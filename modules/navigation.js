@@ -432,10 +432,28 @@ async function forumFinish(g, active, note = '') {
   try { root.sessionStorage?.removeItem(FORUM_TP_ACK); if (travelReceipt(g)) root.sessionStorage?.removeItem(NATIVE_TP_ACK); } catch (_) {}
   env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером${note ? ` (${note})` : ''}`);
 }
+// 20.43 (автономность, доводка 21.10; ревью сверки): ответ — true, только если фон записал именно эту паузу (travelPauseSaved)
 async function forumUncertain(why, active) {
-  if (!active()) return;
+  if (!active()) return false;
   env.rec('B', 'локации', `${why}; повторная оплата телепорта запрещена`);
-  await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
+  const msg = `Телепорт: ${why}. Проверьте положение героя`, t0 = Date.now();
+  await env.pauseBot?.(msg, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
+  return travelPauseSaved(msg, t0);
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки, MV3: сервер лежит на 30-й минуте, игрок жмёт ⏹ Стоп в ожидании сервера): после
+// pauseBot выключенная вкладка (on=false) — не доказательство паузы «Проверьте положение героя». Так же выглядят ⏹ Стоп / ⏸ Пауза игрока,
+// пока pauseBot ждал сервер (serverWait выходит без перезагрузки, pauseBot возвращается без своей паузы), Стоп фона во время srvUp и
+// три недошедшие попытки botControl (automationStop выключает вкладку сразу, до ответа фона). Раньше хватало on=false — метка gaveUp
+// писалась, и следующий Старт игрока закрывал квитанцию «по решению игрока», хотя этой паузы он не видел: запрет платного снимался при
+// неизвестном исходе клика, а через 3 мин farmStep/zonePick могли купить тот же телепорт. Доказательство — одна запись фона botControl
+// в хранилище: on=false, paused и stopMeta с одним временем, не раньше начала паузы, источник 'content-pause', та же причина (фон режет
+// её до 240 символов), «Продолжить» ещё не нажато. Нет доказательства (или хранилище не прочиталось) — метки нет: следующий Старт
+// начинает новое окно сверки, как после Стопа
+async function travelPauseSaved(msg, t0) {
+  try {
+    const s = await root.chrome?.storage?.local?.get?.(['on', 'paused', 'stopMeta']), m = s?.stopMeta, p = s?.paused;
+    return !!m && !!p && s.on === false && m.source === 'content-pause' && !m.resumed && +m.t >= t0 && +p.t === +m.t && m.reason === String(msg).slice(0, 240);
+  } catch (_) { return false; }
 }
 
 // 20.43 (автономность, разбор 21.10; docs/NIGHT-FARM-2026-10-17.md: 07:25:08 POST телепорта в Coliseum → 502, 07:25:16 пауза
@@ -593,11 +611,12 @@ async function travelVerify(g, active, why) {
     // 20.43 (доводка 21.10): сначала — сама сверка без метки; метка gaveUp — только когда пауза действительно записана
     g.check = c; await env.setRt(travelKeep(g)); if (!active()) return;
     const char = env.rt.char, start = +env.rt.dailyStart || 0;
-    await forumUncertain(`${c.why || why}: исход перелёта в «${name}» не удалось сверить за 30 мин (${c.n} сверок)`, active);
-    // пауза записана: pauseBot выключил бота, а герой, запуск (manualKickAt), номер Старта и квитанция — те же. gaveUp — была пауза
-    // «Проверьте положение героя»: квитанцию закроет только следующий Старт игрока (ackStart выше, по rt.dailyStart). Перезагрузка
-    // во время ожидания сервера (serverWait) или отказ фона в паузе сюда не доходят — метки нет, правка меню квитанцию не закроет
-    if (env.on === false && env.rt.char === char && env.rt.manualKickAt === kick && (+env.rt.dailyStart || 0) === start && travelIsCheck(g)) {
+    const saved = await forumUncertain(`${c.why || why}: исход перелёта в «${name}» не удалось сверить за 30 мин (${c.n} сверок)`, active);
+    // пауза записана: фон записал эту паузу (saved — по хранилищу, а не по on=false вкладки), pauseBot выключил бота, а герой, запуск
+    // (manualKickAt), номер Старта и квитанция — те же. gaveUp — была пауза «Проверьте положение героя»: квитанцию закроет только
+    // следующий Старт игрока (ackStart выше, по rt.dailyStart). Перезагрузка во время ожидания сервера (serverWait), отказ фона в паузе
+    // и ⏹ Стоп / ⏸ Пауза игрока, пока pauseBot ждал сервер, метку не ставят — правка меню и Старт квитанцию «по решению игрока» не закроют
+    if (saved && env.on === false && env.rt.char === char && env.rt.manualKickAt === kick && (+env.rt.dailyStart || 0) === start && travelIsCheck(g)) {
       g.check = { ...c, gaveUp: Date.now(), gaveUpStart: start }; await env.setRt(travelKeep(g)); return;
     }
     // сервер лежал — pauseBot ждал его, а не встал на паузу (и метки gaveUp нет): ещё 5 мин сверки после его возвращения

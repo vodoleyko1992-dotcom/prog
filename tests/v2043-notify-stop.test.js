@@ -173,7 +173,8 @@ test('паузы из-за сбоя помечены fault (карта, Ashen, �
     /карта не загрузилась после обновления; цель \$\{H\.name\} сохранена\. Проверь игру и продолжи`, \{ fault: true \}\)/]) assert.match(raid, re);
   for (const re of [/выход из Ashen Bastion не подтверждён за минуту; проверь город/, /не найдена штатная кнопка выхода из Ashen Bastion в город'/, /сервер не подтвердил выход из Ashen Bastion; проверь город/]) assert.doesNotMatch(raid, re);
   assert.match(epics, /Эпики: карта не загрузилась после обновления; цель \$\{e\.nm\} сохранена\. Проверь игру и продолжи`, \{ fault: true \}\)/);
-  assert.match(nav, /pauseBot\?\.\(`Телепорт: \$\{why\}\. Проверьте положение героя`, \{ fault: true \}\)/); assert.match(nav, /pauseBot\(`Возврат в Ashen Bastion: \$\{why\}`, \{ fault: true \}\)/);
+  // 20.43 (доводка 21.10, ревью сверки): причина паузы телепорта — в переменной msg (по ней navigation узнаёт запись фона именно этой паузы)
+  assert.match(nav, /const msg = `Телепорт: \$\{why\}\. Проверьте положение героя`, t0 = Date\.now\(\);\n\s*await env\.pauseBot\?\.\(msg, \{ fault: true \}\)/); assert.match(nav, /pauseBot\(`Возврат в Ashen Bastion: \$\{why\}`, \{ fault: true \}\)/);
   assert.doesNotMatch(raid.match(/return env\.pauseBot\(`🎯 По одному РБ[^\n]*/)[0], /fault/); assert.doesNotMatch(mammon.match(/await env\.pauseBot\(`пришёл к [^\n]*/)[0], /fault/);
 });
 

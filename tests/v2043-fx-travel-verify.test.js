@@ -6,7 +6,9 @@
 //    «не прошёл»; адены убыло хотя бы на цену — «оплата прошла»; бесплатный переход и неоднозначные случаи — ждём, как раньше;
 // 3) статус ожидания и итога сверки — одна форма: строка «бот» в журнал только при смене смысла, а не 2 на каждую сверку;
 // 4) метка gaveUp («была пауза — Старт игрока закроет квитанцию») — только после настоящей паузы и с номером Старта rt.dailyStart:
-//    перезагрузка во время ожидания сервера, pauseBot без паузы и правки меню (manualKickAt) квитанцию «по решению игрока» не закрывают.
+//    перезагрузка во время ожидания сервера, pauseBot без паузы и правки меню (manualKickAt) квитанцию «по решению игрока» не закрывают;
+//    4б) «настоящая пауза» — запись фона botControl в хранилище (on=false, paused, stopMeta 'content-pause' с этой причиной), а не on=false
+//    вкладки: ⏹ Стоп / ⏸ Пауза игрока, пока pauseBot ждал сервер, метку не ставят.
 // Все проверки поведенческие (настоящие navigation.js/payments.js/actions.js в vm) и падают на коде до этой правки (748541f).
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 const root = path.join(__dirname, '..'), read = n => fs.readFileSync(path.join(root, n), 'utf8'), clone = x => JSON.parse(JSON.stringify(x));
@@ -32,7 +34,12 @@ function fixture(o = {}) {
   const row = { textContent: `${cost} аден`, querySelector: s => s.includes('currency') ? { textContent: 'аден', querySelectorAll: () => [] } : s.includes('price-num') ? { textContent: String(cost) } : null };
   const btn = { closest: () => row, dataset: { baseAdenaCost: String(cost), adenaCost: String(cost) }, textContent: `Телепорт ${cost} Adena` };
   const records = [], pauses = [], statuses = [], botLines = [], session = new Map();
-  const F = { pauseMode: 'pause' };
+  // 20.43 (доводка 21.10, ревью сверки): хранилище фона (chrome.storage.local) — on/paused/stopMeta; метку «была пауза» navigation ставит
+  // только по записи фона botControl для этой паузы, а не по on=false вкладки
+  const store = { on: true, paused: null, stopMeta: null };
+  const bgWrite = (action, source, reason) => Object.assign(store, { on: false, paused: action === 'pause' ? { t: clock.t, why: String(reason).slice(0, 160) } : null,
+    stopMeta: { source, reason: String(reason).slice(0, 240), t: clock.t } });
+  const F = { pauseMode: 'pause', store, bgWrite };
   const env = {
     on: true, tabOwner: true, cfg: { shopReserve: 200000 },
     rt: { char: 'Hero', manualKickAt: 5, dailyStart: 3, zoneGo: forum ? { id: target, url: '/forum-farm-resources.html', forum: true, t: clock.t - 1000 } : { id: target, t: clock.t - 1000 },
@@ -42,13 +49,14 @@ function fixture(o = {}) {
     setStatus(s) { statuses.push(s); const sh = String(s).replace(SHAPE_RE, '#'); if (s !== last && sh !== shape) { shape = sh; botLines.push(s); } last = s; },
     sleep: async () => {}, waitX: async f => f(), rnd: a => o.gap ?? a,
     setRt: async p => { Object.assign(env.rt, p); disk = clone(env.rt); return { ok: true }; },
-    // pauseMode: pause — фон записал паузу (on=false); serverDown — сервер лежит, pauseBot ждал его и вернулся без паузы;
-    // reload — ожидание сервера кончилось перезагрузкой вкладки (код после pauseBot не выполняется); функция — своё поведение
+    // pauseMode: pause — фон записал паузу (on=false; 20.43: и в хранилище, как botControl — paused, stopMeta 'content-pause');
+    // serverDown — сервер лежит, pauseBot ждал его и вернулся без паузы; reload — ожидание сервера кончилось перезагрузкой вкладки
+    // (код после pauseBot не выполняется); функция — своё поведение (why — причина паузы)
     pauseBot: async (why, opt) => {
       pauses.push({ why, opt }); const m = F.pauseMode;
-      if (typeof m === 'function') return m(F);
+      if (typeof m === 'function') return m(F, why);
       if (m === 'reload') throw RELOAD;
-      if (m === 'pause') env.on = false;
+      if (m === 'pause') { env.on = false; bgWrite('pause', 'content-pause', why); }
     },
     gameGet: async () => { gets++; o.onGet?.(F, gets); if (o.getFail?.(gets)) return { ok: false, json: async () => ({}) }; return { ok: true, json: async () => ({ character: { ...srv } }) }; },
     fire: () => {
@@ -71,7 +79,8 @@ function fixture(o = {}) {
   };
   function load() {
     const box = { console, URL, URLSearchParams, Date: FakeDate, location: loc, document: { querySelectorAll: () => [{}], body: { innerText: '' } },
-      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) } };
+      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) },
+      chrome: { storage: { local: { get: async keys => { if (F.storeFail) throw new Error('storage недоступно'); return clone(Object.fromEntries([].concat(keys).filter(k => store[k] !== undefined).map(k => [k, store[k]]))); } } } } };
     vm.runInNewContext(PAY, box); vm.runInNewContext(NAV, box); vm.runInNewContext(ACT, box); return box;
   }
   let box = load(), N = box.L2V7Factories.navigation(env);
@@ -80,7 +89,8 @@ function fixture(o = {}) {
     step: () => N.zoneGoStep().catch(e => { if (e !== RELOAD) throw e; }), advance: ms => { clock.t += ms; },
     clicks: () => clicks, gets: () => gets, disk: () => disk, N: () => N, box: () => box,
     // перезагрузка вкладки: память — из хранилища, новый экземпляр модулей, статус-форма ядра сброшена
-    reload() { env.rt = clone(disk); env.on = true; session.clear(); shape = ''; last = null; box = load(); N = box.L2V7Factories.navigation(env); },
+    // 20.43: после перезагрузки / Старта бот снова включён и в хранилище (фон: on=true, paused снят)
+    reload() { env.rt = clone(disk); env.on = true; Object.assign(store, { on: true, paused: null }); session.clear(); shape = ''; last = null; box = load(); N = box.L2V7Factories.navigation(env); },
     log: re => records.some(r => re.test(r)),
     tc: () => env.rt.travelCheck,
     // farmStep ядра через 3+ мин: на точке ресурса не стоим — новый маршрут к той же цели (как content.farmStep), затем шаги маршрута
@@ -235,4 +245,64 @@ test('фон не подтвердил паузу и сменился запус
   f.env.on = true; f.advance(30 * S); await f.step();                 // пауза в хранилище не записана — вкладка снова работает
   assert.ok(!f.log(/по решению игрока/), 'ложного «решения игрока» нет'); assert.ok(f.tc()?.nativeTp, 'квитанция открыта');
   assert.equal(mark, undefined, 'метки нет');
+});
+
+// ===== 4б) метка «была пауза» — по записи фона, а не по on=false вкладки (ревью: ⏹ Стоп / ⏸ Пауза игрока, пока pauseBot ждал сервер) =====
+// После метки следующий Старт закрывал квитанцию «по решению игрока» — паузы «Проверьте положение героя» игрок не видел, запрет платного
+// снимался при неизвестном исходе клика, и через 3 мин farmStep мог купить тот же телепорт. Теперь: нет записи фона botControl для этой
+// паузы — метки нет, Старт начинает новое окно сверки, как после Стопа. На 6d95af0 падают все четыре проверки ниже
+const startAfter = async (f, kick) => { f.reload(); f.env.rt.manualKickAt = kick; f.env.rt.dailyStart++; f.advance(30 * S); await f.step(); };
+for (const [label, press, source, reason] of [['⏹ Стоп', 'stop', 'popup-stop', 'Нажата кнопка Стоп'], ['⏸ Пауза', 'pause', 'popup-pause', 'Пауза']])
+  test(`${label} игрока, пока pauseBot ждал сервер на 30-й минуте: метки нет; ${press === 'stop' ? 'Старт' : '«Продолжить»'} — квитанция открыта, новое окно сверки, платное запрещено, повторной покупки нет`, async () => {
+    const f = fixture({ outcome: 'grewSpent502' }); await f.step();
+    // serverWait вышел по automationCurrent без перезагрузки: вкладка выключена, фон записал остановку игрока (не паузу бота)
+    f.pauseMode = F => { F.env.on = false; F.bgWrite(press, source, reason); };
+    await until30(f); assert.equal(f.pauses.length, 1); assert.equal(f.env.on, false);
+    assert.equal(f.store.stopMeta.source, source); assert.equal(f.store.paused === null, press === 'stop');
+    assert.equal(f.disk().travelCheck.check.gaveUp, undefined, 'своей паузы «Проверьте положение героя» не было — метки нет');
+    assert.equal(f.disk().travelCheck.check.gaveUpStart, undefined);
+    f.pauseMode = 'pause'; await startAfter(f, 900);
+    assert.ok(!f.log(/по решению игрока/), 'ложного «решения игрока» нет'); assert.ok(f.tc()?.nativeTp, 'квитанция открыта');
+    assert.equal(f.tc().check.kick, 900); assert.equal(f.tc().check.ackStart, undefined, 'новое окно сверки, а не закрытие'); assert.equal(f.tc().check.n, 1);
+    assert.ok(f.N().travelPending(), 'платное по-прежнему запрещено'); assert.equal(await payments(f).prepare(SPEC), null);
+    // через 4 мин farmStep хочет к той же точке (прибытия нет), но квитанция открыта — шаги маршрута только сверяют, клика нет
+    f.advance(4 * MIN); await f.farmAgain(); assert.equal(f.clicks(), 1, 'второй оплаты того же телепорта нет'); assert.ok(f.tc()?.nativeTp);
+    // новое окно 30 мин кончается настоящей паузой бота (фон её записал) — теперь метка есть, и Старт игрока закрывает квитанцию
+    await until30(f); assert.equal(f.pauses.length, 2); assert.ok(f.disk().travelCheck.check.gaveUp); assert.equal(f.disk().travelCheck.check.gaveUpStart, 4);
+    await startAfter(f, 950); assert.equal(f.env.rt.travelCheck ?? null, null, 'квитанция закрыта'); assert.ok(f.log(/квитанцию закрываю по решению игрока/)); assert.equal(f.clicks(), 1);
+  });
+test('нет записи фона именно этой паузы — метки нет: три недошедшие попытки botControl, стоп сторожа во время srvUp, чужая пауза, старая запись, хранилище не читается', async () => {
+  const cases = {
+    // automationStop: on=false во вкладке сразу, фон не ответил ни разу — в хранилище бот включён
+    ipcFail: F => { F.env.on = false; },
+    // стоп фона (сторож) пришёл во время srvUp: pauseBot вернулся по automationCurrent, своей паузы нет
+    watchdog: F => { F.env.on = false; F.bgWrite('stop', 'watchdog', 'нет прогресса'); },
+    // пауза другого модуля с другой причиной (тот же источник 'content-pause')
+    otherPause: F => { F.env.on = false; F.bgWrite('pause', 'content-pause', '🎯 По одному РБ: РБ убит — жду команды'); },
+    // в хранилище — пауза с той же причиной, но записанная раньше начала этой паузы (не эта)
+    stale: (F, why) => { F.env.on = false; F.bgWrite('pause', 'content-pause', why); F.store.stopMeta.t = F.store.paused.t = F.clock.t - 1; },
+    // stopMeta от паузы, а paused — от другой записи (снят): одной записи фона нет
+    split: (F, why) => { F.env.on = false; F.bgWrite('pause', 'content-pause', why); F.store.paused = null; },
+    // хранилище не прочиталось — доказательства нет
+    storeFail: (F, why) => { F.env.on = false; F.bgWrite('pause', 'content-pause', why); F.storeFail = true; },
+  };
+  for (const [name, mode] of Object.entries(cases)) {
+    const f = fixture({ outcome: 'grewSpent502' }); await f.step();
+    f.pauseMode = mode; await until30(f); assert.equal(f.pauses.length, 1, name); f.storeFail = false;
+    assert.equal(f.disk().travelCheck.check.gaveUp, undefined, name + ': метки нет');
+    f.pauseMode = 'pause'; await startAfter(f, 900);
+    assert.ok(!f.log(/по решению игрока/), name); assert.ok(f.tc()?.nativeTp, name + ': квитанция открыта'); assert.equal(f.tc().check.ackStart, undefined, name);
+    assert.ok(f.N().travelPending(), name); assert.equal(f.clicks(), 1, name);
+  }
+});
+test('метка по записи фона: та же причина (обрезана фоном до 240 символов), то же время paused и stopMeta, не раньше начала паузы', async () => {
+  // длинная причина сверки: фон хранит первые 240 символов — это та же пауза
+  const f = fixture({ outcome: 'grewSpent502' }); await f.step();
+  f.tc().check.why = 'прибытие не подтверждено ' + 'x'.repeat(300); await f.env.setRt({ travelCheck: f.tc() });
+  await until30(f); assert.equal(f.pauses.length, 1); assert.ok(f.pauses[0].why.length > 240);
+  assert.equal(f.store.stopMeta.reason.length, 240); assert.ok(f.disk().travelCheck.check.gaveUp, 'пауза записана фоном — метка есть');
+  assert.ok(NAV.includes("m.source === 'content-pause' && !m.resumed && +m.t >= t0 && +p.t === +m.t && m.reason === String(msg).slice(0, 240)"), 'признаки записи фона');
+  assert.ok(read('background.js').includes("await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null, stopMeta });"), 'фон пишет on/paused/stopMeta одной записью с одним временем');
+  assert.ok(read('background.js').includes("reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240)"), 'фон режет причину до 240');
+  assert.ok(CORE.includes("source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240)"), 'вкладка шлёт паузу как content-pause с причиной ≤ 240');
 });

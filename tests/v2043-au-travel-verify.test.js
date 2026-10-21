@@ -25,7 +25,7 @@ function fixture(o = {}) {
   const srv = { id: 'hero-1', name: 'Hero', revision: 100, adena: 1000000, currentZoneId: 'giran_field', cityId: 'l2dop_giran', inBattle: false, activeDungeonId: null };
   const row = { textContent: '50 000 аден', querySelector: s => s.includes('currency') ? { textContent: 'аден', querySelectorAll: () => [] } : s.includes('price-num') ? { textContent: '50 000' } : null };
   const btn = { closest: () => row, dataset: { baseAdenaCost: '50000', adenaCost: '50000' }, textContent: 'Телепорт 50 000 Adena' };
-  const records = [], pauses = [], session = new Map();
+  const records = [], pauses = [], session = new Map(), store = { on: true, paused: null, stopMeta: null };
   const env = {
     on: true, tabOwner: true, cfg: { shopReserve: 200000 },
     rt: { char: 'Hero', manualKickAt: 5, zoneGo: forum ? { id: target, url: '/forum-farm-resources.html', forum: true, t: clock.t - 1000 } : { id: target, t: clock.t - 1000 },
@@ -33,7 +33,9 @@ function fixture(o = {}) {
     rec: (...a) => records.push(a.join(' | ')), setStatus() {}, heroLvl: () => 40, shown: () => true, isFarmPage: () => forum, $q: () => btn,
     sleep: async () => {}, waitX: async f => f(), rnd: (a) => o.gap ?? a,
     setRt: async p => { writes++; Object.assign(env.rt, p); disk = clone(env.rt); return { ok: true }; },
-    pauseBot: async (why, opt) => { pauses.push({ why, opt }); if (!o.serverDown) env.on = false; },
+    // 20.43 (доводка 21.10, ревью сверки): пауза — как фон botControl: on=false, paused и stopMeta 'content-pause' с причиной в хранилище
+    // (метку «была пауза» navigation ставит только по этой записи, а не по on=false вкладки); сервер лежит — паузы и записи нет
+    pauseBot: async (why, opt) => { pauses.push({ why, opt }); if (!o.serverDown) { env.on = false; store.on = false; store.paused = { t: clock.t, why: String(why).slice(0, 160) }; store.stopMeta = { source: 'content-pause', reason: String(why).slice(0, 240), t: clock.t }; } },
     gameGet: async () => { gets++; o.onGet?.(F, gets); if (o.getFail?.(gets)) return { ok: false, json: async () => ({}) }; return { ok: true, json: async () => ({ character: { ...srv } }) }; },
     fire: () => {
       clicks++;
@@ -55,14 +57,15 @@ function fixture(o = {}) {
   };
   function load() {
     const box = { console, URL, URLSearchParams, Date: FakeDate, location: loc, document: { querySelectorAll: () => [{}], body: { innerText: '' } },
-      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) } };
+      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) },
+      chrome: { storage: { local: { get: async keys => clone(Object.fromEntries([].concat(keys).filter(k => store[k] !== undefined).map(k => [k, store[k]]))) } } } };   // 20.43: хранилище фона (on/paused/stopMeta)
     vm.runInNewContext(PAY, box); vm.runInNewContext(NAV, box); vm.runInNewContext(ACT, box); return box;
   }
   let box = load(), N = box.L2V7Factories.navigation(env);
   const F = {
     env, srv, clock, records, pauses, session, loc, target, step: () => N.zoneGoStep(), advance: ms => { clock.t += ms; },
     clicks: () => clicks, gets: () => gets, writes: () => writes, disk: () => disk, N: () => N, box: () => box,
-    reload() { env.rt = clone(disk); env.on = true; session.clear(); box = load(); N = box.L2V7Factories.navigation(env); },
+    reload() { env.rt = clone(disk); env.on = true; Object.assign(store, { on: true, paused: null }); session.clear(); box = load(); N = box.L2V7Factories.navigation(env); },
     log: re => records.some(r => re.test(r)),
     tc: () => env.rt.travelCheck,
   };
