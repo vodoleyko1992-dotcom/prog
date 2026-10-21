@@ -3278,6 +3278,8 @@ async function loopPriority() {
 // Разовые команды меню: сумка, список баффов FA, базы рецептов/фарма/РБ, проверка эпиков, полёт к РБ, каталог и полёт в зону.
 async function loopMenuJobs() {
   if (loopStale()) return true;
+  // 20.43 (John 21.10): «▶ Старт» во вкладке «Сабкласс» — сменить класс и одеть лучшее (раньше задач и подготовки старта)
+  if (rt.subGo && !isBattle() && await L2V7Modules.subgo.step()) return true;
   if (rt.bagCheck && !isBattle()) {              // «Пересчитать в сумке» (квесты на ресурсы)
     if (!isChar()) { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(4000); return true; }
     setStatus('Квесты на ресурсы: считаю сумку'); await bagCounts(); await setRt({ bagCheck: null });
@@ -6186,6 +6188,13 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
 L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
+// 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса у Reorin и лучший комплект из сумки (modules/subgo.js). Свой POST идёт мимо hook.js,
+// поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры
+L2V7Modules.subgo = L2V7Factories.subgo({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
+  get on() { return on; }, get tabOwner() { return tabOwner; }, get isBattle() { return isBattle; }, get sleep() { return sleep; }, get rtCommit() { return rtCommit; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get crafterKit() { return L2V7Modules.crafterKit; },
+  get taskNow() { return () => L2EngineCore.selectedTask(cfg, rt) ?? autonomyMode(); },
+  get classNote() { return ch => { L2V7Modules.story.charNote(ch); L2V7Modules.subclass.charNote(ch); L2V7Modules.buffs?.vipNote?.(ch); L2V7Modules.warlock?.autoEnableClass?.(ch)?.catch?.(() => {}); }; } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —

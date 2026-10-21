@@ -389,7 +389,7 @@ async function load() {
   renderEpics(rt, d);
   renderRbTimer(rt, d);
   renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
-  renderStory(rt); renderSub(rt, d); renderCraft(rt, d);
+  renderStory(rt); renderSub(rt, d); renderSubGo(rt); renderCraft(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
   renderHunt(rt, d);
   renderRb(rt);
@@ -1695,6 +1695,37 @@ function renderSub(rt, d) {
   const say = rt.subHandReq?.t ? '⏳ по кнопке: передам основному, как только закончу бой/тур' : rt.subHandSay && Date.now() - rt.subHandSay.t < 600000 ? `✗ по кнопке не передал: ${rt.subHandSay.why}` : '';
   $('subBox').textContent = [say, rt.subInfo || 'Класс и роль бот узнает у игры сам (после первого ответа /character)'].filter(Boolean).join('\n');
 }
+// 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса и лучший комплект (modules/subgo.js, команда rt.subGo)
+const SUBGO_UI = 'l2bot-subGo';
+const profName2 = p => String(p || '?').replace(/^(?:human|elf|dark_elf|orc|dwarf)_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+let subGoSig = '', subGoRt = {};
+function renderSubGo(rt) {
+  subGoRt = rt || {};
+  const sel = $('subGoSlot'); if (!sel) return;
+  const sl = (rt.subSlots || []).filter(x => x && x.prof);
+  const opts = sl.map(x => `<option value="${+x.slot}">${x.slot}: ${profName2(x.prof)} ${x.lvl || ''}${x.on ? ' — сейчас' : ''}</option>`).join('');
+  if (opts && opts !== subGoSig) { const keep = sel.value; subGoSig = opts; sel.innerHTML = opts;
+    let ui = {}; try { ui = JSON.parse(localStorage.getItem(SUBGO_UI) || '{}'); } catch (_) {}
+    const want = keep !== '' && sl.some(x => String(x.slot) === keep) ? keep : String(ui.slot ?? '') !== '' && sl.some(x => String(x.slot) === String(ui.slot)) ? String(ui.slot) : String((sl.find(x => !x.on) || sl[0]).slot);
+    sel.value = want;
+    for (const k of ['Kit', 'Wt', 'Shield']) if (ui[k] && $('subGo' + k)) $('subGo' + k).value = ui[k]; }
+  const J = rt.subGo, S = rt.subGoSay;
+  $('subGoBox').textContent = J?.t ? `⏳ по кнопке: ${J.gearOnly ? 'одеваю лучшее' : `меняю класс на слот ${J.slot}`} — начну, как только закончу бой (бот должен быть запущен)`
+    : S?.t ? `${S.ok ? '✓' : '✗'} ${new Date(S.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${S.why}${S.worn?.length ? '\n' + S.worn.join('\n') : ''}` : '';
+}
+async function subGoSend(gearOnly) {
+  const sel = $('subGoSlot'), ui = { slot: sel.value, Kit: $('subGoKit').value, Wt: $('subGoWt').value, Shield: $('subGoShield').value };
+  try { localStorage.setItem(SUBGO_UI, JSON.stringify(ui)); } catch (_) {}
+  const cur = (subGoRt.subSlots || []).find(x => x.on)?.slot;
+  if (!gearOnly && sel.value === '') return toast('Слоты классов ещё не прочитаны — откройте игру с запущенным ботом');
+  const slot = gearOnly ? cur ?? null : +sel.value;
+  await menuPatch({ subGo: { t: Date.now(), slot, gearOnly: !!gearOnly, kit: ui.Kit, wt: ui.Wt, shield: ui.Shield }, subGoSay: null });
+  const { on = false } = await chrome.storage.local.get('on');
+  if (!on) await $('start').onclick();
+  toast(gearOnly ? '👕 Одеваю лучшее для текущего класса' : '🧬 Меняю класс и одеваю лучшее');
+}
+$('subGoStart')?.addEventListener('click', () => subGoSend(false));
+$('subGoGear')?.addEventListener('click', () => subGoSend(true));
 // 20.43 (John 21.10): свой крафт материалов (modules/craft.js) — книга рецептов rt.craftBook, список rt.craftQueue, прогресс rt.craftMade
 let craftSig = '', craftRt = {};
 function renderCraft(rt, d) {
