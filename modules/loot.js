@@ -13,10 +13,11 @@ const isCrush = b => /crush|розтрощ|сокруш/i.test(env.cleanTitle(b?
 const spoilKey = b => 'spoil:' + env.cleanTitle(b?.title || '').toLowerCase();
 function spoilPick(ctx) {
   // Crush — только с дубиной (игра отвечает «скилл зараз недоступний»): подтверждённая не-дубина — без Crush, неизвестное оружие —
-  // Crush после обычного Spoil (как раньше), дубина — Crush первым
-  const w = env.weaponNow?.(), bl = blunt(), seen = new Set();
+  // Crush после обычного Spoil (как раньше), дубина — Crush первым. Оружие без типа в справочнике (wt «—»: weaponEquipNote,
+  // equipment.stats) — тоже неизвестное, а не «не дубина»: иначе при Spoil на откате Crush не шёл бы и запасным
+  const w = env.weaponNow?.(), bl = blunt(), wtKnown = !!w && !!w.wt && w.wt !== '—', seen = new Set();
   const all = env.names(env.cfg.nSpoil).flatMap(bn => env.slotsBy(bn).map(b => ({ bn, b })))
-    .filter(x => !seen.has(x.b) && seen.add(x.b) && !isMassSpoil(x.b) && !(isCrush(x.b) && w && !bl) && env.ready(x.b) && (ctx.block[spoilKey(x.b)] || 0) < Date.now());
+    .filter(x => !seen.has(x.b) && seen.add(x.b) && !isMassSpoil(x.b) && !(isCrush(x.b) && wtKnown && !bl) && env.ready(x.b) && (ctx.block[spoilKey(x.b)] || 0) < Date.now());
   const rank = x => isCrush(x.b) ? (bl ? 0 : 2) : 1;
   return all.sort((a, b) => rank(a) - rank(b))[0] || null;
 }
@@ -34,8 +35,9 @@ function massSpoilPick(ctx, ok = env.ready) {
   return null;
 }
 
+const festLineOf = lines => lines.find(l => /^(?:spoil festival|спойл[- ]фестиваль)\s*:/i.test(String(l || '').trim()));
 function festivalParse(lines) {                   // → [{ name, ok, ch, was }] из строки «Spoil Festival: Моб: успіх (63%); Моб2: промах (51%)»
-  const L = lines.find(l => /^(?:spoil festival|спойл[- ]фестиваль)\s*:/i.test(l.trim())); if (!L) return [];
+  const L = festLineOf(lines); if (!L) return [];
   return L.replace(/^[^:]+:\s*/, '').split(/\s*;\s*/).map(part => {
     // 20.43 (лог 21.10 21:39:20): «Моб: вже заспойлено» — метка уже висела (ok, was): не новый успех в статистике
     const w = part.match(/^(.+?)\s*:\s*(?:вже|уже)\s+заспойл|^(.+?)\s*:\s*already\s+spoil/i);
@@ -48,6 +50,10 @@ function festivalParse(lines) {                   // → [{ name, ok, ch, was }]
 // 20.43 (лог 21.10 21:39:00–21:39:20, BH 75 с пикой): Festival пометил всех 4 (✅4), следующий ход — 423 «Проверка активности»; после
 // капчи бой открылся заново (новый ctx без massTried), и Festival ушёл второй раз — «вже заспойлено» у всех 4: потерянный ход и MP.
 // Помним Festival этого боя (spawnId адреса + имена из ответа) в памяти вкладки (sessionStorage, как aoeProbe) до победы, не дольше 2 мин.
+// 20.43 (ревью): spawnId — точка появления, через ≈1 мин там тот же вид (dense_12178 снова через 72 с), а бой мог кончиться без победы
+// бота (Stop и ручное добивание, смерть, «итог не подтверждён», отход от чемпиона) — память сняла бы спойл всей новой пачки. Тот же бой
+// узнаём и по строке итога Festival в логе боя (после капчи — на странице, после перезагрузки — в полном battle.log сервера; у нового
+// боя её нет); бой на другом spawnId стирает память сразу.
 const FEST_KEY = 'l2bot.festDone', FEST_MS = 120000;
 let festMem = null;
 const urlSpawn = () => { try { return new URLSearchParams(root.location?.search || '').get('spawnId') || ''; } catch (e) { return ''; } };
@@ -55,12 +61,17 @@ function festRead() {
   try { const v = JSON.parse(root.sessionStorage.getItem(FEST_KEY) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return festMem; }
 }
 function festSave(v) { festMem = v; try { if (v) root.sessionStorage.setItem(FEST_KEY, JSON.stringify(v)); else root.sessionStorage.removeItem(FEST_KEY); } catch (e) { /* хранилище вкладки недоступно — память модуля */ } }
+const festNorm = s => String(s || '').replace(/\s+/g, ' ').trim().toLowerCase();
 function festRestore(ctx) {
   if (ctx.festChecked) return;
   ctx.festChecked = true;
+  const r = festRead(), sp = urlSpawn();
+  if (!r) return;
+  if (sp && r.sp !== sp) { festSave(null); return; }               // другой бой — прошлый окончен
   if (ctx.rb || ctx.massTried) return;
-  const r = festRead(), sp = urlSpawn(), age = Date.now() - (+r?.t || 0);
-  if (!r || !sp || r.sp !== sp || !(age >= 0 && age < FEST_MS) || !(r.names || []).some(n => env.nameLike(n, ctx.name || ''))) return;
+  const age = Date.now() - (+r.t || 0);
+  if (!sp || !(age >= 0 && age < FEST_MS) || !r.line || !(r.names || []).some(n => env.nameLike(n, ctx.name || ''))
+    || !env.logLines().some(l => festNorm(l) === festNorm(r.line))) return;
   ctx.massTried = true;
   if ((r.ok || []).some(n => env.nameLike(n, ctx.name || ''))) ctx.spoiled = true;
   env.rec('B', 'спойл', `${ctx.name}: масс-спойл в этом бою уже был (${Math.round(age / 1000)} с назад, до перерыва) — повторно не жму`);
@@ -94,7 +105,7 @@ async function massSpoilStep(ctx, act, mob) {
   const x = massSpoilPick(ctx); if (!x) return false;
   const mp = env.meMp(), need = env.skillMp(env.cleanTitle(x.b.title)) || 0;
   if (mp && need && mp.cur < need) return false;  // маны мало — обойдёмся обычным Spoil
-  const before = env.logLines(), waited = ctx.massWaitT0 ? Math.max(0, Date.now() - ctx.massWaitT0) : -1;
+  const before = env.logLines(), waited = waitedMs(ctx, x.b);
   const r = await act(x.b, `Масс-спойл: ${env.cleanTitle(x.b.title)} (мобов ${near + 1}${waited >= 0 ? `, ждал откат ${(waited / 1000).toFixed(1)} с` : ''})`);
   if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
   if (r === 'cd' || r === 'noforce') return true;
@@ -108,7 +119,8 @@ async function massSpoilStep(ctx, act, mob) {
   const bads = res.length ? res.filter(x => !x.ok).length : fresh.filter(l => env.SPOIL_FAIL.test(l)).length;
   if (env.mobSpoiled() || mainR?.ok || (!res.length && oks && !bads && !ctx.rb)) ctx.spoiled = true;
   ctx.nearSpoiled = res.length ? res.filter(x => x.ok && !env.nameLike(x.name, ctx.name)).length : ctx.rb ? oks : Math.max(0, oks - 1);
-  if (!ctx.rb && urlSpawn()) festSave({ sp: urlSpawn(), t: Date.now(), names: [...new Set([ctx.name || '', ...res.map(x => x.name)])].filter(Boolean),
+  const festLine = festLineOf(fresh);
+  if (!ctx.rb && urlSpawn() && festLine) festSave({ sp: urlSpawn(), t: Date.now(), line: festLine, names: [...new Set([ctx.name || '', ...res.map(x => x.name)])].filter(Boolean),
     ok: [...new Set([...(ctx.spoiled ? [ctx.name || ''] : []), ...res.filter(x => x.ok).map(x => x.name)])].filter(Boolean) });
   // Festival метит всех живых в зоне со 100 %: на РБ помечаем соседей, видимых в момент нажатия (без ответа игры — тоже,
   // чтобы не жать по кругу; новые соседи после этого снова разрешат нажатие)
@@ -143,33 +155,55 @@ function crafterNoSpoil() {
 // Соседей в начале боя игра не показывает (extras пуст до Festival/АОЕ), поэтому ждём по оружию: не дубина, не РБ, первый спойл боя,
 // Festival откатится не позже чем через MASS_WAIT_S (cdLeft: экран, свой откат и откат сервера) и MP хватает — ждём его, а не жмём Spoil.
 // Удар (АОЕ) в это время не идёт: шаг возвращает новый круг, лечение/банки идут раньше. Не больше MASS_WAIT_MAX за бой (застывший рисунок КД).
-const MASS_WAIT_S = 1, MASS_WAIT_MAX = 1500;
-async function massSpoilWait(ctx, mob) {
-  if (ctx.rb || ctx.spoilTry || ctx.spoiled || ctx.massTried || !(mob?.max > 0) || !(mob.cur > 0) || !env.cdLeft || blunt() || env.mobSpoiled()) return false;
-  const x = massSpoilPick(ctx, b => { const s = env.cdLeft(b); return s > 0 && s <= MASS_WAIT_S; }); if (!x) return false;
-  const mp = env.meMp(), need = env.skillMp(env.cleanTitle(x.b.title)) || 0;
+// 20.43 (ревью): то же у дубины — Spoil Crush (откат 2,1 с) после убийства с одного удара ещё ≈0,7 с на откате к первому ходу следующего
+// боя цепочки (ход-убийство → первый ход нового боя ≈1,3–1,4 с): бот жал готовый Festival (ход без урона), Crush первым шёл через бой.
+// Дубина — ждём Crush, если он откатится не позже чем через MASS_WAIT_S. Откат, который не идёт (застывший RAF-рисунок, cdBusy 15.10:
+// таймер «0.6» стоит), ожидание обрывает через STALL_MS: упал меньше чем на половину проспанного — дальше обычный Spoil, до конца боя не ждём.
+const MASS_WAIT_S = 1, MASS_WAIT_MAX = 1500, STALL_MS = 300;
+let stallNoteT = 0;
+const crushSoon = (ctx, ok) => env.names(env.cfg.nSpoil || '').flatMap(bn => env.slotsBy(bn)).find(b => isCrush(b) && ok(b) && (ctx.block[spoilKey(b)] || 0) < Date.now()) || null;
+async function spoilWait(ctx, mob) {
+  if (ctx.rb || ctx.spoilTry || ctx.spoiled || ctx.massTried || ctx.spoilWaitOff || !(mob?.max > 0) || !(mob.cur > 0) || !env.cdLeft || env.mobSpoiled()) return false;
+  const soon = b => { const s = env.cdLeft(b); return s > 0 && s <= MASS_WAIT_S; };
+  const b = blunt() ? crushSoon(ctx, soon) : massSpoilPick(ctx, soon)?.b; if (!b) return false;
+  const mp = env.meMp(), need = env.skillMp(env.cleanTitle(b.title)) || 0;
   if (mp && need && mp.cur < need) return false;
-  const now = Date.now(); ctx.massWaitT0 ||= now;
+  const now = Date.now(), left = env.cdLeft(b); ctx.massWaitT0 ||= now;
   if (now - ctx.massWaitT0 > MASS_WAIT_MAX) return false;
-  await env.sleep(Math.max(30, Math.min(150, Math.round(env.cdLeft(x.b) * 1000))));
+  let w = ctx.spoilWait;
+  if (!w || w.k !== spoilKey(b)) w = ctx.spoilWait = { k: spoilKey(b), t0: now, left0: left, slept: 0, lastT: now };   // по названию: панель могла перерисоваться
+  else if (left > w.left0 + 0.05) { w.left0 = left; w.slept = 0; }   // сервер уточнил откат в большую сторону — считаем от нового
+  else if (w.slept >= STALL_MS && w.left0 - left < w.slept / 2000) {
+    ctx.spoilWaitOff = true; ctx.spoilWait = null;
+    if (now - stallNoteT > 600000) { stallNoteT = now; env.rec('B', 'спойл', `«${env.cleanTitle(b.title)}»: откат не идёт (${left.toFixed(1)} с после ${(w.slept / 1000).toFixed(1)} с ожидания — застыл рисунок?) — не жду, жму обычный спойл`); }
+    return false;
+  }
+  const ms = Math.max(30, Math.min(150, Math.round(left * 1000)));
+  await env.sleep(ms); w.slept += ms; w.lastT = Date.now();
   return true;
 }
+// 20.43 (ревью): «ждал откат N с» — только у нажатия этой кнопки сразу после её ожидания, счёт от начала этого ожидания
+// (раньше — от первого ожидания боя: после неудачного Spoil поздний Festival получал «ждал 2,1 с»)
+function waitedMs(ctx, b) { const w = ctx.spoilWait; ctx.spoilWait = null; return w && w.k === spoilKey(b) && Date.now() - w.lastT < 250 ? Math.max(0, Date.now() - w.t0) : -1; }
 async function spoilStep(ctx, act, mob) {
   if (crafterNoSpoil()) return false;
   festRestore(ctx);
+  if (blunt() && await spoilWait(ctx, mob)) return true;            // дубина: Crush вот-вот откатится — ждём его, а не Festival
   if (!crushFirst(ctx, mob) && await massSpoilStep(ctx, act, mob)) return true;
-  if (await massSpoilWait(ctx, mob)) return true;
+  if (!blunt() && await spoilWait(ctx, mob)) return true;           // пика: Festival вот-вот откатится — ждём его, а не Spoil
   if (!env.cfg.nSpoil || ctx.spoiled || (ctx.rb && !env.cfg.spoilRb) || !mob?.max || mob.cur <= 0) return false;
   if (env.mobSpoiled()) { ctx.spoiled = true; return false; }           // уже висит значок спойла — не жмём (раньше жали ещё раз: «моб уже заспойлений»)
   // неудача — пробуем снова, пока моб жив и не слишком побит (спойл с шансом ~50–60 %): до 4 попыток, пока HP моба > 30 %
   if ((ctx.spoilTry || 0) >= 4 || (ctx.spoilTry && mob.cur < mob.max * 0.3)) return false;
   const x = spoilPick(ctx); if (!x) return false;
-  const before = env.logLines(); ctx.spoilTry = (ctx.spoilTry || 0) + 1; ctx.block[spoilKey(x.b)] = Date.now() + 700;
-  const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}`);
+  const before = env.logLines(), waited = waitedMs(ctx, x.b); ctx.spoilTry = (ctx.spoilTry || 0) + 1; ctx.block[spoilKey(x.b)] = Date.now() + 700;
+  const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}${waited >= 0 ? ` (ждал откат ${(waited / 1000).toFixed(1)} с)` : ''}`);
   if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую${isCrush(x.b) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
   if (r === 'cd' || r === 'noforce') { ctx.spoilTry--; return true; }
   // 20.41: клик не ушёл ('lock' — окно занятости игры, 'nomp' — нет MP) — строки итога спойла не будет, 1,5 с не ждём
-  if (r === 'lock' || r === 'nomp') { ctx.spoilTry--; if (r === 'nomp') ctx.block[spoilKey(x.b)] = Date.now() + 1500; return true; }   // 1,5 с — как NOMP_MS боя
+  // 20.43 (ревью): 'lock' снимает и блок 0,7 с этой кнопки — повтор её же сразу, как в остальных шагах боя (было: дубина → Festival
+  // вместо повтора Crush; пика → Spoil заблокирован, Crush исключён, спойла в этот ход нет — Whirlwind клал пачку без спойла)
+  if (r === 'lock' || r === 'nomp') { ctx.spoilTry--; ctx.block[spoilKey(x.b)] = r === 'nomp' ? Date.now() + 1500 : 0; return true; }   // 1,5 с — как NOMP_MS боя
   await env.waitFor(() => env.mobSpoiled() || env.newLines(before, env.logLines()).some(l => env.SPOIL_OK.test(l) || env.SPOIL_FAIL.test(l)), 1500, 80);
   const fresh = env.newLines(before, env.logLines()), ok = fresh.find(l => env.SPOIL_OK.test(l)), bad = !ok && fresh.find(l => env.SPOIL_FAIL.test(l));
   const S = { ...(env.rt.spoilStat || {}) };
@@ -306,6 +340,6 @@ async function trackLoot(lines, mob, info) {
   if (campCh) Object.assign(patch, { campaign: { ...campaign, live: Date.now() }, campaignDue: campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
- return { BLUNT, crushFirst, isCrush, massSpoilWait, festRestore, crafterPike, crafterNoSpoil, faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
+ return { BLUNT, crushFirst, isCrush, spoilWait, festRestore, crafterPike, crafterNoSpoil, faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
  };
 })(globalThis);
