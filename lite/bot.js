@@ -891,34 +891,135 @@
     return tvtFightTick(V, g);
   }
 
-  // ---------- кнопка «Lite» на странице игры (1.2.1) ----------
-  // Firefox прячет кнопку MV3-дополнения в меню «Расширения» (кусочек пазла), на Android меню — в «⋮ → Расширения»: игрок не нашёл
-  // меню вовсе. Маленький язычок у правого края открывает меню Lite во вкладке; зелёный — бот включён, в подсказке — что он делает.
-  // Это div в своём shadow DOM: селекторы бота ('a,button', панель боя) и стили игры его не видят.
-  let pill = null, pillSig = '';
-  function pillPaint() {
-    try {
-      if (dead) { if (pill) pill.host.remove(); pill = null; return; }
-      if (!document.body) return;
-      if (!pill || !pill.host.isConnected) {
-        const host = document.createElement('div'); host.id = 'l2lite-pill';
-        host.style.cssText = 'position:fixed;right:0;top:45%;z-index:2147483646;margin:0;padding:0';
-        const sh = host.attachShadow({ mode: 'open' });
-        sh.innerHTML = '<style>div{font:600 11px/1 system-ui,sans-serif;padding:7px 6px 7px 8px;border:1px solid #d9a441;border-right:0;border-radius:8px 0 0 8px;'
-          + 'background:rgba(22,24,29,.85);color:#e8e6e1;cursor:pointer;user-select:none;-webkit-user-select:none}div.on{background:rgba(46,125,50,.9);color:#fff}</style><div></div>';
-        const el = sh.querySelector('div');
-        el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); try { chrome.runtime.sendMessage({ cmd: 'menu' }, () => void chrome.runtime.lastError); } catch (_) {} });
-        pill = { host, el }; pillSig = '';
-        document.body.appendChild(host);
+  // ---------- окно Lite на странице игры (1.4) ----------
+  // 1.2.1: язычок «Lite» у правого края открывал меню во вкладке (Firefox прятал кнопку дополнения в меню «Расширения»).
+  // 1.4 (21.10, John: «чтобы была кнопка сворачивающая окно бота и чтобы он был как плавающая кнопка, захотел свернул, захотел
+  // развернул»): меню Lite — окно прямо на странице игры (iframe popup.html#dock, как встроенное меню основного бота). «—» сворачивает
+  // окно в плавающую кнопку «Lite» (зелёная — бот включён), нажатие на кнопку разворачивает; окно (за шапку) и кнопку можно
+  // перетащить. Свёрнуто/развёрнуто и положение помнит это устройство (localStorage игры); узкий экран (телефон) — сначала свёрнуто.
+  // «⧉» — меню отдельной вкладкой (как язычок 1.2.1). Капча игры на экране — окно прячется в кнопку, чтобы не закрыть проверку.
+  // Всё в своём shadow DOM: селекторы бота ('a,button', панель боя) и стили игры его не видят; кнопки окна — div, не button.
+  const DOCK_KEY = 'l2lite-dock', DOCK_W = 392, DOCK_H = 640;
+  const EXT_ORIGIN = (() => { try { return new URL(chrome.runtime.getURL('')).origin; } catch (e) { return ''; } })();
+  let dock = null, dockSig = '', dockLay = '';
+  const xy = el => { const r = el.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top) }; };
+  function dockMem() { try { const v = JSON.parse(localStorage.getItem(DOCK_KEY) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } }
+  function dockSave(p) { try { localStorage.setItem(DOCK_KEY, JSON.stringify({ ...dockMem(), ...p })); } catch (e) {} }
+  const vpW = () => document.documentElement.clientWidth || innerWidth || 0, vpH = () => document.documentElement.clientHeight || innerHeight || 0;
+  function dockPos(p, w, h, def) {               // в пределах экрана; сохранённое положение — px, после поворота/сужения окна поджимается
+    const ok = p && Number.isFinite(p.x) && Number.isFinite(p.y), x = ok ? p.x : def.x, y = ok ? p.y : def.y;
+    return { x: Math.round(Math.max(0, Math.min(x, vpW() - w))), y: Math.round(Math.max(0, Math.min(y, vpH() - h))) };
+  }
+  // Перетаскивание: сдвиг < 5 px — это нажатие, не перенос. Пока тянем, iframe не забирает мышь себе.
+  function dockDrag(el, start, move, end) {
+    el.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || (e.target && e.target.closest && e.target.closest('.b'))) return;
+      const sx = e.clientX, sy = e.clientY, base = start(); let moved = false;
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      if (dock && dock.frame) dock.frame.style.pointerEvents = 'none';
+      const mv = ev => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (!moved && Math.hypot(dx, dy) < 5) return; moved = true; move(base, dx, dy); };
+      const up = ev => {
+        el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+        if (dock && dock.frame) dock.frame.style.pointerEvents = '';
+        end(moved, ev.type === 'pointercancel');
+      };
+      el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    });
+  }
+  const dockKey = (el, fn) => el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+  function dockMenuTab() { try { chrome.runtime.sendMessage({ cmd: 'menu' }, () => void chrome.runtime.lastError); } catch (_) {} }
+  function dockOpen(open) { if (!dock) return; dock.open = !!open; dockSave({ open: dock.open }); dockSig = dockLay = ''; dockPaint(); }
+  function dockBuild() {
+    const host = document.createElement('div'); host.id = 'l2lite-dock';
+    host.style.cssText = 'all:initial;position:fixed;left:0;top:0;width:0;height:0;z-index:2147483646';
+    const sh = host.attachShadow({ mode: 'open' });
+    sh.innerHTML = '<style>'
+      + '[hidden]{display:none!important}'
+      + '.fab{position:fixed;box-sizing:border-box;font:600 12px/1 system-ui,sans-serif;padding:9px 12px;border:1px solid #d9a441;border-radius:16px;background:rgba(22,24,29,.92);'
+      + 'color:#e8e6e1;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:none;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.5)}'
+      + '.fab.on{background:rgba(46,125,50,.95);color:#fff}'
+      + '.win{position:fixed;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid #d9a441;border-radius:10px;background:#16181d;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.6)}'
+      + '.hd{flex:none;display:flex;align-items:center;gap:2px;height:30px;padding:0 3px 0 10px;background:#20232a;color:#e8e6e1;font:600 12px/1 system-ui,sans-serif;'
+      + 'cursor:move;user-select:none;-webkit-user-select:none;touch-action:none}'
+      + '.t{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.t i{font-style:normal;color:#9a9890;margin-right:5px}.t.on b{color:#5cb85f}'
+      + '.b{width:30px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;font:15px/1 system-ui,sans-serif}'
+      + '.b:hover,.b:focus-visible{background:#2c2f36;outline:none}'
+      + '.body{position:relative;flex:1;min-height:0}iframe{border:0;width:100%;height:100%;display:block;background:#16181d}'
+      + '.fail{position:absolute;inset:0;padding:16px;background:#16181d;color:#e8e6e1;font:13px/1.45 system-ui,sans-serif}'
+      + '.lnk{color:#d9a441;text-decoration:underline;cursor:pointer}'
+      + '@media (pointer:coarse){.fab{padding:12px 16px;font-size:14px}.b{width:40px;height:30px}.hd{height:36px}}'   // палец (Android): крупнее
+      + '</style>'
+      + '<div class="fab" role="button" tabindex="0"></div>'
+      + '<div class="win" hidden><div class="hd"><span class="t"><i>⠿</i><b>L2wap Lite</b></span>'
+      + '<div class="b tab" role="button" tabindex="0" title="Открыть меню отдельной вкладкой" aria-label="Открыть меню отдельной вкладкой">⧉</div>'
+      + '<div class="b min" role="button" tabindex="0" title="Свернуть в кнопку" aria-label="Свернуть в кнопку">—</div></div>'
+      + '<div class="body"><div class="fail" hidden>Меню Lite не загрузилось в окне. <span class="lnk" role="button" tabindex="0">Открыть меню во вкладке</span></div></div></div>';
+    const q = s => sh.querySelector(s), m = dockMem();
+    dock = { host, fab: q('.fab'), win: q('.win'), hd: q('.hd'), title: q('.t'), body: q('.body'), fail: q('.fail'), frame: null, frameT: 0, ok: false,
+      open: typeof m.open === 'boolean' ? m.open : vpW() >= 900, cap: false };
+    const d = dock;
+    // кнопка: нажатие — развернуть, перенос — запомнить место
+    dockDrag(d.fab, () => xy(d.fab), (b, dx, dy) => {
+      const p = dockPos({ x: b.x + dx, y: b.y + dy }, d.fab.offsetWidth, d.fab.offsetHeight, b); d.fab.style.left = p.x + 'px'; d.fab.style.top = p.y + 'px';
+    }, (moved, cancel) => { if (moved) dockSave({ fab: xy(d.fab) }); else if (!cancel) dockOpen(true); });
+    dockKey(d.fab, () => dockOpen(true));
+    // окно: тянем за шапку
+    dockDrag(d.hd, () => xy(d.win), (b, dx, dy) => {
+      const p = dockPos({ x: b.x + dx, y: b.y + dy }, d.win.offsetWidth, d.win.offsetHeight, b); d.win.style.left = p.x + 'px'; d.win.style.top = p.y + 'px';
+    }, moved => { if (moved) dockSave({ win: xy(d.win) }); });
+    const min = q('.min'), tab = q('.tab'), lnk = q('.lnk');
+    min.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockOpen(false); }); dockKey(min, () => dockOpen(false));
+    tab.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockMenuTab(); }); dockKey(tab, dockMenuTab);
+    lnk.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockMenuTab(); }); dockKey(lnk, dockMenuTab);
+    document.documentElement.appendChild(host);
+    dockSig = dockLay = '';
+  }
+  function dockLayout() {
+    const d = dock, m = dockMem(), open = d.open && !d.cap;
+    d.fab.hidden = open; d.win.hidden = !open;
+    if (open) {
+      const w = Math.min(DOCK_W, Math.max(240, vpW() - 16)), h = Math.min(DOCK_H, Math.max(200, vpH() - 16));
+      const p = dockPos(m.win, w, h, { x: vpW() - w - 8, y: 8 });
+      Object.assign(d.win.style, { left: p.x + 'px', top: p.y + 'px', width: w + 'px', height: h + 'px' });
+      if (!d.frame) {                            // меню грузится, только пока окно развёрнуто
+        const fr = document.createElement('iframe');
+        fr.src = chrome.runtime.getURL('popup.html#dock'); fr.title = 'L2wap Lite';
+        d.body.insertBefore(fr, d.fail); d.frame = fr; d.frameT = Date.now(); d.ok = false; d.fail.hidden = true;
       }
-      const on = !!cfg.on, sig = on + '|' + lastStatus;
-      if (sig === pillSig) return;
-      pillSig = sig;
-      pill.el.className = on ? 'on' : '';
-      pill.el.textContent = on ? 'Lite ▶' : 'Lite';
-      pill.el.title = `L2wap Lite — ${lastStatus || (on ? 'включён' : 'выключен')}. Нажмите, чтобы открыть меню.`;
+    } else {
+      if (d.frame) { d.frame.remove(); d.frame = null; d.ok = false; d.fail.hidden = true; }
+      const p = dockPos(m.fab, d.fab.offsetWidth || 64, d.fab.offsetHeight || 32, { x: vpW() - (d.fab.offsetWidth || 64) - 4, y: Math.round(vpH() * 0.45) });
+      d.fab.style.left = p.x + 'px'; d.fab.style.top = p.y + 'px';
+    }
+  }
+  function dockPaint() {
+    try {
+      if (dead) { if (dock) dock.host.remove(); dock = null; return; }
+      if (window.top !== window || !document.documentElement) return;
+      if (!dock || !dock.host.isConnected) dockBuild();
+      const d = dock, on = !!cfg.on;
+      d.cap = !!abLayer();
+      // окно не ответило «готово» за 8 с (чужой CSP, сбой расширения) — подсказка открыть меню во вкладке
+      if (d.frame && !d.ok && d.fail.hidden && Date.now() - d.frameT > 8000) d.fail.hidden = false;
+      const laySig = [on, d.open, d.cap, vpW(), vpH()].join('|'), sig = laySig + '|' + lastStatus;
+      if (sig === dockSig) return;
+      const lay = laySig !== dockLay; dockSig = sig; dockLay = laySig;
+      const st = lastStatus || (on ? 'включён' : 'выключен');
+      d.fab.className = on ? 'fab on' : 'fab';
+      d.fab.textContent = on ? 'Lite ▶' : 'Lite';
+      d.fab.title = `L2wap Lite — ${st}. Нажмите, чтобы развернуть окно бота; можно перетащить.`;
+      d.title.classList.toggle('on', on);
+      d.title.title = `L2wap Lite — ${st}. Перетащите за шапку, чтобы подвинуть окно.`;
+      if (lay) dockLayout();
     } catch (e) {}
   }
+  // меню в окне сообщает «готово» (popup.js, #dock); origin — своё расширение (в Firefox moz-extension://<uuid>)
+  window.addEventListener('message', e => {
+    if (!dock || !e.data || e.data.__l2liteDock !== 'ready') return;
+    if (e.origin !== EXT_ORIGIN && !/^(?:chrome|moz)-extension:\/\//.test(String(e.origin))) return;
+    dock.ok = true; dock.fail.hidden = true;
+  });
+  window.addEventListener('resize', () => { if (dock) dockPaint(); });
 
   // ---------- главный цикл ----------
   let progT = Date.now(), lastPg = '';
@@ -934,7 +1035,7 @@
     } catch (e) { setRt({ locsT: Date.now() - 11 * 3600000 }); } finally { locsRefresh.busy = false; }
   }
   async function tick() {
-    pillPaint();
+    dockPaint();
     if (!ready || dead) { await sleep(500); return; }
     if (!owner) { await sleep(1000); return; }
     void locsRefresh();

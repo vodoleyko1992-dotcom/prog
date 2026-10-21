@@ -6,7 +6,8 @@
 //   (бот замирает, ни одного клика) → игрок прошёл её → охота дальше; Стоп.
 // Сценарий C (Lite 1.1): задержки сервера (ход 150 мс, GET /character 300 мс, откат атаки 200 мс): удар→удар без лишних пауз
 //   (медиана < 600 мс, Lite 1.0 — 530–585 мс), клики не теряются, второй ход не уходит, пока первый ждёт ответа 7 с.
-// В C же (1.2.1): язычок «Lite» на странице игры открывает меню во вкладке, повторный клик новую не плодит, при Старте — «Lite ▶».
+// В C же (1.4): окно меню на странице игры — свёрнуто на узком экране, «—» сворачивает в плавающую кнопку, кнопка и окно
+//   перетаскиваются и помнят место после перезагрузки, поджимаются при сужении окна, «⧉» — меню во вкладке, Старт из окна → «Lite ▶».
 // Сценарий D (Lite 1.2): быстрый удар — галка ВКЛ по умолчанию; ВЫКЛ → ВКЛ на модели основного 20.42 (ход 0,4 с, GET /character 0,35 с).
 // Сценарий E (Lite 1.3, John: «это сборка под БХ, а нужна под дестра»): у героя активен сабкласс Bounty Hunter, Титан — слот 2:
 //   меню предупреждает и не показывает скиллы БХ, после Старта бот ничего не жмёт; в игре переключили на Титана — охота пошла,
@@ -335,10 +336,19 @@ async function scenarioB() {
     // проверка активности: сервер отвечает 423 — бот замирает, никаких кликов, пока игрок не пройдёт её
     S.antibot = 1;
     await until(() => S.abActs >= 1, 30000, 'капча выдана');
+    // 1.4: окно Lite не закрывает «Проверку активности» — пока она на экране, окно свёрнуто в кнопку, потом снова развёрнуто
+    const win = h.game.locator('#l2lite-dock .win'), fab = h.game.locator('#l2lite-dock .fab');
+    await win.waitFor({ state: 'visible', timeout: 5000 });
+    await h.game.evaluate(() => { const d = document.createElement('div'); d.id = 'l2-antibot-layer'; d.innerHTML = '<div class="l2-antibot-card__options">Перевірка: натисніть символи</div>'; document.body.appendChild(d); });
+    await fab.waitFor({ state: 'visible', timeout: 5000 });
+    assert.equal(await win.isVisible(), false, 'окно поверх проверки активности');
     const n0 = S.acts.length;
     await delay(5000);
     assert.equal(S.acts.length, n0, 'во время проверки активности ни одного хода');
     assert.match((await h.rt()).status, /КАПЧА/);
+    await h.game.evaluate(() => document.getElementById('l2-antibot-layer').remove());
+    await win.waitFor({ state: 'visible', timeout: 5000 });
+    assert.equal(await h.game.evaluate(() => JSON.parse(localStorage.getItem('l2lite-dock') || 'null')), null, 'капча не меняет выбор игрока');
     await h.game.evaluate(() => fetch('/game/antibot/challenge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }));
     const k1 = S.hero.mobsKilled;
     await until(() => S.hero.mobsKilled > k1, 60000, 'охота после проверки');
@@ -347,7 +357,7 @@ async function scenarioB() {
     const n1 = S.acts.length; await delay(3000); assert.ok(S.acts.length - n1 <= 1, 'после Стопа ходов нет');
     assert.deepEqual(h.errors, []);
     if (process.env.LITE_LOG) console.log(logText(await h.rt()), '\nходы:', S.acts.join(','));
-    console.log('PASS B: «где стоит герой» → смерть → город → статуя (бафф + восстановление) → телепорт назад → капча: бот замер → пройдена → охота; Стоп');
+    console.log('PASS B: «где стоит герой» → смерть → город → статуя (бафф + восстановление) → телепорт назад → капча: бот замер, окно Lite свёрнуто, пока она на экране → пройдена → охота; Стоп');
   } catch (e) { console.error('DIAG B', { acts: h.S.acts.slice(-30).join(','), buffer: h.S.buffer, tp: h.S.tp, url: h.game.url(), log: logText(await h.rt().catch(() => ({}))), errors: h.errors }); throw e; }
   finally { await h.ctx.close(); }
 }
@@ -359,22 +369,79 @@ async function scenarioC() {
     S.hero.battleHotbarSlots = S.hero.battleHotbarSlots.filter(x => x.a === 'attack' || x.a === 'l2_190');
     await h.game.goto('https://l2wap.com/map.html');
     await until(async () => (await h.rt()).locs?.length === 2, 20000, 'локации');
-    // 1.2.1 (John: «нет даже меню вызова»): язычок «Lite» на странице игры открывает меню во вкладке; второй клик — та же вкладка
-    const pill = h.game.locator('#l2lite-pill div');
-    await pill.waitFor({ timeout: 5000 });
-    assert.equal(await pill.textContent(), 'Lite');
-    const [menu] = await Promise.all([h.ctx.waitForEvent('page', { timeout: 5000 }), pill.click()]);
+    // 1.4 (John: «кнопка сворачивающая окно бота… как плавающая кнопка, захотел свернул, захотел развернул»): окно меню на странице игры
+    const g = h.game, win = g.locator('#l2lite-dock .win'), fab = g.locator('#l2lite-dock .fab'), hd = g.locator('#l2lite-dock .hd');
+    const box = async l => { const b = await l.boundingBox(); return b && { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }; };
+    const mem = () => g.evaluate(() => JSON.parse(localStorage.getItem('l2lite-dock') || 'null'));
+    const dockFrame = async () => { const el = await until(() => g.$('#l2lite-dock iframe'), 5000, 'iframe меню'); return el.contentFrame(); };
+    const menuReady = fr => until(() => fr.evaluate(() => document.documentElement.classList.contains('dock') && !!document.getElementById('run').onclick), 8000, 'меню в окне');
+    async function drag(l, dx, dy) {
+      const b = await l.boundingBox(), x = b.x + Math.min(40, b.width / 2), y = b.y + b.height / 2;
+      await g.mouse.move(x, y); await g.mouse.down(); await g.mouse.move(x + dx, y + dy, { steps: 8 }); await g.mouse.up();
+    }
+    // узкий экран (телефон) — сначала свёрнуто в кнопку; на широком — окно открыто
+    await g.setViewportSize({ width: 600, height: 800 });
+    await g.evaluate(() => localStorage.removeItem('l2lite-dock')); await g.reload();
+    await fab.waitFor({ state: 'visible', timeout: 5000 });
+    assert.equal(await fab.textContent(), 'Lite'); assert.equal(await win.isVisible(), false);
+    assert.equal(await g.$('#l2lite-dock iframe'), null, 'свёрнутое окно не грузит меню');
+    await g.setViewportSize({ width: 1280, height: 720 }); await g.reload();
+    await win.waitFor({ state: 'visible', timeout: 5000 });
+    assert.equal(await fab.isVisible(), false);
+    let wb = await box(win);
+    assert.ok(wb.x + wb.w <= 1280 && wb.x + wb.w >= 1240 && wb.y <= 10 && wb.w === 392 && wb.h === 640, 'окно у правого края ' + JSON.stringify(wb));
+    await menuReady(await dockFrame());
+    // поиск кнопок бота по тексту окна не видит (shadow DOM), стиль игры — тоже
+    assert.equal(await g.evaluate(() => [...document.querySelectorAll('a,button,[role=button]')].some(e => /Lite|⧉|—/.test(e.textContent))), false);
+    // «—» → плавающая кнопка; меню выгружено; запомнено
+    await g.locator('#l2lite-dock .min').click();
+    await fab.waitFor({ state: 'visible', timeout: 3000 });
+    assert.equal(await win.isVisible(), false); assert.equal(await g.$('#l2lite-dock iframe'), null);
+    assert.equal((await mem()).open, false);
+    // перетащили кнопку — окно не открылось, место запомнено
+    const f0 = await box(fab);
+    await drag(fab, -300, -150);
+    const f1 = await box(fab);
+    assert.ok(Math.abs(f1.x - (f0.x - 300)) <= 3 && Math.abs(f1.y - (f0.y - 150)) <= 3, 'кнопка перетащена ' + JSON.stringify([f0, f1]));
+    assert.equal(await win.isVisible(), false, 'перенос кнопки не разворачивает окно');
+    assert.deepEqual((await mem()).fab, { x: f1.x, y: f1.y });
+    // нажали кнопку — окно снова, перетащили окно за шапку
+    await fab.click();
+    await win.waitFor({ state: 'visible', timeout: 3000 });
+    await menuReady(await dockFrame());
+    wb = await box(win);
+    await drag(hd, -500, 40);
+    const w1 = await box(win);
+    assert.ok(Math.abs(w1.x - (wb.x - 500)) <= 3 && Math.abs(w1.y - (wb.y + 40)) <= 3, 'окно перетащено ' + JSON.stringify([wb, w1]));
+    assert.deepEqual((await mem()).win, { x: w1.x, y: w1.y }); assert.equal((await mem()).open, true);
+    // после перезагрузки страницы — там же и развёрнуто; окно браузера сузили — окно поджалось и осталось на экране
+    await g.reload();
+    await win.waitFor({ state: 'visible', timeout: 5000 });
+    assert.deepEqual(await box(win), w1);
+    const frT = Date.now(), fr = await dockFrame();
+    await menuReady(fr);
+    await g.setViewportSize({ width: 700, height: 500 }); await delay(300);
+    const w2 = await box(win);
+    assert.ok(w2.x >= 0 && w2.y >= 0 && w2.x + w2.w <= 700 && w2.y + w2.h <= 500 && w2.h === 484, 'окно в пределах экрана ' + JSON.stringify(w2));
+    await g.setViewportSize({ width: 1280, height: 720 }); await delay(300);
+    // «⧉» — то же меню во вкладке; второй раз — та же вкладка
+    const [menu] = await Promise.all([h.ctx.waitForEvent('page', { timeout: 5000 }), g.locator('#l2lite-dock .tab').click()]);
     await menu.waitForLoadState();
     assert.ok(menu.url().endsWith('/popup.html#tab'), menu.url());
-    await until(() => menu.evaluate(() => document.documentElement.classList.contains('tab') && !!document.getElementById('run').onclick), 5000, 'меню во вкладке');
     const nPages = h.ctx.pages().length;
-    await h.game.bringToFront(); await pill.click(); await delay(1000);
+    await g.bringToFront(); await g.locator('#l2lite-dock .tab').click(); await delay(1000);
     assert.equal(h.ctx.pages().length, nPages, 'второй клик открыл ещё одну вкладку');
-    await menu.close();
+    await menu.close(); await g.bringToFront();
+    // меню в окне ответило «готово» — подсказки «не загрузилось» нет и через 8 с
+    await delay(Math.max(0, 9000 - (Date.now() - frT)));
+    assert.equal(await g.locator('#l2lite-dock .fail').isVisible(), false, 'подсказка «меню не загрузилось» при работающем меню');
+    // Старт прямо из окна на странице, свернули — кнопка зелёная «Lite ▶»
+    await fr.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт из окна');
+    await g.locator('#l2lite-dock .min').click();
+    await until(async () => (await fab.textContent()) === 'Lite ▶' && /\bon\b/.test(await fab.getAttribute('class')), 5000, 'кнопка «включён»');
     const pp = await h.popup();
-    await pp.click('#run');
-    await h.game.bringToFront();
-    await until(async () => (await pill.textContent()) === 'Lite ▶', 5000, 'язычок «включён»');
+    await g.bringToFront();
     await until(() => S.acts.length >= 25, 60000, '25 ходов');
     // ход по ответу сервера: удар→удар внутри одного боя (без победы между ходами)
     const gaps = S.actT.slice(1).map((t, i) => t - S.actT[i]).filter(x => x < 3000).sort((a, b) => a - b), med = gaps[gaps.length >> 1];
@@ -388,7 +455,7 @@ async function scenarioC() {
     assert.ok(med < 600, 'удар→удар, медиана ' + med + ' мс (Lite 1.0 на этой модели — 530–585 мс и 2 потерянных клика)');
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
     assert.deepEqual(h.errors, []);
-    console.log(`PASS C: язычок «Lite» открывает меню во вкладке (повторно — ту же); ход 150 мс + GET /character 300 мс → удар→удар медиана ${med} мс, потерянных кликов ${lost}; второй ход не ушёл, пока первый 7 с ждал ответа`);
+    console.log(`PASS C: окно Lite на странице игры: свёрнуто на узком экране, «—» → плавающая кнопка, перенос кнопки/окна запомнен, поджимается при сужении, «⧉» — вкладка, Старт из окна → «Lite ▶»; ход 150 мс + GET /character 300 мс → удар→удар медиана ${med} мс, потерянных кликов ${lost}; второй ход не ушёл, пока первый 7 с ждал ответа`);
   } catch (e) { console.error('DIAG C', { acts: h.S.acts.slice(-30).join(','), overlap: h.S.overlap, url: h.game.url(), log: logText(await h.rt().catch(() => ({}))), errors: h.errors }); throw e; }
   finally { await h.ctx.close(); }
 }
