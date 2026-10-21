@@ -6119,6 +6119,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get weaponNow(){return ()=>L2V7Modules.c
   get SPOIL_LOOT() { return SPOIL_LOOT; }, set SPOIL_LOOT(value) { SPOIL_LOOT = value; },
   get SPOIL_OK() { return SPOIL_OK; }, set SPOIL_OK(value) { SPOIL_OK = value; },
   get SWEEP_OK() { return SWEEP_OK; }, set SWEEP_OK(value) { SWEEP_OK = value; },
+  get cdLeft() { return cdLeft; },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get extraMobs() { return extraMobs; }, set extraMobs(value) { extraMobs = value; },
