@@ -421,7 +421,7 @@ async function forumFinish(g, active) {
 async function forumUncertain(why, active) {
   if (!active()) return;
   env.rec('B', 'локации', `${why}; повторная оплата телепорта запрещена`);
-  await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`);
+  await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
 }
 
 async function zoneGoStep() {                     // полёт: Телепорт → раскрыть город → «Телепорт» у нужной зоны
@@ -438,7 +438,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
   }
   // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
   if (g.id === 'ashen_bastion' && g.returnPath === '/ashen-bastion.html') {
-    const fail = async why => { if (active()) { env.rec('B', 'локации', `Ashen Bastion: ${why} — фарм в другой зоне остановлен`); await env.pauseBot(`Возврат в Ashen Bastion: ${why}`); } };
+    const fail = async why => { if (active()) { env.rec('B', 'локации', `Ashen Bastion: ${why} — фарм в другой зоне остановлен`); await env.pauseBot(`Возврат в Ashen Bastion: ${why}`, { fault: true }); } };   // 20.43: сервер лежит — ждём его
     if (location.pathname === g.returnPath) { await env.setRt({ zoneGo: null, zonePend: null, zone: 'ashen_bastion' }); return; }
     if (g.sentAt) { await fail('результат телепорта не подтверждён; повторная оплата запрещена'); return; }
     if (!isTeleport()) { env.setStatus('Маммон: возвращаюсь в Ashen Bastion'); location.href = '/teleport.html'; await env.sleep(4000); return; }

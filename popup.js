@@ -232,7 +232,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champM
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -281,7 +281,7 @@ async function liveStatusInto(rt) {
   return rt;
 }
 async function load() {
-  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
+  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
   await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
@@ -309,6 +309,8 @@ async function load() {
     if (!on || heartbeatValid) { if (w) wakeWarnSet(null); paintWakeWarn(false); }
     else if (w) paintWakeWarn(true, w.text);
     else paintWakeWarn(!booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000, WAKE_NOTAB); }
+  { const line = on ? '' : selfStopLine(stopMeta, paused), w = $('stopWarn');   // 20.43: причина самоостановки — постоянной строкой
+    if (w) { if (w.textContent !== line) w.textContent = line; w.hidden = !line; } }
   // 20.12 (ревизия 17.10, UI-6): версия — только в подвале; строка героя короче, шапка не выше 200 px
   $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
@@ -1987,6 +1989,19 @@ function paymentPendingView(rt, now = Date.now()) {
   const sum = Number.isFinite(+p.quote?.amount) ? `${(+p.quote.amount).toLocaleString('ru')} ${p.quote.currency || ''}`.trim() : '';
   const min = Math.max(0, Math.floor((now - (+p.at || now)) / 60000));
   return { id: p.id, char: p.char || rt.char || '', text: `Ждёт сверки: ${what}${sub}${p.evidence?.name ? ' «' + p.evidence.name + '»' : ''}${sum ? ' · ' + sum : ''} · ${min ? min + ' мин назад' : 'только что'}. Бот не повторит её, пока не подтвердит результат; бесплатные задачи идут.` };
+}
+// 20.43 (разбор 21.10): бот встал сам («Персонаж погиб», «3 смерти за 30 минут», «Клик по мобу 3 раза…», сторож «3 перезагрузки…»,
+// пауза «выход из Ashen не подтверждён») — в меню было только «Бот остановлен — Выберите, чем заняться», причина пряталась в подсказке
+// у мыши (на планшете не видна), а при стопе сторожа rt.status вообще оставался прежним действием. Теперь — постоянная строка из stopMeta
+// фона (#stopWarn под кнопками, переносится по словам, а не обрезается) — только для своих остановок (content-halt/content-pause/watchdog),
+// не для Стопа/Паузы из меню, Alt+Shift+B, Esc ×2 и импорта памяти; после Старта (stopMeta.resumed) строка исчезает. Пауза от бота —
+// только пока пауза записана (paused).
+function selfStopLine(meta, paused, now = Date.now()) {
+  const src = String(meta?.source || ''), pause = src === 'content-pause';
+  if (!meta || meta.resumed || !['content-halt', 'content-pause', 'watchdog'].includes(src) || pause && !paused || !(+meta.t > 0)) return '';
+  const t = new Date(+meta.t), day = new Date(now).toDateString() === t.toDateString() ? '' : ' ' + t.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' });
+  const at = `${day} в ${t.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`, why = String(meta.reason || 'причина не записана').slice(0, 240);
+  return pause ? `Сам встал на паузу${at}: ${why}` : src === 'watchdog' ? `Остановлен сторожем${at}: ${why}` : `Остановлен сам${at}: ${why}`;
 }
 function workspaceState(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
