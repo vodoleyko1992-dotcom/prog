@@ -25,8 +25,8 @@ description: Сборка новой версии L2wap Bot — поднять �
 5. **Zip**:
    ```
    rm -f l2wap-bot-vX.Y.Z.zip
-   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' 'kb/*' 'docs/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
-   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|kb/\|docs/\|\.git/\|\.claude/\|CHANGELOG-"   # 0
+   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' 'kb/*' 'docs/*' 'lite/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
+   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|kb/\|docs/\|lite/\|\.git/\|\.claude/\|CHANGELOG-"   # 0
    ```
 6. **Загрузка zip в Chromium**: распаковать во временную папку scratchpad и
    `NODE_PATH=$(npm root -g) node tests/tools/zipload.cjs <папка>` → версия, 0 ошибок консоли, ключевые значения cfg.
@@ -40,3 +40,7 @@ description: Сборка новой версии L2wap Bot — поднять �
 - `node tests/tools/firefox-build.cjs <папка>` → `l2wap-bot-vX.Y.Z-firefox.zip` (фоновая страница, gecko id `l2wap-bot@local`, gecko + gecko_android 128+, без полей Chrome).
 - Проверка: `npx web-ext lint -s <распакованная папка>` (0 ошибок); смоук в настоящем Firefox — скачать Firefox ESR (download.mozilla.org, product=firefox-esr-latest-ssl) и geckodriver (github mozilla/geckodriver), `npm i selenium-webdriver` в scratchpad, затем `FIREFOX=… GECKODRIVER=… NODE_PATH=… node tests/tools/firefox-smoke.cjs <zip>` и с `--android`.
 - Новый вызов chrome.* в background/popup — проверить, есть ли он в Firefox для Android (нет: commands, notifications, значок action, captureVisibleTab) → `?.` и try.
+
+## L2wap Lite (облегчённый бот Дестра, папка lite/) — отдельная сборка
+- Только по просьбе игрока. `node tests/tools/lite-build.cjs <папка>` → `l2wap-lite-v<версия>.zip` (Chrome) и `l2wap-lite-v<версия>-firefox.zip` (gecko id `l2wap-lite@local`, 128+).
+- Версия — `lite/manifest.json` (`version`, `version_name`), тест `tests/lite-manifest.test.js`. В основной пакет lite/ не входит.

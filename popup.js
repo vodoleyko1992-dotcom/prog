@@ -565,6 +565,7 @@ function renderFishTgt(rt, d) {
     + (T.done ? ` · ${new Date(T.doneT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` : left ? ` · осталось ${fmt(left)}` : '')
     + (T.final && !T.done ? '\n⏳ Цель достигнута — сдаю улов на Proof, затем остальные задачи' : '') + eta
     + (T.max>T.min ? `\nВыбрано ${T.n} из ${T.min}–${T.max}` : '')
+    + (typeof L2EngineCore !== 'undefined' ? `\nЦель на игровые сутки${T.day ? ' ' + T.day : ''}: после сброса — новая цель${T.max > T.min ? ' из диапазона' : ''}, счёт с нуля · ${L2EngineCore.dailyResetText(Date.now(), rt)}` : '')   // 20.43
     + `\nпоставлена ${new Date(T.t).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${rt.fishProof != null ? ` · всего Proof: ${fmt(rt.fishProof)}` : ''}`;
 }
 $('fishTgtSet').onclick = async () => {

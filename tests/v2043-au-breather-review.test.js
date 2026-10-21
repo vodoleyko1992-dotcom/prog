@@ -178,7 +178,7 @@ function loopBox({ tasks = null, mode = 'farm', hold = null, rt: rt0 = {}, cfg: 
       tvt: { tvtHold: () => false, tvtWait: note('tvtWait') }, actions: { dispatch: note('dispatch'), canAct: () => true }, fishing: { castReconcile: note('castReconcile') },
       mammon: { mmTick: note('mmTick'), mmStep: note('mmStep') }, subclass: { tick: async () => {} }, story: { storyTick: note('storyTick'), storyStep: note('storyStep') },
       tvtshop: { shopStep: async () => false }, dailies: { tick: note('dailiesTick'), clanStep: note('clanStep'), dailyStep: note('dailyStep') },
-      warlock: { step: note('warlockStep') }, epics: { epicPollTick: note('epicPoll'), epicScanAll: note('epicScanAll') },
+      warlock: { step: note('warlockStep'), raidPrepare: async () => false }, epics: { epicPollTick: note('epicPoll'), epicScanAll: note('epicScanAll') },
       buffs: { townBuffStart: note('buyBuffs') }, payments: { blocked: () => false, pending: () => null } } };
   c.autonomyMode = () => { const t = E.selectedTask(c.cfg, c.rt); return t === 'quests' ? 'campaign' : t === 'auto' ? 'farm' : t || mode; };
   vm.createContext(c); vm.runInContext(HOLD_SRC + '\n' + TB_SRC + '\n' + LOOP_SRC, c);

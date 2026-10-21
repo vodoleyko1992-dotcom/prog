@@ -25,7 +25,7 @@ test('сбой /game/time не перекрывает PvP-восстановле
  vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),c);
  // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
  // 20.43 (автономность): новый шаг передышки loopSelfHold — здесь без передышки; 20.43 (ревью au/breather): + ожидание loopSelfHoldWait после служб
- for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])c[key]=async()=>false;
+ for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])c[key]=async()=>false;
  c.loopSideJobs=async()=>{events.push('services');return true};await c.mainTick();assert.deepEqual(events,['pvp','pvp','services']);
 });
 test('без серверного stamp новый фарм закрыт, повтор GET ограничен15с',async()=>{

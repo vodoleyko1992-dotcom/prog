@@ -44,8 +44,9 @@ async function scenario(stop){
   assert.equal(pendingViews,1,'пока новый документ грузится, старый не перечитывает список целей');
   assert.equal(pendingPaths,1,'одна выбранная цель даёт одну навигацию, без перезапуска загрузки');
   assert.equal(duplicateLoads.length,0,'старый экран победы не запускает battleOpen заново');
-  if(pendingState)assert.equal(pendingState.target.name,'Nephilim Praetorian');
+  // 20.43 (лог 21.10: путь к обычному мобу катакомб без ожидания записи): цель уходит в хранилище отложенно, при уходе со страницы (pagehide)
   await until(()=>h.g.p.url().endsWith('spawnId='+next),15000);
+  if(pendingState)await until(async()=>(await h.get(['rt'])).rt.target?.name==='Nephilim Praetorian',5000);
   await until(()=>h.g.core('typeof on!=="undefined"'),10000);
   if(stop){assert.ok(stoppedAt>nextStarted&&stoppedAt<nextFulfilled,'Stop пришёл во время загрузки, до нового документа');await delay(700);assert.equal(firstAction,0,'Stop до загрузки нового боя запрещает удар');assert.equal(await h.g.core('on'),false);}
   else{await until(()=>firstAction,10000);assert.ok(firstAction-nextFulfilled<2800,'новый документ не ждёт таймаут старой навигации');await h.click('stop');await until(async()=>!(await h.get(['on'])).on);}

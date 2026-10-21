@@ -11,7 +11,7 @@ vm.runInNewContext(slice(enchantCore,'function coreFixture(){',"test('выбра
 
 test('охранная строка цикла — один помощник, старого повтора нет',()=>{
  assert.equal((steps.match(/if \(!on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant'\) continue;/g)||[]).length,0);
- assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,21);
+ assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,27); // 20.43: +5 в loopStartPrep, +1 в сторож (призыв тура РБ)
  assert.match(steps,/const loopStale = \(\) => !on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant';/);
  // в шагах нет continue/break — только return true / LOOP_BREAK (иначе шаг не выйдет из круга)
  const bodies=steps.slice(steps.indexOf('async function mainTick()'));
@@ -25,7 +25,7 @@ test('mainTick: шаги в прежнем порядке',()=>{
  // 20.43 (ревью au/breather): loopSelfHold только завершает истёкшую передышку, а ждёт loopSelfHoldWait — после всех служб, перед туром и
  // основной работой (Маммон, квесты, дейлики, команды меню и сверка оплаты на передышке идут)
  // 20.43 (слияние au/travel + au/breather): loopSelfHold (круг не держит) → loopTravel (сверка перелёта идёт и на передышке) → список задач
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};

@@ -392,13 +392,16 @@
       return Promise.resolve({ ok: true, deferred: true });
     }
     function peek() { return { ...current.inflight, ...current.pending, ...current.later }; }
+    // 20.43 (лог 21.10: путь к мобу катакомб больше не ждёт записи): при уходе со страницы пакет в полёте уже передан фону —
+    // повторно шлём только неотправленное, иначе тот же пакет писался дважды и задерживал замок новой страницы
+    function unsent() { return { ...current.pending, ...current.later }; }
     function recover() { promote(current); return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
     function clear() { if (current.laterT != null) timers.clear(current.laterT); current = fresh(); }
     // 20.41 (ревью): изменение из меню новее ещё не отправленных значений тех же ключей (отложенная статистика держится до 8 с).
     // Пакет уже в полёте тоже: peek() больше не возвращает его старые значения в память вкладки, а неудачная отправка не вернёт их
     // в очередь (inflight — тот же объект, что batch). Уже отправленное отсекает фон по menuRev.
     function drop(keys) { for (const k of keys) { delete current.pending[k]; delete current.later[k]; delete current.inflight[k]; } }
-    return { enqueue, defer, peek, recover, clear, drop };
+    return { enqueue, defer, peek, unsent, recover, clear, drop };
   }
 
   // 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: 40 FA за 572 боя, чемпионов из них 18 — обычным боям остаётся ≥ 22 FA на 554 боя,
@@ -435,6 +438,7 @@
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
   const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
+    'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
   root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
