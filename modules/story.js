@@ -88,17 +88,109 @@ function charNote(ch) {
   if (ch.classBranch && String(ch.classBranch) !== env.rt.classBranch) env.setRt({ classBranch: String(ch.classBranch).slice(0, 20) });
   const cs = ch.classSlots, slot = cs && Number.isFinite(+cs.activeSlot) ? +cs.activeSlot : null;
   const prof = ch.l2Profession || (slot != null && cs.slots?.find?.(x => +x?.slot === slot)?.profession) || '';
-  if (prof) classNote(String(prof), slot, +ch.level || 0);
+  const slotProfs = Array.isArray(cs?.slots) ? cs.slots.map(x => x?.profession).filter(Boolean).map(String) : null;
+  if (prof) classNote(String(prof), slot, +ch.level || 0, slotProfs);
 }
 const profName = p => String(p || '?').replace(/^(human|elf|dark_elf|orc|dwarf)_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-function classNote(prof, slot, lvl) {
+// 20.43 (лог 21.10 22:01–22:03: John повысил Bounty Hunter → Fortune Seeker в слоте 1): память класса ключуется профессией, и повышение
+// в том же слоте считалось сменой класса — замеры BH (358 КБ) ушли в classStash[dwarf_bounty_hunter] навсегда (вниз профессия не
+// меняется), Fortune Seeker начал с нуля; так же лежал human_warlock после Warlock → Arcana Lord. Повышение узнаём по дереву профессий
+// Interlude («профессия:предыдущая», имя без расы и разделителей): память класса остаётся. Другая ветка/раса — смена класса, как раньше
+const PROF_TREE = {
+  human: 'warrior:fighter knight:fighter rogue:fighter gladiator:warrior warlord:warrior paladin:knight darkavenger:knight treasurehunter:rogue hawkeye:rogue duelist:gladiator '
+    + 'dreadnought:warlord phoenixknight:paladin hellknight:darkavenger adventurer:treasurehunter sagittarius:hawkeye wizard:mystic cleric:mystic sorcerer:wizard '
+    + 'necromancer:wizard warlock:wizard bishop:cleric prophet:cleric archmage:sorcerer soultaker:necromancer arcanalord:warlock cardinal:bishop hierophant:prophet',
+  elf: 'knight:fighter scout:fighter templeknight:knight swordsinger:knight plainswalker:scout silverranger:scout evatemplar:templeknight swordmuse:swordsinger '
+    + 'windrider:plainswalker moonlightsentinel:silverranger wizard:mystic oracle:mystic spellsinger:wizard elementalsummoner:wizard elder:oracle mysticmuse:spellsinger '
+    + 'elementalmaster:elementalsummoner evasaint:elder',
+  dark_elf: 'palusknight:fighter assassin:fighter shillienknight:palusknight bladedancer:palusknight abysswalker:assassin phantomranger:assassin shillientemplar:shillienknight '
+    + 'spectraldancer:bladedancer ghosthunter:abysswalker ghostsentinel:phantomranger wizard:mystic shillienoracle:mystic spellhowler:wizard phantomsummoner:wizard '
+    + 'shillienelder:shillienoracle stormscreamer:spellhowler spectralmaster:phantomsummoner shilliensaint:shillienelder',
+  orc: 'raider:fighter monk:fighter destroyer:raider tyrant:monk titan:destroyer grandkhavatari:tyrant shaman:mystic overlord:shaman warcryer:shaman dominator:overlord doomcryer:warcryer',
+  dwarf: 'scavenger:fighter artisan:fighter bountyhunter:scavenger warsmith:artisan fortuneseeker:bountyhunter maestro:warsmith',
+};
+const PROF_UP = Object.fromEntries(Object.entries(PROF_TREE).map(([r, s]) => [r, Object.fromEntries(s.split(' ').map(x => x.split(':')))]));
+const PROF_NODE = Object.fromEntries(Object.entries(PROF_UP).map(([r, up]) => [r, new Set([...Object.keys(up), ...Object.values(up)])]));
+const RACE_ADJ = { elf: /^elven/, dark_elf: /^dark/, orc: /^orc/, dwarf: /^dwar(?:f|ven)/ };
+// 'dwarf_fortune_seeker' → { race: 'dwarf', n: 'fortuneseeker' }; «Elven Elder», «Dark Wizard», «Orc Raider», «Eva's Templar», «Mage» — к узлам дерева
+function profKey(p) {
+  const m = String(p || '').toLowerCase().match(/^(dark_elf|human|elf|orc|dwarf)_(.+)$/); if (!m) return null;
+  const race = m[1], node = s => ({ mage: 'mystic', evastemplar: 'evatemplar', evassaint: 'evasaint' })[s] || s;
+  let n = node(m[2].replace(/[^a-z]/g, ''));
+  if (!PROF_NODE[race].has(n) && RACE_ADJ[race]?.test(n)) n = node(n.replace(RACE_ADJ[race], ''));
+  return { race, n };
+}
+// from — предок to в дереве той же расы: глубина 1…4, иначе 0
+function profUp(from, to) {
+  const a = profKey(from), b = profKey(to);
+  if (!a || !b || a.race !== b.race || a.n === b.n) return 0;
+  for (let n = PROF_UP[b.race][b.n], d = 1; n && d <= 4; n = PROF_UP[b.race][n], d++) if (n === a.n) return d;
+  return 0;
+}
+// Память двух профессий одного класса: своё у новой (newer) важнее, из старой — только то, чего у новой нет (словари — по ключам).
+// Замер РБ и его владелец — из одного источника; владелец-старая профессия → новая (raid.rbOwnerOk сравнивает с classCur.prof).
+// Квест профессии старой — пройден (иначе ★-цели прошлого квеста): не переносим. Память боя — не больше 80 целей (fightlab MEM_MAX)
+function memMerge(newer, older, from, to) {
+  const n = newer || {}, o = older || {}, out = {};
+  for (const k of CLASS_KEYS) {
+    const a = n[k], b = k === 'profQuest' ? null : o[k];
+    out[k] = a == null ? b ?? null : b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b) ? { ...b, ...a } : a;
+  }
+  for (const g of [['rbDps', 'rbDpsContext', 'rbDpsOwner'], ['rbLossK', 'rbLossKOwner']]) { const s = n[g[0]] != null || o[g[0]] == null ? n : o; for (const k of g) out[k] = s[k] ?? null; }
+  for (const k of ['rbDpsOwner', 'rbLossKOwner']) if (from && out[k] === from) out[k] = to;
+  const fm = out.fightMem;
+  if (fm && fm !== n.fightMem && typeof fm === 'object' && Object.keys(fm).length > 80)
+    out.fightMem = Object.fromEntries(Object.entries(fm).sort((x, y) => (y[1]?.t || 0) - (x[1]?.t || 0)).slice(0, 80));
+  return out;
+}
+const packed = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null));
+// Записи тайника — прежние профессии классов, которые есть сейчас (предки активной или, если слоты известны, профессии слота):
+// ближние первыми. Профессия, которая сама стоит в слоте, и запись с двумя возможными наследниками — не трогаем
+function deadOf(stash, cur, slots) {
+  const heirs = [...new Set([cur, ...(slots || [])].filter(Boolean))], out = [];
+  for (const P of Object.keys(stash || {})) {
+    if (!stash[P] || typeof stash[P] !== 'object' || P === cur || slots?.includes(P)) continue;
+    const qs = heirs.map(Q => [Q, profUp(P, Q)]).filter(x => x[1] > 0);
+    if (qs.length === 1) out.push({ P, Q: qs[0][0], d: qs[0][1] });
+  }
+  return out.sort((x, y) => x.d - y.d);
+}
+// 20.43: разовая чистка (content.js once classPromo2043) по снимку rt: { stash, active: {ключ класса: значение}, moved: [[старая, новая]] }
+// или null. Слоты неизвестны (rt.subSlots нет) — только предки активной профессии
+function stashPromote(src) {
+  const st = src?.classStash; if (!st || typeof st !== 'object' || Array.isArray(st)) return null;
+  const cur = String(src.classCur?.prof || ''), slots = Array.isArray(src.subSlots) && src.subSlots.length ? src.subSlots.map(x => String(x?.prof || '')).filter(Boolean) : null;
+  const stash = { ...st }, mine = {}, active = {}, moved = [];
+  for (const k of CLASS_KEYS) mine[k] = src[k] ?? null;
+  let live = mine;
+  for (const { P, Q } of deadOf(st, cur, slots)) {
+    if (Q === cur) live = memMerge(live, st[P], P, Q);
+    else stash[Q] = { ...(stash[Q] || {}), ...packed(memMerge(stash[Q], st[P], P, Q)), t: Math.max(+stash[Q]?.t || 0, +st[P].t || 0) };
+    delete stash[P]; moved.push([P, Q]);
+  }
+  for (const k of CLASS_KEYS) if (live[k] !== mine[k]) active[k] = live[k];
+  return moved.length ? { stash, active, moved } : null;
+}
+function classNote(prof, slot, lvl, slotProfs) {
   const cur = env.rt.classCur;
   if (cur?.prof === prof) { if (slot != null && cur.slot !== slot) env.setRt({ classCur: { ...cur, slot } }); return false; }
   if (!cur?.prof) { env.setRt({ classCur: { prof, slot, t: Date.now() } }); return false; }   // первый раз — просто запоминаем
+  // 20.43: повышение профессии (тот же слот или слот неизвестен) — не смена класса: замеры остаются, квест прошлой профессии пройден
+  if (profUp(cur.prof, prof) && (slot == null || cur.slot == null || slot === cur.slot)) {
+    const patch = { classCur: { prof, slot: slot ?? cur.slot ?? null, t: Date.now() }, classSwT: Date.now(), faSnap: null, hudLong: {}, profQuest: null };
+    for (const k of ['rbDpsOwner', 'rbLossKOwner']) if (env.rt[k] === cur.prof) patch[k] = prof;
+    env.setRt(patch);
+    env.classSwitched?.();
+    env.rec('B', 'класс', `профессия: ${profName(cur.prof)} → ${profName(prof)}${lvl ? ' ' + lvl + ' ур.' : ''} (тот же класс${slot != null ? ', слот ' + slot : ''}) · замеры скиллов, кота, зон и РБ сохранены; новые умения поставь на панель боя`);
+    return true;
+  }
   const stash = { ...(env.rt.classStash || {}) }, mine = {};
   for (const k of CLASS_KEYS) if (env.rt[k] != null) mine[k] = env.rt[k];
   stash[cur.prof] = { ...mine, t: Date.now() };
-  const back = stash[prof] || {}, patch = {};
+  // 20.43: профессию повысили, пока активным был другой класс или бот был выключен: память прежней профессии этого класса — новой
+  let back = stash[prof] || {}; const prev = [];
+  for (const { P, Q } of deadOf(stash, prof, slotProfs)) if (Q === prof && P !== cur.prof) { back = { ...memMerge(back, stash[P], P, prof), t: Math.max(+back.t || 0, +stash[P].t || 0) }; delete stash[P]; prev.push(profName(P)); }
+  const patch = {};
   for (const k of CLASS_KEYS) patch[k] = back[k] ?? null;
   delete stash[prof];
   // баффы сняты и кот отозван сменой класса, а не смертью: снимок платных баффов и «длинные» баффы шапки — заново (не «смерть сняла…»)
@@ -106,7 +198,7 @@ function classNote(prof, slot, lvl) {
   env.setRt(patch);
   try { sessionStorage.setItem('l2bot.classSw', String(Date.now())); } catch (e) {}
   env.classSwitched?.();
-  env.rec('B', 'класс', `смена класса: ${profName(cur.prof)} → ${profName(prof)}${lvl ? ' ' + lvl + ' ур.' : ''} · баффы сняты, кот отозван (игра) · замеры скиллов, кота, зон и РБ — ${back.t ? 'свои с прошлого раза' : 'с нуля'}; панель боя проверь под этот класс`);
+  env.rec('B', 'класс', `смена класса: ${profName(cur.prof)} → ${profName(prof)}${lvl ? ' ' + lvl + ' ур.' : ''} · баффы сняты, кот отозван (игра) · замеры скиллов, кота, зон и РБ — ${prev.length ? 'прежней профессии (' + prev.join(', ') + ')' : back.t ? 'свои с прошлого раза' : 'с нуля'}; панель боя проверь под этот класс`);
   return true;
 }
 async function getJson(path) {
@@ -272,6 +364,6 @@ async function storyStep() {
 }
 // 10.0 (лог 12.10 12:01: заказ Маммона висел, пока шла цепочка): готовую часть есть смысл сдать — цепочку прерываем после боя
 function chainWant() { const w = want(); if (!w || !env.awayFree(true)) return null; const z = env.rt.zone; return z && !/^out:/.test(z) ? w : null; }
-return { chainWant, Q, CLASS_KEYS, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line, onNet, paymentReconcile };
+return { chainWant, Q, CLASS_KEYS, profUp, stashPromote, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line, onNet, paymentReconcile };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

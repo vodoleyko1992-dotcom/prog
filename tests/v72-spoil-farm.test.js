@@ -62,6 +62,9 @@ const load = (file, extra = {}) => { const sb = { console, Date, Math, document:
   assert.equal(both[0].tp, 'z1', 'лучшая зона по дропу + спойлу');
   assert.equal(vm.runInContext(`rt = { ...DEF_RT, prof: 'Bounty Hunter' }; cfg = mergeCfg({}); canSpoil()`, ctx), true);
   assert.equal(vm.runInContext(`rt = { ...DEF_RT, prof: 'Warlock' }; cfg = mergeCfg({}); canSpoil()`, ctx), false);
-  assert.equal(vm.runInContext(`rt = { ...DEF_RT, prof: 'Warlock' }; cfg = mergeCfg({ nSpoil: 'Spoil' }); canSpoil()`, ctx), true);
+  // 20.43 (логи 21.10 13:21/13:30): роль «Спойл» одна на ник — у мага она от спойлера; в счёт, только если класс неизвестен или знает Spoil
+  assert.equal(vm.runInContext(`rt = { ...DEF_RT, prof: 'Warlock' }; cfg = mergeCfg({ nSpoil: 'Spoil' }); canSpoil()`, ctx), false);
+  assert.equal(vm.runInContext(`rt = { ...DEF_RT, prof: 'Warlock', skillDb: { spoil: { name: 'Spoil' } } }; cfg = mergeCfg({ nSpoil: 'Spoil' }); canSpoil()`, ctx), true);
+  assert.equal(vm.runInContext(`rt = { ...DEF_RT }; cfg = mergeCfg({ nSpoil: 'Spoil' }); canSpoil()`, ctx), true);
   console.log('PASS: spoiler — spoil loot counted as the resource, no Sweeper, source mobs ignore the level window, zone by drop + spoil');
 })().catch(e => { console.error(e); process.exit(1); });
