@@ -45,12 +45,18 @@ test('R2: страница, логово подтверждено — второ
   assert.ok(m.logs.some(l => /после платного телепорта карта не загрузилась после 3 обновлений — пробую подтверждённое логово \(за адену\), страницей второй раз не иду/.test(l)));
 });
 
-test('R2: логово не подтверждено — промах логова (пауза логова 6 ч), дальше логово за адену не повторяется каждые 30 мин', async () => {
+// 20.43 (ревью fx/raid): сбой карты — не довод, что неподтверждённое логово неверное. Первый такой сбой — только счёт промаха (без паузы 6 ч:
+// иначе дальше эпик шёл страницей за Coin of Luck вместо логова за адену); второй подряд — пауза логова 6 ч, логово за адену не повторяется
+test('R2: логово не подтверждено — промах логова учтён; пауза логова 6 ч — со второго сбоя карты подряд', async () => {
   const { m } = arriveMapFail('zone', { seenZone: LAIR });
   await m.E.epicStep();
   const d = m.env.rt.epicDb.orfen;
-  assert.equal(d.lairMiss, 1); assert.ok(d.lairBadT > 0); assert.match(d.why, /^логово: карта не загрузилась после 3 обновлений/);
-  assert.equal(m.E.epicLair('orfen', Date.now() + 31 * MIN).ok, false, 'через 30 мин логово не выбирается снова');
+  assert.equal(d.lairMiss, 1); assert.ok(!d.lairBadT, '20.43 (ревью fx/raid): первый сбой карты — без паузы логова'); assert.match(d.why, /^логово: карта не загрузилась после 3 обновлений/);
+  assert.equal(m.E.epicLair('orfen', Date.now() + 31 * MIN).ok, true, 'через 30 мин — снова логово за адену');
+  const n = arriveMapFail('zone', { seenZone: LAIR, lairMiss: 1 }).m;
+  await n.E.epicStep();
+  assert.equal(n.env.rt.epicDb.orfen.lairMiss, 2); assert.ok(n.env.rt.epicDb.orfen.lairBadT > 0);
+  assert.equal(n.E.epicLair('orfen', Date.now() + 31 * MIN).ok, false, 'второй сбой подряд — через 30 мин логово не выбирается снова');
 });
 
 test('R2: подтверждённое логово — первый промах учитывается (второй подряд — пауза логова 6 ч)', async () => {
@@ -84,7 +90,9 @@ test('R3: перелёты запрещены после циклов — эпи
   assert.equal(d.lairMiss, undefined); assert.equal(d.lairBadT, undefined); assert.equal(m.fires.length, 0);
   assert.equal(m.env.rt.epic.step, 'pick'); assert.ok(Math.abs(d.skipT - m.env.rt.actionBan.zoneGo.until) < 2 * MIN, 'отсрочка — до конца запрета');
   assert.match(d.why, /перелёт в логово Sea of Spores запрещён до \d\d:\d\d \(Маршрут zoneGo: более 10 переходов/);
-  assert.equal(m.E.epicRoute('orfen').via, 'zone', 'дорога по-прежнему логово, а не платная страница');
+  // 20.43 (ревью fx/raid): при запрете эпик с дорогой в логово больше не выбирается (подготовка не покупала бы баффы зря) — и платной
+  // страницы вместо логова по-прежнему нет
+  { const r = m.E.epicRoute('orfen'); assert.equal(r.via, '', 'дорога — не платная страница'); assert.match(r.why, /перелёт в логово Sea of Spores запрещён до/); }
   // запрет кончился — обычный путь: резерв адены и маршрут в логово
   const n = goLair({ actionBan: ban({ until: Date.now() - 1 }) });
   await n.E.epicStep();
