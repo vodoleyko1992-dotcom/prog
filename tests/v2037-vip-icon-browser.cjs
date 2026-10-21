@@ -64,7 +64,7 @@ async function scenario(tc){
   }else if(tc.price){
    await until(()=>posts.length>0,25000);
    assert.equal(rejected,0,'Greater требует skillId; отправлен неверный запрос: '+JSON.stringify(posts));
-   await until(()=>catalogCalls>=2,25000);await delay(1200);assert.equal(posts.length,1,'новая цена проверяется перед следующей иконкой');
+   await until(()=>catalogCalls>=2,25000);await delay(1200);assert.equal(posts.filter(x=>x.set==='greater').length,1,'новая цена проверяется перед следующей иконкой');assert.ok(posts.every(x=>x.set==='greater'||x.set==='resists'&&x.status===200),'20.43: бесплатные резисты не зависят от цены Greater');
    assert.equal(posts[0].expectedFeeCoinOfLuck,0);assert.equal(posts[0].feeAtRequest,0);await until(()=>h.g.core('!!L2V7Modules.buffs.vipSession()'),15000);assert.equal(await h.g.core('L2V7Modules.buffs.vipSession()?.ready'),false,'неполный эффект не выдаётся за готовую VIP-связку');
    await h.click('stop');
   }else{
@@ -77,8 +77,10 @@ async function scenario(tc){
    assert.deepEqual(buffs.filter(b=>GROUP.includes(b.skillId)).map(b=>b.skillId),[tc.want],'один выбранный Greater вместо несовместимого набора');
    assert.ok(buffs.some(b=>b.skillId===NOBLESSE));
    for(const skill of baseRow.skills)assert.ok(buffs.some(b=>b.skillId===skill.skillId&&b.level>=skill.level),'класс-набор сохранён '+skill.skillId);
-   assert.ok(posts.every(q=>q.set==='greater'&&Number.isSafeInteger(q.skillId)&&q.expectedFeeAdena==='0'&&q.expectedFeeCoinOfLuck===0),'только точные бесплатные icon-запросы');
-   assert.deepEqual(posts.map(q=>q.skillId).sort((a,b)=>a-b),(tc.existing&&!tc.explicit?[NOBLESSE]:[NOBLESSE,tc.want]).sort((a,b)=>a-b));
+   // 20.43: бесплатные «resists» из каталога берутся отдельной кнопкой без skillId; основной набор не повторяется.
+   assert.ok(posts.every(q=>(q.set==='greater'&&Number.isSafeInteger(q.skillId)||q.set==='resists'&&q.skillId==null)&&q.expectedFeeAdena==='0'&&q.expectedFeeCoinOfLuck===0),'только точные бесплатные icon-запросы и резисты');
+   assert.ok(posts.filter(q=>q.set==='resists').length<=1,'резисты не дольше одного запроса');
+   assert.deepEqual(posts.filter(q=>q.set==='greater').map(q=>q.skillId).sort((a,b)=>a-b),(tc.existing&&!tc.explicit?[NOBLESSE]:[NOBLESSE,tc.want]).sort((a,b)=>a-b));
    await until(()=>h.g.core('L2V7Modules.buffs.vipSession()?.ready===true'),15000); // возврат создал новый isolated world
    const state=await h.get(['rt']);assert.equal(state.rt.actionPayments?.pending??null,null);
    await h.click('stop');
