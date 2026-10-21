@@ -49,6 +49,7 @@ test('loopTaskList: [тур, фарм], тур на передышке посл�
   assert.deepEqual(rt.rbHunt, rbHunt, 'маршрут тура цел'); assert.ok(!p.writes.some(w => Object.hasOwn(w, 'rbHunt')), 'rbHunt не стирается');
   assert.ok(!p.recs.some(r => /несовместимые маршруты: .*rbHunt/.test(r)));
   // передышка кончилась — тот же маршрут снова исполняется (без нового выбора и оплаты)
+  // 20.43 (ревью): для этого тур сначала бесплатно открывает карту (rt.rbResume) — прилёт/бой вне карты на настоящем raid.js: v2043-fx-hold-review
   rt.selfHold = null; assert.equal(E.selectedTask(cfg, rt), 'raid'); assert.equal(E.taskJobAllowed(cfg, 'rbHunt', rt), true);
 });
 

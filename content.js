@@ -1654,7 +1654,10 @@ async function selfHoldStart(kind, why, opt = {}) {
     // такой сбой сразу снова ведёт к стопу
     if (on) return null;
     // остановлены: счёт вида начинается заново — новый Старт игрока даёт ещё 3 передышки
-    await setRt({ [logKey]: { ...(rt[logKey] || {}), [kind]: [] } });
+    // 20.43 (автономность, доводка 21.10, ревью): у вида raidMap/epicMap счёта два — передышки проверки карты (selfHoldLog, mapGate) и
+    // отсрочки на прилёте (selfHoldDefer). Обнулялся только сработавший: стоп по 4-й отсрочке оставлял 3 передышки mapGate, и после Старта
+    // первый же сбой карты сразу снова вёл к стопу «3 передышки за 6 ч не помогли». Теперь настоящий стоп обнуляет вид в обоих журналах
+    await setRt({ selfHoldLog: { ...(rt.selfHoldLog || {}), [kind]: [] }, selfHoldDefer: { ...(rt.selfHoldDefer || {}), [kind]: [] } });
     return 'stop';
   }
   const log = opt.noCount ? (logs[kind] || []) : plan.log;
@@ -3359,9 +3362,40 @@ async function loopSelfHold() {
   const all = L2EngineCore.selfHoldMap(rt), ended = Object.keys(all).filter(k => !L2EngineCore.selfHoldValid(all[k], rt));
   if (!ended.length && Object.keys(all).length) return;
   const rest = Object.fromEntries(Object.entries(all).filter(([k]) => !ended.includes(k)));
-  const saved = await setRt({ selfHold: Object.keys(rest).length ? rest : null });
+  // 20.43 (автономность, доводка 21.10, ревью): кончилась передышка тура, а его маршрут стоит на оплаченном прилёте или бое (arrive/fight) —
+  // метка rt.rbResume: перед шагом тура сначала бесплатно открыть карту (raidResumeMap), см. ниже
+  const H = rt.rbHunt, tour = ended.some(k => all[k]?.task === 'raid' || all[k]?.mode === 'raid') && !!H?.id && ['arrive', 'fight'].includes(H.step);
+  const saved = await setRt({ selfHold: Object.keys(rest).length ? rest : null, ...(tour ? { rbResume: { id: H.id, step: H.step, at: Date.now() } } : {}) });
   if (saved?.ok === false || !on || !tabOwner) return true;
   for (const k of ended) selfHoldEndNote(all[k]);
+}
+// 20.43 (автономность, доводка 21.10, ревью): сохранённый маршрут тура после передышки сам по себе повторную оплату не убирал. Пример:
+// [тур, рыбалка], stall-передышка тура на шаге arrive/fight после подтверждённого платного перелёта, рыбалка увела вкладку на
+// /fishing.html (герой с места не двигался). После передышки шаг arrive видел прилёт старше 60 с не на карте и сдавался («после телепорта
+// не попал на карту», rbGoTried) — выбор вне карты вёл к шагу go и платному телепорту к другому РБ; шаг fight сразу уходил в выбор вне
+// карты — тоже платный телепорт, даже к тому же раненому РБ, стоящему рядом. Теперь перед шагом тура сначала бесплатно /map.html (до
+// минуты), затем тур решает сам: прилёт получает свежее окно (at) и ищет цель на этой карте, итог боя и выбор («он здесь, на этой карте:
+// без телепорта») видят карту. Цели здесь нет — дальше обычные правила тура: неизвестная оплата по-прежнему блокирует платное, квитанции
+// и счётчики телепортов не трогаются.
+const RB_RESUME_MS = 30 * 60000, RB_RESUME_NAV_MS = 60000;
+async function raidResumeMap() {
+  const R = rt.rbResume, H = rt.rbHunt, now = Date.now(); if (!R) return false;
+  if (!H || H.id !== R.id || !['arrive', 'fight'].includes(H.step) || !(now - (+R.at || 0) < RB_RESUME_MS)) { await setRt({ rbResume: null }); return false; }
+  if (isFishing() && fishState()) { await fishFight(); await sleep(30); return true; }   // начатое вываживание доводим
+  // из Ashen Bastion карта не открывается (см. mapGate) — там решает сам тур, со свежим окном прилёта
+  if (!isMap() && !/\/ashen-bastion\.html$/i.test(location.pathname) && !(R.navAt && now - R.navAt >= RB_RESUME_NAV_MS)) {
+    if (R.navAt) { setStatus(`Тур РБ: после передышки открываю карту — ${H.name || 'цель'} без нового перелёта`); await sleep(1500); return true; }
+    if ((await setRt({ rbResume: { ...R, navAt: now } }))?.ok === false || !on || !tabOwner) return true;
+    rec('B', 'тур РБ', `${H.name || H.id}: передышка окончена — сначала бесплатно открываю карту здесь; платный перелёт только если цели здесь нет`);
+    setStatus(`Тур РБ: после передышки открываю карту — ${H.name || 'цель'} без нового перелёта`);
+    if (await rtCommit() && on && tabOwner && !antibotState() && L2V7Modules.actions?.canAct?.() !== false) location.href = '/map.html';
+    await sleep(3000); return true;
+  }
+  // на карте (или она не открылась за минуту) — тур продолжает сам; прилёт — со свежим окном: до минуты до карты, 25 с на поиск цели
+  const saved = await setRt({ rbResume: null, ...(H.step === 'arrive' ? { rbHunt: { ...H, at: now, mapLoadT: 0, mapLoadReloads: 0 } } : {}) });
+  if (saved?.ok === false || !on || !tabOwner) return true;
+  if (!isMap() && R.navAt) rec('B', 'тур РБ', `${H.name || H.id}: карта после передышки не открылась за минуту — дальше по обычным правилам тура`);
+  return false;
 }
 // Основная работа текущего режима/задачи на передышке (сервисы выше уже отработали этот круг)
 const selfHoldMain = () => !!rt.selfHold && !!selfHoldNow();
@@ -3389,7 +3423,8 @@ async function loopTaskList() {
     if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.retireRaidSession = { start: rt.rbSess.start ?? null };
     // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке (L2EngineCore.taskJobHeld) — не «несовместимый»: он хранится до конца
     // передышки (иначе тур после подтверждённого платного перелёта начинал с выбора и платил за тот же перелёт снова), но не исполняется —
-    // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала
+    // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала. Ревью: после передышки тур сначала бесплатно
+    // открывает карту (rt.rbResume, raidResumeMap) — иначе прилёт/бой вне карты всё равно уходили к платному выбору
     const held = [];
     for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) { if (L2EngineCore.taskJobHeld?.(cfg,key,rt)) held.push(key); else blocked[key] = null; }
@@ -3652,6 +3687,7 @@ async function loopRaid() {
   // персонажа, раньше чем диспетчер снимет запрещённый маршрут, и без отметки времени вне тура — каждый круг
   if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
       && Date.now() - (rt.invTourT || 0) > 30 * 60000 && !routeBanned('invScan')) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }
+  if (autonomyMode() === 'raid' && !isBattle() && rt.rbResume && await raidResumeMap()) return true;   // 20.43 (доводка 21.10, ревью): после передышки тура — сначала бесплатно карта
   if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); return true; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
   if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn() && !routeBanned('invScan')) { await invScanStart(); return true; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
   // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
