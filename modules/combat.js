@@ -2638,7 +2638,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     }
   }
   debuffGainFlush(ctx).catch(e => console.warn(env.TAG, 'выгода дебаффов', e));   // 7.2.1
-  try { warlordSkipNote(ctx); } catch (e) {}   // 20.13 (шаг 7, combat/C6)
+  try { warlordSkipNote(ctx); } catch (e) { env.quietErr?.('агро Warlord', e); }   // 20.13 (шаг 7, combat/C6); 20.43 (разбор 21.10): ошибка — в журнал
   if (ctx.pet) { try { petTick(ctx); petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))).catch(e => console.warn(env.TAG, 'статистика кота', e)); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   env.trackEfficiency(rewards.exp + (ctx.extraCredited?.exp || 0), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));

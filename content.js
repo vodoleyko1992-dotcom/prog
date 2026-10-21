@@ -1385,6 +1385,12 @@ function quietErr(tag, e) {
   const n = q.n; q.n = 0; q.t = Date.now();
   try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
 }
+// 20.43 (разбор 21.10): тихие ошибки модулей — в журнал (env.quietErr). Сбой записи памяти setRt не бросает (возвращает {ok:false}, его
+// пишет очередь rtWriter), поэтому .catch у записей тура РБ и try/catch вокруг обучения ловили только ошибки самого кода — TypeError в
+// расчёте молча ломал прогноз РБ. Ошибка кода — отдельным тегом «ошибка кода: …»; сеть и разбор ответа (SyntaxError JSON) — своим тегом,
+// а с codeOnly не пишутся вовсе. Одна строка на тег раз в 10 мин, в журнал — только текст ошибки
+const codeErr = e => ['TypeError', 'ReferenceError', 'RangeError'].includes(e?.name) && !/fetch|network|load failed/i.test(String(e?.message || ''));
+function modErr(tag, e, codeOnly = false) { const code = codeErr(e); if (code || !codeOnly) quietErr(code ? `ошибка кода: ${tag}` : tag, e); }
 // 20.13 (ревизия 17.10, шаг 7, аудит «Код»): пустые catch вокруг записи памяти (setRt/rtWriter) и замка вкладки глушили
 // потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
@@ -1916,14 +1922,14 @@ async function farmGuideSync(why = 'раз в сутки') {
     await setRt({ farmGuideT: Date.now(), farmN: Object.keys(db.res).length, farmGuideReq: null });
     rec('B', 'фарм', `источники из игры (${why}): ресурсов ${m.n}, источников дропа ${m.dr}, спойла ${m.sp}${+j?.resourceTeleportAdenaCost ? ` · телепорт к точке ${(+j.resourceTeleportAdenaCost).toLocaleString('ru')} адены` : ''}`);
     return true;
-  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(() => {}); return false; }
+  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(e => modErr('справочник фарма', e)); return false; }
   finally { farmGuideBusy = false; }
 }
 function farmGuideTick() {                        // фоном, только GET; нужна цели Маммона, цели «Фарм ресурса» и помощнику основного
-  if (rt.farmGuideReq) { farmGuideSync('по кнопке').catch(() => {}); return; }
+  if (rt.farmGuideReq) { farmGuideSync('по кнопке').catch(e => modErr('справочник фарма', e)); return; }   // 20.43: ошибки — в журнал
   if (cfg.mmFarmGuide === false || !(cfg.mmGoalItem || (cfg.farmRes || '').trim() || (cfg.subMainNick || '').trim())) return;
   if (Date.now() - (rt.farmGuideT || 0) < FARM_GUIDE_EVERY) return;
-  farmGuideSync().catch(() => {});
+  farmGuideSync().catch(e => modErr('справочник фарма', e));
 }
 // цель фарма: из меню (ресурс + сколько) или ресурс главы кампании («Нужно сдать: Stone of Purity 48/50»)
 function farmGoal() {
@@ -2158,8 +2164,12 @@ const fmtT = sec => { if (!isFinite(sec)) return '∞'; const s = Math.max(0, Ma
 // перейти на страницу спавна и кликнуть его строку (через обработчик карты)
 async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...args); }
 
+// 20.43 (разбор 21.10): «Тур РБ» + «На месте» — в простое и подготовке тура бьём мобов там, где стоим. Раньше выбранный тур забирал
+// задачу целиком: rbIdleMap писал «жду новые РБ… фарм мобов сейчас не выбран», а map() уходил в tasksIdle, хотя галка фарма стоит.
+// Только фарм на месте: при выбранном туре cfg.zoneAuto/catMode остаются false, автофарм и катакомбы (платные перелёты) по-прежнему ждут.
+const raidIdleFarm = () => Array.isArray(cfg.autoTasks) && L2EngineCore.selectedTask(cfg,rt) === 'raid' && L2EngineCore.taskAllowed(cfg,'farm');
 async function map(...args) {
-  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
+  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !raidIdleFarm() && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
   if(!await dailyWorkReady('mobs'))return;
   return L2V7Modules.mobfarm.map(...args);
 }
@@ -3325,7 +3335,7 @@ async function loopSideJobs() {
   if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); return true; }
   if (loopStale()) return true;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
   // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
-  if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(() => {});
+  if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
   if (L2EngineCore.taskAllowed(cfg,'quests') && await L2V7Modules.story.storyStep()) { await sleep(200); return true; }
   if (loopStale()) return true;
   // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
@@ -5472,7 +5482,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
@@ -5525,7 +5535,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
@@ -6054,7 +6064,7 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get actionGeneration(){return ()=>au
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 
 // 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
-L2V7Modules.story = L2V7Factories.story({ get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+L2V7Modules.story = L2V7Factories.story({ get quietErr(){return modErr}, get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; }, get on() { return on; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 
