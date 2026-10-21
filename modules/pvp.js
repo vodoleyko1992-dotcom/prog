@@ -115,7 +115,8 @@ function pick(){
  if(Date.now()-state.heroesT>15000)return null;
  return state.heroes.map(h=>({h,t:targets()[h.id]})).find(x=>!verdict(x.t,x.h))||null;
 }
-function occupied(){const r=env.rt;return !!(r.autoLs?.hold||r.autoLs?.pending)||env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtHold?.()||env.tvtSoon?.()}
+// 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
+function occupied(){const r=env.rt;return !!(r.autoLs?.hold||r.autoLs?.pending)||env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.travelCheck||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtHold?.()||env.tvtSoon?.()}
 async function selfRefresh(T,maxAge=30000){
  if(!state.self||state.self.char!==T.char||Date.now()-state.self.t>maxAge){
   if(!state.selfIdentity||state.selfIdentity.char!==T.char||Date.now()-state.selfIdentity.t>maxAge){

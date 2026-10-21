@@ -651,7 +651,8 @@ async function noteBattle(ctx) {
   const kept = Object.fromEntries(Object.entries(all).sort((a,b) => (+b[1].at || 0) - (+a[1].at || 0)).slice(0, COHORT_MAX));
   await env.setRt({ petCohorts: kept });
 }
-const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
+// 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
+const chainBlocked = () =>!!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.travelCheck || !!env.rt.bagCheck || !!env.rt.revive;
 return { autoEnableClass, classAutoTick, raidPrepare, raidReady, raidBlocked, raidHoldUntil, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
