@@ -25,3 +25,11 @@
 Изучены Armor Mastery3, Create Common Item1, Lucky1, Wild Sweep1, Spoil1. Каталог /character/magister?npcId=30344 содержит19 навыков: Weapon Mastery1 доступен за310SP, но обучение не выполнялось. Spoil Festival не изучен, цена13000SP при668. Подсказка Spoil прямо говорит об автоматическом попадании дополнительных предметов в сумку после смерти: отдельный Sweeper не нужен; новый боевой тест этого здесь не выполнялся.
 
 Исходный C-комплект восстановлен точно, активен спойлер40 в Oren вне боя. Возвращены те же22 skillId баффов: basic бесплатно, восемь по1FA и1363 за5FA; сроки начались заново. Бесплатное восстановление: HP7130/7130, MP629/629. Итог revision313286: адена344184698 без изменений, CoL310 без изменений, FA146→133. Единственная разница суммарного инвентаря —13FA; EXP/SP/навыки/панель/склад не изменились. Браузерный сеанс закрыт.
+
+## 21.10.2026: смена класса ботом (вкладка «Сабкласс», modules/subgo.js)
+
+- Телепорт POST /game/teleport {teleportId:'oren', expectedAdenaCost, expectedRevision} ставит героя прямо к Maestro Reorin (82956, 53162): nearClassMaster сразу true. С VIP цена 0 (baseAdenaCost 12 000).
+- POST /character/subclasses/switch {slot, expectedRevision} — 1,0–1,4 с. Снимает баффы и отзывает голема/слугу. Переход Arcana Lord 78 → Warsmith 49 снял в сумку всё надетое (остались пояс/плащ/тату); FS 76 ← Warsmith оставил C-комплект.
+- Надеть: POST /character/equip {action:'equip', itemId, enchant, targetInstanceId, [enchantPAtkBonus, enchantMAtkBonus], expectedRevision} ≈0,35–0,75 с; снять: {action:'unequip', slot}. Токен как у игры: клановая вещь — `bag:<id>:<ench>:<clanUid>` (без UID «Предмета немає в сумці»), ЛС на оружии — `bag:<id>:<ench>:aug-<uid>`, заточенное оружие — `bag:<id>:<ench>:<pAtkBonus>:<mAtkBonus>[:трек]`, остальное `bag:<id>:<ench>`.
+- Вторая серьга/кольцо при одном свободном слоте встаёт во второй слот (le2/lr2). При обоих занятых — сначала unequip.
+- Полное переодевание: FS 15 запросов ≈10 с, Arcana Lord 8 ≈4 с, Warsmith 12 ≈5 с. Во время проб revision менялась и без нас (409 revision_conflict → serverRevision в ответе, повтор).
