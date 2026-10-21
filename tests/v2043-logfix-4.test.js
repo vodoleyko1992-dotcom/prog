@@ -173,41 +173,92 @@ test('Start на уже открытой странице списка по-пр
 });
 
 // ---------- confirmed16/17: отчёт обучения ----------
-function learnCore(stored) {
-  const ctx = { console, Date, Math, JSON, Object, Array, String, Number, cfg: {}, learnPk: () => 'craft', learnChange() {}, learnSaveSoon() {},
-    sessionStorage: { getItem: () => null }, chrome: { storage: { local: { get: async () => ({ learn: stored }) } } } };
+function learnCore(stored, o = {}) {
+  const changes = [];
+  const ctx = { console, Date, Math, JSON, Object, Array, String, Number, cfg: { ...(o.cfg || {}) }, learnPk: () => 'craft', learnSaveSoon() {},
+    learnChange: (kind, what) => changes.push(kind + ': ' + what), learnPage() {}, learnSelectors() {}, setTimeout() {}, setInterval() {},
+    sessionStorage: { getItem: () => null }, chrome: { storage: { local: { get: async () => { if (o.fail) throw new Error('storage'); return { learn: stored }; } } } } };
   vm.createContext(ctx);
-  vm.runInContext(cut('let LEARN = null', 'const learnSave =') + cut('const apiPath =', 'const netSeen =')
-    + '\nthis.api={learnLoad,learnApi,learnKey,apiPath,early:LEARN_EARLY,get L(){return LEARN}};', ctx);
-  return ctx.api;
+  vm.runInContext(cut('let LEARN = null', 'const learnSave =') + cut('const apiPath =', 'const netSeen =') + cut('function learnStart()', '// ошибки скрипта бота')
+    + '\nthis.api={learnLoad,learnApi,learnNet,learnStart,learnKey,apiPath,early:LEARN_EARLY,get boot(){return learnBoot},get L(){return LEARN}};', ctx);
+  return Object.assign(ctx.api, { changes, cfg: ctx.cfg });
 }
-test('ключ обучения сворачивает номер спавна/боя; apiPath прежний — rbInfoNote узнаёт РБ', () => {
+// поля ответа /game/spawn/<id>/info из отчёта обучения 21.10 13:30: у РБ свои, у катакомб и охраны эпика их нет
+const SPAWN_BASE = ['aggressive', 'drops', 'dropsSynthetic', 'icon', 'kind', 'level', 'name', 'npcId', 'rewardExp', 'rewardExpSynthetic', 'rewardSp', 'spawnId', 'spoil', 'stats', 'templateId', 'viewerMaySeeSpoil'];
+const RB_ONLY = ['canAttackRaidBoss', 'minRaidBossLevelForAttack', 'scrollDrops'];
+const spawnRes = (extra = []) => ({ status: 200, res: Object.fromEntries([...SPAWN_BASE, ...extra].map(k => [k, 1])) });
+const learnEmpty = () => ({ v: 1, t0: 1, sel: {}, pages: {}, api: {}, changes: [] });
+test('ключ обучения сворачивает номер спавна, вид спавна остаётся; apiPath прежний — rbInfoNote узнаёт РБ', () => {
   const c = learnCore();
-  assert.equal(c.learnKey('GET /game/spawn/l2dop_rb_25063/info'), 'GET /game/spawn/:id/info');
-  assert.equal(c.learnKey('GET /game/spawn/sdms_witch_012/info'), 'GET /game/spawn/:id/info');
-  assert.equal(c.learnKey('GET /game/siege/l2dop_dion/state'), 'GET /game/siege/l2dop_dion/state');
-  assert.equal(c.learnKey('GET /character/profession-quest/dwarf_artisan/status'), 'GET /character/profession-quest/dwarf_artisan/status');
-  assert.equal(c.learnKey('POST /game/battle/action'), 'POST /game/battle/action');
+  assert.equal(c.learnKey('GET /game/spawn/l2dop_rb_25063/info'), 'GET /game/spawn/l2dop_rb_:n/info');
+  assert.equal(c.learnKey('GET /game/spawn/sdms_saints_necropolis_012/info'), 'GET /game/spawn/sdms_saints_necropolis_:n/info');
+  assert.equal(c.learnKey('GET /game/spawn/sdms_necropolis_of_martyrdom_015/info'), 'GET /game/spawn/sdms_necropolis_of_martyrdom_:n/info');
+  assert.equal(c.learnKey('GET /game/spawn/l2dop_eg_29001_29002_0/info'), 'GET /game/spawn/l2dop_eg_:n/info');
+  for (const k of ['GET /game/siege/l2dop_dion/state', 'GET /character/profession-quest/dwarf_artisan/status', 'POST /game/battle/action',
+    'POST /game/news/7165a0e3-00fd-4e66-a8a1-267f7b49d476/read', 'GET /game/spawn/l2dop_rb_:n/info']) assert.equal(c.learnKey(k), k);
   const p = c.apiPath('/game/spawn/l2dop_rb_25063/info?x=1');
   assert.equal(p, '/game/spawn/l2dop_rb_25063/info'); assert.match(p, /^\/game\/spawn\/(l2dop_rb_\d+)\/info$/);
 });
-test('learnLoad: старые ключи со спавнами слиты, их «новый запрос API» убран; ранние запросы страницы дописаны (23:29:46 /game/craft/*)', async () => {
-  const e = { keys: {}, forms: {}, st: { 200: 1 } };
-  const c = learnCore({ v: 1, t0: 1, sel: {}, pages: {}, api: { 'GET /game/spawn/l2dop_rb_1/info': { ...e, n: 3, first: 5, last: 10 }, 'GET /game/spawn/l2dop_rb_2/info': { ...e, n: 2, first: 3, last: 20 }, 'GET /character': { ...e, n: 1, first: 1, last: 1 } },
-    changes: [{ kind: 'новый запрос API', what: 'GET /game/spawn/l2dop_rb_2/info (со страницы «map»)' }, { kind: 'новый запрос API', what: 'POST /game/mammon/teleport (со страницы «mammon»)' }, { kind: 'ответ API изменился', what: 'GET /character: новые поля x' }] });
-  c.early.push(['GET /game/craft/materials', { status: 200, res: { materials: [] } }], ['GET /game/spawn/l2dop_rb_7/info', { status: 200, res: {} }]);
-  await c.learnLoad();
-  const A = c.L.api;
-  assert.deepEqual(Object.keys(A).sort(), ['GET /character', 'GET /game/craft/materials', 'GET /game/spawn/:id/info']);
-  assert.equal(A['GET /game/spawn/:id/info'].n, 6); assert.equal(A['GET /game/spawn/:id/info'].first, 3);
-  assert.deepEqual(c.L.changes.map(x => x.what), ['POST /game/mammon/teleport (со страницы «mammon»)', 'GET /character: новые поля x']);
-  assert.equal(c.early.length, 0);
-  c.learnApi('GET /game/spawn/l2dop_rb_9/info', { status: 200, res: {} });
-  assert.equal(A['GET /game/spawn/:id/info'].n, 7);
+test('ревью: РБ×6, потом катакомбы и охрана эпика (и наоборот) — без ложного «ответ API изменился»', async () => {
+  for (const order of ['rb-first', 'sdms-first']) {
+    const c = learnCore(learnEmpty()); await c.learnLoad();
+    const rb = i => c.learnApi(`GET /game/spawn/l2dop_rb_${25000 + i}/info`, spawnRes(RB_ONLY));
+    const cat = i => c.learnApi(`GET /game/spawn/sdms_saints_necropolis_0${10 + i}/info`, spawnRes());
+    if (order === 'rb-first') { for (let i = 0; i < 6; i++) rb(i); cat(1); c.learnApi('GET /game/spawn/l2dop_eg_29001_29002_0/info', spawnRes()); }
+    else { for (let i = 0; i < 6; i++) cat(i); rb(1); }
+    assert.deepEqual(c.changes.filter(x => /ответ API изменился/.test(x)), [], order);
+    assert.ok(c.L.api['GET /game/spawn/l2dop_rb_:n/info'] && c.L.api['GET /game/spawn/sdms_saints_necropolis_:n/info'], order);
+  }
+  // настоящее изменение у РБ по-прежнему видно
+  const c = learnCore(learnEmpty()); await c.learnLoad();
+  for (let i = 0; i < 6; i++) c.learnApi(`GET /game/spawn/l2dop_rb_${25000 + i}/info`, spawnRes(RB_ONLY));
+  c.learnApi('GET /game/spawn/l2dop_rb_25099/info', spawnRes(['canAttackRaidBoss']));
+  assert.match(c.changes.join('\n'), /l2dop_rb_:n\/info: пропали поля minRaidBossLevelForAttack, scrollDrops/);
 });
-test('сетевой обработчик копит события до загрузки обучения (не больше 50); выключенное обучение копилку чистит', () => {
-  assert.match(content, /if \(LEARN\) try \{ learnApi\(key, secret \? \{\} : d\); \} catch \(er\) \{\}\n\s*else if \(LEARN_EARLY\.length < 50\) LEARN_EARLY\.push\(\[key, secret \? \{\} : d\]\);/);
-  assert.match(cut('function learnStart()', 'learnLoad().then'), /cfg\.autoLearn === false\) \{ LEARN_EARLY\.length = 0; return; \}/);
+test('learnLoad: старые ключи спавнов слиты по виду вместе со схемами; «новый запрос API» по ним убран; ранние запросы страницы дописаны (23:29:46 /game/craft/*)', async () => {
+  const rec = (n, keys, first, last) => ({ n, keys: Object.fromEntries(keys.map(k => [k, n])), forms: { success: { n, keys: Object.fromEntries(keys.map(k => [k, n])) } }, st: { 200: n }, first, last, page: 'map' });
+  const blk = [...SPAWN_BASE, ...RB_ONLY, 'raidBossAttackBlockedReasonUk'];
+  const c = learnCore({ v: 1, t0: 1, sel: {}, pages: {}, api: {
+      // первым — РБ, у которого все 5 ответов с причиной запрета: схема одного РБ не должна стать схемой всех РБ
+      'GET /game/spawn/l2dop_rb_25444/info': rec(5, blk, 5, 10),
+      'GET /game/spawn/l2dop_rb_25032/info': rec(10, [...SPAWN_BASE, ...RB_ONLY], 3, 20),
+      'GET /game/spawn/l2dop_rb_29056/info': rec(11, [...SPAWN_BASE, ...RB_ONLY], 4, 30),
+      'GET /game/spawn/sdms_saints_necropolis_023/info': rec(3, SPAWN_BASE, 7, 8),
+      'GET /character': { keys: {}, forms: {}, st: { 200: 1 }, n: 1, first: 1, last: 1 } },
+    changes: [{ kind: 'новый запрос API', what: 'GET /game/spawn/l2dop_rb_25032/info (со страницы «map»)' }, { kind: 'новый запрос API', what: 'POST /game/mammon/teleport (со страницы «mammon»)' }, { kind: 'ответ API изменился', what: 'GET /character: новые поля x' }] });
+  c.early.push(['GET /game/craft/materials', { status: 200, res: { materials: [] } }], ['GET /game/spawn/l2dop_rb_7/info', spawnRes(RB_ONLY)]);
+  await c.learnLoad();
+  const A = c.L.api, R = A['GET /game/spawn/l2dop_rb_:n/info'];
+  assert.deepEqual(Object.keys(A).sort(), ['GET /character', 'GET /game/craft/materials', 'GET /game/spawn/l2dop_rb_:n/info', 'GET /game/spawn/sdms_saints_necropolis_:n/info']);
+  assert.equal(R.n, 27); assert.equal(R.first, 3); assert.ok(R.last > 30, 'ранний запрос дописан'); assert.equal(R.st[200], 27);
+  assert.equal(R.forms.success.n, 27); assert.equal(R.forms.success.keys.raidBossAttackBlockedReasonUk, 5); assert.equal(R.forms.success.keys.canAttackRaidBoss, 27);
+  assert.deepEqual(c.L.changes.map(x => x.what), ['POST /game/mammon/teleport (со страницы «mammon»)', 'GET /character: новые поля x']);
+  assert.equal(c.early.length, 0); assert.equal(c.boot, false);
+  c.learnApi('GET /game/spawn/l2dop_rb_25999/info', spawnRes(RB_ONLY));
+  c.learnApi('GET /game/spawn/l2dop_rb_25444/info', spawnRes([...RB_ONLY, 'raidBossAttackBlockedReasonUk']));
+  assert.equal(R.n, 29); assert.deepEqual(c.changes, [], 'РБ без причины запрета и с ней — не изменение игры');
+});
+test('ревью: копилка только до первой загрузки — обучение выключено при открытии или хранилище не ответило — не копим', async () => {
+  // обычный путь: до загрузки копим (не больше 50), загрузка дописывает, дальше — сразу в обучение
+  let c = learnCore(learnEmpty());
+  for (let i = 0; i < 60; i++) c.learnNet('GET /game/craft/materials', { status: 200, res: { a: 1 } });
+  assert.equal(c.early.length, 50);
+  c.learnStart(); await new Promise(r => setImmediate(r));
+  assert.equal(c.L.api['GET /game/craft/materials'].n, 50); assert.equal(c.early.length, 0);
+  c.learnNet('GET /game/craft/materials', { status: 200, res: { a: 1 } }); assert.equal(c.L.api['GET /game/craft/materials'].n, 51);
+  // обучение выключено при открытии страницы, потом включено в меню без перезагрузки — ответы не копятся
+  c = learnCore(learnEmpty(), { cfg: { autoLearn: false } });
+  c.learnNet('GET /character', { status: 200, res: { a: 1 } }); assert.equal(c.early.length, 0);
+  c.learnStart(); assert.equal(c.boot, false); assert.equal(c.L, null);
+  c.cfg.autoLearn = true;
+  for (let i = 0; i < 5; i++) c.learnNet('POST /game/battle/action', { status: 200, res: { delta: {} } });
+  assert.equal(c.early.length, 0); assert.equal(c.L, null);
+  // хранилище не ответило — копилка очищена, дальше не копим
+  c = learnCore(null, { fail: true });
+  c.learnNet('GET /character', { status: 200, res: { a: 1 } }); assert.equal(c.early.length, 1);
+  c.learnStart(); await new Promise(r => setImmediate(r));
+  assert.equal(c.L, null); assert.equal(c.boot, false); assert.equal(c.early.length, 0);
+  c.learnNet('GET /character', { status: 200, res: { a: 1 } }); assert.equal(c.early.length, 0);
 });
 
 // ---------- split4: окно TvT на странице победы (лог 21.10 21:57:02–21:58:56) ----------
@@ -237,4 +288,26 @@ test('townBuffStart в окне TvT: к бафферу не уходим, выз
   have = []; hold = false;
   assert.equal(await B.townBuffStart('баффы кончились'), true);
   assert.equal(sb.location.href, '/town-buffer.html', 'вне окна — как раньше');
+});
+test('ревью: окно TvT на странице победы — плановая закупка и закупка тура не начинаются, проверка окна раньше служебных походов', async () => {
+  const run = async o => {
+    const f = flowFixture('fighter'), e = f.env, shops = []; f.setWon(true); let waits = 0, buffs = 0;
+    Object.assign(e.cfg, { shopAuto: true }); Object.assign(e.rt, { shopT: 0, ...o.rt });
+    Object.assign(e, { magisterAfterWin: async () => false, magisterHold: () => o.hold, tvtHoldWait: async () => { if (!o.hold) return false; waits++; return true; },
+      shopNeedByPanel: () => 'заряды душі на исходе', shopPlan: () => [], resQuests: () => [], huntOn: () => !!o.tour,
+      shopStart: async (why, urgent) => { shops.push([why, !!urgent]); }, townBuffStart: async () => { buffs++; return false; } });
+    await f.farm.nextFight(fightCtx);
+    return { waits, shops, buffs, href: f.location.href, hunt: f.events.includes('hunt') };
+  };
+  // TvT через 150 с (окно 3 мин): запасов мало — ни закупки, ни перехода, одна проверка окна со строкой «жду»
+  for (const tour of [false, true]) {
+    const r = await run({ hold: true, tour });
+    assert.equal(r.waits, 1, 'tour=' + tour); assert.deepEqual(r.shops, [], 'tour=' + tour); assert.equal(r.href, undefined, 'tour=' + tour); assert.equal(r.hunt, false); assert.equal(r.buffs, 0, 'к бафферу тоже не идём');
+  }
+  // заказанная игроком срочная закупка («🛒 Закупить сейчас») проходит, как и в ядре
+  const u = await run({ hold: true, rt: { shop: { urgent: true, t: Date.now() } } });
+  assert.equal(u.waits, 0); assert.equal(u.href, '/char.html');
+  // вне окна — как раньше: плановая закупка начинается
+  const n = await run({ hold: false });
+  assert.equal(n.waits, 0); assert.deepEqual(n.shops, [['заряды душі на исходе', false]]); assert.equal(n.href, '/char.html');
 });

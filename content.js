@@ -4465,7 +4465,11 @@ const hashStr = str => { let h = 2166136261 >>> 0; for (let i = 0; i < str.lengt
 let LEARN = null, learnDirty = false, learnSavedT = 0;
 // 20.43 (лог 21.10 23:29:46, страница «Создание предметов»): свои GET страницы при открытии (/game/craft/*) приходили раньше, чем
 // загружалось обучение (learnStart через 1,5 с), и терялись. До загрузки копим до 50 событий сети, после — дописываем (learnLoad)
+// Копим только до первой загрузки (learnBoot): обучение выключено при открытии или хранилище не ответило — копилку не держим
+// (иначе включённое потом в меню обучение копило бы до 50 ответов боя/персонажа до перезагрузки, их никто не прочтёт)
 const LEARN_EARLY = [];
+let learnBoot = true;
+const learnBootEnd = () => { learnBoot = false; LEARN_EARLY.length = 0; };
 // v5.6: раньше весь объект обучения (сотни КБ) писался в хранилище каждые 20 с и при КАЖДОМ переходе страницы (бой ↔ карта —
 // раз в 15–30 с), а каждая запись рассылалась всем вкладкам и меню. Теперь: счётчики переживают переходы в памяти вкладки
 // (sessionStorage), в хранилище — раз в 3 мин; новые находки (изменения игры, новый запрос API) — сразу. Пишет только рабочая вкладка
@@ -4475,17 +4479,29 @@ const learnLoad = () => LEARN ? Promise.resolve(LEARN) : chrome.storage.local.ge
   try { const ss = JSON.parse(sessionStorage.getItem(LEARN_SS) || 'null');
     if (ss?.L?.v === 1 && ss.t > (L.saved || 0) && (ss.L.t0 || 0) === (L.t0 || 0)) { L = ss.L; learnDirty = true; } } catch (e) {}
   learnSavedT = Date.now();
-  // 20.43: старые ключи с номером спавна (l2dop_rb_25063 …) сливаем в один; их «новый запрос API» в списке изменений — шум
+  // 20.43: старые ключи с номером спавна (l2dop_rb_25063 …) сливаем в ключ своего вида (l2dop_rb_:n); их «новый запрос API» в списке
+  // изменений — шум. Схемы (forms) складываем счётчиками: иначе слитый ключ взял бы схему одного РБ (у части есть
+  // raidBossAttackBlockedReasonUk — 16 из 242 ответов) и следующий РБ без этого поля дал бы ложное «ответ API изменился»
   for (const k of Object.keys(L.api || {})) { const nk = learnKey(k); if (nk === k) continue;
     const x = L.api[k], y = L.api[nk]; delete L.api[k]; learnDirty = true;
-    L.api[nk] = y ? { ...y, n: (y.n || 0) + (x?.n || 0), first: Math.min(+y.first || Date.now(), +x?.first || Date.now()), last: Math.max(+y.last || 0, +x?.last || 0) } : x; }
+    L.api[nk] = learnMerge(y, x); }
   if (Array.isArray(L.changes)) { const ch = L.changes.filter(c => !(c?.kind === 'новый запрос API' && learnKey(c.what) !== c.what)); if (ch.length !== L.changes.length) { L.changes = ch; learnDirty = true; } }
   // 20.43 (лог 21.10 23:29:46): запросы, пришедшие до загрузки обучения (свои GET страницы при открытии), — дописываем сейчас
   const early = LEARN_EARLY.splice(0);
-  LEARN = L;
+  LEARN = L; learnBootEnd();
   if (cfg.autoLearn !== false) for (const [k, d] of early) try { learnApi(k, d); } catch (e) {}
   return L;
-});
+}).catch(e => { learnBootEnd(); throw e; });
+// 20.43: слияние двух записей обучения одного запроса — счётчики полей, схем и статусов складываются
+const learnCnt = (a, b) => { const o = { ...(a || {}) }; for (const [k, v] of Object.entries(b || {})) o[k] = (o[k] || 0) + (+v || 0); return o; };
+function learnMerge(y, x) {
+  if (!y || typeof y !== 'object') return x;
+  if (!x || typeof x !== 'object') return y;
+  const forms = { ...(y.forms || {}) };
+  for (const [f, v] of Object.entries(x.forms || {})) forms[f] = forms[f] ? { n: (forms[f].n || 0) + (v?.n || 0), keys: learnCnt(forms[f].keys, v?.keys) } : v;
+  return { ...y, n: (y.n || 0) + (x.n || 0), keys: learnCnt(y.keys, x.keys), forms, st: learnCnt(y.st, x.st),
+    first: Math.min(+y.first || Date.now(), +x.first || Date.now()), last: Math.max(+y.last || 0, +x.last || 0) };
+}
 const learnSave = () => {
   if (!learnDirty || !LEARN || tabIdle || document.prerendering) return;
   learnDirty = false; learnSavedT = Date.now(); LEARN.saved = learnSavedT;
@@ -4562,8 +4578,11 @@ function learnPage() {
 // API: ключи ответа (верхний уровень и поле data), статусы; новый запрос / пропавшее поле — изменение
 const apiPath = u => u.split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:n').replace(/[0-9a-f]{16,}/gi, ':h');
 // 20.43 (отчёт обучения 21.10 13:30: 147 из 283 запросов — GET /game/spawn/l2dop_rb_<id>/info): номер спавна/боя в пути — тот же запрос.
-// Сворачиваем только ключ обучения; apiPath не трогаем — по нему сетевой обработчик узнаёт РБ (spawn/l2dop_rb_N/info → rbInfoNote)
-const learnKey = k => String(k).replace(/\/[a-z][a-z0-9]*_[a-z0-9_]*\d[a-z0-9_]*(?=\/|$)/gi, '/:id');
+// Сворачиваем только ключ обучения; apiPath не трогаем — по нему сетевой обработчик узнаёт РБ (spawn/l2dop_rb_N/info → rbInfoNote).
+// Вид спавна остаётся в ключе (l2dop_rb_:n, l2dop_eg_:n, sdms_saints_necropolis_:n): у ответа РБ свои поля (canAttackRaidBoss,
+// minRaidBossLevelForAttack, scrollDrops), у катакомб и охраны эпика их нет — общий ключ давал ложное «ответ API изменился».
+// Сворачиваются только номера в конце (_25063, _29001_29002_0); l2dop_dion, dwarf_artisan — как были
+const learnKey = k => String(k).replace(/\/([a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*?)((?:_\d+)+)(?=\/|$)/gi, '/$1_:n');
 function respKeys(r) {
   if (!r || typeof r !== 'object' || Array.isArray(r)) return [];
   const k = Object.keys(r);
@@ -4606,6 +4625,12 @@ function learnApi(key, d) {
   }
   const ak = Object.keys(A); if (ak.length > 300) ak.sort((a, b) => A[a].last - A[b].last).slice(0, ak.length - 300).forEach(k => delete A[k]);
   learnDirty = true;
+}
+// 20.43: событие сети → обучение; пока обучение грузится в первый раз — в копилку (до 50), её дописывает learnLoad
+function learnNet(key, d) {
+  if (cfg.autoLearn === false) return;
+  if (LEARN) return learnApi(key, d);
+  if (learnBoot && LEARN_EARLY.length < 50) LEARN_EARLY.push([key, d]);
 }
 // Replace stale local fallbacks with explicit server deadlines. Missing fields
 // remain unknown; this never interprets an absent cooldown map as ready.
@@ -5263,10 +5288,7 @@ addEventListener('message', e => {
   // 7.1.30: квест профессии (Алхімік Орфеус: «★ Giant Fungus ×100 і ★ Dire Wyrm ×15»). Сервер отдаёт счётчики убийств —
   // делаем этих мобов целями квеста: уровень-окно к ним не применяется, бот не улетает «в зону своего уровня» (лог 10.10 13:22)
   if (/\/character\/profession-quest\/[\w-]+\/status$/.test(path) && d.res?.status && !d.res.error) try { profQuestNote(d.res.status); } catch (er) {}
-  if (cfg.autoLearn !== false) {
-    if (LEARN) try { learnApi(key, secret ? {} : d); } catch (er) {}
-    else if (LEARN_EARLY.length < 50) LEARN_EARLY.push([key, secret ? {} : d]);   // 20.43: обучение ещё грузится — дописываем в learnLoad
-  }
+  try { learnNet(key, secret ? {} : d); } catch (er) {}   // 20.43: до первой загрузки обучения — в копилку (learnLoad допишет)
   recordNetworkLog(d, path, key, body, secret);
 });
 // сообщения игры: тосты, ошибки, результаты действий — всё, что всплывает на экране
@@ -5300,7 +5322,7 @@ function gameMsgWatch() {
 }
 // такт обучения: структура страницы — через 4 с после загрузки, селекторы — через 20 с и потом раз в минуту
 function learnStart() {
-  if (cfg.autoLearn === false) { LEARN_EARLY.length = 0; return; }
+  if (cfg.autoLearn === false) { learnBootEnd(); return; }
   learnLoad().then(() => {
     setTimeout(() => { try { learnPage(); } catch (e) {} }, 4000);
     setTimeout(() => { try { learnSelectors(); } catch (e) {} }, 20000);
