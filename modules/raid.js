@@ -1347,9 +1347,14 @@ async function rbOneStep() {
 // 20.43 (автономность, разбор 21.10): выход из Ashen бесплатный (штатная ссылка в город), а не подтверждённый за минуту выход ставил бота
 // на паузу до утра — в том числе после ожившего сервера, когда минута exitAt давно истекла. Теперь после первой минуты раз в минуту бесплатно
 // читаем GET /character: город подтверждён — продолжаем; сервер ответил «ещё не в городе» — повторяем штатный выход (на странице Ashen —
-// та же ссылка, с другой страницы — сначала /ashen-bastion.html). Сбой чтения, чужой ответ или бой попыткой не считаются. Пауза с причиной —
+// та же ссылка, с другой страницы — сначала /ashen-bastion.html). Сбой чтения, чужой ответ или бой попыткой выхода не считаются. Пауза с причиной —
 // только после ASHEN_MISS_MAX ответов «не в городе» подряд (≈1 ч). Платных шагов здесь нет: телепорт тура — после подтверждённого города.
-const ASHEN_RETRY_MS = 60000, ASHEN_MISS_MAX = 60;
+// 20.43 (автономность, доводка 21.10): неудачные сверки считаются отдельно (exitReadFail): раньше при повторяющемся сбое чтения /character
+// (исключение, 401/5xx/429, ответ без JSON), чужом имени или бое тур навсегда оставался на шаге exit — раз в минуту GET, без боя, без паузы и
+// без строки в журнале (сторожа это не ловят: этап и страница не меняются). Теперь первая неудача — одна строка в журнал, ASHEN_READ_MAX
+// неудач подряд (≈30 мин) — пауза с причиной (pauseBot fault: лежит сервер — сначала ждём сервер). Любой ответ сервера про героя вне боя
+// (город или «не в городе») счёт неудач обнуляет
+const ASHEN_RETRY_MS = 60000, ASHEN_MISS_MAX = 60, ASHEN_READ_MAX = 30;
 const ashenCityOk = ch => ch?.name === env.rt.char && /^l2dop_[a-z0-9_]+$/.test(ch.cityId || '') && ch.inBattle === false;
 async function ashenChar() {
   try { const r = await env.gameGet('/character'); const d = r.ok ? await r.json() : null; return d?.character || d; } catch (_) { return null; }
@@ -1361,7 +1366,7 @@ async function rbExitAshen(H, active) {
   const expired=now-(H.exitAt||H.t||0)>ASHEN_RETRY_MS;
   const done=async ch=>{
     if(H.exitMiss)env.rec('B','тур РБ',`выход из Ashen Bastion подтверждён сервером (${ch.cityId}) после ${H.exitMiss} повт. — продолжаю к ${H.name}`);
-    await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReloadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
+    await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReadFail:null,exitReloadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
   };
   // повтор выхода, начатый с другой страницы: на Ashen жмём ссылку сразу, не дожидаясь следующей сверки
   const retryHere=onAshen && +H.exitMiss>0 && !H.exitClickAt && !(+H.exitReloadAt>=+H.exitReadAt);
@@ -1374,14 +1379,24 @@ async function rbExitAshen(H, active) {
     const ch=await ashenChar();
     if(!same())return;
     if(ashenCityOk(ch))return done(ch);
-    if(ch?.name!==env.rt.char || ch.inBattle!==false){env.setStatus('Тур РБ: сверка героя после выхода из Ashen не удалась — повторю через минуту');return;}
+    if(ch?.name!==env.rt.char || ch.inBattle!==false){
+      // 20.43 (автономность, доводка 21.10): неудачная сверка — свой счёт подряд и пауза с причиной после ASHEN_READ_MAX (см. выше)
+      const fail=(+H.exitReadFail||0)+1, what=!ch?'сервер не отдал героя':ch.name!==env.rt.char?'ответ не про этого героя':'герой в бою';
+      if(fail>=ASHEN_READ_MAX){
+        await huntSet({exitReadFail:0});if(!same())return;
+        await env.pauseBot(`Тур РБ: после выхода из Ashen Bastion сервер ${ASHEN_READ_MAX} раз подряд (≈${ASHEN_READ_MAX} мин) не дал сверить героя (${what}); цель ${H.name} сохранена. Проверь город и продолжи`,{fault:true});return;
+      }
+      if(fail===1)env.rec('B','тур РБ',`выход из Ashen Bastion: сверка героя не удалась (${what}) — повторяю раз в минуту, бесплатно; ${ASHEN_READ_MAX} неудач подряд — пауза с причиной`);
+      await huntSet({exitReadFail:fail});if(!same())return;
+      env.setStatus(`Тур РБ: сверка героя после выхода из Ashen не удалась (${what}, ${fail}/${ASHEN_READ_MAX}) — повторю через минуту`);return;
+    }
     const miss=(+H.exitMiss||0)+1;
     if(miss>ASHEN_MISS_MAX){
       await huntSet({exitMiss:0});if(!same())return;
       await env.pauseBot(`Тур РБ: выход из Ashen Bastion не подтверждён ${ASHEN_MISS_MAX} раз подряд (≈1 ч); проверь город и продолжи`,{fault:true});return;   // 20.43: сервер лежит — ждём его, не пауза
     }
     if(miss===1)env.rec('B','тур РБ',`выход из Ashen Bastion не подтверждён за минуту (сервер: ${ch.cityId||'нет города'}) — повторяю штатный выход раз в минуту, бесплатно; телепорт к ${H.name} — только после подтверждённого города`);
-    await huntSet({exitMiss:miss,exitClickAt:0});if(!same())return;
+    await huntSet({exitMiss:miss,exitClickAt:0,exitReadFail:0});if(!same())return;
     if(!onAshen){if(env.canAct?.()!==false)location.href='/ashen-bastion.html';await env.sleep(3000);return;}
   }
   if(onAshen) {
@@ -1417,6 +1432,14 @@ async function rbExitAshen(H, active) {
 
 // 15.10, журнал18:59: на точке могут остаться только РБ; без автофарма не обещаем добычу мобов.
 const rbIdleFarmAllowed = () => env.idleFarmAllowed?.() ?? !Array.isArray(env.cfg.autoTasks);
+// 20.43 (автономность, доводка 21.10): отдаст ли выбор задач ход от ожидающего тура (rbFishWait до until) — та же проверка, что у ядра,
+// на копии памяти, без записи. Справочника ядра нет (старый стенд без engine-core) — как раньше: по наличию рыбалки в списке
+function rbFishTurn(until) {
+  const C = root.L2EngineCore; if (typeof C?.selectedTask !== 'function') return true;
+  const at = Date.now(), H = env.rt.rbHunt || {};
+  const rt = { ...env.rt, rbFishWait: { at, until, listT: env.rt.rbListT || 0, pet: true }, rbHunt: { ...H, step: 'pick', phase: 'wait', id: null } };
+  return C.selectedTask(env.cfg, rt, at) !== 'raid';
+}
 async function rbIdleMap(text,active) {
   if(!active())return;
   if(!rbIdleFarmAllowed()){env.setStatus(text);await env.sleep(1000);return;}
@@ -1434,6 +1457,24 @@ const RB_MAP_WAITS = [30000, 60000, 120000];      // 20.43 (автономнос
 // 20.43 (ревью au/breather): метка «карта не подтверждена» (rt.mapBad, ставит отсрочка raidMap/epicMap) — бесплатная проверка карты
 // (content.mapGate) до подготовки, выбора и оплаты перелёта; не загрузилась — передышка тура (вид raidMap), без телепорта
 const rbMapGate = active => !!env.rt.mapBad?.at && typeof env.mapGate === 'function' && env.mapGate('raidMap', 'Тур РБ', active);
+// 20.43 (автономность, доводка 21.10): отсрочка «карта не загрузилась» (rbSkip, 30 мин) — про сломанную карту, а не про цель. Оплаченный
+// перелёт мог состояться: карта снова показывает этого РБ здесь — отсрочку и метку попытки (rbGoTried) снимаем до выбора, и тур берёт его
+// без телепорта (ветка «он здесь, на этой карте»). Раньше тур выбирал другого РБ и платил за перелёт, а через 30 мин платил ещё раз за
+// возврат к первому. Снимаем только по метке на текущей карте; платный путь по-прежнему ждёт бесплатной проверки карты (rbMapGate)
+const RB_MAP_SKIP = 'карта не загрузилась';
+async function rbMapSkipRelease() {
+  if (!env.isMap?.()) return false;
+  const S = env.rt.rbSkip || {}, now = Date.now();
+  const ids = new Set(Object.keys(S).filter(id => S[id] && typeof S[id] === 'object' && S[id].why === RB_MAP_SKIP && rbSkipUntil(id) > now));
+  if (!ids.size) return false;
+  const here = raidList().filter(r => ids.has(r.id));
+  if (!here.length) return false;
+  const skip = { ...S }, tried = { ...(env.rt.rbGoTried || {}) };
+  for (const r of here) { delete skip[r.id]; delete tried[r.id]; }
+  await env.setRt({ rbSkip: skip, rbGoTried: tried });
+  env.rec('B', 'тур РБ', `${here.map(r => r.name || r.id).join(', ')}: карта снова загружается и показывает его здесь — отсрочку «${RB_MAP_SKIP}» снимаю, беру без телепорта`);
+  return true;
+}
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
   if(env.payments?.blocked()){await paymentReconcile();return;}
@@ -1585,7 +1626,7 @@ async function rbHuntStep() {
       if (held !== 'defer' || !active() || env.rt.rbHunt?.id !== H.id) return;
       // 20.43 (ревью au/breather): и метка «карта не подтверждена» (rt.mapBad) — следующий платный перелёт тура только после бесплатной
       // проверки карты (content.mapGate); иначе при общем сбое карты тур платил за каждого следующего РБ (до 4 перелётов за ≈15 мин)
-      await env.setRt({ rbSkip: { ...(env.rt.rbSkip || {}), [H.id]: { t: Date.now(), until: Date.now() + 30 * 60000, why: 'карта не загрузилась' } },
+      await env.setRt({ rbSkip: { ...(env.rt.rbSkip || {}), [H.id]: { t: Date.now(), until: Date.now() + 30 * 60000, why: RB_MAP_SKIP } },
         mapBad: { at: Date.now(), why: `тур РБ, ${H.name}`, loadAt: 0 } });
       if (!active()) return;
       return huntDone(H.id, `${H.name}: карта не загрузилась после 3 обновлений — откладываю этого РБ на 30 мин; следующий платный перелёт — только после проверки карты`);
@@ -1632,6 +1673,8 @@ async function rbHuntStep() {
     return huntDone(H.id, `${H.name}: бой не открылся`);
   }
   // discover → prepare → choose. Предварительная очередь будит простой, окончательный выбор — после подготовки.
+  // 20.43 (автономность, доводка 21.10): РБ, отложенный из-за незагрузившейся карты, снова на этой карте — до выбора снимаем отсрочку (без телепорта)
+  if (await rbMapSkipRelease() && !active()) return;
   let plan = rbTourPlan();
   rbTourPublish(plan);
   // 14.10: улучшение проверяется ДО ветки, которая фармит мобов до конца 5–20 минут ожидания.
@@ -1694,8 +1737,12 @@ async function rbHuntStep() {
   const petHold = env.warlock?.raidBlocked?.();
   if (petHold) {
     const until = +env.warlock?.raidHoldUntil?.() || 0, fishSelected = Array.isArray(env.cfg.autoTasks) && env.cfg.autoTasks.includes('fish');
-    const fish = fishSelected && until > Date.now() && !env.payments?.blocked?.() && !env.rt.actionPayments?.pending;
-    const next = `${petHold}; ${fish ? 'перехожу к выбранной рыбалке' : rbIdleFarmAllowed() ? 'фарм на месте при наличии мобов' : 'жду, фарм мобов сейчас не выбран'}`;
+    const fishFree = fishSelected && until > Date.now() && !env.payments?.blocked?.() && !env.rt.actionPayments?.pending;
+    // 20.43 (автономность, доводка 21.10): ход рыбалке — только если выбор задач его правда отдаст (та же L2EngineCore.selectedTask с этим
+    // ожиданием: дневной лимит рыбы, цель достигнута, предел забросов). Раньше rbFishWait{pet} писался лишь потому, что рыбалка в списке:
+    // выбор пропускал рыбалку и возвращал тур, и тот до 30 мин стоял в rbIdleMap с ложным «перехожу к выбранной рыбалке»
+    const fish = fishFree && rbFishTurn(until);
+    const next = `${petHold}; ${fish ? 'перехожу к выбранной рыбалке' : `${fishFree ? 'выбранная рыбалка сейчас не идёт (дневной лимит, цель или предел забросов); ' : ''}${rbIdleFarmAllowed() ? 'фарм на месте при наличии мобов' : 'жду, фарм мобов сейчас не выбран'}`}`;
     if (rbPetHoldSaid !== until + next) { rbPetHoldSaid = until + next; env.recBot(`Тур РБ: ${next}`); }
     await rbHuntPhase('wait', next);
     if (!active()) return;
