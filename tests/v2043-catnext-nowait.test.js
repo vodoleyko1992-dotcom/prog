@@ -35,11 +35,19 @@ test('исходник: путь обычного моба — setRtSoon, getter
  assert.match(c,/L2V7Factories\.dungeons\(\{ get badgeSync\(\)\{return badgeSync\}, get setRtSoon\(\)\{return setRtSoon\}/);
  assert.match(cb,/if \(env\.rt\.bounce \|\| env\.rt\.mobClickAt\) rtSoon\(\{ bounce: 0, mobClickAt: 0 \}\);/);
 });
-test('отложенный путь уходит при уходе со страницы (pagehide → peek) — новый бой видит via:dungeon',()=>{
+test('отложенный путь уходит при уходе со страницы (pagehide → unsent) — новый бой видит via:dungeon',()=>{
  const box={globalThis:{}};box.globalThis=box;vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../engine-core.js'),'utf8'),box);
  const sent=[],q=box.L2EngineCore.createPatchQueue(async p=>{sent.push(p);return{ok:true}},()=>true,()=>{},()=>Date.now(),{set:()=>1,clear:()=>{}});
  q.defer({target:{name:'Lilim Court Knight'},mobClickAt:5,via:'dungeon',catInT:5});
  assert.equal(q.peek().via,'dungeon');assert.equal(q.peek().mobClickAt,5);
  const c=fs.readFileSync(path.join(__dirname,'../content.js'),'utf8');
- assert.match(c,/addEventListener\('pagehide', \(\) => \{\s*try \{[\s\S]{0,200}const p = rtWriter\.peek\(\);[\s\S]{0,200}cmd: 'statePatch', patch: p/);
+ assert.match(c,/addEventListener\('pagehide', \(\) => \{\s*try \{[\s\S]{0,200}const p = rtWriter\.unsent \? rtWriter\.unsent\(\) : rtWriter\.peek\(\);[\s\S]{0,200}cmd: 'statePatch', patch: p/);
+});
+// 20.43 (MV3 v2041-battle-writes spread): пакет в полёте при уходе со страницы не отправляется второй раз
+test('unsent(): без пакета в полёте; pagehide берёт unsent',async()=>{
+ const core=require('../engine-core.js');let release;const sent=[];
+ const q=core.createPatchQueue(async p=>{sent.push(p);await new Promise(r=>release=r);return{ok:true}});
+ const pr=q.enqueue({a:1});await new Promise(r=>setImmediate(r));q.defer({b:2});
+ assert.deepEqual(q.unsent(),{b:2});assert.deepEqual(q.peek(),{a:1,b:2});release();await pr;
+ const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');assert.match(src,/const p = rtWriter\.unsent \? rtWriter\.unsent\(\) : rtWriter\.peek\(\);/);
 });

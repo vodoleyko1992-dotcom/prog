@@ -1435,8 +1435,9 @@ addEventListener('pagehide', () => { pageGone = true; });
 addEventListener('pagehide', () => {
   try {
     try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
-    const p = rtWriter.peek();
-    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }, () => void chrome.runtime.lastError);
+    const p = rtWriter.unsent ? rtWriter.unsent() : rtWriter.peek();   // 20.43: пакет в полёте уже у фона — не дублируем
+    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) { chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }, () => void chrome.runtime.lastError);
+      if (rtWriter.unsent) rtWriter.drop(Object.keys(p)); }   // 20.43: отправленное здесь не уходит второй раз из очереди (запись, поставленная flush() выше)
   } catch (e) {}
 });
 // 20.41 (ревью): отложенная статистика (до 8 с) при уходе вкладки в фон пишется сразу: замок обычно переходит к другой вкладке,

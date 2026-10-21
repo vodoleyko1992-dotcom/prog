@@ -168,8 +168,11 @@ function catNative(id, list, pick, cur) {
   if (nat?.id === id && nat.bad >= 2) return false;
   if ((+natMark().off?.[id] || 0) > Date.now()) return false;
   const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';   // ручное подземелье (окно 0–999) — прежнее правило ±1 к выбору
-  const fit = list.filter(x => (auto || Math.abs(x.lvl - pick.lvl) <= 1) && catPick([x], L));
-  if (list.length < 3 || fit.length < 3 || fit.length < list.length * 0.6) return false;
+  const near = list.filter(x => Math.abs(x.lvl - pick.lvl) <= 1 && catPick([x], L)), fit = auto ? list.filter(x => catPick([x], L)) : near;
+  // однородный список (≥80 % ±1 к выбору) — как в 20.41 от 3 соседей; смешанный — только большое подземелье: ≥5 соседей в окне и ≥60 %
+  // (в маленьком списке свой точный выбор цели важнее, 20.32)
+  const same = list.length >= 3 && near.length >= list.length * 0.8, mixed = auto && fit.length >= 5 && fit.length >= list.length * 0.6;
+  if (!same && !mixed) return false;
   if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
   nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
   return true;

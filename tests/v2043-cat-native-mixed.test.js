@@ -1,11 +1,11 @@
 'use strict';
 // 20.43 (решение игрока 21.10 06:19 «Да, быстрее»; лог 21.10 15:50–15:51 Catacomb of Dark Omens 72–78 ур.): штатное «Охотиться дальше»
-// и в подземелье с мобами разных уровней, если ≥3 соседа и ≥60 % из них в окне героя (не ниже −5); выбор сервера вне окна дважды — свой выбор.
+// и в подземелье с мобами разных уровней, если ≥5 соседей и ≥60 % из них в окне героя (не ниже −5); выбор сервера вне окна дважды — свой выбор.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const {flowFixture}=require('./warlock-combat-fixture.cjs');
 const dungeon='catacomb_of_dark_omens',sid=n=>'sdms_'+dungeon+'_'+n;
 const row=(n,name,level)=>({id:sid(n),name,level,kind:'passive',inBattleRange:true});
-const omens=()=>[row('016','Nephilim Commander',78),row('026','Lilim Great Mystic',78),row('041','Lesser Ancient Warrior',78),row('050','Crypt Preacher',75),row('060','Tomb Guard',74),row('070','Lilim Slayer',72)];
+const omens=()=>[row('016','Nephilim Commander',78),row('026','Lilim Great Mystic',78),row('041','Lesser Ancient Warrior',78),row('050','Crypt Preacher',75),row('060','Tomb Guard',74),row('070','Lilim Slayer',72),row('080','Nephilim Royal Guard',77),row('081','Tomb Guard',76)];
 function fixture(rows=omens()){
  const f=flowFixture('fighter'),{env,location:loc,events}=f;
  loc.pathname='/battle.html';loc.search='?spawnId='+sid('016');loc.href='https://l2wap.com/battle.html'+loc.search;

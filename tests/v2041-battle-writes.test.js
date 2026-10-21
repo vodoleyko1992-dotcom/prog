@@ -98,7 +98,7 @@ test('уход со страницы: pagehide шлёт всю очередь о
  assert.deepEqual(sends,['kills,lootStat'],'pagehide отправил очередь');assert.deepEqual(ipcs,[],'visibilitychange не повторил ту же запись');
  // Возврат из bfcache и обычный уход вкладки в фон (без pagehide) по-прежнему сразу пишут отложенное — 20.41 (ревью): замок уходит к другой вкладке
  fire(L,'pageshow',{persisted:true});c.document.hidden=false;c.rtWriter.defer({exp:7});c.document.hidden=true;fire(D,'visibilitychange');await new Promise(r=>setImmediate(r));
- assert.deepEqual(ipcs,['exp,kills,lootStat'],'вкладка в фоне — отложенное записано');
+ assert.deepEqual(ipcs,['exp'],'вкладка в фоне — отложенное записано (20.43: уже отправленное pagehide не повторяется)');
  const fresh=run();fresh.rtWriter.defer({exp:1});fresh.document.hidden=true;fire(D,'visibilitychange');await new Promise(r=>setImmediate(r));
  assert.ok(ipcs.includes('exp'),'без pagehide — запись при скрытии вкладки');assert.equal(sends.length,1);
 });
