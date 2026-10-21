@@ -11,7 +11,7 @@ vm.runInNewContext(slice(enchantCore,'function coreFixture(){',"test('выбра
 
 test('охранная строка цикла — один помощник, старого повтора нет',()=>{
  assert.equal((steps.match(/if \(!on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant'\) continue;/g)||[]).length,0);
- assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,21);
+ assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,27); // 20.43: +5 в loopStartPrep, +1 в сторож (призыв тура РБ)
  assert.match(steps,/const loopStale = \(\) => !on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant';/);
  // в шагах нет continue/break — только return true / LOOP_BREAK (иначе шаг не выйдет из круга)
  const bodies=steps.slice(steps.indexOf('async function mainTick()'));
@@ -20,7 +20,7 @@ test('охранная строка цикла — один помощник, с
 test('mainTick: шаги в прежнем порядке',()=>{
  const tick=steps.match(/async function mainTick\(\) \{\s*return ([^;]+);/)[1].replace(/\s+/g,' ');
  const order=[...tick.matchAll(/await (\w+)\(\)/g)].map(m=>m[1]);
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopRaid','loopActivity']);
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};

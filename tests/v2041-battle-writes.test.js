@@ -98,7 +98,7 @@ test('уход со страницы: pagehide шлёт всю очередь о
  assert.deepEqual(sends,['kills,lootStat'],'pagehide отправил очередь');assert.deepEqual(ipcs,[],'visibilitychange не повторил ту же запись');
  // Возврат из bfcache и обычный уход вкладки в фон (без pagehide) по-прежнему сразу пишут отложенное — 20.41 (ревью): замок уходит к другой вкладке
  fire(L,'pageshow',{persisted:true});c.document.hidden=false;c.rtWriter.defer({exp:7});c.document.hidden=true;fire(D,'visibilitychange');await new Promise(r=>setImmediate(r));
- assert.deepEqual(ipcs,['exp,kills,lootStat'],'вкладка в фоне — отложенное записано');
+ assert.deepEqual(ipcs,['exp'],'вкладка в фоне — отложенное записано (20.43: уже отправленное pagehide не повторяется)');
  const fresh=run();fresh.rtWriter.defer({exp:1});fresh.document.hidden=true;fire(D,'visibilitychange');await new Promise(r=>setImmediate(r));
  assert.ok(ipcs.includes('exp'),'без pagehide — запись при скрытии вкладки');assert.equal(sends.length,1);
 });
@@ -108,7 +108,9 @@ test('не откладываются: квота/итог боя, оплаты,
  for(const k of ['farmQuota','dailyQuota','farmKillMark','raidMobMarks','actionPayments','actionOwner','epic','rbCur','rbPending','rbWound','rbSkip','battleReload','mobClickAt','bounce','buffAt','status','clickLockA','combatWait','subSlots'])
   assert.doesNotMatch(soon,new RegExp(`'${k}'`),k);
  assert.match(combat,/env\.setRt\(\{ buffAt: \{ \.\.\.\(env\.rt\.buffAt \|\| \{\}\), \[bn\]: Date\.now\(\) \} \}\)/,'buffAt — обычной записью: следующая страница боя решает по нему, не повторить ли бафф');
- assert.match(combat,/if \(env\.rt\.bounce \|\| env\.rt\.mobClickAt\) env\.setRt\(\{ bounce: 0, mobClickAt: 0 \}\);/,'сброс петли — обычной записью: карта считает mobClickAt моложе 8 с отскоком');
+ // 20.43 (лог 21.10 15:47–15:51): сброс петли — отложенной записью (rtSoon); память вкладки обновлена сразу, уход со страницы (pagehide → peek)
+ // отправляет его раньше, чем новая страница возьмёт замок — карта не примет свежий mobClickAt за отскок
+ assert.match(combat,/if \(env\.rt\.bounce \|\| env\.rt\.mobClickAt\) rtSoon\(\{ bounce: 0, mobClickAt: 0 \}\);/,'сброс петли — отложенной записью без ожидания');
  assert.match(content,/\(live \? setRtSoon : setRt\)\(\{ status: s \}\)/);assert.match(content,/function statusSave\(s\) \{ liveStatus\(s\); rtStatusW = Date\.now\(\); return setRt\(\{ status: s \}\); \}/,'разовая запись статуса (остановка) — обычной');
 });
 
