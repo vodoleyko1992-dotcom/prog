@@ -754,7 +754,9 @@ async function map() {
   // 20.43 (автономность): передышка после сбоя карты — мобов с карты не бьём, только честное ожидание (поражение на карте — как всегда)
   if (env.selfHoldOn?.('mob')) {
     if (env.shown(env.$q('#map-defeat-root'))) return env.onDeath();
-    env.setStatus(env.selfHoldText ? env.selfHoldText(env.rt.selfHold) : 'Передышка после сбоя карты'); await env.sleep(3000); return;
+    // 20.43 (доводка 21.10): rt.selfHold — передышки по задаче; текст — именно передышки карты (selfHoldOf), старое ядро — прежняя запись
+    const h = env.selfHoldOf ? env.selfHoldOf('mob') : env.rt.selfHold;
+    env.setStatus(env.selfHoldText && h ? env.selfHoldText(h) : 'Передышка после сбоя карты'); await env.sleep(3000); return;
   }
   // защита от петли «клик по мобу → снова карта»
   if (env.rt.mobClickAt && Date.now() - env.rt.mobClickAt < 8000) {

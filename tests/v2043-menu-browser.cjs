@@ -6,6 +6,7 @@
 // 20.43 (ревью меню): «i» из title — первый «labelable» потомок label, клик по тексту подписи уходил в неё (галка не переключалась, под
 // подписью открывалось пояснение, на ПК — со скрытой «i»). Теперь подпись привязана к своему полю: клик по тексту на ПК и на Android
 // переключает галку / ставит фокус в поле и пояснения не открывает; нажатие на саму «i» — по-прежнему пояснение без переключения.
+// 20.43 (доводка 21.10): то же для «i» из HELP (Разделывать улов: клик по подписи — галка, «i» — пояснение).
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const assert = require('node:assert/strict'), root = require('node:path').join(__dirname, '..');
 const AND = 'Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36';
@@ -52,6 +53,19 @@ async function open(ua) {
     // 20.43 (ревью меню): ни одна подпись не управляет кнопкой «i» из title; клик по тексту подписи — галка/поле, а не пояснение
     const stolen = await P.evaluate(() => [...document.querySelectorAll('label')].filter(l => l.control?.classList?.contains('auto-info')).map(l => l.textContent.trim().slice(0, 30)));
     assert.deepEqual(stolen, [], 'label.control у подписей с «i» из title — их поле');
+    // 20.43 (доводка 21.10): и у «i» из HELP — ни одна подпись не управляет кнопкой «i»; клик по тексту — галка, нажатие «i» — пояснение
+    const stolenHelp = await P.evaluate(() => [...document.querySelectorAll('label')].filter(l => l.control?.classList?.contains('inline-info')).map(l => l.textContent.trim().slice(0, 30)));
+    assert.deepEqual(stolenHelp, [], 'label.control у подписей с «i» из HELP — их поле');
+    await P.evaluate(() => showTab('fish')); await P.locator('#fishProcess').scrollIntoViewIfNeeded();
+    const helpA = await helpState(P), wasA = await P.locator('#fishProcess').isChecked(), atA = await labelText(P, 'fishProcess');
+    await P.mouse.click(atA.x, atA.y); await delay(200);
+    assert.equal(await P.locator('#fishProcess').isChecked(), !wasA, 'ПК: клик по тексту подписи с «i» из HELP переключает галку');
+    assert.deepEqual(await helpState(P), helpA, 'ПК: пояснение HELP не открыто');
+    await P.mouse.click(atA.x, atA.y); await delay(200); assert.equal(await P.locator('#fishProcess').isChecked(), wasA);
+    await P.locator('#fishProcess').locator('xpath=ancestor::label').locator('.inline-info').click(); await delay(150);
+    assert.equal(await P.locator('#fishProcess').isChecked(), wasA, 'нажатие «i» из HELP галку не трогает');
+    assert.equal((await helpState(P)).open, 1, 'нажатие «i» из HELP открывает пояснение');
+    await P.locator('#fishProcess').locator('xpath=ancestor::label').locator('.inline-info').click(); await delay(150);
     await P.evaluate(() => showTab('hunt')); await P.locator('#catNoFa').scrollIntoViewIfNeeded();
     const help0 = await helpState(P), was = await P.locator('#catNoFa').isChecked();
     let at = await labelText(P, 'catNoFa'); await P.mouse.click(at.x, at.y); await delay(200);
@@ -112,6 +126,8 @@ async function open(ua) {
     // 20.43 (ревью меню): нажатие на текст подписи на Android — галка, а не пояснение (открытое пояснение остаётся как было)
     const at = await labelText(P, 'catNoFa'), help1 = await helpState(P); await P.mouse.click(at.x, at.y); await delay(200);
     assert.equal(await P.locator('#catNoFa').isChecked(), !before, 'Android: нажатие на текст подписи переключает галку');
+    // 20.43 (доводка 21.10): подпись с «i» из HELP на Android — тоже галка
+    assert.deepEqual(await P.evaluate(() => [...document.querySelectorAll('label')].filter(l => l.control?.classList?.contains('inline-info')).length), 0);
     assert.deepEqual(await helpState(P), help1, 'пояснение не переключилось');
     await P.mouse.click(at.x, at.y); await delay(200); assert.equal(await P.locator('#catNoFa').isChecked(), before);
     const row = await P.evaluate(() => { const lab = document.getElementById('champCancel').closest('label'), tip = lab.querySelector('.auto-info'); tip.click();

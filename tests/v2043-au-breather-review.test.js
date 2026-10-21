@@ -32,17 +32,18 @@ function holdBox({ tasks = ['raid'], mode = 'raid', rt: rt0 = {}, halt } = {}) {
   vm.createContext(c); vm.runInContext(HOLD_SRC + ';this.start=selfHoldStart;this.gate=mapGate;', c);
   return { c, calls, recs };
 }
+// 20.43 (доводка 21.10): отсрочки noWait — свой счёт rt.selfHoldDefer (раньше общий с передышками вида в selfHoldLog), в причине — «отсрочки»
 for (const kind of ['raidMap', 'epicMap']) test(`4-я отсрочка карты (${kind}): мягкий halt ушёл в ожидание сервера — счёт не обнуляется, следующий сбой сразу ведёт к стопу`, async () => {
   const t = Date.now(), log = [t - 3 * MIN, t - 2 * MIN, t - MIN], halts = [];
   let serverUp = false;
-  const f = holdBox({ rt: { selfHoldLog: { [kind]: [...log] } }, halt: async (c, msg, hard) => { halts.push([msg, hard]); if (serverUp) c.on = false; } });
+  const f = holdBox({ rt: { selfHoldDefer: { [kind]: [...log] } }, halt: async (c, msg, hard) => { halts.push([msg, hard]); if (serverUp) c.on = false; } });
   assert.equal(await f.c.start(kind, 'Тур РБ: карта не загрузилась после 3 обновлений (цель Первый)', { noWait: true }), null, 'ни отсрочки, ни стопа');
-  assert.match(halts[0][0], /3 передышки за 6 ч не помогли/); assert.equal(halts[0][1], false, 'мягкий стоп: лежащий сервер — ждём сервер');
-  assert.equal(f.c.on, true); assert.deepEqual([...f.c.rt.selfHoldLog[kind]], log, 'счёт сохранён — новых отсрочек (и платных перелётов) не будет');
+  assert.match(halts[0][0], /3 отсрочки за 6 ч не помогли/); assert.equal(halts[0][1], false, 'мягкий стоп: лежащий сервер — ждём сервер');
+  assert.equal(f.c.on, true); assert.deepEqual([...f.c.rt.selfHoldDefer[kind]], log, 'счёт сохранён — новых отсрочек (и платных перелётов) не будет');
   // после ответа сервера тот же сбой — снова план «стоп», бот выключается, и только теперь счёт с нуля (новый Старт даст ещё 3)
   serverUp = true;
   assert.equal(await f.c.start(kind, 'Тур РБ: карта не загрузилась после 3 обновлений (цель Второй)', { noWait: true }), 'stop');
-  assert.equal(halts.length, 2); assert.equal(f.c.on, false); assert.deepEqual([...f.c.rt.selfHoldLog[kind]], []);
+  assert.equal(halts.length, 2); assert.equal(f.c.on, false); assert.deepEqual([...f.c.rt.selfHoldDefer[kind]], []);
 });
 test('stall (жёсткий стоп) — как прежде: стоп сразу, счёт с нуля', async () => {
   const t = Date.now(), f = holdBox({ rt: { selfHoldLog: { stall: [t - 3, t - 2, t - 1] } } });
