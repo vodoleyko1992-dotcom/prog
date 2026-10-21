@@ -243,7 +243,9 @@ function vipSession() {
   const wanted=[...faIdsOf(env.cfg.faBuffs),...faIdsOf(env.cfg.rbSessBuffs)].find(id=>VIP_GREATER.includes(id)&&(!p?.greaterOptions||p.greaterOptions.includes(id)));
   const same=!!(set&&p?.schema===2&&p.bundleChecked===true&&p.char===env.rt.char&&p.actor===v.actor&&p.set===set&&p.slot===v.slot&&p.prof===v.prof);
   const present=skills=>!!(skills?.length&&H&&skills.every(x=>H[x.skillId]>now+60000&&levels[x.skillId]>=x.level));
-  const additionalReady=!!(same&&!p.greaterUnavailable&&(!wanted||p.greaterIds?.includes(wanted))&&(!p.greaterIds?.length||present(p.skills.filter(x=>p.greaterIds.includes(x.skillId)))));
+  // 20.43 (John 21.10 13:09): резисты — отдельная бесплатная VIP-кнопка; старый vipApplied без resistIds перепроверяется по каталогу.
+  const resistsOk=!vipResistsOn()||Array.isArray(p?.resistIds)&&(!p.resistIds.length||present(p.skills.filter(x=>p.resistIds.includes(x.skillId))));
+  const additionalReady=!!(same&&resistsOk&&!p.greaterUnavailable&&(!wanted||p.greaterIds?.includes(wanted))&&(!p.greaterIds?.length||present(p.skills.filter(x=>p.greaterIds.includes(x.skillId)))));
   const baseReady=same&&present(p.baseSkills||p.skills),ready=baseReady&&additionalReady;
   return {set,ready,baseReady,additionalReady,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
 }
@@ -256,6 +258,9 @@ const vipEffects = (ch, q, existing=false) => ch?.name === env.rt.char && ch.id 
     && Number.isFinite(b.expiresAtMs ?? b.expiresAt) && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 60000));
 // 20.38 (скрин20.10): Greater — одна иконка, шесть эффектов исключают друг друга; Noblesse отдельно.
 const VIP_GREATER = [1356,1357,1355,1363,1413,1414];
+// 20.43 (каталог 21.10 13:10, set «resists»: 1033/1182/1189/1191 Lv.3 + 1352 Lv.1, «Безкоштовно · VIP», 24 ч): берём одной кнопкой,
+// только при нулевой цене из свежего каталога; выключатель cfg.vipResists.
+const vipResistsOn = () => env.cfg.vipResists !== false;
 function vipBundle(ch, catalog, baseSet) {
   const base=catalog?.sets?.find(x=>x.id===baseSet);if(!vipPriceZero(base))return null;
   const greater=catalog.sets.find(x=>x.id==='greater'),free=vipPriceZero(greater),now=Date.now();
@@ -267,9 +272,11 @@ function vipBundle(ch, catalog, baseSet) {
   const picked=group.find(x=>x.skillId===explicit)||group.find(present)||group.find(x=>x.skillId===(baseSet==='mage'?1357:1414))||group[0];
   const extra=[...(picked?[picked]:[]),...available.filter(x=>x.skillId===1323)];
   for(const x of extra)rows.push({set:'greater',skillId:x.skillId,skills:[x]});
+  const res=vipResistsOn()&&catalog.sets.find(x=>x.id==='resists'),resists=vipPriceZero(res)?res.skills:[];
+  if(resists.length)rows.push({set:'resists',skills:resists});
   const baseSkills=down?base.skills.filter(present):base.skills,union=new Map();
-  for(const x of [...baseSkills,...extra])union.set(x.skillId,Math.max(union.get(x.skillId)||0,x.level));
-  return {rows,baseSkills:base.skills,baseSkipped:down,bundleSkills:[...union].map(([skillId,level])=>({skillId,level})),greaterIds:extra.map(x=>x.skillId),greaterOptions:group.map(x=>x.skillId),greaterFree:free,greaterUnavailable:!!greater&&!free};
+  for(const x of [...baseSkills,...extra,...resists])union.set(x.skillId,Math.max(union.get(x.skillId)||0,x.level));
+  return {rows,resistIds:resists.map(x=>x.skillId),baseSkills:base.skills,baseSkipped:down,bundleSkills:[...union].map(([skillId,level])=>({skillId,level})),greaterIds:extra.map(x=>x.skillId),greaterOptions:group.map(x=>x.skillId),greaterFree:free,greaterUnavailable:!!greater&&!free};
 }
 async function vipTownStep(st, active, done) {
   const classKey=()=>JSON.stringify([env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.classSwT||0]),ownerClass=classKey();
@@ -282,9 +289,9 @@ async function vipTownStep(st, active, done) {
       if(current())env.setStatus('VIP: применённый бафф подтверждён — проверяю следующую иконку');return true;
     }
     const levels=Object.fromEntries(q.baseSkills.map(x=>[x.skillId,x.level])),baseComplete=vipEffects(ch,{...q,skills:q.baseSkills},true);
-    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,skills,ids:skills.map(x=>x.skillId)},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId)},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
+    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,resistIds:q.resistIds||[],skills,ids:skills.map(x=>x.skillId)},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId),...(q.resistIds?.length?{resists:q.resistIds}:{})},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
     if(!current())return true;
-    const extra=q.greaterIds.map(id=>env.FA_KNOWN?.[id]?.[0]||env.IL?.[id]?.n||id).join(', ');
+    const extra=[...q.greaterIds.map(id=>env.FA_KNOWN?.[id]?.[0]||env.IL?.[id]?.n||id),...(q.resistIds?.length?['резисты']:[])].join(', ');
     env.rec('B','бафф',q.greaterUnavailable?'VIP: основной набор подтверждён; дополнительный не подтверждён бесплатным — не применяю':`VIP: ${q.baseSkipped?'сильные действующие баффы сохранены':'классовый набор подтверждён'}${extra?' · дополнительные: '+extra:''} — 0 адены, 0 Coin of Luck`);
     await done(q.greaterUnavailable?'VIP: дополнительный бафф пока не получен — цена не нулевая или неизвестна':baseComplete?'VIP-бафф готов — FA не трачу, возвращаюсь':'VIP: дополнительный бафф подтверждён; основной набор пропущен, чтобы не понизить сильные эффекты');return true;
   };
@@ -321,7 +328,7 @@ async function vipTownStep(st, active, done) {
   catch(_){if(current())env.setStatus('VIP-бафф: ответ неизвестен — сверю выбранный эффект без повторного запроса');return;}
   if(!current())return;
   if(r.ok&&!d?.error&&await finish(d?.character,q))return;
-  if([400,401,403,404,409,412,422].includes(r.status)){await env.setRt({tbOk:false,tbuff:{...st,set:baseSet,vipFree:true,vipRequest:null}});env.rec('B','бафф',`VIP: сервер отклонил ${row.skillId?'дополнительный бафф '+row.skillId:'классовый набор'} (${String(d?.error||r.status).slice(0,100)}) — эффект не засчитан`);return done('VIP: бафф не получен — запрос отклонён сервером');}
+  if([400,401,403,404,409,412,422].includes(r.status)){await env.setRt({tbOk:false,tbuff:{...st,set:baseSet,vipFree:true,vipRequest:null}});env.rec('B','бафф',`VIP: сервер отклонил ${row.skillId?'дополнительный бафф '+row.skillId:row.set==='resists'?'резисты':'классовый набор'} (${String(d?.error||r.status).slice(0,100)}) — эффект не засчитан`);return done('VIP: бафф не получен — запрос отклонён сервером');}
   env.setStatus('VIP-бафф: выбранный эффект не подтверждён — сверю без повторного применения');
 }
 let tbDownLogT = 0;
