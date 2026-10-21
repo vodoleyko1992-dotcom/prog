@@ -33,7 +33,7 @@ t('после ожидания игры — новый выбор: свежий 
   assert.match(bot, /if \(still && !still\(\)\) \{ quick = true; return false; \}/);
   assert.match(bot, /await press\(plan, g, false, \(\) => \{ const p = L\.planTurn\(slotsNow\(false\), meStats\(\), mobHp\(\), opt\(\)\); return !!p && p\.slot\.key === plan\.slot\.key; \}\);/);
   // проверка плана — до клика, отказ «план сменился» ничего не блокирует
-  assert.ok(bot.indexOf('if (still && !still())') < bot.indexOf('if (!fire(s.b, g)) return false;'));
+  assert.ok(bot.indexOf('if (still && !still())') < bot.indexOf('if (!fire(s.b, g)) { fastMark(\'\'); return false; }'));
 });
 t('отказ сервера: общий откат — не блокировка слота; откат скилла держит модель; MP — 1,5 с', () => {
   assert.match(bot, /by: String\(d\.bt\?\.blockedBy \|\| ''\)/);
@@ -55,9 +55,11 @@ t('подтверждённый ход и ожидание отката — бе
   // ожидания просыпаются по концу запроса игры
   assert.match(bot, /wakeAll\(\);\n\s+\}\n\s+window\.addEventListener\('message'/);
 });
-t('Lite по-прежнему не меняет ответы игры (быстрый удар — только по отдельному решению игрока)', () => {
+t('ответ игры меняется только быстрым ударом (Lite 1.2, решение John 21.10) — и только для метки Lite', () => {
   const hook = read('lite/hook.js');
-  assert.ok(!/new Response\(|hotbarStale/.test(hook));
-  assert.match(hook, /return p;\n\s+\};/);
+  assert.equal((hook.match(/new Response\(/g) || []).length, 1);
+  assert.match(hook, /return fast \? p\.then\(fastRes\) : p;\n\s+\};/);
+  assert.match(hook, /delete o\.delta\.hotbarStale;/);
+  assert.ok(!/l2botFast/.test(hook), 'метка основного бота Lite не касается');
 });
 console.log(`lite-turn: ${n} PASS`);

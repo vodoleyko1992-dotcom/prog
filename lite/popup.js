@@ -4,7 +4,7 @@
 'use strict';
 const L = globalThis.L2Lite;
 const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
-const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3 };
+const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
 const $ = id => document.getElementById(id);
 let cfg = { ...DEF_CFG }, rt = {};
 const tm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -93,6 +93,7 @@ function paint() { paintRun(); paintStatus(); paintLog(); paintZone(); paintSkil
   for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (document.activeElement !== $(k)) $(k).value = cfg[k];
   if (document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;
   $('tvt').checked = !!cfg.tvt;
+  $('fastTurn').checked = cfg.fastTurn !== false;
   $('ver').textContent = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
 }
 
@@ -101,6 +102,7 @@ $('reset').onclick = () => save({}, 'reset');
 $('zone').onchange = e => { const o = e.target.selectedOptions[0]; save({ zone: e.target.value, zoneName: e.target.value ? o.textContent.replace(/\s*\(\d+–[\d?]+\)$/, '') : '' }); };
 $('limit').onchange = e => save({ killLimit: clampNum(e.target.value, 0, 100000, 0) });
 $('tvt').onchange = e => save({ tvt: e.target.checked });
+$('fastTurn').onchange = e => save({ fastTurn: e.target.checked });
 $('hpPot').onchange = e => save({ hpPot: clampNum(e.target.value, 10, 95, 50) });
 $('mpPot').onchange = e => save({ mpPot: clampNum(e.target.value, 5, 95, 25) });
 $('maxDeaths').onchange = e => save({ maxDeaths: clampNum(e.target.value, 1, 20, 3) });

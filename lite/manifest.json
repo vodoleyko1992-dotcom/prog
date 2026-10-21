@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "L2wap Lite — Дестр",
-  "version": "1.1",
-  "version_name": "1.1 Lite",
-  "description": "L2wap Lite 1.1 — автономная охота Destroyer/Titan: место охоты и число мобов, TvT, возврат, свои скиллы",
+  "version": "1.2",
+  "version_name": "1.2 Lite",
+  "description": "L2wap Lite 1.2 — автономная охота Destroyer/Titan: место охоты и число мобов, TvT, возврат, свои скиллы",
   "permissions": [
     "storage",
     "alarms",

@@ -6,6 +6,7 @@
 //   (бот замирает, ни одного клика) → игрок прошёл её → охота дальше; Стоп.
 // Сценарий C (Lite 1.1): задержки сервера (ход 150 мс, GET /character 300 мс, откат атаки 200 мс): удар→удар без лишних пауз
 //   (медиана < 600 мс, Lite 1.0 — 530–585 мс), клики не теряются, второй ход не уходит, пока первый ждёт ответа 7 с.
+// Сценарий D (Lite 1.2): быстрый удар — галка ВКЛ по умолчанию; ВЫКЛ → ВКЛ на модели основного 20.42 (ход 0,4 с, GET /character 0,35 с).
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
@@ -43,7 +44,7 @@ function makeServer() {
     if (!b || !S.hero.inBattle) return [400, { error: 'no_battle' }];
     if (now < S.gcd) return [400, { error: 'global_cooldown', blockedBy: 'global', serverNowMs: now, globalCooldownUntilMs: S.gcd }];
     if (a !== 'battle_potion_use' && now < (S.cd[a] || 0)) return [400, { error: 'skill_cooldown', blockedBy: 'skill', serverNowMs: now, cooldownUntilMs: S.cd[a] }];
-    S.gcd = now + 250;
+    S.gcd = now + (S.gcdMs || 250);
     const h = S.hero;
     if (a === 'attack') b.mobHp -= 700;
     else if (a === 'l2_190') { b.mobHp -= 1800; h.mp -= 83; }
@@ -201,7 +202,8 @@ async function launch() {
   const errors = [], logs = [];
   await ctx.route('https://l2wap.com/**', async route => {
     const req = route.request(), u = new URL(req.url()), p = u.pathname;
-    const html = b => route.fulfill({ contentType: 'text/html; charset=utf-8', body: b }).catch(() => {});
+    // S.noPoll (сценарий D): страница не перечитывает героя по таймеру — только после хода, как настоящая игра в бою
+    const html = b => route.fulfill({ contentType: 'text/html; charset=utf-8', body: sv.S.noPoll ? b.replace('setInterval(ch,2500);', '') : b }).catch(() => {});
     if (p === '/map.html') return html(mapPage(sv));
     if (p === '/battle.html') return html(battlePage(sv));
     if (p === '/teleport.html') return html(teleportPage(sv));
@@ -212,12 +214,16 @@ async function launch() {
     let body = {}; try { body = req.postDataJSON() || {}; } catch (e) {}
     const S = sv.S, isAct = p === '/game/battle/action';
     if (isAct) { if (++S.pending > 1) S.overlap++; }
+    let status, json;
     try {
       const lat = isAct ? S.lat.action + (S.slowNext ? S.slowNext : 0) : p === '/character' ? S.lat.character : 0;
       if (isAct && S.slowNext) S.slowNext = 0;
-      if (lat) await delay(lat);
+      // S.latSplit (сценарий D): половина задержки до сервера, половина — обратно (откаты сервер считает от момента обработки)
+      const pre = S.latSplit ? Math.round(lat / 2) : lat;
+      if (pre) await delay(pre);
+      [status, json] = await sv.api(p, req.method(), body);
+      if (lat > pre) await delay(lat - pre);
     } finally { if (isAct) S.pending--; }
-    const [status, json] = await sv.api(p, req.method(), body);
     return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) }).catch(() => {});
   });
   const sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker');
@@ -370,6 +376,54 @@ async function scenarioC() {
   finally { await h.ctx.close(); }
 }
 
+// D (Lite 1.2, быстрый удар из основного 20.42): модель основного бота — ход 0,4 с, свой GET /character игры 0,35 с после каждого
+// ответа с hotbarStale. Сначала галка «⚡ Быстрый удар» выключена, потом включена; меряем удар→удар и число GET /character.
+async function scenarioD() {
+  const h = await launch(), { S } = h;
+  const run = async (n, what) => {
+    const a0 = S.actT.length, c0 = S.charN, l0 = await h.game.evaluate(() => window.__lost || 0);
+    await until(() => S.actT.length >= a0 + n, 90000, what);
+    const t = S.actT.slice(a0, a0 + n), gaps = t.slice(1).map((x, i) => x - t[i]).filter(x => x < 3000).sort((a, b) => a - b);
+    return { med: gaps[gaps.length >> 1], chars: S.charN - c0, lost: (await h.game.evaluate(() => window.__lost || 0)) - l0, sec: (t[t.length - 1] - t[0]) / 1000 };
+  };
+  try {
+    S.noPoll = true; S.latSplit = true; S.champAt = 99; S.mobHp = 200000; S.lat = { action: 400, character: 350 }; S.gcdMs = 60; S.cdSet = { attack: 60, l2_190: 2500 };
+    S.hero.battleHotbarSlots = S.hero.battleHotbarSlots.filter(x => x.a === 'attack' || x.a === 'l2_190' || x.k === 'u');
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).locs?.length === 2, 20000, 'локации');
+    const pp = await h.popup();
+    assert.equal(await pp.evaluate(() => document.getElementById('fastTurn').checked), true, 'по умолчанию ВКЛ');
+    await pp.click('details > summary'); await pp.click('#fastTurn');
+    await until(async () => (await h.cfg()).fastTurn === false, 5000, 'галка ВЫКЛ');
+    await pp.click('#run');
+    await h.game.bringToFront();
+    await until(() => S.acts.length >= 3, 30000, 'бой начат');
+    const off = await run(20, '20 ударов ВЫКЛ');
+    assert.equal(await h.game.evaluate(() => document.documentElement.dataset.l2liteFastN), undefined, 'при ВЫКЛ ответы не трогаются');
+    await pp.click('#fastTurn');
+    await until(async () => (await h.cfg()).fastTurn === true, 5000, 'галка ВКЛ');
+    await run(3, 'переход');
+    const on = await run(20, '20 ударов ВКЛ');
+    const fastN = +(await h.game.evaluate(() => document.documentElement.dataset.l2liteFastN || 0));
+    console.log('D замер', { off, on, fastN });
+    assert.ok(fastN >= 10, 'быстрых ответов ' + fastN);
+    assert.ok(on.med < off.med - 150, `удар→удар ВКЛ ${on.med} мс против ВЫКЛ ${off.med} мс`);
+    assert.ok(on.chars <= Math.ceil(on.sec / 5) + 2 && off.chars >= 15, `GET /character: ВЫКЛ ${off.chars}, ВКЛ ${on.chars} за ${on.sec} с`);
+    assert.ok(off.lost <= 1 && on.lost <= 1, `потерянные клики ВЫКЛ ${off.lost}, ВКЛ ${on.lost}`);
+    // HP героя падает сразу после собственного GET /character игры: панель отстанет на ~5 с, банку бот пьёт по ответу на ход
+    const c1 = S.charN; await until(() => S.charN > c1, 10000, 'GET /character игры');
+    const p0 = S.acts.filter(a => a === 'battle_potion_use').length, tDrop = Date.now(); S.hero.hp = 6000;
+    await until(() => S.acts.filter(a => a === 'battle_potion_use').length > p0, 6000, 'банка HP по ответу на ход');
+    const potMs = Date.now() - tDrop, hud = await h.game.evaluate(() => document.getElementById('l2-hud-hp-cur').textContent);
+    assert.ok(potMs < 2500, `банка через ${potMs} мс (панель героя показывала ${hud})`);
+    assert.equal(S.overlap, 0, 'второй ход ушёл до ответа на первый');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    console.log(`PASS D: ход 0,4 с + GET /character 0,35 с → удар→удар ВЫКЛ ${off.med} мс (GET ${off.chars} на 20 ударов) → ВКЛ ${on.med} мс (GET ${on.chars}), потерянных кликов ${off.lost}/${on.lost}; банка HP через ${potMs} мс после падения HP (панель ещё ${hud})`);
+  } catch (e) { console.error('DIAG D', { acts: h.S.acts.slice(-30).join(','), overlap: h.S.overlap, url: h.game.url(), log: logText(await h.rt().catch(() => ({}))), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABC';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCD';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });

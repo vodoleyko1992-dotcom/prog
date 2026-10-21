@@ -67,6 +67,22 @@
     return { ...info, type, on: on && type !== 'other' };
   }
 
+  // Быстрый удар (Lite 1.2, порт основного бота 20.42): метку для hook.js получают только обычная атака и известный удар по цели
+  // из таблицы (l2_<id> с типом attack в SK) — не банки, баффы, лимиты, транс, стойки, лечение и не скилл, которому игрок сам сменил тип.
+  function fastHit(s) {
+    if (!s || s.pot || s.type === 'item') return false;
+    if (s.type === 'basic') return s.action === 'attack';
+    const m = String(s.action || '').match(/^l2_(\d+)$/), row = m ? SK[+m[1]] : null;
+    return s.type === 'attack' && !!row && row[1] === 'attack';
+  }
+  // HP/MP героя: панель игры или ответ на ход — что свежее (Lite 1.2: после быстрого удара игра до 5 с не перечитывает персонажа,
+  // и панель может отставать). hud — числа с панели, hudT — когда они в последний раз менялись, resp — {hp, maxHp, mp, maxMp, t}.
+  function meMerge(hud, resp, hudT, now) {
+    const h = { ...(hud || {}) };
+    if (!resp || !Number.isFinite(resp.hp) || !(now - resp.t <= 4000) || resp.t < hudT) return h;
+    return { hp: resp.hp, maxHp: resp.maxHp > 0 ? resp.maxHp : h.maxHp, mp: Number.isFinite(resp.mp) ? resp.mp : h.mp, maxMp: resp.maxMp > 0 ? resp.maxMp : h.maxMp };
+  }
+
   // Банки по номеру предмета (TvT-арена подписывает их «#728 — зілля …») и по названию.
   const POT_MP = [726, 728], POT_HP = [725, 727, 1060, 1061, 1073, 1539, 1540];
   function potKind(title) {
@@ -222,7 +238,7 @@
 
   const fmtLeft = msLeft => { const s = Math.max(0, Math.round(msLeft / 1000)); return s < 90 ? s + ' с' : Math.round(s / 60) + ' мин'; };
 
-  const api = { SK, NATIVE, TYPES, TYPE_RU, cleanTitle, guessType, skillInfo, defaultOn, skillUse, potKind, planTurn,
+  const api = { SK, NATIVE, TYPES, TYPE_RU, cleanTitle, guessType, skillInfo, defaultOn, skillUse, fastHit, meMerge, potKind, planTurn,
     tvtView, phaseLive, tvtDecide, tvtPollGap, killStep, limitDone, mobRow, pickMob, teleportCost, fmtLeft, ms };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

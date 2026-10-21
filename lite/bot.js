@@ -4,13 +4,14 @@
 // Правила проекта сохранены: капчу не решаем (бот замирает и зовёт игрока), пароль не храним, Coin of Luck и FA не тратим
 // (адена — только на телепорт к месту охоты), клик — только когда игра свободна (иначе она его теряет).
 // Lite 1.1 (21.10, «на основе нового кода, внеси правки»): ход по ответу сервера и подстройка запаса клика из основного бота 20.36–20.41.
+// Lite 1.2 (21.10, решение John «Разрешаю», «по умолчанию вкл»): быстрый удар из основного 20.42 — выключатель cfg.fastTurn в «Ещё».
 (() => {
   'use strict';
   if (window.__l2lite) return;
   window.__l2lite = 1;
   const L = globalThis.L2Lite, CDM = globalThis.L2BattleCooldown;
   const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
-  const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3 };
+  const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
   const DEF_RT = { k: { kills: 0 }, zone: null, status: '', statusT: 0, log: [], deaths: [], revive: null, goZone: '', tpTry: [], zoneBlockT: 0,
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
     char: null, bar: [], locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0 };
@@ -119,7 +120,7 @@
   // ---------- сеть игры (hook.js) ----------
   const NET = { inflight: new Map(), starts: [], ends: new Map(), actEnd: 0, charEnd: 0 };
   const BUSY = /^\/character$|^\/game\/battle\/(?:action|hunt-continue)$|^\/game\/tvt\/action$/;
-  let SNAP = null, TVT = null, TVTC = { actN: 0 }, TVTS = null, BINFO = null;
+  let SNAP = null, TVT = null, TVTC = { actN: 0 }, TVTS = null, BINFO = null, BME = null;   // BME — HP/MP героя из ответа на ход (1.2)
   const CD = CDM.createBattleCooldown();
   const tvtDead = new Map();
   function netStart(d) {
@@ -143,6 +144,7 @@
     // Ход принят сервером — значит проверки активности уже нет (игрок решил её сам на этой или другой странице).
     if (d.path === '/game/battle/action' && ok && !d.err && rt.abChal) { setRt({ abChal: 0 }); log('проверка активности снята — продолжаю'); }
     if (d.bi && ok) BINFO = { ...d.bi, t };
+    if (d.me && ok && !d.err) { hudMark(); BME = { ...d.me, t }; }
     if (d.path === '/game/battle/leave' && d.method === 'POST' && ok) sess.set('l2lite.leftOk', { t });
     if (d.tvt) tvtNet(d);
     if (d.ab) abNet(d.ab, d.path);
@@ -229,10 +231,14 @@
   const zoneIs = id => !!rt.zone && (id === rt.zone.id || (rt.zone.alias || []).includes(id));
   const snapFresh = (ms = 60000) => (SNAP && Date.now() - SNAP.t < ms ? SNAP : null);
   const heroLvl = () => SNAP?.level || rt.char?.lvl || num($('#l2-hud-legacy-lvl')?.textContent) || 0;
+  // Lite 1.2: панель героя после быстрого удара может отставать до 5 с — берём ответ на ход, если он свежее последней смены панели.
+  let hudSeen = { v: '', t: 0 };
+  const hudNow = () => ({ hp: num($('#l2-hud-hp-cur')?.textContent), maxHp: num($('#l2-hud-hp-max')?.textContent), mp: num($('#l2-hud-mp-cur')?.textContent), maxMp: num($('#l2-hud-mp-max')?.textContent) });
+  function hudMark(h = hudNow()) { const v = [h.hp, h.maxHp, h.mp, h.maxMp].join('/'); if (v !== hudSeen.v) hudSeen = { v, t: Date.now() }; return h; }
   function meStats() {
-    const hp = num($('#l2-hud-hp-cur')?.textContent), maxHp = num($('#l2-hud-hp-max')?.textContent), mp = num($('#l2-hud-mp-cur')?.textContent), maxMp = num($('#l2-hud-mp-max')?.textContent);
+    const { hp, maxHp, mp, maxMp } = hudMark();
     const S = snapFresh(30000);
-    return { hp: Number.isFinite(hp) ? hp : S?.hp, maxHp: maxHp > 0 ? maxHp : S?.maxHp, mp: Number.isFinite(mp) ? mp : S?.mp, maxMp: maxMp > 0 ? maxMp : S?.maxMp };
+    return L.meMerge({ hp: Number.isFinite(hp) ? hp : S?.hp, maxHp: maxHp > 0 ? maxHp : S?.maxHp, mp: Number.isFinite(mp) ? mp : S?.mp, maxMp: maxMp > 0 ? maxMp : S?.maxMp }, BME, hudSeen.t, Date.now());
   }
   const limitDone = () => L.limitDone(rt.k?.kills || 0, cfg.killLimit);
   const zoneBlocked = () => Date.now() - (rt.zoneBlockT || 0) < 15 * 60000;
@@ -400,6 +406,8 @@
   // still() — план ещё тот же (Lite 1.1, основной бот 20.37): пока ждали игру, ответ мог назначить новый откат или сменить HP —
   // тогда не жмём старое, а сразу выбираем заново.
   let quick = false;                               // ход подтверждён сервером — следующий круг без «человеческой» паузы
+  // Быстрый удар (1.2): одноразовая метка для hook.js «действие|время» — только на этот клик; пустое действие метку снимает.
+  const fastMark = a => { try { const ds = document.documentElement.dataset; if (a) ds.l2liteFast = a + '|' + Date.now(); else delete ds.l2liteFast; } catch (e) {} };
   async function press(plan, g, tvt, still = null) {
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
     if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
@@ -410,10 +418,12 @@
     const slackA = NET.actEnd ? t0 - (NET.actEnd + lockA) : 1e9, slackB = NET.charEnd ? t0 - (NET.charEnd + lockB) : 1e9, bindB = slackB < slackA, gap = Math.min(slackA, slackB);
     if (s.action) pressAt.set(s.action, t0);
     pressAt.set(key, t0);
-    if (!fire(s.b, g)) return false;
+    fastMark(!tvt && cfg.fastTurn !== false && L.fastHit(s) ? s.action : '');
+    if (!fire(s.b, g)) { fastMark(''); return false; }
     if (s.pot) lastPot = { ...lastPot, [s.pot]: t0 };
     const st = await waitFor(() => NET.starts.find(x => x.t >= t0 && x.path === path && x.method === 'POST'), 450, 15);
     if (!st) {                                       // игра клик не отправила: слот «занят» 0,7 с, запас, решавший впритык, растёт
+      fastMark('');
       block.set(key, Date.now() + 700);
       if (frozen) frozenLost.set(key, (frozenLost.get(key) || 0) + 1);
       if (gap < 250) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }

@@ -1,7 +1,8 @@
 // ===== L2wap Lite — сетевой «жучок» (мир страницы, document_start) =====
 // 20.10.2026 (тред «Упрошенка под Дестра»): видит запросы игры к своему серверу (fetch / XMLHttpRequest) и передаёт боту
 // только нужные поля по белому списку: герой (уровень, локация, HP/MP, счётчик убийств), откаты боя, TvT, антибот.
-// Заголовки, токены, пароли и тела запросов целиком наружу не уходят. Работу игры не меняет: ответ отдаётся как был.
+// Заголовки, токены, пароли и тела запросов целиком наружу не уходят. Работу игры не меняет: ответ отдаётся как был —
+// кроме «быстрого удара» (Lite 1.2, решение John 21.10 «Разрешаю», «по умолчанию вкл»; выключатель в «Ещё»), см. fastTake ниже.
 (() => {
   if (window.__l2liteHook) return;
   window.__l2liteHook = 1;
@@ -55,6 +56,12 @@
     if (!b || (typeof b.spawnId !== 'string' && typeof b.mobName !== 'string')) return undefined;
     return { spawn: str(b.spawnId, 120) || '', name: str(b.mobName, 80) || '', kind: str(b.kind, 30) || '', tier: str(b.championTier, 12) || '', lvl: num(b.mobLevel) };
   }
+  // HP/MP героя из ответа на ход (Lite 1.2): после быстрого удара игра не перечитывает персонажа, а ответ хода всегда свежий.
+  function meOf(o) {
+    const d = o && typeof o === 'object' && o.delta && typeof o.delta === 'object' ? o.delta : null;
+    if (!d || num(d.characterHp) === undefined) return undefined;
+    return pick({ hp: num(d.characterHp), maxHp: num(d.characterMaxHp), mp: num(d.characterMp), maxMp: num(d.characterMaxMp) }, ['hp', 'maxHp', 'mp', 'maxMp']);
+  }
   const ROSTER = ['characterId', 'name', 'level', 'hp', 'maxHp', 'cp', 'maxCp', 'alive', 'spawnProtectedUntil', 'stunnedUntil', 'team'];
   const roster = a => (Array.isArray(a) ? a.slice(0, 40).filter(x => x && typeof x === 'object').map(x => pick(x, ROSTER)) : undefined);
   function tvtOf(path, o) {
@@ -84,7 +91,7 @@
     const o = parse(t), path = u.pathname, d = { path, method, status };
     if (req) d.req = req;
     const ch = heroOf(o); if (ch) d.ch = ch;
-    if (/^\/game\/battle(?:\/|$)/.test(path)) { const cd = cdOf(o); if (cd) d.bt = cd; const bi = battleOf(o); if (bi) d.bi = bi; }
+    if (/^\/game\/battle(?:\/|$)/.test(path)) { const cd = cdOf(o); if (cd) d.bt = cd; const bi = battleOf(o); if (bi) d.bi = bi; const me = meOf(o); if (me) d.me = me; }
     const tv = /^\/game\/tvt(?:\/|$)/.test(path) ? tvtOf(path, o) : undefined; if (tv) d.tvt = tv;
     const ab = abOf(path, o, status); if (ab) d.ab = ab;
     const lc = locsOf(path, o); if (lc) d.locs = lc;
@@ -95,17 +102,48 @@
   // Начало и конец каждого запроса игры — бот не кликает, пока игра ждёт свой GET /character (иначе клик теряется, основной бот 8.0.3).
   let ridN = 0;
   const start = (u, method) => { const rid = ++ridN; try { window.postMessage({ __l2lite: 'start', rid, path: u.pathname, method }, location.origin); } catch (e) {} return rid; };
+  // Быстрый удар (Lite 1.2, порт основного бота 20.42; решение John 21.10 «Разрешаю», «по умолчанию вкл», cfg.fastTurn в «Ещё»):
+  // почти каждый ответ на ход несёт delta.hotbarStale — по нему игра под замком действия делает свой GET /character (0,3–0,45 с),
+  // и клик бота в это время теряется. Только для обычного удара Lite (одноразовая метка data-l2lite-fast «действие|время» от press)
+  // в середине боя снимаем hotbarStale, если свой GET /character игры был не позже 5 с назад — персонаж всё равно обновляется
+  // не реже раза в 5 с. Победа/поражение/PvP/конец боя/банки/баффы/стойки, TvT и ручные клики игрока — как было.
+  let charT = 0;
+  const FAST_ACT = /^(?:attack|l2_\d+)$/;
+  const fastTake = (u, method, req) => { try {
+    if (method !== 'POST' || u.pathname !== '/game/battle/action') return false;
+    const h = document.documentElement, m = String((h && h.dataset && h.dataset.l2liteFast) || ''), i = m.lastIndexOf('|');
+    if (!m) return false;
+    delete h.dataset.l2liteFast;
+    const act = m.slice(0, i), age = Date.now() - +m.slice(i + 1);
+    return i > 0 && FAST_ACT.test(act) && act === (req && req.action) && age >= 0 && age < 1500;
+  } catch (e) { return false; } };                 // запрос игры уходит в любом случае
+  const fastOk = o => {
+    const d = o && o.delta;
+    if (!o || o.kind !== 'delta' || !d || typeof d !== 'object' || d.hotbarStale !== true) return false;
+    if (o.victory || o.defeat || o.pvpDefeat || o.pvpIncoming || o.pvpEnd || o.lethalMeta || o.battleEnded || o.outcome || o.partyReward) return false;
+    if (d.battleEnded || d.mobDead || d.characterDead || d.outcome || d.pvpEnd || d.pvp || d.victory || d.defeat) return false;
+    return Number.isFinite(+d.characterHp) && +d.characterHp > 0 && Number.isFinite(+d.mobHp) && +d.mobHp > 0 && Date.now() - charT < 5000;
+  };
+  const fastRes = res => !res.ok ? res : res.clone().text().then(t => {
+    const o = parse(t);
+    if (!fastOk(o)) return res;
+    delete o.delta.hotbarStale;
+    const hd = new Headers(res.headers); hd.delete('content-length'); hd.delete('content-encoding');
+    const h = document.documentElement; if (h) h.dataset.l2liteFastN = String((+h.dataset.l2liteFastN || 0) + 1);
+    return new Response(JSON.stringify(o), { status: res.status, statusText: res.statusText, headers: hd });
+  }).catch(() => res);
   const ofetch = window.fetch;
   if (ofetch) window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : (input && input.url) || String(input);
     const p = ofetch.apply(this, arguments), u = same(url);
     if (!u) return p;
     const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase(), req = method === 'POST' ? reqOf(init && init.body) : undefined;
-    const rid = start(u, method);
+    const rid = start(u, method), fast = fastTake(u, method, req);
     p.then(res => {
+      if (method === 'GET' && u.pathname === '/character' && res.ok) charT = Date.now();
       res.clone().text().then(t => post({ rid, ...summary(u, method, res.status, t, req) }), () => post({ rid, path: u.pathname, method, status: res.status }));
     }, err => post({ rid, path: u.pathname, method, status: 0, net: String((err && err.message) || err).slice(0, 80) }));
-    return p;
+    return fast ? p.then(fastRes) : p;
   };
   const XO = XMLHttpRequest.prototype.open, XS = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.open = function (m, url) { this.__l2lite = { method: String(m || 'GET').toUpperCase(), url }; return XO.apply(this, arguments); };
@@ -114,6 +152,7 @@
     if (u) {
       const req = info.method === 'POST' ? reqOf(body) : undefined, rid = start(u, info.method);
       this.addEventListener('loadend', function () {
+        if (info.method === 'GET' && u.pathname === '/character' && this.status >= 200 && this.status < 300) charT = Date.now();
         let t = '';
         try { t = !this.responseType || this.responseType === 'text' ? this.responseText : this.responseType === 'json' ? JSON.stringify(this.response) : ''; } catch (e) {}
         post({ rid, ...summary(u, info.method, this.status, t, req), ...(this.status ? {} : { net: 'нет ответа' }) });
