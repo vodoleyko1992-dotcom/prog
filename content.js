@@ -3420,6 +3420,9 @@ async function loopSideJobs() {
   farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
   L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
   if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); return true; }
+  if (loopStale()) return true;
+  // 20.43 (John 21.10: саб крафтера): свой крафт материалов — цель Маммона + список из меню (modules/craft.js), вне боя, только у крафтера
+  if (await L2V7Modules.craft?.step?.()) { await sleep(200); return true; }
   if (loopStale()) return true;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
   // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
   if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
@@ -6178,6 +6181,10 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
   get heroNick() { return heroNick; }, get heroLvl() { return heroLvl; }, get mammon() { return L2V7Modules.mammon; }, get canSpoil() { return canSpoil; },
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
+// 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
+L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+  get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
