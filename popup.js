@@ -1674,7 +1674,8 @@ const dockUiSave = () => { try { localStorage.setItem(DOCK_UI_KEY, JSON.stringif
 function taskListOpen(open, remember = true) {
   const grid = $('quickModeGrid'), tog = $('modeToggle');
   if (grid) grid.hidden = !open; tog?.setAttribute('aria-expanded', String(!!open));
-  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Свернуть' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
+  // 21.10: «Свернуть» теперь у плиток задач (#taskBoardFold); раскрытый список галок закрывается «Готово»
+  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Готово' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
   if (remember) { dockUi.tasksOpen = !!open; dockUiSave(); }
 }
 // 20.12 (ревизия 17.10): галки задач переехали из шапки в «Обзор» (в шапке — одна строка-сводка). Нажатие на сводку или «Изменить»
@@ -1686,6 +1687,16 @@ function taskListToggle() {
   setTimeout(() => $('taskBoard')?.scrollIntoView({ block: 'start' }), 30);
 }
 if (typeof dockUi.tasksOpen === 'boolean') taskListOpen(dockUi.tasksOpen, false);
+// 21.10 (игрок: «Кнопка свернуть не работает и должна сворачивать выделенную часть», скрин): «Свернуть» прячет простые плитки
+// выбранных задач — без счётчиков, прогресса и не первую по приоритету (TvT, Враги, Дейлики… на паузе); плитки с лимитами/полосой
+// и текущая задача остаются. Скрытые перечислены одной строкой. Состояние запоминается на устройстве (dockUi.boardMin).
+const taskRowPlain = r => !r.progress && r.percent == null && r.state === 'selected';
+function taskBoardFold(min, remember = true) {
+  const b = $('taskBoardFold'); if (b) { b.textContent = min ? 'Развернуть' : 'Свернуть'; b.setAttribute('aria-expanded', String(!min)); }
+  $('taskBoard')?.classList.toggle('folded', !!min);
+  if (remember) { dockUi.boardMin = !!min; dockUiSave(); }
+}
+taskBoardFold(dockUi.boardMin === true, false);
 const tabScroll = new Map(Object.entries(dockUi.scroll).filter(([k, v]) => /^tab-[\w-]+$/.test(k) && Number.isFinite(v) && v > 0));
 let scrollSaveT = null;
 document.querySelectorAll('section[id^="tab-"]').forEach(sec => sec.addEventListener('scroll', () => {
@@ -2087,8 +2098,11 @@ function renderWorkspace(rt, d, st) {
   const display = [...rows], fishAt = rows.findIndex(r => r.key === 'fish');
   if (fishAt < 0) display.push(dailyFishBoardRow(rt, d));
   display.splice(fishAt < 0 ? display.length : fishAt + 1, 0, dailyMobBoardRow(rt, d));
-  const markup = display.map(r => `<div class="task-row" data-state="${r.state}"${r.summary ? ` data-task-summary="${esc(r.summary)}"` : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
-  const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
+  const plain = display.filter(taskRowPlain).map(r => r.name);
+  if ($('taskBoardFold')) $('taskBoardFold').hidden = !plain.length;
+  const markup = display.map(r => `<div class="task-row${taskRowPlain(r) ? ' plain' : ''}" data-state="${r.state}"${r.summary ? ` data-task-summary="${esc(r.summary)}"` : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
+  const folded = plain.length ? `<button type="button" class="task-folded" data-task-unfold>Свёрнуто: ${plain.map(esc).join(' · ')}</button>` : '';
+  const board = $('taskBoardRows'); if (board._markup !== markup + folded) { board.innerHTML = markup + folded; board._markup = markup + folded; }
 }
 function selectedAutoTasks(d) {
   if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
@@ -3087,7 +3101,8 @@ if ($('paymentDismiss')) $('paymentDismiss').onclick = async () => {
   } catch (e) { toast('⚠ ' + e.message, 'var(--bad)'); }
   finally { b.disabled = false; b.textContent = 'Считать оплату не прошедшей'; }
 };
-if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
+if ($('taskBoardFold')) $('taskBoardFold').onclick = () => taskBoardFold(!$('taskBoard').classList.contains('folded'));
+if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { if (e.target.closest('[data-task-unfold]')) return taskBoardFold(false); const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
 cardify();
 foldHints();
 
