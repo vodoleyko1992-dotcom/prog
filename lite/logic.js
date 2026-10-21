@@ -128,7 +128,7 @@
     const row = id ? SK[id] : null;
     return s.type === 'attack' && !!row && row[1] === 'attack';
   }
-  // HP/MP героя: панель игры или ответ на ход — что свежее (Lite 1.2: после быстрого удара игра до 5 с не перечитывает персонажа,
+  // HP/MP героя: панель игры или ответ на ход — что свежее (Lite 1.2: после быстрого удара игра до 5 с, с 1.5.1 — до 30 с, не перечитывает персонажа,
   // и панель может отставать). hud — числа с панели, hudT — когда они в последний раз менялись, resp — {hp, maxHp, mp, maxMp, t}.
   function meMerge(hud, resp, hudT, now) {
     const h = { ...(hud || {}) };
@@ -147,6 +147,37 @@
     if (/\bhp\b|зцілен|исцелен|лікуван|лечен|healing|здоров/i.test(t)) return 'hp';
     return null;
   }
+
+  // ---------- стойка (toggle) ----------
+  // 1.5.1 (John 21.10: «Vicious Stance то включает то выключает туда сюда»): Lite 1.5 считал стойку выключенной, если её нет
+  // в character.toggleStances, и жал её снова — второе нажатие стойку снимало. У лука vicious_stance (именованное действие)
+  // игра в этом списке, видимо, не показывает. Теперь «включена» — по подсветке слота, строке баффов героя или списку игры;
+  // «выключена» — только если игра так сказала после нашего нажатия; иначе — своя память о последнем принятом нажатии.
+  // ev: {dom: true|false|null — подсветка слота, buff: стойка в баффах героя, seen: раньше была видна в баффах,
+  //      snap: {fresh, entry: {on}|null, buffs} — снимок героя позже нашего нажатия, mem: {on, t, hold} — своя память, now}
+  // → true / false / null (null — не знаем, не жмём).
+  const TGL_DOM_ON = /--(?:toggle-on|active|on|toggled|enabled)(?![\w-])/;
+  function toggleOn(ev = {}) {
+    const now = ev.now || Date.now(), mem = ev.mem || null, snap = ev.snap || null;
+    if (mem && mem.hold > now) return null;                        // щёлкала туда-сюда — не трогаем до конца паузы
+    if (ev.dom === true || ev.buff) return true;
+    if (snap && snap.fresh && snap.entry) return !!snap.entry.on;  // игра сама показала состояние после нашего нажатия
+    if (ev.dom === false) return false;
+    if (ev.seen && snap && snap.fresh && snap.buffs) return false; // раньше висела в баффах, теперь её там нет
+    if (mem) return mem.on !== false;
+    return false;                                                  // не нажимали и игра молчит — включаем один раз, дальше память
+  }
+  // Защита от «туда-сюда»: стойку уже жали дважды подряд (каждое нажатие — меньше 2 мин после прошлого, mem.flap ≥ 1),
+  // а игра снова показывает её выключенной — третий раз не жмём, 30 мин не трогаем. Одно «выкл» после нажатия — ещё не «туда-сюда»:
+  // первое нажатие могло снять стойку, которую бот не видел включённой, или игра сняла её сама (кончилась MP). → {st, hold}
+  const TGL_FLAP_MS = 120000, TGL_HOLD_MS = 30 * 60000;
+  function toggleDecide(ev = {}) {
+    const st = toggleOn(ev), mem = ev.mem, now = ev.now || Date.now();
+    if (st === false && mem && mem.t && now - mem.t < TGL_FLAP_MS && (mem.flap || 0) >= 1) return { st: null, hold: true };
+    return { st, hold: false };
+  }
+  // Номер нажатия подряд для памяти стойки: прошлое нажатие было меньше 2 мин назад — +1, иначе счёт с нуля.
+  const toggleFlap = (mem, now) => (mem && mem.t && now - mem.t < TGL_FLAP_MS ? (mem.flap || 0) + 1 : 0);
 
   // ---------- ход в бою ----------
   // slots: [{key, name, type ('basic'|attack|buff|lowhp|trance|heal|toggle|other), on, ready, active (бафф/стойка висит;
@@ -269,6 +300,18 @@
       boss: /босс|boss|рейд/.test(tail) || /--raid|--epic_guard/.test(c) || /raid|epic/i.test(mk) || /^l2dop_(?:rb|eg)_/i.test(id || ''),
       npc: /--npc/.test(c) };
   }
+  // 1.5.1 (John 21.10 «привел куда надо мне, не бьет мобов»): почему на карте не нашлось цели — одной строкой для журнала.
+  function noMobWhy(rows, opt = {}) {
+    const above = Number.isFinite(+opt.above) ? +opt.above : 10, hero = +opt.hero || 0;
+    if (!rows || !rows.length) return 'список мобов пуст';
+    const sp = rows.filter(r => r.boss || r.champ || r.npc).length, sk = rows.filter(r => opt.skip && opt.skip.has(r.id)).length;
+    const high = rows.filter(r => !r.boss && !r.champ && !r.npc && hero > 0 && r.lvl > hero + above);
+    const parts = [];
+    if (high.length) parts.push(`${high.length} выше героя +${above} (герой ${hero} ур.: ${high.slice(0, 3).map(r => `${r.name} ${r.lvl}`).join(', ')})`);
+    if (sp) parts.push(`${sp} — РБ, чемпионы или NPC`);
+    if (sk) parts.push(`${sk} — бой с ними не начался, пропуск 2 мин`);
+    return `на карте ${rows.length}: ${parts.join('; ') || 'подходящих нет'}`;
+  }
   // Ближайший обычный моб (список карты уже по дистанции). РБ, охрану эпиков, чемпионов и NPC не трогаем;
   // моб сильно выше героя (> +10) — тоже нет: бот рассчитан на автономную охоту без присмотра.
   function pickMob(rows, opt = {}) {
@@ -366,7 +409,8 @@
 
   const api = { SK, NATIVE, TYPES, TYPE_RU, cleanTitle, guessType, skillInfo, defaultOn, skillUse, fastHit, meMerge, potKind, planTurn,
     tvtView, phaseLive, tvtDecide, tvtPollGap, killStep, limitDone, mobRow, pickMob, teleportCost, fmtLeft, ms, BOW_ONLY, MELEE_ONLY, offWeapon, isDestr, isArcher, clsKind, KINDS, KIND_RU, profName, heroClass, slotRu, ARROWS, arrowsText,
-    PROF_KEYS, DEF_PROF, profCfg, profPatch, rtKind, profRt, profSwap };
+    PROF_KEYS, DEF_PROF, profCfg, profPatch, rtKind, profRt, profSwap,
+    noMobWhy, TGL_DOM_ON, toggleOn, toggleDecide, toggleFlap, TGL_FLAP_MS, TGL_HOLD_MS };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

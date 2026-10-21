@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "L2wap Lite — Дестр и лук",
-  "version": "1.5",
-  "version_name": "1.5 Lite",
-  "description": "L2wap Lite 1.5 — охота для Destroyer/Titan и лучника, у каждого свой профиль: место и число мобов, TvT, возврат, скиллы",
+  "version": "1.5.1",
+  "version_name": "1.5.1 Lite",
+  "description": "L2wap Lite 1.5.1 — охота для Destroyer/Titan и лучника, у каждого свой профиль: место и число мобов, TvT, возврат, скиллы",
   "permissions": [
     "storage",
     "alarms",

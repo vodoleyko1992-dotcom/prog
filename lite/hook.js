@@ -30,7 +30,8 @@
       locType: str(c.locationType, 30), inBattle: c.inBattle === true, spawn: str(c.battleSpawnId, 120), dung: str(c.activeDungeonId, 80),
       hp: num(c.hp), maxHp: num(c.maxHp), mp: num(c.mp), maxMp: num(c.maxMp), k: Number.isSafeInteger(c.mobsKilled) ? c.mobsKilled : undefined,
       rev: Number.isSafeInteger(c.revision) ? c.revision : undefined, adena: num(c.adena),
-      buffs: ids(c.activeBuffs).filter(b => b && typeof b === 'object').map(b => ({ id: num(b.skillId), until: num(b.expiresAt) || (typeof b.expiresAt === 'string' ? Date.parse(b.expiresAt) || undefined : undefined) })),
+      // 1.5.1: нет списка в ответе — undefined (не «баффов нет»): по нему бот решает, что стойка слетела.
+      buffs: Array.isArray(c.activeBuffs) ? ids(c.activeBuffs).filter(b => b && typeof b === 'object').map(b => ({ id: num(b.skillId), until: num(b.expiresAt) || (typeof b.expiresAt === 'string' ? Date.parse(b.expiresAt) || undefined : undefined) })) : undefined,
       toggles: Array.isArray(c.toggleStances) ? ids(c.toggleStances).filter(b => b && typeof b === 'object').map(b => ({ a: str(b.battleId, 60), id: num(b.skillId), on: b.active === true })) : undefined,
       // Панель боя без DOM: какие скиллы стоят и как они называются (для меню выбора скиллов).
       bar: ids(c.battleHotbarSlots).filter(s => s && s.k === 'a' && typeof s.a === 'string').map(s => s.a.slice(0, 60)),
@@ -122,6 +123,8 @@
   // и клик бота в это время теряется. Только для обычного удара Lite (одноразовая метка data-l2lite-fast «действие|время» от press)
   // в середине боя снимаем hotbarStale, если свой GET /character игры был не позже 5 с назад — персонаж всё равно обновляется
   // не реже раза в 5 с. Победа/поражение/PvP/конец боя/банки/баффы/стойки, TvT и ручные клики игрока — как было.
+  // 1.5.1 (John 21.10: «поставь пересчет не раз в 5 а раз в 30 сек»): перечитывание героя между ударами — раз в 30 с.
+  const FAST_CHAR_MS = 30000;
   let charT = 0;
   // 1.5: выстрелы лучника игра шлёт именем (power_shot, double_shot, stun_shot) — их метку ставит logic.js fastHit по таблице.
   const FAST_ACT = /^(?:attack|l2_\d+|[a-z]+_shot)$/;
@@ -138,7 +141,7 @@
     if (!o || o.kind !== 'delta' || !d || typeof d !== 'object' || d.hotbarStale !== true) return false;
     if (o.victory || o.defeat || o.pvpDefeat || o.pvpIncoming || o.pvpEnd || o.lethalMeta || o.battleEnded || o.outcome || o.partyReward) return false;
     if (d.battleEnded || d.mobDead || d.characterDead || d.outcome || d.pvpEnd || d.pvp || d.victory || d.defeat) return false;
-    return Number.isFinite(+d.characterHp) && +d.characterHp > 0 && Number.isFinite(+d.mobHp) && +d.mobHp > 0 && Date.now() - charT < 5000;
+    return Number.isFinite(+d.characterHp) && +d.characterHp > 0 && Number.isFinite(+d.mobHp) && +d.mobHp > 0 && Date.now() - charT < FAST_CHAR_MS;
   };
   const fastRes = res => !res.ok ? res : res.clone().text().then(t => {
     const o = parse(t);

@@ -1,7 +1,7 @@
 'use strict';
 // Lite 1.2 (21.10, тред «Упрошенка под Дестра», решение John «Разрешаю», «по умолчанию вкл»): быстрый удар из основного бота 20.42.
 // lite/hook.js снимает delta.hotbarStale только у обычного удара Lite (метка data-l2lite-fast) в середине боя и только если
-// собственный GET /character игры был не позже 5 с назад; остальные ответы отдаются игре как были. Выключатель — «Ещё» в меню.
+// собственный GET /character игры был не позже 5 с назад (с 1.5.1 — 30 с); остальные ответы отдаются игре как были. Выключатель — «Ещё» в меню.
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 const L = require('../lite/logic.js');
@@ -62,14 +62,25 @@ test('1.5: выстрел лучника под именем игры (метк�
   assert.equal((await p.act('power_shot', null)).delta.hotbarStale, true, 'выстрел игрока руками');
 });
 
-test('GET /character игры старше 5 с — игре даём обновить персонажа', async () => {
+// 1.5.1 (John 21.10: «поставь пересчет не раз в 5 а раз в 30 сек»): окно — 30 с вместо 5.
+test('GET /character игры старше 30 с — игре даём обновить персонажа; моложе 30 с — нет', async () => {
   const p = page();
   p.routes.set('/game/battle/action', mid());
   assert.equal((await p.act('attack')).delta.hotbarStale, true, 'GET ещё не было');
-  p.routes.set('/character', {}); await p.call('/character'); p.tick(5001);
-  assert.equal((await p.act('attack')).delta.hotbarStale, true);
+  p.routes.set('/character', {}); await p.call('/character'); p.tick(29000);
+  assert.equal((await p.act('attack')).delta.hotbarStale, undefined, '29 с после GET — ещё без перечитывания');
+  p.tick(1001);
+  assert.equal((await p.act('attack')).delta.hotbarStale, true, '30 с прошло — игра перечитывает героя');
   await p.call('/character'); p.tick(100);
   assert.equal((await p.act('attack')).delta.hotbarStale, undefined);
+});
+test('1.5.1: ответ без activeBuffs — buffs не «пусто», а неизвестно', async () => {
+  const p = page();
+  p.routes.set('/character', { character: { name: 'D', toggleStances: [] } }); await p.call('/character'); await flush();
+  p.routes.set('/character', { character: { name: 'D', activeBuffs: [{ skillId: 312, expiresAt: null }] } }); await p.call('/character'); await flush();
+  const chs = p.posts.filter(d => d.ch).map(d => d.ch);
+  assert.equal(chs[0].buffs, undefined);
+  assert.deepEqual(chs[1].buffs.map(b => b.id), [312]);
 });
 
 test('конец боя, смерть, PvP, TvT и полные ответы не трогаем', async () => {

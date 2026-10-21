@@ -92,7 +92,8 @@
       setRt({ cmdDone: c.id, k: { ...(rt.k || {}), lastK: null }, revive: null, goZone: '', tpTry: [], zoneBlockT: 0, deaths: [], limitNoted: 0, by, arrowOut: null, arrowNote: 0,
         zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null });
       log(`▶ Старт (профиль «${L.KIND_RU[kind]}»): ${cfg.zone ? 'место охоты «' + (cfg.zoneName || cfg.zone) + '»' : 'охочусь там, где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов' : 'без лимита мобов'}, TvT ${cfg.tvt ? 'вкл.' : 'выкл.'}`);
-      SNAP && onSnapZone(SNAP);
+      if (SNAP && Date.now() - SNAP.t < 30000) onSnapZone(SNAP);
+      if (!rt.zone && !cfg.zone) { zoneAskT = 0; void zoneAsk(); }   // 1.5.1: где стоит герой — спросим игру сразу
     } else if (c.type === 'reset') {
       const k = L.KINDS.includes(c.kind) ? c.kind : kind;
       if (k === kind) setRt({ cmdDone: c.id, k: { ...(rt.k || {}), kills: 0, lastK: null }, limitNoted: 0 });
@@ -137,6 +138,13 @@
   let SNAP = null, TVT = null, TVTC = { actN: 0 }, TVTS = null, BINFO = null, BME = null;   // BME — HP/MP героя из ответа на ход (1.2)
   let CLS = null;                                   // 1.3: активный класс героя {name, prof, slot, slots, t} — из ответа игры или своего GET
   const CD = CDM.createBattleCooldown();
+  // 1.5.1 (пробный бой лука 21.10, lite/archer-study.md §6): откаты выстрелов сервер присылает под каноническим номером
+  // (delta.skillCooldowns = {l2_19, l2_56, l2_101}), а жмём мы double_shot / power_shot / stun_shot — модель откатов спрашиваем по обоим.
+  const cdIds = a => { const id = a && !/^l2_\d+$/.test(a) && Object.prototype.hasOwnProperty.call(L.NATIVE, a) ? L.NATIVE[a] : 0; return id ? [a, 'l2_' + id] : [a]; };
+  const cdWait = a => Math.max(0, ...cdIds(a).map(x => CD.skillWait(x, '')));
+  const cdKnown = (a, since) => cdIds(a).some(x => CD.skillKnown(x, '', since));
+  // Ответ на добивающий ход (победа) откатов не несёт: длину отката скилла помним по прошлому ответу сервера (см. press).
+  const cdLen = new Map();
   const tvtDead = new Map();
   function netStart(d) {
     const t = Date.now();
@@ -147,7 +155,8 @@
   function netEnd(d) {
     const t = Date.now(), ok = d.status >= 200 && d.status < 300;
     NET.inflight.delete(d.rid);
-    NET.ends.set(d.rid, { status: d.status, err: d.err || (d.bt && (d.bt.error || (!ok && d.bt.code))) || (d.tvt && d.tvt.error) || '', by: String(d.bt?.blockedBy || ''), t });
+    const rem = Number(d.bt?.remainingMs ?? d.bt?.skillRemainingMs);   // 1.5.1: ранний выстрел — 400 {code:'skill_cooldown', skillId:'l2_19', remainingMs}
+    NET.ends.set(d.rid, { status: d.status, err: d.err || (d.bt && (d.bt.error || (!ok && d.bt.code))) || (d.tvt && d.tvt.error) || '', by: String(d.bt?.blockedBy || ''), rem: Number.isFinite(rem) ? rem : 0, t });
     if (NET.ends.size > 60) NET.ends.delete(NET.ends.keys().next().value);
     if (d.path === '/character') NET.charEnd = t;
     if (/^\/game\/(?:battle|tvt)\/action$/.test(d.path)) NET.actEnd = t;
@@ -210,8 +219,27 @@
       if (!c || typeof c !== 'object') return null;
       if (typeof c.name === 'string') clsSet(c.name, c.l2Profession, c.classSlots?.activeSlot,
         Array.isArray(c.classSlots?.slots) ? c.classSlots.slots.filter(s => s && s.owned === true).slice(0, 4).map(s => ({ slot: s.slot, prof: String(s.profession || ''), lvl: s.level })) : undefined);
-      return { zone: String(c.currentZoneId || ''), inBattle: c.inBattle === true, city: c.locationType === 'city', adena: num(c.adena) };
+      const h = { zone: String(c.currentZoneId || ''), zoneName: String(c.currentZoneNameUk || ''), inBattle: c.inBattle === true, city: c.locationType === 'city',
+        locType: String(c.locationType || ''), dung: String(c.activeDungeonId || ''), adena: num(c.adena) };
+      return h;
     } catch (e) { return null; }
+  }
+  // 1.5.1 (John 21.10: «привел куда надо мне, не бьет мобов»): место охоты не запомнено — не ждём, пока игра сама пришлёт
+  // героя (на карте она делает это редко, бот стоял на «Запоминаю место охоты»), а спрашиваем сами раз в 3 с.
+  let zoneAskT = 0, zoneLast = null;
+  async function zoneAsk() {
+    if (rt.zone || cfg.zone || Date.now() - zoneAskT < 3000) return;
+    zoneAskT = Date.now();
+    const h = await heroNow();
+    if (h) zoneLast = { ...h, t: Date.now() };
+    if (h && !rt.zone && !cfg.zone) onSnapZone(h);
+  }
+  // Почему место не запоминается — в журнал (раз в 2 мин), чтобы по журналу было видно, на чём бот стоит.
+  function zoneWhy() {
+    if (Date.now() - (sess.get('l2lite.zoneWhy', 0) || 0) < 120000) return;
+    sess.set('l2lite.zoneWhy', Date.now());
+    const S = zoneLast && (!SNAP || zoneLast.t > SNAP.t) ? zoneLast : SNAP, why = !S ? 'игра ещё не прислала, где герой' : S.dung ? `герой в подземелье (${S.dung}) — Lite там не охотится` : S.locType === 'city' ? 'герой в городе' : !S.zone ? 'игра не прислала локацию героя' : `локация «${S.zoneName || S.zone}» (${S.locType || '—'}) не подходит`;
+    log(`место охоты пока не запомнено: ${why}`);
   }
 
   // ---------- герой: уровень, локация, счётчик мобов ----------
@@ -236,10 +264,13 @@
     }
     onSnapZone(ch);
   }
-  // «Где стоит герой при Старте» — запоминаем первую локацию после Старта (не в бою, не в городе и не в подземелье).
+  // «Где стоит герой при Старте» — запоминаем первую локацию после Старта (не в городе и не в подземелье).
   // Окрестности города могут иметь свой номер зоны: после выхода из города места охоты запоминаем его как то же место.
+  // 1.5.1 (журнал John 21.10 19:57–20:00): и в бою — локация боя та же, где стоит герой. Lite 1.5 ждал конца боя, а охота
+  // цепочкой шла без перерывов: место так и не запомнилось, после выхода из боя бот взял за место охоты чужую точку.
+  const zoneSpot = ch => !!ch && !!ch.zone && !ch.dung && ch.locType !== 'city' && !/arena|tvt|olymp/i.test(ch.locType || '');
   function onSnapZone(ch) {
-    if (!owner || !cfg.on || !ch.zone || ch.inBattle || ch.dung || ch.locType === 'city') return;
+    if (!owner || !cfg.on || !zoneSpot(ch)) return;
     const z = rt.zone, out = sess.get('l2lite.outsk', null);
     if (z && out && Date.now() - out.t < 120000 && out.from === z.id && !zoneIs(ch.zone)) {
       sess.set('l2lite.outsk', null);
@@ -254,7 +285,7 @@
   const zoneIs = id => !!rt.zone && (id === rt.zone.id || (rt.zone.alias || []).includes(id));
   const snapFresh = (ms = 60000) => (SNAP && Date.now() - SNAP.t < ms ? SNAP : null);
   const heroLvl = () => SNAP?.level || rt.char?.lvl || num($('#l2-hud-legacy-lvl')?.textContent) || 0;
-  // Lite 1.2: панель героя после быстрого удара может отставать до 5 с — берём ответ на ход, если он свежее последней смены панели.
+  // Lite 1.2: панель героя после быстрого удара может отставать до 5 с (1.5.1 — до 30 с) — берём ответ на ход, если он свежее последней смены панели.
   let hudSeen = { v: '', t: 0 };
   const hudNow = () => ({ hp: num($('#l2-hud-hp-cur')?.textContent), maxHp: num($('#l2-hud-hp-max')?.textContent), mp: num($('#l2-hud-mp-cur')?.textContent), maxMp: num($('#l2-hud-mp-max')?.textContent) });
   function hudMark(h = hudNow()) { const v = [h.hp, h.maxHp, h.mp, h.maxMp].join('/'); if (v !== hudSeen.v) hudSeen = { v, t: Date.now() }; return h; }
@@ -275,7 +306,8 @@
     const n = Object.values(by).reduce((a, b) => a + (+b || 0), 0);
     ARW = { by: { ...by }, n, t: Date.now() };
     if (!owner || cfg.kind !== 'archer') return;
-    if (rt.arrowOut && n > (rt.arrowOut.n || 0)) { setRt({ arrowOut: null, arrowNote: 0 }); log(`стрелы есть (${n}) — продолжаю охоту`); }
+    // 1.5.1: и когда «нет стрел» было по пустой сумке (без отказа сервера) — иначе следующий раз журнал и окно «СТРЕЛ НЕТ» молчали бы
+    if (n > 0 && (rt.arrowOut || rt.arrowNote) && n > (rt.arrowOut?.n || 0)) { setRt({ arrowOut: null, arrowNote: 0 }); log(`стрелы есть (${n}) — продолжаю охоту`); }
     // «мало стрел» — один раз, пока их снова не станет больше порога (rt.arrowLow переживает перезагрузку страницы)
     if (n > 0 && n < ARROW_LOW && !rt.arrowLow) { setRt({ arrowLow: 1 }); log(`стрел осталось ${n} — скоро кончатся`); notify('arrows', 'L2wap Lite: мало стрел', `Осталось ${n} стрел.`); }
     else if (n >= ARROW_LOW && rt.arrowLow) setRt({ arrowLow: 0 });
@@ -409,7 +441,7 @@
     const now = Date.now();
     if ((block.get(key) || 0) > now || CD.globalWait('') > 0) return false;
     if (b.disabled || b.getAttribute('aria-disabled') === 'true' || /--disabled/.test(b.className)) return false;
-    const known = !!action && CD.skillKnown(action, '', pressAt.get(action) || 0), left = action ? CD.skillWait(action, '') : 0;
+    const known = !!action && cdKnown(action, pressAt.get(action) || 0), left = action ? cdWait(action) : 0;
     if (!domBusy(b)) { frozenSince.delete(key); return !(known && left > 0); }
     if (known && left <= 0 && (frozenLost.get(key) || 0) < 2 && !NET.inflight.size) {
       if (!frozenSince.has(key)) frozenSince.set(key, now);
@@ -431,12 +463,25 @@
     return set;
   }
   function markBuff(id, sec) { if (!id) return; const m = sess.get('l2lite.buffs', {}); m[id] = Date.now() + Math.max(5, Math.min(sec || 20, 600)) * 1000; sess.set('l2lite.buffs', m); }
-  // Стойка: только подтверждённое игрой состояние (ответ /character после нашего нажатия), иначе null — не трогаем.
+  // Стойка (1.5.1, John 21.10: «Vicious Stance то включает то выключает туда сюда»): 1.5 верил только списку игры
+  // character.toggleStances и считал стойку, которой там нет, выключенной — жал снова и снимал её. Теперь включена — по подсветке
+  // слота, строке баффов героя или списку игры; выключена — только когда игра так показала после нашего нажатия; иначе — своя
+  // память о последнем принятом нажатии (sessionStorage вкладки, смерть её стирает). Решение — L.toggleDecide (logic.js).
+  const tglMem = () => sess.get('l2lite.tgl', {});
+  function tglSet(key, patch) { const m = tglMem(); m[key] = { ...(m[key] || {}), ...patch }; sess.set('l2lite.tgl', m); }
   function toggleState(info) {
-    const S = snapFresh(60000);
-    if (!S || !Array.isArray(S.toggles) || S.t < (pressAt.get(info.key) || 0) + 300) return null;
-    const x = S.toggles.find(t => (t.a && t.a.toLowerCase() === info.key) || (info.id && t.id === info.id));
-    return x ? x.on : false;                       // стойка на панели, но её нет в списке игры — значит выключена
+    const mem = tglMem()[info.key] || null, b = info.b, now = Date.now();
+    const dom = !b ? null : b.getAttribute('aria-pressed') === 'true' || L.TGL_DOM_ON.test(b.className || '') ? true : b.getAttribute('aria-pressed') === 'false' ? false : null;
+    const buff = !!(info.id && activeIds().has(info.id));
+    if (buff && !mem?.seen) tglSet(info.key, { seen: 1 });
+    const S = snapFresh(60000), entry = S && Array.isArray(S.toggles) ? S.toggles.find(t => (t.a && t.a.toLowerCase() === info.key) || (info.id && t.id === info.id)) || null : null;
+    const r = L.toggleDecide({ dom, buff, seen: !!mem?.seen, mem, now,
+      snap: S ? { fresh: S.t >= (mem?.t || 0) + 1500, entry, buffs: Array.isArray(S.buffs) } : null });
+    if (r.hold) {
+      tglSet(info.key, { hold: now + L.TGL_HOLD_MS });
+      log(`${info.name}: включал дважды, а игра снова показывает стойку выключенной — 30 мин её не трогаю, чтобы не щёлкать туда-сюда`);
+    }
+    return r.st;
   }
   const skillKey = (action, title) => L.skillInfo(action, title).key;
   // TvT: скиллы арены из /game/tvt/skills (MP, откат, на кого) — бьём только по врагу (как основной бот 10.0.11).
@@ -503,7 +548,7 @@
   async function press(plan, g, tvt, still = null) {
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
     if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
-    if (!tvt && (CD.globalWait('') > 0 || (s.action && CD.skillWait(s.action, '') > 0 && CD.skillKnown(s.action, '', pressAt.get(s.action) || 0)))) { quick = true; return false; }
+    if (!tvt && (CD.globalWait('') > 0 || (s.action && cdWait(s.action) > 0 && cdKnown(s.action, pressAt.get(s.action) || 0)))) { quick = true; return false; }
     if (still && !still()) { quick = true; return false; }
     status(`${tvt ? 'TvT' : 'Бой'}: ${s.name} — ${plan.why}`);
     const t0 = Date.now(), frozen = frozenSince.has(key);
@@ -536,12 +581,19 @@
         return false;
       }
       if (end.by === 'global') { if (CD.globalWait('') <= 0) block.set(key, Date.now() + 300); quick = true; return false; }
-      if (cdErr && s.action && CD.skillWait(s.action, '') > 0) { quick = true; return false; }
+      if (cdErr && s.action && cdWait(s.action) > 0) { quick = true; return false; }
+      if (cdErr && end.rem > 0) { block.set(key, Date.now() + Math.min(end.rem, 30000) + 20); quick = true; return false; }   // 1.5.1: сервер сказал, сколько ждать
       block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : cdErr ? 700 : 1200));
       return false;
     }
     progress(); lastActOk = Date.now(); quick = true;
+    if (s.action && s.type !== 'basic') {           // 1.5.1: выстрел добил моба — откат держим сами, иначе в новом бою ранний выстрел и отказ
+      const w = cdWait(s.action);
+      if (w > 0 && cdKnown(s.action, t0)) cdLen.set(s.action, w + Date.now() - t0);
+      else if (cdLen.get(s.action)) block.set(key, t0 + cdLen.get(s.action));
+    }
     if ((s.type === 'buff' || s.type === 'lowhp') && s.id) markBuff(s.id, s.dur || 20);
+    if (s.type === 'toggle') { tglSet(key, { on: true, t: t0, flap: L.toggleFlap(tglMem()[key], t0) }); log(`${s.name}: стойку включил`); }
     if (s.type === 'trance') log(`Battle Trance: HP до 25 % — дальше ${plan.why.replace(/^транс → /, '')}`);
     if (s.type === 'lowhp') log(`${s.name} включён при HP ${Math.round(meStats().hp * 100 / (meStats().maxHp || 1))} %`);
     return true;
@@ -552,7 +604,7 @@
   const victoryShown = () => shown($('#battle-victory-inline'));
   const defeatShown = () => shown($('#battle-defeat-root')) || shown($('#map-defeat-root'));
   const spawnId = () => new URLSearchParams(location.search).get('spawnId') || '';
-  let rowsDone = false, lastActOk = Date.now(), pageT0 = Date.now(), battleWarn = '';
+  let rowsDone = false, lastActOk = Date.now(), pageT0 = Date.now(), battleWarn = '', noMobT = 0;
   // Противник — босс или чемпион: по номеру спавна в адресе, по ответу игры о начале этого боя или по приписке в заголовке.
   function specialFoe() {
     const id = spawnId(), title = ($('#battle-mob-title')?.textContent || '').trim(), row = L.mobRow(title, '');
@@ -611,7 +663,19 @@
       await toMap(g); return;
     }
     if (sp && battleWarn !== sp.key + ':fight') { battleWarn = sp.key + ':fight'; log(`${sp.name || 'противник'}: ${(leaveN[sp.key] || 0) >= 2 ? 'выйти из боя не получилось' : 'почти добит'} — бьюсь`); }
-    if (!mob) { if (Date.now() - pageT0 > 15000) { log('страница боя без моба 15 с — на карту'); await toMap(g); } else await sleep(200); return; }
+    // 1.5.1 (журнал John 21.10 19:59:45): 15 с — от пропажи моба, а не от загрузки страницы. Охота цепочкой идёт на одной странице,
+    // и 1.5 уходил на карту при первом же кадре без полоски HP моба (между боями), хотя бой шёл.
+    if (!mob) {
+      noMobT = noMobT || Date.now();
+      if (Date.now() - Math.max(noMobT, pageT0) > 15000) {
+        noMobT = 0;
+        const ttl = ($('#battle-mob-title')?.textContent || '').trim().slice(0, 40), hpT = ($('#battle-mob-hp-val')?.textContent || '').trim().slice(0, 30);
+        log(`страница боя без моба 15 с (моб: «${ttl || '—'}», HP: «${hpT || '—'}») — на карту`);
+        await toMap(g);
+      } else await sleep(200);
+      return;
+    }
+    noMobT = 0;
     // 1.5: лучник без стрел не стреляет — выходим из боя, как от босса (на карте бот ждёт стрелы).
     if (arrowsOut()) { arrowWait(); sess.set('l2lite.left', { id: sp?.key || spawnId(), t: Date.now() }); await toMap(g); return; }
     if (!rowsDone) { rowsDone = true; await rowsAll(g); barFromDom(); }
@@ -627,7 +691,7 @@
     const now = Date.now(); let w = Infinity;
     for (const s of slots) {
       if (s.on === false || s.type === 'other') continue;
-      const t = Math.max((block.get(s.key) || 0) - now, CD.globalWait(''), s.action ? CD.skillWait(s.action, '') : 0);
+      const t = Math.max((block.get(s.key) || 0) - now, CD.globalWait(''), s.action ? cdWait(s.action) : 0);
       if (t > 0) w = Math.min(w, t);
     }
     return w;
@@ -663,7 +727,13 @@
     const leaving = left && Date.now() - left.t < 60000 && (S?.t <= left.t + 300 || (leftOk && leftOk.t >= left.t));
     if (S?.inBattle && S.spawn && !leaving) { log('бой на сервере не закончен — возвращаюсь в него'); await go('/battle.html?spawnId=' + encodeURIComponent(S.spawn)); return; }
     if (!rt.zone && S?.locType === 'city') return outskirts(g);
-    if (!rt.zone) { status(snapFresh() ? 'Запоминаю место охоты' : 'Жду данные героя от игры'); await sleep(1000); if (Date.now() - pageT0 > 20000) location.reload(); return; }
+    if (!rt.zone) {
+      status(snapFresh() ? 'Запоминаю место охоты' : 'Жду данные героя от игры');
+      await zoneAsk();
+      if (rt.zone) return;
+      if (Date.now() - pageT0 > 10000) zoneWhy();
+      await sleep(1000); if (Date.now() - pageT0 > 60000) location.reload(); return;
+    }
     if (zoneWrong()) { setRt({ goZone: rt.zone.id }); log(`герой в «${SNAP.zoneName || SNAP.zone}», место охоты — «${rt.zone.name}»: лечу обратно`); await go('/teleport.html'); return; }
     if (S?.locType === 'city') return outskirts(g);
     if (limitDone()) { status(`Цель выполнена: убито ${rt.k?.kills || 0} из ${cfg.killLimit}${cfg.tvt ? ' · жду TvT' : ''}`); progress(); await sleep(3000); return; }
@@ -688,7 +758,10 @@
     }
     if (!m) {
       noMobT0 = noMobT0 || Date.now();
-      status('Подходящих мобов рядом нет — обновлю карту через 15 с'); progress();
+      // 1.5.1 (John 21.10: «не бьет мобов»): причина — в журнал (раз в 2 мин), чтобы было видно, почему бот стоит.
+      const why = L.noMobWhy(rows || mapRows(), { hero: heroLvl(), skip: new Set(badSpawn.keys()) });
+      if (Date.now() - (sess.get('l2lite.noMobLog', 0) || 0) > 120000) { sess.set('l2lite.noMobLog', Date.now()); log(`подходящих мобов нет — ${why}; обновляю карту каждые 15 с`); }
+      status(`Подходящих мобов рядом нет (${why}) — обновлю карту через 15 с`); progress();
       await sleep(15000); if (alive(g)) location.reload(); await sleep(3000); return;
     }
     noMobT0 = 0;
@@ -745,7 +818,7 @@
     if (!btn && !defeatShown()) return false;
     if (!rt.revive || Date.now() - (rt.revive.t || 0) > 180000) {
       const deaths = [...(rt.deaths || []).filter(t => Date.now() - t < 30 * 60000), Date.now()];
-      setRt({ deaths, revive: { t: Date.now(), step: 'city' } }); sess.set('l2lite.buffs', {});
+      setRt({ deaths, revive: { t: Date.now(), step: 'city' } }); sess.set('l2lite.buffs', {}); sess.set('l2lite.tgl', {});   // 1.5.1: стойки после смерти слетают
       log(`☠ герой погиб (${deaths.length} за 30 мин)`);
       if (deaths.length >= Math.max(1, +cfg.maxDeaths || 3)) {
         log(`☠ ${deaths.length} смерти за 30 мин — останавливаю бота, чтобы не терять опыт. Проверьте место охоты и скиллы`);
@@ -775,6 +848,11 @@
     const a = $('#l2-nav-bottom a[data-nav-role="outskirts"]') || $('a[data-nav-role="outskirts"]');
     if (rt.zone && SNAP && zoneIs(SNAP.zone)) sess.set('l2lite.outsk', { from: rt.zone.id, t: Date.now() });
     status('В Окрестности');
+    // 1.5.1: в журнал — почему бот оказался в городе и куда идёт (John 21.10: «вышел зачем то в город»).
+    if (Date.now() - (sess.get('l2lite.outskLog', 0) || 0) > 60000) {
+      sess.set('l2lite.outskLog', Date.now());
+      log(`герой в городе${SNAP?.zoneName ? ' («' + SNAP.zoneName + '»)' : ''} — выхожу в Окрестности${rt.zone ? '' : ', место охоты запомню там'}`);
+    }
     const s0 = SNAP;
     if (a && fire(a, g)) { await waitFor(() => (pageKind() !== 'city' && pageKind() !== 'map') || (SNAP !== s0 && SNAP?.locType !== 'city'), 8000, 200, g); progress(); return; }
     if (pageKind() !== 'city') { await go('/city.html'); return; }
@@ -1014,14 +1092,25 @@
       + '.fail{position:absolute;inset:0;padding:16px;background:#16181d;color:#e8e6e1;font:13px/1.45 system-ui,sans-serif}'
       + '.lnk{color:#d9a441;text-decoration:underline;cursor:pointer}'
       + '@media (pointer:coarse){.fab{padding:12px 16px;font-size:14px}.b{width:40px;height:30px}.hd{height:36px}}'   // палец (Android): крупнее
+      // 1.5.1 (John 21.10: «когда стрелы кончились добавь сообщение большое с возможностью его закрыть СТРЕЛ НЕТ. красным текстом на белом фоне»)
+      + '.arw{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:min(560px,calc(100vw - 24px));padding:26px 22px 20px;'
+      + 'background:#fff;color:#d10000;border:4px solid #d10000;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.55);text-align:center;font-family:system-ui,sans-serif}'
+      + '.arw .h{font:900 clamp(40px,12vw,76px)/1.05 system-ui,sans-serif;letter-spacing:.02em}'
+      + '.arw .p{margin:14px 0 18px;font:600 16px/1.4 system-ui,sans-serif}'
+      + '.arw .ok{display:inline-block;padding:10px 26px;border:2px solid #d10000;border-radius:8px;color:#d10000;background:#fff;font:700 16px/1 system-ui,sans-serif;cursor:pointer}'
+      + '.arw .ok:hover,.arw .ok:focus-visible{background:#d10000;color:#fff;outline:none}'
+      + '.arw .x{position:absolute;right:8px;top:8px;width:36px;height:36px;color:#d10000;font-size:22px}.arw .x:hover,.arw .x:focus-visible{background:#ffe5e5}'
       + '</style>'
       + '<div class="fab" role="button" tabindex="0"></div>'
       + '<div class="win" hidden><div class="hd"><span class="t"><i>⠿</i><b>L2wap Lite</b></span>'
       + '<div class="b tab" role="button" tabindex="0" title="Открыть меню отдельной вкладкой" aria-label="Открыть меню отдельной вкладкой">⧉</div>'
       + '<div class="b min" role="button" tabindex="0" title="Свернуть в кнопку" aria-label="Свернуть в кнопку">—</div></div>'
-      + '<div class="body"><div class="fail" hidden>Меню Lite не загрузилось в окне. <span class="lnk" role="button" tabindex="0">Открыть меню во вкладке</span></div></div></div>';
+      + '<div class="body"><div class="fail" hidden>Меню Lite не загрузилось в окне. <span class="lnk" role="button" tabindex="0">Открыть меню во вкладке</span></div></div></div>'
+      + '<div class="arw" role="alertdialog" aria-label="Стрел нет" hidden><div class="b x" role="button" tabindex="0" title="Закрыть" aria-label="Закрыть">✕</div>'
+      + '<div class="h">СТРЕЛ НЕТ</div><div class="p">Лучник без стрел не охотится. Положите в сумку стрелы под грейд лука — бот продолжит сам.</div>'
+      + '<div class="ok" role="button" tabindex="0">Закрыть</div></div>';
     const q = s => sh.querySelector(s), m = dockMem();
-    dock = { host, fab: q('.fab'), win: q('.win'), hd: q('.hd'), title: q('.t'), body: q('.body'), fail: q('.fail'), frame: null, frameT: 0, ok: false,
+    dock = { host, fab: q('.fab'), win: q('.win'), hd: q('.hd'), title: q('.t'), body: q('.body'), fail: q('.fail'), arw: q('.arw'), frame: null, frameT: 0, ok: false,
       open: typeof m.open === 'boolean' ? m.open : vpW() >= 900, cap: false };
     const d = dock;
     // кнопка: нажатие — развернуть, перенос — запомнить место
@@ -1037,6 +1126,9 @@
     min.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockOpen(false); }); dockKey(min, () => dockOpen(false));
     tab.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockMenuTab(); }); dockKey(tab, dockMenuTab);
     lnk.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); dockMenuTab(); }); dockKey(lnk, dockMenuTab);
+    // «СТРЕЛ НЕТ» закрыли — до следующего раза, когда стрелы кончатся (rt.arrowNote — время этого раза)
+    const arwClose = () => { dockSave({ arwX: rt.arrowNote || 0 }); dockSig = ''; dockPaint(); };
+    for (const el of [q('.arw .x'), q('.arw .ok')]) { el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); arwClose(); }); dockKey(el, arwClose); }
     document.documentElement.appendChild(host);
     dockSig = dockLay = '';
   }
@@ -1067,9 +1159,12 @@
       d.cap = !!abLayer();
       // окно не ответило «готово» за 8 с (чужой CSP, сбой расширения) — подсказка открыть меню во вкладке
       if (d.frame && !d.ok && d.fail.hidden && Date.now() - d.frameT > 8000) d.fail.hidden = false;
-      const laySig = [on, d.open, d.cap, vpW(), vpH()].join('|'), sig = laySig + '|' + lastStatus;
+      // 1.5.1: окно «СТРЕЛ НЕТ» — пока лук без стрел и его не закрыли; капча важнее — тогда не показываем
+      const arw = on && cfg.kind === 'archer' && !d.cap && !!rt.arrowNote && arrowsOut() && dockMem().arwX !== rt.arrowNote;
+      const laySig = [on, d.open, d.cap, vpW(), vpH()].join('|'), sig = laySig + '|' + arw + '|' + lastStatus;
       if (sig === dockSig) return;
       const lay = laySig !== dockLay; dockSig = sig; dockLay = laySig;
+      d.arw.hidden = !arw;
       const st = lastStatus || (on ? 'включён' : 'выключен');
       d.fab.className = on ? 'fab on' : 'fab';
       d.fab.textContent = on ? 'Lite ▶' : 'Lite';
