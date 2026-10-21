@@ -1561,7 +1561,16 @@ async function halt(msg, hard, user = false) {
 }
 // 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
 // как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
-async function pauseBot(msg) {
+// 20.43 (разбор 21.10): halt при неотвечающем сервере ждёт сервер, а pauseBot — нет: минутный лаг при выходе из Ashen Bastion, загрузке
+// карты или телепорте ставил бота на паузу до утра. Пауза из-за сбоя (opt.fault: карта, Ashen, телепорт) сначала спрашивает сервер:
+// не отвечает — ждём его, как halt (serverWait), шаг повторится после ответа/перезагрузки. «Один РБ» и визит к Маммону (без fault) — пауза
+// сразу, как раньше. Повторной оплаты здесь нет: ожидание только откладывает паузу, маршруты сами запрещают повтор неподтверждённого.
+async function pauseBot(msg, opt = {}) {
+  if (opt.fault && on) {
+    const stamp = automationSnapshot();
+    if (!(await srvUp())) { if (!automationCurrent(stamp)) return; rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, на паузу не встаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
+    if (!automationCurrent(stamp)) return;
+  }
   rec('B', 'пауза', msg);
   await automationStop(msg, 'pause');
 }

@@ -1339,11 +1339,11 @@ async function rbExitAshen(H, active) {
   if(!same())return;
   const expired=Date.now()-(H.exitAt||H.t||0)>60000;
   if(/\/ashen-bastion\.html$/i.test(location.pathname)) {
-    if(expired){await env.pauseBot('Тур РБ: выход из Ashen Bastion не подтверждён за минуту; проверь город и продолжи');return;}
+    if(expired){await env.pauseBot('Тур РБ: выход из Ashen Bastion не подтверждён за минуту; проверь город и продолжи',{fault:true});return;}   // 20.43: сервер лежит — ждём его, не пауза
     if(H.exitClickAt){env.setStatus('Тур РБ: жду подтверждения выхода из Ashen Bastion');await env.sleep(1000);return;}
     const link=await env.waitX(()=>!same()||env.$q('a#ashen-exit-city[href="/city.html"]'),8000,150);
     if(!same())return;
-    if(!link || link===true){await env.pauseBot('Тур РБ: не найдена штатная кнопка выхода из Ashen Bastion в город');return;}
+    if(!link || link===true){await env.pauseBot('Тур РБ: не найдена штатная кнопка выхода из Ashen Bastion в город',{fault:true});return;}
     const clickAt=Date.now(),char=env.rt.char;
     await huntSet({exitClickAt:clickAt,next:'жду подтверждения штатного входа в город'});
     // В этой вкладке точно знаем, что fire ещё не был вызван; после reload такого знания нет.
@@ -1359,7 +1359,7 @@ async function rbExitAshen(H, active) {
   if(!same())return;
   // Первая загрузка /city.html ещё может отдавать прежнее cityId: URL не доказывает выход.
   if(ch?.name!==env.rt.char || !/^l2dop_[a-z0-9_]+$/.test(ch.cityId||'') || ch.inBattle!==false){
-    if(expired){await env.pauseBot('Тур РБ: сервер не подтвердил выход из Ashen Bastion; проверь город и продолжи');return;}
+    if(expired){await env.pauseBot('Тур РБ: сервер не подтвердил выход из Ashen Bastion; проверь город и продолжи',{fault:true});return;}
     env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;
   }
   await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
@@ -1517,7 +1517,7 @@ async function rbHuntStep() {
       }
       await huntSet({ mapLoadT: 0, mapLoadReloads: 0 });
       if (!active()) return;
-      return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`);
+      return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
     }
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;

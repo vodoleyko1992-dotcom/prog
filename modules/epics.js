@@ -881,7 +881,7 @@ async function epicStep() {
       }
       await epicSet({ mapLoadT: 0, mapLoadReloads: 0 });
       if (!active()) return;
-      return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`);
+      return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
     }
     if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
     const r = await env.waitX(() => epicPins().find(x => x.k === E.k), 5000, 300);

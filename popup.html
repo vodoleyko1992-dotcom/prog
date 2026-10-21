@@ -188,6 +188,7 @@
   <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
   <div id="controlWarn" class="wake-warn" role="alert" hidden></div>
   <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
+  <div id="stopWarn" class="wake-warn" role="status" hidden></div>
   <div id="updateWarn" class="wake-warn" role="alert" hidden><span id="updateWarnText"></span> <button id="reloadBot" type="button">Перезагрузить бот</button></div>
   <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="false" title="Список задач — в разделе «Обзор»: показать или скрыть">
     <span class="mode-toggle-title">◫ Задачи бота:</span><span id="modeSummary">Выбрать задачи</span><span class="mode-toggle-edit" aria-hidden="true">Изменить</span>
@@ -813,6 +814,7 @@
   <h4>📌 Меню и индикатор</h4>
   <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
   <label>🖥 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
+  <label>🔔 Уведомлять об остановках <input id="notifyStops" type="checkbox"></label>
   <h4>🔐 Автовход (если выбило из игры)</h4>
   <label>Логин (ник) <input id="authLogin" class="nm" autocomplete="off" spellcheck="false"></label>
   <label>Пароль <input id="authPass" class="nm" type="password" autocomplete="new-password"></label>
