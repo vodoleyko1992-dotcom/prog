@@ -389,7 +389,7 @@ async function load() {
   renderEpics(rt, d);
   renderRbTimer(rt, d);
   renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
-  renderStory(rt); renderSub(rt, d); renderCraft(rt, d);
+  renderStory(rt); renderSub(rt, d); renderSubGo(rt); renderCraft(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
   renderHunt(rt, d);
   renderRb(rt);
@@ -1695,6 +1695,37 @@ function renderSub(rt, d) {
   const say = rt.subHandReq?.t ? '⏳ по кнопке: передам основному, как только закончу бой/тур' : rt.subHandSay && Date.now() - rt.subHandSay.t < 600000 ? `✗ по кнопке не передал: ${rt.subHandSay.why}` : '';
   $('subBox').textContent = [say, rt.subInfo || 'Класс и роль бот узнает у игры сам (после первого ответа /character)'].filter(Boolean).join('\n');
 }
+// 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса и лучший комплект (modules/subgo.js, команда rt.subGo)
+const SUBGO_UI = 'l2bot-subGo';
+const profName2 = p => String(p || '?').replace(/^(?:human|elf|dark_elf|orc|dwarf)_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+let subGoSig = '', subGoRt = {};
+function renderSubGo(rt) {
+  subGoRt = rt || {};
+  const sel = $('subGoSlot'); if (!sel) return;
+  const sl = (rt.subSlots || []).filter(x => x && x.prof);
+  const opts = sl.map(x => `<option value="${+x.slot}">${x.slot}: ${profName2(x.prof)} ${x.lvl || ''}${x.on ? ' — сейчас' : ''}</option>`).join('');
+  if (opts && opts !== subGoSig) { const keep = sel.value; subGoSig = opts; sel.innerHTML = opts;
+    let ui = {}; try { ui = JSON.parse(localStorage.getItem(SUBGO_UI) || '{}'); } catch (_) {}
+    const want = keep !== '' && sl.some(x => String(x.slot) === keep) ? keep : String(ui.slot ?? '') !== '' && sl.some(x => String(x.slot) === String(ui.slot)) ? String(ui.slot) : String((sl.find(x => !x.on) || sl[0]).slot);
+    sel.value = want;
+    for (const k of ['Kit', 'Wt', 'Shield']) if (ui[k] && $('subGo' + k)) $('subGo' + k).value = ui[k]; }
+  const J = rt.subGo, S = rt.subGoSay;
+  $('subGoBox').textContent = J?.t ? `⏳ по кнопке: ${J.gearOnly ? 'одеваю лучшее' : `меняю класс на слот ${J.slot}`} — начну, как только закончу бой (бот должен быть запущен)`
+    : S?.t ? `${S.ok ? '✓' : '✗'} ${new Date(S.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${S.why}${S.worn?.length ? '\n' + S.worn.join('\n') : ''}` : '';
+}
+async function subGoSend(gearOnly) {
+  const sel = $('subGoSlot'), ui = { slot: sel.value, Kit: $('subGoKit').value, Wt: $('subGoWt').value, Shield: $('subGoShield').value };
+  try { localStorage.setItem(SUBGO_UI, JSON.stringify(ui)); } catch (_) {}
+  const cur = (subGoRt.subSlots || []).find(x => x.on)?.slot;
+  if (!gearOnly && sel.value === '') return toast('Слоты классов ещё не прочитаны — откройте игру с запущенным ботом');
+  const slot = gearOnly ? cur ?? null : +sel.value;
+  await menuPatch({ subGo: { t: Date.now(), slot, gearOnly: !!gearOnly, kit: ui.Kit, wt: ui.Wt, shield: ui.Shield }, subGoSay: null });
+  const { on = false } = await chrome.storage.local.get('on');
+  if (!on) await $('start').onclick();
+  toast(gearOnly ? '👕 Одеваю лучшее для текущего класса' : '🧬 Меняю класс и одеваю лучшее');
+}
+$('subGoStart')?.addEventListener('click', () => subGoSend(false));
+$('subGoGear')?.addEventListener('click', () => subGoSend(true));
 // 20.43 (John 21.10): свой крафт материалов (modules/craft.js) — книга рецептов rt.craftBook, список rt.craftQueue, прогресс rt.craftMade
 let craftSig = '', craftListSig = null, craftRt = {};
 function renderCraft(rt, d) {
@@ -2128,12 +2159,15 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в разделе «Лимиты»; дополнительные задачи остаются разрешены.', tab:'overview' };
   // 17.10: бой стоит дольше 6 с — причина ожидания навыков из журнала показана рядом с задачей (свежая, не старше 2 мин)
   const combatWait = rt.combatWait && now - (+rt.combatWait.t || 0) < 120000 && /^\/?battle|бой/i.test(String(rt.status || '')) ? ' · Бой ждёт: ' + String(rt.combatWait.text || '').slice(0, 160) : '';
-  return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
+  // 20.43 (доводка 21.10): передышки — по задаче, в подсказке все
+  const holdNote = selfHoldViews(rt, d, now).map(hold => `Передышка${hold.key && AUTO_TASK_LABELS[hold.key] ? ` «${AUTO_TASK_LABELS[hold.key]}»` : ''} до ${hold.hm}: ${hold.why}. `).join('');
+  return { state:'running', label:'Движок активен', text:last, hint:holdNote + 'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
 }
 function taskBoardRows(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
-  const day = L2EngineCore.dailyDay(now,rt);
+  const day = L2EngineCore.dailyDay(now,rt), holds = selfHoldViews(rt, d, now);
   return selected.map(key => {
+    const hold = holds.find(h => h.key === key);   // 20.43 (доводка 21.10): у каждой задачи — своя передышка
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
     const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
@@ -2163,7 +2197,23 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     }
     // 20.43 (ревью): ход рыбалке отдан на время отсрочки призыва кота (rbFishWait.pet) — тур ждёт кота, а не доступного РБ
     if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = rt.rbFishWait.pet ? 'Ждёт кота: призыв не подтвердился' : 'Ждёт доступного РБ'; state = 'waiting'; }
+    // 20.43 (автономность): задача на передышке после временного сбоя — «Передышка до HH:MM» и причина
+    if (st.on && hold && hold.key === key) { label = `Передышка до ${hold.hm}`; state = 'waiting'; progress.unshift(hold.text); }
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
+  });
+}
+// 20.43 (автономность, разбор 21.10): передышка после временного сбоя (rt.selfHold) — в меню видно, какая задача ждёт, до скольки и почему
+// (стоит после taskBoardRows: срезы тестов доски задач берут код от taskBoardRows до сводки дневных мобов)
+function selfHoldView(rt, d, now = Date.now()) { return selfHoldViews(rt, d, now)[0] || null; }
+// 20.43 (доводка 21.10): rt.selfHold — передышки по задаче (L2EngineCore.selfHoldList); ближайшая к концу — первой
+function selfHoldViews(rt, d, now = Date.now()) {
+  const list = typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldList ? L2EngineCore.selfHoldList(rt, now)
+    : typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldActive ? [L2EngineCore.selfHoldActive(rt, now)].filter(Boolean) : [];
+  return list.slice().sort((a, b) => +a.until - +b.until).map(h => {
+    const key = h.task || { farm: d?.zoneAuto ? 'auto' : 'farm', campaign: 'quests', raid: 'raid', epic: 'epic', fish: 'fish', cat: 'cat' }[h.mode] || null;
+    const hm = new Date(+h.until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    const why = String(h.why || 'сбой').slice(0, 160);
+    return { key, hm, why, text: `передышка до ${hm}: ${why}` };
   });
 }
 // 20.10 (журнал 09:58:23): снятие задачи рыбалки не прячет дневной счётчик и его лимит.
@@ -2784,7 +2834,7 @@ $('recDom').onclick = async () => {
   } catch (e) { toast('⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com')); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
+const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'wdSilent', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
   const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память

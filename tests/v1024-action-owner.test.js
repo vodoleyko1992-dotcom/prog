@@ -1,12 +1,14 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function fixture(saved={}){
+// 20.43 (автономность): hold — ответ content.selfHoldStart ('defer' | 'stop'); без него — старое ядро без передышек (halt)
+function fixture(saved={},hold=null){
  const box={Date,JSON,Object,Proxy};vm.runInNewContext(fs.readFileSync(__dirname+'/../modules/actions.js','utf8'),box);
  let id=0,mode='raid',lease='a',page='/map.html',interrupt=false,battle=false,commit=true;
  const calls=[],run={},env={rt:{char:'Hero',...saved},cfg:{},on:true,tabOwner:true,mode:()=>mode,lease:()=>lease,page:()=>page,id:()=>String(++id),
   setRt:async p=>{Object.assign(env.rt,p);return {ok:commit}},rtCommit:async()=>commit,rec(){},setStatus:s=>calls.push(s),halt:async s=>{calls.push('halt');env.on=false},isBattle:()=>battle,interrupted:()=>interrupt,
   paymentPending:()=>env.rt.actionPayments?.pending,reconcile:async()=>calls.push('reconcile'),
-  jobs:()=>['tbuff','petBufferTrip','shop','rbGo','zoneGo'].map(key=>({key,run:async()=>{calls.push(key);await run[key]?.();}}))};
+  jobs:()=>['tbuff','petBufferTrip','shop','rbGo','zoneGo'].map(key=>({key,run:async()=>{calls.push(key);await run[key]?.();}})),
+  ...(hold?{selfHold:async(kind,why,o)=>{calls.push('hold:'+kind+':'+(o?.noWait?'noWait':o?.noCount?'noCount':''));return hold}}:{})};
  const A=box.L2V7Factories.actions(env);A.enterFrame();
  return {A,env,calls,run,page:v=>page=v,mode:v=>mode=v,lease:v=>lease=v,interrupt:v=>interrupt=v,battle:v=>battle=v,commit:v=>commit=v};
 }
@@ -83,10 +85,21 @@ test('Stop блокирует автоматический переход, но 
  const f=fixture(),native={href:'/map.html'};f.env.on=false;f.A.locationProxy(native).href='/automatic';assert.equal(native.href,'/map.html');let manual=true;const loc=f.A.locationProxy(native,()=>manual);loc.href='/char.html';assert.equal(native.href,'/char.html');manual=false;loc.href='/late';assert.equal(native.href,'/char.html');
 });
 
-test('цикл A→B→A с изменением фазы также ограничен и переживает reload',async()=>{
- let f=fixture({petBufferTrip:{id:'cycle',phase:'city'}});
+// 20.43 (автономность, разбор 21.10): третий цикл того же маршрута за час — запрет маршрута на 2 ч вместо остановки; новый запрос этого
+// маршрута снимается до запуска, явная команда меню (manual) проходит. Без передышек в ядре — прежняя остановка (проверка сохранена)
+async function cycle3(hold){
+ let f=fixture({petBufferTrip:{id:'cycle',phase:'city'}},hold);
  for(let round=0;round<3&&f.env.on;round++){if(!f.env.rt.petBufferTrip)f.env.rt.petBufferTrip={id:'cycle'+round,phase:'city'};
-  for(let i=0;i<14&&f.env.on&&f.env.rt.petBufferTrip;i++){f.env.rt.petBufferTrip.phase=i%2?'pay':'city';f.page(i%2?'/town-buffer.html':'/city.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}
+  for(let i=0;i<14&&f.env.on&&f.env.rt.petBufferTrip;i++){f.env.rt.petBufferTrip.phase=i%2?'pay':'city';f.page(i%2?'/town-buffer.html':'/city.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)),hold);}
   if(round<2){assert.equal(f.env.on,true,'цикл '+(round+1)+' снимает маршрут, бот работает');assert.equal(f.env.rt.petBufferTrip,null);}}
- assert.ok(f.calls.includes('halt'),'третий цикл того же маршрута за час — остановка');
+ return f;
+}
+test('цикл A→B→A с изменением фазы также ограничен и переживает reload; третий за час — запрет маршрута, бот работает',async()=>{
+ const f=await cycle3('defer');
+ assert.equal(f.env.on,true);assert.ok(!f.calls.includes('halt'));assert.ok(f.calls.includes('hold:route:petBufferTrip:noWait'));
+ assert.ok(f.env.rt.actionBan.petBufferTrip.until>Date.now()+119*60000);assert.equal(f.env.rt.petBufferTrip,null);
+ f.env.rt.petBufferTrip={id:'again',phase:'city'};const n=f.calls.length;await f.A.dispatch();
+ assert.equal(f.env.rt.petBufferTrip,null,'запрещённый маршрут снят до запуска');assert.ok(!f.calls.slice(n).includes('petBufferTrip'));
+ f.env.rt.petBufferTrip={id:'menu',phase:'city',manual:true};await f.A.dispatch();assert.ok(f.calls.slice(n).includes('petBufferTrip'),'явная команда меню не запрещается');
+ const g=await cycle3(null);assert.ok(g.calls.includes('halt'),'старое ядро без передышек — третий цикл за час — остановка');
 });

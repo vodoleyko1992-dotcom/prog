@@ -145,7 +145,7 @@ async function finish(J, ok, why) {
   if (!active(T0) || !sameJob(J)) return;
   const log = [{ kind: J.kind, ok: !!ok, why: String(why || '').slice(0, 140), t: Date.now() }, ...(env.rt.storyLog || [])].slice(0, 20);
   env.rec('B', 'квест', `${Q[J.kind].name}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
-  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'квест сдан: обратно на точку' }, zoneGoT: 0 } : {};
+  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'квест сдан: обратно на точку', svc: 'quests' }, zoneGoT: 0 } : {};   // 20.43 (ревью): svc — передышка не снимает
   await env.setRt({ storyJob: null, storyLog: log, ...back });
   if (!active(T0) || env.rt.storyJob) return;
   storyTick(true).catch(() => {});

@@ -10,12 +10,16 @@ assert.equal(wdPlan({ quiet: 100000, recent: [], srv: 'down', now }).act, 'none'
 assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: R(3), srv: 'down', now }) }, { act: 'reload', down: true }, 'server down + 3 reloads — NOT stop');
 assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: R(5), srv: 'down', downLast: now - 60000, wasDown: true, now }) }, { act: 'none', down: true }, 'max once per 2 min');
 assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: R(3), srv: 'up', wasDown: true, now }) }, { act: 'reload', back: true }, 'server back — reload at once, not counted');
-// сервер отвечает, а вкладка молчит — как раньше: 3 попытки за 20 мин, потом стоп (рыбалка — реже, без стопа)
+// сервер отвечает, а вкладка молчит: 3 попытки за 20 мин (рыбалка — потом реже, без стопа)
 assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: R(1), srv: 'up', now }) }, { act: 'reload', count: true });
-assert.equal(wdPlan({ quiet: 200000, recent: R(3), srv: 'up', now }).act, 'stop');
+// 20.43 (автономность, разбор 21.10): после 3 попыток — не стоп, а редкая перезагрузка раз в 15 мин; стоп — после 2,5 ч непрерывной тишины
+assert.equal(wdPlan({ quiet: 200000, recent: R(3), srv: 'up', now }).act, 'none', 'последняя перезагрузка 1 мин назад — ждём');
+assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: [], srv: 'up', now, silent: { since: now - 3600000, n: 5, last: now - 15 * 60000 } }) }, { act: 'rareReload', count: true });
+assert.equal(wdPlan({ quiet: 200000, recent: R(3), srv: 'up', now, silent: { since: now - 150 * 60000, n: 12, last: now - 60000 } }).act, 'stop');
 assert.equal(wdPlan({ quiet: 200000, recent: [now - 6 * 60000, now - 7 * 60000, now - 8 * 60000], fish: true, srv: 'up', now }).act, 'fishReload');
 // проводка в обработчике будильника
-assert.match(bg, /const server = await srvProbe\(origin\);[\s\S]*const plan = wdPlan\(\{ quiet, recent, fish: fishMode, srv: server, downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now \}\);/);
+// 20.43: + серия тишины сторожа (wdSilent) для редкой перезагрузки и стопа после 2,5 ч
+assert.match(bg, /const server = await srvProbe\(origin\);[\s\S]*const plan = wdPlan\(\{ quiet, recent, fish: fishMode, srv: server, downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now, silent: wdSilent \}\);/);
 assert.match(bg, /if \(plan\.down\) \{[\s\S]{0,900}chrome\.tabs\.reload\(hb\.tab\)[\s\S]{0,60}return;\s+\}\s+if \(plan\.back\)/);
 // 20.13 (шаг 5, core-b/F4): здоровый пульс снимает wdDown и (после ≥3 мин работы) счётчик перезагрузок
 assert.match(bg, /if \(quiet < 150000\) \{[\s\S]{0,400}\.\.\.\(wdDown \? \{ wdDown: null \} : \{\}\)[\s\S]{0,200}await chrome\.storage\.local\.set\(patch\);\s+return;\s+\}/);

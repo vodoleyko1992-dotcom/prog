@@ -690,6 +690,7 @@ async function afterOnWrite(prevOn, nextOn) {      // только внутри 
     const nextHb = { ...h, t: Date.now() };
     await chrome.storage.local.set({ hbBg: { ...nextHb }, wdog: [], wdDown: null });
     hbMem = nextHb; hbPersistedAt = Date.now();
+    await chrome.storage.local.set({ wdSilent: null });   // 20.43 (автономность): и серия тишины сторожа — старт начинает отсчёт заново
   } catch (_) {}
 }
 chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {});
@@ -1060,13 +1061,22 @@ void ensureWatchdogAlarm();
 // после 3 перезагрузок за 20 мин ВЫКЛЮЧАЛ бота. Теперь сторож сначала спрашивает сервер: лежит — перезагружает вкладку раз
 // в 2 мин и не считает это попыткой (бота не выключает никогда); сервер снова ответил — перезагружает сразу, задача продолжается
 // (вкладка открывается на той же странице, состояние задачи в памяти бота)
+// 20.43 (автономность, разбор 21.10): после 3 перезагрузок за 20 мин сторож выключал бота на всю ночь (исключение — рыбалка). Теперь для
+// всех задач — редкая перезагрузка раз в 15 мин (рыбалка — по-прежнему раз в 5 мин на /fishing.html и без стопа); бот выключается
+// (on=false, уведомление stopAlert) только после 2,5 ч непрерывной тишины вкладки. Серия тишины — wdSilent {since, n, last}:
+// since — последний настоящий пульс до первой перезагрузки серии, n — перезагрузок в серии; пульс ≥ 3 мин после последней — серия окончена.
 function wdPlan(o) {
-  const { quiet, recent = [], fish, srv, downLast = 0, wasDown, now } = o;
+  const { quiet, recent = [], fish, srv, downLast = 0, wasDown, now, silent = null } = o;
+  const RARE_MS = 15 * 60000, SILENT_STOP_MS = 150 * 60000;   // 20.43: редкая перезагрузка и стоп после 2,5 ч непрерывной тишины
   if (quiet < 150000) return { act: 'none' };
   if (srv === 'down') return now - downLast >= 120000 ? { act: 'reload', down: true } : { act: 'none', down: true };
   if (wasDown) return { act: 'reload', back: true };                                   // сервер ожил — сразу на страницу задачи
-  if (recent.length >= 3 && fish) return now - Math.max(...recent) < 5 * 60000 ? { act: 'none' } : { act: 'fishReload', count: true };
-  if (recent.length >= 3) return { act: 'stop' };
+  const last = Math.max(0, ...recent, +silent?.last || 0), series = recent.length >= 3 || +silent?.n >= 3;
+  if (series && fish) return now - last < 5 * 60000 ? { act: 'none' } : { act: 'fishReload', count: true };
+  if (series) {
+    if (now - (+silent?.since || now) >= SILENT_STOP_MS) return { act: 'stop' };
+    return now - last < RARE_MS ? { act: 'none' } : { act: 'rareReload', count: true };
+  }
   return { act: 'reload', count: true };
 }
 async function srvProbe(origin) {
@@ -1082,7 +1092,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
   const generation = serializeLock.controlSeq || 0;
   try {
     const before = await serializeLock(async () => {
-      const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']);
+      const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']);
       if (!!state.on !== paintedOn) paintOn(state.on);   // 20.41: страховка значка раз в минуту; совпадает — не трогаем ('!' капчи остаётся)
       void payAlert(state.rt, state.cfg).catch(() => {});   // 20.43: оплата без сверки дольше 15 мин — и при остановленном боте; очередь не ждёт
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
@@ -1090,14 +1100,14 @@ chrome.alarms?.onAlarm.addListener(async a => {
       const quiet = Date.now() - hb.t, wdDown = state.wdDown;
       if (quiet < 150000) {
         // 20.13 (шаг 5, core-b/F4): после перезагрузки бот снова пульсирует ≥3 мин — перезагрузка помогла, счётчик «3 за 20 мин» сбрасываем
-        const healed = wdHealed(state.wdog, hb.t), patch = { ...(wdDown ? { wdDown: null } : {}), ...(healed ? { wdog: [] } : {}) };
+        const healed = wdHealed(state.wdog, hb.t), patch = { ...(wdDown ? { wdDown: null } : {}), ...(healed ? { wdog: [] } : {}), ...wdSilentHeal(state.wdSilent, hb.t) };
         if (Object.keys(patch).length) await chrome.storage.local.set(patch);
         return;
       }
       return state;
     });
     if (!before) return;
-    let { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {} } = before;
+    let { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {}, wdSilent = null } = before;
     let hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
     let now = Date.now(), quiet = now - hb.t, tab;
     try { tab = await chrome.tabs.get(hb.tab); } catch (_) { return; }
@@ -1125,7 +1135,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
         hbMem = nextHb; hbPersistedAt = Date.now();
       };
       // 15.10: сетевой probe может занять 8 с. Stop, новый хозяин или свежий heartbeat отменяют прежнее решение.
-      ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {} } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']));
+      ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {}, wdSilent = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']));
       hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
       if ((serializeLock.controlSeq || 0) !== generation || !on || lock?.k !== before.lock?.k || lock?.epoch !== before.lock?.epoch || lock?.k !== 'tab' + tab.id || hb?.tab !== tab.id || rt.char !== before.rt?.char || (rt.manualKickAt || 0) !== (before.rt?.manualKickAt || 0)) return;
       let currentTab; try { currentTab = await chrome.tabs.get(tab.id); } catch (_) { return; }
@@ -1134,43 +1144,54 @@ chrome.alarms?.onAlarm.addListener(async a => {
       if (quiet < 150000) return;
       const recent = wdog.filter(t => now - t < 20 * 60000);
       const fishMode = Array.isArray(cfg.autoTasks) ? globalThis.L2EngineCore?.selectedTask(cfg, rt, now) === 'fish' : !!cfg.fishMode;
-      const plan = wdPlan({ quiet, recent, fish: fishMode, srv: server, downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
+      const plan = wdPlan({ quiet, recent, fish: fishMode, srv: server, downLast: wdDown?.last || 0, wasDown: !!wdDown, now, silent: wdSilent });
+      // 20.43: серия тишины — с последнего настоящего пульса до первой перезагрузки (hbBg.t потом сдвигается на время перезагрузки)
+      const silentNext = () => ({ wdSilent: { since: +wdSilent?.since || hb.t, n: (+wdSilent?.n || 0) + 1, last: now } });
       if (plan.down) {                                     // сервер лежит: не попытка, не остановка
         if (plan.act !== 'reload') return;
         ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), сервер игры не отвечает — перезагружаю вкладку раз в 2 мин, бота не останавливаю`;
         if (!wdDown) { buf.push(ev); flush(); }            // в журнал — только начало простоя
-        await persist({ wdDown: { since: wdDown?.since || now, last: now } }, { tab: hb.tab, t: now - 60000, page: hb.page });
+        await persist({ wdDown: { since: wdDown?.since || now, last: now }, wdSilent: null }, { tab: hb.tab, t: now - 60000, page: hb.page });   // 20.43: простой сервера — не тишина бота
         if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
         return;
       }
       if (plan.back) {
         ev.what = `сервер игры снова отвечает (простой ${Math.round((now - (wdDown.since || now)) / 60000)} мин) — перезагружаю вкладку, бот продолжает задачу`;
         buf.push(ev); flush();
-        await persist({ wdDown: null }, { tab: hb.tab, t: now, page: hb.page });
+        await persist({ wdDown: null, wdSilent: null }, { tab: hb.tab, t: now, page: hb.page });
         if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
         return;
       }
       // рыбалка (v4.49): не останавливаем никогда — после 3 перезагрузок за 20 мин просто перезагружаем реже (раз в 5 мин)
-      if (recent.length >= 3 && fishMode) {
-        if (now - Math.max(...recent) < 5 * 60000) return;
+      if (plan.act === 'none') return;                // 20.43: рыбалка — не чаще раза в 5 мин, остальные задачи — раз в 15 мин
+      if (plan.act === 'fishReload') {
         ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — рыбалка: перезагружаю вкладку (раз в 5 мин, не останавливаю)`;
         buf.push(ev); flush();
-        await persist({ wdog: [...recent, now] }, { tab: hb.tab, t: now, page: hb.page });
+        await persist({ wdog: [...recent, now], ...silentNext() }, { tab: hb.tab, t: now, page: hb.page });
         if (await stillCurrent()) try { await chrome.tabs.update(hb.tab, { url: origin + '/fishing.html' }); } catch (e) { if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e2) {} }
         return;
       }
-      if (recent.length >= 3) {
-        ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
+      if (plan.act === 'stop') {
+        // 20.43 (автономность): стоп — только после 2,5 ч непрерывной тишины (wdPlan), а не после 3 перезагрузок за 20 мин
+        const since = +wdSilent?.since || hb.t;
+        ev.what = `бот молчит ${Math.round((now - since) / 60000)} мин подряд (с ${new Date(since).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}), перезагрузки вкладки (${+wdSilent?.n || recent.length}) не помогли — останавливаю`;
         buf.push(ev); flush();
         const stopMeta = { source: 'watchdog', reason: ev.what, t: Date.now() };
-        await chrome.storage.local.set({ on: false, wdog: recent, stopMeta });
+        await chrome.storage.local.set({ on: false, wdog: recent, wdSilent: null, stopMeta });
         await afterOnWrite(on, false);
         await stopAlert(stopMeta, cfg);              // 20.43: уведомление и «!» — rt.status при стопе сторожа не меняется, меню читает stopMeta
         return;
       }
+      if (plan.act === 'rareReload') {
+        // 20.43: в журнал — только переход на редкие перезагрузки (начало серии), дальше молча до конца серии
+        if (+wdSilent?.n === 3 || !wdSilent) { ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), 3 перезагрузки не помогли — дальше перезагружаю раз в 15 мин, не останавливаю (стоп — после 2,5 ч тишины)`; buf.push(ev); flush(); }
+        await persist({ wdog: [...recent, now], ...silentNext() }, { tab: hb.tab, t: now, page: hb.page });
+        if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+        return;
+      }
       ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
       buf.push(ev); flush();
-      await persist({ wdog: [...recent, now] }, { tab: hb.tab, t: now, page: hb.page }); // дать странице время загрузиться
+      await persist({ wdog: [...recent, now], ...silentNext() }, { tab: hb.tab, t: now, page: hb.page }); // дать странице время загрузиться
       if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
     });
   } catch (e) { console.warn('[L2bot] сторож: восстановление отложено', e); }
@@ -1184,6 +1205,13 @@ const WD_HEAL_MS = 180000;
 function wdHealed(wdog, hbT) {
   if (!Array.isArray(wdog) || !wdog.length || !Number.isFinite(hbT)) return false;
   return hbT - Math.max(...wdog) >= WD_HEAL_MS;
+}
+// 20.43 (автономность): серия тишины окончена — пульс идёт ≥ 3 мин после последней перезагрузки; в журнал — конец серии (начало уже
+// записано при переходе на редкие перезагрузки). Возвращает часть патча хранилища
+function wdSilentHeal(S, hbT) {
+  if (!S || !Number.isFinite(+S.last) || !Number.isFinite(hbT) || hbT - S.last < WD_HEAL_MS) return {};
+  if (+S.n >= 3) { buf.push({ t: Date.now(), src: 'S', kind: 'сторож', what: `вкладка снова работает: тишина ${Math.round((hbT - (+S.since || hbT)) / 60000)} мин, перезагрузок ${S.n} — продолжаю как обычно`, st: '' }); flush(); }
+  return { wdSilent: null };
 }
 // Release immediately when the owning tab is closed (no 90-second stale lock).
 chrome.tabs.onRemoved.addListener(tabId => {

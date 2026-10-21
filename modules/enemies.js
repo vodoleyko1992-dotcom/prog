@@ -152,7 +152,8 @@ function pick() {
 // бот занят тем, что прерывать нельзя (поход, тур РБ/эпиков, рыбалка, катакомбы, TvT скоро)
 function busy() {
   const r = env.rt;
-  if (r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return true;
+  // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
+  if (r.shop || r.rbGo || r.zoneGo || r.travelCheck || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return true;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return true;
   if (['epic', 'raid', 'fish', 'cat'].includes(env.autonomyMode())) return true;
   if (env.fishNow()) return true;

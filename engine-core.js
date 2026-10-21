@@ -190,6 +190,39 @@
     // Уже начатая закупка/дорога запасной задачи завершается до возврата: короткая пауза не обрывает её на полпути.
     return w.until>now||rt.actionOwner||rt.actionPayments?.pending?w:null;
   }
+  // 20.43 (автономность, разбор 21.10): «передышка» вместо стопа. Временный технический сбой (клик по мобу не открыл бой, список мобов
+  // не грузится, нет прогресса 9 мин ×3) раньше выключал бота до утра. Теперь — общий шаг rt.selfHold = {kind, why, at, until, n, task,
+  // mode, kick}: на это время выбранная задача (task) пропускается в selectedTask и идут другие выбранные задачи, а если их нет — бот ждёт
+  // с пульсом, TvT и проверкой капчи и потом продолжает сам. Новый Старт игрока (другой manualKickAt) передышку снимает. Предел — 3 передышки
+  // одного вида за 6 ч (rt.selfHoldLog[kind]): нужна 4-я — полный стоп с причиной (selfHoldPlan → stop).
+  const SELF_HOLD_WINDOW = 6 * 3600000, SELF_HOLD_MAX = 3;
+  // 20.43 (автономность, доводка 21.10): передышки — по задаче, rt.selfHold = {ключ: передышка}. Раньше ячейка была одна, и новая передышка
+  // молча затирала прежнюю: [тур, фарм] при общем сбое карты — тур на передышке, идёт фарм, его передышка «mob» стирала туровую, тур снова
+  // выходил на сломанную карту и стирал фермерскую; передышки сменяли друг друга, счёт «3 за 6 ч» набегал за 30–40 мин. Ключ — задача
+  // (режим задач), режим (без списка) или вид (передышка без своей задачи — только запрет клика по карте). Старая одиночная запись читается.
+  const selfHoldKey = h => h?.task ? String(h.task) : h?.mode ? 'mode:' + h.mode : 'kind:' + String(h?.kind || '');
+  function selfHoldMap(rt = {}) {
+    const v = rt?.selfHold;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+    if (['kind', 'until', 'at', 'why'].some(k => Object.hasOwn(v, k))) return { [selfHoldKey(v)]: v };   // запись до доводки 21.10
+    return Object.fromEntries(Object.entries(v).filter(([, h]) => h && typeof h === 'object' && !Array.isArray(h)));
+  }
+  const selfHoldValid = (h, rt = {}, now = Date.now()) => !!h && typeof h === 'object' && Number.isFinite(+h.until) && Number.isFinite(+h.at) && +h.at <= now + 60000 && +h.until > now
+    && (+h.kick || 0) === (+rt?.manualKickAt || 0);
+  const selfHoldList = (rt = {}, now = Date.now()) => Object.values(selfHoldMap(rt)).filter(h => selfHoldValid(h, rt, now));
+  // pick — отбор (функция); без него — первая действующая (совместимость: одна передышка — она и есть)
+  function selfHoldActive(rt = {}, now = Date.now(), pick = null) {
+    return selfHoldList(rt, now).find(h => typeof pick !== 'function' || pick(h)) || null;
+  }
+  // 20.43 (автономность, ревью): window — окно учёта вида. Запрет маршрута длится 2 ч, поэтому 4-й запрет одного маршрута не укладывался в 6 ч
+  // никогда: маршрут зацикливался снова после каждого запрета (с новой оплатой телепорта/баффов) без стопа и уведомления. Запрет — окно 12 ч
+  function selfHoldPlan(rt = {}, kind = '', steps = [30], now = Date.now(), window = SELF_HOLD_WINDOW) {
+    const span = Number.isFinite(+window) && +window > 0 ? +window : SELF_HOLD_WINDOW;
+    const log = (Array.isArray(rt?.selfHoldLog?.[kind]) ? rt.selfHoldLog[kind] : []).filter(t => Number.isFinite(+t) && now - t < span && t <= now);
+    if (log.length >= SELF_HOLD_MAX) return { stop: true, n: log.length, log };
+    const list = Array.isArray(steps) && steps.length ? steps : [30], min = +list[Math.min(log.length, list.length - 1)] || 30;
+    return { stop: false, n: log.length + 1, ms: min * 60000, log: [...log, now] };
+  }
   // 20.10: явный запуск тура выбрасывает прежний список живых/мёртвых, а не боевую память и платежи.
   function raidFreshStartPatch(rt = {}, c = {}, now = Date.now()) {
     const raw = rawTaskConfig(c) || {}, list = taskList(c);
@@ -201,18 +234,25 @@
       rbTourView:null, rbFishWait:null, rbListVerifyNextAt:0,
       ...(protective ? {} : { rbHuntIdle:0, rbIdleMark:null, rbIdleN:0 }) };
   }
-  function selectedTask(c, rt = {}, now = Date.now()) {
+  // 20.43 (автономность, ревью): base — выбор игрока без автоматических пропусков: передышки (rt.selfHold) и ожидания тура на рыбалке
+  // (rt.rbFishWait, в том числе отсрочки кота). Это «режим маршрута» (baseTask → content.routeMode): контекст владельца служебного маршрута
+  // (actions.context) и задания Маммона. Раньше в контексте был фактический выбор, и конец передышки/ожидания выглядел как «пользователь
+  // сменил режим»: начатый поход к Маммону (после платного телепорта) или «Закупить сейчас» отменялись, герой оставался у NPC
+  function selectedTask(c, rt = {}, now = Date.now(), base = false) {
     const list = taskList(c); if (list === null) return null;
     const fishWait=fishTaskWait(c,rt,now);
     const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
-    const wait = rt.rbListStartRequired != null && rt.rbListReadStart !== rt.rbListStartRequired ? null : rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
+    const wait = base || rt.rbListStartRequired != null && rt.rbListReadStart !== rt.rbListStartRequired ? null : rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
     // 20.28 (лог 20.10 08:51): подготовка услуги Маммона не возвращает отложенный рейд.
     // Сам pending по-прежнему запрещает повторную оплату; удерживать рейд должен его собственный телепорт.
     const raidPayment = rt.actionPayments?.pending?.kind === 'raid-teleport';
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
+    // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится. Доводка 21.10: передышек может быть несколько
+    const held = base ? [] : selfHoldList(rt, now).map(h => h.task).filter(Boolean);
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
+      if (held.includes(k) && k !== 'enchant' && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
       if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy || fishWait) && idleRaid && (!raidPayment || fishWait && rt.actionOwner) && (fishBusy || fishWait && rt.actionOwner || wait.until > now && !freshRaid)) return false;
       if (k === 'fish') return fishOpen || !!idleRaid && fishBusy;
@@ -223,6 +263,7 @@
       return true;
     }) || 'tasks';
   }
+  const baseTask = (c, rt = {}, now = Date.now()) => selectedTask(c, rt, now, true);
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
     if (!Array.isArray(raw?.autoTasks)) {
@@ -291,7 +332,25 @@
     if (key === 'tsJob') return false;
     // 17.10 (лог 15:10, West): перелёт цели «Фарм ресурсов»/рецепта — работа задачи «ресурсы», а не чужой маршрут; иначе «Только задачи» отменял его каждые 4 с.
     if (key === 'zoneGo' && (rt.zoneGo?.task === 'resources' || rt.zoneGo?.res)) return taskAllowed(c,'resources');
+    // 20.43 (автономность, ревью 21.10): обратный перелёт службы (Маммон, сдача квеста — zoneGo.svc) — конец её похода, а не новая основная
+    // работа. На передышке фарма выбор — «tasks», и перелёт снимался как несовместимый: герой оставался у NPC и после передышки фармил не на
+    // своей точке. Решает выбор игрока без передышки (baseTask); в режиме «только задачи» / рыбалки / заточки — как прежде
+    if (key === 'zoneGo' && rt.zoneGo?.svc && taskAllowed(c,rt.zoneGo.svc)) return !['tasks','fish','enchant'].includes(baseTask(c,rt));
     return !['tasks','fish','enchant'].includes(selectedTask(c,rt));
+  }
+  // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке. В режиме задач передышка меняет выбор, и loopTaskList снимал маршруты
+  // удерживаемой задачи как несовместимые: тур на stall-передышке (бой с РБ без изменения HP 9 мин ×3) терял rbHunt в шаге arrive/fight
+  // уже после подтверждённого платного перелёта — через 20 мин тур начинал с выбора и снова платил ≈100 000 за телепорт к тому же РБ; так же
+  // терялся перелёт zoneGo фарма. Теперь такой маршрут (его разрешает выбор без передышек) хранится, но до конца передышки не исполняется:
+  // диспетчер и сторож вкладки его не видят (content). Застрявший маршрут, ставший причиной передышки (hold.drop), не держим — он снимается
+  // как прежде. Квитанции оплат живут отдельно и не снимаются ни в одном случае.
+  // Ревью: одного хранения мало — после передышки вкладка могла стоять не на карте (рыбалка), и прилёт/бой сдавались с платным выбором;
+  // поэтому по концу передышки тур сначала бесплатно открывает карту (content: rt.rbResume, raidResumeMap).
+  function taskJobHeld(c, key, rt = {}, now = Date.now()) {
+    if (taskList(c) === null || !rt?.[key]) return false;
+    const holds = selfHoldList(rt, now); if (!holds.some(h => h.task)) return false;
+    if (holds.some(h => Array.isArray(h.drop) && h.drop.includes(key))) return false;
+    return !taskJobAllowed(c, key, rt) && taskJobAllowed(c, key, { ...rt, selfHold: null });
   }
 
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
@@ -409,6 +468,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -134,12 +134,17 @@ test('сторож без слушателя: прямая on:false во вре�
   assert.deepEqual(f.reloads, []); assert.equal(f.state.on, false); assert.equal(f.state.wdog.length, 1);
 });
 
-test('сторож останавливает бота после 3 неудачных перезагрузок — значок гаснет без слушателя хранилища', async () => {
-  const now = Date.now(), f = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null })); await tick(); const seq0 = f.seq();
+// 20.43 (автономность, разбор 21.10): 3 неудачные перезагрузки больше не стоп — дальше редкая перезагрузка раз в 15 мин; стоп сторожа —
+// только после 2,5 ч непрерывной тишины (wdSilent.since). Проверка значка без слушателя хранилища сохранена на этом новом пути стопа
+test('сторож после 3 неудачных перезагрузок не останавливает, после 2,5 ч тишины останавливает — значок гаснет без слушателя хранилища', async () => {
+  const now = Date.now(), e = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null })); await tick();
+  await e.alarm(); await tick(); assert.equal(e.state.on, true); assert.deepEqual(e.reloads, []); assert.equal(e.painted(), true);
+  const silent = { since: now - 151 * 60000, n: 12, last: now - 6 * 60000 };
+  const f = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null, wdSilent: silent })); await tick(); const seq0 = f.seq();
   await f.alarm(); await tick();
   // 20.43 (разбор 21.10): стоп сторожа — самоостановка: «ON» гаснет, затем красный «!» (tests/v2043-notify-stop); при выключенной галке — пусто, как раньше
   assert.equal(f.state.on, false); assert.equal(f.state.stopMeta.source, 'watchdog'); assert.deepEqual(f.badges.slice(-2), ['', '!']); assert.equal(f.painted(), false); assert.equal(f.seq(), seq0 + 1);
-  const g = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null, cfg: { notifyStops: false } })); await tick();
+  const g = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null, wdSilent: silent, cfg: { notifyStops: false } })); await tick();
   await g.alarm(); await tick(); assert.equal(g.state.on, false); assert.equal(g.badges.at(-1), ''); assert.equal(g.painted(), false);
 });
 

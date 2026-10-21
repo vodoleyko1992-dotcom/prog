@@ -46,9 +46,14 @@ test('неизвестная попытка держит бота, как ран
  assert.equal(await h.m.step(),true);assert.equal(h.posts.length,1);
  h.advance();await h.m.step();assert.equal(h.s.pending,null);assert.equal(h.s.status,'done');assert.equal(h.s.hold,false);assert.equal(h.posts.length,1);
 });
-test('ручная пауза и пауза после перезагрузки держат удержание; продолжение по-прежнему вручную',async()=>{
+// 20.43 (автономность, доводка 21.10): пауза после перезагрузки — автоматическая: продолжить серию может только игрок, а удержание держало
+// главный цикл без срока и уведомления. Теперь она снимает удержание (бот возвращается к задачам), продолжение по-прежнему вручную;
+// ручная пауза игрока удержание держит, как раньше
+test('ручная пауза держит удержание; пауза после перезагрузки — снимает (к задачам); продолжение по-прежнему вручную',async()=>{
  const h=harness();await h.run();await h.m.command('pause');assert.equal(h.s.status,'paused');assert.equal(h.s.hold,true);assert.equal(await h.m.step(),true);
- const g=harness();await g.run();const fresh=g.root.L2V7Factories.lifestone(g.env);await fresh.step();assert.equal(g.s.status,'paused');assert.equal(g.s.hold,true);assert.equal(g.posts.length,0);
+ const g=harness();await g.run();const fresh=g.root.L2V7Factories.lifestone(g.env);await fresh.step();assert.equal(g.s.status,'paused');assert.equal(g.s.hold,false);assert.equal(g.posts.length,0);
+ assert.ok(g.recs.some(x=>/серия на паузе, возвращаюсь к задачам; продолжение вручную/.test(x)),g.recs.join('\n'));
+ assert.equal(await fresh.step(),false,'серия больше не держит главный цикл');assert.equal(g.posts.length,0);
 });
 test('уступка TvT: идущая серия → пауза без удержания и строка журнала; завершённая остаётся done',async()=>{
  const h=harness();await h.run();assert.equal(await h.m.yieldToUrgent(),true);assert.equal(h.s.status,'paused');assert.equal(h.s.hold,false);assert.match(h.s.reason,/TvT/);

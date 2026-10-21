@@ -74,7 +74,7 @@ function mk(o = {}) {
   const sessionStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
   const fetchMock = async u => { calls.push(u); const r = o.net?.(u); if (!r) throw new Error('net'); return { ok: true, status: 200, json: async () => clone(r) }; };
   const sb = { console, Date, Math, JSON, URLSearchParams, CSS: { escape: s => s }, AbortController, setTimeout, clearTimeout, sessionStorage, fetch: fetchMock,
-    get document() { return doc; }, location: loc };
+    get document() { return doc; }, location: loc, ...(o.sb || {}) };   // 20.43 (доводка 21.10): o.sb — глобальные справочники страницы (L2EngineCore)
   sb.globalThis = sb; vm.createContext(sb);
   vm.runInContext(raidSrc, sb); vm.runInContext(epicsSrc, sb);
   let hero = o.hero || 54;
