@@ -8,6 +8,9 @@
 //   (медиана < 600 мс, Lite 1.0 — 530–585 мс), клики не теряются, второй ход не уходит, пока первый ждёт ответа 7 с.
 // В C же (1.2.1): язычок «Lite» на странице игры открывает меню во вкладке, повторный клик новую не плодит, при Старте — «Lite ▶».
 // Сценарий D (Lite 1.2): быстрый удар — галка ВКЛ по умолчанию; ВЫКЛ → ВКЛ на модели основного 20.42 (ход 0,4 с, GET /character 0,35 с).
+// Сценарий E (Lite 1.3, John: «это сборка под БХ, а нужна под дестра»): у героя активен сабкласс Bounty Hunter, Титан — слот 2:
+//   меню предупреждает и не показывает скиллы БХ, после Старта бот ничего не жмёт; в игре переключили на Титана — охота пошла,
+//   в меню скиллы Титана; снова БХ — панель Титана в меню остаётся, бот ждёт.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
@@ -438,6 +441,66 @@ async function scenarioD() {
   finally { await h.ctx.close(); }
 }
 
+async function scenarioE() {
+  const h = await launch(), { S } = h;
+  const SLOTS = act => ({ activeSlot: act, slots: [
+    { slot: 0, owned: true, active: act === 0, profession: 'human_arcana_lord', race: 'Human', level: 78 },
+    { slot: 1, owned: true, active: act === 1, profession: 'dwarf_bounty_hunter', race: 'Dwarf', level: 70 },
+    { slot: 2, owned: true, active: act === 2, profession: 'orc_titan', race: 'Orc', level: 76 },
+    { slot: 3, owned: false, active: false, profession: null, race: null, level: null }] });
+  const titan = { l2Profession: 'orc_titan', level: 76, classSlots: SLOTS(2), battleHotbarSlots: S.hero.battleHotbarSlots, learnedBattleSkillsDetail: S.hero.learnedBattleSkillsDetail };
+  const bh = { l2Profession: 'dwarf_bounty_hunter', level: 70, classSlots: SLOTS(1),
+    battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'l2_254' }, { k: 'a', a: 'l2_100' }, { k: 'a', a: 'l2_255' }],
+    learnedBattleSkillsDetail: [{ battleId: 'l2_254', nameUk: 'Spoil' }, { battleId: 'l2_100', nameUk: 'Stun Attack' }, { battleId: 'l2_255', nameUk: 'Power Smash' }] };
+  const BH_ACT = /^(?:l2_254|l2_100|l2_255)$/;
+  try {
+    S.champAt = 99;
+    Object.assign(S.hero, bh);
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).char?.prof === 'dwarf_bounty_hunter' && (await h.rt()).locs?.length === 2, 20000, 'герой БХ в памяти');
+    const pp = await h.popup();
+    await until(() => pp.evaluate(() => !document.getElementById('cls').hidden), 5000, 'предупреждение в меню');
+    const warn = await pp.textContent('#cls');
+    assert.match(warn, /Сейчас в игре Dstr — Dwarf Bounty Hunter/); assert.match(warn, /переключите в игре сабкласс 2 на Orc Titan \(76 ур\.\)/);
+    assert.match(await pp.textContent('#hero'), /Dstr, 70 ур\. · Dwarf Bounty Hunter/);
+    assert.equal(await pp.$$eval('#skills .sk', e => e.length), 0, 'скиллы БХ в меню');
+    assert.match(await pp.textContent('#skills'), /когда в игре будет активен Дестр\/Титан/);
+    assert.deepEqual((await h.rt()).bar || [], [], 'панель БХ в памяти');
+    await pp.click('#run');
+    await until(async () => /Lite ведёт только Дестра\/Титана/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
+    await delay(6000);
+    assert.equal(S.spawnN, 0, 'начат бой'); assert.deepEqual(S.acts, []); assert.deepEqual(S.tp, []); assert.equal(S.tvt.isRegistered, false);
+    assert.equal(h.game.url(), 'https://l2wap.com/map.html');
+    const r1 = await h.rt();
+    assert.match(r1.status, /Сейчас в игре Dstr — Dwarf Bounty Hunter\. Lite ведёт только Дестра\/Титана: переключите в игре сабкласс 2 на Orc Titan/);
+    assert.equal(logText(r1).match(/Lite только для Дестра/g)?.length, 1, 'запись в журнале одна');
+    // игрок переключил в игре сабкласс на Титана (слот 2): игра перечитала героя → Lite охотится, меню без предупреждения, скиллы Титана
+    Object.assign(S.hero, titan);
+    await until(() => S.acts.length >= 5, 30000, 'охота на Титане');
+    await until(() => pp.evaluate(() => document.getElementById('cls').hidden && document.querySelectorAll('#skills .sk').length === 5), 5000, 'меню Титана');
+    const r2 = await h.rt();
+    assert.match(logText(r2), /активен Orc Titan \(Dstr\) — продолжаю/);
+    assert.equal(r2.barCls, 'orc_titan');
+    assert.ok(!S.acts.some(a => BH_ACT.test(a)), 'жал скилл БХ: ' + S.acts.join(','));
+    // Стоп, в игре снова БХ: в меню — предупреждение и панель Титана (панель БХ её не затирает); после Старта — снова ждёт
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    Object.assign(S.hero, bh, { inBattle: false }); S.battle = null;
+    await until(async () => (await h.rt()).char?.prof === 'dwarf_bounty_hunter', 10000, 'снова БХ');
+    await until(() => pp.evaluate(() => !document.getElementById('cls').hidden), 5000, 'предупреждение снова');
+    assert.deepEqual(await pp.$$eval('#skills .sk', els => els.map(e => e.dataset.key)), ['l2_190', 'battle_trance', 'l2_176', 'l2_420', 'l2_286']);
+    assert.equal((await h.rt()).barCls, 'orc_titan');
+    const n = S.acts.length;
+    await pp.click('#run');
+    await until(async () => /Lite ведёт только Дестра\/Титана/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
+    await delay(4000);
+    assert.equal(S.acts.length, n, 'ходы на БХ');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    console.log(`PASS E: сабкласс БХ — предупреждение «переключите сабкласс 2 на Orc Titan», скиллов БХ нет, 0 боёв/ходов/телепортов за 6 с; Титан — охота (${n} ходов), скиллы Титана; снова БХ — панель Титана в меню, бот ждёт`);
+  } catch (e) { console.error('DIAG E', { acts: h.S.acts.slice(-30).join(','), url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, char: r.char, barCls: r.barCls, bar: r.bar, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCD';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDE';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });

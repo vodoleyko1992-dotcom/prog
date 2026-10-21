@@ -13,6 +13,7 @@ section, details { border-top: 1px solid var(--line); padding: 8px 0; }
 #run { min-width: 104px; padding: 9px 10px; font-weight: 600; font-size: 14px; border: 0; border-radius: 6px; background: var(--ok); color: #fff; cursor: pointer; }
 #run.on { background: var(--bad); }
 .status { flex: 1; min-height: 2.8em; }
+.warn { margin: 0 0 8px; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--bad); color: var(--fg); background: color-mix(in srgb, var(--bad) 14%, var(--bg)); }   /* 1.3: в игре не Дестр */
 .row { display: flex; gap: 6px; align-items: center; margin: 4px 0; flex-wrap: wrap; }
 label.chk { display: flex; gap: 6px; align-items: flex-start; margin: 4px 0; }
 label.chk input { margin-top: 2px; }

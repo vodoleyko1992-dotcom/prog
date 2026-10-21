@@ -224,6 +224,21 @@
       && !(opt.hero > 0 && r.lvl > 0 && r.lvl > opt.hero + above)) || null;
   }
 
+  // ---------- класс героя ----------
+  // Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): Lite ведёт только воина-орка ветки Дестра — Orc Fighter →
+  // Orc Raider → Destroyer → Titan. Профессия — character.l2Profession («orc_titan», «dwarf_bounty_hunter»); у героя до четырёх
+  // классов (основной + сабклассы, character.classSlots), активен один, панель скиллов у каждого своя. Другой класс (сабкласс
+  // Bounty Hunter, другой герой аккаунта) Lite не ведёт и его скиллы в меню не показывает.
+  const profKey = p => String(p || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const isDestr = p => /^(?:orc_)?(?:raider|destroyer|titan)$|^orc_fighter$/.test(profKey(p));
+  const profName = p => profKey(p).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  // ok: true — Дестр/Титан, false — другой класс, null — профессия не прочитана (не мешаем). alt — слот Дестра у этого же героя.
+  function heroClass(prof, slots, slot) {
+    const p = profKey(prof), alt = (Array.isArray(slots) ? slots : []).find(s => s && s.slot !== slot && isDestr(s.prof)) || null;
+    return { ok: p ? isDestr(p) : null, name: profName(p), alt: alt ? { slot: alt.slot, name: profName(alt.prof), lvl: alt.lvl ?? null } : null };
+  }
+  const slotRu = s => (s === 0 ? 'основной класс' : Number.isInteger(s) && s > 0 ? 'сабкласс ' + s : 'класс');
+
   // ---------- телепорт ----------
   // Цена из строки «Телепорт» (основной бот, navigation.teleportCost): Coin of Luck никогда, неизвестная валюта/цена — не летим.
   function teleportCost(rowText, priceText, curText) {
@@ -239,7 +254,7 @@
   const fmtLeft = msLeft => { const s = Math.max(0, Math.round(msLeft / 1000)); return s < 90 ? s + ' с' : Math.round(s / 60) + ' мин'; };
 
   const api = { SK, NATIVE, TYPES, TYPE_RU, cleanTitle, guessType, skillInfo, defaultOn, skillUse, fastHit, meMerge, potKind, planTurn,
-    tvtView, phaseLive, tvtDecide, tvtPollGap, killStep, limitDone, mobRow, pickMob, teleportCost, fmtLeft, ms };
+    tvtView, phaseLive, tvtDecide, tvtPollGap, killStep, limitDone, mobRow, pickMob, teleportCost, fmtLeft, ms, isDestr, profName, heroClass, slotRu };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

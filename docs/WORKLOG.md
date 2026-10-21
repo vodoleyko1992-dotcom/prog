@@ -1,5 +1,10 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 21.10.2026, 13:30 UTC+10 — Claude — [PR #306](https://github.com/vodoleyko1992-dotcom/prog/pull/306): Lite 1.3 — только Дестр/Титан
+
+- John: «это сборка под БХ, а нужна под дестра». Lite показывал панель класса, открытого в игре (сабкласс Bounty Hunter). Теперь: класс и слоты героя из `character.l2Profession`/`classSlots` (hook), другой класс — бот ждёт и ничего не жмёт, предупреждение в меню со слотом Титана, в списке скиллов только панель Дестра (`rt.barCls`).
+- Проверки: 533 Node-файла PASS/0 FAIL (новый `lite-class.test.js`), `node --check`, envcheck, diff-check; `tests/lite-browser.cjs` A–E PASS на исходниках и на распакованном ZIP (E: БХ — 0 боёв/ходов/телепортов, предупреждение «сабкласс 2 на Orc Titan»; Титан — охота и его скиллы; снова БХ — панель Титана остаётся); `web-ext lint` 0/0/0; `lite-firefox-smoke.cjs` в Firefox 158 PASS (класс/слот Титана, `barCls`, без предупреждения); состав ZIP = исходники. SHA — `builds/SHA256SUMS-lite-1.3.txt`. Живая игра и Android не проверены.
+
 ## 21.10.2026, 13:20 UTC+10 — Claude — [PR #306](https://github.com/vodoleyko1992-dotcom/prog/pull/306): Lite 1.2.1 — меню в Firefox
 
 - John: «нет даже меню вызова, загрузка в фаерфокс ни к чему не приводит». В настоящем Firefox 158 Lite 1.0–1.2 работали, но кнопка лежала в меню «Расширения». Сборка Firefox теперь закрепляет кнопку на панели (`default_area: navbar`), на странице игры — язычок «Lite», открывающий меню во вкладке.

@@ -6,6 +6,9 @@
 // Lite 1.1 (21.10, «на основе нового кода, внеси правки»): ход по ответу сервера и подстройка запаса клика из основного бота 20.36–20.41.
 // Lite 1.2 (21.10, решение John «Разрешаю», «по умолчанию вкл»): быстрый удар из основного 20.42 — выключатель cfg.fastTurn в «Ещё».
 // Lite 1.2.1 (21.10, John: «нет даже меню вызова, загрузка в фаерфокс ни к чему не приводит»): кнопка «Lite» на странице игры открывает меню.
+// Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): Lite читал панель того класса, что открыт в игре, — у героя
+// с активным сабклассом Bounty Hunter меню показывало скиллы БХ. Теперь бот ведёт только Дестра/Титана: другой класс — ждёт
+// и ничего не жмёт, в меню предупреждение и панель Дестра (rt.barCls — с какого класса она прочитана).
 (() => {
   'use strict';
   if (window.__l2lite) return;
@@ -15,7 +18,7 @@
   const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
   const DEF_RT = { k: { kills: 0 }, zone: null, status: '', statusT: 0, log: [], deaths: [], revive: null, goZone: '', tpTry: [], zoneBlockT: 0,
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
-    char: null, bar: [], locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0 };
+    char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0 };
   let cfg = { ...DEF_CFG }, rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
   // ---------- мелочи ----------
@@ -122,6 +125,7 @@
   const NET = { inflight: new Map(), starts: [], ends: new Map(), actEnd: 0, charEnd: 0 };
   const BUSY = /^\/character$|^\/game\/battle\/(?:action|hunt-continue)$|^\/game\/tvt\/action$/;
   let SNAP = null, TVT = null, TVTC = { actN: 0 }, TVTS = null, BINFO = null, BME = null;   // BME — HP/MP героя из ответа на ход (1.2)
+  let CLS = null;                                   // 1.3: активный класс героя {name, prof, slot, slots, t} — из ответа игры или своего GET
   const CD = CDM.createBattleCooldown();
   const tvtDead = new Map();
   function netStart(d) {
@@ -194,6 +198,8 @@
     try {
       const r = await gameGet('/character', 6000), c = r.ok ? (await r.json())?.character : null;
       if (!c || typeof c !== 'object') return null;
+      if (typeof c.name === 'string') clsSet(c.name, c.l2Profession, c.classSlots?.activeSlot,
+        Array.isArray(c.classSlots?.slots) ? c.classSlots.slots.filter(s => s && s.owned === true).slice(0, 4).map(s => ({ slot: s.slot, prof: String(s.profession || ''), lvl: s.level })) : undefined);
       return { zone: String(c.currentZoneId || ''), inBattle: c.inBattle === true, city: c.locationType === 'city', adena: num(c.adena) };
     } catch (e) { return null; }
   }
@@ -201,16 +207,19 @@
   // ---------- герой: уровень, локация, счётчик мобов ----------
   function onSnap(ch) {
     SNAP = { ...ch, t: Date.now() };
+    clsSet(ch.name, ch.prof, ch.slot, ch.slots);
     if (!owner) return;
     const lastK = rt.k?.lastK, r = L.killStep(rt.k, ch, !!cfg.on);
     if (r.st !== rt.k) setRt({ k: r.st });
     if (r.add > 0) { progress(); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
-    const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '' };
+    const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null };
     if (JSON.stringify(c) !== JSON.stringify(rt.char)) setRt({ char: c });
-    if (Array.isArray(ch.bar) && ch.bar.length) {
-      const bar = [...new Set(ch.bar)].map(a => ({ a, n: (ch.names || {})[a] || (rt.bar || []).find(x => x.a === a)?.n || '' }));
-      if (JSON.stringify(bar) !== JSON.stringify(rt.bar)) setRt({ bar });
+    // 1.3: панель для меню — только у Дестра/Титана (или если профессия не прочитана); панель БХ и других классов не запоминаем.
+    if (Array.isArray(ch.bar) && ch.bar.length && L.heroClass(ch.prof).ok !== false) {
+      const old = barMine() ? rt.bar || [] : [];
+      const bar = [...new Set(ch.bar)].map(a => ({ a, n: (ch.names || {})[a] || old.find(x => x.a === a)?.n || '' }));
+      if (JSON.stringify(bar) !== JSON.stringify(rt.bar) || rt.barCls !== (ch.prof || '')) setRt({ bar, barCls: ch.prof || '' });
     }
     onSnapZone(ch);
   }
@@ -244,6 +253,31 @@
   const limitDone = () => L.limitDone(rt.k?.kills || 0, cfg.killLimit);
   const zoneBlocked = () => Date.now() - (rt.zoneBlockT || 0) < 15 * 60000;
   const zoneWrong = () => { const S = snapFresh(60000), z = rt.zone; return !!(S && z && z.id && S.zone && !zoneIs(S.zone) && !S.inBattle && !S.dung && !zoneBlocked()); };
+
+  // ---------- класс героя (1.3): ведём только Дестра/Титана ----------
+  function clsSet(name, prof, slot, slots) {
+    if (typeof name !== 'string' || !name) return;
+    CLS = { name: name.slice(0, 60), prof: typeof prof === 'string' ? prof.slice(0, 60) : '', slot: Number.isInteger(slot) ? slot : null,
+      slots: Array.isArray(slots) ? slots : null, t: Date.now() };
+  }
+  const heroCls = () => (CLS ? L.heroClass(CLS.prof, CLS.slots, CLS.slot) : null);
+  // Панель в памяти прочитана у Дестра (или класс тогда не был известен; память 1.2.1 — по герою в rt.char).
+  const barMine = () => L.heroClass(rt.barCls || rt.char?.prof).ok !== false;
+  let pullT = 0;
+  async function heroPull() {                       // игра ещё не присылала героя на этой странице — спросим сами (раз в 5 с)
+    if (Date.now() - pageT0 < 1500 || Date.now() - pullT < 5000) { await sleep(300); return; }
+    pullT = Date.now();
+    await heroNow();
+  }
+  function clsWait(hc) {
+    const who = CLS.name, how = hc.alt ? `переключите в игре ${L.slotRu(hc.alt.slot)} на ${hc.alt.name}` : 'войдите в игру героем-Дестром или переключите сабкласс на Дестра/Титана';
+    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана: ${how}. Пока жду и ничего не жму`);
+    const sig = who + '|' + hc.name;
+    if (rt.clsNote === sig) return;
+    setRt({ clsNote: sig });
+    log(`активен ${hc.name} (${who}) — Lite только для Дестра/Титана: ничего не жму, жду${hc.alt ? ' ' + hc.alt.name + ' (' + L.slotRu(hc.alt.slot) + ')' : ' Дестра'}`);
+    notify('cls', 'L2wap Lite: нужен Дестр', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана.`);
+  }
 
   // ---------- антибот: решает только человек ----------
   const abLayer = () => { const x = $('#l2-antibot-layer'); return shown(x) ? x : null; };
@@ -385,15 +419,15 @@
   }
   // Меню видит скиллы и без боя (ответ /character), а на странице боя — точные имена с панели.
   function barFromDom() {
-    if (!owner) return;
-    const bar = [...(rt.bar || [])];
+    if (!owner || heroCls()?.ok === false) return;
+    const bar = barMine() ? [...(rt.bar || [])] : [];
     for (const b of $$(SLOT)) {
       const a = slotAction(b).toLowerCase(), n = L.cleanTitle(b.getAttribute('title') || '');
       if (!a || a === 'attack' || b.querySelector('.l2-battle-hotbar-slot-uqty')) continue;
       const x = bar.find(y => y.a === a);
       if (!x) bar.push({ a, n }); else if (!x.n && n) x.n = n;
     }
-    if (JSON.stringify(bar) !== JSON.stringify(rt.bar)) setRt({ bar });
+    if (JSON.stringify(bar) !== JSON.stringify(rt.bar) || rt.barCls !== (CLS?.prof || '')) setRt({ bar, barCls: CLS?.prof || '' });
   }
   async function rowsAll(g) {                       // все 3 ряда панели на виду (основной бот hotbarRows3)
     const hb = $('.l2-battle-hotbar'); if (!hb) return;
@@ -919,6 +953,11 @@
       const x = abLayer().querySelector('.l2-antibot-card__close, button'); if (x) fire(x, g); setRt({ abBlock: 0 }); await sleep(800); return;
     }
     if (loginPage()) { status('Нужен вход в игру — войдите сами (пароль бот не хранит)'); progress(); await sleep(3000); return; }
+    // 1.3: другой класс (сабкласс БХ, другой герой) не ведём совсем — ни охоту, ни смерть, ни TvT.
+    const hc = heroCls();
+    if (!hc) { status('Жду данные героя от игры'); progress(); await heroPull(); return; }
+    if (hc.ok === false) { clsWait(hc); progress(); await sleep(2000); return; }
+    if (rt.clsNote) { setRt({ clsNote: '' }); log(`активен ${hc.name || 'Дестр'} (${CLS.name}) — продолжаю`); }
     if (await deathStep(pg, g)) return;
     if (cfg.tvt) void tvtPoll();                    // расписание TvT читаем сами: частота — по близости записи и боя
     TVT_ACT = cfg.tvt ? tvtDecideNow(pg) : null;

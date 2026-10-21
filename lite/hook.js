@@ -36,6 +36,10 @@
       names: Object.fromEntries([...ids(c.panelHotbarSkills).filter(s => s && typeof s.id === 'string').map(s => [s.id.slice(0, 60), str(s.labelUk, 60)]),
         ...ids(c.learnedBattleSkillsDetail).filter(s => s && typeof s.battleId === 'string').map(s => [s.battleId.slice(0, 60), str(s.nameUk, 60)])].filter(x => x[1])),
       pveDefeat: !!c.pveDefeat,
+      // Lite 1.3 (John: «это сборка под БХ, а нужна под дестра»): активный класс и занятые слоты классов — бот ведёт только Дестра/Титана.
+      slot: num(c.classSlots && c.classSlots.activeSlot),
+      slots: Array.isArray(c.classSlots && c.classSlots.slots) ? c.classSlots.slots.slice(0, 4).filter(s => s && typeof s === 'object' && s.owned === true)
+        .map(s => ({ slot: num(s.slot), prof: str(s.profession, 60) || '', lvl: num(s.level) })) : undefined,
     };
   }
   // Откаты боя — ровно те поля, которые читает battle-cooldown.js.

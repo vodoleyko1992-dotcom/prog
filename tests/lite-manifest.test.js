@@ -8,8 +8,8 @@ const read = f => fs.readFileSync(path.join(lite, f), 'utf8');
 const mf = JSON.parse(read('manifest.json'));
 
 assert.equal(mf.manifest_version, 3);
-assert.equal(mf.version, '1.2.1');
-assert.equal(mf.version_name, '1.2.1 Lite');
+assert.equal(mf.version, '1.3');
+assert.equal(mf.version_name, '1.3 Lite');
 assert.deepEqual(mf.permissions, ['storage', 'alarms', 'notifications']);               // без tabs/scripting/<all_urls>
 assert.deepEqual(mf.host_permissions, ['https://l2wap.com/*', 'https://*.l2wap.com/*']);
 const cs = mf.content_scripts;
@@ -51,8 +51,8 @@ if (zipOk) {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'lite-test-'));
   const lines = execFileSync(process.execPath, [path.join(root, 'tests/tools/lite-build.cjs'), out], { encoding: 'utf8' }).trim().split('\n');
   const [czip, cdir, fzip, fdir] = lines;
-  assert.ok(fs.existsSync(czip) && /l2wap-lite-v1\.2\.1\.zip$/.test(czip));
-  assert.ok(fs.existsSync(fzip) && /l2wap-lite-v1\.2\.1-firefox\.zip$/.test(fzip));
+  assert.ok(fs.existsSync(czip) && /l2wap-lite-v1\.3\.zip$/.test(czip));
+  assert.ok(fs.existsSync(fzip) && /l2wap-lite-v1\.3-firefox\.zip$/.test(fzip));
   const list = d => { const r = []; const walk = (p, rel) => { for (const e of fs.readdirSync(p, { withFileTypes: true })) e.isDirectory() ? walk(path.join(p, e.name), rel + e.name + '/') : r.push(rel + e.name); }; walk(d, ''); return r.sort(); };
   assert.deepEqual(list(cdir), list(lite).filter(f => !/\.zip$/.test(f)));
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(cdir, 'manifest.json'), 'utf8')), mf);

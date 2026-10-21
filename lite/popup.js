@@ -1,6 +1,7 @@
 // ===== L2wap Lite — меню (один экран) =====
 // 20.10.2026, тред «Упрошенка под Дестра»: Старт/Стоп, место охоты и число мобов, TvT, выбор скиллов, журнал.
 // Меню пишет только настройки (lite.cfg) и разовые команды (lite.cmd); память бота (lite.rt) пишет вкладка игры.
+// Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): в игре другой класс — предупреждение; скиллы — только панель Дестра.
 'use strict';
 if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
 const L = globalThis.L2Lite;
@@ -29,9 +30,13 @@ function paintRun() {
 function paintStatus() {
   const old = rt.statusT && Date.now() - rt.statusT > 120000;
   $('status').textContent = cfg.on ? (rt.status || 'Жду вкладку игры l2wap.com') + (old ? ` (обновлено в ${hm(rt.statusT)} — открыта ли вкладка игры?)` : '') : 'Выключен';
-  const c = rt.char;
-  const prof = String(c?.prof || '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const c = rt.char, prof = L.profName(c?.prof);
   $('hero').textContent = c && c.name ? `${c.name}${c.lvl ? ', ' + c.lvl + ' ур.' : ''}${prof ? ' · ' + prof : ''}` : '';
+  const hc = c && c.name ? L.heroClass(c.prof, c.slots, c.slot) : null, w = $('cls');
+  w.hidden = hc?.ok !== false;
+  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана: `
+    + (hc.alt ? `переключите в игре ${L.slotRu(hc.alt.slot)} на ${hc.alt.name}${hc.alt.lvl ? ' (' + hc.alt.lvl + ' ур.)' : ''}.` : 'войдите в игру героем-Дестром или переключите сабкласс на Дестра/Титана.')
+    + ' Пока активен другой класс, бот ничего не жмёт.' : '';
   const k = rt.k?.kills || 0, lim = +cfg.killLimit || 0;
   $('kills').textContent = lim > 0 ? `${k} / ${lim}${k >= lim ? ' ✔' : ''}` : String(k);
   $('now').textContent = rt.zone ? `Место охоты: ${rt.zone.name}` : cfg.on ? '' : 'Место охоты запомнится при Старте';
@@ -71,8 +76,11 @@ function paintZone() {
   sel.title = locs.length ? '' : 'Список локаций появится, когда бот откроет игру';
 }
 function paintSkills() {
-  const box = $('skills'), bar = (rt.bar || []).filter(x => x && x.a && x.a !== 'attack');
-  if (!bar.length) { box.replaceChildren(el('p', { className: 'hint', textContent: 'Откройте игру с включённым расширением — бот прочитает панель скиллов героя.' })); box.dataset.sig = ''; return; }
+  // Панель другого класса (память 1.2.1 у сабкласса БХ) не показываем: rt.barCls — класс, у которого она прочитана.
+  const mine = L.heroClass(rt.barCls || rt.char?.prof).ok !== false;
+  const box = $('skills'), bar = mine ? (rt.bar || []).filter(x => x && x.a && x.a !== 'attack') : [];
+  if (!bar.length) { box.replaceChildren(el('p', { className: 'hint', textContent: L.heroClass(rt.char?.prof).ok === false
+    ? 'Скиллы появятся, когда в игре будет активен Дестр/Титан: бот прочитает его панель.' : 'Откройте игру с включённым расширением — бот прочитает панель скиллов Дестра.' })); box.dataset.sig = ''; return; }
   const rows = bar.map(x => {
     const info = L.skillInfo(x.a, x.n), ch = (cfg.skills || {})[info.key], use = L.skillUse(info, ch);
     return { key: info.key, name: x.n || info.name, use, known: info.known };
