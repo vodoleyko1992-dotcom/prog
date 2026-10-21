@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-22T01:59:00+10:00",
+  "author": "Claude",
+  "version": "20.43",
+  "flavor": "Chrome + Firefox",
+  "request": "Потом быстрая сборка на хром и фаер (John 21.10, тред «Что ещё улучшить в боте»)",
+  "includes": [
+    "PR #324: 16 quick wins of the 21.10 review (stop notifications and reasons, cat before RB, auto-LS inventory_full, Firefox dock without chrome.tabs, menu consistency, honest measurements, RB tour + on-the-spot farming, quiet errors)",
+    "PR #338: autonomy — travel check by free GET /character instead of a pause (rt.travelCheck, loopTravel), per-task breathers instead of stops (rt.selfHold, loopSelfHold/loopSelfHoldWait, L2EngineCore.baseTask), softer tab/background watchdogs, review follow-ups",
+    "PR #325 pet start order, #327/#328 daily fishing goal, #332/#335 own crafting (modules/craft.js), #333 spoil by weapon, #334 VIP resists, #336/#337 subclass tab (modules/subgo.js)"
+  ],
+  "archives": {
+    "/mnt/project-files/builds/l2wap-bot-v20.43.zip": { "bytes": 1586764, "sha256": "4f31ecbdca9637c7ecc38cd984a1fcd048a195ad8c71d9aafc535ef261274204", "files": 66, "fileList": "20.42 list + modules/craft.js + modules/subgo.js" },
+    "/mnt/project-files/builds/l2wap-bot-v20.43-firefox.zip": { "bytes": 1587022, "sha256": "b099f3978179b556f0371b2e17307c6da6c82a7c10eb9189b8c5941dcdd145ba", "files": 66, "manifest": "background.scripts, gecko + gecko_android 128+" }
+  },
+  "checks": {
+    "nodeAllFiles": { "pass": 582, "fail": 0 },
+    "syntaxAllRuntimeJs": "PASS",
+    "envcheck": "PASS",
+    "baseProfileNoAuth": true,
+    "browserFromSource": {
+      "run": "22 scenarios, 3 in parallel, on the merged code (f27a211, same runtime as the build except the version)",
+      "pass": 20,
+      "failedOnlyInParallel": { "v2043-raidmisc-idle-farm-browser": "no content world under load; alone PASS", "v2043-subgo-browser": "Start before tab ready under load; alone PASS, also PASS on base" },
+      "list": ["v2043-au-breather", "v2043-au-travel", "v2043-firefox-dock-commands", "v2043-fx-travel", "v2043-fx-travel-stop", "v2043-learn-reset", "v2043-menu", "v2043-notify-stop", "v2043-own-craft", "v2043-raidmisc-idle-farm", "v2043-subgo", "v1015-warlock-mv3", "v1027-resource-teleport", "v2014-quick-start", "v2017-lifestone-auto", "v2024-vip-free-buff", "v2031-pet-raid-prep", "v2031-vip-greater-buff", "v2032-subclass-bag-startup", "v206-raid-arrival-payment", "v207-no-crafter", "v209-control-workspace"]
+    },
+    "chromeZipload": { "version": "20.43", "pageErrors": 0, "runtimeHashesZipEqualsSource": true },
+    "firefox": { "browser": "Firefox 153.5.1esr", "geckodriver": "0.37.1", "lint": { "errors": 0, "warnings": 48 }, "smokeDesktop": "PASS", "smokeAndroidApisRemoved": "PASS" }
+  },
+  "notChecked": ["live game and l2wap.com", "browser scenarios that download public game files from l2wap.com", "full browser suite on the final commit (autonomy groups ran it on their merges)", "Android device", "AMO signing"]
+}
