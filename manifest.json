@@ -93,6 +93,7 @@
         "modules/rbrun.js",
         "modules/subclass.js",
         "modules/craft.js",
+        "modules/crafterkit.js",
         "modules/subgo.js",
         "modules/enchant.js",
         "modules/lifestone.js",

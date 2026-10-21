@@ -68,8 +68,9 @@ test('крафтер с пикой: точка фарма не выбирает�
   assert.match(src, /const canSpoil = \(\) => !L2V7Modules\.loot\?\.crafterPike\?\.\(\) && \(/);
   assert.match(src, /L2V7Modules\.loot = L2V7Factories\.loot\(\{[^\n]*get roleNow\(\)\{return \(\)=>L2V7Modules\.subclass\?\.role\?\.\(\)\}/);
 });
+// 20.44 (итоговая проверка): спойл берёт «живое» оружие combatWeaponLive (устаревшая запись «надето» при другой руке в игре — неизвестно)
 test('подключение: геттер weaponNow у loot и экспорт combatWeapon из combat', () => {
   const src = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
-  assert.match(src, /L2V7Modules\.loot = L2V7Factories\.loot\(\{ get weaponNow\(\)\{return \(\)=>L2V7Modules\.combat\?\.combatWeapon\?\.\(\)\}/);
-  assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /healSlot, combatWeapon, weaponContext/);
+  assert.match(src, /L2V7Modules\.loot = L2V7Factories\.loot\(\{ get weaponNow\(\)\{return \(\)=>L2V7Modules\.combat\?\.combatWeaponLive\?\.\(\)\}/);
+  assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /healSlot, combatWeapon, combatWeaponLive, weaponContext/);
 });

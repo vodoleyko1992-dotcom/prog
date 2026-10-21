@@ -431,6 +431,19 @@ function mmShopWant() {
   return (P?.raw || []).filter(r => r.shop && r.miss > 0).map(r => ({ key: `mm${r.id}`, label: `${MM_SHOP_UK[r.id] || r.nm} (Маммон)`, ids: [r.id], grade: r.shop.g, sub: 'resources',
     name: new RegExp(`^(?:${[MM_SHOP_UK[r.id], nameEn(r.id), r.nm].filter(Boolean).map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})$`, 'i'), mm: [r.need, r.need], unit: r.shop.a }));
 }
+// 20.44 (набор крафтера): сколько этого сырья всего нужно цели Маммона и сколько уже есть — запас голему кладём поверх
+function rawNeed(id) {
+  if (!+env.cfg.mmGoalItem) return null;
+  let P = null; try { P = goalAll(); } catch (e) { return null; }
+  const r = (P?.raw || []).find(x => +x.id === +id);
+  return r ? { need: +r.need || 0, have: +r.have || 0 } : null;
+}
+// 20.43 (набор крафтера): та же строка закупки для любого сырья магазина — голему Crystal C (запас поверх нужды Маммона)
+function shopRow(id, mm, tag) {
+  const s = MM_SHOP[id]; if (!s) return null;
+  return { key: `mm${id}`, label: `${MM_SHOP_UK[id] || nameEn(id) || '#' + id} (${tag})`, ids: [id], grade: s[0], sub: 'resources',
+    name: new RegExp(`^(?:${[MM_SHOP_UK[id], nameEn(id)].filter(Boolean).map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})$`, 'i'), mm, unit: s[1] };
+}
 const short = (l, n = 8) => l.slice(0, n).map(m => `${m.nm} ${fmtA(m.miss)}`).join(', ') + (l.length > n ? ` и ещё ${l.length - n}` : '');
 function planOut(P) {                             // компактный план для меню (rt.mmGoalPlan): popup модуль не загружает
   if (!P || P.done) return null;
@@ -1285,6 +1298,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { bagAnalyze, bagAuto, bagAfterClaim, paymentNote, paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
+return { bagAnalyze, bagAuto, bagAfterClaim, paymentNote, paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, shopRow, rawNeed, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

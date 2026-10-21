@@ -9,6 +9,7 @@ function fixture(o={}){
  on:true,tabOwner:true,cfg:{autoMagister:true,...o.cfg},rt:{char:'hero',lvl:75,classCur:{prof:'human_warlock',slot:0},zone:'valley',panel:[{name:'Blaze'}],skills:{blaze:{dmgN:2}},magEnabled:true,...o.rt},
  heroNick:()=>ctx.rt.char,heroLevel:()=>ctx.rt.lvl,autonomyMode:()=>ctx.cfg.catMode?'cat':ctx.cfg.fishMode?'fish':'auto',isBattle:()=>ctx.location.pathname==='/battle.html',victory:()=>o.win!==false,
  abHold:()=>!!ctx.rt.abChal,antibotState:()=>ctx.rt.abChal?'check':ctx.rt.pveBlockUntil?'blocked':null,fishNow:()=>!!ctx.cfg.fishMode,names:s=>String(s).split(',').map(x=>x.trim().toLowerCase()),ilOf:()=>({c:'Маг. атака'}),petState:()=>null,rec(){},setStatus(){},rtCommit:async()=>true,
+ sleep:async()=>{},pageLeaving:false,pageGone:false,   // 20.43: переход к учителю ждёт смены страницы; обрыв при уходе — не ошибка гильдии
  setRt:p=>{Object.assign(ctx.rt,p);o.write?.(p,ctx);return Promise.resolve({ok:true})},toMap:async()=>{calls.push('map');ctx.location.pathname='/map.html'},catGo:async id=>calls.push('cat:'+id)};
  const character=()=>({name:ctx.rt.char,level:o.serverLevel??ctx.rt.lvl,l2Profession:ctx.rt.classCur.prof,classSlots:{activeSlot:ctx.rt.classCur.slot},revision});
  const catalog=()=>({npc:{npcId:30344},profession:{l2Profession:o.catalogProf||ctx.rt.classCur.prof},characterSp:sp,

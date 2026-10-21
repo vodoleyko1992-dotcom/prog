@@ -847,7 +847,7 @@ function dpsPlan(ctx, mp) {
     for (const n of env.names(env.cfg.nPower).filter(n => !env.names(env.cfg.nUltra).includes(n))) {   // v5.3: сверхсильные — только через ultPick
       const b = slotsBy(n)[0];
       const il = b && env.ilOf(b);
-      if (nonOffenseSkill(b)) continue;
+      if (nonOffenseSkill(b) || weaponBarred(b)) continue;   // 20.43: навык не под надетое оружие
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
       // 10.0.11 (лог 13.10 22:03–22:12, Knight alt1): Drain Health — в логе игры без цифры урона («Витягування життя: темний урон…»),
       // 26 нажатий, урон засчитан 1 раз. Как у мага (mageSpellSlots): 5+ нажатий без единого замера урона — удара в ротации нет
@@ -861,7 +861,7 @@ function dpsPlan(ctx, mp) {
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
-      if (!b || nonOffenseSkill(b) || !ready(b) || !free('force:' + c.name) || fN < c.cost) continue;
+      if (!b || nonOffenseSkill(b) || weaponBarred(b) || !ready(b) || !free('force:' + c.name) || fN < c.cost) continue;
       opts.push({ key: 'force:' + c.name, name: `${c.name} (−${c.cost} эн.)`, b, dmg: env.expDmg(c.name), force: c.cost, cost: c.cost,
                   cd: env.rt.skills?.[k]?.cd || env.rt.skillDb?.[k]?.cd || 10 });
     }
@@ -870,7 +870,7 @@ function dpsPlan(ctx, mp) {
   // but recognize these three skills from hotbar when autoRoles did not fill nPower.
   if (ctx.rb && mpOk) for (const n of ['Burning Fist', 'Soul Breaker', 'Iron Punch']) {
     const b = slotsBy(n)[0];
-    if (!b || !ready(b) || !free('power:' + b.title) || opts.some(o => o.b === b)) continue;
+    if (!b || weaponBarred(b) || !ready(b) || !free('power:' + b.title) || opts.some(o => o.b === b)) continue;
     if (mp && mp.cur < (env.skillMp(n) || 0) + 5) continue;
     opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b,
       dmg: env.expDmg(env.skKey(b)) || env.expDmg(n) || 0,
@@ -893,7 +893,7 @@ function dpsPlan(ctx, mp) {
     }
   }
   ctx.lfHold = !!lfCut;
-  const chargeB = env.names(env.cfg.nCharge).map(n => slotsBy(n)[0]).find(b => b && !nonOffenseSkill(b) && ready(b) && free('charge') && affordable(b, mp));
+  const chargeB = env.names(env.cfg.nCharge).map(n => slotsBy(n)[0]).find(b => b && !nonOffenseSkill(b) && !weaponBarred(b) && ready(b) && free('charge') && affordable(b, mp));
   // v4.46 (симуляция 350 000 боёв): на РБ ход Focused Force проигрывает обычной атаке с вампиризмом — энергию не копим,
   // уже накопленную тратим (HA/FB). Побед при нехватке банок 26 % → 53 %, бой на 16 % быстрее, банок на 58 % меньше
   const rbDamageNames = ['Burning Fist', 'Soul Breaker', 'Iron Punch'];
@@ -991,7 +991,7 @@ function ultPick(ctx, mp) {
   const boss = !!(ctx.rb || ctx.champ);
   for (const n of L) {
     const b = slotsBy(n)[0]; const skillInfo = b && env.ilOf(b);
-    if (nonOffenseSkill(b)) continue;
+    if (nonOffenseSkill(b) || weaponBarred(b)) continue;
     if (!b || !ready(b) || (ctx.block['ult:' + b.title] || 0) > Date.now()) continue;
     const il = env.ilOf(b), hpCost = /HP −/.test(il?.L || '') || /of doom/i.test(n);
     // касты в l2wap мгновенные (между скиллами — общая задержка хода + свой откат), поэтому Vortex — такой же сверхсильный удар
@@ -1139,6 +1139,36 @@ function weaponBlocks() {
     if (v.context === context && Date.now() - v.t >= 0 && Date.now() - v.t < 1800000) block[k] = Infinity;
   return block;
 }
+// 20.43 (лог 21.10 22:07 Fortune Seeker с Elysian, 23:15–23:20 Warsmith с Yaksa Mace в туре РБ): Whirlwind и Wild Sweep (в справочнике
+// только «древковое») жались с дубиной — 400 «Цей скилл зараз недоступний», ход теряется заново после каждой смены/заточки оружия.
+// Требование навыка к оружию (поле w базы IL) сверяем с подтверждённым надетым оружием: вид другой — навык не выбираем.
+// Оружие не подтверждено, вид неизвестен или w — не вид оружия («без оружия», «щит») — как раньше: учит отказ сервера (unavailW)
+const WT_ALIAS = { 'дуалы': 'парные мечи', dual: 'парные мечи', pole: 'древковое', polearm: 'древковое', blunt: 'дубина', bigblunt: 'двуруч. дубина',
+  sword: 'меч', bigsword: 'двуруч. меч', dagger: 'кинжал', bow: 'лук', fist: 'кастеты' };
+const WT_KNOWN = new Set(['меч', 'двуруч. меч', 'дубина', 'двуруч. дубина', 'кинжал', 'лук', 'древковое', 'кастеты', 'парные мечи']);
+const wtKind = s => { const t = String(s || '').trim().toLowerCase(), k = WT_ALIAS[t] || t; return WT_KNOWN.has(k) ? k : ''; };
+function weaponNeed(b) {
+  const w = b && env.ilOf?.(b)?.w; if (!w) return null;
+  const need = String(w).split(',').map(wtKind);
+  return need.length && need.every(Boolean) ? need : null;
+}
+// 20.43 (ревью): запись rt.weapons «надето» устаревает без POST смены, который видит бот (смена руками до старта, вторая вкладка,
+// облачная сессия). Правая рука из GET /character игры (hook aug → rt.weaponAug.w = eq.l1, приходит и после каждого хода) другая
+// и не старше записи — записи не верим: навык не прячем, решает отказ сервера (unavailW), как до 20.43. Старше записи — верим записи:
+// свой POST набора крафтера (gamePost) мимо hook, rt.weaponAug догонит на первом GET игры (content.augNote освежает t при расхождении)
+// 20.44 (ревью): запись «надето» устарела — игра (свой GET /character, rt.weaponAug.w) показывает в руке другое, и не раньше записи:
+// оружие неизвестно (так же считают и спойл, и запрет умений по виду оружия)
+function combatWeaponLive() {
+  const w = combatWeapon(), live = env.rt.weaponAug;
+  return w && live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0) ? null : w;
+}
+function weaponBarred(b) {
+  const need = weaponNeed(b); if (!need) return false;
+  const w = combatWeaponLive();
+  if (!w) return false;
+  const wt = wtKind(w.wt);
+  return !!wt && !need.includes(wt);
+}
 function refreshWeaponBlocks(ctx) {
   const context = weaponContext();
   if (ctx.weaponContext != null && ctx.weaponContext !== context) {
@@ -1227,10 +1257,10 @@ function chooseAction(ctx, mp) {
   const mpOk = !mp || mp.cur >= env.cfg.skillMpMin;
   // силовые и станы — списки через запятую, порядок = приоритет (каждое название — отдельный скилл)
   const list = str => env.names(str).map(n => slotsBy(n)[0]).filter(Boolean);
-  const powers = mpOk ? env.names(env.cfg.nPower).filter(n => !env.names(env.cfg.nUltra).includes(n)).map(n => slotsBy(n)[0]).filter(Boolean).filter(b => { const il = env.ilOf(b); return !nonOffenseSkill(b) && free('power:' + b.title); }) : [];
+  const powers = mpOk ? env.names(env.cfg.nPower).filter(n => !env.names(env.cfg.nUltra).includes(n)).map(n => slotsBy(n)[0]).filter(Boolean).filter(b => !nonOffenseSkill(b) && !weaponBarred(b) && free('power:' + b.title)) : [];
   const longFight = (mobHp()?.cur || 0) > env.expDmg('атака') * 2 + Math.max(0, ...powers.filter(ready).map(b => env.expDmg(env.skKey(b))));
   const stuns  = mpOk && ctx.champ && !ctx.rb && longFight && Date.now() - ctx.lastStun >= env.cfg.stunEvery * 1000
-               ? list(env.cfg.nStun).filter(b => !nonOffenseSkill(b) && free('stun:' + b.title) && affordable(b, mp)) : [];
+               ? list(env.cfg.nStun).filter(b => !nonOffenseSkill(b) && !weaponBarred(b) && free('stun:' + b.title) && affordable(b, mp)) : [];
   const st = stuns.find(ready);
   const ult = ultPick(ctx, mp);                   // v5.3: 💥 сверхсильный скилл (Punch of Doom, Crush of Doom, Vortex…)
   if (ult) return ult;
@@ -1539,7 +1569,14 @@ async function battle() {
     let done = lost || refused ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
     // ответ игры: «скилл недоступен» (оружие) или «Скіл на перезарядці»
     // 8.0: сервер принял именно этот ход (2xx) — «на перезарядке»/«недоступен» к нему не относится, 250 мс не ждём
-    const code=receipt?.code||'',serverAnswer=matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp':/unavail|weapon|not_learned/i.test(code)?'unavail':null):null;
+    // 20.43 (лог 21.10 22:07:37): 400 battle_skill_not_allowed «Цей скилл зараз недоступний…» не узнавался по коду; второй отказ
+    // подряд (Wild Sweep после Whirlwind) давал тот же тост, ожидание «новый текст» молчало — 3 с паузы вместо запрета, и в
+    // следующем бою снова 400. Текст сервера проверяем тем же UNAVAIL, что и тост; «боя нет» (battle_none/not_in_battle) — не «недоступно»
+    const code=receipt?.code||'',refuseMsg=String(receipt?.message||''),fightGone=receipt?.error==='battle_none'||receipt?.reason==='not_in_battle';
+    const serverAnswer=matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp'
+      :!fightGone&&(/unavail|weapon|not_learned/i.test(code)||!env.FORCE_NEED?.test(refuseMsg)&&env.UNAVAIL?.test(refuseMsg))?'unavail':null):null;
+    // 20.43: текст отказа сервера «недоступно» — в строки журнала боя, баффов, спойла (loot) и тогглов (content) через ctx
+    ctx.refuseText=serverAnswer==='unavail'?refuseMsg:'';
     const ans = serverAnswer || (dead() || (done === true && netOk) ? null : await waitNet(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost || refused ? 300 : 600, 50));
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
@@ -2061,7 +2098,8 @@ async function battle() {
         if (P.has) { ctx.pet.alive = true; if (P.key && !ctx.pet.key) ctx.pet.key = P.key; }
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
-      if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000) {
+      // 20.43 (John 21.10 13:05 «голем только на РБ»): у крафтера с набором на фарме слугу в бою не призываем; 20.44: в бою с РБ (и ради ресурса) — можно
+      if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000 && !env.crafterKit?.noSummon?.(!!ctx.rb)) {
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && servitorSummonSlot(b));   // 9.2: Feline Queen — бафф, не кот; 20.13 (C4): и не кубик
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10 && affordable(sb, mp, 10))) {   // 20.12: и цена act()
@@ -2087,7 +2125,7 @@ async function battle() {
         const hb = slots.find(b => /^(?:servitor heal|heal servitor)/i.test(env.cleanTitle(b.title)) || (env.ilOf(b)?.target === 'PET' && env.ilOf(b)?.c === 'Лечение'));
         const mpOk = b => !mp || mp.cur >= (env.skillMp(env.cleanTitle(b.title)) || 0) + 10 && affordable(b, mp, 10);   // 20.12: и цена act()
         const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb);
-        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb);
+        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.(!!ctx.rb);
         const useSummon = !!canSummon && (env.cfg.petHealPrefer === 'resummon' || !canHeal);
         const pick = useSummon ? sb : canHeal ? hb : null;
         if (pick) {
@@ -2192,7 +2230,7 @@ async function battle() {
         if (r === 'lock') ctx.block['petbuff:' + pb.n] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу
         if (r === 'nomp') ctx.block['petbuff:' + pb.n] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота
         if (r === true) { env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } })?.catch?.(() => {}); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
-        else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
+        else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${ctx.refuseText || noticeText() || 'недоступен'} — до конца боя не трогаю`); }
         return AGAIN;
       }
     }
@@ -2229,7 +2267,7 @@ async function battle() {
       if (r === true) { env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } })?.catch?.(() => {}); ctx.block['buff:' + bn] = 0; }   // 20.41: без ожидания записи
       if (r === 'unavail') {                      // с этим оружием бафф не работает — до конца боя не трогаем
         ctx.block['buff:' + bn] = Infinity;
-        env.rec('B', 'недоступно', `бафф «${b.title}»: ${noticeText() || 'недоступен'}`);
+        env.rec('B', 'недоступно', `бафф «${b.title}»: ${ctx.refuseText || noticeText() || 'недоступен'}`);
         console.info(env.TAG, `бафф ${b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
       } else if (r === 'cd') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: 0 } })?.catch?.(() => {});   // на КД — повторим, когда откатится (память КД)
       else if (r === 'lock') ctx.block['buff:' + bn] = 0;          // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
@@ -2339,7 +2377,7 @@ async function battle() {
         (ctx.weaponBlocked ||= []).push(a.key);
         await env.setRt({ unavailW: { ...(env.rt.unavailW || {}), [a.key]: { context: weaponContext(), t: Date.now() } } });
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
-        env.rec('B', 'недоступно', `«${a.b.title}»: ${noticeText() || 'скилл недоступен'}`);
+        env.rec('B', 'недоступно', `«${a.b.title}»: ${ctx.refuseText || noticeText() || 'скилл недоступен'}`);
         console.info(env.TAG, `${a.b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
       } else if (done === 'cd') {                 // «на перезарядке» — сразу другим скиллом/атакой (ready() учтёт память КД)
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
@@ -2369,8 +2407,8 @@ async function battle() {
         const blockMs = Math.max(0, (ctx.block[key] || 0) - Date.now());
         const localMs = localCdLeft(b) * 1000;
         const needMp = mp && !affordable(b, mp);
-        const reason = !uiReady(b) ? 'интерфейс' : gcdMs > 0 ? 'сервер GCD' : serverMs > 0 ? 'сервер навыка' : blockMs > 0 ? (blockMs > 1e12 ? 'недоступно до конца боя' : 'после неудачи') : localMs > 0 ? 'резервный таймер' : needMp ? `не хватает MP (${actionMp(b)})` : 'готов';
-        return `${name}: ${reason}${reason === 'готов' || /MP|недоступно/.test(reason) ? '' : ` ${Math.ceil(Math.max(gcdMs, serverMs, Math.min(blockMs, 1e9), localMs))} мс`}`;
+        const reason = weaponBarred(b) ? 'нужно ' + weaponNeed(b).join('/') : !uiReady(b) ? 'интерфейс' : gcdMs > 0 ? 'сервер GCD' : serverMs > 0 ? 'сервер навыка' : blockMs > 0 ? (blockMs > 1e12 ? 'недоступно до конца боя' : 'после неудачи') : localMs > 0 ? 'резервный таймер' : needMp ? `не хватает MP (${actionMp(b)})` : 'готов';
+        return `${name}: ${reason}${reason === 'готов' || /MP|недоступно|нужно/.test(reason) ? '' : ` ${Math.ceil(Math.max(gcdMs, serverMs, Math.min(blockMs, 1e9), localMs))} мс`}`;
       });
       // 7.1.30: и атака — при MP ≈ 0 маг живёт атакой, а в журнале было видно только заклинания («все готовы», но бот стоит)
       const atkB = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака');
@@ -2769,6 +2807,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

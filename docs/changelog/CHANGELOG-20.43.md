@@ -199,7 +199,7 @@
 
 ## Проверки
 
-- `node tests/run-all.cjs`: 538 PASS / 0 FAIL (на базе 20.42 — 527 PASS / 0 FAIL; добавлено 11 Node-файлов 20.43).
+- `node tests/run-all.cjs`: 561 PASS / 0 FAIL (на базе 20.42 — 527 PASS / 0 FAIL; добавлено 34 Node-файла 20.43).
 - `node --check` всех js в корне и `modules/` — без ошибок; `node tests/tools/envcheck.cjs .` — PASS.
 - Браузерные сценарии (настоящий MV3 в Chromium, ответы игры подменены) — весь список `tests/tools/smokes.sh`, по 3 параллельно: после слияния 124 сценария, 96 PASS / 28 FAIL; на базе 20.42 (`1987416`) — 119 сценариев, 89 PASS / 30 FAIL. Все 28 падений есть и на базе: в среде нет кэшей публичных файлов игры и путей Codex, часть старых сценариев не дожидается своих условий. Новых падений нет. Два сценария (`v1016-enchant-public`, `v1016-enchant-public-independent`) на базе упали на скачивании публичных файлов игры (502), после слияния прошли. Все 5 новых сценариев 20.43 PASS: `v2043-notify-stop`, `v2043-firefox-dock-commands`, `v2043-menu`, `v2043-learn-reset`, `v2043-raidmisc-idle-farm`; изменённые `v2017-lifestone-auto` и `v209-control-workspace` — PASS. Три новых сценария (notify-stop, learn-reset, raidmisc-idle-farm) добавлены в `tests/tools/smokes.sh`. Python-смоуки не запускались: в среде нет python-playwright.
 - Часть прежних сценариев `smokes.sh` сама скачивает публичные файлы игры (страницы и скрипты) анонимным GET с l2wap.com — без входа в аккаунт, без запросов от имени героя и без действий в игре.
