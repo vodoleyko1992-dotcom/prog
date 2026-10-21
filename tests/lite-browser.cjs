@@ -15,8 +15,10 @@
 // Сценарий F (Lite 1.5, John: «есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный профиль
 //   на лука»): у героя активен Phantom Ranger (слоты как на аккаунте из разбора лука). Меню — вкладки «Дестр»/«Лук» со своими
 //   лимитами (старые настройки 1.4 — профиль Дестра); лук бьёт выстрелами под именем игры, баффы — да, Hex/стойка — нет;
-//   стрелы кончились (сервер: not_enough_arrows) — выход из боя и ожидание; стрелы появились — охота до 3; в игре Титан —
+//   стрелы кончились (сервер: battle_no_arrows, как в пробном бою 21.10) — выход из боя и ожидание; стрелы появились — охота до 3; в игре Титан —
 //   профиль Дестра (свой лимит 4, Fatal Strike, без выстрелов); снова лук — его 3 из 3 уже выполнены, бот стоит.
+// Сценарий G (Lite 1.5.1, John: «Vicious Stance то включает то выключает», «привел куда надо мне, не бьет мобов»): Старт в бою —
+//   место охоты сразу; стойку, которой игра не показывает, бот жмёт один раз; миг без полоски HP моба — не повод уходить из боя.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
@@ -46,23 +48,33 @@ function makeServer() {
   };
   const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000,
     double_shot: 2500, power_shot: 2500, stun_shot: 1500, soul_of_sagittarius: 1000, l2_77: 1000, l2_91: 1000, l2_122: 1000, vicious_stance: 1000 };
-  // 1.5: лук тратит стрелы (Double Shot — две); не хватает — отказ сервера (код — догадка, настоящий ждёт пробного боя)
-  const ARROW_NEED = { attack: 1, power_shot: 1, stun_shot: 1, double_shot: 2 };
-  const ch = () => { S.hero.revision++; return { ...S.hero, activeBuffs: S.hero.activeBuffs.filter(b => b.expiresAt > Date.now()),
-    ...(S.arrows != null ? { inventory: { stacks: [{ itemId: 1342, qty: S.arrows }, { itemId: 728, qty: 50 }] } } : {}) }; };
+  // 1.5 / 1.5.1 (пробный бой лука 21.10, archer-study.md §6, §6a): выстрел тратит 2 стрелы, атака — 1; стрел нет — 400 battle_no_arrows.
+  // Выстрелы GCD не ставят; их откат сервер присылает под каноническим номером (l2_19 / l2_56 / l2_101), ранний выстрел —
+  // 400 {code:'skill_cooldown', skillId, remainingMs} без serverNowMs.
+  const ARROW_NEED = { attack: 1, power_shot: 2, stun_shot: 2, double_shot: 2 };
+  const CANON = { double_shot: 'l2_19', power_shot: 'l2_56', stun_shot: 'l2_101' };
+  // 1.5.1: стойку лука (Vicious Stance, 312) игра показывает по-разному: нигде (S.stanceReport 'none', как, видимо, у John),
+  // в баффах героя ('buff') или в toggleStances ('list'). S.stanceStuck — нажатие принимается, но стойка не включается.
+  const ch = () => { S.hero.revision++; const now = Date.now(), buffs = S.hero.activeBuffs.filter(b => b.expiresAt > now);
+    if (S.stance && S.stanceReport === 'buff') buffs.push({ skillId: 312, expiresAt: now + 3600000 });
+    return { ...S.hero, activeBuffs: buffs,
+      toggleStances: S.stanceReport === 'list' ? [{ battleId: 'vicious_stance', skillId: 312, level: 8, active: !!S.stance }] : S.hero.toggleStances,
+      ...(S.arrows != null ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []), { itemId: 728, qty: 50 }] } } : {}) }; };   // 0 стрел — стопки нет (§6a)
   const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [] });
   function action(body) {
     const now = Date.now(), a = String(body.action || '');
     S.acts.push(a); S.actT.push(now);
+    if (a === 'vicious_stance') (S.stanceAll = S.stanceAll || []).push([now % 100000, now < S.gcd ? 'gcd' : now < (S.cd[a] || 0) ? 'cd' : 'ok']);
     if (S.antibot) { S.abActs++; return [423, { error: 'anti_bot_challenge', code: 'anti_bot_challenge' }]; }
     const b = S.battle;
     if (!b || !S.hero.inBattle) return [400, { error: 'no_battle' }];
     if (now < S.gcd) return [400, { error: 'global_cooldown', blockedBy: 'global', serverNowMs: now, globalCooldownUntilMs: S.gcd }];
+    if (CANON[a] && now < (S.cd[a] || 0)) { S.shotRej = (S.shotRej || 0) + 1; return [400, { code: 'skill_cooldown', skillId: CANON[a], remainingMs: S.cd[a] - now }]; }
     if (a !== 'battle_potion_use' && now < (S.cd[a] || 0)) return [400, { error: 'skill_cooldown', blockedBy: 'skill', serverNowMs: now, cooldownUntilMs: S.cd[a] }];
     const h = S.hero, bow = /ranger|hawkeye|sagittarius|sentinel/.test(h.l2Profession);
-    if (bow && ARROW_NEED[a] && (S.arrows || 0) < ARROW_NEED[a]) return [400, { error: 'not_enough_arrows' }];
+    if (bow && ARROW_NEED[a] && (S.arrows || 0) < ARROW_NEED[a]) return [400, { error: 'battle_no_arrows', messageRu: 'Немає стріл потрібного грейду для лука' }];
     if (bow && ARROW_NEED[a]) S.arrows -= ARROW_NEED[a];
-    S.gcd = now + (S.gcdMs || 250);
+    if (!CANON[a]) S.gcd = now + (S.gcdMs || 250);
     if (a === 'attack') b.mobHp -= 700;
     else if (a === 'double_shot') { b.mobHp -= 1500; h.mp -= 98; }
     else if (a === 'power_shot') { b.mobHp -= 1000; h.mp -= 70; }
@@ -75,13 +87,14 @@ function makeServer() {
     else if (a === 'l2_420') { h.activeBuffs.push({ skillId: 420, expiresAt: now + 60000 }); h.hp -= 204; h.mp -= 136; }
     else if (a === 'battle_potion_use') { S.pots--; h.hp = Math.min(h.maxHp, h.hp + 3000); }
     else if (a === 'l2_286') {}
+    else if (a === 'vicious_stance') { (S.stanceT = S.stanceT || []).push([now % 100000, S.stance, S.stanceReport]); if (!S.stanceStuck) S.stance = !S.stance; }
     if (a !== 'battle_potion_use') S.cd[a] = now + ((S.cdSet || CD)[a] || 1000);
     h.hp -= S.killHero ? 9000 : 150;
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
     if (b.mobHp <= 0) { b.mobHp = 0; h.inBattle = false; h.mobsKilled++; return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now } }]; }
     // Как настоящая игра (battle-action-result.js): почти каждый ответ на ход несёт hotbarStale — страница перечитывает персонажа.
     return [200, { kind: 'delta', delta: { mobHp: b.mobHp, mobMaxHp: b.mobMaxHp, characterHp: h.hp, characterMaxHp: h.maxHp, characterMp: h.mp, characterMaxMp: h.maxMp,
-      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [a]: S.cd[a] } } }];
+      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [CANON[a] || a]: S.cd[a] } } }];
   }
   function tvtState() {
     const t = S.tvt, now = Date.now();
@@ -267,6 +280,13 @@ async function launch() {
   return { sv, S: sv.S, ctx, sw, game, store, rt, cfg, pcfg, popup, errors, logs, id };
 }
 const logText = r => (r.log || []).map(x => x.x).join('\n');
+// 1.5.1: окно «СТРЕЛ НЕТ» на странице игры (shadow DOM окна Lite) — видно ли, текст и цвета; close — нажать «Закрыть»
+const arwBox = game => game.evaluate(() => {
+  const r = document.getElementById('l2lite-dock')?.shadowRoot?.querySelector('.arw'); if (!r) return null;
+  const b = r.getBoundingClientRect();
+  return { shown: !r.hidden && b.width > 300 && b.height > 100, text: r.textContent, bg: getComputedStyle(r).backgroundColor, color: getComputedStyle(r.querySelector('.h')).color, size: parseFloat(getComputedStyle(r.querySelector('.h')).fontSize) };
+});
+const arwClose = (game, sel = '.ok') => game.evaluate(s => document.getElementById('l2lite-dock').shadowRoot.querySelector('.arw ' + s).click(), sel);
 
 async function scenarioA() {
   const h = await launch(), { S } = h;
@@ -513,10 +533,10 @@ async function scenarioD() {
     console.log('D замер', { off, on, fastN });
     assert.ok(fastN >= 10, 'быстрых ответов ' + fastN);
     assert.ok(on.med < off.med - 150, `удар→удар ВКЛ ${on.med} мс против ВЫКЛ ${off.med} мс`);
-    assert.ok(on.chars <= Math.ceil(on.sec / 5) + 2 && off.chars >= 15, `GET /character: ВЫКЛ ${off.chars}, ВКЛ ${on.chars} за ${on.sec} с`);
+    assert.ok(on.chars <= Math.ceil(on.sec / 30) + 2 && off.chars >= 15, `GET /character: ВЫКЛ ${off.chars}, ВКЛ ${on.chars} за ${on.sec} с`);
     assert.ok(off.lost <= 1 && on.lost <= 1, `потерянные клики ВЫКЛ ${off.lost}, ВКЛ ${on.lost}`);
-    // HP героя падает сразу после собственного GET /character игры: панель отстанет на ~5 с, банку бот пьёт по ответу на ход
-    const c1 = S.charN; await until(() => S.charN > c1, 10000, 'GET /character игры');
+    // HP героя падает сразу после собственного GET /character игры: панель отстанет до 30 с (1.5.1, было 5), банку бот пьёт по ответу на ход
+    const c1 = S.charN; await until(() => S.charN > c1, 35000, 'GET /character игры');
     const p0 = S.acts.filter(a => a === 'battle_potion_use').length, tDrop = Date.now(); S.hero.hp = 6000;
     await until(() => S.acts.filter(a => a === 'battle_potion_use').length > p0, 6000, 'банка HP по ответу на ход');
     const potMs = Date.now() - tDrop, hud = await h.game.evaluate(() => document.getElementById('l2-hud-hp-cur').textContent);
@@ -590,19 +610,22 @@ async function scenarioE() {
 }
 
 
+// Герой с четырьмя классами (как на аккаунте из разбора лука): act — активный слот; лучник — панель и навыки Phantom Ranger.
+const SLOTS = act => ({ activeSlot: act, slots: [
+  { slot: 0, owned: true, active: act === 0, profession: 'dark_elf_storm_screamer', race: 'DarkElf', level: 78 },
+  { slot: 1, owned: true, active: act === 1, profession: 'dark_elf_spectral_master', race: 'DarkElf', level: 76 },
+  { slot: 2, owned: true, active: act === 2, profession: 'orc_titan', race: 'Orc', level: 77 },
+  { slot: 3, owned: true, active: act === 3, profession: 'dark_elf_phantom_ranger', race: 'DarkElf', level: 70 }] });
+const ARCHER_BAR = ['double_shot', 'power_shot', 'stun_shot', 'l2_122', 'l2_77', 'l2_91', 'soul_of_sagittarius', 'vicious_stance'];
+const ARCHER_NAMES = { double_shot: 'Double Shot', power_shot: 'Power Shot', stun_shot: 'Stun Shot', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura', soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance' };
+const archerOf = () => ({ l2Profession: 'dark_elf_phantom_ranger', level: 70, classSlots: SLOTS(3),
+  battleHotbarSlots: [{ k: 'a', a: 'double_shot' }, { k: 'a', a: 'power_shot' }, { k: 'a', a: 'stun_shot' }, { k: 'a', a: 'attack' }, ...ARCHER_BAR.slice(3).map(a => ({ k: 'a', a })), { k: 'u', id: 1539 }],
+  learnedBattleSkillsDetail: ARCHER_BAR.map(a => ({ battleId: a, nameUk: ARCHER_NAMES[a] })) });
+
 async function scenarioF() {
   const h = await launch(), { S } = h;
-  const SLOTS = act => ({ activeSlot: act, slots: [
-    { slot: 0, owned: true, active: act === 0, profession: 'dark_elf_storm_screamer', race: 'DarkElf', level: 78 },
-    { slot: 1, owned: true, active: act === 1, profession: 'dark_elf_spectral_master', race: 'DarkElf', level: 76 },
-    { slot: 2, owned: true, active: act === 2, profession: 'orc_titan', race: 'Orc', level: 77 },
-    { slot: 3, owned: true, active: act === 3, profession: 'dark_elf_phantom_ranger', race: 'DarkElf', level: 70 }] });
   const titan = { l2Profession: 'orc_titan', level: 77, classSlots: SLOTS(2), battleHotbarSlots: S.hero.battleHotbarSlots, learnedBattleSkillsDetail: S.hero.learnedBattleSkillsDetail };
-  const ARCHER_BAR = ['double_shot', 'power_shot', 'stun_shot', 'l2_122', 'l2_77', 'l2_91', 'soul_of_sagittarius', 'vicious_stance'];
-  const NAMES = { double_shot: 'Double Shot', power_shot: 'Power Shot', stun_shot: 'Stun Shot', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura', soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance' };
-  const archer = { l2Profession: 'dark_elf_phantom_ranger', level: 70, classSlots: SLOTS(3),
-    battleHotbarSlots: [{ k: 'a', a: 'double_shot' }, { k: 'a', a: 'power_shot' }, { k: 'a', a: 'stun_shot' }, { k: 'a', a: 'attack' }, ...ARCHER_BAR.slice(3).map(a => ({ k: 'a', a })), { k: 'u', id: 1539 }],
-    learnedBattleSkillsDetail: ARCHER_BAR.map(a => ({ battleId: a, nameUk: NAMES[a] })) };
+  const archer = archerOf();
   const SHOT = /^(?:double_shot|power_shot|stun_shot)$/;
   const sel = pp => pp.evaluate(() => [...document.querySelectorAll('#profs button')].map(b => [b.dataset.kind, b.classList.contains('sel'), b.querySelector('i').textContent]));
   try {
@@ -645,8 +668,16 @@ async function scenarioF() {
     assert.equal(S.spawnN, sp, 'без стрел начал бой'); assert.ok(S.acts.length - a0 <= 1, 'без стрел ходы: ' + S.acts.slice(a0).join(','));
     assert.ok(!S.hero.inBattle, 'вышел из боя');
     await until(() => pp.evaluate(() => /Нет стрел/.test(document.getElementById('arw').textContent)), 5000, 'меню: нет стрел');
+    // 1.5.1 (John: «сообщение большое с возможностью его закрыть СТРЕЛ НЕТ. красным текстом на белом фоне»)
+    const box = await until(async () => { const b = await arwBox(h.game); return b?.shown ? b : null; }, 8000, 'окно «СТРЕЛ НЕТ»');
+    if (process.env.LITE_SHOT) await h.game.screenshot({ path: process.env.LITE_SHOT });
+    assert.match(box.text, /СТРЕЛ НЕТ/); assert.equal(box.bg, 'rgb(255, 255, 255)'); assert.equal(box.color, 'rgb(209, 0, 0)'); assert.ok(box.size >= 40, 'крупно: ' + box.size);
+    await arwClose(h.game);
+    await until(async () => !(await arwBox(h.game)).shown, 3000, 'окно закрыто');
+    await delay(2500);
+    assert.equal((await arwBox(h.game)).shown, false, 'закрытое окно вернулось, хотя стрел всё ещё нет');
     const r1 = await h.rt();
-    assert.match(logText(r1), /сервер не дал выстрелить: «not_enough_arrows»/);
+    assert.match(logText(r1), /сервер не дал выстрелить: «battle_no_arrows»/);
     assert.match(logText(r1), /нет стрел — охоту остановил/);
     // стрелы появились в сумке — охота до 3 мобов лука
     S.arrows = 500;
@@ -659,6 +690,7 @@ async function scenarioF() {
     assert.ok(fastMax >= 3, 'быстрых ответов ' + fastMax);
     const r2 = await h.rt();
     assert.match(logText(r2), /стрелы есть \(500\) — продолжаю охоту/);
+    assert.equal((await arwBox(h.game)).shown, false, 'окно «СТРЕЛ НЕТ» при стрелах');
     assert.equal(r2.k.kills, 3);
     // в игре переключили на Титана: профиль Дестра — свой лимит 4 и место, Fatal Strike, выстрелов нет
     const n1 = S.acts.length;
@@ -694,6 +726,82 @@ async function scenarioF() {
   finally { await h.ctx.close(); }
 }
 
+// Сценарий G (Lite 1.5.1, журналы John 21.10 19:55–20:05: «Vicious Stance то включает то выключает туда сюда»,
+// «привел куда надо мне, не бьет мобов»). Лук, стойка включена галкой, место — «где стоит герой».
+// 1) Старт, когда герой уже в долгом бою: место охоты запоминается сразу (1.5 ждал конца боя, а цепочка его не давала).
+// 2) Стойку игра нигде не показывает (ни toggleStances, ни баффы): за всю охоту — одно нажатие (1.5 жал её снова и снова).
+// 3) Полоска HP моба на 2 с пропала на странице боя, открытой дольше 15 с: бот не уходит на карту (1.5 уходил сразу).
+// 4) Стойка видна в баффах героя, игра её сняла — бот включает снова (одно нажатие).
+// 5) Сервер принимает нажатие, но стойка не включается (список игры: active:false) — после двух нажатий подряд пауза 30 мин.
+// Всё время: откат выстрела сервер присылает под номером игры (l2_56…), на панели его не видно — бот не жмёт выстрел раньше времени.
+async function scenarioG() {
+  const h = await launch(), { S } = h;
+  const presses = () => (S.stanceT || []).length;          // принятые сервером нажатия стойки (отказ по откату — не нажатие)
+  try {
+    S.champAt = 99; S.arrows = 5000; S.stance = false; S.stanceReport = 'none';
+    Object.assign(S.hero, archerOf());
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, tvt: false, p: { archer: { killLimit: 0, tvt: false, skills: { vicious_stance: { on: true } } } } } }));
+    // герой уже бьётся с толстым мобом (игрок сам начал бой), бот выключен
+    S.mobHp = 80000; await h.sv.api('/game/battle/start', 'POST', { spawnId: 'g1' }); S.mobHp = 4000;
+    await h.game.goto('https://l2wap.com/battle.html?spawnId=g1');
+    await until(async () => (await h.rt()).kind === 'archer' && (await h.rt()).bar?.length === 9, 20000, 'профиль лука');
+    const k0 = S.hero.mobsKilled, tStart = Date.now();
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: true, tvt: false, p: { archer: { killLimit: 0, tvt: false, skills: { vicious_stance: { on: true } } } } },
+      'lite.cmd': { id: 'g-start', type: 'start', kind: 'archer', t: Date.now() } }));
+    await until(async () => (await h.rt()).zone?.id === 'giran_harbor', 5000, 'место охоты запомнено при Старте');
+    assert.ok(S.hero.inBattle && S.hero.mobsKilled === k0, 'место запомнено ещё в первом бою');
+    const zl = (await h.rt()).log.find(x => /место охоты — где стоит герой: «Гавань Гірана»/.test(x.x));
+    assert.ok(zl && zl.t - tStart < 5000, 'строка о месте охоты');
+    S.battle.mobHp = Math.min(S.battle.mobHp, 3000);       // первый бой — к концу, дальше обычные мобы цепочкой
+    // (2) охота цепочкой; страница боя та же — ждём, пока ей станет больше 16 с
+    await until(async () => S.hero.mobsKilled >= k0 + 4 && Date.now() - tStart > 17000, 60000, 'охота цепочкой 17 с');
+    assert.equal(presses(), 1, 'стойку жал ' + presses() + ' раз: ' + S.acts.join(','));
+    assert.equal(S.stance, true, 'стойка включена');
+    // (3) полоска HP моба на 2 с пропала — бот ждёт, а не уходит на карту
+    const leaves0 = S.leaves, url0 = h.game.url();
+    await h.game.evaluate(() => { const el = document.querySelector('#battle-mob-hp-val'), v = el.textContent; el.textContent = ''; setTimeout(() => { if (!el.textContent) el.textContent = v; }, 2000); });
+    const k1 = S.hero.mobsKilled;
+    await until(() => S.hero.mobsKilled >= k1 + 2, 30000, 'охота после пропажи полоски HP');
+    assert.equal(S.leaves, leaves0, 'вышел из боя'); assert.equal(h.game.url(), url0, 'ушёл со страницы боя');
+    assert.doesNotMatch(logText(await h.rt()), /страница боя без моба/);
+    assert.equal(presses(), 1, 'стойку жал повторно: ' + presses());
+    // (4) игра показывает стойку в баффах; потом сняла её — бот включает снова одним нажатием
+    S.stanceReport = 'buff'; S.phaseT = [['buff', Date.now() % 100000]];
+    await delay(3500);
+    S.stance = false; S.phaseT.push(['off', Date.now() % 100000]);
+    await until(() => presses() === 2 && S.stance === true, 20000, 'стойку включил снова');
+    const k2 = S.hero.mobsKilled;
+    await until(() => S.hero.mobsKilled >= k2 + 3, 30000, 'охота со стойкой');
+    assert.equal(presses(), 2, 'лишние нажатия стойки: ' + presses());
+    // (5) нажатие проходит, а стойка не включается — третьего нажатия нет, пауза 30 мин
+    S.stanceReport = 'list'; S.stanceStuck = true; S.stance = false;
+    await until(async () => /Vicious Stance: включал дважды, а игра снова показывает стойку выключенной — 30 мин её не трогаю/.test(logText(await h.rt())), 20000, 'пауза стойки');
+    const k3 = S.hero.mobsKilled;
+    await until(() => S.hero.mobsKilled >= k3 + 3, 30000, 'охота без стойки');
+    assert.equal(presses(), 2, 'стойку жал после паузы: ' + presses());
+    assert.ok((S.shotRej || 0) <= 2, 'выстрелов раньше отката: ' + S.shotRej);
+    // (6) стрелы кончились (стопка исчезла из сумки) — окно «СТРЕЛ НЕТ»; закрыли (крестиком), положили стрелы — охота; кончились снова — окно опять
+    for (const round of [1, 2]) {
+      S.arrows = 0;
+      await until(async () => (await arwBox(h.game))?.shown, 20000, 'окно «СТРЕЛ НЕТ», раз ' + round);
+      await arwClose(h.game, round === 1 ? '.x' : '.ok');
+      await until(async () => !(await arwBox(h.game)).shown, 3000, 'окно закрыто, раз ' + round);
+      S.arrows = 300; const kr = S.hero.mobsKilled;
+      await until(() => S.hero.mobsKilled >= kr + 2, 40000, 'охота со стрелами, раз ' + round);
+    }
+    assert.equal((logText(await h.rt()).match(/нет стрел — охоту остановил/g) || []).length, 2, 'журнал: оба раза без стрел');
+    for (const a of ['double_shot', 'power_shot', 'stun_shot']) assert.ok(S.acts.includes(a), a);
+    await h.sw.evaluate(() => chrome.storage.local.get('lite.cfg').then(o => chrome.storage.local.set({ 'lite.cfg': { ...o['lite.cfg'], on: false } })));
+    await until(async () => /■ Стоп/.test(logText(await h.rt())), 5000, 'Стоп');
+    const txt = logText(await h.rt());
+    assert.equal((txt.match(/Vicious Stance: стойку включил/g) || []).length, 2, txt);
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(txt, '\nходы:', S.acts.join(','));
+    console.log(`PASS G: Старт в долгом бою — место охоты запомнено сразу; выстрелов раньше отката: ${S.shotRej || 0}; стрелы кончились дважды — оба раза окно «СТРЕЛ НЕТ», закрывается; стойку, которую игра не показывает, жал 1 раз за ${S.hero.mobsKilled - k0} мобов; полоска HP пропала на 2 с — бой продолжен; игра сняла стойку — включил снова; не включается — после 2 нажатий пауза 30 мин`);
+  } catch (e) { console.error('DIAG G', { acts: h.S.acts.slice(-40).join(','), stance: S.stance, presses: presses(), stanceT: JSON.stringify(S.stanceT), stanceAll: JSON.stringify(S.stanceAll), phaseT: JSON.stringify(S.phaseT), url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, zone: r.zone, k: r.k, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDEF';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEFG';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
