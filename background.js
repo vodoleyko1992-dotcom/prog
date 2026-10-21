@@ -426,6 +426,11 @@ async function menuPatch(m, sender) {
       const next = { ...state.rt, ...change.rt };
       change.rt = { ...next, ...L2EngineCore.raidFreshStartPatch(next, nextCfg), _src:'menu' };
     }
+    // 20.43 (лог 21.10 17:13): выполненная цель рыбалки снимает рыбалку с задач; новое явное включение рыбалки — новая работа,
+    // а не продолжение старой цели (так же «Старт» с выбранной рыбалкой). Раньше «✅ Выполнено 1679 рыб» от 18.10 оставалось, и выбранная рыбалка молча не начиналась.
+    const fishOn = c => Array.isArray(c?.autoTasks) ? c.autoTasks.includes('fish') : !!c?.fishMode;
+    if (state.rt?.fishTgt?.done && !Object.hasOwn(rtPatch, 'fishTgt') && fishOn(nextCfg) && (!fishOn(state.cfg) || m.on === true))
+      change.rt = { ...state.rt, ...change.rt, fishTgt: null, _src: 'menu' };
     if(m.setFishGoal) {
       const E=m.setFishGoal;
       if(!m.expectedChar || !['fish','proof'].includes(E.type) || !Number.isSafeInteger(E.min) || E.min<1 || !Number.isSafeInteger(E.max) || E.max<E.min)return {ok:false,reason:'Цель: нужен положительный диапазон «от … до …»'};

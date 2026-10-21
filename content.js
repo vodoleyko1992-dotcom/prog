@@ -2706,8 +2706,11 @@ async function tasksIdle() {
   if(fishWait){const seconds=Math.max(0,Math.ceil((fishWait.until-Date.now())/1000));setStatus(`⏸ ${fishWait.why} · ${seconds?`повтор через ${seconds} с`:'повтор после завершения текущего действия'}; другие выбранные задачи пока недоступны`);await sleep(2000);return;}
   const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmMailClaim && 'почта',
     cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
-  setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
-  if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
+  // 20.43 (лог 21.10 17:13): рыбалка выбрана, но старая цель уже выполнена — говорим прямо, а не «дел нет»
+  const T = rt.fishTgt, fishDone = Array.isArray(cfg.autoTasks) && L2EngineCore.taskAllowed(cfg, 'fish') && T?.done
+    ? `рыбалка не идёт: цель «${T.type === 'proof' ? 'собрать' : 'поймать'} ${T.n} ${T.type === 'proof' ? 'Proof' : 'рыб'}» уже выполнена — нажмите «Старт» заново или сбросьте цель в «Рыбалке»; ` : '';
+  setStatus(`⏹ ${fishDone}Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
+  if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `${fishDone}без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
   await sleep(2000);
 }
 // 10.0.5 (лог 12.10 01:30, игрок: «почему в режиме „только задачи“ автофармит мобов?»): цель фарма ресурса/рецепта — тоже задача, и бот
