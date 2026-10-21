@@ -2,6 +2,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.join(__dirname,'..'),read=n=>fs.readFileSync(path.join(root,n),'utf8'),clone=x=>JSON.parse(JSON.stringify(x));
 function load(name,env,globals={}){const box={console,URL,URLSearchParams,Date,...globals};vm.runInNewContext(read('modules/'+name+'.js'),box);return box.L2V7Factories[name](env)}
+// 20.43 (ревью au/travel): квитанция перелёта — в отдельном rt.travelCheck (маршрут zoneGo снят той же записью до клика), её сверку
+// ведёт ядро раньше диспетчера (content.loopTravel → navigation.travelStep) — tick повторяет этот порядок; проверки прежние
 function teleportFixture(o={}){
  let href='/teleport.html',payments=0,disk={},rev=10;
  const loc={get href(){return href},set href(v){href=v},get pathname(){return href.split('?')[0]},get search(){return href.includes('?')?'?'+href.split('?')[1]:''}};
@@ -9,15 +11,21 @@ function teleportFixture(o={}){
  const button={closest:()=>row},ch={id:'hero-1',name:'Hero',revision:10,adena:1000000,currentZoneId:null,cityId:'l2dop_dion',inBattle:false,activeDungeonId:null};
  const e={on:true,tabOwner:true,cfg:{shopReserve:200000},rt:{char:'Hero',zoneGo:{id:o.id||'cruma_marshlands',t:1},zoneCat:{cruma_marshlands:{name:'Cruma'}}},
   mode:()=> 'farm',lease:()=> 'lease-1',page:()=>loc.href,id:()=> 'owner-1',interrupted:()=>false,isBattle:()=>false,paymentPending:()=>null,
-  setRt:async p=>{Object.assign(e.rt,p);disk=clone(e.rt);return {ok:true}},rtCommit:async()=>!(o.flushFail&&e.rt.zoneGo?.nativeTp),rec(){},setStatus(){},halt:async()=>{e.on=false},
+  setRt:async p=>{Object.assign(e.rt,p);disk=clone(e.rt);return {ok:true}},rtCommit:async()=>!(o.flushFail&&e.rt.travelCheck?.nativeTp),rec(){},setStatus(){},halt:async()=>{e.on=false},
   heroLvl:()=>38,shown:()=>true,$q:()=>button,sleep:async()=>{},waitX:async f=>f(),pauseBot:async()=>{e.on=false},
   gameGet:async()=>({ok:true,json:async()=>({character:{...ch}})}),
-  fire:()=>{payments++;ch.revision=++rev;ch.adena-=50000;if(!o.noArrival)ch.currentZoneId='cruma_marshlands';if(o.receipt){const p=e.rt.zoneGo.nativeTp;N.onForumTeleportNet('/game/teleport',{method:'POST',status:200,nativeNonce:o.badNonce?'old':p.nonce,req:{teleportId:p.id,expectedRevision:rev-1,expectedAdenaCost:50000},res:{character:{...ch}}});}if(!o.noNavigation)loc.href='/map.html';return true}
+  fire:()=>{payments++;ch.revision=++rev;ch.adena-=50000;if(!o.noArrival)ch.currentZoneId='cruma_marshlands';if(o.receipt){const p=e.rt.travelCheck.nativeTp;N.onForumTeleportNet('/game/teleport',{method:'POST',status:200,nativeNonce:o.badNonce?'old':p.nonce,req:{teleportId:p.id,expectedRevision:rev-1,expectedAdenaCost:50000},res:{character:{...ch}}});}if(!o.noNavigation)loc.href='/map.html';return true}
  };
  const globals={location:loc,document:{querySelectorAll:()=>[{}],body:{innerText:''}}};
  let N=load('navigation',e,globals),A;e.jobs=()=>[{key:'zoneGo',run:()=>N.zoneGoStep()}];A=load('actions',e);e.canAct=()=>A.canAct();
- return{e,ch,loc,clicks:()=>payments,disk:()=>disk,async tick(){A.enterFrame();return A.dispatch()},reload(){e.on=true;e.rt=clone(disk);N=load('navigation',e,globals);A=load('actions',e)}};
+ return{e,ch,loc,clicks:()=>payments,disk:()=>disk,async tick(){A.enterFrame();if(N.travelPending()){await N.travelStep();return true;}return A.dispatch()},reload(){e.on=true;e.rt=clone(disk);N=load('navigation',e,globals);A=load('actions',e)}};
 }
+// 20.43 (автономность, доводка 21.10): ревизия выросла и адены убыло на цену телепорта — вывод «оплата прошла» (navigation.travelPaid):
+// квитанция закрыта, прибытие записано, повтора нет. Прежние проверки «потерянный/чужой ACK, город — не доказательство» оставлены
+// для GET без адены (noAdenaAfterClick: вывода нет, квитанция и запрет повторной оплаты остаются); с аденой — проверяется, что вывод
+// сделан по адене, а не по чужому ACK или городу (нет «прибытие подтверждено сервером»)
+function noAdenaAfterClick(f){const get=f.e.gameGet;f.e.gameGet=async(...a)=>{const r=await get(...a);if(!f.clicks())return r;const j=await r.json();return{ok:true,json:async()=>({character:{...j.character,adena:undefined}})}};}
+const logOf=f=>{const lines=[];f.e.rec=(...a)=>lines.push(a.join(' | '));return lines;};
 test('обычный платный телепорт → native map → dispatcher: одна оплата и завершённый маршрут',async()=>{
  const f=teleportFixture();await f.tick();await f.tick();await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.rt.zoneGo,null);assert.equal(f.loc.pathname,'/map.html');
 });
@@ -52,17 +60,25 @@ test('reload сменил epoch: запоздалый acquire старого д�
  const stale=await f.call({...req,epoch:old.epoch});assert.equal(stale.ok,false);assert.equal(f.state.lock.epoch,fresh.epoch);
 });
 
-test('потерянный ACK и непроверенная карта → остановка → reload: повторного платежа нет',async()=>{
- const f=teleportFixture({noArrival:true});await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,false);assert.ok(f.e.rt.zoneGo.nativeTp);f.reload();await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,false);
+// 20.43 (автономность, разбор 21.10): неизвестный исход — сверка по серверу без паузы (бот включён); повторного платежа по-прежнему нет
+test('потерянный ACK и непроверенная карта → сверка без паузы → reload: повторного платежа нет',async()=>{
+ const f=teleportFixture({noArrival:true});noAdenaAfterClick(f);await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,true);assert.ok(f.e.rt.travelCheck.nativeTp);assert.equal(f.e.rt.travelCheck.check.n,1);f.reload();await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,true);assert.ok(f.e.rt.travelCheck.nativeTp);
+ // 20.43 (доводка 21.10): адены убыло на цену — «оплата прошла» с первой сверки, прибытие записано; после reload второго клика нет
+ const g=teleportFixture({noArrival:true});const lines=logOf(g);await g.tick();assert.equal(g.clicks(),1);assert.equal(g.e.on,true);assert.equal(g.e.rt.travelCheck,null);assert.equal(g.e.rt.zone,'cruma_marshlands');
+ assert.ok(lines.some(l=>/адены убыло на цену телепорта.+оплату считаю прошедшей/.test(l)));g.reload();await g.tick();await g.tick();assert.equal(g.clicks(),1);
 });
 test('обычная world-зона с currentZoneId=null подтверждается exact native ACK',async()=>{
  const f=teleportFixture({noArrival:true,receipt:true});await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.rt.zoneGo,null);assert.equal(f.e.on,true);
 });
+// 20.43: вместо паузы — сверка (бот включён), маршрут не завершён
 test('запоздалый ACK другого native intent не завершает маршрут',async()=>{
- const f=teleportFixture({noArrival:true,receipt:true,badNonce:true});await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,false);
+ const f=teleportFixture({noArrival:true,receipt:true,badNonce:true});noAdenaAfterClick(f);await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.travelCheck.nativeTp);assert.equal(f.e.on,true);assert.ok(f.e.rt.travelCheck.check);
+ // 20.43 (доводка 21.10): с аденой вывод — по адене («оплата прошла»), а не по чужому ACK: «прибытие подтверждено сервером» нет
+ const g=teleportFixture({noArrival:true,receipt:true,badNonce:true});const lines=logOf(g);await g.tick();assert.equal(g.clicks(),1);assert.equal(g.e.rt.travelCheck,null);
+ assert.ok(lines.some(l=>/адены убыло на цену телепорта/.test(l)));assert.ok(!lines.some(l=>/прибытие подтверждено сервером/.test(l)),'чужой ACK не засчитан');
 });
 for(const change of ['stop','char','mode','lease'])test('изменение '+change+' во время durable intent запрещает клик',async()=>{
- const f=teleportFixture();f.e.rtCommit=async()=>{if(f.e.rt.zoneGo?.nativeTp){if(change==='stop')f.e.on=false;if(change==='char')f.e.rt={char:'Other'};if(change==='mode')f.e.rt.manualKickAt=100;if(change==='lease')f.e.lease=()=> 'lease-2';}return true};
+ const f=teleportFixture();f.e.rtCommit=async()=>{if(f.e.rt.travelCheck?.nativeTp){if(change==='stop')f.e.on=false;if(change==='char')f.e.rt={char:'Other'};if(change==='mode')f.e.rt.manualKickAt=100;if(change==='lease')f.e.lease=()=> 'lease-2';}return true};
  await f.tick();assert.equal(f.clicks(),0);
 });
 
@@ -88,4 +104,8 @@ test('BFCache восстановление перечитывает runtime в �
  listeners.pageshow({isTrusted:true,persisted:true});assert.equal(box.tabOwner,false);assert.equal(box.leaseEpoch,null);assert.deepEqual(calls,['clear','reload']);
 });
 
-test('город Heine не доказывает точную обычную локацию при lost ACK',async()=>{const f=teleportFixture({id:'heine',noArrival:true});f.ch.cityId='l2dop_heine';await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,false)});
+// 20.43: вместо паузы — сверка (бот включён); тот же город до и после клика не считается «герой уже в другом месте»
+test('город Heine не доказывает точную обычную локацию при lost ACK',async()=>{const f=teleportFixture({id:'heine',noArrival:true});f.ch.cityId='l2dop_heine';noAdenaAfterClick(f);await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.travelCheck.nativeTp);assert.equal(f.e.on,true);assert.ok(f.e.rt.travelCheck.check);
+ // 20.43 (доводка 21.10): с аденой — «оплата прошла» по адене (не «прибытие подтверждено» по городу); повторного клика нет
+ const g=teleportFixture({id:'heine',noArrival:true});g.ch.cityId='l2dop_heine';const lines=logOf(g);await g.tick();assert.equal(g.clicks(),1);assert.equal(g.e.rt.travelCheck,null);
+ assert.ok(lines.some(l=>/адены убыло на цену телепорта/.test(l)));assert.ok(!lines.some(l=>/прибытие подтверждено сервером/.test(l)),'город не засчитан прибытием');});

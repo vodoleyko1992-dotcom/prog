@@ -732,7 +732,7 @@ async function attackSpawn(c, label, opt = {}) {
   if (!a || env.shown?.(a) === false || env.fire(a) === false) { await rollback(); return false; }
   if (!(await env.waitFor(env.isBattle, 10000)) && active()) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
     const n = (env.rt.clickFail || 0) + 1;
-    if (n >= 3) { await env.setRt({ clickFail: 0 }); await env.halt('Клик по мобу 3 раза подряд не открыл бой — проверьте игру'); return true; }
+    if (n >= 3) { await env.setRt({ clickFail: 0 }); await mobHold('Клик по мобу 3 раза подряд не открыл бой', 'проверьте игру'); return true; }
     await env.setRt({ clickFail: n });
     if (!active()) return false;
     env.rec('B', 'карта', `клик по «${c.name}» не открыл бой — обновляю карту (${n}/3)`);
@@ -741,15 +741,28 @@ async function attackSpawn(c, label, opt = {}) {
   return true;
 }
 
+// 20.43 (автономность, разбор 21.10): клик по мобу трижды не открыл бой, бой трижды вернул на карту, список мобов не грузится — раньше
+// стоп бота до утра (env.halt). Теперь передышка: уход с карты на нейтральную /char.html (не /city.html: штатный вход в город переносит
+// героя, а назад — платный телепорт; бот должен стоять, где оставили), 5 → 15 → 30 мин; на это время идут другие выбранные задачи, потом
+// снова карта со свежей загрузкой. Стоп с причиной — если понадобилась бы 4-я передышка за 6 ч (content.selfHoldStart)
+const mobHold = (why, advice) => env.selfHold ? env.selfHold('mob', why, { page: '/char.html' }) : env.halt(`${why} — ${advice}`);
+
 // 10.0.5: «Только задачи» — бить мобов можно только на точке активной цели фарма ресурса/рецепта (зона известна и совпадает)
 function tasksGoalHere() { const g = env.lootGoal?.(); return !!g && !!env.rt.zone && env.rt.zone === g.zone; }
 
 async function map() {
+  // 20.43 (автономность): передышка после сбоя карты — мобов с карты не бьём, только честное ожидание (поражение на карте — как всегда)
+  if (env.selfHoldOn?.('mob')) {
+    if (env.shown(env.$q('#map-defeat-root'))) return env.onDeath();
+    // 20.43 (доводка 21.10): rt.selfHold — передышки по задаче; текст — именно передышки карты (selfHoldOf), старое ядро — прежняя запись
+    const h = env.selfHoldOf ? env.selfHoldOf('mob') : env.rt.selfHold;
+    env.setStatus(env.selfHoldText && h ? env.selfHoldText(h) : 'Передышка после сбоя карты'); await env.sleep(3000); return;
+  }
   // защита от петли «клик по мобу → снова карта»
   if (env.rt.mobClickAt && Date.now() - env.rt.mobClickAt < 8000) {
     const n = (env.rt.bounce || 0) + 1;
     await env.setRt({ bounce: n, mobClickAt: 0 });
-    if (n >= 3) return env.halt('Клик по мобу 3 раза вернул на карту — пришлите лог');
+    if (n >= 3) { await env.setRt({ bounce: 0 }); return mobHold('Клик по мобу 3 раза вернул на карту', 'пришлите лог'); }
     env.setStatus(`Бой не открылся (${n}/3), пауза 5 с`);
     await env.sleep(5000);
     if (!env.on) return;
@@ -768,7 +781,7 @@ async function map() {
     const n = (env.rt.mapReload || 0) + 1;
     if (n > 3) {                                 // сервер/интернет лежит: ждём и пробуем снова; стоп — если так 15 мин
       const down = env.rt.mapDownT || Date.now();
-      if (Date.now() - down > 15 * 60000) { await env.setRt({ mapReload: 0, mapDownT: 0 }); return env.halt('Список мобов не грузится 15 минут — проверьте игру/интернет'); }
+      if (Date.now() - down > 15 * 60000) { await env.setRt({ mapReload: 0, mapDownT: 0 }); return mobHold('Список мобов не грузится 15 минут', 'проверьте игру/интернет'); }
       await env.setRt({ mapReload: 0, mapDownT: down });
       env.rec('B', 'карта', 'список мобов не грузится — жду 2 мин и пробую снова');
       await env.idle(120000, 'Игра не отвечает — жду и пробую снова');
@@ -782,7 +795,7 @@ async function map() {
   if (!env.on) return;
   if (!pageItems().length) {                     // пустой список — как «не загрузился»: обновить (до 3 раз)
     const n = (env.rt.mapReload || 0) + 1;
-    if (n > 3) { await env.setRt({ mapReload: 0 }); return env.halt('Не вижу список мобов — проверьте игру'); }
+    if (n > 3) { await env.setRt({ mapReload: 0 }); return mobHold('Не вижу список мобов после 3 обновлений карты', 'проверьте игру'); }
     await env.setRt({ mapReload: n }); location.reload(); await env.sleep(8000); return;
   }
   if (env.rt.mapReload || env.rt.mapDownT) await env.setRt({ mapReload: 0, mapDownT: 0 });

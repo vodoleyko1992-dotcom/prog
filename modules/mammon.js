@@ -12,7 +12,8 @@
 // Список улучшений кузнеца (GET /game/mammon/blacksmith/upgrades) сервер отдаёт только рядом с ним, иначе 403 mammon_blacksmith_not_nearby
 // 10.0.24: все переходы проходят общий guard владельца; прежний режим не возвращает героя домой.
 const location = env.routeLocation || root.location;
-const context = () => ({ char: env.rt.char || '', kick: +env.rt.manualKickAt || 0, mode: env.autonomyMode?.() || '' });
+// 20.43 (автономность, ревью): режим — routeMode (выбор игрока без передышек и ожидания тура на рыбалке): конец передышки не отменяет поход
+const context = () => ({ char: env.rt.char || '', kick: +env.rt.manualKickAt || 0, mode: (env.routeMode || env.autonomyMode)?.() || '' });
 const sameContext = c => !c || JSON.stringify(c) === JSON.stringify(context());
 const jobGuards = new WeakMap();
 function guard(J) {
@@ -465,7 +466,8 @@ function goalNote() {                             // раз на изменен�
 function modeFree(afterWin = false, allowEnchant = false, priceOnly = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
   if (env.cfg.enchantMode === true && !allowEnchant) return false; // 15.10: отдельная заточка запрещает новые служебные походы.
   const r = env.rt;                               // afterWin — 10.0: экран победы в цепочке (страница боя, но бой окончен)
-  if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc || r.petBufferTrip || r.enchantJob || r.subTrip || env.payments?.blocked()) return false;
+  // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo: исход платного клика не сверен
+  if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.travelCheck || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc || r.petBufferTrip || r.enchantJob || r.subTrip || env.payments?.blocked()) return false;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return false;
   // 20.41 (игрок 20.10 «не покупает С кристаллы»): в туре РБ цену кузнеца не узнавали никогда → план Маммона пуст → закупка без кристаллов.
   // priceOnly — разовый поход только за ценой и только пока тур простаивает ещё ≥ 3 мин (rbHuntIdle); отдельный поход на улучшение, бой и эпики — по-прежнему нет
@@ -499,10 +501,15 @@ function goReq(now = Date.now()) {
 function want() {
   const g = goReq(); if (g && !g.drop) return g;
   const o = env.rt.mmOrder, now = Date.now(), tried = env.rt.mmTried || {};
-  if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
+  // 20.43 (автономность, ревью): маршрут Маммона запрещён после циклов (actions: actionBan, 2 ч) — сами не просимся, кнопки меню (cmd) проходят.
+  // Раньше почта/улучшение/цены кузнеца пересоздавались каждый круг (их отметки mmClaimT/mmUpT/mmSmithT пишет только finish), диспетчер снимал
+  // их снова, а в журнал каждый круг шло «Маммон: иду к …»; заказ торговца при этом отмечался «пробован» (mmTried) и пропадал на сутки
+  const banned = !!env.routeBanned?.('mmJob');
+  if (!banned && env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
   // 20.7: отправка сырья стороннему крафтеру удалена; план потребностей остаётся.
   const hw = env.handWant?.(now); if (hw && !hw.drop) return hw;   // 10.0.7: «📤 Передать основному сейчас» (modules/subclass.js)
+  if (banned) return null;
   // 10.0 (аудит): вложение не забирается (инвентарь полон, кнопки нет) — не ходить на почту раз в 10 мин: повтор, когда почта изменилась, или раз в 2 ч
   const uncSig = (env.rt.mmMail?.unc || []).map(a => a.a).join(','), cf = env.rt.mmClaimFail;
   if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3 && !(cf?.sig === uncSig && now - (cf.t || 0) < 2 * 3600000))
@@ -541,7 +548,8 @@ async function finish(J, ok, why) {
   const active = guard(J); if (!active()) return;
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
-  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку', ...(J.home === 'ashen_bastion' ? { returnPath: '/ashen-bastion.html' } : {}) }, zoneGoT: 0 } : {};
+  // 20.43 (ревью): svc — обратный перелёт службы: передышка фарма его не снимает (engine-core taskJobAllowed)
+  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку', svc: 'mammon', ...(J.home === 'ashen_bastion' ? { returnPath: '/ashen-bastion.html' } : {}) }, zoneGoT: 0 } : {};
   // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
   const extra = {};
   if (J.up && !J.cancelled) { const k = String(J.id || '').replace(/^up:/, ''), uf = env.rt.mmUpFail; extra.mmUpFail = ok ? null : { k, n: (uf?.k === k ? uf.n || 0 : 0) + 1, t: Date.now() }; }

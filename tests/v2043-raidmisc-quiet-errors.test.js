@@ -58,7 +58,8 @@ test('исходник: перечисленные тихие места пер�
 // на чужих файлах (notify: background.js 46 > 37, menu: engine-core.js 2 > 1, lifestone/learn: content.js 154/153 > 152), хотя пустые catch
 // в тур РБ никто не добавлял. Теперь пределы — только на modules/raid.js, combat.js, story.js; в content.js проверяются переведённые места.
 const EMPTY_TRY=/\bcatch\s*(?:\(\s*\w*\s*\))?\s*\{\s*\}/g,EMPTY_PROMISE=/\.catch\??\.?\(\s*(?:\(\s*\w*\s*\)|\w+)\s*=>\s*(?:\{\s*\}|undefined|null|void 0)\s*\)/g;
-const CAP={'modules/raid.js':7,'modules/combat.js':33,'modules/story.js':4};
+// 20.43 (автономность, передышки): переписанный выход из Ashen читает /character через ashenChar без пустого catch промиса — в raid.js 7 → 6
+const CAP={'modules/raid.js':6,'modules/combat.js':33,'modules/story.js':4};
 const emptyN=s=>(s.match(EMPTY_TRY)||[]).length+(s.match(EMPTY_PROMISE)||[]).length;
 const overCap=rd=>Object.keys(CAP).map(f=>[f,emptyN(rd(f))]).filter(([f,n])=>n>CAP[f]).map(([f,n])=>`${f}: ${n} > ${CAP[f]}`);
 test('храповик: пустых catch в модулях тура РБ, боя и квестов не больше, чем после 20.43; переведённые места content.js не опустели снова',()=>{

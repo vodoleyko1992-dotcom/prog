@@ -25,6 +25,8 @@ function setup(o={}){
   assert.equal(await f.prep({buffs:false}),true);assert.deepEqual(f.nav,['/skill-panel.html']);assert.equal(f.fires.length,0);assert.equal(f.e.rt.petPrep.back,'/dungeon.html?dungeonId=x');assert.equal(f.e.rt.petPrep.buffs,false);
   await f.prep();assert.deepEqual(f.fires,[1406]);assert.equal(f.e.rt.petPrep.pending.kind,'summon');
   await f.prep();assert.deepEqual(f.fires,[1406],'без свежей ревизии не повторяет');
+  // 20.43 (автономность, доводка 21.10, ревью): ожидание подтверждения на Старте читает /character раз в 1,5 с, а не на каждом круге
+  {const g=f.gets.length;assert.equal(await f.prep(),true);assert.equal(f.gets.length,g,'в паузе без GET');f.tick(1500);}
   f.born();await f.prep();
   assert.deepEqual(f.fires,[1406],'баффы кота на этапе призыва не ставятся');assert.equal(f.page(),'/dungeon.html?dungeonId=x');assert.equal(f.e.rt.petPrep,null);
   assert.equal(f.ready('summon'),true);assert.equal(f.ready('pet'),false);assert.equal(f.calls.length,0);

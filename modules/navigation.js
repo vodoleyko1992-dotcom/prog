@@ -381,61 +381,281 @@ function nativeAck(g) {
   if(p.ack)return p.ack;
   try{const a=JSON.parse(root.sessionStorage?.getItem('l2bot.nativeTeleportAck')||'null');return a?.nonce===p.nonce?a.ack:null;}catch(_){return null;}
 }
+// 20.43 (ревью au/travel): 409 (revision_conflict) и 401 на телепорт — не доказательство отказа: браузер сам повторяет оборванный
+// POST, первый запрос мог уже пройти, повтор получает 409 (kb/lifestone.md, story.js); после 401 игра обновляет токен и шлёт запрос
+// снова. Такой ответ — неизвестный исход (сверка по серверу), а не «отказ»
+const TP_UNSURE = [401, 409];
 function onNativeTeleportNet(path,d) {
-  const g=env.rt.zoneGo,p=g?.nativeTp;
+  const g=travelOpen(),p=g?.nativeTp;
   if(!p||path!=='/game/teleport'||d.method!=='POST'||p.char!==env.rt.char||p.kick!==env.rt.manualKickAt||
     d.nativeNonce!==p.nonce||d.req?.teleportId!==p.id||d.req?.expectedAdenaCost!==p.cost||!Number.isSafeInteger(d.req?.expectedRevision)||d.req.expectedRevision<p.revision)return;
+  if(nativeAck(g)?.ok)return;                     // 20.43 (ревью): подтверждённое прибытие поздним ответом другого запроса не затираем
   const ch=d.res?.character, good=d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false;
+  // 20.43 (автономность, разбор 21.10): явный отказ сервера на этот самый запрос (4xx из списка, 2xx с error/ok:false, 500 с кодом
+  // «не хватает…» — общее правило L2PayOutcome.classify) — кроме 409/401 (TP_UNSURE). Это ещё не вывод: перелёт снимается только
+  // после свежего GET /character с той же ревизией и аденой (travelVerify). 5xx/обрыв — неизвестно
+  if(!good&&!TP_UNSURE.includes(+d.status)&&root.L2PayOutcome?.classify?.(d)==='rejected'&&(!ch||ch.name===p.char&&ch.id===p.charId)){
+    p.ack={ok:false,refused:true,status:+d.status||0,t:Date.now()};
+    try{root.sessionStorage?.setItem('l2bot.nativeTeleportAck',JSON.stringify({nonce:p.nonce,ack:p.ack}));}catch(_){}
+    env.setRt(travelKeep(g)).catch(()=>{});return;
+  }
   if(!good||!ch||ch.name!==p.char||ch.id!==p.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=d.req.expectedRevision)return;
   p.ack={ok:true,t:Date.now()};
   try{root.sessionStorage?.setItem('l2bot.nativeTeleportAck',JSON.stringify({nonce:p.nonce,ack:p.ack}));}catch(_){}
-  env.setRt({zoneGo:g}).catch(()=>{});
+  env.setRt(travelKeep(g)).catch(()=>{});
 }
 function onForumTeleportNet(path, d) {
   onNativeTeleportNet(path,d);
-  const g = env.rt.zoneGo, p = g?.forumTp;
+  const g = travelOpen(), p = g?.forumTp;
   if (!p || env.on === false || env.tabOwner === false || env.rt.char !== p.char || env.rt.manualKickAt !== p.kick ||
       path !== '/game/farm-guide/resource-teleport' || d.method !== 'POST' || d.req?.teleportId !== p.id ||
       d.req?.expectedRevision !== p.revision || d.req?.expectedAdenaCost !== p.cost ||
       g.id !== p.id || (g.url || env.rt.zoneCat?.[g.id]?.url) !== p.url || location.pathname + location.search !== p.url) return;
+  if (forumAck(g)?.ok) return;                     // 20.43 (ревью): подтверждённое прибытие не затираем
   const ch = d.res?.character, good = !d.error && d.status >= 200 && d.status < 300 && d.res && !d.res.error && d.res.ok !== false;
-  // Отказом считаем лишь явный ответ сервера. 5xx/обрыв не освобождает повторную оплату.
-  const refused = !d.error && d.res && (d.res.error || d.res.ok === false) && d.status >= 200 && d.status < 500;
+  // Отказом считаем лишь явный ответ сервера. 5xx/обрыв не освобождает повторную оплату. 20.43: 409/401 — тоже неизвестно (TP_UNSURE)
+  const refused = !d.error && d.res && (d.res.error || d.res.ok === false) && d.status >= 200 && d.status < 500 && !TP_UNSURE.includes(+d.status);
   if (good && (!ch || ch.name !== p.char || ch.id !== p.charId || !Number.isSafeInteger(ch.revision) || ch.revision <= p.revision)) return;
   if (ch && (ch.name !== p.char || ch.id !== p.charId)) return;
   if (!good && !refused) return;
-  p.ack = { ok: good && forumTargetReached(p.id, ch), refused: !!refused, t: Date.now() };
+  p.ack = { ok: good && forumTargetReached(p.id, ch), refused: !!refused, ...(refused ? { status: +d.status || 0 } : {}), t: Date.now() };
   try { root.sessionStorage?.setItem(FORUM_TP_ACK, JSON.stringify({ nonce: p.nonce, id: p.id, charId: p.charId, url: p.url, ack: p.ack })); } catch (_) {}
   // sessionStorage синхронен: native переход может выгрузить страницу раньше chrome.storage.
-  env.setRt({ zoneGo: g }).catch(() => {});
+  env.setRt(travelKeep(g)).catch(() => {});
 }
 async function forumCharacter() {
   try { const r = await env.gameGet('/character'); return r.ok ? (await r.json())?.character : null; } catch (_) { return null; }
 }
-async function forumFinish(g, active) {
+async function forumFinish(g, active, note = '') {
   if (!active()) return;
-  await env.setRt({ zoneGo: null, zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
-  try { root.sessionStorage?.removeItem(FORUM_TP_ACK); } catch (_) {}
-  env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером`);
+  await env.setRt({ ...travelClose(g), zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
+  try { root.sessionStorage?.removeItem(FORUM_TP_ACK); if (travelReceipt(g)) root.sessionStorage?.removeItem(NATIVE_TP_ACK); } catch (_) {}
+  env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером${note ? ` (${note})` : ''}`);
 }
+// 20.43 (автономность, доводка 21.10; ревью сверки): ответ — true, только если фон записал именно эту паузу (travelPauseSaved)
 async function forumUncertain(why, active) {
-  if (!active()) return;
+  if (!active()) return false;
   env.rec('B', 'локации', `${why}; повторная оплата телепорта запрещена`);
-  await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
+  const msg = `Телепорт: ${why}. Проверьте положение героя`, t0 = Date.now();
+  await env.pauseBot?.(msg, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
+  return travelPauseSaved(msg, t0);
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки, MV3: сервер лежит на 30-й минуте, игрок жмёт ⏹ Стоп в ожидании сервера): после
+// pauseBot выключенная вкладка (on=false) — не доказательство паузы «Проверьте положение героя». Так же выглядят ⏹ Стоп / ⏸ Пауза игрока,
+// пока pauseBot ждал сервер (serverWait выходит без перезагрузки, pauseBot возвращается без своей паузы), Стоп фона во время srvUp и
+// три недошедшие попытки botControl (automationStop выключает вкладку сразу, до ответа фона). Раньше хватало on=false — метка gaveUp
+// писалась, и следующий Старт игрока закрывал квитанцию «по решению игрока», хотя этой паузы он не видел: запрет платного снимался при
+// неизвестном исходе клика, а через 3 мин farmStep/zonePick могли купить тот же телепорт. Доказательство — одна запись фона botControl
+// в хранилище: on=false, paused и stopMeta с одним временем, не раньше начала паузы, источник 'content-pause', та же причина (фон режет
+// её до 240 символов), «Продолжить» ещё не нажато. Нет доказательства (или хранилище не прочиталось) — метки нет: следующий Старт
+// начинает новое окно сверки, как после Стопа
+async function travelPauseSaved(msg, t0) {
+  try {
+    const s = await root.chrome?.storage?.local?.get?.(['on', 'paused', 'stopMeta']), m = s?.stopMeta, p = s?.paused;
+    return !!m && !!p && s.on === false && m.source === 'content-pause' && !m.resumed && +m.t >= t0 && +p.t === +m.t && m.reason === String(msg).slice(0, 240);
+  } catch (_) { return false; }
+}
+
+// 20.43 (автономность, разбор 21.10; docs/NIGHT-FARM-2026-10-17.md: 07:25:08 POST телепорта в Coliseum → 502, 07:25:16 пауза
+// «прибытие не подтверждено» до утра, хотя уже в 07:25:46 GET /character вернул 200 и герой стоял в Aden): сбой перелёта больше
+// не ставит бота на паузу.
+//  (а) клика не было (не прочитался персонаж, квитанция не записалась до клика) или сервер явно отказал и свежий GET /character
+//      показал ту же ревизию и адену — оплаты точно не было: перелёт снят, зона 6 ч «плохая» (как при нехватке адены), строка
+//      в журнал, бот работает дальше (travelDrop);
+//  (б) клик был, исход неизвестен — квитанция остаётся, платное запрещено (сверка держит круг, payments.prepare — через
+//      externalPending ядра), раз в 30–60 с бесплатный GET /character (travelVerify). Пауза с причиной — только если сверить не удаётся
+//      30 мин. Stop/другой герой — шаг выходит без оплаты, без паузы и без записи.
+// 20.43 (ревью au/travel): квитанция с состоянием сверки живёт в отдельном ключе rt.travelCheck (копия маршрута + nativeTp/forumTp +
+// check), а не внутри маршрута zoneGo: маршрут снимают диспетчер действий при смене режима/цели/Старта (actions.clear), список
+// «Задачи бота» (loopTaskList), смена режима в меню и новые маршруты автофарма/Маммона/квестов — вместе с ним пропадала и квитанция,
+// а с ней запрет платного, хотя исход клика не сверен. travelCheck пишет только этот модуль и снимает только по выводу сверки
+// (прибыл / не прошёл / отказ, подтверждённый GET / перелёт состоялся) или по Старту игрока после паузы «Проверьте положение героя».
+// Сверку ведёт ядро в любом режиме (content.loopTravel → travelStep), раньше списка задач и диспетчера.
+const TRAVEL_GAP = 30000, TRAVEL_GAP_MAX = 60000, TRAVEL_GIVEUP = 30 * 60000, NATIVE_TP_ACK = 'l2bot.nativeTeleportAck';
+const travelReceipt = g => g?.nativeTp || g?.forumTp || null;
+// открытая квитанция: rt.travelCheck; запись старых версий — внутри zoneGo (travelStep переносит её в travelCheck)
+const travelOpen = () => env.rt.travelCheck || (travelReceipt(env.rt.zoneGo) ? env.rt.zoneGo : null);
+// ядро: незакрытая квитанция перелёта запрещает другие оплаты и не считается «нет прогресса» у сторожа
+const travelPending = () => !!travelReceipt(travelOpen());
+// запись / снятие той записи, где лежит квитанция (travelCheck или старый маршрут); новый маршрут zoneGo, созданный во время сверки, не трогаем
+const travelIsCheck = g => !!g && (g === env.rt.travelCheck || !!travelReceipt(g)?.nonce && travelReceipt(g).nonce === travelReceipt(env.rt.travelCheck)?.nonce);
+const travelKeep = g => travelIsCheck(g) ? { travelCheck: g } : { zoneGo: g };
+const travelClose = g => travelIsCheck(g) ? { travelCheck: null } : { zoneGo: null };
+const travelPlace = ch => ({ zone: ch?.currentZoneId ?? null, city: ch?.cityId ?? null });
+const adenaOf = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
+const travelRnd = (a, b) => typeof env.rnd === 'function' ? env.rnd(a, b) : a + Math.random() * (b - a);
+// 20.43 (ревью au/travel): метка запроса для NET_CONTEXT ядра — только первые 30 с после клика бота. Раньше её получал любой POST
+// /game/teleport, пока квитанция открыта (до 30 мин сверки), в том числе ручной клик игрока, и его ответ засчитывался клику бота
+const NATIVE_NONCE_MS = 30000;
+const nativeNonce = () => { const p = travelOpen()?.nativeTp; return p?.nonce && Date.now() - (+p.sentAt || 0) <= NATIVE_NONCE_MS ? p.nonce : ''; };
+function travelForget() { try { root.sessionStorage?.removeItem(FORUM_TP_ACK); root.sessionStorage?.removeItem(NATIVE_TP_ACK); } catch (_) {} }
+// (а): перелёт без оплаты — снять маршрут без паузы; toMap — со страницы телепорта на карту (как при нехватке адены).
+// zoneGoT — «была попытка»: при сбоящем GET /character автофарм (10 мин) и цель ресурса (3 мин) не перебирают зоны подряд, помечая
+// их все «плохими»; поэтому и zoneLvlT не сбрасываем (выбор зоны по уровню — не чаще раза в 5 мин)
+async function travelDrop(g, why, active, toMap = false) {
+  if (!active()) return;
+  env.rec('B', 'локации', `${zoneName(g.id)}: ${why} — оплаты не было, перелёт снят, зону 6 ч не выбираю; работаю дальше без паузы`);
+  await env.setRt({ ...travelClose(g), zoneGoT: Date.now(), zoneTried: { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() },
+    zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } });
+  travelForget();
+  if (toMap && env.on !== false && env.tabOwner !== false) { location.href = '/map.html'; await env.sleep(3000); }
+}
+// Ревизия выросла, герой не в бою и уже не там, где стоял до клика, а адены убыло не меньше цены (или переход бесплатный), —
+// перелёт состоялся, только currentZoneId не совпал с id телепорта. Ошибиться этот вывод может лишь в сторону «оплата прошла»
+function travelMoved(p, ch) {
+  const a = p.from, b = travelPlace(ch), cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  if (!a || !ch || ch.inBattle || ch.activeDungeonId || (b.zone == null && b.city == null) || (a.zone === b.zone && a.city === b.city)) return false;
+  return cost === 0 || (p.adena != null && adena != null && adena <= p.adena - cost);
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки: ветка «ревизия выросла» кончалась 30 мин простоя и паузой, хотя исход доказуем по
+// адене и месту). Платный телепорт, ревизия выросла, герой не в бою и не в подземелье:
+//  travelPaid   — адены стало меньше хотя бы на цену телепорта (другие оплаты всё это время запрещены квитанцией) — плата списана, даже если
+//                 место по ответу сервера прежнее; как и travelMoved, ошибиться этот вывод может лишь в сторону «оплата прошла»;
+//  travelStayed — адена ровно та же, что до клика, и герой там же, где стоял (зона и город те же): следов телепорта нет, ревизию
+//                 сдвинуло другое действие (TvT, бой, письмо). Запрос телепорта несёт expectedRevision (kb/repo-facts: 409 на
+//                 /game/teleport) — после роста ревизии прежний запрос уже не применится. Вывод «не прошёл» — как для «ничего не
+//                 изменилось»: две такие сверки с промежутком ≥ 30 с, первая не раньше 30 с после клика. Адена именно «та же», а не
+//                 «не меньше»: во время сверки идёт TvT, а победа даёт 500 000 аден (kb/repo-facts) — с ней списанная плата за телепорт
+//                 в мировую зону, где currentZoneId/cityId не меняются, выглядела бы как «не прошёл», и тот же телепорт оплачивался бы снова.
+// Бесплатный переход, неизвестные или изменившиеся (но не на цену) адена или место — не доказательство: ждём до 30 мин, как раньше
+const travelSettled = ch => !!ch && !ch.inBattle && !ch.activeDungeonId;
+function travelPaid(p, ch) {
+  const cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  return cost > 0 && travelSettled(ch) && p.adena != null && adena != null && adena <= p.adena - cost;
+}
+function travelStayed(p, ch) {
+  const a = p.from, b = travelPlace(ch), cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  return cost > 0 && !!a && travelSettled(ch) && (b.zone != null || b.city != null) && a.zone === b.zone && a.city === b.city
+    && p.adena != null && adena != null && adena === p.adena;
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки): вывод «перелёт состоялся / оплата прошла» без совпадения id зоны раньше снимал
+// квитанцию, не записав прибытия (только zoneGoT). Проверка перед следующим кликом (nativeTargetReached / forumTargetReached) не узнаёт
+// цель по тому же несовпадающему id, и цель ресурса (farmStep: rt.zone ≠ точка, через 3 мин после zoneGoT), рецепт и автофарм
+// покупали тот же телепорт ещё раз. Теперь прибытие записывается как у forumFinish (rt.zone = цель): повтора нет, зону уточнит карта по мобам
+async function travelPaidFinish(g, active, line) {
+  if (!active()) return;
+  env.rec('B', 'локации', line);
+  await env.setRt({ ...travelClose(g), zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
+  travelForget();
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки): одна форма статуса и для ожидания следующей сверки, и для её итога. setStatus ядра
+// пишет строку «бот» в журнал (со снимком новых строк журнала игры) при каждой смене формы (цифры → #): две формы давали 2 строки
+// на каждую сверку — ≈80 за 30 мин без вывода. Теперь строка — только когда меняется смысл («без изменений» / «следов перелёта нет»)
+const travelStatus = (name, c, now) => `Телепорт в ${name}: исход не подтверждён — сверка ${c.n}${c.same ? ' (без изменений)' : c.stay ? ' (следов перелёта нет)' : ''}, следующая через ${Math.max(0, Math.ceil(((+c.next || 0) - now) / 1000))} с; платное не трачу`;
+// (б): сверка исхода клика по серверу. Повтор оплаты допускается только после доказательства «телепорт не прошёл»:
+// ревизия и адена героя те же, что до клика (L2PayOutcome.unchanged), в двух сверках подряд с промежутком ≥ 30 с, первая — не раньше
+// 30 с после клика (поздний ответ сервера успеет изменить ревизию).
+// 20.43 (ревью au/travel): явный отказ сервера на этот запрос (ack.refused) снимает перелёт только вместе со сверкой «ревизия и адена
+// те же» — одной достаточно: на сам запрос сервер уже ответил. Раньше отказ сразу писал «оплаты не было» и ставил зоне zoneBad без GET:
+// сервер применил телепорт и ответил 409 на повтор POST — герой уже в цели, адены −50 000, а журнал «оплаты не было», и зона, куда
+// только что заплатили, выпадала на 6 ч. Теперь: ревизия выросла и герой в цели — прибытие; ничего не изменилось — отказ; иначе — сверка
+async function travelVerify(g, active, why) {
+  const p = travelReceipt(g); if (!p || !active()) return;
+  const native = !!g.nativeTp, name = zoneName(g.id), kick = env.rt.manualKickAt, prev = g.check;
+  let c = prev && prev.kick === kick ? prev : null;
+  if (c && Date.now() < (+c.next || 0)) {
+    env.setStatus(travelStatus(name, c, Date.now()));   // 20.43 (доводка 21.10): та же форма, что после сверки
+    await env.sleep(1000); return;
+  }
+  // 20.43 (ревью au/travel): Старт / «Продолжить» игрока после паузы «Проверьте положение героя» (30 мин без вывода) — его решение:
+  // следующая удачная сверка закрывает квитанцию (герой в цели — прибытие, иначе «закрыта по Старту игрока»), без нового окна
+  // в 30 мин и новой паузы. Остальные Старты (Stop → Старт, смена режима) квитанцию не снимают — окно сверки начинается заново
+  // 20.43 (автономность, доводка 21.10; ревью сверки): «решение игрока» — только настоящий Старт / «Продолжить» после настоящей паузы.
+  // Раньше метка gaveUp писалась до pauseBot, а ackStart выводился из неё при любой смене manualKickAt: сервер лежит на 30-й минуте →
+  // pauseBot ждёт его (serverWait, перезагрузка), паузы нет, бот включён — и первая же правка меню (задача, лимит, режим, дневной сброс)
+  // закрывала квитанцию «по решению игрока», снимая запрет платного. Теперь метка пишется только после записанной паузы (ниже), в ней —
+  // номер Старта rt.dailyStart (фон поднимает его только на Старт / «Продолжить» / горячую клавишу запуска, не на правку меню),
+  // и квитанцию закрывает лишь более поздний Старт. Метка прежнего вида (без номера Старта) — новое окно сверки, не закрытие
+  const acked = !!prev && (!!prev.ackStart || !!prev.gaveUp && Number.isSafeInteger(prev.gaveUpStart) && (+env.rt.dailyStart || 0) > prev.gaveUpStart);
+  const fresh = !c; if (fresh) c = { kick, t0: Date.now(), at: 0, next: 0, n: 0, same: 0, sameAt: 0, why, ...(acked ? { ackStart: 1 } : {}) };
+  const ch = await forumCharacter();
+  if (!active()) return;                           // Stop / другой герой / новый Старт во время сверки — без оплаты, паузы и записи
+  const now = Date.now(), mine = !!ch && p.char === env.rt.char && ch.name === p.char && (!p.charId || ch.id === p.charId) && Number.isSafeInteger(ch.revision);
+  c = { ...c, at: now, next: now + travelRnd(TRAVEL_GAP, TRAVEL_GAP_MAX), n: c.n + 1 };
+  if (mine && ch.revision > p.revision && (native ? nativeTargetReached(g.id, ch) : forumTargetReached(g.id, ch))) { await forumFinish(g, active, c.n > 1 ? `сверка ${c.n}` : ''); return; }
+  const same = mine && root.L2PayOutcome?.unchanged?.({ revision: p.revision, adena: p.adena ?? null }, ch) === true, ack = native ? nativeAck(g) : forumAck(g);
+  if (same && ack?.refused) { await travelDrop(g, `сервер отказал в телепорте${ack.status ? ' (HTTP ' + ack.status + ')' : ''}`, active, native && isTeleport()); return; }
+  if (same && now - (+p.sentAt || 0) >= TRAVEL_GAP) {
+    if (c.ackStart || c.same && now - c.sameAt >= TRAVEL_GAP) {
+      env.rec('B', 'локации', c.ackStart ? `${name}: телепорт не прошёл — ревизия героя (${p.revision}) и адена не изменились (сверка после Старта игрока); оплаты не было, перелёт снят, работаю дальше`
+        : `${name}: телепорт не прошёл — ревизия героя (${p.revision}) и адена не изменились в двух сверках с промежутком ${Math.round((now - c.sameAt) / 1000)} с; оплаты не было, перелёт снят, работаю дальше`);
+      await env.setRt({ ...travelClose(g), zonePend: null }); travelForget(); return;
+    }
+    if (!c.same) c = { ...c, same: 1, sameAt: now };
+  } else if (mine && ch.revision > p.revision) {
+    c = { ...c, same: 0, sameAt: 0 };
+    const a = p.from, b = travelPlace(ch), adena = adenaOf(ch.adena);
+    // 20.43 (доводка 21.10): вывод «оплата прошла» записывает прибытие (travelPaidFinish) — иначе тот же телепорт покупался снова
+    if (travelMoved(p, ch)) {
+      await travelPaidFinish(g, active, `${name}: ответ телепорта не подтверждён, но герой уже в другом месте (было ${a.zone || a.city || '?'}, сейчас ${b.zone || b.city || '?'}) — перелёт состоялся, оплату считаю прошедшей; прибытие в «${name}» записано (зону уточнит карта), повтора нет`);
+      return;
+    }
+    if (travelPaid(p, ch)) {
+      await travelPaidFinish(g, active, `${name}: ответ телепорта не подтверждён, но адены убыло на цену телепорта (до клика ${p.adena}, сейчас ${adena}, цена ${p.cost}; другие оплаты всё это время запрещены) — оплату считаю прошедшей; прибытие в «${name}» записано (зону уточнит карта), повтора нет`);
+      return;
+    }
+    if (travelStayed(p, ch) && now - (+p.sentAt || 0) >= TRAVEL_GAP) {
+      if (c.ackStart || c.stay && now - c.stayAt >= TRAVEL_GAP) {
+        env.rec('B', 'локации', `${name}: телепорт не прошёл — ревизия героя выросла (${p.revision} → ${ch.revision}) другим действием, а адена та же и герой там же (${a.zone || a.city}) ${c.ackStart ? '(сверка после Старта игрока)' : `в двух сверках с промежутком ${Math.round((now - c.stayAt) / 1000)} с`}; прежний запрос с той ревизией уже не применится — оплаты не было, перелёт снят, работаю дальше`);
+        await env.setRt({ ...travelClose(g), zonePend: null }); travelForget(); return;
+      }
+      if (!c.stay) c = { ...c, stay: 1, stayAt: now };
+    } else c = { ...c, stay: 0, stayAt: 0 };
+  }
+  if (c.ackStart && mine) {
+    env.rec('B', 'локации', `${name}: после паузы «Проверьте положение героя» игрок нажал Старт — исход перелёта сервер так и не подтвердил (ревизия ${ch.revision}, до клика ${p.revision}); квитанцию закрываю по решению игрока, маршрут снят, повторного клика по ней не было`);
+    await env.setRt({ ...travelClose(g), zonePend: null, zoneGoT: now }); travelForget(); return;
+  }
+  if (fresh) env.rec('B', 'локации', `${name}: ${why}; повторная оплата запрещена. На паузу не встаю: сверяю положение героя раз в 30–60 с (бесплатный GET /character), платное до итога не трачу`);
+  if (now - c.t0 >= TRAVEL_GIVEUP && !(c.same && now - c.sameAt < 2 * TRAVEL_GAP_MAX) && !(c.stay && now - c.stayAt < 2 * TRAVEL_GAP_MAX)) {
+    // 20.43 (доводка 21.10): сначала — сама сверка без метки; метка gaveUp — только когда пауза действительно записана
+    g.check = c; await env.setRt(travelKeep(g)); if (!active()) return;
+    const char = env.rt.char, start = +env.rt.dailyStart || 0;
+    const saved = await forumUncertain(`${c.why || why}: исход перелёта в «${name}» не удалось сверить за 30 мин (${c.n} сверок)`, active);
+    // пауза записана: фон записал эту паузу (saved — по хранилищу, а не по on=false вкладки), pauseBot выключил бота, а герой, запуск
+    // (manualKickAt), номер Старта и квитанция — те же. gaveUp — была пауза «Проверьте положение героя»: квитанцию закроет только
+    // следующий Старт игрока (ackStart выше, по rt.dailyStart). Перезагрузка во время ожидания сервера (serverWait), отказ фона в паузе
+    // и ⏹ Стоп / ⏸ Пауза игрока, пока pauseBot ждал сервер, метку не ставят — правка меню и Старт квитанцию «по решению игрока» не закроют
+    if (saved && env.on === false && env.rt.char === char && env.rt.manualKickAt === kick && (+env.rt.dailyStart || 0) === start && travelIsCheck(g)) {
+      g.check = { ...c, gaveUp: Date.now(), gaveUpStart: start }; await env.setRt(travelKeep(g)); return;
+    }
+    // сервер лежал — pauseBot ждал его, а не встал на паузу (и метки gaveUp нет): ещё 5 мин сверки после его возвращения
+    if (active()) { g.check = { ...c, t0: Date.now() - TRAVEL_GIVEUP + 5 * 60000 }; await env.setRt(travelKeep(g)); }
+    return;
+  }
+  g.check = c; await env.setRt(travelKeep(g));
+  env.setStatus(travelStatus(name, c, now));   // 20.43 (доводка 21.10): одна форма с ожиданием — одна строка журнала на смену смысла
+}
+// 20.43 (ревью au/travel): один шаг открытой квитанции перелёта — из ядра (loopTravel) в любом режиме и из zoneGoStep. Новых кликов
+// нет: ACK своего запроса (тот же герой, Старт и маршрут) — прибытие, иначе сверка по серверу (travelVerify). Старая запись внутри
+// zoneGo (до этой правки) сначала переносится в rt.travelCheck
+async function travelStep() {
+  const T = travelOpen(); if (!T) return;
+  const kick = env.rt.manualKickAt, char = env.rt.char;
+  const live = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.manualKickAt === kick && env.rt.char === char;
+  if (!live()) return;
+  if (T !== env.rt.travelCheck) { await env.setRt({ travelCheck: T, zoneGo: null }); if (env.rt.travelCheck !== T) return; }
+  const active = () => live() && env.rt.travelCheck === T;
+  if (!active()) return;
+  await travelSettle(T, active, T.nativeTp ? 'результат обычного телепорта не подтверждён' : forumPendingFor(T) ? 'прибытие не подтверждено' : 'квитанция телепорта с прошлого запуска не подтверждена');
+}
+// исход клика: ACK своего запроса — прибытие; явный отказ или нет ответа — сверка (отказ снимает перелёт только с подтверждением GET)
+async function travelSettle(T, active, why) {
+  const ack = T.nativeTp ? nativeAck(T) : forumAck(T);
+  if (ack?.ok) await forumFinish(T, active);
+  else await travelVerify(T, active, ack?.refused ? `сервер отказал в телепорте${ack.status ? ' (HTTP ' + ack.status + ')' : ''}` : why);
 }
 
 async function zoneGoStep() {                     // полёт: Телепорт → раскрыть город → «Телепорт» у нужной зоны
+  // 20.43 (автономность, разбор 21.10; ревью au/travel): открыта квитанция перелёта (rt.travelCheck или старая внутри zoneGo) — клик
+  // мог быть: новых кликов нет, ни этого маршрута, ни нового; вместо одной сверки и паузы — ACK этого запроса, иначе сверка по серверу
+  if (travelOpen()) { await travelStep(); return; }
   const g = env.rt.zoneGo;
   if (!g) return;
   const kick = env.rt.manualKickAt, char = env.rt.char;
-  const active = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
+  const live = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.manualKickAt === kick && env.rt.char === char;
+  const active = () => live() && env.rt.zoneGo === g;
   if (!active()) return;
-  if(g.nativeTp){
-    const p=g.nativeTp,ack=nativeAck(g),ch=ack?.ok?null:await forumCharacter();if(!active())return;
-    if(ack?.ok||(p.char===char&&p.kick===kick&&ch?.name===char&&ch.id===p.charId&&ch.revision>p.revision&&nativeTargetReached(g.id,ch)))await forumFinish(g,active);
-    else await forumUncertain('результат обычного телепорта не подтверждён',active);
-    return;
-  }
   // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
   if (g.id === 'ashen_bastion' && g.returnPath === '/ashen-bastion.html') {
     const fail = async why => { if (active()) { env.rec('B', 'локации', `Ashen Bastion: ${why} — фарм в другой зоне остановлен`); await env.pauseBot(`Возврат в Ashen Bastion: ${why}`, { fault: true }); } };   // 20.43: сервер лежит — ждём его
@@ -459,15 +679,15 @@ async function zoneGoStep() {                     // полёт: Телепор�
   // телепорта нет в «Телепорте», но есть кнопка на странице форума (как «Фарм ресурсов» → pavel_ruins)
   const viaUrl = g.url || (env.rt.zoneCat?.[g.id]?.forum && env.rt.zoneCat[g.id].url);
   if (viaUrl && (g.forum || !env.rt.zoneCat?.[g.id]?.city)) {
-    if (g.forumTp && !forumPendingFor(g)) { await forumUncertain('сохранённый платёж относится к другому персонажу или маршруту', active); return; }
-    const ack = forumAck(g), snapshot = ack?.ok ? null : await forumCharacter();
+    // 20.43 (автономность, разбор 21.10): квитанция есть — клик мог быть: ни нового клика, ни паузы — её ведёт travelStep (выше, в
+    // начале шага; раньше квитанция с прошлого Старта/маршрута сразу ставила паузу)
+    const snapshot = await forumCharacter();
     if (!active()) return;
-    const mine = !!snapshot && !!char && snapshot.name === char && (!g.forumTp || snapshot.id === g.forumTp.charId && snapshot.revision > g.forumTp.revision);
-    if (ack?.ok || (mine && forumTargetReached(g.id, snapshot))) { await forumFinish(g, active); return; }
-    if (g.forumTp || (isMap() && g.t && env.rt.zoneGoT >= g.t)) {
-      await forumUncertain(ack?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active); return;
-    }
-    if (!mine || !snapshot.id || !Number.isSafeInteger(snapshot.revision)) { await forumUncertain('не удалось сверить персонажа и локацию', active); return; }
+    const mine = !!snapshot && !!char && snapshot.name === char;
+    if (mine && forumTargetReached(g.id, snapshot)) { await forumFinish(g, active); return; }
+    // 20.43: квитанции нет — клика не было (она пишется до клика): без паузы, перелёт снят (а)
+    if (isMap() && g.t && env.rt.zoneGoT >= g.t) { await travelDrop(g, 'прошлая попытка перелёта прервана до оплаты', active); return; }
+    if (!mine || !snapshot.id || !Number.isSafeInteger(snapshot.revision)) { await travelDrop(g, 'не удалось сверить персонажа и локацию перед оплатой', active); return; }
     if (location.pathname + location.search !== viaUrl) { env.setStatus(`Локации: лечу в ${zoneName(g.id)} (через форум)`); location.href = viaUrl; await env.sleep(4000); return; }
     let fb = await env.waitX(() => env.$q(`[data-teleport-id="${g.id}"]`), env.isFarmPage() ? 2000 : 8000, 200);
     if (!active()) return;
@@ -491,7 +711,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
     if (!fb) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта на форуме нет`); await env.setRt({ zoneGo: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
     if (!active()) return;
     const beforePay = await forumCharacter(); if (!active()) return;
-    if (!beforePay || beforePay.name !== char || beforePay.id !== snapshot.id || !Number.isSafeInteger(beforePay.revision)) { await forumUncertain('персонаж перед оплатой не подтверждён', active); return; }
+    if (!beforePay || beforePay.name !== char || beforePay.id !== snapshot.id || !Number.isSafeInteger(beforePay.revision)) { await travelDrop(g, 'персонаж перед оплатой не подтверждён', active); return; }
     if (forumTargetReached(g.id, beforePay)) { await forumFinish(g, active); return; }
     const cost = forumTeleportCost(fb);
     const budget = !cost.why && await teleportBudget(cost.price, active, beforePay);
@@ -499,19 +719,18 @@ async function zoneGoStep() {                     // полёт: Телепор�
     if (cost.why || budget) { env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`); await env.setRt({ zoneGo: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } }); return; }
     env.rec('B', 'локации', `телепорт с форума → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
     if (!active()) return;
-    g.forumTp = { id: g.id, url: viaUrl, char, charId: beforePay.id, revision: beforePay.revision,
-      cost: Number(fb.dataset.adenaCost), sentAt: Date.now(), nonce: Date.now() + ':' + Math.random().toString(36).slice(2), kick };
-    const saved = await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) });
-    if (env.rtCommit ? !(await env.rtCommit()) : saved?.ok === false) { await forumUncertain('не удалось сохранить платёж до клика', active); return; }
-    if (!active()) return;
+    // 20.43: адена и место до клика — для сверки «ничего не изменилось» (L2PayOutcome.unchanged) и «герой уже в другом месте».
+    // Ревью au/travel: квитанция — в отдельном rt.travelCheck (копия маршрута), маршрут zoneGo снят той же записью до клика
+    const T = { ...g, forumTp: { id: g.id, url: viaUrl, char, charId: beforePay.id, revision: beforePay.revision, adena: adenaOf(beforePay.adena), from: travelPlace(beforePay),
+      cost: Number(fb.dataset.adenaCost), sentAt: Date.now(), nonce: Date.now() + ':' + Math.random().toString(36).slice(2), kick } };
+    const saved = await env.setRt({ zoneGo: null, travelCheck: T, ...(cost.price > 0 ? { adenaSeen: null } : {}) });
+    const activeT = () => live() && env.rt.travelCheck === T;
+    if (env.rtCommit ? !(await env.rtCommit()) : saved?.ok === false) { await travelDrop(T, 'не удалось сохранить квитанцию до клика', activeT); return; }
+    if (!activeT()) return;
     env.fire(fb);
-    await env.waitX(() => forumAck(g) || location.pathname + location.search !== viaUrl, 6000, 200);
-    if (!active()) return;
-    const result = forumAck(g), after = result?.ok ? null : await forumCharacter();
-    if (!active()) return;
-    if (result?.ok || (after?.name === char && after.id === g.forumTp.charId && after.revision > g.forumTp.revision && forumTargetReached(g.id, after))) {
-      await forumFinish(g, active);
-    } else await forumUncertain(result?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active);
+    await env.waitX(() => forumAck(T) || location.pathname + location.search !== viaUrl, 6000, 200);
+    if (!activeT()) return;
+    await travelSettle(T, activeT, 'прибытие не подтверждено');   // 20.43: первая сверка — сразу, без паузы; отказ — только с GET
     return;
   }
   if (!isTeleport()) { env.setStatus(`Локации: лечу в ${zoneName(g.id)}`); location.href = '/teleport.html'; await env.sleep(4000); return; }
@@ -545,19 +764,22 @@ async function zoneGoStep() {                     // полёт: Телепор�
     await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: cost.price, ...tc } } });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
-  if(!before||before.name!==char||!before.id||!Number.isSafeInteger(before.revision)){await forumUncertain('персонаж перед телепортом не подтверждён',active);return;}
-  g.nativeTp={id:g.id,char,charId:before.id,revision:before.revision,cost:cost.price,kick,sentAt:Date.now(),nonce:Date.now()+':'+Math.random().toString(36).slice(2)};
-  const saved=await env.setRt({zoneGo:g,zoneTried:tried,zoneGoT:Date.now(),...(cost.price>0?{adenaSeen:null}:{})});
-  if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await forumUncertain('не удалось сохранить платёж до клика',active);return;}
-  if (!active()) return;
+  // 20.43 (автономность, разбор 21.10): до клика оплаты не было — без паузы, перелёт снят (а); в квитанцию — адена и место до клика
+  if(!before||before.name!==char||!before.id||!Number.isSafeInteger(before.revision)){await travelDrop(g,'персонаж перед телепортом не подтверждён',active,true);return;}
+  // ревью au/travel: квитанция — в отдельном rt.travelCheck (копия маршрута), маршрут zoneGo снят той же записью до клика
+  const T={...g,nativeTp:{id:g.id,char,charId:before.id,revision:before.revision,adena:adenaOf(before.adena),from:travelPlace(before),cost:cost.price,kick,sentAt:Date.now(),nonce:Date.now()+':'+Math.random().toString(36).slice(2)}};
+  const saved=await env.setRt({zoneGo:null,travelCheck:T,zoneTried:tried,zoneGoT:Date.now(),...(cost.price>0?{adenaSeen:null}:{})});
+  const activeT=()=>live()&&env.rt.travelCheck===T;
+  if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await travelDrop(T,'не удалось сохранить квитанцию до клика',activeT,true);return;}
+  if (!activeT()) return;
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
   env.fire(btn);
   // 10.0 (аудит фарма): переход на карту бывает дольше 2,5 с — удачный платный полёт писался «не улетели» и зона «плохой» на 6 ч. Ждём до 8 с
   await env.waitX(() => !isTeleport() || /недостат|not enough/i.test(document.body.innerText.slice(-4000)) || null, 8000, 200);
-  if(!active())return;
-  const ack=nativeAck(g),after=ack?.ok?null:await forumCharacter();if(!active())return;
-  if(ack?.ok||(after?.name===char&&after.id===g.nativeTp.charId&&after.revision>g.nativeTp.revision&&nativeTargetReached(g.id,after)))await forumFinish(g,active);
-  else await forumUncertain('прибытие не подтверждено',active);
+  if(!activeT())return;
+  // 20.43: ACK этого запроса — прибытие; явный отказ или нет ответа — сверка по серверу (первая — сразу), бот не встаёт на паузу;
+  // ревью au/travel: отказ снимает перелёт только вместе с GET «ревизия и адена те же»
+  await travelSettle(T,activeT,'прибытие не подтверждено');
 }
 
 // 10.0.7 (лог 13.10 13:21, Necropolis of Devotion): бой в подземелье (spawnId sdms_<подземелье>_NNN) кончился не победой (ошибка загрузки,
@@ -614,6 +836,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { onForumTeleportNet, curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { onForumTeleportNet, travelPending, travelStep, nativeNonce, curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);

@@ -1606,6 +1606,149 @@ async function pauseBot(msg, opt = {}) {
   rec('B', 'пауза', msg);
   await automationStop(msg, 'pause');
 }
+// 20.43 (автономность, разбор 21.10): «передышка» вместо стопа — временный технический сбой (клик по мобу трижды не открыл бой, бой трижды
+// вернул на карту, список мобов не грузится, нет прогресса 9 мин после 3 восстановлений) раньше выключал бота до утра. Теперь rt.selfHold
+// {kind, why, at, until, n, task, mode, kick}: задача на передышке пропускается (L2EngineCore.selectedTask), идут другие выбранные задачи;
+// других нет — бот ждёт с пульсом, TvT и проверкой капчи (loopSelfHold), потом продолжает сам. Шаги: mob 5 → 15 → 30 мин, stall 20 → 25 → 30.
+// 4-я передышка одного вида за 6 ч — полный стоп с причиной (halt; stall — жёсткий, как прежний стоп сторожа). opt.noWait — только учёт
+// (карта тура/эпика, цикл выхода тура, запрет маршрута: цель откладывается, а тур идёт дальше). В журнал — начало и конец передышки.
+// Где возможна оплата, передышка ничего не повторяет: она только откладывает работу, неизвестная оплата по-прежнему блокирует платное.
+// 20.43 (автономность, доводка 21.10): rt.selfHold — {ключ: передышка} по задаче (L2EngineCore.selfHoldKey), а не одна ячейка: новая
+// передышка другой задачи прежнюю больше не затирает (раньше [тур, фарм] при общем сбое карты сменяли друг друга, и счёт «3 за 6 ч» набегал
+// за 30–40 мин); той же задачи — заменяет со строкой в журнале и сроком не раньше прежнего. Отсрочки noWait — свой счёт (rt.selfHoldDefer):
+// отсрочка цели на прилёте (raidMap/epicMap) и следующая передышка проверки карты (mapGate, тот же вид) раньше считались дважды за один сбой.
+const SELF_HOLD_STEPS = { mob: [5, 15, 30], stall: [20, 25, 30] };
+const holdHM = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+const selfHoldText = h => `Передышка до ${holdHM(h.until)}: ${h.why}`;
+// Передышка держит именно текущую работу: в режиме задач — пока ядро выбирает эту задачу (обычно 'tasks' после пропуска), без списка — тот же режим
+function selfHoldFits(h) {
+  if (!h) return false;
+  if (Array.isArray(cfg.autoTasks)) return !!h.task && L2EngineCore.selectedTask(cfg, rt) === h.task;
+  return !!h.mode && autonomyMode() === h.mode;
+}
+// 20.43 (доводка 21.10): из всех действующих передышек — та, что держит текущую работу
+const selfHoldNow = () => L2EngineCore.selfHoldList(rt).find(selfHoldFits) || null;
+const selfHoldApplies = (h = selfHoldNow()) => selfHoldFits(h);
+const selfHoldOn = kind => L2EngineCore.selfHoldList(rt).some(h => !kind || h.kind === kind);
+const selfHoldOf = kind => L2EngineCore.selfHoldList(rt).find(h => !kind || h.kind === kind) || null;
+// конец передышки — одна строка: истекла или снята новым Стартом (loopSelfHold и замена записи той же задачи)
+const selfHoldEndNote = h => rec('B', 'передышка', `${(+h?.kick || 0) !== (+rt.manualKickAt || 0) ? 'снята новым запуском' : 'окончена'}: ${String(h?.why || '').slice(0, 120)} — продолжаю сам`);
+// Тот же запуск: Стоп, новый Старт, другой герой или вкладка-хозяин отменяют объявление. Не automationCurrent: передышка сама меняет
+// выбранную задачу (autonomyMode) и уходит на нейтральную страницу — это ожидаемо, а не чужое вмешательство (MV3-сценарий 20.43).
+// 20.43 (ревью): контекст кадра действий передышкой больше не меняется — в нём routeMode (выбор игрока без передышки)
+const selfHoldRun = () => JSON.stringify([automationGeneration, rt.char || '', leaseEpoch, +rt.manualKickAt || 0]);
+// 20.43 (автономность, доводка 21.10, ревью): отдельный счёт отсрочек карты на прилёте (raidMap/epicMap) пропускал вдвое больше оплаченных
+// перелётов при чередовании «отсрочка на прилёте → бесплатная проверка карты не прошла (передышка) → после передышки проверка прошла →
+// новый платный перелёт → снова отсрочка»: стоп был только на 4-й отсрочке — после 4 оплаченных перелётов (≈400 000 аден, у эпиков — до 4
+// Coin of Luck в пределах дневного лимита); с прежним общим счётом — после 2. Теперь отсрочка карты на прилёте, перед которой за 6 ч уже была
+// такая отсрочка, а после неё не прошла и бесплатная проверка карты (передышка того же вида), — стоп сразу: второй оплаченный перелёт кончился
+// картой, которая не грузится, и проверка с места это подтвердила. Один сбой (отсрочка и передышка проверки) по-прежнему один в счёте «3 за
+// 6 ч»; отсрочки без проваленной проверки (карта у героя грузится) — прежний предел 3 за 6 ч. «Подряд»: прилёт, после которого карта
+// загрузилась (rt.mapArriveOk[вид], пишут тур и эпики — selfHoldMapOk), цепочку обрывает: следующая отсрочка снова обычная.
+const SELF_HOLD_MAP_KINDS = ['raidMap', 'epicMap'];
+const selfHoldRecent = (a, now) => (Array.isArray(a) ? a : []).map(Number).filter(t => Number.isFinite(t) && t <= now && now - t < L2EngineCore.SELF_HOLD_WINDOW);
+function selfHoldMapChain(kind, now = Date.now()) {
+  if (!SELF_HOLD_MAP_KINDS.includes(kind)) return false;
+  const defers = selfHoldRecent(rt.selfHoldDefer?.[kind], now), checks = selfHoldRecent(rt.selfHoldLog?.[kind], now), okAt = +rt.mapArriveOk?.[kind] || 0;
+  return defers.length > 0 && checks.some(t => t >= Math.min(...defers) && t > okAt);
+}
+// Карта на прилёте тура/эпика загрузилась. Запись — только когда есть что обрывать (проваленная проверка вида после прошлой отметки), иначе null
+function selfHoldMapOk(kind, now = Date.now()) {
+  if (!SELF_HOLD_MAP_KINDS.includes(kind) || !tabOwner) return null;
+  const okAt = +rt.mapArriveOk?.[kind] || 0;
+  if (!selfHoldRecent(rt.selfHoldLog?.[kind], now).some(t => t > okAt)) return null;
+  return setRt({ mapArriveOk: { ...(rt.mapArriveOk || {}), [kind]: now } });
+}
+async function selfHoldStart(kind, why, opt = {}) {
+  const now = Date.now(), run0 = selfHoldRun(), sameRun = () => on && tabOwner && selfHoldRun() === run0;
+  // 20.43 (доводка 21.10): noWait (отсрочка цели, цикл выхода тура, запрет маршрута) — отдельный счёт rt.selfHoldDefer, предел тот же
+  const logKey = opt.noWait ? 'selfHoldDefer' : 'selfHoldLog', logs = rt[logKey] || {};
+  const plan = L2EngineCore.selfHoldPlan({ selfHoldLog: logs }, kind, opt.steps || SELF_HOLD_STEPS[kind] || [30], now, opt.window);
+  const text = String(why || 'сбой').slice(0, 200), all = L2EngineCore.selfHoldMap(rt);
+  const chain = !!opt.noWait && !plan.stop && selfHoldMapChain(kind, now);   // 20.43 (доводка 21.10, ревью): см. selfHoldMapChain
+  if ((plan.stop || chain) && !opt.noCount) {
+    const rest = Object.fromEntries(Object.entries(all).filter(([, h]) => h.kind !== kind));   // передышки других видов не трогаем
+    await setRt({ selfHold: Object.keys(rest).length ? rest : null });
+    if (!sameRun()) return null;
+    await halt(chain ? `${text} — и после прошлой такой отсрочки бесплатная проверка карты не прошла: второй оплаченный перелёт подряд без карты, дальше не плачу`
+      : `${text} — ${L2EngineCore.SELF_HOLD_MAX} ${opt.noWait ? 'отсрочки' : 'передышки'} за ${Math.round((+opt.window > 0 ? +opt.window : L2EngineCore.SELF_HOLD_WINDOW) / 3600000)} ч не помогли`, !!opt.hard);   // запрет маршрута — окно 12 ч
+    // 20.43 (ревью au/breather): счёт вида раньше обнулялся ДО halt. Мягкий halt (карта тура/эпика) при неотвечающем сервере уходит
+    // в ожидание сервера (serverWait) и бота не выключает — после ответа сервера тур получал ещё 3 отсрочки (и платных перелёта) до
+    // следующей попытки стопа. Теперь счёт обнуляется только после настоящей остановки; не остановились — счёт прежний, следующий
+    // такой сбой сразу снова ведёт к стопу
+    if (on) return null;
+    // остановлены: счёт вида начинается заново — новый Старт игрока даёт ещё 3 передышки
+    // 20.43 (автономность, доводка 21.10, ревью): у вида raidMap/epicMap счёта два — передышки проверки карты (selfHoldLog, mapGate) и
+    // отсрочки на прилёте (selfHoldDefer). Обнулялся только сработавший: стоп по 4-й отсрочке оставлял 3 передышки mapGate, и после Старта
+    // первый же сбой карты сразу снова вёл к стопу «3 передышки за 6 ч не помогли». Теперь настоящий стоп обнуляет вид в обоих журналах
+    await setRt({ selfHoldLog: { ...(rt.selfHoldLog || {}), [kind]: [] }, selfHoldDefer: { ...(rt.selfHoldDefer || {}), [kind]: [] } });
+    return 'stop';
+  }
+  const log = opt.noCount ? (logs[kind] || []) : plan.log;
+  if (opt.noWait) {
+    const saved = await setRt({ [logKey]: { ...logs, [kind]: log } });
+    return saved?.ok === false ? null : 'defer';
+  }
+  const strict = Array.isArray(cfg.autoTasks), task0 = strict ? L2EngineCore.selectedTask(cfg, rt, now) : null, mode0 = autonomyMode();
+  // mob: тур/эпики/катакомбы карту только «подкармливают» — их не держим, хватает запрета клика по карте (mobfarm.map)
+  const own = kind !== 'mob' || (strict ? ['farm','auto','quests','tasks'].includes(task0) : ['farm','campaign','tasks'].includes(mode0));
+  // 20.43 (доводка 21.10): маршрут задачи на передышке теперь хранится до её конца (L2EngineCore.taskJobHeld) — кроме застрявшего, который
+  // и привёл к передышке: у «нет прогресса» это служебный маршрут, владевший кругом (actionOwner); он снимается, как раньше
+  const drop = (Array.isArray(opt.drop) ? opt.drop : kind === 'stall' && rt.actionOwner?.key ? [rt.actionOwner.key] : []).filter(k => typeof k === 'string' && k).slice(0, 4);
+  const hold = { kind, why: text, at: now, until: Number.isFinite(opt.until) && opt.until > now ? opt.until : now + plan.ms, n: opt.noCount ? Math.max(1, log.length) : plan.n,
+    task: own ? task0 : null, mode: own && !strict ? mode0 : null, kick: +rt.manualKickAt || 0 };
+  // одна запись на задачу (режим/вид): действующую той же задачи заменяем, но не раньше её срока; другие задачи — как были
+  const key = L2EngineCore.selfHoldKey(hold), prev = all[key], live = L2EngineCore.selfHoldValid(prev, rt, now) ? prev : null;
+  if (live) hold.until = Math.max(hold.until, +live.until);
+  const dropAll = [...new Set([...(Array.isArray(live?.drop) ? live.drop : []), ...drop])].slice(0, 4);
+  if (dropAll.length) hold.drop = dropAll;
+  const saved = await setRt({ selfHold: { ...all, [key]: hold }, selfHoldLog: { ...logs, [kind]: log } });
+  if (saved?.ok === false || !sameRun()) return null;
+  if (prev && !live) selfHoldEndNote(prev);   // прежняя той же задачи уже кончилась, но loopSelfHold её ещё не снял
+  const next = strict && own ? L2EngineCore.selectedTask(cfg, rt, now) : null;
+  rec('B', 'передышка', `${text} — передышка до ${holdHM(hold.until)} (${hold.n}/${L2EngineCore.SELF_HOLD_MAX} за 6 ч)${live ? `; заменяет прежнюю «${String(live.why || '').slice(0, 80)}» до ${holdHM(live.until)}` : ''}: ${!own ? 'карту не трогаю, остальная работа идёт' : next && next !== 'tasks' ? `пока идёт «${next}»` : 'жду с пульсом, TvT и проверкой капчи'}, потом продолжу сам`);
+  setStatus(selfHoldText(hold));
+  if (own && opt.page && location.pathname !== opt.page && await rtCommit() && sameRun() && !antibotState()) { location.href = opt.page; await sleep(3000); }
+  return 'hold';
+}
+// 20.43 (автономность, ревью au/breather): «карта не подтверждена» — rt.mapBad {at, why, loadAt}. После отсрочки цели тура/эпика из-за
+// незагрузившейся карты (raidMap/epicMap) тур сразу платил следующий телепорт (≈100 000 аден), не проверив, работает ли карта вообще: при
+// общем сбое (карта и спавны не отдаются, а список РБ и POST телепорта живы) — до 4 платных перелётов за ≈15 мин вместо одного. Теперь, пока
+// метка стоит, платный путь тура/эпиков не начинается: сначала бесплатная свежая загрузка /map.html там, где герой стоит. Карта загрузилась —
+// метка снята, работа продолжается; нет — передышка этой работы (тот же вид, 4-я за 6 ч — стоп с причиной), без телепорта. Метку снимает
+// только успешная карта (mapReady). true — шаг занят проверкой/ожиданием (круг заново), false — метки нет, платный путь разрешён.
+const MAP_GATE_NAV_MS = 60000, MAP_GATE_STALE_MS = 5 * 60000;
+async function mapGate(kind, label, active = () => on && tabOwner) {
+  const M = rt.mapBad; if (!M?.at) return false;
+  if (!active()) return true;   // запуск сменился — платный путь этого круга не продолжаем
+  if (/\/ashen-bastion\.html$/i.test(location.pathname)) return false;   // из Ashen карта не открывается — сначала свой бесплатный штатный выход
+  const now = Date.now(), loadAt = +M.loadAt || 0, onMap = isMap();
+  const failed = async () => {
+    if ((await setRt({ mapBad: { ...M, loadAt: 0 } }))?.ok === false || !active()) return true;
+    await selfHoldStart(kind, `${label}: карта не загружается и при бесплатной проверке${M.why ? ` (${M.why})` : ''} — платный перелёт не начинаю`);
+    return true;
+  };
+  if (!loadAt || onMap && now - loadAt > MAP_GATE_STALE_MS) {   // свежая загрузка карты; прежняя страница могла остаться от сбоя
+    if ((await setRt({ mapBad: { ...M, loadAt: now, said: true } }))?.ok === false || !active()) return true;
+    if (!M.said) rec('B', 'карта', `${label}: после сбоя карты сначала проверяю карту здесь, бесплатно — платный перелёт только после неё`);
+    setStatus(`${label}: проверяю карту после сбоя — без телепорта`);
+    if (await rtCommit() && active()) location.href = '/map.html';
+    await sleep(3000); return true;
+  }
+  if (!onMap) {
+    if (now - loadAt < MAP_GATE_NAV_MS) { setStatus(`${label}: открываю карту для проверки после сбоя — без телепорта`); await sleep(1500); return true; }
+    return failed();
+  }
+  const ready = await mapReady(30000, `${label}: проверяю карту после сбоя`);
+  if (!active()) return true;
+  if (ready === true) {
+    if ((await setRt({ mapBad: null }))?.ok === false || !active()) return true;
+    rec('B', 'карта', `${label}: карта снова загружается — продолжаю, платный перелёт разрешён`);
+    return true;
+  }
+  if (ready === 'changed' || ready === 'down') { await sleep(500); return true; }   // смена задачи / сервер лежит — решит следующий круг
+  return failed();
+}
 
 // ---------- переходы ----------
 async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
@@ -1613,7 +1756,8 @@ async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
 // выход из боя через нижнее меню «Окрестности» — прерывает бой (так выходят из боя с РБ)
 async function toOutskirts(...args) { return L2V7Modules.navigation.toOutskirts(...args); }
 
-async function nextFight(...args) { await dailyServerSync(true); if(!on||!tabOwner)return; return L2V7Modules.mobfarm.nextFight(...args); }
+// 20.43 (автономность): на передышке начатый бой доводим, но следующий не начинаем — на карту, там loopSelfHold ждёт
+async function nextFight(...args) { await dailyServerSync(true); if(!on||!tabOwner)return; if (rt.selfHold && selfHoldApplies()) return toMap(); return L2V7Modules.mobfarm.nextFight(...args); }
 
 // ---------- карта ----------
 const tags = r => (r.quest ? ' [квест]' : '') + (r.champ ? ' [чемп]' : '');
@@ -2169,7 +2313,9 @@ const faCost = id => rt.faCat?.[id]?.cost || FA_KNOWN[id]?.[1] || 1;
 function faWanted(...args) { return L2V7Modules.buffs.faWanted(...args); }
 function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args); }
 // 20.12 (ревизия 17.10): платный поход к бафферу при неизвестной оплате не начинаем — бесплатный фарм идёт дальше.
-async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; if (L2V7Modules.payments?.blocked?.()) return false; return L2V7Modules.buffs.townBuffStart(...args); }
+// 20.43 (ревью au/breather): основная работа на передышке — баффы под неё не покупаем (как в режиме задач при ожидании 'tasks'): сервисы во
+// время передышки теперь идут, и сторож баффов иначе покупал бы набор, который истечёт, пока бот ждёт
+async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; if (L2V7Modules.payments?.blocked?.()) return false; if (selfHoldMain()) return false; return L2V7Modules.buffs.townBuffStart(...args); }
 async function townBuffStep(...args) { return L2V7Modules.buffs.townBuffStep(...args); }
 
 // 8.0.3 (лог 11.10 10:13:25 «РБ HP 704k ≈6:60», 09:59:54 «до опасного HP ≈-1:-1»): секунды округлялись отдельно от минут (419,6 с →
@@ -2706,6 +2852,10 @@ const epicOn = (...args) => cfg.enchantMode !== true && L2V7Modules.epics.epicOn
 async function tasksIdle() {
   const fishWait=L2EngineCore.fishTaskWait(cfg,rt);
   if(fishWait){const seconds=Math.max(0,Math.ceil((fishWait.until-Date.now())/1000));setStatus(`⏸ ${fishWait.why} · ${seconds?`повтор через ${seconds} с`:'повтор после завершения текущего действия'}; другие выбранные задачи пока недоступны`);await sleep(2000);return;}
+  // 20.43 (автономность): выбранная задача на передышке, других нет — честное ожидание с причиной и временем
+  // 20.43 (доводка 21.10): передышек может быть несколько (по задаче) — в статусе все, ближайшая первой
+  const holds=L2EngineCore.selfHoldList(rt).filter(h=>h.task).sort((a,b)=>a.until-b.until);
+  if(holds.length){setStatus(`⏸ ${holds.map(selfHoldText).join(' · ')} · других выбранных задач сейчас нет — жду, потом продолжу сам`);await sleep(2000);return;}
   const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmMailClaim && 'почта',
     cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
   // 20.43 (лог 21.10 17:13): рыбалка выбрана, но старая цель уже выполнена — говорим прямо, а не «дел нет»
@@ -2730,6 +2880,15 @@ const autonomyMode = () => L2EngineCore.selectedTask(cfg, rt) === 'quests' ? 'ca
   enchant: cfg.enchantMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
   cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
+// 20.43 (автономность, ревью 21.10): «режим маршрута» — выбор игрока без автоматических пропусков (передышка rt.selfHold, ожидание тура
+// на рыбалке rt.rbFishWait, отсрочка кота). Он, а не autonomyMode, входит в контекст владельца служебного маршрута (actions.context) и задания
+// Маммона: передышка, взятая и снятая самим ботом, — не «пользователь сменил режим». Раньше конец передышки фарма в списке [фарм, Маммон]
+// отменял начатый поход к Маммону (после платного телепорта, заказ — не раньше чем через сутки), а начало/конец — «Закупить сейчас».
+// Без списка задач (старые флаги режимов) передышка режим не меняет — там прежний autonomyMode
+const routeMode = () => { const t = L2EngineCore.baseTask(cfg, rt); return t == null ? autonomyMode() : t === 'quests' ? 'campaign' : t === 'auto' ? 'farm' : t; };
+// 20.43 (автономность, ревью): служебный маршрут запрещён после циклов (actions: rt.actionBan) — автоматические создатели его не создают
+// (Маммон, чтение сумки), иначе каждый круг: создать → снять (и переход на страницу маршрута до снятия)
+const routeBanned = key => !!L2V7Modules.actions?.banned?.(key);
 // 15.10: диагностика меняется вместе с выбором/задачей, а не на каждом тике.
 function taskPolicyNote(active = autonomyMode()) {
   if (!Array.isArray(cfg.autoTasks) || !tabOwner) return;
@@ -3040,7 +3199,7 @@ async function main() {
   if (!on) { try { await switchChar(); } catch (e) { console.warn(TAG, 'персонаж', e); } return; }
   running = true;
   try {
-  LOOP.servicesStarted = false; LOOP.castObservedAt = 0;
+  LOOP.servicesStarted = false; LOOP.castObservedAt = 0; LOOP.holdWaitT = 0;
   while (on) {
     loopT = Date.now();                            // 20.12: метка живости цикла для пульса сторожа
     try {
@@ -3050,13 +3209,15 @@ async function main() {
   } finally { running = false; }
 }
 const LOOP_BREAK = 'break';
-const LOOP = { servicesStarted: false, castObservedAt: 0 };   // бывшие локальные переменные main() (сбрасываются при каждом запуске main)
+const LOOP = { servicesStarted: false, castObservedAt: 0, holdWaitT: 0 };   // бывшие локальные переменные main() (сбрасываются при каждом запуске main)
 const loopStale = () => !on || !tabOwner || autonomyMode() === 'enchant';
 // Один круг главного цикла: первый шаг, вернувший true/LOOP_BREAK, заканчивает круг.
+// 20.43 (автономность, слияние au/travel + au/breather): loopSelfHold только снимает истёкшую передышку и круг не держит; сверка квитанции
+// перелёта loopTravel — сразу за ним, раньше списка задач и диспетчера (идёт и на передышке: бесплатный GET); ожидание передышки — loopSelfHoldWait
 async function mainTick() {
-  return await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent()
-    || await loopTaskList() || await loopEnchant() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
-    || await loopSideJobs() || await loopRaid() || await loopActivity();
+  return await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent() || await loopSelfHold()
+    || await loopTravel() || await loopTaskList() || await loopEnchant() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
+    || await loopSideJobs() || await loopSelfHoldWait() || await loopRaid() || await loopActivity();
 }
 // Замок вкладки: «один бот на все вкладки»; новая выдача замка перечитывает хранилище.
 async function loopLease() {
@@ -3162,11 +3323,24 @@ async function loopWatchdog() {
   // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
   // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
   // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
-  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
-    !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
-    !!rt.invScan || fishNow());
+  // 20.43 (автономность, разбор 21.10): сверка исхода перелёта (до 30 мин, GET раз в 30–60 с) — честное ожидание, не «нет прогресса»
+  // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке хранится, но не исполняется (L2EngineCore.taskJobHeld) — это ожидание,
+  // а не «нет прогресса»: иначе стоящий маршрут через 9 мин давал перезагрузки и stall-передышку ожидающему кругу
+  const job = key => !!rt[key] && !L2EngineCore.taskJobHeld?.(cfg, key, rt);
+  // 20.43 (автономность, доводка 21.10, ревью): состояние эпика (rt.epic) — работа, только пока режим эпиков и выбран (epicStep зовётся лишь
+  // при autonomyMode() === 'epic'). В режиме задач эпик на передышке (epicMap на шаге go, stall на шаге fight) пропускается выбором, бот стоит
+  // в tasksIdle, а rt.epic.step ('go'/'fight') никто не меняет — сторож считал это работой без прогресса: перезагрузка и «нет прогресса 9 мин …
+  // попытка N/3» каждые 9 мин передышки, stallRecoveries копились, и следующая настоящая stall-передышка эпика наступала на 9–18 мин раньше.
+  // Без списка задач передышка эпиков режим не меняет — её ожидание учтено ниже (selfHoldMain), как прежде
+  const epicJob = !!rt.epic && !['pick', 'prep'].includes(rt.epic.step) && autonomyMode() === 'epic';
+  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && !L2V7Modules.navigation?.travelPending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || job('shop') || job('rbGo') || job('zoneGo') || job('mmJob') ||
+    job('tbuff') || epicJob ||
+    job('invScan') || fishNow());
   // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
   const abWait = !!antibotState() || (rt.pveBlockUntil || 0) > Date.now();
+  // 20.43 (автономность): ожидание передышки (rt.selfHold) — тоже честное ожидание, а не «нет прогресса»: отсчёт сторожа сначала.
+  // 20.43 (ревью au/breather): сервисы во время передышки идут — не считается только сам круг ожидания (loopSelfHoldWait ≤ 15 с назад)
+  if (selfHoldMain() && Date.now() - (LOOP.holdWaitT || 0) < 15000) { progressMonitor.tick('', false); return; }
   const sig = [location.pathname, location.search, rt.kills, rt.rbKills,
     rt.fish?.casts || 0, rt.fish?.caught || 0, rt.epic?.step || '',
     rt.rbHunt?.step || '', rt.shop?.step || '', rt.tbuff?.step || '',
@@ -3177,7 +3351,14 @@ async function loopWatchdog() {
     if (!up) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); return true; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
     const history = (rt.stallRecoveries || []).filter(t => Date.now() - t < 30 * 60000);
     rec('S', 'восстановление', `нет прогресса 9 мин: ${location.pathname}, режим ${autonomyMode()}, попытка ${history.length + 1}/3`);
-    if (history.length >= 3) { await halt('Автономный режим не продвигается после 3 восстановлений за 30 мин', true); return LOOP_BREAK; }
+    // 20.43 (автономность, разбор 21.10): после 3 восстановлений — не стоп до утра, а уход на карту и передышка 20 → 25 → 30 мин
+    // (идут другие выбранные задачи или бот ждёт с пульсом); жёсткий стоп — когда понадобилась бы 4-я такая серия за 6 ч
+    if (history.length >= 3) {
+      await setRt({ stallRecoveries: [] });
+      if (!automationCurrent(stamp)) return true;
+      const r = await selfHoldStart('stall', `Автономный режим не продвигается после 3 восстановлений за 30 мин (${location.pathname}, режим ${autonomyMode()})`, { hard: true, page: '/map.html' });
+      return r === 'stop' ? LOOP_BREAK : true;
+    }
     await setRt({ stallRecoveries: [...history, Date.now()] });
     if (!await automationFlush(stamp)) return true;
     location.reload(); await sleep(5000); return true;
@@ -3191,6 +3372,75 @@ async function loopUrgent() {
   if (isMap() && await leaveCheck()) return true;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
   if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); return true; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
 }
+// 20.43 (автономность, ревью au/travel): открытая квитанция перелёта (rt.travelCheck: клик телепорта был, исход не сверен) — сверка
+// по серверу в любом режиме, раньше списка «Задачи бота» и диспетчера маршрутов: смена режима/цели/Старт снимают маршрут zoneGo, но не
+// квитанцию, и платное до вывода запрещено (payments.externalPending, новые клики телепорта — navigation.zoneGoStep). Сервер/вход/
+// капча/PvP/воскрешение/TvT — выше; бой и вываживание доводим, затем сверка снова держит круг (GET раз в 30–60 с)
+async function loopTravel() {
+  if (!L2V7Modules.navigation?.travelPending?.() || isBattle() || (isFishing() && fishState())) return;
+  await L2V7Modules.navigation.travelStep(); await sleep(200); return true;
+}
+// 20.43 (автономность, разбор 21.10): передышка (rt.selfHold). Сервер, вход, капча, PvP-восстановление, воскрешение и TvT — выше, они идут и
+// во время передышки. Истекла или игрок нажал новый Старт — одна строка в журнал и обычная работа.
+// 20.43 (ревью au/breather): этот шаг круг больше не держит. Раньше он стоял сразу после loopUrgent и на 5–30 мин замораживал всё ниже:
+// Маммона, квесты сабкласса/Noblesse, дейлики и клан, баффер кота, опрос эпиков, команды меню («🛒 Закупить сейчас», «Пересчитать сумку»,
+// «Проверить эпиков»), сверку неизвестной оплаты (actions.dispatch), врагов/PvP — без списка задач для любой передышки текущего режима, в
+// режиме задач — когда держится сама 'tasks' (фарм цели ресурса). Теперь держится только основная работа — loopSelfHoldWait перед туром РБ
+// и основной работой (плюс epicStep и рыбалка при блоке PvE), сервисные шаги идут как обычно.
+// 20.43 (доводка 21.10): передышки — по задаче; каждая кончается своей строкой, действующие остаются
+async function loopSelfHold() {
+  if (!rt.selfHold) return;
+  const all = L2EngineCore.selfHoldMap(rt), ended = Object.keys(all).filter(k => !L2EngineCore.selfHoldValid(all[k], rt));
+  if (!ended.length && Object.keys(all).length) return;
+  const rest = Object.fromEntries(Object.entries(all).filter(([k]) => !ended.includes(k)));
+  // 20.43 (автономность, доводка 21.10, ревью): кончилась передышка тура, а его маршрут стоит на оплаченном прилёте или бое (arrive/fight) —
+  // метка rt.rbResume: перед шагом тура сначала бесплатно открыть карту (raidResumeMap), см. ниже
+  const H = rt.rbHunt, tour = ended.some(k => all[k]?.task === 'raid' || all[k]?.mode === 'raid') && !!H?.id && ['arrive', 'fight'].includes(H.step);
+  const saved = await setRt({ selfHold: Object.keys(rest).length ? rest : null, ...(tour ? { rbResume: { id: H.id, step: H.step, at: Date.now() } } : {}) });
+  if (saved?.ok === false || !on || !tabOwner) return true;
+  for (const k of ended) selfHoldEndNote(all[k]);
+}
+// 20.43 (автономность, доводка 21.10, ревью): сохранённый маршрут тура после передышки сам по себе повторную оплату не убирал. Пример:
+// [тур, рыбалка], stall-передышка тура на шаге arrive/fight после подтверждённого платного перелёта, рыбалка увела вкладку на
+// /fishing.html (герой с места не двигался). После передышки шаг arrive видел прилёт старше 60 с не на карте и сдавался («после телепорта
+// не попал на карту», rbGoTried) — выбор вне карты вёл к шагу go и платному телепорту к другому РБ; шаг fight сразу уходил в выбор вне
+// карты — тоже платный телепорт, даже к тому же раненому РБ, стоящему рядом. Теперь перед шагом тура сначала бесплатно /map.html (до
+// минуты), затем тур решает сам: прилёт получает свежее окно (at) и ищет цель на этой карте, итог боя и выбор («он здесь, на этой карте:
+// без телепорта») видят карту. Цели здесь нет — дальше обычные правила тура: неизвестная оплата по-прежнему блокирует платное, квитанции
+// и счётчики телепортов не трогаются.
+const RB_RESUME_MS = 30 * 60000, RB_RESUME_NAV_MS = 60000;
+async function raidResumeMap() {
+  const R = rt.rbResume, H = rt.rbHunt, now = Date.now(); if (!R) return false;
+  if (!H || H.id !== R.id || !['arrive', 'fight'].includes(H.step) || !(now - (+R.at || 0) < RB_RESUME_MS)) { await setRt({ rbResume: null }); return false; }
+  if (isFishing() && fishState()) { await fishFight(); await sleep(30); return true; }   // начатое вываживание доводим
+  // из Ashen Bastion карта не открывается (см. mapGate) — там решает сам тур, со свежим окном прилёта
+  if (!isMap() && !/\/ashen-bastion\.html$/i.test(location.pathname) && !(R.navAt && now - R.navAt >= RB_RESUME_NAV_MS)) {
+    if (R.navAt) { setStatus(`Тур РБ: после передышки открываю карту — ${H.name || 'цель'} без нового перелёта`); await sleep(1500); return true; }
+    if ((await setRt({ rbResume: { ...R, navAt: now } }))?.ok === false || !on || !tabOwner) return true;
+    rec('B', 'тур РБ', `${H.name || H.id}: передышка окончена — сначала бесплатно открываю карту здесь; платный перелёт только если цели здесь нет`);
+    setStatus(`Тур РБ: после передышки открываю карту — ${H.name || 'цель'} без нового перелёта`);
+    if (await rtCommit() && on && tabOwner && !antibotState() && L2V7Modules.actions?.canAct?.() !== false) location.href = '/map.html';
+    await sleep(3000); return true;
+  }
+  // на карте (или она не открылась за минуту) — тур продолжает сам; прилёт — со свежим окном: до минуты до карты, 25 с на поиск цели
+  const saved = await setRt({ rbResume: null, ...(H.step === 'arrive' ? { rbHunt: { ...H, at: now, mapLoadT: 0, mapLoadReloads: 0 } } : {}) });
+  if (saved?.ok === false || !on || !tabOwner) return true;
+  if (!isMap() && R.navAt) rec('B', 'тур РБ', `${H.name || H.id}: карта после передышки не открылась за минуту — дальше по обычным правилам тура`);
+  return false;
+}
+// Основная работа текущего режима/задачи на передышке (сервисы выше уже отработали этот круг)
+const selfHoldMain = () => !!rt.selfHold && !!selfHoldNow();
+// 20.43 (ревью au/breather): ожидание передышки — после сервисных шагов, перед туром РБ и основной работой. Начатый бой и вываживание
+// доводим (новую охоту nextFight не начнёт), иначе честное ожидание с пульсом. LOOP.holdWaitT — круг дошёл до ожидания: только тогда сторож
+// вкладки не считает простой «нет прогресса» (сервис, застрявший во время передышки, сторож по-прежнему видит)
+async function loopSelfHoldWait() {
+  const live = rt.selfHold ? selfHoldNow() : null;
+  if (!live) return;
+  LOOP.holdWaitT = Date.now();
+  if (isBattle()) { await battle(); return true; }
+  if (isFishing() && fishState()) { await fishFight(); await sleep(30); return true; }
+  setStatus(selfHoldText(live)); await sleep(3000); return true;
+}
 // Режим «Задачи бота»: несовместимые маршруты снимаются; без задач-сервисов — только бой/вываживание/ожидание.
 async function loopTaskList() {
   // 15.10: сохранённые маршруты не обходят новый список задач; квитанции оплат не удаляем.
@@ -3202,9 +3452,22 @@ async function loopTaskList() {
     // Снимаем только завершённую выбором сессию; покупки, статистика и квитанции остаются.
     // В pending нет rbSess-снимка: повтор после ошибки записи не перекрывает новый Start.
     if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.retireRaidSession = { start: rt.rbSess.start ?? null };
+    // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке (L2EngineCore.taskJobHeld) — не «несовместимый»: он хранится до конца
+    // передышки (иначе тур после подтверждённого платного перелёта начинал с выбора и платил за тот же перелёт снова), но не исполняется —
+    // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала. Ревью: после передышки тур сначала бесплатно
+    // открывает карту (rt.rbResume, raidResumeMap) — иначе прилёт/бой вне карты всё равно уходили к платному выбору
+    const held = [];
     for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
-      if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) blocked[key] = null;
-    if (Object.keys(blocked).length) { if(blocked.tbuff===null)blocked.tbInterrupted={t:Date.now(),jobT:rt.tbuff.t}; await setRt(blocked); rec('S','авторежим', 'отменены несовместимые маршруты: ' + Object.keys(blocked).join(', ') + '; квитанции оплат сохранены'); return true; }
+      if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) { if (L2EngineCore.taskJobHeld?.(cfg,key,rt)) held.push(key); else blocked[key] = null; }
+    if (rt.actionOwner?.key && held.includes(rt.actionOwner.key) && !Object.hasOwn(blocked, rt.actionOwner.key)) blocked.actionOwner = null;
+    if (Object.keys(blocked).length) {
+      if(blocked.tbuff===null)blocked.tbInterrupted={t:Date.now(),jobT:rt.tbuff.t};
+      const owner = rt.actionOwner?.key, gone = Object.keys(blocked).filter(k => k !== 'actionOwner' && k !== 'tbInterrupted');
+      await setRt(blocked);
+      if (gone.length) rec('S','авторежим', 'отменены несовместимые маршруты: ' + gone.join(', ') + '; квитанции оплат сохранены');
+      if (Object.hasOwn(blocked, 'actionOwner')) rec('S','авторежим', `маршрут ${owner} задачи на передышке сохранён и ждёт её конца; ${held.length > 1 ? 'остальные сохранены тоже: ' + held.filter(k => k !== owner).join(', ') : 'продолжу после передышки'}`);
+      return true;
+    }
     await sealQueue();
     if (!on || !tabOwner) return true;
     if (autonomyMode() === 'tasks' && !L2EngineCore.taskList(cfg).some(k => ['mammon','quests','dailies','clan','pvp','petbuff','resources'].includes(k))) {
@@ -3248,7 +3511,7 @@ async function loopPriority() {
   // закупку, магистра, баффы, Маммона, квесты, дейлики, туры и телепорты не начинаем; бой с мобом и заброс рыбалки доводим,
   // «🛒 Закупить сейчас» (urgent) — как и раньше. На арену уводит tvtStep выше (за минуту до старта)
   if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { taskPolicyNote('tvt'); await L2V7Modules.tvt.tvtWait(); return true; }
-  if (await pveFishingStep()) return true;          // только рыбалка после завершённой проверки, без PvE
+  if (!selfHoldMain() && await pveFishingStep()) return true;          // только рыбалка после завершённой проверки, без PvE (20.43, ревью: на передышке рыбалки — ждёт loopSelfHoldWait)
   if (await antibotGuard()) return true;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
   if (loopStale()) return true;
   if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); return true; }
@@ -3314,7 +3577,7 @@ async function loopMenuJobs() {
   if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/teleport.html')); await sleep(4000); } return true; }
   if (rt.zoneGo && !isBattle()) {
     if (rt.zoneGo.id === 'ashen_bastion' && rt.zoneGo.returnPath === '/ashen-bastion.html') { await zoneGoStep(); return true; }
-    if (rt.zoneGo.forumTp) { await zoneGoStep(); return true; } // Не терять незавершённую оплату по таймауту маршрута.
+    if (rt.zoneGo.forumTp || rt.zoneGo.nativeTp) { await zoneGoStep(); return true; } // Не терять незавершённую оплату по таймауту маршрута; 20.43: и квитанцию обычного телепорта (сверка исхода)
     const onSrc = isTeleport() || (rt.zoneGo.url && location.pathname + location.search === rt.zoneGo.url);
     if (Date.now() - (rt.zoneGo.t || 0) < 120000 && (onSrc || !rt.zoneGoT || Date.now() - rt.zoneGoT > 120000)) { await zoneGoStep(); return true; }
     await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
@@ -3369,7 +3632,9 @@ async function loopStartPrep() {
   if (!startPrepWanted()) return false;          // временный запрет (ЛС, оплата, магистр…): задачу держит prepHold, этап — таймаут
   const W = L2V7Modules.warlock;
   if (S.phase === 'summon') {
-    if (await W.startPrepare({ buffs: false })) return true;
+    // 20.43 (автономность, доводка 21.10, ревью): занятый шаг кота — со сном, как в loopGate. Раньше без него: при сбое чтения /character задачи
+    // petPrep ещё нет, ветка loopGate не срабатывала, и следующий круг сразу снова читал персонажа (пауза чтения — в warlock, startReadAt)
+    if (await W.startPrepare({ buffs: false })) { await sleep(300); return true; }
     if (!W.startReady('summon')) { setStatus('Старт: жду возможности призвать кота'); return false; }
     return next('self', 'кот на месте — баффы героя');
   }
@@ -3382,7 +3647,7 @@ async function loopStartPrep() {
   }
   if (S.phase === 'pet') {
     if (rt.petBufferTrip) return false;          // платный набор кота в пути — его ведёт loopSideJobs
-    if (await W.startPrepare({ buffs: true })) return true;
+    if (await W.startPrepare({ buffs: true })) { await sleep(300); return true; }
     if (!W.startReady('pet')) { setStatus('Старт: жду возможности бафнуть кота'); return false; }
     // 20.43 (ревью): свежее чтение — только при первом заходе этапа; дальше step соблюдает свою паузу (nextCheckAt 15 с после отказа
     // или неизвестного исхода) и вернёт false — этап завершается, без платного POST на каждом тике
@@ -3446,7 +3711,8 @@ async function loopSideJobs() {
   if (on && tabOwner && !isBattle() && !prepHold() && await L2V7Modules.warlock.step()) { await sleep(200); return true; }   // 20.43: платный набор кота — после призыва
   if (loopStale()) return true;
   if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
-  if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); return true; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
+  // 20.43 (ревью au/breather): режим эпиков на передышке — свой цикл не начинаем, ждёт loopSelfHoldWait (опрос списка выше идёт)
+  if (autonomyMode() === 'epic' && !isBattle() && !selfHoldMain()) { await epicStep(); await sleep(200); return true; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
 }
 // Чтение сумки/оружия, тур по РБ, ★ точки кампании.
 async function loopRaid() {
@@ -3456,12 +3722,15 @@ async function loopRaid() {
   if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); return true; }
   if (rt.invScan) await setRt({ invScan: null });
   if (loopStale()) return true;
+  // 20.43 (автономность, ревью): чтение сумки запрещено после циклов (routeBanned) — не начинаем: invScanStart сразу уходит на страницу
+  // персонажа, раньше чем диспетчер снимет запрещённый маршрут, и без отметки времени вне тура — каждый круг
   if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
-      && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }
+      && Date.now() - (rt.invTourT || 0) > 30 * 60000 && !routeBanned('invScan')) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }
+  if (autonomyMode() === 'raid' && !isBattle() && rt.rbResume && await raidResumeMap()) return true;   // 20.43 (доводка 21.10, ревью): после передышки тура — сначала бесплатно карта
   if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); return true; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
-  if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); return true; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
+  if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn() && !routeBanned('invScan')) { await invScanStart(); return true; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
   // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
-  if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) {
+  if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn() && !routeBanned('invScan')) {
     const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
     if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); return true; }
   }
@@ -3540,6 +3809,7 @@ function magChar(ch) {
 }
 async function magisterStart(afterWin = false) {
   if (L2V7Modules.payments?.blocked?.()) return false;   // 20.12 (ревизия 17.10): обучение платное — ждёт сверки оплаты
+  if (rt.travelCheck) return false;   // 20.43 (ревью au/travel): и сверки перелёта (квитанция телепорта открыта — платное ждёт вывода)
   if (!magActive() || fishNow() || rt.shop || rt.rbGo || rt.zoneGo
       || (rt.epic?.step && rt.epic.step !== 'pick') || (isBattle() && !afterWin)
       || (afterWin && !victory()) || (cfg.tvtOn && L2V7Modules.tvt.tvtHold())) return false;
@@ -4866,7 +5136,9 @@ const NET_CONTEXT = new Map();
 const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
 function netContextStart(d) {
   if(d.rid==null)return;
-  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  // 20.43 (ревью au/travel): метка своего телепорта (nativeNonce) — только первые 30 с после клика бота (navigation.nativeNonce):
+  // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now()});
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
@@ -5487,15 +5759,17 @@ async function actionScanStep(key){
 
 // 10.0.24: реестр продолжений. Read-only опросы не приобретают маршрут.
 L2V7Modules.actions = L2V7Factories.actions({
+ get selfHold(){return selfHoldStart},
  get actionGeneration(){return ()=>automationGeneration},
  get rt(){return rt},get cfg(){return cfg},get on(){return on},get tabOwner(){return tabOwner},
- get mode(){return autonomyMode},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
+ get mode(){return autonomyMode},get routeMode(){return routeMode},get pauseBot(){return pauseBot},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
  get id(){return ()=>crypto.randomUUID()},get setRt(){return setRt},get rtCommit(){return rtCommit},get rec(){return rec},get setStatus(){return setStatus},get halt(){return halt},get isBattle(){return isBattle},
  get challengeHold(){return abHold},
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
  get paymentPending(){return ()=>L2V7Modules.payments?.pending?.()||(rt.petFull?.pending?{...rt.petFull.pending,kind:'summon-buff'}:rt.enchant?.pending?{...rt.enchant.pending,kind:'enchant'}:null)},
  get runCombat(){return battle},get victory(){return victory},get freeWork(){return paymentFreeStep},
  get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':P.kind==='cat-teleport'?'dungeons':P.kind==='fishing'?'fishing':P.kind==='tvt-shop'?'tvtshop':P.kind==='story-teleport'?'story':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
+ // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке хранится, но до её конца не исполняется (L2EngineCore.taskJobHeld)
  get jobs(){return ()=>[
   ...(sealAvailable()?[{key:'sealEx',run:sealStep}]:[]),
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
@@ -5504,12 +5778,14 @@ L2V7Modules.actions = L2V7Factories.actions({
   ...(rt.rbHunt?.step==='exit'?[{key:'rbHunt',run:()=>L2V7Modules.raid.rbHuntStep()}]:[]),
   {key:'rbGo',run:rbGoStep},{key:'zoneGo',run:zoneGoStep},
   ...['bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc',...(fishNow()&&['cut','exchange','rod'].includes(rt.fishService)?['fishService']:[])].map(key=>({key,run:()=>actionScanStep(key)}))
- ]}
+ ].filter(j=>!L2EngineCore.taskJobHeld?.(cfg,j.key,rt))}
 });
 const actionLocation=L2V7Modules.actions.locationProxy(location);
+// 20.43 (автономность, разбор 21.10): незакрытая квитанция перелёта (navigation.travelPending — исход клика сверяется, бот не на паузе)
+// запрещает новые оплаты так же, как ожидание оплаты кота и заточки
 L2V7Modules.payments = L2V7Factories.payments({
  get rt(){return rt},get setRt(){return setRt},get rtCommit(){return rtCommit},get on(){return on},get tabOwner(){return tabOwner},get rec(){return rec},get autonomyMode(){return autonomyMode},
- get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending}
+ get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending||!!L2V7Modules.navigation?.travelPending?.()}
 });
 
 
@@ -5554,7 +5830,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get badgeSync(){return badgeSync},
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get routeLocation(){return actionLocation}, get shown() { return shown; }, get rbTimerListNote() { return (...a) => L2V7Modules.rbtimer.listNote(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get selfHold(){return selfHoldStart}, get mapGate(){return mapGate}, get mapArriveOk(){return selfHoldMapOk}, get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get routeLocation(){return actionLocation}, get shown() { return shown; }, get rbTimerListNote() { return (...a) => L2V7Modules.rbtimer.listNote(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
@@ -5594,7 +5870,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get selfHold(){return selfHoldStart}, get mapGate(){return mapGate}, get mapArriveOk(){return selfHoldMapOk}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
@@ -5828,7 +6104,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get selfHold(){return selfHoldStart}, get selfHoldOn(){return selfHoldOn}, get selfHoldOf(){return selfHoldOf}, get selfHoldText(){return selfHoldText}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -6168,7 +6444,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwne
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
 
-L2V7Modules.mammon = L2V7Factories.mammon({ get actionGeneration(){return ()=>automationGeneration}, get bagAllowed(){return ()=>L2EngineCore.taskAllowed(cfg,'mammon')}, get invSnapshot(){return ()=>INV_READY===invContext()&&invQty(0)!==null?INV_NET:null}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+L2V7Modules.mammon = L2V7Factories.mammon({ get routeMode(){return routeMode}, get routeBanned(){return routeBanned}, get actionGeneration(){return ()=>automationGeneration}, get bagAllowed(){return ()=>L2EngineCore.taskAllowed(cfg,'mammon')}, get invSnapshot(){return ()=>INV_READY===invContext()&&invQty(0)!==null?INV_NET:null}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
@@ -6273,10 +6549,11 @@ let lsTvtReadT = 0;
 const lsTvtPoll = () => { if (Date.now() - lsTvtReadT < 30000) return; lsTvtReadT = Date.now(); try { void L2V7Modules.tvt?.tvtRefresh?.()?.catch?.(() => {}); } catch (e) {} };
 // Запись открыта по свежему ответу сервера (≤2 мин), а не по старому rt.tvt: ложная уступка ставила бы серию на ручную паузу.
 const lsTvtRegOpen = () => { const T = L2V7Modules.tvt; return !!T?.tvtRegistrationDue?.() && !!T.tvtState?.()?.fresh; };
+// 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo (закупка ЛС платная)
 const lifestonePrepareFree = () => location.pathname === '/augmentation.html' && !!rt.char && heroNick() === rt.char && !serverDown() && !loginPage() && !antibotState() && !abHold()
   && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
   && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending
-  && !['shop','magister','tbuff','invScan','fishSvc','fishService','mmJob','tsJob','storyJob','petBufferTrip','rbGo','zoneGo','dailyFish','dailyRb','revive','actionOwner'].some(k => rt[k]);
+  && !['shop','magister','tbuff','invScan','fishSvc','fishService','mmJob','tsJob','storyJob','petBufferTrip','rbGo','zoneGo','travelCheck','dailyFish','dailyRb','revive','actionOwner'].some(k => rt[k]);
 async function reduceLsAttempts(next) {
   const context=()=>JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname]);
   const before=rt.autoLs,stamp=context(),id=before?.id,epoch=leaseEpoch,who=rt.char;
@@ -6411,7 +6688,7 @@ async function enchantDispatch() {
   if (enchantCommandBusy) { setStatus('Заточка: выполняю команду меню'); return false; }
   if (!enchantFree()) {
     const jobs = {shop:'закупку',magister:'обучение у магистра',tbuff:'городские баффы',invScan:'проверку оружия',fishSvc:'обслуживание рыбалки',fishService:'обслуживание рыбалки',
-      mmJob:'задачу Маммона',tsJob:'покупку в магазине TvT',storyJob:'квестовую задачу',petBufferTrip:'поход за баффом кота',rbGo:'переход к РБ',zoneGo:'переход в локацию',dailyFish:'рыболовный дейлик',dailyRb:'рейдовый дейлик'};
+      mmJob:'задачу Маммона',tsJob:'покупку в магазине TvT',storyJob:'квестовую задачу',petBufferTrip:'поход за баффом кота',rbGo:'переход к РБ',zoneGo:'переход в локацию',travelCheck:'сверку перелёта',dailyFish:'рыболовный дейлик',dailyRb:'рейдовый дейлик'};
     const job = Object.keys(jobs).find(k => rt[k]);
     setStatus(job ? `Заточка: завершите ${jobs[job]} в прежнем режиме, затем вернитесь` : 'Заточка: жду окончания боя, рыбалки или TvT');
     return false;
@@ -6667,8 +6944,9 @@ if (typeof addEventListener==='function') addEventListener('message',e=>{
   if (d.method==='POST' && shot && d.status>=200 && d.status<300 && !d.error && !d.res?.error
     || path==='/game/battle/action' && /^(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error||'')) L2V7Modules.warlock?.invalidateSnapshot?.();
 });
+// 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo (поход к бафферу платный)
 const warlockCanRun = () => !rt.autoLs?.hold && !rt.autoLs?.pending && cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.() && (L2V7Modules.actions?.owns?.('petBufferTrip') || (!rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
-  && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.tbuff)) && !rt.enchant?.pending && rt.enchant?.status !== 'running';
+  && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.travelCheck && !rt.tbuff)) && !rt.enchant?.pending && rt.enchant?.status !== 'running';
 // Вне боя используем ту же родную панель и распознанные метаданные, что и в бою.
 function warlockNativePanel() {
   const combat=L2V7Modules.combat,all=[...document.querySelectorAll(SLOT)],desc=b=>{

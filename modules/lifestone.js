@@ -4,7 +4,7 @@
  root.L2V7Factories=root.L2V7Factories||Object.create(null);
  root.L2V7Factories.lifestone=function(env){
   const A=root.L2Aug, path='/character/weapon-augmentation';
-  let busy=false, trusted=null, permit=null, supplyPermit=null;
+  let busy=false, trusted=null, permit=null, supplyPermit=null, userPause=false;
   const now=()=>Date.now(), current=()=>env.rt.autoLs, char=()=>String(env.rt.char||'');
   const own=s=>!!s&&s.char===char()&&env.tabOwner===true;
   const live=()=>env.on===true&&env.tabOwner===true&&env.canRun();
@@ -73,6 +73,11 @@
   const allowed=s=>own(s)&&live()&&trusted===s.id&&s.status==='running'&&s.context===stamp()&&s.configSig===sig(config());
   async function save(s,eq){
    if(!own(s))return false;const before=current();let ok=false;
+   // 20.43 (автономность, доводка 21.10, ревью): «Пауза» игрока, нажатая во время шага (POST попытки/закупки или снимок после него), только
+   // сбрасывала trusted — пауза этого шага приходила из settle/settleSupply/отказа сервера («Состояние сверено; продолжение вручную»)
+   // без userHold, и следующий шаг снимал удержание как паузу сбоя: бот уходил с аугментации, «Продолжить» становилось недоступно.
+   // Теперь любая пауза с удержанием, записанная, пока действует «Пауза» игрока (userPause), — пауза игрока
+   if(userPause&&s.status==='paused'&&s.hold===true&&s.userHold!==true)s={...s,userHold:true};
    const a=eq&&A.ofEq(eq),m=a&&A.info(a.o);
    try{ok=(await env.setRt({autoLs:s,...(a?{weaponAug:{...a,k:m?.k||'',n:m?.n||''}}:{})}))?.ok===true&&own(s);}catch(_){}
    if(!ok){trusted=null;permit=null;if(before?.pending&&own(before))try{await env.setRt({autoLs:{...before,status:'paused',reason:'Запись результата не подтверждена; требуется сверка'}});}catch(_){}}
@@ -82,7 +87,18 @@
   async function get(p){try{const r=await env.gameGet(p);return r?.ok?await r.json():null;}catch(_){return null;}}
   async function snapshot(){const who=char(),j=await get('/character'),s=j?.character;
    return char()===who&&s?.name===who&&s.inventory?.eq&&Array.isArray(s.inventory.stacks)&&Number.isSafeInteger(s.revision)&&s.revision>=0?s:null;}
-  async function pause(reason){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;await save({...s,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;}
+  // 20.43 (автономность, доводка 21.10): пауза серии сама (не прочитались цены материалов, неверные лимиты закупки, перезагрузка посреди
+  // серии…) оставляла hold:true, а продолжить серию может только игрок: allowed() требует running и trusted, trusted сбрасывается и
+  // перезагрузкой. loopGate держал главный цикл без срока — ни задач, ни сторожа, ни отметки остановки с уведомлением, только статус «ЛС: …».
+  // Теперь такая пауза без неизвестной попытки/покупки (pending) снимает удержание, как finish/refusedSupply/yieldToUrgent: бот возвращается
+  // к задачам, серия ждёт ручного «Продолжить». Держат по-прежнему: неизвестный исход (pending), ручная пауза игрока и подготовленная серия.
+  // userHold — удержание выбрал игрок («Пауза»); подготовленная серия ждёт «Продолжить» (PREPARED) — тоже держит
+  const PREPARED='Серия подготовлена; нажмите «Продолжить»';
+  // userPause — «Пауза» нажата, пока шёл шаг (и «Сверить» игрока): пауза этого шага — игрока, а не сбоя; объявлена в начале фабрики (save)
+  const freeNote=reason=>env.rec?.('B','ЛС',`${reason||'Серия на паузе'} — серия на паузе, возвращаюсь к задачам; продолжение вручную`);
+  async function pause(reason,keep=false){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;
+   const user=keep||userPause,free=!user&&!s.pending&&s.hold===true;
+   const ok=await save({...s,status:'paused',reason,...(user?{userHold:true}:{}),...(free?{hold:false}:{})});env.setStatus?.('ЛС: '+reason);if(ok&&free)freeNote(reason);return true;}
   // 20.43 (разбор 21.10): серия с целью/лимитом больше ничего не тратит — удержание снимаем, бот сам возвращается к рыбалке/фарму
   // (раньше стоял на аугментации до «Закончить серию»). Новая трата — только «Начать новую серию»; неизвестная попытка держит, как прежде.
   const DONE_NOTE='Серия завершена — возвращаюсь к задачам';
@@ -172,9 +188,11 @@
    const key=p.currency==='aa'?'AA':'Adena';if(L['reserved'+key]<p.amount)return false;
    trusted=null;permit=null;supplyPermit=null;
    const why=refusalWhy(code),reason=`Игра отказала в закупке: ${why}. Покупки не было, резерв снят; серия на паузе, продолжение вручную`;
-   if(!await save({...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,pending:null,status:'paused',hold:false,reason,
+   // 20.43 (доводка 21.10, ревью): «Пауза»/«Сверить» игрока во время этой закупки — удержание остаётся (пауза игрока), иначе — снимаем
+   const user=userPause||s.userHold===true;
+   if(!await save({...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,pending:null,status:'paused',hold:user,...(user?{userHold:true}:{}),reason,
     supplies:[{t:now(),id:p.id,action:p.action,itemId:p.itemId||0,name:p.name,qty:0,currency:p.currency,amount:0,revision:snap.revision,code,status:'rejected'},...(s.supplies||[])].slice(0,40)}))return false;
-   env.rec?.('B','ЛС',`${p.action==='travel'?'Телепорт к Маммону':p.name+' ×'+p.qty}: ${why} (${code}); ревизия ${snap.revision} и остатки прежние — покупки не было. Серия на паузе, возвращаюсь к задачам`);
+   env.rec?.('B','ЛС',`${p.action==='travel'?'Телепорт к Маммону':p.name+' ×'+p.qty}: ${why} (${code}); ревизия ${snap.revision} и остатки прежние — покупки не было. ${user?'Серия на паузе игрока; продолжение вручную':'Серия на паузе, возвращаюсь к задачам'}`);
    env.setStatus?.('ЛС: '+reason);return true;
   }
   function consumeSupplyPermit(id,path,body){const s=current(),p=s?.pending,c=config();
@@ -271,23 +289,27 @@
    }
    const outcome=w?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект — обновите каталог');
    trusted=null;permit=null;supplyPermit=null;
-   const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:'Серия подготовлена; нажмите «Продолжить»',
+   userPause=false;
+   const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:PREPARED,
     weaponKey:c.weaponKey,weaponName:chosen?.name||h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id,targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0,spentAA:0,spentAdena:0,reservedAA:0,reservedAdena:0,supplies:[]};
    if(!await save(row,s.inventory.eq))throw Error('Не удалось сохранить серию; расход не выполнялся');return true;
   }
-  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;supplyPermit=null;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
+  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;supplyPermit=null;userPause=true;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
    try{
     if(action==='scan')return await scanWeapons();
     if(action==='prepare')return await prepare();
     const s=current();if(!own(s))throw Error('Нет серии этого персонажа');
-    if(action==='pause')return await pause('Пауза игрока');
-    if(action==='reconcile')return await reconcile();
+    if(action==='pause')return await pause('Пауза игрока',true);
+    // 20.43 (доводка 21.10, ревью): «Сверить» и «Учесть попытку» — команды игрока на странице серии: итоговая пауза («Состояние
+    // сверено…», «Неизвестная попытка учтена…») держит удержание, как «Пауза», — иначе следующий шаг уводил бота к задачам и
+    // «Продолжить» (нужна страница аугментации) становилось недоступно, оставалась только новая серия с обнулёнными тратами
+    if(action==='reconcile'){if(s.pending)userPause=true;return await reconcile();}
     if(action==='acknowledge'){
      const p=s.pending;if(!p)throw Error('Нет неизвестной попытки');if(p.kind==='supply')throw Error('Неизвестную покупку нельзя учесть как попытку; сначала сверьте материалы и оплату');
      trusted=null;permit=null;const snap=await snapshot();
      if(!own(s)||current()?.pending?.id!==p.id||!snap||snap.revision<=p.revision||base(snap.inventory.eq.l1)!==s.base)throw Error('Нужна свежая ревизия героя и прежнее оружие. Сначала проверьте состояние в игре');
      const outcome=snap.inventory.eq.l1?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект');
-     return await save({...s,pending:null,attempts:s.attempts+1,weapon:fingerprint(snap.inventory.eq.l1),status:'paused',reason:'Неизвестная попытка учтена в лимите; продолжение вручную',
+     return await save({...s,pending:null,attempts:s.attempts+1,weapon:fingerprint(snap.inventory.eq.l1),status:'paused',userHold:true,reason:'Неизвестная попытка учтена в лимите; продолжение вручную',
       history:[{t:now(),attempt:s.attempts+1,status:'unknown',pending:p,checkedRevision:snap.revision},...s.history].slice(0,100)},snap.inventory.eq);
     }
     if(action==='close'){if(s.pending)throw Error('Результат попытки неизвестен — сначала сверить');trusted=null;return await save({...s,status:'closed',hold:false,reason:'Серия завершена игроком'});}
@@ -296,8 +318,8 @@
     if(!live()||!env.canPrepare())throw Error('Запустите бота на странице аугментации, без других служебных задач');
     if(!config().valid||s.configSig!==sig(config()))throw Error('Цели или лимит изменились — подготовьте новую серию');
     if(s.attempts>=s.maxAttempts||s.status==='closed')throw Error('Серия завершена; подготовьте новую');
-    const next={...s,status:'running',hold:true,reason:'',context:stamp()};
-    if(!await save(next))throw Error('Не удалось сохранить запуск');trusted=s.id;return true;
+    const next={...s,status:'running',hold:true,userHold:false,reason:'',context:stamp()};
+    userPause=false;if(!await save(next))throw Error('Не удалось сохранить запуск');trusted=s.id;return true;
    }finally{busy=false;}
   }
   // Одно разрешение только на конкретный долговечно записанный POST; чужие gamePost его не получают.
@@ -336,6 +358,10 @@
     if(s.pending){if(now()-(s.pending.lastCheck||s.pending.t)<15000)return true;await reconcile();return true;}
     // 20.43 (разбор 21.10): серия, завершённая до обновления (done + удержание), тоже отпускает бота — после 'done' ЛС ничего не тратит.
     if(s.status==='done'){trusted=null;if(await save({...s,hold:false}))env.rec?.('B','ЛС',DONE_NOTE);return true;}
+    // 20.43 (доводка 21.10): и серия на паузе после сбоя с удержанием (запись прежней версии) — пауза не игрока и не подготовка.
+    // Ревью: пауза игрока помечена userHold во всех путях («Пауза», в т. ч. во время шага, «Сверить», «Учесть попытку»); пока действует
+    // «Пауза» этой вкладки (userPause), не снимаем и неотмеченную запись
+    if(s.status==='paused'&&s.hold===true&&!s.userHold&&!userPause&&s.reason!=='Пауза игрока'&&s.reason!==PREPARED){trusted=null;if(await save({...s,hold:false}))freeNote(s.reason);return true;}
     if(!allowed(s)){if(s.status==='running')await pause('Остановлено, страница или настройки изменились; продолжение вручную');env.setStatus?.('ЛС: '+(current()?.reason||'Ожидание команды'));return true;}
     if(now()<s.nextAt)return true;
     if(s.attempts>=s.maxAttempts)return await finish(s,'Достигнут лимит попыток');

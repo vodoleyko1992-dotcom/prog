@@ -53,14 +53,16 @@ test('ECO-1: все вызовы закупки уважают паузу, см�
  assert.match(content,/L2V7Factories\.mobfarm\(\{ get shopGap\(\)\{return \(\)=>L2V7Modules\.economy\.shopGap\(\)\}/);
  assert.match(content,/L2V7Factories\.raid\(\{ get shopGap\(\)\{return \(\)=>L2V7Modules\.economy\.shopGap\(\)\}/);
 });
-function actions(saved={}){
+// 20.43 (автономность, разбор 21.10): opt.hold — ответ content.selfHoldStart ('defer' | 'stop'); без него — старое ядро без передышек (halt)
+function actions(saved={},opt={}){
  const box={Date,JSON,Object,Proxy};vm.runInNewContext(src('modules/actions.js'),box);
- let page='/map.html';const calls=[],recs=[];
+ let page='/map.html';const calls=[],recs=[],holds=[];
  const env={rt:{char:'Hero',...saved},cfg:{},on:true,tabOwner:true,mode:()=>'farm',lease:()=>'a',page:()=>page,id:()=>String(Math.random()),
+  ...(opt.hold?{selfHold:async(kind,why,o)=>{holds.push({kind,why,o});if(opt.hold==='stop')env.on=false;return opt.hold}}:{}),
   setRt:async p=>{Object.assign(env.rt,p);return {ok:true}},rtCommit:async()=>true,rec:(...a)=>recs.push(a.join(' ')),setStatus(){},halt:async s=>{calls.push('halt:'+s);env.on=false},isBattle:()=>false,interrupted:()=>false,
   paymentPending:()=>null,reconcile:async()=>{},jobs:()=>['tbuff','shop','invScan','rbHunt','zoneGo'].map(key=>({key,run:async()=>calls.push(key)}))};
  const A=box.L2V7Factories.actions(env);A.enterFrame();
- return {A,env,calls,recs,page:v=>page=v};
+ return {A,env,calls,recs,holds,page:v=>page=v};
 }
 async function loop(f,key,value){f.env.rt[key]=value;for(let i=0;i<14&&f.env.on&&f.env.rt[key];i++){f.page(i%2?'/map.html':'/x.html');await f.A.dispatch();}}
 test('ACT-1: цикл магазина снимает только магазин и ставит паузу закупки; остальные маршруты целы',async()=>{
@@ -70,18 +72,36 @@ test('ACT-1: цикл магазина снимает только магази�
  assert.ok(f.recs.some(r=>/маршрут shop снят \(1\/3 за час\), остальные задачи продолжаются/.test(r)));
  f.env.rt.zoneGo={id:'z'};await f.A.dispatch();assert.equal(f.calls.at(-1),'zoneGo','следующий маршрут работает');
 });
-test('ACT-1: цикл баффера отмечает прерванный бафф; третий цикл за час — полная остановка',async()=>{
- const f=actions();await loop(f,'tbuff',{step:'fa',t:7});
+// 20.43 (автономность, разбор 21.10): третий цикл за час — уже не полная остановка, а запрет маршрута на 2 ч (actionBan) и пауза сторожа
+// баффов; стоп с причиной — 4-я такая отсрочка за 6 ч (selfHold → 'stop'). Без передышек в ядре — прежний стоп (проверка сохранена)
+test('ACT-1: цикл баффера отмечает прерванный бафф; третий цикл за час — запрет маршрута на 2 ч, бот работает',async()=>{
+ const f=actions({},{hold:'defer'});await loop(f,'tbuff',{step:'fa',t:7});
  assert.equal(f.env.rt.tbuff,null);assert.equal(f.env.rt.tbInterrupted.jobT,7);assert.equal(f.env.on,true);
- await loop(f,'tbuff',{step:'fa',t:8});assert.equal(f.env.on,true);
- await loop(f,'tbuff',{step:'fa',t:9});assert.equal(f.env.on,false);assert.ok(f.calls.some(c=>/^halt:.*3-й раз за час/.test(c)));
+ await loop(f,'tbuff',{step:'fa',t:8});assert.equal(f.env.on,true);assert.equal(f.holds.length,0,'первые два цикла — без передышки');
+ await loop(f,'tbuff',{step:'fa',t:9});assert.equal(f.env.on,true);assert.ok(!f.calls.some(c=>/^halt:/.test(c)));
+ assert.equal(f.holds.length,1);assert.equal(f.holds[0].kind,'route:tbuff');assert.equal(f.holds[0].o.noWait,true);assert.equal(f.holds[0].o.hard,true);
+ const b=f.env.rt.actionBan.tbuff;assert.ok(b.until-Date.now()>119*MIN&&b.until-Date.now()<=120*MIN);assert.ok(f.env.rt.tbPauseUntil>=b.until-1000);
+ assert.equal(f.env.rt.actionLoops.tbuff.length,0,'после запрета счёт циклов заново');
+ assert.ok(f.recs.some(r=>/маршрут tbuff запрещён на 2 ч, остальные задачи продолжаются/.test(r)));
+ const g=actions({},{hold:'stop'});for(const t of [7,8,9])await loop(g,'tbuff',{step:'fa',t});
+ assert.equal(g.env.on,false);assert.equal(g.env.rt.actionBan,undefined,'4-я отсрочка за 6 ч — стоп с причиной без запрета');
+ const h=actions();for(const t of [7,8,9])await loop(h,'tbuff',{step:'fa',t});
+ assert.equal(h.env.on,false);assert.ok(h.calls.some(c=>/^halt:.*3-й раз за час/.test(c)),'старое ядро без передышек — прежний стоп');
 });
 test('ACT-1: старые отметки циклов (старше часа) не копятся',async()=>{
  const f=actions({actionLoops:{invScan:[Date.now()-2*3600000,Date.now()-90*MIN]}});await loop(f,'invScan',{t:1,step:'scan'});
  assert.equal(f.env.on,true);assert.equal(f.env.rt.actionLoops.invScan.length,1);
 });
-test('ACT-1: выход тура РБ (rbHunt) по-прежнему останавливает сразу — это состояние тура, не маршрут',async()=>{
- const f=actions({rbHunt:{step:'exit',phase:'exit'}});f.env.rt.rbHunt={step:'exit',phase:'exit'};
- for(let i=0;i<14&&f.env.on;i++){f.page(i%2?'/map.html':'/x.html');await f.A.dispatch();}
- assert.equal(f.env.on,false);assert.ok(f.env.rt.rbHunt);
+// 20.43 (автономность, разбор 21.10): цикл выхода тура больше не стоп — текущий РБ откладывается на 60 мин (rbSkip.until), тур выбирает
+// следующего; стоп с причиной — 4-я такая отсрочка за 6 ч. Без передышек в ядре — прежний немедленный стоп (проверка сохранена)
+test('ACT-1: цикл выхода тура РБ (rbHunt) откладывает этот РБ на 60 мин и возвращает тур к выбору цели',async()=>{
+ const f=actions({},{hold:'defer'});f.env.rt.rbHunt={step:'exit',phase:'exit',id:'rb1',name:'Босс'};
+ for(let i=0;i<14&&f.env.on&&f.env.rt.rbHunt?.step==='exit';i++){f.page(i%2?'/map.html':'/x.html');await f.A.dispatch();}
+ assert.equal(f.env.on,true);assert.equal(f.env.rt.rbHunt.step,'pick');assert.equal(f.env.rt.actionOwner,null);
+ assert.equal(f.holds.length,1);assert.equal(f.holds[0].kind,'rbExit');assert.equal(f.holds[0].o.noWait,true);
+ const sk=f.env.rt.rbSkip.rb1;assert.ok(sk.until-Date.now()>59*MIN&&sk.until-Date.now()<=60*MIN);
+ assert.ok(f.recs.some(r=>/Босс отложен на 60 мин, тур выбирает следующую цель/.test(r)));
+ const g=actions({rbHunt:{step:'exit',phase:'exit'}});g.env.rt.rbHunt={step:'exit',phase:'exit'};
+ for(let i=0;i<14&&g.env.on;i++){g.page(i%2?'/map.html':'/x.html');await g.A.dispatch();}
+ assert.equal(g.env.on,false,'старое ядро без передышек — прежний стоп');assert.ok(g.env.rt.rbHunt);
 });
