@@ -1,0 +1,2 @@
+28ba4f443dc1c1fd9d50db8337e1a38beb62ec6a3be9f7544d2db355d46c4c24  l2wap-lite-v1.3.zip
+bc4ad49c1b86ef0ac75911b08cc799aa1072fa119082833d92a58959d943e262  l2wap-lite-v1.3-firefox.zip
