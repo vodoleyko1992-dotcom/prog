@@ -24,6 +24,12 @@ let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = nu
 const unsent = new Set();
 const classProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/, '');
 const catClass = p => /^(warlock|arcana_lord)$/.test(classProf(p));
+// 20.45 (лог 22.10 09:03, John «не взял бафф на суммона перед РБ»): платный «Повний баф сумона» берёт и голем крафтера
+// (Warsmith / Maestro, Mechanic Golem из набора РБ crafterkit). Раньше задача молча стояла на «нужен класс Warlock…».
+const FULL_CLASS = /^(warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/;
+const fullProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^(?:human|dwarf)_/, '');
+const fullClass = p => FULL_CLASS.test(fullProf(p));
+const golemClass = p => /^(warsmith|maestro)$/.test(fullProf(p));
 let classBusy = false, classReadAt = 0, classRevision = -1, classOwner = '', classSeenKey = '', raidBusy = false, raidProof = null;
 // 20.10: явное решение игрока — при выборе котовода включать полный бафф, без сброса бюджета.
 async function autoEnableClass(ch) {
@@ -277,15 +283,16 @@ const startPrepare = (o = {}) => petPrepare({ ...o, reason: 'start' });
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick() || !Number.isInteger(slot) || !Number.isSafeInteger(ch.revision)) return null;
-  const plain = classProf(ch.l2Profession);
-  if (!/^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(plain)) return null;
-  const prof = 'human_' + plain;
+  const plain = fullProf(ch.l2Profession);
+  if (!FULL_CLASS.test(plain)) return null;
+  const prof = (golemClass(plain) ? 'dwarf_' : 'human_') + plain;
   return { char: ch.name, prof, slot, key: `${slot}:${prof}` };
 }
 // 10.0.23 (лог 15.10 07:18): полный городской набор доступен и Dark Panther (283).
 function summon(ch) {
   const p = ch?.activeSummon;
-  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^(dark_avenger|hell_knight)$/.test(classProf(ch.l2Profession)) ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key) || p.key === 'feline_king' && number(p.summonSkillId) === 1406)
+  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^(dark_avenger|hell_knight)$/.test(classProf(ch.l2Profession)) ? p.key === 'dark_panther' && number(p.summonSkillId) === 283
+    : golemClass(ch.l2Profession) ? /golem/i.test(p.key) : /^(?:kai|kat|mew)_the_cat$/.test(p.key) || p.key === 'feline_king' && number(p.summonSkillId) === 1406)
     && p.hp > 0 && number(p.summonSkillId) > 0 && number(p.summonSkillLevel) > 0 && Array.isArray(p.activeBuffs) ? p : null;
 }
 function catalogSet(data) {
@@ -458,7 +465,7 @@ async function step({ afterWin = false, forceRead = false } = {}) {
   try {
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
-    if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord или Dark Avenger / Hell Knight', { nextCheckAt: Date.now() + 15000 }); return false; }
+    if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord, Dark Avenger / Hell Knight или Warsmith / Maestro', { nextCheckAt: Date.now() + 15000 }); return false; }
     noteSnapshot(ch);
     // 20.13 (ревизия 17.10, шаг 5, аудит combat/C10): без nextCheckAt бой на сервере давал GET /character на каждом тике главного цикла
     if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя', { nextCheckAt: Date.now() + 10000 }); return false; }
@@ -798,6 +805,6 @@ async function noteBattle(ctx) {
 }
 // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
 const chainBlocked = () =>!!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.travelCheck || !!env.rt.bagCheck || !!env.rt.revive;
-return { autoEnableClass, classAutoTick, raidPrepare, raidReady, raidBlocked, raidHoldUntil, startPrepare, startReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, fullClass, raidPrepare, raidReady, raidBlocked, raidHoldUntil, startPrepare, startReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
