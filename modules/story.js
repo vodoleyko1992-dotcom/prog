@@ -144,6 +144,15 @@ function memMerge(newer, older, from, to) {
   return out;
 }
 const packed = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null));
+// 20.43 (ревью): rt.rbStats общий (не в CLASS_KEYS), а замер потерь HP у каждого РБ помечен профессией (raid.js: lossOwner). Память
+// прежней профессии перешла новой — и владелец замера тоже, иначе raid.rbOwnerOk(lossOwner) отбрасывает свой замер (оценка по
+// P.Atk × rbLossK), а следующий бой пишет его заново без сглаживания. moves: Map(старая → новая); null — менять нечего
+function lossOwnerMove(stats, moves) {
+  if (!stats || typeof stats !== 'object' || Array.isArray(stats) || !moves?.size) return null;
+  let n = 0; const out = {};
+  for (const [id, s] of Object.entries(stats)) { const to = s && typeof s === 'object' && s.lossOwner ? moves.get(s.lossOwner) : null; out[id] = to ? (n++, { ...s, lossOwner: to }) : s; }
+  return n ? out : null;
+}
 // Записи тайника — прежние профессии классов, которые есть сейчас (предки активной или, если слоты известны, профессии слота):
 // ближние первыми. Профессия, которая сама стоит в слоте, и запись с двумя возможными наследниками — не трогаем
 function deadOf(stash, cur, slots) {
@@ -155,8 +164,8 @@ function deadOf(stash, cur, slots) {
   }
   return out.sort((x, y) => x.d - y.d);
 }
-// 20.43: разовая чистка (content.js once classPromo2043) по снимку rt: { stash, active: {ключ класса: значение}, moved: [[старая, новая]] }
-// или null. Слоты неизвестны (rt.subSlots нет) — только предки активной профессии
+// 20.43: разовая чистка (content.js once classPromo2043) по снимку rt: { stash, active: {ключ класса: значение}, moved: [[старая, новая]],
+// rbStats (если владелец замера потерь сменился) } или null. Слоты неизвестны (rt.subSlots нет) — только предки активной профессии
 function stashPromote(src) {
   const st = src?.classStash; if (!st || typeof st !== 'object' || Array.isArray(st)) return null;
   const cur = String(src.classCur?.prof || ''), slots = Array.isArray(src.subSlots) && src.subSlots.length ? src.subSlots.map(x => String(x?.prof || '')).filter(Boolean) : null;
@@ -169,7 +178,9 @@ function stashPromote(src) {
     delete stash[P]; moved.push([P, Q]);
   }
   for (const k of CLASS_KEYS) if (live[k] !== mine[k]) active[k] = live[k];
-  return moved.length ? { stash, active, moved } : null;
+  if (!moved.length) return null;
+  const rbStats = lossOwnerMove(src.rbStats, new Map(moved));
+  return { stash, active, moved, ...(rbStats ? { rbStats } : {}) };
 }
 function classNote(prof, slot, lvl, slotProfs) {
   const cur = env.rt.classCur;
@@ -179,6 +190,7 @@ function classNote(prof, slot, lvl, slotProfs) {
   if (profUp(cur.prof, prof) && (slot == null || cur.slot == null || slot === cur.slot)) {
     const patch = { classCur: { prof, slot: slot ?? cur.slot ?? null, t: Date.now() }, classSwT: Date.now(), faSnap: null, hudLong: {}, profQuest: null };
     for (const k of ['rbDpsOwner', 'rbLossKOwner']) if (env.rt[k] === cur.prof) patch[k] = prof;
+    const rbStats = lossOwnerMove(env.rt.rbStats, new Map([[cur.prof, prof]])); if (rbStats) patch.rbStats = rbStats;
     env.setRt(patch);
     env.classSwitched?.();
     env.rec('B', 'класс', `профессия: ${profName(cur.prof)} → ${profName(prof)}${lvl ? ' ' + lvl + ' ур.' : ''} (тот же класс${slot != null ? ', слот ' + slot : ''}) · замеры скиллов, кота, зон и РБ сохранены; новые умения поставь на панель боя`);
@@ -188,10 +200,11 @@ function classNote(prof, slot, lvl, slotProfs) {
   for (const k of CLASS_KEYS) if (env.rt[k] != null) mine[k] = env.rt[k];
   stash[cur.prof] = { ...mine, t: Date.now() };
   // 20.43: профессию повысили, пока активным был другой класс или бот был выключен: память прежней профессии этого класса — новой
-  let back = stash[prof] || {}; const prev = [];
-  for (const { P, Q } of deadOf(stash, prof, slotProfs)) if (Q === prof && P !== cur.prof) { back = { ...memMerge(back, stash[P], P, prof), t: Math.max(+back.t || 0, +stash[P].t || 0) }; delete stash[P]; prev.push(profName(P)); }
+  let back = stash[prof] || {}; const prev = [], moves = new Map();
+  for (const { P, Q } of deadOf(stash, prof, slotProfs)) if (Q === prof && P !== cur.prof) { back = { ...memMerge(back, stash[P], P, prof), t: Math.max(+back.t || 0, +stash[P].t || 0) }; delete stash[P]; prev.push(profName(P)); moves.set(P, prof); }
   const patch = {};
   for (const k of CLASS_KEYS) patch[k] = back[k] ?? null;
+  const rbStats = lossOwnerMove(env.rt.rbStats, moves); if (rbStats) patch.rbStats = rbStats;
   delete stash[prof];
   // баффы сняты и кот отозван сменой класса, а не смертью: снимок платных баффов и «длинные» баффы шапки — заново (не «смерть сняла…»)
   Object.assign(patch, { classStash: stash, classCur: { prof, slot, t: Date.now() }, classSwT: Date.now(), faSnap: null, hudLong: {}, zone: null, zonePend: null });

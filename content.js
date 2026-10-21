@@ -2022,7 +2022,9 @@ function spoilRoleOwn() {
   const sp = names(cfg.nSpoil || '');
   if (!sp.length) return false;
   if (L2V7Modules.subclass?.role?.() === 'crafter' || !rt.classCur?.prof && !rt.prof) return true;   // класс неизвестен — по роли, как раньше
-  return sp.some(n => !!(rt.skillDb?.[n] || rt.skills?.[n]));
+  // 20.43 (ревью): в skills — только нажатое (uses > 0). Заглушка v5.5.5 skills.spoil {cdNet, cdFloor} (spoilCdMig) есть у первого
+  // класса любого ника без базового профиля, и classPromo2043 переносит её Warlock → Arcana Lord — это не знание умения
+  return sp.some(n => !!rt.skillDb?.[n] || (+rt.skills?.[n]?.uses || 0) > 0);
 }
 // 7.2: активная цель «фарм ресурса» / «охота на рецепт» с подходящей зоной. Пока она есть, автофарм не уводит с её локации
 // (раньше: прилетел за ресурсом → через 10 мин автофарм улетал в «лучшую по опыту» зону → через 3 мин фарм тянул обратно — по кругу)
@@ -7192,6 +7194,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (!P) return;
     rf.classStash = P.stash;
     for (const [k, v] of Object.entries(P.active)) if (k === 'skills') { S = { ...(v || {}) }; sk = true; } else rf[k] = v;
+    if (P.rbStats) rf.rbStats = P.rbStats;   // 20.43 (ревью): замеры потерь у РБ (rbStats[id].lossOwner) — тоже наследнику
     try { rec('S', 'класс', `память прежних профессий перенесена: ${P.moved.map(([a, b]) => `${a} → ${b}`).join(', ')}`); } catch (e) {}
   });
   if (sk) rf.skills = S;

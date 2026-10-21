@@ -234,6 +234,74 @@ test('Arcana Lord с ролью «Spoil» от спойлера — не спо�
   assert.deepEqual([...run({}, { mmFarmSpoil: 'auto' })], [false, false]);
 });
 
+test('ревью: заглушка skills.spoil {cdNet, cdFloor} (миграция v5.5.5 spoilCdMig) — не знание Spoil: Arcana Lord после classPromo2043 не спойлер', () => {
+  const ctx = loadCore();
+  const run = (rt, cfg) => { ctx.__rt = rt; ctx.__cfg = cfg; return vm.runInContext('rt = { ...DEF_RT, ...__rt }; cfg = mergeCfg(__cfg); [canSpoil(), L2V7Modules.mammon.spoilOn()]', ctx); };
+  const SP = { nSpoil: 'Spoil', mmFarmSpoil: 'auto' }, AL = { classCur: { prof: 'human_arcana_lord', slot: 0 }, prof: 'Arcana lord' };
+  // миграция v5.5.5 пишет заглушку в первый класс любого rt без spoilCdMig (новый ник, установка без базового профиля)
+  assert.match(csrc, /if \(rt\.spoilCdMig !== 2\) \{ rf\.spoilCdMig = 2; S\.spoil = \{ \.\.\.\(S\.spoil \|\| \{\}\), cdNet: 0\.3, cdFloor: 0 \}/);
+  const ph = { cdNet: 0.3, cdFloor: 0 };
+  assert.deepEqual([...run({ ...AL, skills: { blaze: { uses: 900 }, spoil: ph } }, SP)], [false, false], 'заглушка без нажатий');
+  assert.deepEqual([...run({ ...AL, skills: { spoil: { ...ph, cdFloorAt: 1 } } }, SP)], [false, false]);
+  assert.deepEqual([...run({ ...AL, skills: { spoil: { ...ph, uses: 0 } } }, SP)], [false, false]);
+  assert.deepEqual([...run({ ...AL, skills: { spoil: { ...ph, name: 'Spoil', uses: 12, dmgN: 0 } } }, SP)], [true, true], 'Spoil нажимали этим классом');
+  // путь из ревью: заглушка у Warlock → stashPromote переносит её Arcana Lord (у наследника нет своего «spoil»)
+  const { S } = mkStory();
+  const P = S.stashPromote({ classCur: { prof: 'human_arcana_lord', slot: 0 }, skills: { blaze: { uses: 900 } }, subSlots: [{ slot: 0, prof: 'human_arcana_lord' }],
+    classStash: { human_warlock: { skills: { blaze: { uses: 10 }, spoil: ph }, t: 1 } } });
+  assert.deepEqual(Object.keys(P.active.skills).sort(), ['blaze', 'spoil'], 'заглушка переехала вместе с памятью Warlock');
+  assert.deepEqual([...run({ ...AL, skills: plain(P.active.skills) }, SP)], [false, false], 'и не делает мага спойлером');
+});
+
+test('ревью: повышение BH → FS — владелец замера потерь у РБ (rbStats[id].lossOwner) тоже новый, чужие замеры не трогаем', () => {
+  const rbStats = () => ({ l2dop_rb_25202: { hp: 1e6, patk: 900, loss: 500, lossContext: null, lossOwner: 'dwarf_bounty_hunter' },
+    l2dop_rb_25001: { hp: 5e5, patk: 700, loss: 320, lossContext: null, lossOwner: 'human_arcana_lord' }, l2dop_rb_25010: { hp: 3e5, loss: 210 }, l2dop_rb_25020: { hp: 2e5 } });
+  // 1) повышение в том же слоте
+  const a = mkStory({ classCur: { prof: 'dwarf_bounty_hunter', slot: 1 }, ...bhMem(), rbStats: rbStats() });
+  const before = plain(rbStats());
+  a.S.charNote(ch('dwarf_fortune_seeker', 1, ['human_arcana_lord', 'dwarf_fortune_seeker']));
+  const st = a.env.rt.rbStats;
+  assert.equal(st.l2dop_rb_25202.lossOwner, 'dwarf_fortune_seeker', 'свой замер — новой профессии');
+  assert.equal(st.l2dop_rb_25202.loss, 500); assert.equal(st.l2dop_rb_25202.hp, 1e6, 'остальное в записи РБ — как было');
+  assert.deepEqual(plain(st.l2dop_rb_25001), before.l2dop_rb_25001, 'замер Arcana Lord — его');
+  assert.deepEqual(plain(st.l2dop_rb_25010), before.l2dop_rb_25010, 'замер без владельца (до 20.41) не трогаем');
+  assert.deepEqual(plain(st.l2dop_rb_25020), before.l2dop_rb_25020);
+  // нечего менять — rbStats в патч не попадает
+  const b = mkStory({ classCur: { prof: 'human_warlock', slot: 0 }, rbStats: { x: { loss: 1, lossOwner: 'dwarf_bounty_hunter' } } });
+  const sets = []; const set0 = b.env.setRt; b.env.setRt = async p => { sets.push(Object.keys(p)); return set0(p); };
+  b.S.charNote(ch('human_arcana_lord', 0, ['human_arcana_lord', 'dwarf_bounty_hunter']));
+  assert.equal(b.env.rt.classCur.prof, 'human_arcana_lord'); assert.ok(!sets.flat().includes('rbStats'));
+  // 2) повысили, пока был активен другой класс: AL → FS, мёртвая запись BH в тайнике
+  const c = mkStory({ classCur: { prof: 'human_arcana_lord', slot: 0 }, ...arcanaMem(), classStash: { dwarf_bounty_hunter: { ...bhMem(), t: NOW - 7200000 } }, rbStats: rbStats() });
+  c.S.charNote(ch('dwarf_fortune_seeker', 1, ['human_arcana_lord', 'dwarf_fortune_seeker']));
+  assert.equal(c.env.rt.classCur.prof, 'dwarf_fortune_seeker');
+  assert.equal(c.env.rt.rbStats.l2dop_rb_25202.lossOwner, 'dwarf_fortune_seeker'); assert.equal(c.env.rt.rbStats.l2dop_rb_25001.lossOwner, 'human_arcana_lord');
+  // обычная смена класса — владельцы замеров прежние
+  const d = mkStory({ classCur: { prof: 'dwarf_fortune_seeker', slot: 1 }, rbStats: rbStats() });
+  d.S.charNote(ch('human_arcana_lord', 0, ['human_arcana_lord', 'dwarf_fortune_seeker']));
+  assert.deepEqual(plain(d.env.rt.rbStats), before);
+  // 3) once classPromo2043 (stashPromote): тайник из лога 21.10 — BH → FS и Warlock → Arcana Lord
+  const { S } = mkStory();
+  const src = { classCur: { prof: 'dwarf_warsmith', slot: 2 }, subSlots: [{ slot: 0, prof: 'human_arcana_lord' }, { slot: 1, prof: 'dwarf_fortune_seeker' }, { slot: 2, prof: 'dwarf_warsmith' }],
+    classStash: { human_arcana_lord: arcanaMem(), human_warlock: warlockMem(), dwarf_bounty_hunter: bhMem(), dwarf_fortune_seeker: { skills: {} } },
+    rbStats: { ...rbStats(), l2dop_rb_25030: { loss: 90, lossOwner: 'human_warlock' }, l2dop_rb_25040: { loss: 80, lossOwner: 'dwarf_warsmith' } } };
+  const snap = plain(src), P = S.stashPromote(src);
+  assert.deepEqual(plain(src), snap, 'снимок rt не меняется');
+  assert.equal(P.rbStats.l2dop_rb_25202.lossOwner, 'dwarf_fortune_seeker'); assert.equal(P.rbStats.l2dop_rb_25030.lossOwner, 'human_arcana_lord');
+  assert.equal(P.rbStats.l2dop_rb_25001.lossOwner, 'human_arcana_lord'); assert.equal(P.rbStats.l2dop_rb_25040.lossOwner, 'dwarf_warsmith', 'активный Warsmith — его');
+  assert.deepEqual(plain(P.rbStats.l2dop_rb_25010), before.l2dop_rb_25010);
+  assert.ok(!('rbStats' in S.stashPromote({ ...src, rbStats: { x: { loss: 1, lossOwner: 'dwarf_warsmith' } } })), 'нечего менять — без rbStats');
+  // content.js: тело once пишет P.rbStats в rf
+  const a0 = csrc.indexOf("  once('classPromo2043'"), b0 = csrc.indexOf('\n  });\n', a0), body = csrc.slice(a0, b0 + 6);
+  const m = { rt: src, rf: {}, cf: {}, S: {}, sk: false, L2V7Modules: { story: S }, rec() {}, Object, JSON };
+  vm.runInNewContext('const once = (flag, fn) => { if (!rt[flag] && !rf[flag]) { rf[flag] = 1; cf[flag] = 1; fn(); } };\n' + body, m);
+  assert.equal(m.rf.rbStats.l2dop_rb_25202.lossOwner, 'dwarf_fortune_seeker'); assert.equal(m.rf.rbStats.l2dop_rb_25030.lossOwner, 'human_arcana_lord');
+  // rf.rbStats от более ранних миграций того же запуска (rbStats925 и др.) — основа: once видит { ...rt, ...rf }
+  const m2 = { rt: src, rf: { rbStats: { y: { loss: 7, lossOwner: 'dwarf_bounty_hunter' } } }, cf: {}, S: {}, sk: false, L2V7Modules: { story: S }, rec() {}, Object, JSON };
+  vm.runInNewContext('const once = (flag, fn) => { if (!rt[flag] && !rf[flag]) { rf[flag] = 1; cf[flag] = 1; fn(); } };\n' + body, m2);
+  assert.deepEqual(plain(m2.rf.rbStats), { y: { loss: 7, lossOwner: 'dwarf_fortune_seeker' } });
+});
+
 test('журнал: «состояние размер …» — раз в 30 мин на вкладку, метка переживает загрузку страницы', () => {
   const ss = new Map(), store = { getItem: k => (ss.has(k) ? ss.get(k) : null), setItem: (k, v) => ss.set(k, String(v)) };
   // объявление метки читается из sessionStorage
