@@ -3,6 +3,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-text-size-adjust: none; text-size-adjust: none; }
 body { width: 380px; max-width: 100vw; padding: 10px 12px 14px; }
+html.tab body { margin: 0 auto; }                       /* 1.2.1: меню во вкладке (кнопка «Lite» на странице игры) — по центру */
 header { display: flex; gap: 6px; align-items: baseline; margin-bottom: 8px; }
 .right { margin-left: auto; text-align: right; }
 .dim { color: var(--dim); }

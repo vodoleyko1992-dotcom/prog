@@ -5,6 +5,7 @@
 // (адена — только на телепорт к месту охоты), клик — только когда игра свободна (иначе она его теряет).
 // Lite 1.1 (21.10, «на основе нового кода, внеси правки»): ход по ответу сервера и подстройка запаса клика из основного бота 20.36–20.41.
 // Lite 1.2 (21.10, решение John «Разрешаю», «по умолчанию вкл»): быстрый удар из основного 20.42 — выключатель cfg.fastTurn в «Ещё».
+// Lite 1.2.1 (21.10, John: «нет даже меню вызова, загрузка в фаерфокс ни к чему не приводит»): кнопка «Lite» на странице игры открывает меню.
 (() => {
   'use strict';
   if (window.__l2lite) return;
@@ -856,6 +857,35 @@
     return tvtFightTick(V, g);
   }
 
+  // ---------- кнопка «Lite» на странице игры (1.2.1) ----------
+  // Firefox прячет кнопку MV3-дополнения в меню «Расширения» (кусочек пазла), на Android меню — в «⋮ → Расширения»: игрок не нашёл
+  // меню вовсе. Маленький язычок у правого края открывает меню Lite во вкладке; зелёный — бот включён, в подсказке — что он делает.
+  // Это div в своём shadow DOM: селекторы бота ('a,button', панель боя) и стили игры его не видят.
+  let pill = null, pillSig = '';
+  function pillPaint() {
+    try {
+      if (dead) { if (pill) pill.host.remove(); pill = null; return; }
+      if (!document.body) return;
+      if (!pill || !pill.host.isConnected) {
+        const host = document.createElement('div'); host.id = 'l2lite-pill';
+        host.style.cssText = 'position:fixed;right:0;top:45%;z-index:2147483646;margin:0;padding:0';
+        const sh = host.attachShadow({ mode: 'open' });
+        sh.innerHTML = '<style>div{font:600 11px/1 system-ui,sans-serif;padding:7px 6px 7px 8px;border:1px solid #d9a441;border-right:0;border-radius:8px 0 0 8px;'
+          + 'background:rgba(22,24,29,.85);color:#e8e6e1;cursor:pointer;user-select:none;-webkit-user-select:none}div.on{background:rgba(46,125,50,.9);color:#fff}</style><div></div>';
+        const el = sh.querySelector('div');
+        el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); try { chrome.runtime.sendMessage({ cmd: 'menu' }, () => void chrome.runtime.lastError); } catch (_) {} });
+        pill = { host, el }; pillSig = '';
+        document.body.appendChild(host);
+      }
+      const on = !!cfg.on, sig = on + '|' + lastStatus;
+      if (sig === pillSig) return;
+      pillSig = sig;
+      pill.el.className = on ? 'on' : '';
+      pill.el.textContent = on ? 'Lite ▶' : 'Lite';
+      pill.el.title = `L2wap Lite — ${lastStatus || (on ? 'включён' : 'выключен')}. Нажмите, чтобы открыть меню.`;
+    } catch (e) {}
+  }
+
   // ---------- главный цикл ----------
   let progT = Date.now(), lastPg = '';
   function progress() { progT = Date.now(); }
@@ -870,6 +900,7 @@
     } catch (e) { setRt({ locsT: Date.now() - 11 * 3600000 }); } finally { locsRefresh.busy = false; }
   }
   async function tick() {
+    pillPaint();
     if (!ready || dead) { await sleep(500); return; }
     if (!owner) { await sleep(1000); return; }
     void locsRefresh();

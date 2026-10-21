@@ -2,6 +2,7 @@
 // 20.10.2026, тред «Упрошенка под Дестра»: Старт/Стоп, место охоты и число мобов, TvT, выбор скиллов, журнал.
 // Меню пишет только настройки (lite.cfg) и разовые команды (lite.cmd); память бота (lite.rt) пишет вкладка игры.
 'use strict';
+if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
 const L = globalThis.L2Lite;
 const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
 const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };

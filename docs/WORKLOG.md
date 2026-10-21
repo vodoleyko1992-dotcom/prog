@@ -1,5 +1,10 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 21.10.2026, 13:20 UTC+10 — Claude — [PR #306](https://github.com/vodoleyko1992-dotcom/prog/pull/306): Lite 1.2.1 — меню в Firefox
+
+- John: «нет даже меню вызова, загрузка в фаерфокс ни к чему не приводит». В настоящем Firefox 158 Lite 1.0–1.2 работали, но кнопка лежала в меню «Расширения». Сборка Firefox теперь закрепляет кнопку на панели (`default_area: navbar`), на странице игры — язычок «Lite», открывающий меню во вкладке.
+- Проверки: 532 Node-файла PASS/0 FAIL (новый `lite-menu.test.js`, `lite-manifest` проверяет `default_area`), `node --check`, envcheck, diff-check; `tests/lite-browser.cjs` A–D PASS на исходниках и на распакованном ZIP (C — язычок открывает меню во вкладке, повторно ту же); новый `tests/tools/lite-firefox-smoke.cjs` в Firefox 158 PASS (кнопка `nav-bar`, hook, бот прочитал героя и панель, язычок → меню во вкладке; старый 1.2 — FAIL: кнопка в меню «Расширения»); `web-ext lint` 0/0/0. SHA — `builds/SHA256SUMS-lite-1.2.1.txt`. Живая игра и Android не проверены.
+
 ## 21.10.2026, 12:10 UTC+10 — Claude — [PR #306](https://github.com/vodoleyko1992-dotcom/prog/pull/306): Lite 1.2 — быстрый удар (сборки Chrome + Firefox)
 
 - John на карточке «Включить в Lite быстрый удар из основного бота 20.42?» выбрал «Разрешаю», затем «по умолчанию вкл». Порт 20.42 в `lite/hook.js` (метка `data-l2lite-fast`, только обычная атака и известные удары `l2_<id>`, середина боя, свой GET /character игры ≤ 5 с), выключатель «⚡ Быстрый удар» в «Ещё» (ВКЛ), HP/MP из ответа хода (`L.meMerge`).

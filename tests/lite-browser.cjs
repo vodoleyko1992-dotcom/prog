@@ -6,6 +6,7 @@
 //   (бот замирает, ни одного клика) → игрок прошёл её → охота дальше; Стоп.
 // Сценарий C (Lite 1.1): задержки сервера (ход 150 мс, GET /character 300 мс, откат атаки 200 мс): удар→удар без лишних пауз
 //   (медиана < 600 мс, Lite 1.0 — 530–585 мс), клики не теряются, второй ход не уходит, пока первый ждёт ответа 7 с.
+// В C же (1.2.1): язычок «Lite» на странице игры открывает меню во вкладке, повторный клик новую не плодит, при Старте — «Lite ▶».
 // Сценарий D (Lite 1.2): быстрый удар — галка ВКЛ по умолчанию; ВЫКЛ → ВКЛ на модели основного 20.42 (ход 0,4 с, GET /character 0,35 с).
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
@@ -355,9 +356,22 @@ async function scenarioC() {
     S.hero.battleHotbarSlots = S.hero.battleHotbarSlots.filter(x => x.a === 'attack' || x.a === 'l2_190');
     await h.game.goto('https://l2wap.com/map.html');
     await until(async () => (await h.rt()).locs?.length === 2, 20000, 'локации');
+    // 1.2.1 (John: «нет даже меню вызова»): язычок «Lite» на странице игры открывает меню во вкладке; второй клик — та же вкладка
+    const pill = h.game.locator('#l2lite-pill div');
+    await pill.waitFor({ timeout: 5000 });
+    assert.equal(await pill.textContent(), 'Lite');
+    const [menu] = await Promise.all([h.ctx.waitForEvent('page', { timeout: 5000 }), pill.click()]);
+    await menu.waitForLoadState();
+    assert.ok(menu.url().endsWith('/popup.html#tab'), menu.url());
+    await until(() => menu.evaluate(() => document.documentElement.classList.contains('tab') && !!document.getElementById('run').onclick), 5000, 'меню во вкладке');
+    const nPages = h.ctx.pages().length;
+    await h.game.bringToFront(); await pill.click(); await delay(1000);
+    assert.equal(h.ctx.pages().length, nPages, 'второй клик открыл ещё одну вкладку');
+    await menu.close();
     const pp = await h.popup();
     await pp.click('#run');
     await h.game.bringToFront();
+    await until(async () => (await pill.textContent()) === 'Lite ▶', 5000, 'язычок «включён»');
     await until(() => S.acts.length >= 25, 60000, '25 ходов');
     // ход по ответу сервера: удар→удар внутри одного боя (без победы между ходами)
     const gaps = S.actT.slice(1).map((t, i) => t - S.actT[i]).filter(x => x < 3000).sort((a, b) => a - b), med = gaps[gaps.length >> 1];
@@ -371,7 +385,7 @@ async function scenarioC() {
     assert.ok(med < 600, 'удар→удар, медиана ' + med + ' мс (Lite 1.0 на этой модели — 530–585 мс и 2 потерянных клика)');
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
     assert.deepEqual(h.errors, []);
-    console.log(`PASS C: ход 150 мс + GET /character 300 мс → удар→удар медиана ${med} мс, потерянных кликов ${lost}; второй ход не ушёл, пока первый 7 с ждал ответа`);
+    console.log(`PASS C: язычок «Lite» открывает меню во вкладке (повторно — ту же); ход 150 мс + GET /character 300 мс → удар→удар медиана ${med} мс, потерянных кликов ${lost}; второй ход не ушёл, пока первый 7 с ждал ответа`);
   } catch (e) { console.error('DIAG C', { acts: h.S.acts.slice(-30).join(','), overlap: h.S.overlap, url: h.game.url(), log: logText(await h.rt().catch(() => ({}))), errors: h.errors }); throw e; }
   finally { await h.ctx.close(); }
 }

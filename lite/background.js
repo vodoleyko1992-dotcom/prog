@@ -32,6 +32,8 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     beat(id, m.on).then(reply, () => reply({ owner: false }));
     return true;
   }
+  // 1.2.1: кнопка «Lite» на странице игры — меню во вкладке (открытое уже — просто показать); всплывающее окно отсюда открыть нельзя.
+  if (m.cmd === 'menu') { openMenu(sender.tab).then(() => reply({ ok: true }), () => reply({ ok: false })); return true; }
   if (m.cmd === 'notify') {
     try {
       chrome.notifications && chrome.notifications.create('lite-' + String(m.id || 'x').slice(0, 20), {
@@ -41,6 +43,14 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
   }
 });
 chrome.tabs.onRemoved.addListener(async id => { const cur = await ownGet(); if (cur && cur.tab === id) await ownSet(null); });
+let menuTab = null;
+async function openMenu(from) {
+  if (menuTab != null) try { const t = await chrome.tabs.get(menuTab); if (t) { await chrome.tabs.update(menuTab, { active: true }); return; } } catch (e) { menuTab = null; }
+  const opt = { url: chrome.runtime.getURL('popup.html#tab'), active: true };
+  if (from && from.index != null) opt.index = from.index + 1;
+  if (from && from.windowId != null) opt.windowId = from.windowId;
+  const t = await chrome.tabs.create(opt); menuTab = t && t.id != null ? t.id : null;
+}
 
 function badge(on) {
   try {

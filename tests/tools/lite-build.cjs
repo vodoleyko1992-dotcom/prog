@@ -22,6 +22,8 @@ function pack(name, manifest) {
 // Firefox: фоновая страница вместо service worker, без полей только для Chrome; gecko_android — та же сборка для Firefox на Android
 const ff = { ...mf, background: { scripts: ['background.js'] } };
 delete ff.minimum_chrome_version; delete ff.version_name;
+// 1.2.1 (John: «нет даже меню вызова»): Firefox кладёт кнопку MV3-дополнения в меню «Расширения» — закрепляем её на панели
+ff.action = { ...mf.action, default_area: 'navbar' };
 ff.browser_specific_settings = {
   gecko: { id: 'l2wap-lite@local', strict_min_version: '128.0', data_collection_permissions: { required: ['none'] } },
   gecko_android: { strict_min_version: '128.0' }   // 128 — первая версия с content_scripts world:"MAIN" (hook.js)
