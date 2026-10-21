@@ -3,10 +3,19 @@
 // при наведении, «i» из title скрыта; «Катакомбы» из «Задач бота» не пишут «Выключено»; «Лимиты» показывают сброс по Владивостоку;
 // поиск находит поле по пояснению и открывает подраздел другого класса; Alt+6 — по-прежнему «Рыбалка».
 // Android-вкладка (html.tabbed): «i» из title видна и раскрывает пояснение, галка при этом не переключается.
+// 20.43 (ревью меню): «i» из title — первый «labelable» потомок label, клик по тексту подписи уходил в неё (галка не переключалась, под
+// подписью открывалось пояснение, на ПК — со скрытой «i»). Теперь подпись привязана к своему полю: клик по тексту на ПК и на Android
+// переключает галку / ставит фокус в поле и пояснения не открывает; нажатие на саму «i» — по-прежнему пояснение без переключения.
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const assert = require('node:assert/strict'), root = require('node:path').join(__dirname, '..');
 const AND = 'Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36';
 const delay = ms => new Promise(r => setTimeout(r, ms));
+// точка внутри текста подписи поля (не на «i» и не на самом поле) — туда кликает игрок
+const labelText = (P, id) => P.evaluate(id => {
+  const lab = document.getElementById(id).closest('label'), w = document.createTreeWalker(lab, NodeFilter.SHOW_TEXT, { acceptNode: n => n.textContent.trim() && !n.parentElement.closest('button') ? 1 : 3 });
+  const r = document.createRange(); r.selectNodeContents(w.nextNode()); const b = r.getBoundingClientRect(); return { x: b.left + Math.min(10, b.width / 2), y: b.top + b.height / 2 };
+}, id);
+const helpState = P => P.evaluate(() => ({ boxes: document.querySelectorAll('.field-help').length, open: document.querySelectorAll('.field-help.open').length, expanded: document.querySelectorAll('.inline-info[aria-expanded=true]').length }));
 async function until(fn, ms = 10000) { const end = Date.now() + ms; let last; do { try { last = await fn(); if (last) return last; } catch (e) {} await delay(100); } while (Date.now() < end); throw Error('timeout ' + last); }
 async function open(ua) {
   const ctx = await chromium.launchPersistentContext('', { headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', ...(ua ? { userAgent: ua } : {}),
@@ -40,6 +49,18 @@ async function open(ua) {
     assert.match(pc.title, /FA/); assert.equal(pc.hasTip, true);
     // на ПК соседи label прежние: блоки пояснений только у HELP, ряды чемпионов заканчиваются своим label (.champ-row>label:last-child)
     assert.equal(pc.boxes, pc.help); assert.ok(pc.rows > 0); assert.equal(pc.rowLast, pc.rows);
+    // 20.43 (ревью меню): ни одна подпись не управляет кнопкой «i» из title; клик по тексту подписи — галка/поле, а не пояснение
+    const stolen = await P.evaluate(() => [...document.querySelectorAll('label')].filter(l => l.control?.classList?.contains('auto-info')).map(l => l.textContent.trim().slice(0, 30)));
+    assert.deepEqual(stolen, [], 'label.control у подписей с «i» из title — их поле');
+    await P.evaluate(() => showTab('hunt')); await P.locator('#catNoFa').scrollIntoViewIfNeeded();
+    const help0 = await helpState(P), was = await P.locator('#catNoFa').isChecked();
+    let at = await labelText(P, 'catNoFa'); await P.mouse.click(at.x, at.y); await delay(200);
+    assert.equal(await P.locator('#catNoFa').isChecked(), !was, 'ПК: клик по тексту подписи переключает галку');
+    assert.deepEqual(await helpState(P), help0, 'ПК: пояснение не вставлено и не открыто');
+    await P.mouse.click(at.x, at.y); await delay(200); assert.equal(await P.locator('#catNoFa').isChecked(), was, 'второй клик — обратно');
+    await P.locator('#champCancel').scrollIntoViewIfNeeded(); at = await labelText(P, 'champCancel'); await P.mouse.click(at.x, at.y); await delay(150);
+    assert.equal(await P.evaluate(() => document.activeElement?.id), 'champCancel', 'ПК: клик по подписи списка ставит фокус в список');
+    assert.deepEqual(await helpState(P), help0);
     // «Катакомбы» выбраны в «Задачах бота», флага catMode нет — раздел не пишет «Выключено»
     await P.evaluate(() => showTab('dungeon')); await until(() => P.locator('#catBox').textContent().then(s => s.length > 0));
     assert.doesNotMatch(await P.locator('#catBox').textContent(), /^Выключено/); assert.equal(await P.locator('#catMode').isChecked(), true);
@@ -73,7 +94,7 @@ async function open(ua) {
     await P.keyboard.press('Alt+0'); assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-svc');
     assert.equal((await h.sw.evaluate(() => chrome.storage.local.get('on'))).on, false);
     assert.deepEqual(h.errors, []); assert.ok(h.requests.every(r => r.startsWith('GET ')), JSON.stringify(h.requests));
-    console.log('PASS ПК: «i» из title скрыта (' + pc.auto + ' полей), HELP как раньше, катакомбы из задач, сброс по Владивостоку, поиск по пояснению/другому классу, Alt+6/0');
+    console.log('PASS ПК: «i» из title скрыта (' + pc.auto + ' полей), клик по подписи — поле, а не пояснение, HELP как раньше, катакомбы из задач, сброс по Владивостоку, поиск по пояснению/другому классу, Alt+6/0');
   } finally { await h.ctx.close(); }
   h = await open(AND);
   try {
@@ -88,12 +109,17 @@ async function open(ua) {
       return { text: n?.textContent || '', open: !!n?.classList.contains('open'), expanded: lab.querySelector('.auto-info').getAttribute('aria-expanded') }; });
     assert.match(box.text, /FA/); assert.equal(box.open, true); assert.equal(box.expanded, 'true');
     assert.equal(await P.locator('#catNoFa').isChecked(), before, 'нажатие «i» не переключает галку');
+    // 20.43 (ревью меню): нажатие на текст подписи на Android — галка, а не пояснение (открытое пояснение остаётся как было)
+    const at = await labelText(P, 'catNoFa'), help1 = await helpState(P); await P.mouse.click(at.x, at.y); await delay(200);
+    assert.equal(await P.locator('#catNoFa').isChecked(), !before, 'Android: нажатие на текст подписи переключает галку');
+    assert.deepEqual(await helpState(P), help1, 'пояснение не переключилось');
+    await P.mouse.click(at.x, at.y); await delay(200); assert.equal(await P.locator('#catNoFa').isChecked(), before);
     const row = await P.evaluate(() => { const lab = document.getElementById('champCancel').closest('label'), tip = lab.querySelector('.auto-info'); tip.click();
       const r = lab.parentElement, n = r.nextElementSibling; return { inRow: r.matches('.champ-row'), last: r.lastElementChild === lab, open: !!n?.classList.contains('field-help') && n.classList.contains('open') }; });
     assert.deepEqual(row, { inRow: true, last: true, open: true }, 'пояснение ряда — после ряда, label остаётся последним');
     const shown = await P.evaluate(() => [...document.querySelectorAll('section.act .inline-info.auto-info')].filter(b => getComputedStyle(b).display !== 'none').length);
     assert.ok(shown >= 3, 'в разделе видны «i» из title: ' + shown);
     assert.deepEqual(h.errors, []);
-    console.log('PASS Android-вкладка: «i» из title видна, раскрывает пояснение, галку не трогает');
+    console.log('PASS Android-вкладка: «i» из title видна, раскрывает пояснение, галку не трогает; нажатие на подпись — галка');
   } finally { await h.ctx.close(); }
 })().catch(e => { console.error('FAIL', e); process.exitCode = 1; });

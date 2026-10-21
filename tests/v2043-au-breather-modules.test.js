@@ -72,17 +72,22 @@ function actions(saved = {}) {
     setRt: async p => { Object.assign(env.rt, p); return { ok: true }; }, rtCommit: async () => true, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
     halt: async s => { calls.push('halt:' + s); env.on = false; }, isBattle: () => false, interrupted: () => false, paymentPending: () => null, reconcile: async () => {},
     selfHold: async (kind, why, opt) => { holds.push({ kind, why, opt }); return 'hold'; },
+    pauseBot: async (msg, opt) => { calls.push({ pause: msg, opt }); env.on = false; },
     jobs: () => ['tbuff', 'shop', 'invScan', 'rbHunt'].map(key => ({ key, run: async () => calls.push(key) })) };
   const A = box.L2V7Factories.actions(env); A.enterFrame();
   return { A, env, calls, recs, holds };
 }
-test('actions: запрещённый маршрут снимается до запуска, в журнал — один раз; 10-й запрос — передышка задачи до конца запрета без учёта', async () => {
+// 20.43 (автономность, ревью 21.10): 10-й запрос запрещённого маршрута раньше давал передышку текущей основной задаче (фарму), а служба
+// продолжала проситься — тупик. Теперь 10 запросов за 1 мин — пауза с причиной (pauseBot fault), передышки задаче нет (проверка изменена)
+test('actions: запрещённый маршрут снимается до запуска, в журнал — один раз; 10 запросов за 1 мин — пауза с причиной, не передышка задачи', async () => {
   const until = Date.now() + 90 * MIN, f = actions({ actionBan: { shop: { t: 1, until, why: 'цикл магазина' } } });
   for (let i = 1; i <= 10; i++) { f.env.rt.shop = { step: 'buy', t: i }; assert.equal(await f.A.dispatch(), true); assert.equal(f.env.rt.shop, null); }
-  assert.ok(!f.calls.includes('shop'), 'маршрут ни разу не запущен'); assert.equal(f.env.on, true);
+  assert.ok(!f.calls.includes('shop'), 'маршрут ни разу не запущен');
   assert.equal(f.recs.filter(r => /маршрут shop запрещён до \d\d:\d\d \(цикл магазина\)/.test(r)).length, 1, 'в журнал — один раз');
-  assert.equal(f.holds.length, 1); assert.equal(f.holds[0].kind, 'route:shop'); assert.deepEqual({ ...f.holds[0].opt }, { until, noCount: true });
-  assert.equal(f.env.rt.actionBan.shop.asks, 10);
+  assert.equal(f.holds.length, 0, 'передышки основной задаче нет');
+  const pause = f.calls.find(c => c?.pause); assert.ok(pause, 'пауза с причиной'); assert.equal(pause.opt.fault, true);
+  assert.match(pause.pause, /^Маршрут shop запрещён после циклов \(до \d\d:\d\d\), но его снова создают — 10 раз за 1 мин/);
+  assert.equal(f.env.rt.actionBan.shop.asks, 0, 'после паузы счёт запросов заново'); f.env.on = true;
   // явная команда меню (urgent/manual) запретом не задерживается
   f.env.rt.shop = { step: 'buy', t: 99, urgent: true }; await f.A.dispatch(); assert.ok(f.calls.includes('shop'));
   // запрет кончился — маршрут снова работает

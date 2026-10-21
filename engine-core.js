@@ -201,8 +201,11 @@
     if (!h || typeof h !== 'object' || !Number.isFinite(+h.until) || !Number.isFinite(+h.at) || +h.at > now + 60000 || +h.until <= now) return null;
     return (+h.kick || 0) === (+rt.manualKickAt || 0) ? h : null;
   }
-  function selfHoldPlan(rt = {}, kind = '', steps = [30], now = Date.now()) {
-    const log = (Array.isArray(rt?.selfHoldLog?.[kind]) ? rt.selfHoldLog[kind] : []).filter(t => Number.isFinite(+t) && now - t < SELF_HOLD_WINDOW && t <= now);
+  // 20.43 (автономность, ревью): window — окно учёта вида. Запрет маршрута длится 2 ч, поэтому 4-й запрет одного маршрута не укладывался в 6 ч
+  // никогда: маршрут зацикливался снова после каждого запрета (с новой оплатой телепорта/баффов) без стопа и уведомления. Запрет — окно 12 ч
+  function selfHoldPlan(rt = {}, kind = '', steps = [30], now = Date.now(), window = SELF_HOLD_WINDOW) {
+    const span = Number.isFinite(+window) && +window > 0 ? +window : SELF_HOLD_WINDOW;
+    const log = (Array.isArray(rt?.selfHoldLog?.[kind]) ? rt.selfHoldLog[kind] : []).filter(t => Number.isFinite(+t) && now - t < span && t <= now);
     if (log.length >= SELF_HOLD_MAX) return { stop: true, n: log.length, log };
     const list = Array.isArray(steps) && steps.length ? steps : [30], min = +list[Math.min(log.length, list.length - 1)] || 30;
     return { stop: false, n: log.length + 1, ms: min * 60000, log: [...log, now] };
@@ -218,17 +221,21 @@
       rbTourView:null, rbFishWait:null, rbListVerifyNextAt:0,
       ...(protective ? {} : { rbHuntIdle:0, rbIdleMark:null, rbIdleN:0 }) };
   }
-  function selectedTask(c, rt = {}, now = Date.now()) {
+  // 20.43 (автономность, ревью): base — выбор игрока без автоматических пропусков: передышки (rt.selfHold) и ожидания тура на рыбалке
+  // (rt.rbFishWait, в том числе отсрочки кота). Это «режим маршрута» (baseTask → content.routeMode): контекст владельца служебного маршрута
+  // (actions.context) и задания Маммона. Раньше в контексте был фактический выбор, и конец передышки/ожидания выглядел как «пользователь
+  // сменил режим»: начатый поход к Маммону (после платного телепорта) или «Закупить сейчас» отменялись, герой оставался у NPC
+  function selectedTask(c, rt = {}, now = Date.now(), base = false) {
     const list = taskList(c); if (list === null) return null;
     const fishWait=fishTaskWait(c,rt,now);
     const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
-    const wait = rt.rbListStartRequired != null && rt.rbListReadStart !== rt.rbListStartRequired ? null : rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
+    const wait = base || rt.rbListStartRequired != null && rt.rbListReadStart !== rt.rbListStartRequired ? null : rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
     // 20.28 (лог 20.10 08:51): подготовка услуги Маммона не возвращает отложенный рейд.
     // Сам pending по-прежнему запрещает повторную оплату; удерживать рейд должен его собственный телепорт.
     const raidPayment = rt.actionPayments?.pending?.kind === 'raid-teleport';
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
-    const hold = selfHoldActive(rt, now);   // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится
+    const hold = base ? null : selfHoldActive(rt, now);   // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
       if (hold?.task === k && k !== 'enchant' && !(k === 'fish' && fishBusy)) return false;
@@ -242,6 +249,7 @@
       return true;
     }) || 'tasks';
   }
+  const baseTask = (c, rt = {}, now = Date.now()) => selectedTask(c, rt, now, true);
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
     if (!Array.isArray(raw?.autoTasks)) {
@@ -310,6 +318,10 @@
     if (key === 'tsJob') return false;
     // 17.10 (лог 15:10, West): перелёт цели «Фарм ресурсов»/рецепта — работа задачи «ресурсы», а не чужой маршрут; иначе «Только задачи» отменял его каждые 4 с.
     if (key === 'zoneGo' && (rt.zoneGo?.task === 'resources' || rt.zoneGo?.res)) return taskAllowed(c,'resources');
+    // 20.43 (автономность, ревью 21.10): обратный перелёт службы (Маммон, сдача квеста — zoneGo.svc) — конец её похода, а не новая основная
+    // работа. На передышке фарма выбор — «tasks», и перелёт снимался как несовместимый: герой оставался у NPC и после передышки фармил не на
+    // своей точке. Решает выбор игрока без передышки (baseTask); в режиме «только задачи» / рыбалки / заточки — как прежде
+    if (key === 'zoneGo' && rt.zoneGo?.svc && taskAllowed(c,rt.zoneGo.svc)) return !['tasks','fish','enchant'].includes(baseTask(c,rt));
     return !['tasks','fish','enchant'].includes(selectedTask(c,rt));
   }
 
@@ -424,6 +436,6 @@
   const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1610,16 +1610,17 @@ function selfHoldApplies(h = L2EngineCore.selfHoldActive(rt)) {
 }
 const selfHoldOn = kind => { const h = L2EngineCore.selfHoldActive(rt); return !!h && (!kind || h.kind === kind); };
 // Тот же запуск: Стоп, новый Старт, другой герой или вкладка-хозяин отменяют объявление. Не automationCurrent: передышка сама меняет
-// выбранную задачу (autonomyMode), а с ней контекст кадра действий — это ожидаемо, а не чужое вмешательство (MV3-сценарий 20.43)
+// выбранную задачу (autonomyMode) и уходит на нейтральную страницу — это ожидаемо, а не чужое вмешательство (MV3-сценарий 20.43).
+// 20.43 (ревью): контекст кадра действий передышкой больше не меняется — в нём routeMode (выбор игрока без передышки)
 const selfHoldRun = () => JSON.stringify([automationGeneration, rt.char || '', leaseEpoch, +rt.manualKickAt || 0]);
 async function selfHoldStart(kind, why, opt = {}) {
   const now = Date.now(), run0 = selfHoldRun(), sameRun = () => on && tabOwner && selfHoldRun() === run0;
-  const plan = L2EngineCore.selfHoldPlan(rt, kind, opt.steps || SELF_HOLD_STEPS[kind] || [30], now);
+  const plan = L2EngineCore.selfHoldPlan(rt, kind, opt.steps || SELF_HOLD_STEPS[kind] || [30], now, opt.window);
   const text = String(why || 'сбой').slice(0, 200);
   if (plan.stop && !opt.noCount) {
     await setRt({ selfHold: null });
     if (!sameRun()) return null;
-    await halt(`${text} — ${L2EngineCore.SELF_HOLD_MAX} передышки за 6 ч не помогли`, !!opt.hard);
+    await halt(`${text} — ${L2EngineCore.SELF_HOLD_MAX} передышки за ${Math.round((+opt.window > 0 ? +opt.window : L2EngineCore.SELF_HOLD_WINDOW) / 3600000)} ч не помогли`, !!opt.hard);   // запрет маршрута — окно 12 ч
     // 20.43 (ревью au/breather): счёт вида раньше обнулялся ДО halt. Мягкий halt (карта тура/эпика) при неотвечающем сервере уходит
     // в ожидание сервера (serverWait) и бота не выключает — после ответа сервера тур получал ещё 3 отсрочки (и платных перелёта) до
     // следующей попытки стопа. Теперь счёт обнуляется только после настоящей остановки; не остановились — счёт прежний, следующий
@@ -2808,6 +2809,15 @@ const autonomyMode = () => L2EngineCore.selectedTask(cfg, rt) === 'quests' ? 'ca
   enchant: cfg.enchantMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
   cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
+// 20.43 (автономность, ревью 21.10): «режим маршрута» — выбор игрока без автоматических пропусков (передышка rt.selfHold, ожидание тура
+// на рыбалке rt.rbFishWait, отсрочка кота). Он, а не autonomyMode, входит в контекст владельца служебного маршрута (actions.context) и задания
+// Маммона: передышка, взятая и снятая самим ботом, — не «пользователь сменил режим». Раньше конец передышки фарма в списке [фарм, Маммон]
+// отменял начатый поход к Маммону (после платного телепорта, заказ — не раньше чем через сутки), а начало/конец — «Закупить сейчас».
+// Без списка задач (старые флаги режимов) передышка режим не меняет — там прежний autonomyMode
+const routeMode = () => { const t = L2EngineCore.baseTask(cfg, rt); return t == null ? autonomyMode() : t === 'quests' ? 'campaign' : t === 'auto' ? 'farm' : t; };
+// 20.43 (автономность, ревью): служебный маршрут запрещён после циклов (actions: rt.actionBan) — автоматические создатели его не создают
+// (Маммон, чтение сумки), иначе каждый круг: создать → снять (и переход на страницу маршрута до снятия)
+const routeBanned = key => !!L2V7Modules.actions?.banned?.(key);
 // 15.10: диагностика меняется вместе с выбором/задачей, а не на каждом тике.
 function taskPolicyNote(active = autonomyMode()) {
   if (!Array.isArray(cfg.autoTasks) || !tabOwner) return;
@@ -3510,12 +3520,14 @@ async function loopRaid() {
   if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); return true; }
   if (rt.invScan) await setRt({ invScan: null });
   if (loopStale()) return true;
+  // 20.43 (автономность, ревью): чтение сумки запрещено после циклов (routeBanned) — не начинаем: invScanStart сразу уходит на страницу
+  // персонажа, раньше чем диспетчер снимет запрещённый маршрут, и без отметки времени вне тура — каждый круг
   if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
-      && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }
+      && Date.now() - (rt.invTourT || 0) > 30 * 60000 && !routeBanned('invScan')) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }
   if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); return true; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
-  if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); return true; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
+  if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn() && !routeBanned('invScan')) { await invScanStart(); return true; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
   // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
-  if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) {
+  if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn() && !routeBanned('invScan')) {
     const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
     if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); return true; }
   }
@@ -5529,7 +5541,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get selfHold(){return selfHoldStart},
  get actionGeneration(){return ()=>automationGeneration},
  get rt(){return rt},get cfg(){return cfg},get on(){return on},get tabOwner(){return tabOwner},
- get mode(){return autonomyMode},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
+ get mode(){return autonomyMode},get routeMode(){return routeMode},get pauseBot(){return pauseBot},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
  get id(){return ()=>crypto.randomUUID()},get setRt(){return setRt},get rtCommit(){return rtCommit},get rec(){return rec},get setStatus(){return setStatus},get halt(){return halt},get isBattle(){return isBattle},
  get challengeHold(){return abHold},
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
@@ -6210,7 +6222,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwne
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
 
-L2V7Modules.mammon = L2V7Factories.mammon({ get actionGeneration(){return ()=>automationGeneration}, get bagAllowed(){return ()=>L2EngineCore.taskAllowed(cfg,'mammon')}, get invSnapshot(){return ()=>INV_READY===invContext()&&invQty(0)!==null?INV_NET:null}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+L2V7Modules.mammon = L2V7Factories.mammon({ get routeMode(){return routeMode}, get routeBanned(){return routeBanned}, get actionGeneration(){return ()=>automationGeneration}, get bagAllowed(){return ()=>L2EngineCore.taskAllowed(cfg,'mammon')}, get invSnapshot(){return ()=>INV_READY===invContext()&&invQty(0)!==null?INV_NET:null}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
