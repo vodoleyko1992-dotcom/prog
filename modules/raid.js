@@ -50,12 +50,15 @@ function rbHasScrolls(id) {
 }
 const rbScrollOrder = (a, b) => env.cfg.rbScrollFirst === true ? +rbHasScrolls(b.id) - +rbHasScrolls(a.id) : 0;
 
+// 20.43 (автономность, разбор 21.10): явный пропуск цели rt.rbSkip[id] — число (момент пропуска, 30 мин, как раньше) или {t, until, why}:
+// цикл выхода тура откладывает РБ на 60 мин (actions.loopTrip), карта тура не загрузилась — на 30 мин
+const rbSkipUntil = id => { const v = env.rt.rbSkip?.[id]; return typeof v === 'number' ? v + 30 * 60000 : Number.isFinite(+v?.until) ? +v.until : 0; };
 function rbCandidates() {                      // окно уровня: ниже героя на rbMaxBelow (0 = любые), выше — на rbMaxAbove
   const h = env.heroLvl();
   const want = env.rt.rbWant && raidList().find(r => r.id === env.rt.rbWant);   // прилетели к нему по списку РБ — он первый (v4.30: и без места в списке — через метку)
   if (!env.cfg.rbMode) return farmRbOn() && want && want.id === env.rt.farmRb.id && !rbVerdictBlocks(want.id) ? [want] : [];   // v5.6: фарм ресурса с РБ — только этот РБ
   // v5.6: «мало банок» (rbPreSkip) тоже пропускаем 30 мин — раньше такой РБ выбирался снова и снова, и бот не фармил мобов
-  const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000 || !!rbPreSkipWhy(id);
+  const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() < rbSkipUntil(id) || !!rbPreSkipWhy(id);
   if (want && want.lvl >= rbLo(h) && want.lvl <= rbHi(h) && !rbVerdictBlocks(want.id) && !skip(want.id)) return [want];
   return raidList().filter(r => r.lvl >= rbLo(h) && r.lvl <= rbHi(h) && !rbVerdictBlocks(r.id) && !skip(r.id))
     .sort((a, b) => rbScrollOrder(a, b) || (env.cfg.rbOrder === 'down' ? b.lvl - a.lvl : a.lvl - b.lvl) // сохранённый rbCur не обгоняет очередь
@@ -830,7 +833,7 @@ function rbEntryDecision(id, x) {
     if (row.deny || row.canAttack === false) return { ok: false, kind: 'deny', action: 'wait', why: row.deny || 'игра не пускает' };
     if (Date.now() - (row.t || env.rt.rbListT || 0) > 15 * 60000) return { ok: false, kind: 'stale', action: 'wait', why: 'нужен свежий список живых РБ' };
     if (!arrived && (!Number.isFinite(row.price) || row.price < 0 || row.unit !== 'аден')) return { ok: false, kind: 'currency', action: 'wait', why: `цена и валюта телепорта не подтверждены («${row.priceText || 'пустая цена'}»)` };
-    if (Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000) return { ok: false, kind: 'skip', action: 'wait', why: 'явный пропуск цели' };
+    if (Date.now() < rbSkipUntil(id)) return { ok: false, kind: 'skip', action: 'wait', why: env.rt.rbSkip?.[id]?.why ? `отложен: ${env.rt.rbSkip[id].why}` : 'явный пропуск цели' };
     if (env.rt.rbDb?.[id]?.leaveBadUntil > Date.now()) return { ok: false, kind: 'exit', action: 'wait', why: 'штатный выход ранее не подтверждён' };
   }
   const price = arrived ? '' : rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]);
@@ -919,6 +922,9 @@ function rbTourPlan() {
     let block = rbListBlock(id, x, lo, hi);
     const wound = rbWounded(id) ? env.rt.rbWound[id] : null, tried = env.rt.rbGoTried?.[id] || 0;
     const times = (env.rt.rbGoCnt?.[id] || []).filter(t => at - t < 3600000).sort((a, b) => a - b);
+    // 20.43 (автономность): отсрочка цели после сбоя (rbSkip {until}: цикл выхода — 60 мин, карта не загрузилась — 30 мин) действует и вне
+    // обычного живого тура (с эпиками), где rbEntryDecision пропуск не проверяет; прежние числовые метки rbSkip здесь не учитываются, как раньше
+    { const sk = env.rt.rbSkip?.[id]; if (!block && sk && typeof sk === 'object' && at < rbSkipUntil(id)) block = { kind: 'skip', why: `отложен: ${sk.why || 'сбой маршрута'}`, waitMs: rbSkipUntil(id) - at }; }
     if (!block && times.length >= 3) block = { kind: 'limit', why: 'лимит 3 платных телепортов за час', waitMs: Math.max(0, times[times.length - 3] + 3600000 - at) };
     if (!block && !wound && tried && at - tried <= env.RB_RETRY_MS) block = { kind: 'retry', why: 'недавно пробовал — жду повтор', waitMs: Math.max(0, env.RB_RETRY_MS - (at - tried)) };
     if (!ordinaryLiveTour(id) && !block && mode === 'value' && rbDpsEvidence(id).source !== 'unknown' && !(rbValueScore(id, x) > 0)) block = { kind: 'value', why: 'невыгоден по текущей оценке' };
@@ -1338,16 +1344,60 @@ async function rbOneStep() {
 
 // 15.10, журнал18:35–18:36: /map.html не выводит из Ashen, сервер возвращает назад.
 // Выход — отдельное сохранённое продолжение; город готов только после native enter-city.
+// 20.43 (автономность, разбор 21.10): выход из Ashen бесплатный (штатная ссылка в город), а не подтверждённый за минуту выход ставил бота
+// на паузу до утра — в том числе после ожившего сервера, когда минута exitAt давно истекла. Теперь после первой минуты раз в минуту бесплатно
+// читаем GET /character: город подтверждён — продолжаем; сервер ответил «ещё не в городе» — повторяем штатный выход (на странице Ashen —
+// та же ссылка, с другой страницы — сначала /ashen-bastion.html). Сбой чтения, чужой ответ или бой попыткой не считаются. Пауза с причиной —
+// только после ASHEN_MISS_MAX ответов «не в городе» подряд (≈1 ч). Платных шагов здесь нет: телепорт тура — после подтверждённого города.
+const ASHEN_RETRY_MS = 60000, ASHEN_MISS_MAX = 60;
+const ashenCityOk = ch => ch?.name === env.rt.char && /^l2dop_[a-z0-9_]+$/.test(ch.cityId || '') && ch.inBattle === false;
+async function ashenChar() {
+  try { const r = await env.gameGet('/character'); const d = r.ok ? await r.json() : null; return d?.character || d; } catch (_) { return null; }
+}
 async function rbExitAshen(H, active) {
   const same=()=>active() && env.canAct?.()!==false && env.rt.rbHunt?.step==='exit' && env.rt.rbHunt?.id===H.id;
   if(!same())return;
-  const expired=Date.now()-(H.exitAt||H.t||0)>60000;
-  if(/\/ashen-bastion\.html$/i.test(location.pathname)) {
-    if(expired){await env.pauseBot('Тур РБ: выход из Ashen Bastion не подтверждён за минуту; проверь город и продолжи',{fault:true});return;}   // 20.43: сервер лежит — ждём его, не пауза
-    if(H.exitClickAt){env.setStatus('Тур РБ: жду подтверждения выхода из Ashen Bastion');await env.sleep(1000);return;}
+  const now=Date.now(), onAshen=/\/ashen-bastion\.html$/i.test(location.pathname);
+  const expired=now-(H.exitAt||H.t||0)>ASHEN_RETRY_MS;
+  const done=async ch=>{
+    if(H.exitMiss)env.rec('B','тур РБ',`выход из Ashen Bastion подтверждён сервером (${ch.cityId}) после ${H.exitMiss} повт. — продолжаю к ${H.name}`);
+    await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReloadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
+  };
+  // повтор выхода, начатый с другой страницы: на Ashen жмём ссылку сразу, не дожидаясь следующей сверки
+  const retryHere=onAshen && +H.exitMiss>0 && !H.exitClickAt && !(+H.exitReloadAt>=+H.exitReadAt);
+  if(expired && H.exitReadAt && now-H.exitReadAt<ASHEN_RETRY_MS && !retryHere){
+    env.setStatus(`Тур РБ: выход из Ashen Bastion не подтверждён — сверяю героя раз в минуту${H.exitMiss?`, повторов выхода ${H.exitMiss}`:''}; платные шаги ждут`);
+    await env.sleep(2000);return;
+  }
+  if(expired && !retryHere){
+    await huntSet({exitReadAt:now});if(!same())return;
+    const ch=await ashenChar();
+    if(!same())return;
+    if(ashenCityOk(ch))return done(ch);
+    if(ch?.name!==env.rt.char || ch.inBattle!==false){env.setStatus('Тур РБ: сверка героя после выхода из Ashen не удалась — повторю через минуту');return;}
+    const miss=(+H.exitMiss||0)+1;
+    if(miss>ASHEN_MISS_MAX){
+      await huntSet({exitMiss:0});if(!same())return;
+      await env.pauseBot(`Тур РБ: выход из Ashen Bastion не подтверждён ${ASHEN_MISS_MAX} раз подряд (≈1 ч); проверь город и продолжи`,{fault:true});return;   // 20.43: сервер лежит — ждём его, не пауза
+    }
+    if(miss===1)env.rec('B','тур РБ',`выход из Ashen Bastion не подтверждён за минуту (сервер: ${ch.cityId||'нет города'}) — повторяю штатный выход раз в минуту, бесплатно; телепорт к ${H.name} — только после подтверждённого города`);
+    await huntSet({exitMiss:miss,exitClickAt:0});if(!same())return;
+    if(!onAshen){if(env.canAct?.()!==false)location.href='/ashen-bastion.html';await env.sleep(3000);return;}
+  }
+  if(onAshen) {
+    const J=env.rt.rbHunt;
+    if(J.exitClickAt){env.setStatus('Тур РБ: жду подтверждения выхода из Ashen Bastion');await env.sleep(1000);return;}
     const link=await env.waitX(()=>!same()||env.$q('a#ashen-exit-city[href="/city.html"]'),8000,150);
     if(!same())return;
-    if(!link || link===true){await env.pauseBot('Тур РБ: не найдена штатная кнопка выхода из Ashen Bastion в город',{fault:true});return;}
+    if(!link || link===true){
+      // 20.43: кнопки нет — не пауза: в первую минуту ждём отрисовки, дальше раз в минуту свежая загрузка страницы после сверки героя
+      if(expired){
+        if(!J.exitReloadAt)env.rec('B','тур РБ','на странице Ashen Bastion нет штатной кнопки выхода в город — обновляю страницу не чаще раза в минуту');
+        await huntSet({exitReloadAt:Date.now()});if(!same())return;
+        if(env.canAct?.()!==false)location.reload();await env.sleep(3000);return;
+      }
+      env.setStatus('Тур РБ: жду штатную кнопку выхода из Ashen Bastion в город');await env.sleep(1000);return;
+    }
     const clickAt=Date.now(),char=env.rt.char;
     await huntSet({exitClickAt:clickAt,next:'жду подтверждения штатного входа в город'});
     // В этой вкладке точно знаем, что fire ещё не был вызван; после reload такого знания нет.
@@ -1358,15 +1408,11 @@ async function rbExitAshen(H, active) {
   }
   if(H.exitReadAt && Date.now()-H.exitReadAt<1500){await env.sleep(500);return;}
   await huntSet({exitReadAt:Date.now()});if(!same())return;
-  let ch=null;
-  try{const r=await env.gameGet('/character');const d=r.ok?await r.json():null;ch=d?.character||d;}catch(_){}
+  const ch=await ashenChar();
   if(!same())return;
   // Первая загрузка /city.html ещё может отдавать прежнее cityId: URL не доказывает выход.
-  if(ch?.name!==env.rt.char || !/^l2dop_[a-z0-9_]+$/.test(ch.cityId||'') || ch.inBattle!==false){
-    if(expired){await env.pauseBot('Тур РБ: сервер не подтвердил выход из Ashen Bastion; проверь город и продолжи',{fault:true});return;}
-    env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;
-  }
-  await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
+  if(!ashenCityOk(ch)){env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;}
+  return done(ch);
 }
 
 // 15.10, журнал18:59: на точке могут остаться только РБ; без автофарма не обещаем добычу мобов.
@@ -1384,6 +1430,7 @@ async function rbIdleMap(text,active) {
 }
 
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
+const RB_MAP_WAITS = [30000, 60000, 120000];      // 20.43 (автономность): ожидание карты после прилёта перед 1-й, 2-й и 3-й перезагрузкой
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
   if(env.payments?.blocked()){await paymentReconcile();return;}
@@ -1514,14 +1561,25 @@ async function rbHuntStep() {
       const since = H.mapLoadT || Date.now();
       if (!H.mapLoadT) await huntSet({ mapLoadT: since });
       if (!active() || env.rt.rbHunt?.id !== H.id) return;
-      if (Date.now() - since < 30000) { env.setStatus(`Тур РБ: карта ещё не загружена — жду ${H.name}`); await env.sleep(1500); return; }
-      if (!H.mapLoadReloads) {
-        await huntSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
-        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      // 20.43 (автономность, разбор 21.10): одна перезагрузка и пауза до утра → 3 перезагрузки с растущей паузой (30 → 60 → 120 с),
+      // затем этот РБ откладывается на 30 мин и тур идёт дальше (оплаченный перелёт не повторяется: выбор следующей цели — по общим
+      // правилам, неизвестная оплата по-прежнему блокирует платное). Стоп с причиной — 4-я такая отсрочка за 6 ч (content.selfHoldStart)
+      const reloads = +H.mapLoadReloads || 0;
+      if (Date.now() - since < RB_MAP_WAITS[Math.min(reloads, RB_MAP_WAITS.length - 1)]) { env.setStatus(`Тур РБ: карта ещё не загружена — жду ${H.name}${reloads ? ` (обновлений ${reloads}/3)` : ''}`); await env.sleep(1500); return; }
+      if (reloads < 3) {
+        await huntSet({ mapLoadT: Date.now(), mapLoadReloads: reloads + 1 });
+        if (!active()) return;
+        if (!reloads) env.rec('B', 'тур РБ', `${H.name}: карта не загрузилась — обновляю страницу (до 3 раз с растущей паузой)`);
+        location.reload(); await env.sleep(3000); return;
       }
       await huntSet({ mapLoadT: 0, mapLoadReloads: 0 });
       if (!active()) return;
-      return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      if (!env.selfHold) return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      const held = await env.selfHold('raidMap', `Тур РБ: карта не загрузилась после 3 обновлений (цель ${H.name})`, { noWait: true });
+      if (held !== 'defer' || !active() || env.rt.rbHunt?.id !== H.id) return;
+      await env.setRt({ rbSkip: { ...(env.rt.rbSkip || {}), [H.id]: { t: Date.now(), until: Date.now() + 30 * 60000, why: 'карта не загрузилась' } } });
+      if (!active()) return;
+      return huntDone(H.id, `${H.name}: карта не загрузилась после 3 обновлений — откладываю этого РБ на 30 мин, тур идёт дальше`);
     }
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;

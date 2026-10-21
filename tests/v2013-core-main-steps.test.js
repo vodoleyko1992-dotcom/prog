@@ -20,20 +20,25 @@ test('охранная строка цикла — один помощник, с
 test('mainTick: шаги в прежнем порядке',()=>{
  const tick=steps.match(/async function mainTick\(\) \{\s*return ([^;]+);/)[1].replace(/\s+/g,' ');
  const order=[...tick.matchAll(/await (\w+)\(\)/g)].map(m=>m[1]);
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopRaid','loopActivity']);
+ // 20.43 (автономность): шаг передышки loopSelfHold — сразу после срочных (сервер, вход, воскрешение, TvT), до задач; прежний порядок цел
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};
  const seq=['await tabLock()','stopPendRetry()','deferredMigrations.rt','if (heroNick() && rt.char !== heroNick()) {','serverDown()','loginPage()','syncLimitRanges()','L2V7Modules.pvp.recoveryStep()','progressMonitor.tick(','rt.revive','await tvtStep()','Array.isArray(cfg.autoTasks)',"if (autonomyMode() === 'enchant') {",'L2V7Modules.pvp.seedConfirmed()','L2V7Modules.raid.rbOneStep()','L2V7Modules.tvt.tvtHold()) { taskPolicyNote','pveFishingStep()','inventoryReady()','castReconcile(','{ await shopStep(); await sleep(300); return true; }','magisterDisable()','townBuffStep()','rt.bagCheck','rt.faScan','rt.epicScanReq','rt.rbGo && !isBattle()','rt.zoneGo && !isBattle()',"townBuffStart('сторож","rt.fishSvc && !isBattle()",'if (await sealQueue())','mammon.mmStep()','story.storyStep()','tvtshop.shopStep()','dailies.clanStep()','dailies.dailyStep()','warlockTripStep()','warlock.step()','await epicStep()','await invScanStep()','await rbHuntStep()','weaponRescanWhy(','campLocationStep()',"rt.fishService === 'cut'",'await fishing()','await catGo()','await goOutskirts()','await sleep(isBattle() ? 40 : 200)'];
  for(let i=1;i<seq.length;i++)assert.ok(at(seq[i-1])<at(seq[i]),seq[i-1]+' → '+seq[i]);
 });
-test('главный цикл: «нет прогресса» после 3 восстановлений выходит из цикла (бывший break)',async()=>{
- const c=fixBox.mainFixture();c.cfg.enchantMode=false;let halted=0;
+// 20.43 (автономность): после 3 восстановлений — передышка (selfHoldStart 'stall'); стоп и выход из цикла — только когда передышки
+// исчерпаны (selfHoldStart → 'stop', внутри halt(…, true)); поведение самой передышки — tests/v2043-au-breather-core.test.js
+test('главный цикл: «нет прогресса» после 3 восстановлений и исчерпанных передышек выходит из цикла (бывший break)',async()=>{
+ const c=fixBox.mainFixture();c.cfg.enchantMode=false;let halted=0;const holds=[];
  Object.assign(c,{progressMonitor:{tick:()=>'stalled'},automationSnapshot:()=>1,automationCurrent:()=>true,srvUp:async()=>true,halt:async()=>{halted++},
+  selfHoldStart:async(kind,why,opt)=>{holds.push([kind,opt]);await c.halt(why,opt.hard);return 'stop';},
   sleep:async()=>{},enchantModePause:async()=>{},syncLimitRanges:async()=>true,limitSyncDue:()=>false,limitSyncBlock:()=>false});
  c.rt.stallRecoveries=[Date.now(),Date.now(),Date.now()];
  await vm.runInContext('main()',c);   // без выхода по LOOP_BREAK цикл крутился бы вечно (on не снят)
  assert.equal(halted,1);assert.equal(c.running,false);
+ assert.deepEqual(JSON.parse(JSON.stringify(holds)),[['stall',{hard:true,page:'/map.html'}]]);assert.deepEqual(JSON.parse(JSON.stringify(c.rt.stallRecoveries)),[]);
 });
 test('M1: смена героя отложена (switchChar не сменил rt) — круг не идёт дальше, повтор через 0,5 с',async()=>{
  const c=fixBox.mainFixture({recovery:true}),calls=c.calls;c.cfg.enchantMode=false;c.rt.char='Old';

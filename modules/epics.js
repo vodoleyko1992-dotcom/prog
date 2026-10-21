@@ -525,6 +525,7 @@ function epicWhyNone() {
   return epicWant().map(k => `${epicOf(k).nm}: ${(epicPickWhy(k) || '?').slice(0, 140)}`).join(' · ');
 }
 
+const EPIC_MAP_WAITS = [30000, 60000, 120000];   // 20.43 (автономность): ожидание карты после прилёта перед 1-й, 2-й и 3-й перезагрузкой
 async function epicGiveUp(k, min, why) {
   const e = epicOf(k);
   await epicDbSet(k, { skipT: Date.now() + min * 60000, why });
@@ -874,14 +875,23 @@ async function epicStep() {
       const since = E.mapLoadT || Date.now();
       if (!E.mapLoadT) await epicSet({ mapLoadT: since });
       if (!active()) return;
-      if (Date.now() - since < 30000) { await env.sleep(1500); return; }
-      if (!E.mapLoadReloads) {
-        await epicSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
-        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      // 20.43 (автономность, разбор 21.10): одна перезагрузка и пауза до утра → 3 перезагрузки с растущей паузой (30 → 60 → 120 с), затем
+      // этот эпик откладывается на 30 мин, режим идёт дальше. Второй платный заход в это появление по-прежнему не разрешён (paidN, лимит
+      // Coin of Luck), неизвестный телепорт — отдельная сверка. Стоп с причиной — 4-я такая отсрочка за 6 ч (content.selfHoldStart)
+      const reloads = +E.mapLoadReloads || 0;
+      if (Date.now() - since < EPIC_MAP_WAITS[Math.min(reloads, EPIC_MAP_WAITS.length - 1)]) { env.setStatus?.(`Эпики: карта ещё не загружена — жду ${e.nm}${reloads ? ` (обновлений ${reloads}/3)` : ''}`); await env.sleep(1500); return; }
+      if (reloads < 3) {
+        await epicSet({ mapLoadT: Date.now(), mapLoadReloads: reloads + 1 });
+        if (!active()) return;
+        if (!reloads) env.rec('B', 'эпики', `${e.nm}: карта не загрузилась — обновляю страницу (до 3 раз с растущей паузой)`);
+        location.reload(); await env.sleep(3000); return;
       }
       await epicSet({ mapLoadT: 0, mapLoadReloads: 0 });
       if (!active()) return;
-      return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      if (!env.selfHold) return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      const held = await env.selfHold('epicMap', `Эпики: карта не загрузилась после 3 обновлений (цель ${e.nm})`, { noWait: true });
+      if (held !== 'defer' || !active()) return;
+      return epicGiveUp(E.k, 30, 'карта не загрузилась после 3 обновлений');
     }
     if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
     const r = await env.waitX(() => epicPins().find(x => x.k === E.k), 5000, 300);
