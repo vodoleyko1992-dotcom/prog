@@ -107,7 +107,7 @@ async function massSpoilStep(ctx, act, mob) {
   if (mp && need && mp.cur < need) return false;  // маны мало — обойдёмся обычным Spoil
   const before = env.logLines(), waited = waitedMs(ctx, x.b);
   const r = await act(x.b, `Масс-спойл: ${env.cleanTitle(x.b.title)} (мобов ${near + 1}${waited >= 0 ? `, ждал откат ${(waited / 1000).toFixed(1)} с` : ''})`);
-  if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
+  if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${ctx.refuseText || env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
   if (r === 'cd' || r === 'noforce') return true;
   if (r !== true) return true; // потерянный клик не подтверждает применение
   ctx.massTried = true;
@@ -198,7 +198,7 @@ async function spoilStep(ctx, act, mob) {
   const x = spoilPick(ctx); if (!x) return false;
   const before = env.logLines(), waited = waitedMs(ctx, x.b); ctx.spoilTry = (ctx.spoilTry || 0) + 1; ctx.block[spoilKey(x.b)] = Date.now() + 700;
   const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}${waited >= 0 ? ` (ждал откат ${(waited / 1000).toFixed(1)} с)` : ''}`);
-  if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую${isCrush(x.b) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
+  if (r === 'unavail') { ctx.block[spoilKey(x.b)] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${ctx.refuseText || env.noticeText() || 'недоступен'} — до конца боя не использую${isCrush(x.b) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
   if (r === 'cd' || r === 'noforce') { ctx.spoilTry--; return true; }
   // 20.41: клик не ушёл ('lock' — окно занятости игры, 'nomp' — нет MP) — строки итога спойла не будет, 1,5 с не ждём
   // 20.43 (ревью): 'lock' снимает и блок 0,7 с этой кнопки — повтор её же сразу, как в остальных шагах боя (было: дубина → Festival
