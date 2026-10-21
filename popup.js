@@ -2070,7 +2070,8 @@ function renderWorkspace(rt, d, st) {
       const main = selectedAutoTasks(d).find(k => AUTO_MAIN_TASKS.includes(k));
       $('quickStart').hidden = !activity.quick;
       if (activity.quick && !/неподтверждённый/.test(activity.hint)) $('activityHint').textContent = '';   // «Последнее: …» — подсказкой при наведении
-      $('activityText').title = activity.quick ? activity.hint : '';
+      $('activityText').title = activity.quick ? activity.hint : activity.text;   // 21.10: текст длиннее двух строк — целиком при наведении
+      $('activityHint').title = $('activityHint').textContent;
       document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => b.classList.toggle('on', b.dataset.quickTask === main));
     }
     $('activityDetails').dataset.goto = activity.tab; $('activityDetails').textContent = activity.tab === 'overview' ? 'Обзор ↗' : 'Подробнее ↗';
