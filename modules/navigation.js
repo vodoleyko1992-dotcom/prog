@@ -489,6 +489,41 @@ function travelMoved(p, ch) {
   if (!a || !ch || ch.inBattle || ch.activeDungeonId || (b.zone == null && b.city == null) || (a.zone === b.zone && a.city === b.city)) return false;
   return cost === 0 || (p.adena != null && adena != null && adena <= p.adena - cost);
 }
+// 20.43 (автономность, доводка 21.10; ревью сверки: ветка «ревизия выросла» кончалась 30 мин простоя и паузой, хотя исход доказуем по
+// адене и месту). Платный телепорт, ревизия выросла, герой не в бою и не в подземелье:
+//  travelPaid   — адены стало меньше хотя бы на цену телепорта (другие оплаты всё это время запрещены квитанцией) — плата списана, даже если
+//                 место по ответу сервера прежнее; как и travelMoved, ошибиться этот вывод может лишь в сторону «оплата прошла»;
+//  travelStayed — адена ровно та же, что до клика, и герой там же, где стоял (зона и город те же): следов телепорта нет, ревизию
+//                 сдвинуло другое действие (TvT, бой, письмо). Запрос телепорта несёт expectedRevision (kb/repo-facts: 409 на
+//                 /game/teleport) — после роста ревизии прежний запрос уже не применится. Вывод «не прошёл» — как для «ничего не
+//                 изменилось»: две такие сверки с промежутком ≥ 30 с, первая не раньше 30 с после клика. Адена именно «та же», а не
+//                 «не меньше»: во время сверки идёт TvT, а победа даёт 500 000 аден (kb/repo-facts) — с ней списанная плата за телепорт
+//                 в мировую зону, где currentZoneId/cityId не меняются, выглядела бы как «не прошёл», и тот же телепорт оплачивался бы снова.
+// Бесплатный переход, неизвестные или изменившиеся (но не на цену) адена или место — не доказательство: ждём до 30 мин, как раньше
+const travelSettled = ch => !!ch && !ch.inBattle && !ch.activeDungeonId;
+function travelPaid(p, ch) {
+  const cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  return cost > 0 && travelSettled(ch) && p.adena != null && adena != null && adena <= p.adena - cost;
+}
+function travelStayed(p, ch) {
+  const a = p.from, b = travelPlace(ch), cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  return cost > 0 && !!a && travelSettled(ch) && (b.zone != null || b.city != null) && a.zone === b.zone && a.city === b.city
+    && p.adena != null && adena != null && adena === p.adena;
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки): вывод «перелёт состоялся / оплата прошла» без совпадения id зоны раньше снимал
+// квитанцию, не записав прибытия (только zoneGoT). Проверка перед следующим кликом (nativeTargetReached / forumTargetReached) не узнаёт
+// цель по тому же несовпадающему id, и цель ресурса (farmStep: rt.zone ≠ точка, через 3 мин после zoneGoT), рецепт и автофарм
+// покупали тот же телепорт ещё раз. Теперь прибытие записывается как у forumFinish (rt.zone = цель): повтора нет, зону уточнит карта по мобам
+async function travelPaidFinish(g, active, line) {
+  if (!active()) return;
+  env.rec('B', 'локации', line);
+  await env.setRt({ ...travelClose(g), zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
+  travelForget();
+}
+// 20.43 (автономность, доводка 21.10; ревью сверки): одна форма статуса и для ожидания следующей сверки, и для её итога. setStatus ядра
+// пишет строку «бот» в журнал (со снимком новых строк журнала игры) при каждой смене формы (цифры → #): две формы давали 2 строки
+// на каждую сверку — ≈80 за 30 мин без вывода. Теперь строка — только когда меняется смысл («без изменений» / «следов перелёта нет»)
+const travelStatus = (name, c, now) => `Телепорт в ${name}: исход не подтверждён — сверка ${c.n}${c.same ? ' (без изменений)' : c.stay ? ' (следов перелёта нет)' : ''}, следующая через ${Math.max(0, Math.ceil(((+c.next || 0) - now) / 1000))} с; платное не трачу`;
 // (б): сверка исхода клика по серверу. Повтор оплаты допускается только после доказательства «телепорт не прошёл»:
 // ревизия и адена героя те же, что до клика (L2PayOutcome.unchanged), в двух сверках подряд с промежутком ≥ 30 с, первая — не раньше
 // 30 с после клика (поздний ответ сервера успеет изменить ревизию).
@@ -501,13 +536,20 @@ async function travelVerify(g, active, why) {
   const native = !!g.nativeTp, name = zoneName(g.id), kick = env.rt.manualKickAt, prev = g.check;
   let c = prev && prev.kick === kick ? prev : null;
   if (c && Date.now() < (+c.next || 0)) {
-    env.setStatus(`Телепорт в ${name}: исход не подтверждён — сверка ${c.n}, следующая через ${Math.ceil((c.next - Date.now()) / 1000)} с; платное не трачу`);
+    env.setStatus(travelStatus(name, c, Date.now()));   // 20.43 (доводка 21.10): та же форма, что после сверки
     await env.sleep(1000); return;
   }
   // 20.43 (ревью au/travel): Старт / «Продолжить» игрока после паузы «Проверьте положение героя» (30 мин без вывода) — его решение:
   // следующая удачная сверка закрывает квитанцию (герой в цели — прибытие, иначе «закрыта по Старту игрока»), без нового окна
   // в 30 мин и новой паузы. Остальные Старты (Stop → Старт, смена режима) квитанцию не снимают — окно сверки начинается заново
-  const fresh = !c; if (fresh) c = { kick, t0: Date.now(), at: 0, next: 0, n: 0, same: 0, sameAt: 0, why, ...(prev && (prev.gaveUp || prev.ackStart) ? { ackStart: 1 } : {}) };
+  // 20.43 (автономность, доводка 21.10; ревью сверки): «решение игрока» — только настоящий Старт / «Продолжить» после настоящей паузы.
+  // Раньше метка gaveUp писалась до pauseBot, а ackStart выводился из неё при любой смене manualKickAt: сервер лежит на 30-й минуте →
+  // pauseBot ждёт его (serverWait, перезагрузка), паузы нет, бот включён — и первая же правка меню (задача, лимит, режим, дневной сброс)
+  // закрывала квитанцию «по решению игрока», снимая запрет платного. Теперь метка пишется только после записанной паузы (ниже), в ней —
+  // номер Старта rt.dailyStart (фон поднимает его только на Старт / «Продолжить» / горячую клавишу запуска, не на правку меню),
+  // и квитанцию закрывает лишь более поздний Старт. Метка прежнего вида (без номера Старта) — новое окно сверки, не закрытие
+  const acked = !!prev && (!!prev.ackStart || !!prev.gaveUp && Number.isSafeInteger(prev.gaveUpStart) && (+env.rt.dailyStart || 0) > prev.gaveUpStart);
+  const fresh = !c; if (fresh) c = { kick, t0: Date.now(), at: 0, next: 0, n: 0, same: 0, sameAt: 0, why, ...(acked ? { ackStart: 1 } : {}) };
   const ch = await forumCharacter();
   if (!active()) return;                           // Stop / другой герой / новый Старт во время сверки — без оплаты, паузы и записи
   const now = Date.now(), mine = !!ch && p.char === env.rt.char && ch.name === p.char && (!p.charId || ch.id === p.charId) && Number.isSafeInteger(ch.revision);
@@ -524,27 +566,46 @@ async function travelVerify(g, active, why) {
     if (!c.same) c = { ...c, same: 1, sameAt: now };
   } else if (mine && ch.revision > p.revision) {
     c = { ...c, same: 0, sameAt: 0 };
+    const a = p.from, b = travelPlace(ch), adena = adenaOf(ch.adena);
+    // 20.43 (доводка 21.10): вывод «оплата прошла» записывает прибытие (travelPaidFinish) — иначе тот же телепорт покупался снова
     if (travelMoved(p, ch)) {
-      const a = p.from, b = travelPlace(ch);
-      env.rec('B', 'локации', `${name}: ответ телепорта не подтверждён, но герой уже в другом месте (было ${a.zone || a.city || '?'}, сейчас ${b.zone || b.city || '?'}) — перелёт состоялся, оплату считаю прошедшей; повтора нет`);
-      await env.setRt({ ...travelClose(g), zonePend: null, zoneGoT: now }); travelForget(); return;
+      await travelPaidFinish(g, active, `${name}: ответ телепорта не подтверждён, но герой уже в другом месте (было ${a.zone || a.city || '?'}, сейчас ${b.zone || b.city || '?'}) — перелёт состоялся, оплату считаю прошедшей; прибытие в «${name}» записано (зону уточнит карта), повтора нет`);
+      return;
     }
+    if (travelPaid(p, ch)) {
+      await travelPaidFinish(g, active, `${name}: ответ телепорта не подтверждён, но адены убыло на цену телепорта (до клика ${p.adena}, сейчас ${adena}, цена ${p.cost}; другие оплаты всё это время запрещены) — оплату считаю прошедшей; прибытие в «${name}» записано (зону уточнит карта), повтора нет`);
+      return;
+    }
+    if (travelStayed(p, ch) && now - (+p.sentAt || 0) >= TRAVEL_GAP) {
+      if (c.ackStart || c.stay && now - c.stayAt >= TRAVEL_GAP) {
+        env.rec('B', 'локации', `${name}: телепорт не прошёл — ревизия героя выросла (${p.revision} → ${ch.revision}) другим действием, а адена та же и герой там же (${a.zone || a.city}) ${c.ackStart ? '(сверка после Старта игрока)' : `в двух сверках с промежутком ${Math.round((now - c.stayAt) / 1000)} с`}; прежний запрос с той ревизией уже не применится — оплаты не было, перелёт снят, работаю дальше`);
+        await env.setRt({ ...travelClose(g), zonePend: null }); travelForget(); return;
+      }
+      if (!c.stay) c = { ...c, stay: 1, stayAt: now };
+    } else c = { ...c, stay: 0, stayAt: 0 };
   }
   if (c.ackStart && mine) {
     env.rec('B', 'локации', `${name}: после паузы «Проверьте положение героя» игрок нажал Старт — исход перелёта сервер так и не подтвердил (ревизия ${ch.revision}, до клика ${p.revision}); квитанцию закрываю по решению игрока, маршрут снят, повторного клика по ней не было`);
     await env.setRt({ ...travelClose(g), zonePend: null, zoneGoT: now }); travelForget(); return;
   }
   if (fresh) env.rec('B', 'локации', `${name}: ${why}; повторная оплата запрещена. На паузу не встаю: сверяю положение героя раз в 30–60 с (бесплатный GET /character), платное до итога не трачу`);
-  if (now - c.t0 >= TRAVEL_GIVEUP && !(c.same && now - c.sameAt < 2 * TRAVEL_GAP_MAX)) {
-    // gaveUp — была пауза «Проверьте положение героя»: следующий Старт игрока закроет квитанцию (ackStart выше)
-    g.check = { ...c, gaveUp: now }; await env.setRt(travelKeep(g)); if (!active()) return;
+  if (now - c.t0 >= TRAVEL_GIVEUP && !(c.same && now - c.sameAt < 2 * TRAVEL_GAP_MAX) && !(c.stay && now - c.stayAt < 2 * TRAVEL_GAP_MAX)) {
+    // 20.43 (доводка 21.10): сначала — сама сверка без метки; метка gaveUp — только когда пауза действительно записана
+    g.check = c; await env.setRt(travelKeep(g)); if (!active()) return;
+    const char = env.rt.char, start = +env.rt.dailyStart || 0;
     await forumUncertain(`${c.why || why}: исход перелёта в «${name}» не удалось сверить за 30 мин (${c.n} сверок)`, active);
+    // пауза записана: pauseBot выключил бота, а герой, запуск (manualKickAt), номер Старта и квитанция — те же. gaveUp — была пауза
+    // «Проверьте положение героя»: квитанцию закроет только следующий Старт игрока (ackStart выше, по rt.dailyStart). Перезагрузка
+    // во время ожидания сервера (serverWait) или отказ фона в паузе сюда не доходят — метки нет, правка меню квитанцию не закроет
+    if (env.on === false && env.rt.char === char && env.rt.manualKickAt === kick && (+env.rt.dailyStart || 0) === start && travelIsCheck(g)) {
+      g.check = { ...c, gaveUp: Date.now(), gaveUpStart: start }; await env.setRt(travelKeep(g)); return;
+    }
     // сервер лежал — pauseBot ждал его, а не встал на паузу (и метки gaveUp нет): ещё 5 мин сверки после его возвращения
     if (active()) { g.check = { ...c, t0: Date.now() - TRAVEL_GIVEUP + 5 * 60000 }; await env.setRt(travelKeep(g)); }
     return;
   }
   g.check = c; await env.setRt(travelKeep(g));
-  env.setStatus(`Телепорт в ${name}: исход не подтверждён — сверка ${c.n}${c.same ? ' (без изменений)' : ''}; платное не трачу`);
+  env.setStatus(travelStatus(name, c, now));   // 20.43 (доводка 21.10): одна форма с ожиданием — одна строка журнала на смену смысла
 }
 // 20.43 (ревью au/travel): один шаг открытой квитанции перелёта — из ядра (loopTravel) в любом режиме и из zoneGoStep. Новых кликов
 // нет: ACK своего запроса (тот же герой, Старт и маршрут) — прибытие, иначе сверка по серверу (travelVerify). Старая запись внутри
