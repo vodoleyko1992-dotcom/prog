@@ -123,7 +123,8 @@ async function storyTick(force) {
   for (const kind of Object.keys(Q)) {
     const S = env.rt.story?.[kind];
     if (!force && S?.completed && Date.now() - (S.t || 0) < 24 * 3600000) continue;   // пройденный — раз в сутки
-    try { const r = await getJson(Q[kind].root); if (!same(T0)) return; if (r.ok && r.j?.quest) qNote(kind, r.j.quest); } catch (e) {}
+    // 20.43 (разбор 21.10): сбой сети по-прежнему тихо (повтор через 10 мин), ошибка кода разбора квеста — в журнал
+    try { const r = await getJson(Q[kind].root); if (!same(T0)) return; if (r.ok && r.j?.quest) qNote(kind, r.j.quest); } catch (e) { env.quietErr?.('квесты: прогресс', e, true); }
   }
 }
 // ---- сдача готовой части ----

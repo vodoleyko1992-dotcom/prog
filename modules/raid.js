@@ -543,15 +543,19 @@ async function rbInfo(id) {
 // Теперь телепорт к РБ/эпику и смерть сбрасывают rt.zone (content.zoneMoveNet, survival.onDeath), а перелёт по «Телепорту» (zonePend, 2 мин)
 // — не повод писать зону: пишем только зону, которую карта определила уже на месте
 const rbZoneNow = () => !(env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000) && env.rt.zone || null;
-async function rbNote(id, patch) {
+// 20.43 (разбор 21.10): soon — обучающие цифры боя (incoming, спецудар/maxHit) отложенной записью: память вкладки (её читает rbFlee)
+// обновлена сразу, в хранилище — пакетом раз в 8 с, с ближайшей обычной записью или при уходе со страницы. Раньше каждый ход с РБ
+// писал весь rbDb обычной записью и выталкивал с собой отложенные пакеты 20.41 (skills, kills, dps, rbForecast). Победа, смерть, проба — сразу
+async function rbNote(id, patch, soon = false) {
   const prev = env.rt.rbDb?.[id] || { tries: 0, kills: 0 };
-  const won = patch.kills > (prev.kills || 0), at = Date.now();
+  const won = patch.kills > (prev.kills || 0), at = Date.now(), died = /^убил героя/.test(patch.note || '');
   // Даже короткая победа с меняющимися баффами — факт победы, но не стабильный
   // DPS: хранится отдельно и не попадает в rbDpsSample/перенос на другого РБ.
   const victoryEvidence = won ? { at, char: env.rt.char, classKey: `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`,
     endingContext: rbContext(id)?.key || null, stableContext: patch.fightContext || null,
     targetMaxHp: rbStatsOf(id)?.hp || null, fightS: patch.fightS || null } : null;
-  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(/^убил героя/.test(patch.note || '') ? { deathAt: at, deathLog: [...(prev.deathLog || []).filter(x => at - x.t < 24 * 3600000), { t: at, lvl: env.heroLvl() || 0 }].slice(-5) } : {}), ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
+  const write = soon && !won && !died && !patch.probe && typeof env.setRtSoon === 'function' ? env.setRtSoon : env.setRt;
+  await write({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(died ? { deathAt: at, deathLog: [...(prev.deathLog || []).filter(x => at - x.t < 24 * 3600000), { t: at, lvl: env.heroLvl() || 0 }].slice(-5) } : {}), ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
     ...(won && env.cfg.rbHuntMode && !isEpicId(id) ? { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, rbRefuse: null } : {}) });
   if (won && env.payments?.pending()?.kind === 'raid-teleport') await paymentReconcile();
 }
@@ -862,7 +866,7 @@ function noteRbSkip(id, reason) {
   if (Date.now() - seen > 1800000) {
     rbSkipNotices.set(id, Date.now());
     const keep = Object.fromEntries(Object.entries(env.rt.rbSkipNote || {}).filter(([, t]) => Date.now() - t < 1800000));
-    try { env.setRt?.({ rbSkipNote: { ...keep, [id]: Date.now() } })?.catch?.(() => {}); } catch (e) {}
+    try { env.setRt?.({ rbSkipNote: { ...keep, [id]: Date.now() } })?.catch?.(e => env.quietErr?.('тур РБ: метка пропуска', e)); } catch (e) { env.quietErr?.('тур РБ: метка пропуска', e); }   // 20.43: ошибки кода — в журнал
     env.rec('B', 'РБ-тур', `не полетел к ${env.rt.rbList?.[id]?.name || id}: ${reason}`);
   }
 }
@@ -954,7 +958,7 @@ function rbTourPublish(plan) {
   const view = { ...plan, ready }, sig = JSON.stringify({ ...view, at: 0, blocked: view.blocked.map(({ waitMs, ...x }) => x) });
   if (sig === rbTourViewSig && Date.now() - (env.rt.rbTourView?.at || 0) < 30000) return;
   rbTourViewSig = sig;
-  try { env.setRt({ rbTourView: view })?.catch?.(() => {}); } catch (e) {}
+  try { env.setRt({ rbTourView: view })?.catch?.(e => env.quietErr?.('тур РБ: план', e)); } catch (e) { env.quietErr?.('тур РБ: план', e); }
 }
 
 function rbListWhy(plan = rbTourPlan()) {
@@ -1251,7 +1255,7 @@ async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
   if (phase !== 'wait' && env.rt.rbFishWait) env.setRt({rbFishWait:null});
   if (H.phase === phase && H.next === next && !Object.keys(extra).length) return;
-  huntSet({ phase, next, ...extra }).catch(() => {});
+  huntSet({ phase, next, ...extra }).catch(e => env.quietErr?.('тур РБ: этап', e));   // 20.43: setRt не бросает при сбое записи — здесь только ошибки кода
   env.setStatus(`Тур РБ: ${next}`);
 }
 
@@ -1540,7 +1544,7 @@ async function rbHuntStep() {
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
     // 20.41 (лог 21:09:40–45: 4–6 записей подряд перед боем): шаг fight и текущий РБ — одной точкой ожидания (FIFO)
-    huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() }).catch(() => {});
+    huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() }).catch(e => env.quietErr?.('тур РБ: этап', e));
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;
@@ -1736,11 +1740,12 @@ function rbWoundNote(ctx) {
   S.woundT = Date.now();
   const W = Object.fromEntries(Object.entries(env.rt.rbWound || {}).filter(([, w]) => Date.now() - (w.t || 0) < 3600000));
   W[S.id] = { cur: mob.cur, max: mob.max, t: Date.now(), name: ctx.name };
-  env.setRt({ rbWound: W });
+  // 20.43 (разбор 21.10): замер раз в 8 с — отложенной записью; rbWounded читает память вкладки, отход/выход/победа пишут сразу и забирают его с собой
+  (env.setRtSoon || env.setRt)({ rbWound: W });
 }
 const rbWounded = id => { if (ordinaryLiveTour(id) && rbPreSkipWhy(id)) return false; const w = env.rt.rbWound?.[id], skip = preSkip(id); return !(skip.probeExit && (!ordinaryLiveTour(id) || skip.safety === true) && Date.now() - skip.t < 30 * 60000) && !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.99 && !rbVerdictBlocks(id); };   // 10.0.2: 95 → 99 % (лог 12.10 22:16: Рахха 96,7 % — «бой окончен → следующий», урон по 4 РБ вразброс)
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
-  try { rbWoundNote(ctx); } catch (e) {}
+  try { rbWoundNote(ctx); } catch (e) { env.quietErr?.('тур РБ: замер HP РБ', e); }   // 20.43 (разбор 21.10): ошибки обучения — в журнал, не тишина
   const S = ctx.rb;
   if (env.payments?.pending()?.kind === 'raid-teleport' && env.payments.pending().evidence?.id === S.id) void paymentReconcile(S.id);
   const lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
@@ -1781,16 +1786,19 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
   const db = env.rt.rbDb?.[S.id] || {};
   if (incomingKey && !changedIncoming && fresh.length && (W.hits.length || W.sp)) {
     const hits = [...W.hits].sort((a,b)=>a-b), old = db.incoming?.context === incomingKey ? db.incoming : {};
-    env.rbNote(S.id, { incoming: { context: incomingKey, t: Date.now(), n: Math.max(old.n||0,hits.length),
+    const inc = { context: incomingKey, t: Date.now(), n: Math.max(old.n||0,hits.length),
       base: hits.length ? hits[hits.length>>1] : old.base||0,
       sp: Math.max(old.sp||0,W.sp), maxHit: Math.max(old.maxHit||0,...hits),
-      hitP90: hits.length>=3 ? hits[Math.min(hits.length-1,Math.floor(hits.length*.9))] : old.hitP90||0 } });
+      hitP90: hits.length>=3 ? hits[Math.min(hits.length-1,Math.floor(hits.length*.9))] : old.hitP90||0 };
+    // 20.43 (разбор 21.10): раньше — запись всего rbDb на каждой порции журнала (метка t новая каждый ход). Теперь только при изменении цифр и отложенно;
+    // метку свежести (rbIncoming верит наблюдению 30 мин) освежаем и без изменений, но не чаще раза в минуту
+    if (old.context !== incomingKey || ['n','base','sp','maxHit','hitP90'].some(k => inc[k] !== old[k]) || !(inc.t - (old.t || 0) < 60000)) env.rbNote(S.id, { incoming: inc }, true)?.catch?.(e => env.quietErr?.('тур РБ: запись ударов РБ', e));
   }
   // 8.0.3 (лог 11.10 11:42, Орфен): hitP90 — только от ≥ 3 ударов, и бой после 1–2 ударов (выход, смерть) знание о 57 % ударе терял —
   // самый сильный одиночный обычный удар помним отдельно (maxHit), по нему аварийный выход в следующем бою с этим боссом
   const mx = S.hits?.length ? Math.max(...S.hits) : 0;
   if ((S.sp || 0) > (db.sp || 0) || p90 > (db.hitP90 || 0) || mx > (db.maxHit || 0)) {
-    env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90), maxHit: Math.max(db.maxHit || 0, mx) });
+    env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90), maxHit: Math.max(db.maxHit || 0, mx) }, true)?.catch?.(e => env.quietErr?.('тур РБ: запись ударов РБ', e));   // 20.43: отложенно, память вкладки — сразу
   }
   const st = env.rt.rbStats?.[S.id];
   // 8.0.3: удары эпика (Орфен k ≈0,65 против ≈0,056 у обычных РБ) общий rbK не учат — иначе «обычный удар» всех РБ вырос бы в 3–5 раз
@@ -1825,7 +1833,7 @@ function rbAssess(ctx, me, mob) {
   if (probingDps && !(measurement.startedAt > 0)) {
     // Дедлайн попытки переживает reload/новый ctx; время ожидания окна карты в 30 с боя не входит.
     measurement = { ...measurement, startedAt: now, deadlineAt: now + 30000, ...(measurement.checkpointSeconds ? { checkpointAt: now + measurement.checkpointSeconds*1000 } : {}) };
-    rbNote(S.id, { probe: measurement }).catch(() => {});
+    rbNote(S.id, { probe: measurement }).catch(e => env.quietErr?.('тур РБ: проба', e));
   }
   const elapsed = (now - (probingDps ? measurement.startedAt : S.t0)) / 1000;
   const context = rbContext(S.id), contextKey = context?.managed ? context.key || '?' : null;
@@ -1847,7 +1855,7 @@ function rbAssess(ctx, me, mob) {
   S.contextSet = true; S.contextKey = contextKey;
   if (!env.rbLive || env.rbLive.name !== ctx.name || env.rbLive.t0 !== S.t0 || now - env.rbLive.t > 60000) env.rbLive = { name: ctx.name, cur: mob.cur, max: mob.max, t0: S.t0, t: now, verdict: 'measuring', win: false };
   else Object.assign(env.rbLive, { cur: mob.cur, max: mob.max, t: now });
-  try { rbLearn(ctx); } catch (e) {}
+  try { rbLearn(ctx); } catch (e) { env.quietErr?.('тур РБ: обучение', e); }
   if (!S.last || now - S.last >= 1000) {
     S.samples.push({ t: now, me: me.cur, mob: mob.cur });
     S.last = now;
@@ -1867,7 +1875,7 @@ function rbAssess(ctx, me, mob) {
     const budget = rbProbeBudget({ me, sp: spike, p90, loss, pot: env.potModel(), seconds, entry: false });
     if (!budget) return { abort: true, why: 'разведка: не подтверждён конечный запас HP/лечения до следующей проверки — штатный выход' };
     measurement = { ...measurement, checkpointAt: Math.min(measurement.deadlineAt,now+budget.seconds*1000) };
-    rbNote(S.id, { probe: measurement }).catch(() => {});
+    rbNote(S.id, { probe: measurement }).catch(e => env.quietErr?.('тур РБ: проба', e));
   }
   const a = S.samples[0], b = S.samples[S.samples.length - 1];
   const dt = (b.t - a.t) / 1000;
@@ -1893,7 +1901,7 @@ function rbAssess(ctx, me, mob) {
   // 10.0.2: свой ДПС по ЭТОМУ РБ (с котом) — для выбора цели: на 8–14 ур. выше героя урон вдвое меньше (лог 12.10: Рахха 65 ≈4,3k/с,
   // Галлате 73 ≈2,5k/с, Голконда 79 ≈2,4k/с при общем «≈4k/с») — по общему ДПС тур ждал от Голконды 25 мин, реально ≈43 мин и две смерти
   const damageSamples = S.samples.slice(1).filter((v, i) => S.samples[i].mob > v.mob).length;
-  if (dt >= 20 && damageSamples >= 5 && dealt > 0 && (!context?.managed || context.key) && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; rbDpsLearn(S.id, dps).catch(() => {}); }
+  if (dt >= 20 && damageSamples >= 5 && dealt > 0 && (!context?.managed || context.key) && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; rbDpsLearn(S.id, dps).catch(e => env.quietErr?.('тур РБ: замер DPS', e)); }
   // Не объявляем победу по 1–2 случайным значениям HP или кратковременному лечению персонажа.
   // Для эпика прежний аварийный выход по нулевому урону продолжает действовать.
   const reliable = dt >= 15 && S.samples.length >= 5 && dealt >= Math.max(1, mob.max * 0.001);
@@ -1972,14 +1980,14 @@ function rbAssess(ctx, me, mob) {
   // Завершаем пробу сразу после достаточного замера, пока доказательства ещё доступны.
   if (probingDps && win) {
     S.probeConfirmed = true;
-    rbNote(S.id, { probe: { ...measurement, done: now } }).catch(() => {});
+    rbNote(S.id, { probe: { ...measurement, done: now } }).catch(e => env.quietErr?.('тур РБ: проба', e));
     env.rec('B', 'РБ', `${ctx.name}: проба подтверждена, полный DPS ≈${Math.round(dps)}/с; продолжаю бой`);
   }
   if (probingDps && !win && elapsed >= 30) {
     const tooLong = (env.cfg.rbMaxKillMin ?? 30) > 0 && tKill > (env.cfg.rbMaxKillMin ?? 30) * 60;
     if (tooLong || !enoughCombatData || spikeRisk || !potReliable || !enoughReserve || !candidateWin || context?.managed && !context.key)
       return { abort: true, why: `проба 30 с завершена: ${tooLong ? 'измеренный бой дольше предела' : 'урон и лечение ещё не подтверждают безопасное продолжение'}; полный DPS ≈${Math.round(dps)}/с` };
-    rbNote(S.id, { probe: { ...measurement, done: now } }).catch(() => {});
+    rbNote(S.id, { probe: { ...measurement, done: now } }).catch(e => env.quietErr?.('тур РБ: проба', e));
     env.rec('B', 'РБ', `${ctx.name}: проба завершена, полный DPS ≈${Math.round(dps)}/с; продолжаю по измеренному прогнозу`);
   }
   // v4.31: лечение банки ещё не измерено (300 HP — догадка) — не сдаёмся, пока не выпьем банку и не узнаем, сколько она лечит
@@ -2047,7 +2055,7 @@ function rbAssess(ctx, me, mob) {
 // спецудар на откате и следующим ходом не прилетит
 function rbFlee(ctx, me, mob) {
   const S = ctx?.rb; if (!S || !(me?.max > 0) || !(me.cur > 0) || !(mob?.max > 0) || (!ordinaryLiveTour(S.id) && mob.cur <= mob.max * 0.05)) return null;
-  try { rbLearn(ctx); } catch (e) {}
+  try { rbLearn(ctx); } catch (e) { env.quietErr?.('тур РБ: обучение', e); }
   const liveTour = ordinaryLiveTour(S.id), d = liveTour ? {} : rbIncoming(S.id, rbContext(S.id));
   const hit = Math.round(Math.max(0, ...(S.hits || []), d.hitP90 || 0, d.maxHit || 0));
   const worst = Math.max(hit, Math.round(Math.max(S.sp || 0, d.sp || 0)));
