@@ -157,6 +157,12 @@ async function slotModalTab(key) {
   return !!(await env.waitFor(() => document.querySelector('.l2-battle-hotbar-pick') ? 1 : null, 2000, 100));
 }
 const slotPicks = () => [...document.querySelectorAll('.l2-battle-hotbar-pick')].filter(x => env.shown(x));
+// 20.43 (лог 21.10 22:06–22:08, Fortune Seeker): одна общая пауза 2 мин на любую перестановку зарядов — удачная замена B→S в 22:06:19
+// не пускала замену S→A после смены оружия игроком (22:06:53) и покупки 5000 A-зарядов (22:07:52): 4 боя без зарядов до 22:08:19.
+// Пауза теперь — только на тот же грейд и только до следующего похода в магазин (rt.shopT): новый грейд или свежая закупка — пробуем сразу.
+// Старая метка без грейда держит, как прежде (одна пауза после обновления)
+const shotTryHeld = (tk, gk, want, now) => { const t = +env.rt[tk] || 0, g = env.rt[gk];
+  return now - t < 120000 && (!g || g === want) && (+env.rt.shopT || 0) <= t; };
 // слот зарядов не того грейда → «Прибрати» старый, на свободный слот — заряды нужного грейда из «Розхідники» (раз в 2 мин)
 async function shotSlotSwap(b) {
   const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null, have = shotGradeOf(b);
@@ -164,8 +170,8 @@ async function shotSlotSwap(b) {
   const matches = x => shotGradeOf(x) === want && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, ''));
   if (!want || !have || matches(b) || shotSlots().some(matches)) return false;
   const now = Date.now();
-  if (now - (env.rt.shotSwapT || 0) < 120000) return false;
-  env.rt.shotSwapT = now; env.setRt({ shotSwapT: now });
+  if (shotTryHeld('shotSwapT', 'shotSwapG', want, now)) return false;
+  env.rt.shotSwapT = now; env.rt.shotSwapG = want; env.setRt({ shotSwapT: now, shotSwapG: want });
   const close = slotModalClose, openTab = slotModalTab, picks = slotPicks;
   // 1) нужный грейд в сумке есть?
   if (!(await openTab('consumable'))) { await close(); env.rec('B', 'внимание', `заряды на панели ${have}-грейда, а оружие ${want} — свободного слота нет, переставь вручную`); return false; }
@@ -194,8 +200,8 @@ async function shotSlotAdd() {
   const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null;
   if (!want || shotSlots().length || !emptySlot()) return false;
   const now = Date.now();
-  if (now - (env.rt.shotAddT || 0) < 120000) return false;
-  env.rt.shotAddT = now; env.setRt({ shotAddT: now });
+  if (shotTryHeld('shotAddT', 'shotAddG', want, now)) return false;
+  env.rt.shotAddT = now; env.rt.shotAddG = want; env.setRt({ shotAddT: now, shotAddG: want });
   const re = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
   const slotNm = (emptySlot()?.title || '').match(/слот \d+/)?.[0] || 'пустой слот';
   if (!(await slotModalTab('consumable'))) { await slotModalClose(); return false; }

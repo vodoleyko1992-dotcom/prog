@@ -1400,7 +1400,17 @@ async function rbHuntStep() {
     if (!active()) return;
     if (!(env.rt.rbHuntIdle > Date.now() && env.rt.rbRefuse?.n >= 2 && Date.now() - (env.rt.rbRefuse.t || 0) < 600000)) await env.setRt({rbHuntIdle:0,rbIdleMark:null});
     if (!active()) return;
-    if (!isRbPage()) { location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return; }
+    if (!isRbPage()) {
+      // 20.43 (лог 21.10 23:14:43/23:14:47, 23:24:18/23:24:21): переход отсюда не записывал rbScan — новая страница списка считалась
+      // «старым документом до Start», и rbListScan открывал её второй раз (+3–4 с на каждый запуск тура). Метка этого документа
+      // говорит rbListScan, что следующий документ уже свежий; Start на открытой странице списка по-прежнему её перезагружает
+      const start = env.rt.rbListStartRequired;
+      if (start != null && env.rt.rbScan?.start !== start) {
+        const saved = await env.setRt({rbScan:{start,document:rbListDocument,at:Date.now()}});
+        if (saved?.ok === false || !active() || typeof env.rtCommit === 'function' && !await env.rtCommit() || !active()) return;
+      }
+      location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return;
+    }
     return rbListScan();
   }
   if (rbOneHit() && H.step !== 'fight') return rbOnePause(H.name);   // 8.0.3: РБ убит по команде «один РБ» (и вне шага боя)

@@ -254,7 +254,9 @@ async function nextFight(ctx) {
   if (env.magisterAfterWin && env.victory()) {
     if (await env.magisterAfterWin(ctx)) return;
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
-    if (env.tvtSoon() || env.magisterHold?.()) return; // Условия могли измениться во время чтения персонажа.
+    if (env.tvtSoon()) return; // Условия могли измениться во время чтения персонажа.
+    // 20.43 (лог 21.10 21:57:02–21:58:56): окно TvT — новый бой не начинаем, как и на карте, но пишем «TvT через N с — жду»
+    if (env.magisterHold?.()) { await env.tvtHoldWait?.(); return; }
   }
   if (!env.on || env.tabOwner === false) return;
   // Автобаф кота — обслуживание между целями, без выхода из выбранной зоны.
