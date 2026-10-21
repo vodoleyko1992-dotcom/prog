@@ -30,11 +30,19 @@ async function until(fn, ms = 10000) { const end = Date.now() + ms; let last; do
     assert.equal(q.code, 'steel'); assert.equal(q.n, 50); assert.equal(q.item, 1880);
     await sw.evaluate(async id => { const s = await chrome.storage.local.get(null), k = s['rt@CraftHero'] ? 'rt@CraftHero' : 'rt'; await chrome.storage.local.set({ [k]: { ...s[k], craftMade: { [id]: 20 } } }); }, q.id);
     await until(() => p.evaluate(() => /Steel — 20\/50/.test(document.getElementById('craftList').textContent)));
-    await p.evaluate(() => document.querySelector('#craftList [data-craftdel]').click());   // раздел скрыт вкладкой — клик из страницы
-    await until(async () => { const r = (await read()).rt; return (r.craftQueue || []).length === 0 && !r.craftMade?.[q.id]; });
+    // ревью 21.10: настоящий клик оставляет фокус на ✕ — строка всё равно исчезает; craftMade меню не переписывает (его пишет бот)
+    await p.evaluate(() => { const b = document.querySelector('#craftList [data-craftdel]'); b.focus(); b.click(); });   // раздел скрыт вкладкой — клик из страницы
+    await until(async () => { const r = (await read()).rt; return (r.craftQueue || []).length === 0; });
+    await until(() => p.evaluate(() => !document.querySelector('#craftList [data-craftdel]')));
+    assert.equal((await read()).rt.craftMade?.[q.id], 20, 'прогресс бота меню не трогает');
+    // «Передать основному сейчас» остаётся в карточке «Сабклассы», а не в карточке крафта
+    assert.doesNotMatch(await p.evaluate(() => document.getElementById('subHandNow').closest('.card')?.dataset.key || ''), /Свой крафт/);
     // галка и запас MP — обычные поля настроек
     await p.evaluate(() => { document.getElementById('craftAuto').click(); });
     await until(async () => (await read()).cfg.craftAuto === true);
+    // другой герой без книги — в выборе снова заглушка, а не рецепты прошлого героя
+    await sw.evaluate(async () => { const s = await chrome.storage.local.get(null), k = s['rt@CraftHero'] ? 'rt@CraftHero' : 'rt'; const r = { ...s[k] }; delete r.craftBook; await chrome.storage.local.set({ [k]: r }); });
+    await until(() => p.evaluate(() => document.querySelectorAll('#craftPick option').length === 1 && document.getElementById('craftPick').value === ''));
     assert.deepEqual(errors, []);
     console.log('PASS: меню «Свой крафт материалов» — выбор рецепта из книги, список с прогрессом и удалением, галки в настройках, 0 ошибок JS');
   } finally { await ctx.close(); }

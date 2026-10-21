@@ -1702,8 +1702,10 @@ function renderCraft(rt, d) {
   craftRt = rt;
   const b = rt.craftBook, q = rt.craftQueue || [], made = rt.craftMade || {}, s = rt.craftSay, out = [];
   const opts = (b?.list || []).map(([code, nm, , oq, lvl, mp]) => `<option value="${esc(code)}">${esc(nm)}${oq > 1 ? ` (×${oq})` : ''} · ур. ${lvl} · ${mp} MP${b.lvl < lvl ? ' · закрыт' : ''}</option>`).join('');
-  if (opts && craftSig !== opts) { craftSig = opts; $('craftPick').innerHTML = opts; }
-  if (!$('craftList').contains(document.activeElement)) $('craftList').innerHTML = q.map(x => { const m = +made[x.id] || 0;
+  // пустая книга (другой герой) — снова заглушка, а не рецепты прошлого героя; в списке нет полей ввода — перерисовываем всегда
+  const html = opts || '<option value="">— рецепт (появится после первого чтения книги) —</option>';
+  if (craftSig !== html) { craftSig = html; $('craftPick').innerHTML = html; }
+  $('craftList').innerHTML = q.map(x => { const m = +made[x.id] || 0;
     return `<div class="rule"><span class="t">${m >= x.n ? '✅' : '⚒'} ${esc(x.nm || x.code)} — ${fmt(m)}/${fmt(x.n)}</span><button data-craftdel="${esc(x.id)}" title="Убрать">✕</button></div>`; }).join('');
   if (d.craftAuto !== true) out.push('Выключено: бот сам не крафтит');
   if (b) out.push(`Книга ${new Date(b.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}: Create Item ур. ${b.lvl}${b.lvl ? '' : ' — навык не выучен (магистр)'} · MP ${fmt(b.mp)}/${fmt(b.maxMp)}`);
@@ -1715,12 +1717,12 @@ $('craftAdd')?.addEventListener('click', async () => {
   const code = $('craftPick').value, n = Math.floor(+$('craftN').value || 0); if (!code) return $('craftPick').focus(); if (n < 1) return $('craftN').focus();
   const rt = craftRt, row = (rt.craftBook?.list || []).find(x => x[0] === code);
   const q = [...(rt.craftQueue || []), { id: 'c' + Date.now().toString(36), code, nm: row?.[1] || code, item: row?.[2] || 0, n }];
-  $('craftN').value = ''; await menuPatch({ craftQueue: q }); toast(`⚒ В список крафта: ${row?.[1] || code} ×${n}`);
+  $('craftN').value = ''; await menuPatch({ craftQueue: q }, { expectedChar: formChar }); toast(`⚒ В список крафта: ${row?.[1] || code} ×${n}`);
 });
 $('craftList')?.addEventListener('click', async e => {
   const id = e.target.closest('[data-craftdel]')?.dataset.craftdel; if (!id) return;
-  const rt = craftRt, made = { ...(rt.craftMade || {}) }; delete made[id];
-  await menuPatch({ craftQueue: (rt.craftQueue || []).filter(x => x.id !== id), craftMade: made });
+  // только список: craftMade пишет бот после каждой партии — старая копия меню откатила бы чужой прогресс (id строк уникальны)
+  await menuPatch({ craftQueue: (craftRt.craftQueue || []).filter(x => x.id !== id) }, { expectedChar: formChar });
 });
 $('subHandNow')?.addEventListener('click', async () => { await menuPatch({ subHandReq: { t: Date.now() }, subHandSay: null }); toast('📤 Передам основному сырьё из сумки'); });
 $('mmGuideNow')?.addEventListener('click', async () => { await menuPatch({ farmGuideReq: Date.now() }); toast('🔄 Обновлю источники дропа и спойла из игры'); });
