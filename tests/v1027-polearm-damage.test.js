@@ -10,7 +10,7 @@ function fixture() {
  let now = 100000, rid = 0;
  const location = {search: '?spawnId=main'}, rt = {char: 'Fixture', zone: 'cruma'}, logs = [];
  const env = {rt, cfg: {}, routeLocation: location, actName: a => a === 'attack' ? 'атака' : a,
-   setRt: async p => Object.assign(rt,p), rec: (...a) => logs.push(a), mobTitle: () => 'Main'};
+   setRt: async p => Object.assign(rt,p), setRtSoon: async p => Object.assign(rt,p) /* 20.41: замеры навыков — отложенная запись */, rec: (...a) => logs.push(a), mobTitle: () => 'Main'};
  const box = {Date: {now: () => now}, URLSearchParams, console};
  vm.runInNewContext(read('modules/fightlab.js'),box); const lab = box.L2V7Factories.fightlab(env);
  const send = (path,data,req={},status=200,id=++rid) => {
@@ -101,7 +101,7 @@ async function observe({turn,domDamage=0,accepted=true,sent=true,hpAfter=1572}={
   mobHp:()=>({cur:now>10000?hpAfter:1572,max:1572}),meHp:()=>({cur:5000}),meMp:()=>({cur:500}),logLines:()=>[],noticeText:()=>'',slotCd:()=>null,
   setTimeout:f=>{callback=f},sleep:async()=>{},newLines:()=>[],BUFF_RE:/x^/,ilOf:()=>null,isChargeName:()=>false,dmgFromLog:()=>domDamage,
   L2V7Modules:{fightlab:{turnFor:(name,t,action,rid)=>turn&&turn.rid===rid&&turn.action===action?turn:null}},rt,
-  fightNote:(...a)=>notes.push(a),splashDmg:()=>0,BUFF_CTX:null,UNAVAIL:/x^/,setRt:async p=>Object.assign(rt,p),rec:(...a)=>logs.push(a)};
+  fightNote:(...a)=>notes.push(a),splashDmg:()=>0,BUFF_CTX:null,UNAVAIL:/x^/,setRt:async p=>Object.assign(rt,p),setRtSoon:async p=>Object.assign(rt,p)/* 20.41 */,rec:(...a)=>logs.push(a)};
  vm.runInNewContext(content.slice(content.indexOf('function observeOwner()'),content.indexOf('// роли по панели'))+';this.observeSlot=observeSlot',box);
  box.observeSlot(b,'B');if(sent){net.start=net.done=3;net.rid=2;net.ok=accepted;}now+=900;await callback();return{rt,notes,logs};
 }

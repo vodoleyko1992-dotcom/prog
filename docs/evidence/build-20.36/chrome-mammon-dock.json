@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-20T07:07:26.240Z",
+  "boundary": "actual Chrome MV3 dock/runtime/content; Firefox iframe tabs absence modeled; HTTPS fully local",
+  "capabilities": {
+    "docked": true,
+    "tabs": "undefined",
+    "runtime": "function"
+  },
+  "offFreshRead": "PASS",
+  "refreshChangedBag": "PASS",
+  "errorKeepsSuccessTimestamp": "PASS",
+  "buttonRecovered": "PASS",
+  "onOwnerRead": "PASS",
+  "posts": 0,
+  "navigation": false,
+  "unpromptedStartup": false,
+  "reads": 4,
+  "errors": []
+}

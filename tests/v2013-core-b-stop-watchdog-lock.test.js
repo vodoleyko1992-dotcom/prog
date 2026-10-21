@@ -21,6 +21,8 @@ function fixture(options={}){
  vm.createContext(box);
  vm.runInContext(slice(bg,'const LOCK_TTL =','// A single process owns'),box);
  vm.runInContext(slice(bg,'async function botControl(','async function switchCharacter('),box);
+ // 20.41: Stop и сторож сами рисуют значок/двигают controlSeq после записи «on» (слушателя storage.onChanged в фоне нет)
+ vm.runInContext(slice(bg,'let paintedOn = null;',"chrome.storage.local.get('on').then(s => paintOn"),box);
  vm.runInContext(slice(bg,'function wdPlan(','async function srvProbe('),box);
  vm.runInContext(slice(bg,'chrome.alarms?.onAlarm.addListener(','// Release immediately when'),box);
  const tab=id=>({id:'test',frameId:0,url:'https://l2wap.com/map.html',tab:{id}});

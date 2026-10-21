@@ -1,0 +1,803 @@
+{
+  "checkedAtUTC": "2026-10-20T11:04:24.769373+00:00",
+  "browserVersion": "Google Chrome for Testing 156.0.8078.4",
+  "archiveSHA256": "7e57d29e902900ed0659d68635b3556a618fc4cd70d3bc6e8b4cda636f2b968c",
+  "archiveBytes": 1454077,
+  "manifestVersion": "20.40",
+  "cfgKeys": 208,
+  "runtimeFiles": 64,
+  "runtimeBeforeAfterSame": true,
+  "runtimeAllMatchSource": true,
+  "archiveCRC": "PASS",
+  "zipload": {
+    "status": "PASS",
+    "pageErrors": 0
+  },
+  "catNavigation": {
+    "file": "tests/v2038-cat-navigation-browser.cjs",
+    "casesPassed": 2,
+    "pageErrors": 0,
+    "proof": [
+      {
+        "case": "single navigation then immediate new-document combat",
+        "browser": "156.0.8078.4",
+        "navigationDelayMs": 1200,
+        "stopBeforeDocument": null,
+        "statusTrace": [
+          {
+            "t": 1792494242934,
+            "s": "Бой: загрузка"
+          },
+          {
+            "t": 1792494242945,
+            "s": "Проверяю серверное время и лимиты дня"
+          },
+          {
+            "t": 1792494243079,
+            "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+          }
+        ],
+        "views": 1,
+        "navigations": 1,
+        "oldDocumentReloadStatuses": 0,
+        "newDocumentFirstActionMs": 167,
+        "pendingState": {
+          "target": {
+            "champ": false,
+            "name": "Nephilim Praetorian",
+            "rb": false
+          },
+          "status": "Бой: загрузка",
+          "observedAt": 1792494243591
+        },
+        "calls": [
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+            "method": "GET",
+            "at": 1792494241595
+          },
+          {
+            "path": "/game/time",
+            "query": "",
+            "method": "GET",
+            "at": 1792494242951
+          },
+          {
+            "path": "/game/daily-quests",
+            "query": "",
+            "method": "GET",
+            "at": 1792494242962
+          },
+          {
+            "path": "/game/dungeon/view",
+            "query": "?dungeonId=necropolis_of_martyrdom",
+            "method": "GET",
+            "at": 1792494243059
+          },
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+            "method": "GET",
+            "at": 1792494243095
+          },
+          {
+            "path": "/game/battle/start",
+            "query": "",
+            "method": "POST",
+            "at": 1792494244331
+          },
+          {
+            "path": "/character",
+            "query": "",
+            "method": "GET",
+            "at": 1792494244395
+          },
+          {
+            "path": "/game/battle/action",
+            "query": "",
+            "method": "POST",
+            "at": 1792494244463
+          }
+        ],
+        "paths": [
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+            "at": 1792494241595
+          },
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+            "at": 1792494243095
+          }
+        ],
+        "errors": []
+      },
+      {
+        "case": "Stop while document loads",
+        "browser": "156.0.8078.4",
+        "navigationDelayMs": 1200,
+        "stopBeforeDocument": true,
+        "statusTrace": [
+          {
+            "t": 1792494247629,
+            "s": "Бой: загрузка"
+          },
+          {
+            "t": 1792494247650,
+            "s": "Проверяю серверное время и лимиты дня"
+          },
+          {
+            "t": 1792494247874,
+            "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+          }
+        ],
+        "views": 1,
+        "navigations": 1,
+        "oldDocumentReloadStatuses": 0,
+        "newDocumentFirstActionMs": null,
+        "pendingState": {
+          "target": {
+            "champ": false,
+            "name": "Nephilim Praetorian",
+            "rb": false
+          },
+          "status": "Бой: загрузка",
+          "observedAt": 1792494248392
+        },
+        "calls": [
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+            "method": "GET",
+            "at": 1792494246746
+          },
+          {
+            "path": "/game/time",
+            "query": "",
+            "method": "GET",
+            "at": 1792494247671
+          },
+          {
+            "path": "/game/daily-quests",
+            "query": "",
+            "method": "GET",
+            "at": 1792494247678
+          },
+          {
+            "path": "/game/dungeon/view",
+            "query": "?dungeonId=necropolis_of_martyrdom",
+            "method": "GET",
+            "at": 1792494247835
+          },
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+            "method": "GET",
+            "at": 1792494247911
+          },
+          {
+            "path": "/game/battle/start",
+            "query": "",
+            "method": "POST",
+            "at": 1792494249168
+          }
+        ],
+        "paths": [
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+            "at": 1792494246746
+          },
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+            "at": 1792494247911
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "combatStorage": {
+    "file": "tests/v2039-combat-storage-browser.cjs",
+    "casesPassed": 3,
+    "pageErrors": 0,
+    "proof": [
+      {
+        "mode": "hold",
+        "browser": "156.0.8078.4",
+        "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+        "beforeReleaseActions": [
+          "l2_302",
+          "whirlwind"
+        ],
+        "actions": [
+          {
+            "action": "l2_302",
+            "at": 1792494243658
+          },
+          {
+            "action": "whirlwind",
+            "at": 1792494243814
+          }
+        ],
+        "ackToNextActionMs": 116,
+        "victoryToNextPageMs": 3486,
+        "storageWrites": 20,
+        "storageTrace": [
+          {
+            "at": 1792494242268,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494242332
+          },
+          {
+            "at": 1792494242663,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt",
+              "on"
+            ],
+            "done": 1792494242710
+          },
+          {
+            "at": 1792494242773,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "cfg",
+              "rt"
+            ],
+            "done": 1792494242816
+          },
+          {
+            "at": 1792494243345,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243382
+          },
+          {
+            "at": 1792494243403,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243457
+          },
+          {
+            "at": 1792494243474,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243510
+          },
+          {
+            "at": 1792494243526,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243594
+          },
+          {
+            "at": 1792494243604,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243647
+          },
+          {
+            "at": 1792494243731,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494243780
+          },
+          {
+            "at": 1792494243799,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "gate": true,
+            "done": 1792494244423
+          },
+          {
+            "at": 1792494244470,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494244534
+          },
+          {
+            "at": 1792494244729,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494244803
+          },
+          {
+            "at": 1792494244867,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494244985
+          },
+          {
+            "at": 1792494245044,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494245167
+          },
+          {
+            "at": 1792494245222,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494245340
+          },
+          {
+            "at": 1792494245591,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494245682
+          },
+          {
+            "at": 1792494245820,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494245861
+          },
+          {
+            "at": 1792494245882,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494245933
+          },
+          {
+            "at": 1792494246151,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494246235
+          },
+          {
+            "at": 1792494246260,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494246321
+          }
+        ],
+        "saved": {
+          "kills": 3,
+          "mass": 1,
+          "massOk": 3,
+          "Coal": 5,
+          "daily": 3,
+          "quota": 3,
+          "padding": 1331200
+        },
+        "paths": [
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_013",
+            "at": 1792494241910
+          },
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_032",
+            "at": 1792494245947
+          },
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_032",
+            "at": 1792494247340
+          }
+        ],
+        "errors": []
+      },
+      {
+        "mode": "delay",
+        "browser": "156.0.8078.4",
+        "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+        "beforeReleaseActions": null,
+        "actions": [
+          {
+            "action": "l2_302",
+            "at": 1792494252969
+          },
+          {
+            "action": "whirlwind",
+            "at": 1792494253126
+          }
+        ],
+        "ackToNextActionMs": 117,
+        "victoryToNextPageMs": 4281,
+        "storageWrites": 18,
+        "storageTrace": [
+          {
+            "at": 1792494249645,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494249842
+          },
+          {
+            "at": 1792494250002,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt",
+              "on"
+            ],
+            "done": 1792494250206
+          },
+          {
+            "at": 1792494250426,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "cfg",
+              "rt"
+            ],
+            "done": 1792494250613
+          },
+          {
+            "at": 1792494251287,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494251493
+          },
+          {
+            "at": 1792494251663,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494251866
+          },
+          {
+            "at": 1792494252034,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494252232
+          },
+          {
+            "at": 1792494252393,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494252587
+          },
+          {
+            "at": 1792494252746,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494252956
+          },
+          {
+            "at": 1792494253189,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494253386
+          },
+          {
+            "at": 1792494253549,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494253745
+          },
+          {
+            "at": 1792494254185,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494254387
+          },
+          {
+            "at": 1792494254597,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494254795
+          },
+          {
+            "at": 1792494254976,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494255189
+          },
+          {
+            "at": 1792494255408,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494255622
+          },
+          {
+            "at": 1792494255840,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494256044
+          },
+          {
+            "at": 1792494256216,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494256436
+          },
+          {
+            "at": 1792494256770,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494256976
+          },
+          {
+            "at": 1792494257308,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ]
+          }
+        ],
+        "saved": {
+          "kills": 3,
+          "mass": 1,
+          "massOk": 3,
+          "Coal": 5,
+          "daily": 3,
+          "quota": 3,
+          "padding": 1331200
+        },
+        "paths": [
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_013",
+            "at": 1792494249351
+          },
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_032",
+            "at": 1792494256475
+          },
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_032",
+            "at": 1792494257447
+          }
+        ],
+        "errors": []
+      },
+      {
+        "mode": "stop",
+        "browser": "156.0.8078.4",
+        "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+        "beforeReleaseActions": [
+          "l2_302"
+        ],
+        "actions": [
+          {
+            "action": "l2_302",
+            "at": 1792494260998
+          }
+        ],
+        "ackToNextActionMs": null,
+        "victoryToNextPageMs": null,
+        "storageWrites": 11,
+        "storageTrace": [
+          {
+            "at": 1792494259664,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494259737
+          },
+          {
+            "at": 1792494260027,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt",
+              "on"
+            ],
+            "done": 1792494260085
+          },
+          {
+            "at": 1792494260125,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "cfg",
+              "rt"
+            ],
+            "done": 1792494260169
+          },
+          {
+            "at": 1792494260692,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494260741
+          },
+          {
+            "at": 1792494260752,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494260797
+          },
+          {
+            "at": 1792494260828,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494260871
+          },
+          {
+            "at": 1792494260882,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494260926
+          },
+          {
+            "at": 1792494260941,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494260991
+          },
+          {
+            "at": 1792494261063,
+            "big": true,
+            "mass": 0,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494261120
+          },
+          {
+            "at": 1792494261141,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "gate": true,
+            "done": 1792494263300
+          },
+          {
+            "at": 1792494263331,
+            "big": true,
+            "mass": 1,
+            "keys": [
+              "rt"
+            ],
+            "done": 1792494263378
+          }
+        ],
+        "saved": {
+          "kills": 0,
+          "mass": 1,
+          "massOk": 3,
+          "daily": 0,
+          "quota": 0,
+          "padding": 1331200
+        },
+        "paths": [
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_013",
+            "at": 1792494259508
+          },
+          {
+            "spawn": "sdms_necropolis_of_martyrdom_013",
+            "at": 1792494264506
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "nativeDamage": {
+    "file": "tests/v2039-native-damage.test.cjs",
+    "casesPassed": 32,
+    "casesFailed": 0,
+    "executionSource": "same extracted ZIP runtime"
+  },
+  "browserCasesPassed": 5,
+  "gameTraffic": "all HTTPS responses locally mocked in actual MV3 harness",
+  "liveGameOpened": false,
+  "liveWireObserved": false,
+  "testsAddedToExtractedStagingOnly": true,
+  "zipChangedByTests": false,
+  "logsSHA256": {
+    "zipload": "131991566209670d7272ce0314c855931103550335a843fdb6f73c1de09f33d4",
+    "cat-navigation": "426800da919f4867a52f83ad81109e2262495059e661aed84251f1a516e29ade",
+    "combat-storage": "dce494c3dee515574b48862f6ed88e9a714e188f132d4b1c3544464daad0f09d",
+    "native-damage": "4f2fcb2671fb1d5f1b6d5f0081cb93d403ead871ed6364a0d2566f840208c127"
+  }
+}

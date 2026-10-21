@@ -76,6 +76,11 @@ function shopPlan() {
   return list.filter(x => x.mm[1] > 0 && !((bad || guess || sg.blocked) && x.key === 'shots'));
 }
 
+let mmInvKickT = 0;
+function mmInvKick(now = Date.now()) {
+  if (typeof env.invRefresh !== 'function' || now - mmInvKickT < 300000) return false;
+  mmInvKickT = now; Promise.resolve().then(() => env.invRefresh()).catch(() => {}); return true;
+}
 function shopNeedByPanel() {
   if (!env.cfg.shopAuto) return '';
   const low = [];
@@ -95,7 +100,12 @@ function shopNeedByPanel() {
     if (q < sp.mm[0]) low.push(`заряды ${sp.grade} ${q} < ${sp.mm[0]}`);
   }
   // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
-  for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) chk(null, it.mm, it.label, it.ids[0]);
+  // 20.41 (игрок 20.10 «не покупает С кристаллы»): сумка не прочитана/старше 5 мин — сырьё молча пропускалось и сумку никто не перечитывал.
+  // Теперь фоновое чтение GET /character (не чаще раза в 5 мин); решение о закупке — на следующей проверке по свежей сумке
+  for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) {
+    if (it.ids.some(id => env.invQty?.(id) == null)) { mmInvKick(); continue; }
+    chk(null, it.mm, it.label, it.ids[0]);
+  }
   return low.join(', ');
 }
 
@@ -148,12 +158,17 @@ const shopReserve = (adena = shopAdena()) => Math.max(0, Math.min(+(env.cfg.shop
 // 204 960 аден — первыми куплены банки MP по 2 200, на заряды осталось 23 шт.). Денег на весь список нет → порядок «заряды → банки HP →
 // банки MP → прочее», каждому из трёх главных — доля оставшихся денег (заряды — половина, HP — половина остатка, MP — что осталось),
 // количество — круглой пачкой (по 1000 / 100 / 10)
+// 20.41 (лог 20.10 22:03): «inventory_full» — в сумке нет места под новый предмет (кристаллы C для пояса Маммона, сумка 214 видов).
+// Повтор той же покупки бесполезен, пока игрок не освободит место: причина — понятным текстом, пауза закупки растёт как при «нет адены».
+const refusedWhy = nb => nb?.msg === 'inventory_full' ? 'сумка полна — новый предмет не помещается; освободите место в сумке (продать/на склад), бот докупит сам'
+  : 'Игра отклонила покупку (HTTP ' + nb?.status + (nb?.msg ? ', ' + nb.msg : '') + ')';
 const SHOP_ORDER = { shots: 0, hp: 1, mp: 2 };
 const shopShare = (key, rest) => key in SHOP_ORDER ? (rest.some(k => k in SHOP_ORDER && SHOP_ORDER[k] > SHOP_ORDER[key]) ? 0.5 : 1) : 1;
 const packQty = (cap, want) => { if (cap >= want || cap < 10) return cap; const st = cap >= 1000 ? 1000 : cap >= 100 ? 100 : 10; return Math.floor(cap / st) * st; };
 
 // 15.10: потерянный ответ закупки сверяем чтением сумки; неизвестный исход не превращается в новую покупку.
 const shopOutcome=N=>N?.outcome||(N?.ok?'applied':env.payments?.REJECT?.includes(N?.status)?'rejected':'unknown');
+const notCharged=(before,now,price)=>{const a=typeof now==='string'&&/^\d+$/.test(now)?+now:now;return Number.isSafeInteger(before)&&Number.isSafeInteger(a)&&Number.isSafeInteger(price)&&price>0&&a>=before;};
 async function paymentReconcile() {
   const P=env.payments?.pending(); if(!P || P.kind!=='shop')return !P;
   const lease=env.leaseEpoch, char=env.rt.char;
@@ -173,7 +188,11 @@ async function paymentReconcile() {
       if(known && Number.isFinite(E.beforeQty) && have>=E.beforeQty+E.qty)
         proof={kind:'stock-satisfied',qty:have};
       // 20.12: ревизия героя та же, адены не меньше и запас не вырос — дважды за ≥2 мин: покупка не применилась.
-      else if(probe && env.payments.probeNote?.(P,env.payments.unchanged?.({revision:E.revision,adena:E.adenaChar},ch)&&known&&(!Number.isFinite(E.beforeQty)||have<=E.beforeQty)))
+      // 20.41 (лог 20.10 22:03–22:06): ревизия героя менялась от других действий, и сверка «не применилась» не срабатывала —
+      // бот 3+ мин стоял в магазине. Покупка всегда кладёт товар в сумку и списывает цену: запас не вырос и адены
+      // не меньше, чем до клика, — тоже доказательство (те же 2 мин и две сверки подряд), даже если ревизия ушла вперёд.
+      else if(probe && env.payments.probeNote?.(P,known&&(!Number.isFinite(E.beforeQty)||have<=E.beforeQty)&&(env.payments.unchanged?.({revision:E.revision,adena:E.adenaChar},ch)
+        ||Number.isFinite(E.beforeQty)&&notCharged(E.adenaChar,ch.adena,P.quote?.amount))))
         {proof={kind:'state-not-applied',spent:0,revision:ch.revision};rejected=true;}
     }
   }catch(_){}
@@ -181,7 +200,7 @@ async function paymentReconcile() {
   if(!proof){env.setStatus?.('Закупка: исход оплаты неизвестен; повтор запрещён, сверяю запас и состояние героя');return false;}
   const S=env.rt.shop;
   if(S && Number.isFinite(E.jobT) && S.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick && !(S.done||[]).some(x=>x.paymentId===P.id)) {
-    const why=proof.kind==='state-not-applied'?'Покупка не применилась (состояние героя не изменилось)':'Игра отклонила покупку (HTTP '+N?.status+')';
+    const why=proof.kind==='state-not-applied'?'Покупка не применилась (состояние героя не изменилось)':refusedWhy(N);
     const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:!rejected,qty:rejected?0:E.qty,paymentId:P.id,...(rejected?{why}:{})}],spent:(S.spent||0)+(rejected?0:P.quote.amount)}});
     if(saved?.ok!==true || !valid())return false;
   }
@@ -278,7 +297,7 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
         // Состояние задачи обновляется сверкой ДО снятия блокировки платежа.
         const refused=nb?.paymentId===P.id&&nb.t>=P.at&&nb.key===shopKey&&nb.qty===cap&&shopOutcome(nb)==='rejected';
         const confirmed=await paymentReconcile();
-        return {ok:confirmed&&!refused,pending:!confirmed,paymentId:P.id,qty:refused?0:cap,unit,spent:confirmed&&!refused?P.quote.amount:0,msg:m,...(refused?{why:'Игра отклонила покупку (HTTP '+nb.status+')'}:{}),key:nb&&nb.t>=a0T?nb.key:''};
+        return {ok:confirmed&&!refused,pending:!confirmed,paymentId:P.id,qty:refused?0:cap,unit,spent:confirmed&&!refused?P.quote.amount:0,msg:m,...(refused?{why:refusedWhy(nb)}:{}),key:nb&&nb.t>=a0T?nb.key:''};
       }
       return { ok: !!ok && shopAdena() < a0, qty: cap, unit, spent: a0 - shopAdena(), msg: m, key: nb && nb.t >= a0T ? nb.key : '' };
     }
@@ -293,7 +312,7 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
 // Теперь пауза растёт 10 → 30 → 60 → 180 мин (rt.shopFail.n). Сброс: удачная покупка, «всё есть», смена оружия (content: shopFail:null)
 // или заметный рост адены после неудачи (adenaSeen ≥ ×1,2 + 50 тыс.). Временные сбои (окно не открылось, отказ сервера) паузу не растят.
 const SHOP_GAPS = [600000, 1800000, 3600000, 10800000];
-const SHOP_CANT = /адены|нет в магазине|нет в списке|Coin of Luck|лимит трат/;
+const SHOP_CANT = /адены|нет в магазине|нет в списке|Coin of Luck|лимит трат|сумка полна/;
 function shopGap() {
   const f = env.rt.shopFail, n = Math.min(SHOP_GAPS.length, Math.max(0, Math.floor(+f?.n || 0)));
   if (!n) return SHOP_GAPS[0];

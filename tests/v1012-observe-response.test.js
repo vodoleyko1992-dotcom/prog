@@ -11,7 +11,7 @@ async function scenario({ delay = 1300, sent = true, refused = false, supersede 
     mobHp: () => ({ cur: hp, max: 100 }), meHp: () => ({ cur: 100 }), meMp: () => ({ cur: mp }), logLines: () => arr, noticeText: () => '',
     slotCd: () => null, setTimeout: f => { callback = f; }, sleep: async ms => { now += ms; update(); if (changeWhileWaiting) sb.rt.classSwT=999; if (supersede && !trigger) { trigger = true; vm.runInContext('lastObserve++', ctx); } },
     newLines: (a, z) => z.slice(a.length), BUFF_RE: /x^/, ilOf: () => null, isChargeName: () => false, dmgFromLog: () => arr.length ? 100 : 0,
-    L2V7Modules: { fightlab: { turnFor: () => null } }, rt: {}, fightNote: () => {}, splashDmg: () => 0, BUFF_CTX: null, UNAVAIL: /x^/, setRt: async p => writes.push(p), rec: (...a) => logs.push(a),
+    L2V7Modules: { fightlab: { turnFor: () => null } }, rt: {}, fightNote: () => {}, splashDmg: () => 0, BUFF_CTX: null, UNAVAIL: /x^/, setRt: async p => writes.push(p), setRtSoon: async p => writes.push(p) /* 20.41: замеры навыков — отложенная запись */, rec: (...a) => logs.push(a),
   };
   const ctx = vm.createContext(sb); vm.runInContext(fn + '\nthis.observeSlot = observeSlot;', ctx);
   sb.rt.char='Hero'; sb.rt.classCur={prof:'Warlock',slot:0}; sb.leaseEpoch='lease1'; sb.on=true;

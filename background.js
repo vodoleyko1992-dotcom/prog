@@ -313,9 +313,13 @@ async function statePatch(m, sender) {
       await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,dailyQuota:r.rt.dailyQuota,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
-      const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
+      let r = farmQuotaChange(state, m.farmQuota, now);
+      // 20.41: итог боя без ожидания (fallback) — вкладка могла уже уйти на другую страницу. Неподтверждённый итог засчитываем по журналу
+      // боя здесь же, как approx close вкладки; иначе убитые этого боя не попали бы ни в задачу, ни в дневной лимит.
+      if (!r.ok && m.farmQuota.op === 'win' && m.farmQuota.fallback === true) { const a = farmQuotaChange(state, { ...m.farmQuota, op: 'approx', n: m.farmQuota.seen, close: true }, now); if (a.ok) r = { ...a, approx: true }; }
+      if (!r.ok) return r;
       // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
-      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark };
+      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark,...(r.approx?{approx:true}:{}) };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;
@@ -335,8 +339,18 @@ async function statePatch(m, sender) {
       return { ok: true, fishTgt, cfg };
     }
     const change = {};
-    const retirement=retireRaidSessionPatch(pvpSeedPatch(patch,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
+    // 20.41 (ревью 2): пакет вкладки, собранный до сброса из меню (отложенная статистика до 8 с, пакет в очереди за записью меню),
+    // не возвращает старые значения статистики (MENU_STAT_KEYS: ↺ сессии, сброс лута/памяти боя). menuRev — последняя увиденная
+    // вкладкой запись меню. Прочие ключи (намерения, оплаты, маршруты, rbTimer) — как раньше, последней записью. Метки меню вкладка не пишет.
+    const fresh = { ...patch }, menuRevs = state.rt?.menuKeyRev || {}; delete fresh.menuRev; delete fresh.menuKeyRev;
+    // Смена класса (classCur другого класса с памятью боя из classStash) — замена набора, а не старая статистика.
+    const classSwap = fresh.classCur && JSON.stringify([fresh.classCur.prof, fresh.classCur.slot]) !== JSON.stringify([state.rt?.classCur?.prof, state.rt?.classCur?.slot]);
+    if (Number.isSafeInteger(m.menuRev) && !classSwap) for (const k of globalThis.L2EngineCore?.MENU_STAT_KEYS || []) if (Object.hasOwn(fresh, k) && (+menuRevs[k] || 0) > m.menuRev) delete fresh[k];
+    const retirement=retireRaidSessionPatch(pvpSeedPatch(fresh,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
     if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
+    // 20.41 (ревью): kills вкладки может прийти отложенным пакетом уже после итога квоты фона (max по серверу). Вкладка счёт сессии
+    // только увеличивает (сброс — только из меню), поэтому меньшее значение сохранённое не понижает.
+    if (Number.isSafeInteger(writePatch.kills) && Number.isSafeInteger(state.rt?.kills) && writePatch.kills < state.rt.kills) writePatch.kills = state.rt.kills;
     // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
     if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: retirement.retired ? 'raid-session-policy' : writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
@@ -392,7 +406,7 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   if (typeof m.on === 'boolean' || Object.hasOwn(rtPatch, 'manualKickAt')) serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['rt', 'cfg']);
+    const state = await chrome.storage.local.get(['rt', 'cfg', 'on']);   // 20.41: «on» — для afterOnWrite (новый отсчёт сторожа только при off→on)
     if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (m.pvpTargetEdit) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
@@ -450,7 +464,12 @@ async function menuPatch(m, sender) {
         reason: cfgPatch.enchantMode === true ? 'Режим выбран — нажмите «Продолжить серию»' : 'Выбран другой режим — продолжение заточки только вручную' } };
     }
     if (typeof m.on === 'boolean') { change.on = m.on; if (!m.on) change.stopMeta = { source: 'popup-menu', reason: 'Команда остановки из панели', t: Date.now() }; }
+    // 20.41 (ревью 2): метка записи меню у статистики из самой команды меню (повторный ↺ тех же нулей — тоже сброс) и у изменённой по
+    // значению другими шагами (см. statePatch); копии с прежним содержимым её не получают.
+    const menuStat = change.rt ? (globalThis.L2EngineCore?.MENU_STAT_KEYS || []).filter(k => Object.hasOwn(change.rt, k) && (Object.hasOwn(rtPatch, k) || change.rt[k] !== state.rt?.[k] && JSON.stringify(change.rt[k]) !== JSON.stringify(state.rt?.[k]))) : [];
+    if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
     if (Object.keys(change).length) await chrome.storage.local.set(change);
+    if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
     return { ok: true };
   });
 }
@@ -485,6 +504,7 @@ async function botControl(m, sender) {
     const now = Date.now(), reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240);
     await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null,
       stopMeta: { source: String(user ? 'content-user' : m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
+    await afterOnWrite(state.on, false);
     return { ok: true };
   });
 }
@@ -562,12 +582,19 @@ async function switchCharacter(m, sender) {
 const paint = on => {
   try { chrome.action?.setBadgeText?.({ text: on ? 'ON' : '' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#27ae60' })?.catch?.(() => {}); } catch (e) {}
 };
-chrome.storage.local.get('on').then(s => paint(s.on));
-chrome.storage.onChanged.addListener(ch => {
-  if (!ch.on) return;
+// 20.41 (лог 20.10 21:09: память rt 1,3 МБ — каждая запись rt доставлялась двум слушателям storage.onChanged фона целиком, старое+новое
+// значение, ≈100–190 мс на каждый цикл statePatch в том же потоке фона): слушателей хранилища в фоне больше нет. Их работу делают сами
+// писатели «on» после удачной записи: значок, controlSeq (отмена ещё не отправленного восстановления сторожа) и новый отсчёт сторожа
+// только при настоящем запуске off→on — Chrome не сообщал о неизменном «on», выбор режима при работающем боте сторожа не сбрасывал.
+// Прямые записи on:false (модули, импорт памяти) зовут badgeSync; сторож и так перечитывает on/замок/эпоху под очередью перед reload.
+let paintedOn = null;                              // что сейчас на значке: «работает/стоит» ('!' капчи это значение не меняет)
+const paintOn = on => { paintedOn = !!on; paint(on); };
+async function afterOnWrite(prevOn, nextOn) {      // только внутри serializeLock и только после удачной записи «on»
+  if (!!prevOn === !!nextOn) { if (paintedOn !== !!nextOn) paintOn(nextOn); return; }
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
-  paint(ch.on.newValue);
-  if (ch.on.newValue) serializeLock(async () => {   // старт — отсчёт сторожа заново, в очереди владельца
+  paintOn(nextOn);
+  if (!nextOn) return;
+  try {   // старт — отсчёт сторожа заново, в очереди владельца
     const { on, hbBg, lock } = await chrome.storage.local.get(['on', 'hbBg', 'lock']);
     if (!on) return; // Пока ждали хранилище, игрок мог уже остановить бота.
     const h = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
@@ -575,8 +602,9 @@ chrome.storage.onChanged.addListener(ch => {
     const nextHb = { ...h, t: Date.now() };
     await chrome.storage.local.set({ hbBg: { ...nextHb }, wdog: [], wdDown: null });
     hbMem = nextHb; hbPersistedAt = Date.now();
-  }).catch(() => {});
-});
+  } catch (_) {}
+}
+chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {});
 
 // после установки/обновления расширения старый скрипт во вкладках игры «отключается» —
 // перезагружаем открытые вкладки l2wap, чтобы бот подхватил новую версию
@@ -674,6 +702,7 @@ chrome.commands?.onCommand.addListener(async c => {
       if (next.char) change['rt@' + next.char] = next;
     } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };
     await chrome.storage.local.set(change);
+    await afterOnWrite(on, !on);
   });
 });
 
@@ -850,8 +879,10 @@ async function faBuffEvidence(p) {
 // Теперь и по объёму разметки: больше 50 МБ — удаляем самые старые. Сумма хранится в storage «snapbytes» (один раз считается по
 // уже лежащим снимкам), «Очистить журнал» в меню сбрасывает её в 0
 const MAX_SNAP_BYTES = 50 * 1024 * 1024;
+// 20.41 (лог 20.10 21:09, ревью): слушателя storage.onChanged для snapbytes у фона больше нет, сообщения от меню тоже не нужно —
+// пустое хранилище снимков всегда 0 байт (см. addSnap): «Очистить журнал» (IndexedDB очищена, snapbytes:0) сбрасывает сумму сама,
+// даже если меню закрылось сразу после записи или снимок уже стоял в очереди writing
 let snapBytes = null;
-chrome.storage.onChanged.addListener(ch => { if (ch.snapbytes) snapBytes = Number.isFinite(ch.snapbytes.newValue) ? ch.snapbytes.newValue : null; });
 async function snapBytesNow(db) {
   if (snapBytes != null) return snapBytes;
   const { snapbytes } = await chrome.storage.local.get('snapbytes');
@@ -870,7 +901,7 @@ function addSnap({ key, state, html }) {
     const tx = db.transaction('snaps', 'readwrite'), st = tx.objectStore('snaps');
     let added = 0, n = 0;
     st.count().onsuccess = e => {
-      n = e.target.result;
+      n = e.target.result; if (!n) total = 0;   // 20.41 (ревью): снимков нет — объём 0, а не старая сумма из памяти/хранилища (иначе 50 МБ «заняты» пустотой)
       st.getKey(key).onsuccess = g => {
         if (g.target.result != null) return;
         st.put({ key, state: state || '', t: Date.now(), html }); added = 1; n++; total += size;
@@ -961,6 +992,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
   try {
     const before = await serializeLock(async () => {
       const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']);
+      if (!!state.on !== paintedOn) paintOn(state.on);   // 20.41: страховка значка раз в минуту; совпадает — не трогаем ('!' капчи остаётся)
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
       if (!state.on || !Number.isInteger(hb?.tab) || state.lock?.k !== 'tab' + hb.tab) return null;
       const quiet = Date.now() - hb.t, wdDown = state.wdDown;
@@ -1039,6 +1071,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
         ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
         buf.push(ev); flush();
         await chrome.storage.local.set({ on: false, wdog: recent, stopMeta: { source: 'watchdog', reason: ev.what, t: Date.now() } });
+        await afterOnWrite(on, false);
         return;
       }
       ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
@@ -1066,6 +1099,34 @@ chrome.tabs.onRemoved.addListener(tabId => {
     if (hbMem?.tab === tabId) { hbMem = null; hbPersistedAt = 0; }
   }).catch(e => console.warn('[L2bot] lock tab close', e));
 });
+
+// 20.10, лог06:56: чтение рюкзака из встроенного меню Firefox через фон, без запуска бота.
+async function mammonBagDockAnalyze(m, sender) {
+  const denied = reason => ({ ok: false, reason });
+  try {
+    const page = new URL(sender?.url || ''), menu = new URL(chrome.runtime.getURL('popup.html'));
+    if (sender?.id !== chrome.runtime.id || page.protocol !== menu.protocol || page.host !== menu.host || page.pathname !== menu.pathname || page.searchParams.get('dock') !== '1'
+      || !Number.isInteger(sender.frameId) || sender.frameId <= 0 || !Number.isInteger(sender.tab?.id) || sender.tab.id < 0)
+      return denied('Анализ доступен только из встроенного меню игры');
+    if (typeof m.expectedChar !== 'string' || !m.expectedChar || !Number.isSafeInteger(m.goalItem) || m.goalItem < 0 || !Number.isSafeInteger(m.goalLvl) || m.goalLvl < 1 || m.goalLvl > 5)
+      return denied('Некорректный запрос анализа рюкзака');
+    const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
+    if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl)
+      return denied('Вкладка игры закрыта или загружается — повторите анализ');
+    const { rt = {}, cfg = {}, lock = null } = await chrome.storage.local.get(['rt', 'cfg', 'lock']);
+    if (rt.char !== m.expectedChar) return denied('Персонаж изменился — обновите меню');
+    if ((+cfg.mmGoalItem || 0) !== m.goalItem || (+cfg.mmGoalLvl || 5) !== m.goalLvl) return denied('Цель изменилась — обновите меню');
+    if (Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < LOCK_TTL && lock.tab !== sender.tab.id)
+      return denied('Управление у другой вкладки — откройте её меню');
+    const command = { cmd: 'mammonBagAnalyze', expectedChar: m.expectedChar, goalItem: m.goalItem, goalLvl: m.goalLvl };
+    let timer;
+    try {
+      const answer = await Promise.race([chrome.tabs.sendMessage(sender.tab.id, command, { frameId: 0 }),
+        new Promise(resolve => { timer = setTimeout(() => resolve(denied('Вкладка игры не ответила на анализ — обновите страницу')), 20000); })]);
+      return answer?.ok === true ? { ok: true } : denied(typeof answer?.reason === 'string' ? answer.reason.slice(0, 220) : 'Не удалось прочитать рюкзак — обновите вкладку игры');
+    } finally { clearTimeout(timer); }
+  } catch (_) { return denied('Не удалось передать анализ во вкладку игры — обновите страницу'); }
+}
 
 // 20.33 (скрин20.10 14:31): Firefox не даёт tabs встроенному меню; фон адресует только его родителя.
 async function lifestoneDockCommand(m, sender) {
@@ -1106,6 +1167,9 @@ async function lifestoneDockCommand(m, sender) {
 }
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'mammonBagDockAnalyze') {
+    mammonBagDockAnalyze(m, _s).then(reply).catch(() => reply({ ok: false, reason: 'Не удалось прочитать рюкзак' })); return true;
+  }
   if(m?.cmd==='lifestoneDockCommand'){
     lifestoneDockCommand(m,_s).then(reply).catch(()=>reply({ok:false,reason:'Команда ЛС не выполнена'}));return true;
   }
@@ -1220,7 +1284,9 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     try { chrome.notifications?.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
     try { chrome.action?.setBadgeText?.({ text: m.badge || '!' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#c0392b' })?.catch?.(() => {}); } catch (e) {}
   }
-  if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paint(s.on)); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
+  if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
+  // 20.41: прямая запись on:false (модуль/импорт памяти) — значок по факту; та же запись при уже остановленном боте значок не трогает
+  if (m?.cmd === 'badgeSync') chrome.storage.local.get('on').then(s => { if (!!s.on !== paintedOn) paintOn(s.on); }).catch(() => {});
   if (m?.cmd === 'rec') { buf.push(m.ev); if (!timer) timer = setTimeout(flush, 1500); }
   if (m?.cmd === 'snap' && m.key && m.html) addSnap(m);
   if (m?.cmd === 'shot' && _s?.tab) addShot(_s.tab, m);

@@ -11,7 +11,7 @@ const cases = [
   { name: 'Hamstring', action: 'hamstring_slash', id: 127, line: 'Підріз сухожилля 16269', dmg: 16269, mp: 39 },
 ];
 function context(extra = {}) {
-  const rt = {}, sb = { console, Math, Date, rt, BUFF_RE: /x^/, setRt: async p => Object.assign(rt, p), ...extra };
+  const rt = {}, sb = { console, Math, Date, rt, BUFF_RE: /x^/, setRt: async p => Object.assign(rt, p), setRtSoon: async p => Object.assign(rt, p) /* 20.41: замеры навыков — отложенная запись */, ...extra };
   vm.createContext(sb);
   vm.runInContext(fs.readFileSync(path.join(root, 'skills-il.js'), 'utf8'), sb);
   vm.runInContext(metadata + '\n' + damage + '\nthis.ilOf = ilOf; this.dmgFromLog = dmgFromLog;', sb);
@@ -61,7 +61,7 @@ function raidPlan(c, confirmedGameDamage, { ctx = { block: {}, rb: { id: '25217'
     forceNow: () => 0, forceMax: () => 0, forceCosts: () => [], isChargeName: () => false, isForceName: () => false,
     cleanTitle: x => x, longFightMp: () => null, skillMp: () => c.mp, meHp: () => ({ cur: 10592, max: 10592, pct: 100 }),
     hpPotByDeficit: () => null, mpPotSlot: () => null, chargeValue: () => 0, turnSec: () => 1.2, actCost: () => 1,
-    qty: () => 0, SK_NET: {}, setRt: async p => Object.assign(rt, p),
+    qty: () => 0, SK_NET: {}, setRt: async p => Object.assign(rt, p), setRtSoon: async p => Object.assign(rt, p) /* 20.41 */,
   };
   return sb.L2V7Factories.combat(env).dpsPlan(ctx, { cur: 1119, max: 1119 });
 }

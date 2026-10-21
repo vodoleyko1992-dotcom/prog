@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-20T07:01:08Z",
+  "sourceVersion": "20.35",
+  "scope": "Исходники, без новой сборки и без обращения к живой игре",
+  "regression": {
+    "scenarios": 39,
+    "baseline": {
+      "pass": 2,
+      "fail": 37
+    },
+    "patched": {
+      "pass": 39,
+      "fail": 0
+    }
+  },
+  "browser": {
+    "dock": {
+      "at": "2026-10-20T07:01:08.167Z",
+      "boundary": "actual Chrome MV3 dock/runtime/content; Firefox iframe tabs absence modeled; HTTPS fully local",
+      "capabilities": {
+        "docked": true,
+        "tabs": "undefined",
+        "runtime": "function"
+      },
+      "offFreshRead": "PASS",
+      "refreshChangedBag": "PASS",
+      "errorKeepsSuccessTimestamp": "PASS",
+      "buttonRecovered": "PASS",
+      "onOwnerRead": "PASS",
+      "posts": 0,
+      "navigation": false,
+      "unpromptedStartup": false,
+      "reads": 4,
+      "errors": []
+    },
+    "standalone": "PASS tests/v2023-mammon-bag-browser.cjs",
+    "engine": "Chrome for Testing 151.0.7922.34",
+    "firefox": "В этой правке настоящий Firefox не запускался; отсутствие chrome.tabs явно воспроизведено в настоящем MV3 iframe",
+    "initialSystemChromium": "Системный Chromium не создал extension service worker за30с; оба сценария успешно проверены в установленном Chrome for Testing151."
+  },
+  "fullNodeSuite": {
+    "files": 501,
+    "pass": 501,
+    "fail": 0
+  },
+  "syntax": "PASS 7 изменённых JS/CJS",
+  "envcheck": "PASS 31 фабрика",
+  "diffCheck": "PASS",
+  "boundary": "Все игровые HTTP-ответы синтетические. Анализ не вызывает POST, переходы или запуск бота; рабочие настройки игрока не менялись.",
+  "review": "Независимое ревью: блокирующих замечаний нет"
+}

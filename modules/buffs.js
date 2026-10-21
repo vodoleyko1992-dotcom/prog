@@ -98,7 +98,9 @@ async function buffAuditStep(ctx, me) {
   }
   const patch = { buffAudit: { t: now, list: out } };
   if (Object.keys(fix).length) { patch.buffAt = { ...(env.rt.buffAt || {}), ...fix }; patch.buffFixT = { ...(env.rt.buffFixT || {}), ...Object.fromEntries(Object.keys(fix).map(k => [k, now])) }; }
-  await env.setRt(patch);
+  // 20.41 (лог 20.10 21:09): проверка раз в 15 с в бою ждала полную запись памяти (0,6–1,5 с при 1,3 МБ) и держала удар.
+  // Причины — для меню, сброс таймеров баффов действует сразу в памяти вкладки; запись идёт в фоне
+  env.setRt(patch)?.catch?.(() => {});
   if (notes.length) env.rec('S', 'проверка баффов', notes.join(' · '));
 }
 
@@ -163,7 +165,7 @@ async function totemNote(ctx, dps) {
   const eff = Object.fromEntries(Object.entries(S).map(([x, v]) => [x, { n: v.n, r: v.w ? +(v.rs / v.w).toFixed(3) : 1,
     name: x === '—' ? 'без тотема' : env.cleanTitle(env.slotsBy(x)[0]?.title || '') || x }]));
   if (eff[k].n === env.TOTEM_MIN) env.rec('B', 'тотем', `${eff[k].name}: замер готов (${env.TOTEM_MIN} боёв) · скорость убийства ${eff[k].r >= 1 ? '+' : ''}${Math.round((eff[k].r - 1) * 100)} % к среднему`);
-  await env.setRt({ totemDps: T, buffEff: eff });
+  env.setRt({ totemDps: T, buffEff: eff })?.catch?.(() => {});   // 20.41: статистика тотема — победа не ждёт запись
 }
 
 let planningSnapshot = null;
@@ -227,9 +229,10 @@ async function vipRefresh(active) {
   } catch (_) {}
   return false;
 }
+const vipEnabled = () => env.cfg.vipBuffAuto !== false && ['basic','warrior','mage'].includes(env.cfg.townBuffSet || 'basic');
 function vipPreferred() {
   const v = env.rt.vipBuff, now = Date.now();
-  if (env.cfg.vipBuffAuto === false || (env.cfg.townBuffSet || 'basic') !== 'basic' || !v || v.char !== env.rt.char || !v.active || !v.set
+  if (!vipEnabled() || !v || v.char !== env.rt.char || !v.active || !v.set
       || now - v.t > 120000 || v.t > now + 1000 || v.until !== null && v.until <= now + 3000 || (env.rt.classSwT || 0) > v.t) return '';
   if (Number.isInteger(env.rt.classCur?.slot) && v.slot !== null && env.rt.classCur.slot !== v.slot) return '';
   return v.set;
@@ -237,87 +240,89 @@ function vipPreferred() {
 function vipSession() {
   if(!vipNoFa())return null;
   const set=vipPreferred(),v=env.rt.vipBuff,p=env.rt.vipApplied,H=hudBuffs(),levels=hudLevels(),now=Date.now();
-  const ready=!!(set && p?.bundleChecked===true && p?.char===env.rt.char && p.actor===v.actor && p.set===set && p.slot===v.slot && p.prof===v.prof
-    && p.skills?.length && H && p.skills.every(x=>H[x.skillId]>now+60000 && levels[x.skillId]>=x.level));
-  return {set,ready,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
+  const wanted=[...faIdsOf(env.cfg.faBuffs),...faIdsOf(env.cfg.rbSessBuffs)].find(id=>VIP_GREATER.includes(id)&&(!p?.greaterOptions||p.greaterOptions.includes(id)));
+  const same=!!(set&&p?.schema===2&&p.bundleChecked===true&&p.char===env.rt.char&&p.actor===v.actor&&p.set===set&&p.slot===v.slot&&p.prof===v.prof);
+  const present=skills=>!!(skills?.length&&H&&skills.every(x=>H[x.skillId]>now+60000&&levels[x.skillId]>=x.level));
+  const additionalReady=!!(same&&!p.greaterUnavailable&&(!wanted||p.greaterIds?.includes(wanted))&&(!p.greaterIds?.length||present(p.skills.filter(x=>p.greaterIds.includes(x.skillId)))));
+  const baseReady=same&&present(p.baseSkills||p.skills),ready=baseReady&&additionalReady;
+  return {set,ready,baseReady,additionalReady,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
 }
 const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
   && Object.entries(s).every(([k,v]) => !/^fee/i.test(k) || ['feeAdena','feeCoinOfLuck','feeHintUk','feeHintRu','feeHintEn'].includes(k) || v === 0 || v === '0')
   && s.skills.every(x => Number.isSafeInteger(x.skillId) && x.skillId > 0 && Number.isSafeInteger(x.level) && x.level > 0);
 const vipEffects = (ch, q, existing=false) => ch?.name === env.rt.char && ch.id === q.actor && Number.isSafeInteger(ch.revision) && (existing ? ch.revision >= q.revision : ch.revision > q.revision)
+  && (!Number.isInteger(q.slot)||ch.classSlots?.activeSlot===q.slot) && (!q.prof||ch.l2Profession===q.prof)
   && Array.isArray(ch.activeBuffs) && q.skills.every(x => ch.activeBuffs.some(b => b.skillId === x.skillId && b.level >= x.level
     && Number.isFinite(b.expiresAtMs ?? b.expiresAt) && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 60000));
+// 20.38 (скрин20.10): Greater — одна иконка, шесть эффектов исключают друг друга; Noblesse отдельно.
+const VIP_GREATER = [1356,1357,1355,1363,1413,1414];
+function vipBundle(ch, catalog, baseSet) {
+  const base=catalog?.sets?.find(x=>x.id===baseSet);if(!vipPriceZero(base))return null;
+  const greater=catalog.sets.find(x=>x.id==='greater'),free=vipPriceZero(greater),now=Date.now();
+  const present=x=>ch.activeBuffs.some(b=>b.skillId===x.skillId&&b.level>=x.level&&(b.expiresAtMs??b.expiresAt)>now+60000);
+  const down=base.skills.some(x=>ch.activeBuffs.some(b=>b.skillId===x.skillId&&b.level>x.level&&(b.expiresAtMs??b.expiresAt)>now+30*60000));
+  const rows=down?[]:[{set:baseSet,skills:base.skills}],available=free?greater.skills:[];
+  const group=available.filter(x=>VIP_GREATER.includes(x.skillId));
+  const explicit=[...faIdsOf(env.cfg.faBuffs),...faIdsOf(env.cfg.rbSessBuffs)].find(id=>group.some(x=>x.skillId===id));
+  const picked=group.find(x=>x.skillId===explicit)||group.find(present)||group.find(x=>x.skillId===(baseSet==='mage'?1357:1414))||group[0];
+  const extra=[...(picked?[picked]:[]),...available.filter(x=>x.skillId===1323)];
+  for(const x of extra)rows.push({set:'greater',skillId:x.skillId,skills:[x]});
+  const baseSkills=down?base.skills.filter(present):base.skills,union=new Map();
+  for(const x of [...baseSkills,...extra])union.set(x.skillId,Math.max(union.get(x.skillId)||0,x.level));
+  return {rows,baseSkills:base.skills,baseSkipped:down,bundleSkills:[...union].map(([skillId,level])=>({skillId,level})),greaterIds:extra.map(x=>x.skillId),greaterOptions:group.map(x=>x.skillId),greaterFree:free,greaterUnavailable:!!greater&&!free};
+}
 async function vipTownStep(st, active, done) {
-  // Только VIP-ветка: точная нулевая цена идёт в серверный запрос, не берётся из старого DOM/кэша.
-  const current = () => active() && env.rt.tbuff?.t === st.t;
-  const finish = async (ch, q, existing=false) => {
-    if (!current() || !vipEffects(ch, q, existing)) return false;
-    const skills = q.bundleSkills || q.skills, set = q.baseSet || q.set;
-    // 20.10, дополнительный VIP-бафф: подтверждение первого набора ещё не разрешает вход в РБ.
-    // Следующий набор получает новый каталог/ревизию; неизвестный прежний запрос не повторяется.
-    if (!vipEffects(ch, {...q, skills}, true)) {
-      await env.setRt({ tbuff: { ...st, set, vipFree: true, vipRequest: null } });
-      if (current()) env.setStatus('VIP: набор подтверждён — проверяю дополнительный сильный бафф');
-      return true;
+  const classKey=()=>JSON.stringify([env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.classSwT||0]),ownerClass=classKey();
+  const current=()=>active()&&classKey()===ownerClass&&env.rt.tbuff?.t===st.t;
+  const finish=async(ch,q,existing=false)=>{
+    if(q.schema!==2||!current()||!vipEffects(ch,q,existing))return false;
+    const skills=q.bundleSkills||q.skills,set=q.baseSet||q.set;
+    if(!vipEffects(ch,{...q,skills},true)){
+      await env.setRt({tbuff:{...st,set,vipFree:true,vipRequest:null}});
+      if(current())env.setStatus('VIP: применённый бафф подтверждён — проверяю следующую иконку');return true;
     }
-    const levels = Object.fromEntries(skills.map(x => [x.skillId, x.level]));
-    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, actor:ch.id, set, slot:ch.classSlots?.activeSlot??null, prof:ch.l2Profession||'', bundleChecked:q.bundleChecked===true, skills, ids: skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [set]: skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
-    if (!current()) return true;
-    env.rec('B', 'бафф', `VIP: полный ${set === 'mage' ? 'бафф мага' : 'бафф воина'}${q.greaterFree?' и дополнительный сильный бафф':''} подтверждён — 0 адены, 0 Coin of Luck`);
-    await done('VIP-бафф готов — FA не трачу, возвращаюсь');
-    return true;
+    const levels=Object.fromEntries(q.baseSkills.map(x=>[x.skillId,x.level])),baseComplete=vipEffects(ch,{...q,skills:q.baseSkills},true);
+    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,skills,ids:skills.map(x=>x.skillId)},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId)},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
+    if(!current())return true;
+    const extra=q.greaterIds.map(id=>env.FA_KNOWN?.[id]?.[0]||env.IL?.[id]?.n||id).join(', ');
+    env.rec('B','бафф',q.greaterUnavailable?'VIP: основной набор подтверждён; дополнительный не подтверждён бесплатным — не применяю':`VIP: ${q.baseSkipped?'сильные действующие баффы сохранены':'классовый набор подтверждён'}${extra?' · дополнительные: '+extra:''} — 0 адены, 0 Coin of Luck`);
+    await done(q.greaterUnavailable?'VIP: дополнительный бафф пока не получен — цена не нулевая или неизвестна':baseComplete?'VIP-бафф готов — FA не трачу, возвращаюсь':'VIP: дополнительный бафф подтверждён; основной набор пропущен, чтобы не понизить сильные эффекты');return true;
   };
-  if (st.vipRequest?.phase === 'prepared') { await env.setRt({ tbuff: { ...st, vipRequest: null } }); return; }
-  if (st.vipRequest) {
-    try { const r = await env.gameGet('/character'), d = r.ok ? await r.json() : null; if (await finish(d?.character, st.vipRequest)) return; } catch (_) {}
-    if (current()) env.setStatus('VIP-бафф: проверяю результат прежнего запроса; повтор не отправляю');
-    await env.sleep(3000); return;
+  if(st.vipRequest?.schema===2&&st.vipRequest.classKey!==ownerClass){await env.setRt({tbuff:{...st,set:'basic',vipFree:true,vipRequest:null},vipApplied:null});return;}
+  if(st.vipRequest?.phase==='prepared'){await env.setRt({tbuff:{...st,vipRequest:null}});return;}
+  if(st.vipRequest?.schema===2){
+    try{const r=await env.gameGet('/character'),d=r.ok?await r.json():null;if(await finish(d?.character,st.vipRequest))return;}catch(_){}
+    if(current())env.setStatus('VIP-бафф: сверяю результат выбранной иконки; повтор не отправляю');await env.sleep(3000);return;
   }
-  let ch, catalog;
-  try { const [cr, lr] = await Promise.all([env.gameGet('/character'), env.gameGet('/character/town/buffer/catalog')]);
-    const [c, l] = await Promise.all([cr.json(), lr.json()]); if (!current()) return;
-    ch = cr.ok && c?.character; catalog = lr.ok && l;
-  } catch (_) { if (current()) { await env.setRt({ tbOk: false }); await done('VIP: цену не удалось проверить — набор не применяю'); } return; }
-  if (!ch || ch.name !== env.rt.char || !ch.id || !Number.isSafeInteger(ch.revision) || ch.inBattle !== false || !(ch.hp > 0) || !Array.isArray(ch.activeBuffs)) return done('VIP: состояние персонажа не подтверждено — набор не применяю');
+  let ch,catalog;
+  try{const [cr,lr]=await Promise.all([env.gameGet('/character'),env.gameGet('/character/town/buffer/catalog')]);const [c,l]=await Promise.all([cr.json(),lr.json()]);if(!current())return;ch=cr.ok&&c?.character;catalog=lr.ok&&l;}
+  catch(_){if(current()){await env.setRt({tbOk:false});await done('VIP: цену не удалось проверить — набор не применяю');}return;}
+  if(!ch||ch.name!==env.rt.char||!ch.id||!Number.isSafeInteger(ch.revision)||ch.inBattle!==false||!(ch.hp>0)||!Array.isArray(ch.activeBuffs))return done('VIP: состояние персонажа не подтверждено — набор не применяю');
   vipNote(ch);
-  const eligible = ch.vip?.active === true && (vipUntil(ch.vip.vipUntil) === null || vipUntil(ch.vip.vipUntil) > Date.now() + 3000);
-  if (!eligible || env.cfg.vipBuffAuto === false || (env.cfg.townBuffSet || 'basic') !== 'basic') {
-    if (current()) await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false } }); return;
-  }
-  const baseSet = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '', baseRow = catalog?.sets?.find(x => x.id === baseSet);
-  if (!baseSet || !vipPriceZero(baseRow)) { await env.setRt({ tbOk: false }); return done('VIP: полный набор не подтверждён бесплатным — не применяю'); }
-  const greater = catalog.sets.find(x => x.id === 'greater'), greaterFree = vipPriceZero(greater);
-  const rows = [baseRow, ...(greaterFree ? [greater] : [])], union = new Map();
-  for (const row of rows) for (const x of row.skills) union.set(x.skillId, Math.max(union.get(x.skillId)||0, x.level));
-  const bundleSkills = [...union].map(([skillId,level]) => ({skillId,level}));
-  const row = rows.find(x => !vipEffects(ch,{actor:ch.id,revision:ch.revision,skills:x.skills},true)) || baseRow, set = row.id;
-  const levels = Object.fromEntries(row.skills.map(x => [x.skillId, x.level]));
-  const q = { phase: 'prepared', set, baseSet, bundleChecked:true, greaterFree, bundleSkills, actor: ch.id, revision: ch.revision, skills: row.skills.map(x => ({ skillId: x.skillId, level: x.level })) };
+  const eligible=ch.vip?.active===true&&(vipUntil(ch.vip.vipUntil)===null||vipUntil(ch.vip.vipUntil)>Date.now()+3000);
+  if(!eligible||!vipEnabled()){if(current())await env.setRt({tbuff:{...st,set:'basic',vipFree:false,vipRequest:null}});return;}
+  const baseSet=ch.classBranch==='fighter'?'warrior':ch.classBranch==='mystic'?'mage':'',bundle=vipBundle(ch,catalog,baseSet);
+  if(!baseSet||!bundle){await env.setRt({tbOk:false});return done('VIP: полный набор не подтверждён бесплатным — не применяю');}
+  // Старые запросы требовали всех7 взаимоисключающих эффектов и не могли завершиться. После свежей сверки строим новый бесплатный план.
+  if(st.vipRequest){if(st.vipRequest.actor!==ch.id)return;await env.setRt({tbuff:{...st,set:baseSet,vipFree:true,vipRequest:null},vipApplied:null});if(current())env.setStatus('VIP: старое ожидание общего Greater заменено проверкой отдельных иконок');return;}
+  const selection=JSON.stringify([env.cfg.faBuffs,env.cfg.rbSessBuffs]);
+  const missing=bundle.rows.find(row=>!vipEffects(ch,{actor:ch.id,revision:ch.revision,skills:row.skills},true));
+  const row=missing||{set:baseSet,skills:bundle.bundleSkills};
+  const q={schema:2,classKey:ownerClass,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',phase:'prepared',set:row.set,...(row.skillId?{skillId:row.skillId}:{}),baseSet,bundleChecked:true,...bundle,actor:ch.id,revision:ch.revision,skills:row.skills.map(x=>({skillId:x.skillId,level:x.level}))};
   if(await finish(ch,q,true))return;
-  if (row.skills.some(x => ch.activeBuffs?.some(b => b.skillId === x.skillId && b.level > x.level && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 30 * 60000))) return done('VIP: набор понизил бы действующие баффы — пропускаю');
-  const saved = await env.setRt({ tbuff: { ...st, set, vipRequest: q }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
-  if (!current()) return;
-  if (saved?.ok !== true || !await env.rtCommit()) { if (current()) await env.setRt({ tbuff: st }); return; }
-  const permitted = () => current() && env.cfg.vipBuffAuto !== false && (env.cfg.townBuffSet || 'basic') === 'basic'
-    && !(Number.isInteger(env.rt.classCur?.slot) && ch.classSlots?.activeSlot != null && env.rt.classCur.slot !== ch.classSlots.activeSlot)
-    && (vipUntil(ch.vip.vipUntil) === null || vipUntil(ch.vip.vipUntil) > Date.now() + 1000);
-  await env.pause();
-  if (!permitted()) {
-    if (current()) await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false, vipRequest: null } }); return;
-  }
-  const sent = { ...q, phase: 'sent' };
-  const marked = await env.setRt({ tbuff: { ...st, set, vipRequest: sent } });
-  const flushed = marked?.ok === true && await env.rtCommit();
-  if (!permitted() || !flushed) {
-    if (active.same() && env.rt.tbuff?.t === st.t) await env.setRt({ tbuff: { ...st, vipRequest: null } }); return;
-  }
-  let r, d;
-  try { r = await env.gamePost('/character/town/buffer', { set, expectedRevision: ch.revision, expectedFeeAdena: '0', expectedFeeCoinOfLuck: 0 }); d = await r.json(); }
-  catch (_) { if (current()) env.setStatus('VIP-бафф: ответ неизвестен — сверю эффекты без повторного запроса'); return; }
-  if (!current()) return;
-  if (r.ok && !d?.error && await finish(d?.character, q)) return;
-  if ([400,401,403,404,409,412,422].includes(r.status)) { await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false, vipRequest: null }, tbOk: false }); env.rec('B','бафф','VIP: сервер отклонил бесплатный набор — возвращаюсь к обычному'); return; }
-  env.setStatus('VIP-бафф: эффект не подтверждён — сверю без повторного применения');
+  const saved=await env.setRt({tbuff:{...st,set:row.set,vipRequest:q}});if(!current())return;
+  if(saved?.ok!==true||!await env.rtCommit()){if(current())await env.setRt({tbuff:st});return;}
+  const permitted=()=>current()&&JSON.stringify([env.cfg.faBuffs,env.cfg.rbSessBuffs])===selection&&vipEnabled()&&!(Number.isInteger(env.rt.classCur?.slot)&&ch.classSlots?.activeSlot!=null&&env.rt.classCur.slot!==ch.classSlots.activeSlot)&&(vipUntil(ch.vip.vipUntil)===null||vipUntil(ch.vip.vipUntil)>Date.now()+1000);
+  await env.pause();if(!permitted()){if(current())await env.setRt({tbuff:{...st,set:vipEnabled()?baseSet:'basic',vipFree:vipEnabled(),vipRequest:null}});return;}
+  const marked=await env.setRt({tbuff:{...st,set:row.set,vipRequest:{...q,phase:'sent'}}});const flushed=marked?.ok===true&&await env.rtCommit();
+  if(!permitted()||!flushed){if(active.same()&&classKey()===ownerClass&&env.rt.tbuff?.t===st.t)await env.setRt({tbuff:{...st,vipRequest:null}});return;}
+  let r,d;
+  try{r=await env.gamePost('/character/town/buffer',{set:row.set,...(row.skillId?{skillId:row.skillId}:{}),expectedRevision:ch.revision,expectedFeeAdena:'0',expectedFeeCoinOfLuck:0});d=await r.json();}
+  catch(_){if(current())env.setStatus('VIP-бафф: ответ неизвестен — сверю выбранный эффект без повторного запроса');return;}
+  if(!current())return;
+  if(r.ok&&!d?.error&&await finish(d?.character,q))return;
+  if([400,401,403,404,409,412,422].includes(r.status)){await env.setRt({tbOk:false,tbuff:{...st,set:baseSet,vipFree:true,vipRequest:null}});env.rec('B','бафф',`VIP: сервер отклонил ${row.skillId?'дополнительный бафф '+row.skillId:'классовый набор'} (${String(d?.error||r.status).slice(0,100)}) — эффект не засчитан`);return done('VIP: бафф не получен — запрос отклонён сервером');}
+  env.setStatus('VIP-бафф: выбранный эффект не подтверждён — сверю без повторного применения');
 }
 let tbDownLogT = 0;
 // 20.13 (ревизия 17.10, шаг 7, raid/BF-4): два порога «кончается» были разбросаны числами по модулю. Значения прежние:
@@ -354,7 +359,7 @@ function townBuffNeed() {                          // что взять: { set, 
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000 && (!unavailableVip.includes(id) || ids.includes(id)));
   let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && !vipSession()?.ready);
   const down = needSet ? tbDowngrade(set, H) : [];
-  if (down.length) {                                 // 7.2.2: набор понизил бы баффы — не берём
+  if (down.length && !(vip && !vipSession()?.additionalReady)) { // 20.38: сильный базовый бафф не запрещает отдельную Greater-иконку; 7.2.2: набор понизил бы баффы — не берём
     needSet = false;
     if (Date.now() - tbDownLogT > 1800000) { tbDownLogT = Date.now(); env.rec('B', 'бафф', `городской набор «${set}» не беру — он понизит ваши баффы: ${down.map(x => `${env.FA_KNOWN?.[x.id]?.[0] || env.rt.faCat?.[x.id]?.name || 'skill ' + x.id} Lv.${x.have}→${x.give}`).join(', ')}`); }
   }
@@ -520,6 +525,9 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   const active=contextGuard();if(!active())return false;
   if(env.payments?.blocked())return true;
   if(vipNoFa() && !vipPreferred()){
+    // 20.41 (аудит скорости): «Городской бафф: выкл.» при активном VIP — FA нельзя, бесплатный набор не нужен; раньше каждый вызов
+    // после победы возвращал «жду» и охота стояла с GET /character на каждом круге. Покупок здесь нет — просто продолжаем без баффа.
+    if((env.cfg.townBuffSet||'basic')==='off')return false;
     if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return true;}
     if(!active())return false;
     if(vipNoFa() && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен или отключён');return true;}
@@ -558,19 +566,21 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   const since = Date.now() - (env.rt.tbT || 0);
   // 10.0.7: баффы снял моб (cancelNote после последнего похода) — это не «поход не удался» и не повод ждать 10 мин: идём сразу
   const cancelled = (env.rt.tbCancelT || 0) > (env.rt.tbT || 0);
-  let wait = cancelled || interrupted ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
+  // 20.38: основной набор уже висит, а отдельной VIP-иконки нет — это новая потребность, не повтор неудачного баффера.
+  const vipRepair=!!(n.vipFree&&!vipSession()?.additionalReady&&env.rt.tbOk!==false&&!env.rt.vipApplied?.greaterUnavailable);
+  let wait = cancelled || interrupted || vipRepair ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
   if (cancelled) why += ' — сняты мобом';
   // 20.14.1 (лог 18.10 18:32–18:33): сторож взял городской «basic», через 30 с тур РБ попросил полный набор FA — бот записал
   // «после баффера баффы так и не появились (1/3)» и ждал баффера 24 с, хотя прошлый поход удался: просто теперь нужны ДРУГИЕ баффы.
   // Прошлый поход помнит, за чем шёл (rt.tbWant); всё это висит в шапке — поход удался, новые баффы берём сразу, без счёта неудач.
   const wantOf = p => [...(p.set ? [...(env.TB_KEYS[p.set] || []), ...(env.rt.tbSetIds?.[p.set] || [])] : []), ...(p.fa || [])].map(Number);
   const Hp = hudBuffs(), prevW = Array.isArray(env.rt.tbWant) ? env.rt.tbWant : null;
-  if (!interrupted && !cancelled && Hp && prevW?.length && env.rt.tbT && since < 15 * 60000 && prevW.every(id => Hp[id])) {
+  if (!interrupted && !cancelled && !(n.vipFree&&env.rt.tbOk===false&&!vipSession()?.additionalReady) && Hp && prevW?.length && env.rt.tbT && since < 15 * 60000 && prevW.every(id => Hp[id])) {
     const prevS = new Set(prevW), fresh = wantOf(n).filter(id => !prevS.has(id) && !Hp[id]);
     if (env.rt.tbChk !== env.rt.tbT) { await env.setRt({ tbChk: env.rt.tbT, tbOk: true, tbFail: 0 }); if(!active())return false; }
     if (fresh.length) wait = 0;
   }
-  if (!interrupted && !cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
+  if (!interrupted && !cancelled && !vipRepair && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
     const fails = (env.rt.tbFail || 0) + 1;
     await env.setRt({ tbChk: env.rt.tbT, tbOk: false, tbFail: fails });
     if(!active())return false;
@@ -579,7 +589,7 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
     if (fails >= 3) await env.setRt({ tbFail: 0, tbOk: true, tbPauseUntil: Date.now() + 10 * 60000 });   // v5.6: пауза и для «срочных» (перед РБ) — раньше они шли каждую минуту
   }
   if(!active())return false;
-  if ((env.rt.tbPauseUntil || 0) > Date.now()) return false;
+  if (!vipRepair && (env.rt.tbPauseUntil || 0) > Date.now()) return false;
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < BUFF_LOW_MS);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;

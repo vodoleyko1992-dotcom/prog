@@ -31,7 +31,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
-  stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true, destroyerLimits: true,
+  stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true, destroyerLimits: true, fastTurn: true,
   // 20.13 (ревизия 17.10, шаг 5, quality/L3): скрытые настройки, умолчание которых раньше жило только в месте чтения
   // (`?? 30`, `!== false`…). Значения те же, поведение не меняется; теперь они видны в cfg, экспорте и проверке
   // tests/v2013-defaults-sync. Резервные `??` в модулях оставлены для старых тестовых окружений без DEF_CFG.

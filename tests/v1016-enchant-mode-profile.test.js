@@ -38,6 +38,8 @@ function menuFixture() {
  let beforeLock=null;
  const writes=[],box={L2EngineCore:E,URL,Date,MAX_PATCH_KEYS:250,serializeLock:async fn=>{if(beforeLock)await beforeLock();return fn()},chrome:{runtime:{getURL:p=>'chrome-extension://fixture/'+p},storage:{local:{get:async()=>clone(state),set:async patch=>{writes.push(clone(patch));Object.assign(state,clone(patch));}}}}};
  const i=source.indexOf('async function menuPatch('),j=source.indexOf('async function switchCharacter(',i);assert.ok(i>=0&&j>i);vm.runInNewContext(source.slice(i,j),box);
+ // 20.41: Start/Stop из меню после записи «on» зовут afterOnWrite (слушателя storage.onChanged в фоне нет)
+ vm.runInNewContext(source.slice(source.indexOf('const paint ='),source.indexOf("chrome.storage.local.get('on').then(s => paintOn")),box);
  return {state,writes,session,lock:fn=>{beforeLock=fn},patch:m=>box.menuPatch({expectedChar:'Hero',rtPatch:{},...m},{url:'chrome-extension://fixture/popup.html'})};
 }
 for(const [name,selected,old] of [['вход из старого профиля',true,undefined],['выход',false,true],['повторный явный выбор',true,true]])test(name+': режим атомарно паузит серию и сохраняет каждый результат/лимит',async()=>{

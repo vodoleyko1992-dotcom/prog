@@ -232,7 +232,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champM
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -1522,9 +1522,16 @@ async function analyzeMammonBag() {
     if (rt.char !== expectedChar) throw Error('Персонаж изменился — обновите меню');
     mmBagUi.context = mammonBagContext(rt, { mmGoalItem: goalItem, mmGoalLvl: goalLvl });
     if ((+cfg.mmGoalItem || 0) !== goalItem || (+cfg.mmGoalLvl || 5) !== goalLvl) throw Error('Дождитесь сохранения выбранной цели');
-    const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
-    if (!tab?.id) throw Error('Откройте вкладку игры');
-    const result = await Promise.race([chrome.tabs.sendMessage(tab.id, { cmd: 'mammonBagAnalyze', expectedChar, goalItem, goalLvl }),
+    // 20.10, лог06:56: встроенное меню Firefox не имеет tabs; фон адресует анализ родительской игре.
+    const request = { expectedChar, goalItem, goalLvl };
+    let response;
+    if (DOCKED) response = chrome.runtime.sendMessage({ cmd: 'mammonBagDockAnalyze', ...request });
+    else {
+      const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
+      if (!Number.isInteger(tab?.id) || tab.id < 0) throw Error('Откройте вкладку игры');
+      response = chrome.tabs.sendMessage(tab.id, { cmd: 'mammonBagAnalyze', ...request });
+    }
+    const result = await Promise.race([response,
       new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Не получен ответ анализа. Повторите после загрузки вкладки игры.')), 20000); })]);
     if (!result?.ok) throw Error(result?.reason || 'Не удалось прочитать рюкзак');
   } catch (e) { mmBagUi.error = String(e?.message || e); mmBagUi.errorAt = Date.now(); }
@@ -2208,6 +2215,7 @@ function renderClsBox(d, rt, role, cls) {
 function renderFight(rt) {
   const box = $('fightBox'); if (!box) return;
   FL_RT = rt;
+  if ($('packBox')) $('packBox').textContent = FL?.packReport?.() || 'Пачки: замеров ещё нет';
   const M = rt.fightMem || {}, keys = Object.keys(M), rb = keys.filter(k => k.startsWith('rb:')), ch = keys.filter(k => k.startsWith('ch:')), mob = keys.filter(k => k.startsWith('m:'));
   const L = rt.fightLast, out = [];
   if (L) out.push(`Последний бой: ${L.name}${L.rb ? ' (РБ)' : L.champ ? ' (чемпион)' : ''} — ${L.outcome === 'win' ? 'победа' : L.outcome === 'lose' ? 'смерть' : 'бой окончен'} за ${L.sec} с, ходов ${L.turns}, урон ${L.dealt}${L.pet ? ' + кот ' + L.pet : ''}${L.dps ? ` (≈${L.dps}/с)` : ''}${L.pots ? `, банок ${L.pots}` : ''}${L.lost ? `, потерянных ходов ${L.lost}` : ''}`);
@@ -2245,7 +2253,7 @@ function renderEnemies(rt) {
   }
 }
 confirmClick('fightMemReset', async () => {
-  await menuPatch({ fightMem: {}, fightLast: null, fightGroups: {} });
+  await menuPatch({ fightMem: {}, fightLast: null, fightGroups: {}, packLab: null });
   toast('Память боя этого класса очищена');
 });
 $('showAllCls').onclick = async () => {
@@ -2433,6 +2441,7 @@ confirmClick('reset', async () => {
 // ---------- журнал: IndexedDB расширения (пишет фоновый скрипт, читает попап) ----------
 const pad = (n, w = 2) => String(n).padStart(w, '0');
 const tm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`; };
+const evBattle = e => !!e.data?.battle && typeof e.data.battle === 'object';   // 20.41: только объект боя (v2034), не строка spawnId
 const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   `| ${e.st?.page || ''} HP ${e.st?.hp || ''} MP ${e.st?.mp || ''}${e.st?.mob ? ' · моб ' + e.st.mob : ''}`,
   e.slots ? `| слоты: ${e.slots}` : '',
@@ -2440,9 +2449,13 @@ const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   e.el ? `| эл: ${e.el}` : '',
   e.data?.q != null ? `| запрос: ${typeof e.data.q === 'string' ? e.data.q : JSON.stringify(e.data.q)}`.slice(0, 600) : '',
   e.data?.r ? `| ответ: ${e.data.r}` : '',
-  e.data?.battle ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
+  // 20.41 (выгрузка 20.10): «КД сервера» — поля в data.cd; старые события хранили строку spawnId в data.battle
+  // и плоские поля КД в data — печатаем их целиком, без разложения строки по символам.
+  e.data?.cd && typeof e.data.cd === 'object' ? `| кд: ${JSON.stringify(e.data.cd)}`.slice(0, 1200) : '',
+  e.data && typeof e.data.battle === 'string' ? `| кд: ${JSON.stringify({ ...e.data, spawn: e.data.battle, battle: undefined })}`.slice(0, 1200) : '',
+  evBattle(e) ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
 // 20.10: безопасный боевой блок уже ограничен hook; прежние 4000 знаков теряли соседей и исход боя.
-const exportEventLine = e => { const t = fmtEv(e); return e.data?.battle || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
+const exportEventLine = e => { const t = fmtEv(e); return evBattle(e) || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
 // Выгрузки — не больше 6 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
 // и пишем в шапке, сколько не вошло. Файл собирается из частей (Blob), без одной гигантской строки в памяти.
@@ -2538,6 +2551,7 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
     + `# | бой: JSON — безопасные поля сервера, rid запроса, цели, HP/MP, КД, исход и награда. log/finalLog: хвост до 200 строк / 32К знаков, строка до 2048; omitted/shortened/cut явно отмечают сокращения.\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
+    + `# Пачки: ${(() => { const before=FL_RT;FL_RT=rt;try{return (FL?.packReport?.()||'нет замеров').replace(/\n/g,'\n# ');}finally{FL_RT=before;} })()}\n`
     + `# Цель рыбалки: ${JSON.stringify(rt.fishTgt || null)} · активный заброс: ${rt.fishCastActive === true} · обслуживание: ${rt.fishService || '—'}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
     + `# Скиллы (по наблюдениям): ${Object.entries(rt.skills || {}).filter(([, p]) => p.uses || p.dmgN).map(([k, p]) => ({ ...p, name: p.name || k })).map(p => `${p.name}: исп ${p.uses || 0} (ваших ${p.usesU || 0})`
@@ -2798,6 +2812,7 @@ $('memFile').onchange = async e => {
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
     if (data.rt) data.rt = { ...data.rt, _src: 'menu' };
     await chrome.storage.local.set({ ...data, on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
+    try { chrome.runtime.sendMessage({ cmd: 'badgeSync' })?.catch?.(() => {}); } catch (_) {}   // 20.41 (лог 20.10 21:09): у фона нет слушателя storage.onChanged — значок по факту
     const rt = data.rt || {};
     $('memNote').textContent = `✅ Загружено (v${j.v}, ${new Date(j.t).toLocaleString('ru')}): РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}. Бот остановлен — нажмите ▶ Старт.`;
     load();

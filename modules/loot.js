@@ -77,7 +77,8 @@ async function massSpoilStep(ctx, act, mob) {
   // Festival метит всех живых в зоне со 100 %: на РБ помечаем соседей, видимых в момент нажатия (без ответа игры — тоже,
   // чтобы не жать по кругу; новые соседи после этого снова разрешат нажатие)
   if (ctx.rb) { const S = ctx.nearSpoiledKeys ||= {}; for (const [k, n] of Object.entries(nearCount(alive))) S[k] = Math.max(S[k] || 0, n); ctx.nearSpoiled = Math.max(ctx.nearSpoiled, near); }
-  const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; S.massFail = (S.massFail || 0) + bads; await env.setRt({ spoilStat: S });
+  // Лог20.10 10:43UTC: локальный счётчик уже обновляется setRt; запись статистики не держит следующий удар.
+  const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; S.massFail = (S.massFail || 0) + bads; env.setRt({ spoilStat: S });
   env.rec('B', 'спойл', `${ctx.name} +${near} рядом: масс-спойл → ${oks || bads ? `✅${oks} ✗${bads}${res.length ? ' (' + res.map(x => `${x.name} ${x.ok ? '✅' : '✗'}${x.ch ? x.ch + '%' : ''}`).join(', ') + ')' : ''}` : 'нажат'}${ctx.rb ? ' · РБ масс-спойл не берёт, метим мобов рядом' : ctx.spoiled ? ' · главный помечен' : ' · главного добью обычным Spoil'}${fresh.length && !oks && !bads ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
   return true;
 }
@@ -93,6 +94,8 @@ async function spoilStep(ctx, act, mob) {
   const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}`);
   if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую${/crush/i.test(x.bn) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
   if (r === 'cd' || r === 'noforce') { ctx.spoilTry--; return true; }
+  // 20.41: клик не ушёл ('lock' — окно занятости игры, 'nomp' — нет MP) — строки итога спойла не будет, 1,5 с не ждём
+  if (r === 'lock' || r === 'nomp') { ctx.spoilTry--; if (r === 'nomp') ctx.block['spoil:' + x.bn] = Date.now() + 1500; return true; }   // 1,5 с — как NOMP_MS боя
   await env.waitFor(() => env.mobSpoiled() || env.newLines(before, env.logLines()).some(l => env.SPOIL_OK.test(l) || env.SPOIL_FAIL.test(l)), 1500, 80);
   const fresh = env.newLines(before, env.logLines()), ok = fresh.find(l => env.SPOIL_OK.test(l)), bad = !ok && fresh.find(l => env.SPOIL_FAIL.test(l));
   const S = { ...(env.rt.spoilStat || {}) };
@@ -101,7 +104,7 @@ async function spoilStep(ctx, act, mob) {
   else if (r !== true) ctx.spoilTry--;            // нажатие не прошло (ответа нет) — попытку не считаем
   else if (!env.rt.spoilMsgKnown && ctx.spoilTry >= 2) ctx.spoiled = true;   // игра молчит (другой язык?) — после 2 нажатий считаем помеченным
   if (ok && !env.rt.spoilMsgKnown) S.known = 1;
-  await env.setRt({ spoilStat: S, ...(ok && !env.rt.spoilMsgKnown ? { spoilMsgKnown: 1 } : {}) });
+  env.setRt({ spoilStat: S, ...(ok && !env.rt.spoilMsgKnown ? { spoilMsgKnown: 1 } : {}) });
   env.rec('B', 'спойл', `${ctx.name}: ${ctx.spoiled ? '✅ ' + (ok || 'значок спойла').slice(0, 60) : bad ? '✗ ' + bad.slice(0, 60) + (ctx.spoilTry < 4 && mob.cur >= mob.max * 0.3 ? ' — пробую ещё' : '') : 'нажат' + (fresh.length ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : '')}`
     + (S.ok || S.fail ? ` · всего ✅${S.ok || 0} ✗${S.fail || 0}${S.chance ? ' · шанс ' + S.chance + '%' : ''}` : ''));
   return true;
@@ -114,7 +117,7 @@ async function sweepStep(ctx) {                   // после победы: с
   if (sl.length) {
     const S = { ...(env.rt.spoilStat || {}) }, it = { ...(S.items || {}) };
     for (const m of sl) it[m[1]] = (it[m[1]] || 0) + +m[2];
-    S.items = it; S.loots = (S.loots || 0) + 1; await env.setRt({ spoilStat: S });
+    S.items = it; S.loots = (S.loots || 0) + 1; env.setRt({ spoilStat: S });
     env.rec('B', 'спойл', `${ctx.name}: добыча спойла — ${sl.map(m => `${m[1]} ×${m[2]}`).join(', ')}`);
     return;
   }

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.35 — закупка Life Stone и Gemstone на серию =====
+// ===== L2wap Bot v20.42 — быстрый удар: игра не ждёт лишнего обновления персонажа после обычного удара =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -7,6 +7,8 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
+// 20.41 (лог 20.10 21:09: память 1,3 МБ): у фона нет слушателя storage.onChanged — после прямой записи on:false модуль просит перерисовать значок
+const badgeSync = () => { try { chrome.runtime.sendMessage({ cmd: 'badgeSync' })?.catch?.(() => {}); } catch (_) {} };
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания настроек и дневные диапазоны — в defaults.js (общий файл
 // с меню, подключён в manifest перед content.js). Здесь только прежние имена, код ниже не меняется.
 const { DAILY_RANGE, DAILY_KILL_DEF, DAILY_FISH_DEF, DAILY_RANGES_DEF } = L2Defaults;
@@ -20,9 +22,14 @@ const BACK  = /^(Назад на карту|Назад на мапу)$/i;
 const QUEST = /[★☆⭐✩✪✫✭✮✯]/;
 
 let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
-let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ownership
+let deferredMigrations = { cfg: {}, rt: {}, petSlim: false }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
+// 20.41 (ревью petCohorts: готовый ужатый словарь в deferredMigrations.rt писался после замка поверх свежих строк хозяина и даже
+// в rt другого героя — migApplied снимает только пакеты с флагом once(), а смена героя отложенное не чистит): вкладка без замка
+// откладывает не данные, а намерение (deferredMigrations.petSlim). Ужатие считается в loopMigrations по свежему rt (loopLease перечитал
+// хранилище) и герою этого rt.
+const petCohortsFat = pc => !!pc && typeof pc === 'object' && Object.entries(pc).some(([k, v]) => k.length > 64 || !!v?.hero || !!v?.snapshotKey);
 // Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
 const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
 const withRb = c => L2EngineCore.taskConfig({ ...L2EngineCore.rawTaskConfig(c), rbMode: rbEff(c) }, () => rt);
@@ -223,9 +230,14 @@ async function noteRaidMobKills(spawn,begin=false) {
   if(begin){RAID_MOB_BASE.set(key,{seq:s.seq,rev:s.rev,...(s.fullSeq===s.seq?{fullN:s.fullN,fullSeq:s.fullSeq}:{}),...counter});if(RAID_MOB_BASE.size>8)RAID_MOB_BASE.delete(RAID_MOB_BASE.keys().next().value);}
   const old=rt.raidMobMarks?.[key];
   const ended=!!(report.win||report.lose);
-  if(!begin&&old&&old.seq>=s.seq&&(!s.start||old.start===s.start)&&(!old.done||ended)&&(!ended||old.done)&&(!Number.isSafeInteger(s.fullN)||old.absolute>=s.fullN))return true;
+  // 20.41 (лог 20.10 21:09): каждый ответ сервера двигает курсор, и бот писал весь rt (1,3 МБ) на каждый ход РБ, даже без новых
+  // смертей соседей. Курсор без новых смертей не меняет счёт (фон считает смерти после сохранённого seq) — такую запись пропускаем.
+  if(!begin&&old&&(old.seq>=s.seq||!ended&&!old.done&&!s.deaths.some(x=>x>old.seq))&&(!s.start||old.start===s.start)&&(!old.done||ended)&&(!ended||old.done)&&(!Number.isSafeInteger(s.fullN)||old.absolute>=s.fullN))return true;
   try{
-    if(!await rtCommit()||!valid())return true;
+    // 20.41 (лог 20.10 21:09): ждать всю очередь записи нужно, только если в ней ключи, которые фон меняет этой же записью
+    // (иначе старый патч вкладки затёр бы новый счёт). Замеры навыков/статистика в очереди — не повод ждать 0,5–1,5 с.
+    if(['kills','dailyQuota','farmKillMark','raidMobMarks'].some(k=>Object.hasOwn(rtWriter.peek(),k))&&!await rtCommit())return true;
+    if(!valid())return true;
     const r=await ipc({cmd:'statePatch',patch:{},raidMobs:{...snapshot,op:begin?'begin':'count',spawn,prof,slot,kick,sessT0,dailyLimit,ended:!!(report.win||report.lose),base:RAID_MOB_BASE.get(key)},expectedChar:char,epoch,src:TAB_ID});
     if(r?.ok&&valid())rt={...rt,kills:r.kills,raidMobMarks:r.raidMobMarks,...(r.dailyQuota?{dailyQuota:r.dailyQuota}:{}),...(r.farmKillMark?{farmKillMark:r.farmKillMark}:{})};
   }catch(e){/* Следующий круг повторит неподтверждённую запись с тем же курсором. */}
@@ -258,6 +270,17 @@ async function farmQuotaSnapshot(char, need = null) {
     return snap();
   } catch (e) { KILL_FAIL_T = Date.now(); throw e; }
 }
+// 20.41: итог боя без ожидания записи — только когда и до лимита задачи, и до дневного лимита дальше QUOTA_ASYNC_ROOM мобов
+// (с запасом на неподтверждённый ещё итог текущего боя и пачки до 10 целей). Ближе — как раньше: точная остановка на лимите.
+const QUOTA_ASYNC_ROOM = 40;
+let quotaWin = null;   // { T, p }: итог прошлого боя ещё пишется; p → счёт сессии фона после итога (или undefined)
+function farmQuotaIdle() { return quotaWin?.p || Promise.resolve(); }
+function farmQuotaRoom(T, n) {
+  const row = rt.farmQuota?.[T.task], room = [];
+  if (T.limit > 0) room.push(T.limit - (+row?.got || 0));
+  if (T.dailyLimit > 0) room.push(T.dailyLimit - L2EngineCore.dailyCount(rt, 'auto'));
+  return room.length ? Math.min(...room) - Math.max(0, +n || 0) : 0;
+}
 // Повтор подтверждения одного боя: не чаще раза в 2 с, не больше 5 попыток / 30 с.
 function quotaWait(key) {
   const now = Date.now(), W = QUOTA_WAIT[key] ||= { n: 0, t0: now, t: 0 };
@@ -272,12 +295,15 @@ function farmQuotaPending(spawn) {
   return ['auto','cat'].map(task => ({ task, row: rt.farmQuota?.[task] })).filter(({task,row}) => enabled(task)
     && row?.pending && !row.done && row.pending.spawn === spawn && row.limit === farmQuotaLimit(task) && (farmQuotaLimit(task) || farmDailyLimit(task)));
 }
-async function beginFarmQuota(spawn) {
+async function beginFarmQuota(spawn, onBase = null) {
   if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
-  const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
+  // 20.41 (ревью): итог прошлого боя ещё пишется — его pending с тем же ключом спавна (цепочка в той же странице) — не reload этого боя.
+  const W = quotaWin, winning = p => !!W && p.task === W.T.task && p.row.run === W.T.run && p.row.pending.revision === W.T.beforeRevision;
+  const previous = farmQuotaPending(spawn).filter(p => !winning(p)); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
   const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
   if (!limit && !dailyLimit) return null;
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionKills = previous.length ? previous[0].row.pending.sessionKills : Number.isSafeInteger(rt.kills) && rt.kills >= 0 ? rt.kills : undefined, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
+  let sessionKills = previous.length ? previous[0].row.pending.sessionKills : Number.isSafeInteger(rt.kills) && rt.kills >= 0 ? rt.kills : undefined;
   const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
   // 20.12: без счётчика бой не бросаем — билет «неточно», убитые засчитаются по журналу боя.
   const approxId = `${TAB_ID}:${Date.now()}:${++quotaTicketN}`, approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true, approxId, run:rt.farmQuota?.[task]?.run ?? 0, sessionKills, sessionT0, beforeCounter: c?.mobsKilled, beforeRevision: c?.revision });
@@ -287,6 +313,12 @@ async function beginFarmQuota(spawn) {
   try { c = prev ? { mobsKilled: prev.counter, revision: prev.revision } : await farmQuotaSnapshot(char); }
   catch (e) { if (!valid()) return null; setStatus('Лимит мобов: счётчик сервера недоступен — считаю по журналу боя'); return approx(); }
   if (!valid()) return null;
+  // 20.41 (катакомбы: каждый моб — новая страница, свежего счётчика нет): точка начала уже снята — бой может начинать удары,
+  // запись 'begin' (полная память 1,3 МБ, 0,4–1,5 с) идёт параллельно; итог боя ждёт её через quotaTicket, фон пишет по порядку
+  try { onBase?.(); } catch (e) {}
+  // 20.41: итог прошлого боя ещё пишется (без ожидания) — начало этого боя после него. Счёт сессии — снятый до первого удара этого боя
+  // (живой rt.kills уже может включать его убитых — фон засчитал бы их дважды), но не меньше счёта фона после итога.
+  if (W) { const k = await W.p; if (!valid()) return null; if (!previous.length && Number.isSafeInteger(k) && k >= 0) sessionKills = Math.max(+sessionKills || 0, k); }
   try {
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision, sessionKills, sessionT0 }, expectedChar: char, epoch, src: TAB_ID });
     if (!valid()) return null;
@@ -296,8 +328,14 @@ async function beginFarmQuota(spawn) {
   } catch (e) { if (!valid()) return null; setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
 }
 // Общий итог подтверждённого и приблизительного учёта: true — бой в этой задаче больше не продолжаем (лимит).
+// 20.41 (лог 20.10 21:09, память 1,3 МБ: ожидание всей очереди записи перед итогом стоило 0,5–1,5 с на моба): итог квоты больше не
+// ждёт очередь вкладки. Фон сам упорядочивает записи (serializeLock, FIFO), а farmQuota/farmKillMark/dailyQuota вкладка через setRt не
+// пишет. Общий ключ один — kills: если в очереди лежит патч победы со старым kills, ставим туда свежий (больший) — он заменит старый
+// в ещё не отправленном пакете и не даст ему понизить счёт фона.
+function farmQuotaKillsRequeue() { if (Object.hasOwn(rtWriter.peek(), 'kills')) setRt({ kills: rt.kills })?.catch?.(() => {}); }
 function farmQuotaApply(T, r) {
   rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}), ...(Number.isSafeInteger(r.kills) ? { kills: Math.max(+rt.kills || 0, r.kills) } : {}) }; cfg = mergeCfg(r.cfg);
+  farmQuotaKillsRequeue();
   if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
   if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0} + рядом с РБ ${r.dailyQuota.raid||0}, ранее по серверу ${r.dailyQuota.server||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)+(r.dailyQuota.raid||0)+(r.dailyQuota.server||0)}/${T.dailyLimit} — обе охоты ждут 00:00 по времени сервера, продолжаю остальные задачи`);return true;}
   if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
@@ -310,7 +348,7 @@ async function farmQuotaApprox(T, n, close = false) {
   if (!valid()) return true;
   const name = T.task === 'cat' ? 'Катакомбы' : 'Автофарм';
   try {
-    if (!await rtCommit() || !valid()) return false;
+    if (!valid()) return false;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close, run:T.run, approxId: T.approxId, sessionKills: T.sessionKills, sessionT0: T.sessionT0, beforeCounter: T.beforeCounter, beforeRevision: T.beforeRevision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
     if (!r?.ok || !valid()) return false;
     T.done = true;
@@ -346,8 +384,26 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
   };
   try {
     const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || observed > 0 || lost || s.k > p.counter);
-    const c = await farmQuotaSnapshot(T.char, need); if (!valid() || !await rtCommit()) return true;
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    const c = await farmQuotaSnapshot(T.char, need); if (!valid()) return true;
+    const msg = { cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID };
+    // 20.41 (замер цикла катакомб, память 1,3 МБ: запись итога 0,7–1,3 с держала экран победы до «Охотиться дальше»): счётчик сервера уже
+    // подтвердил бой — до лимита далеко, следующий бой итог не ждёт. Фон пишет записи по очереди (serializeLock): итог раньше начала
+    // следующего боя, а beginFarmQuota ждёт этот ответ, прежде чем взять счёт сессии. Отказ подтверждения фон сам засчитывает по журналу
+    // боя (fallback: вкладка могла уже уйти на другую страницу); не дошедший запрос — approx отсюда.
+    if (farmQuotaRoom(T, logN) > QUOTA_ASYNC_ROOM) {
+      delete QUOTA_WAIT[key];
+      const W = { T, p: null };
+      W.p = ipc({ ...msg, farmQuota: { ...msg.farmQuota, fallback: true } }).then(async r => {
+        if (!valid()) return;
+        if (!r?.ok) { await farmQuotaApprox(T, logN, true); return; }
+        if (r.approx && Date.now() - quotaApproxNoteT > 600000) { quotaApproxNoteT = Date.now(); rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: счётчик убийств сервера не подтвердил итог боя — засчитал по журналу боя: ${logN} (неточно), продолжаю`); }
+        farmQuotaApply(T, r); return r.kills;
+      }, async () => { if (valid()) await farmQuotaApprox(T, logN, true); })
+        .catch(e => console.warn(TAG, 'итог лимита', e)).finally(() => { if (quotaWin === W) quotaWin = null; });
+      quotaWin = W;
+      return false;
+    }
+    const r = await ipc(msg);
     if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
     delete QUOTA_WAIT[key];
     return farmQuotaApply(T, r);
@@ -581,7 +637,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     const b = slotsBy(bn)[0]; if (!b || (ctx.block['tgl:' + bn] || 0) > Date.now()) continue;
     const st = toggleState(bn, b), il = ilOf(b);
     if (il?.autoUse === false) continue; // 20.3: ручной Focus Attack не переключаем даже из старого списка ролей.
-    if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) await setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } });
+    if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } })?.catch?.(() => {});   // 20.41: ход не ждёт записи
     let want = null;
     if (st !== true && mpP >= (st === false && rt.toggleOff?.[bn] ? onP : off + 1) && uiReady(b)) want = true;     // включить
     else if (st === true && mpP < off) want = false;                                                                  // выключить — бережём MP
@@ -594,7 +650,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     // 20.13 (шаг 7, combat/C3): состояние тоггла пишем только по сработавшему нажатию (true). 'lock' — клик потерян в окне занятости
     // игры: повтор сразу, без записи; false/'cd'/'noforce' — пауза слота 4 с без записи (раньше их засчитывали как переключение)
     if (r === true) {   // у тоггла КД может не быть — act засчитывает нажатие без ухода в КД; дальше сверяемся со строкой баффов
-      await setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } });
+      setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } })?.catch?.(() => {});
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
     } else if (r === 'lock') ctx.block['tgl:' + bn] = 0;
     else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
@@ -657,7 +713,7 @@ function forceNow() {
 const forceMax = () => rt.force?.max || 0;
 async function forceSet(n, max, why) {
   const nf = { n: Math.max(0, n), t: Date.now(), max: max || rt.force?.max || 0, hud: hudForce() };
-  await setRt({ force: nf });
+  setRt({ force: nf })?.catch?.(() => {});   // 20.41 (память 1,3 МБ): энергия сверяется с HUD в начале каждого боя — удар не ждёт записи
   if (why) rec('B', 'энергия', `${why}: ${nf.n}${nf.max ? '/' + nf.max : ''}`);
 }
 // по новым строкам лога после нажатия: точное значение или списание
@@ -796,7 +852,10 @@ const NAME_ALIAS = { 'force buster': 'force burst',
   // 7.1.16-fix: в логе боя заклинания мага — по-украински («Вампірний дотик 596», «Полум’я 618»). Без этого урон Vampiric Touch
   // и Blaze не узнавался (урон 0, «урон ≈2»), и бот выбирал заклинания вслепую
   'vampiric touch': 'вампірний дотик', 'aura burn': 'опік аури', 'energy bolt': 'енергетична блискавка', 'blaze': 'полум’я',
-  'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
+  'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля',
+  // 20.41 (лог 20.10 21:09, Bounty Hunter): native-удары в журнале по-украински — «Дикий розмах: power 326 · КРИТ 14635»,
+  // «Вихор: power 2033; до 4 цілей (головна + 3 поруч) 9893». Без алиаса урон из DOM не читался (запасной путь не учит алиас при «power N»)
+  'wild sweep': 'дикий розмах', 'whirlwind': 'вихор' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
 const apos = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '’');
 const logName = n => apos(rt.logAlias?.[(n || '').toLowerCase()] || NAME_ALIAS[(n || '').toLowerCase()] || n);
 for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL_BY_NAME[a] == null) IL_BY_NAME[a] = IL_BY_NAME[b];
@@ -951,7 +1010,8 @@ function dmgFromLog(name, lines, allowAlt = true) {
     return hits.reduce((a, b) => a + b, 0) + splashDmg(lines);   // главная цель + задетые рядом
   }
   // Лог 14.10 16:20: урон соседям — отдельный канал, даже если его строка идёт перед главным попаданием.
-  lines = lines.filter(l => !/(?:поруч|додаткові цілі\s*[—–:-])/i.test(String(l)));
+  // 20.41 (лог 20.10 21:09): «(головна + 3 поруч) 9893» — основная строка Whirlwind, не канал соседей; «… поруч −123.» по-прежнему отбрасывается
+  lines = lines.filter(l => !/(?:поруч(?!\s*\))|додаткові цілі\s*[—–:-])/i.test(String(l)));
   // строка этого заклинания: сначала та, что НАЧИНАЕТСЯ с его имени («Полум’я 618», а не «Удар полум’я 610»), потом любая с именем
   const ln = logName(name), eng = apos(name);
   const has = (l, n) => !BUFF_RE.test(l) && apos(l).includes(n);
@@ -1005,7 +1065,7 @@ async function learnCd(key, name, sec, b) {
   const S = [...(p.cdS || []), Math.round(sec * 10) / 10].slice(-7);
   const med = [...S].sort((x, y) => x - y)[S.length >> 1];
   p.cdS = S; p.cd = med;
-  await setRt({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
+  await setRtSoon({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
 }
 function observeOwner() { return JSON.stringify([rt.char || '', rt.classCur?.prof || '', rt.classCur?.slot ?? '', rt.classSwT || rt.classCur?.t || 0, typeof leaseEpoch === 'undefined' ? null : leaseEpoch]); }
 function damageSample(p, dmg, known, splash) {
@@ -1105,7 +1165,7 @@ function observeSlot(b, src) {
     p.kind = slotKind(b); p.img = (b.querySelector('img')?.getAttribute('src') || '').split('/').pop();
     p.last = txt.slice(0, 160);
     damageSample(p, dmg, damageKnown, slotKind(b) === 'скилл' && dmg > 0 ? splashDmg(added) : null);
-    await setRt({ skills: { ...(rt.skills || {}), [key]: p } });
+    await setRtSoon({ skills: { ...(rt.skills || {}), [key]: p } });
     rec(src, 'скилл', `«${name}»: урон ${damageKnown ? dmg : 'не измерен'} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
       + `${hpd > 15 ? ' · HP +' + hpd : ''}${buff ? ' · бафф ' + buff[1] + ' с' : ''}${stun ? ' · стан' : ''}`
       + `${p.cd ? ' · КД ' + p.cd + ' с' : ''}${unav ? ' · ⚠ недоступен' : ''}`, { added: added.slice(0, 8) });
@@ -1317,8 +1377,19 @@ function quietErr(tag, e) {
 // потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
 let rtBigWarnT = 0, rtSizeT = 0, rtRetryT = null;
+// 20.41 (лог 20.10 21:09: «размер 1328 КБ», каждая запись ≈0,5 с): в строку о размере — самые крупные части памяти, чтобы по журналу
+// было видно, что разрослось (замеры других классов classStash — по классам)
+function rtSizeTop() {
+  try {
+    const kb = v => Math.round(JSON.stringify(v ?? null).length / 1024);
+    const top = Object.keys(rt).map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
+    const st = rt.classStash && typeof rt.classStash === 'object' ? Object.entries(rt.classStash).map(([c, v]) => `${c} ${kb(v)}`).join(', ') : '';
+    return top ? `; крупные части (КБ): ${top}${st ? `; classStash: ${st}` : ''}` : '';
+  } catch (e) { return ''; }
+}
 const rtWriter = L2EngineCore.createPatchQueue(
-  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }),
+  // 20.41 (ревью): menuRev — последняя увиденная вкладкой запись меню; фон по ней отсекает в пакете ключи, изменённые меню позже.
+  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }),
   () => !tabIdle && !document.prerendering && (!on || (tabOwner && !!leaseEpoch)),
   e => {
     console.warn(TAG, 'запись состояния отложена', e);
@@ -1331,13 +1402,21 @@ const rtWriter = L2EngineCore.createPatchQueue(
 );
 // 8.0 (аудит ядра/боя): часть записей в бою больше не ждём (память вкладки обновлена сразу). Чтобы при уходе со страницы
 // (location.href, перезагрузка) недописанное не пропало — отправляем остаток очереди сразу, без ожидания ответа
+let pageGone = false;   // 20.41 (ревью 2): только pagehide/pageshow — beforeunload ставит pageLeaving ещё до ответа сервера на переход
+addEventListener('pageshow', () => { pageGone = false; });
+addEventListener('pagehide', () => { pageGone = true; });
 addEventListener('pagehide', () => {
   try {
     try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
     const p = rtWriter.peek();
-    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }, () => void chrome.runtime.lastError);
+    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }, () => void chrome.runtime.lastError);
   } catch (e) {}
 });
+// 20.41 (ревью): отложенная статистика (до 8 с) при уходе вкладки в фон пишется сразу: замок обычно переходит к другой вкладке,
+// когда эта не видна, а после потери замка неотправленная очередь сбрасывается. Уход со страницы — не здесь: остаток уже отправил
+// pagehide (он раньше скрытия документа при выгрузке), иначе каждая навигация писала бы память дважды. Переход, ещё ждущий ответа
+// сервера, и отменённый переход запись при уходе в фон не выключают.
+document.addEventListener('visibilitychange', () => { if (document.hidden && !pageGone && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };
@@ -1366,12 +1445,27 @@ function setRt(p) {
       // сбросить — строка раз в 30 мин, иначе она вытесняет из журнала (лимит 20 000 событий) полезные события
       if (Date.now() - rtBigWarnT > (cleared.length ? 60000 : 30 * 60000)) {
         rtBigWarnT = Date.now();
-        try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена`); } catch (e) {}
+        try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена${rtSizeTop()}`); } catch (e) {}
       }
     }
   }
   if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
+  if (Object.keys(patch).every(k => RT_STAT_SOON.has(k))) return rtWriter.defer(patch, 8000);
   return rtWriter.enqueue(patch);
+}
+// Задаётся до первого вызова setRt: верхний уровень файла его не вызывает, только функции после загрузки.
+// 20.41 (замер цикла катакомб, память 1,3 МБ: на моба 4 полные записи памяти, фон пишет их по очереди ≈0,65 с каждую, и экран победы
+// ждал запись начала боя за ними): статистика обычного боя — награды, ДПС, замеры, счётчики, путь к цели — пишется отложенно, одним
+// пакетом раз в 8 с или вместе с любой обычной записью. Память вкладки обновлена сразу, при уходе со страницы остаток уходит по pagehide.
+const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 'sp', 'lastWinT', 'lastBattle', 'packLab', 'buffAudit', 'dps', 'mobVal',
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'eff', 'skills', 'via', 'catInT']);
+// 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
+// каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
+// уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
+function setRtSoon(p, ms = 8000) {
+  rt = { ...rt, ...p };
+  if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
+  return rtWriter.defer(p, ms);
 }
 const RECENT = [];                               // v4.47: последние действия — для индикатора
 // v5.6: статус с бегущим счётчиком («ждёт 37 с», «HP 512/900») — в журнал только когда меняется смысл (цифры не в счёт),
@@ -1396,7 +1490,11 @@ function setStatus(s) {
   if (s !== rt.status && shape !== statusShape) { statusShape = shape; recBot(s); RECENT.unshift({ t: Date.now(), s }); RECENT.length = Math.min(RECENT.length, 31); }
   if (s !== rt.status && Date.now() - statusW > 2500) {
     statusW = Date.now();
-    if (!liveStatus(s) || Date.now() - rtStatusW > 60000) { rtStatusW = Date.now(); setRt({ status: s }); }
+    // 20.41 (замер цепочки катакомб, память 1,3 МБ: на каждой новой странице боя первая строка статуса — полная запись памяти в фоне):
+    // меню берёт живой статус из live@Ник, rt.status — запасной показ и экспорт; раз в минуту он идёт отложенным пакетом (до 8 с).
+    // Живой статус не записался (вкладка без замка, предзагрузка) — как раньше, обычной записью.
+    const live = liveStatus(s);
+    if (!live || Date.now() - rtStatusW > 60000) { rtStatusW = Date.now(); (live ? setRtSoon : setRt)({ status: s }); }
     else rt = { ...rt, status: s };
   }
   else rt = { ...rt, status: s };
@@ -2817,6 +2915,11 @@ async function renewResume() {
 setInterval(async () => {
   try {
     if (tabOwner && on) {
+      // 20.41 (ревью battle-write-count, память 1,3 МБ, статистика боя пишется отложенно до 8 с): продление из фоновой вкладки публикует vis:false —
+      // после этого видимая вкладка с фокусом забирает замок, а очередь этой вкладки при потере замка сбрасывается (rtWriter.clear). Раньше
+      // в цепочке «Охотиться дальше» её почти каждый ход досылала лишняя запись слотов классов; теперь перед каждым продлением в фоне
+      // отложенное дописывается (пустая очередь — без записи; продление ждёт запись не дольше 3 с). Видимая вкладка — как прежде.
+      if (!tabVis()) { await L2EngineCore.withTimeout(rtWriter.recover(), 3000).catch(e => quietErr('запись памяти', e)); if (!(tabOwner && on)) return; }
       const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);   // без ответа фона — исключение, повтор через 5 с (как раньше)
       if (!r?.ok) {
         // 20.13 (ревизия 17.10, шаг 5, core-b/F6): продление не прошло (фон не ответил за 9 с, вкладку в фоне придержали дольше 90 с) —
@@ -2933,6 +3036,13 @@ async function loopMigrations() {
     const patch = deferredMigrations.rt; deferredMigrations.rt = {};
     const result = await setRt(patch);
     if (!result?.ok) deferredMigrations.rt = { ...patch, ...deferredMigrations.rt };
+  }
+  // 20.41 (ревью petCohorts): отложенное при загрузке ужатие — по свежему rt и его герою (до switchChar, как и пакет выше). Хозяин уже
+  // ужал или у героя этого rt старых строк нет — писать нечего; запись не прошла — намерение остаётся до следующего замка.
+  if (deferredMigrations.petSlim) {
+    deferredMigrations.petSlim = false;
+    const slim = L2V7Modules.warlock?.slimCohorts;
+    if (slim && petCohortsFat(rt.petCohorts) && !(await setRt({ petCohorts: slim(rt.petCohorts) }))?.ok) deferredMigrations.petSlim = true;
   }
   // 8.0.3 (проверка правок по чемпионам): и для настроек — иначе вкладка, ждавшая замок, позже записывала свой старый пакет
   // разовых миграций вслепую: игрок включил «Искать чемпионов», вкладка перехватила управление — и галочка молча выключилась
@@ -4374,7 +4484,7 @@ function logCooldownApi(d, path) {
   const sc = r.skillCooldowns ?? inner.skillCooldowns;
   const fields = {
     action: d.req?.action ?? r.requestedAction ?? null,
-    battle: d.req?.battleSpawnId ?? battleSpawn(),
+    spawn: d.req?.battleSpawnId ?? battleSpawn(),   // 20.41 (выгрузка 20.10): не data.battle — это поле зарезервировано под объект боя (v2034)
     status: d.status,
     serverNowMs: r.serverNowMs ?? r.nowMs ?? inner.serverNowMs ?? null,
     blockedBy: r.blockedBy ?? null,
@@ -4391,7 +4501,8 @@ function logCooldownApi(d, path) {
   if (Date.now() - (cooldownDiagSeen.get(key) || 0) < 3000) return;
   cooldownDiagSeen.set(key, Date.now());
   if (cooldownDiagSeen.size > 100) cooldownDiagSeen.delete(cooldownDiagSeen.keys().next().value);
-  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: fields });
+  // 20.41 (выгрузка 20.10): поля КД — в data.cd; прежняя строка spawnId в data.battle печаталась в TXT посимвольно, а сами КД не выводились
+  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: { cd: fields } });
 }
 const netOutage = { failures: [], successes: [], since: 0, last: 0 };
 // 8.0.3: отметка «сервер завис в бою» (ход без ответа > 8 с, «нет ответа игры 20 с», серия 5xx) — в sessionStorage вкладки: смерть сразу после неё
@@ -4601,6 +4712,22 @@ setInterval(onMark, 500);
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
 // его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
 const GAME_REQ = new Map(); let GAME_END = 0;
+// 20.36: сетевой ответ будит ожидание боя сразу; таймер — страховка и точный дедлайн КД.
+// schedule использует sleep/bgSleep, поэтому фоновая вкладка не ждёт секундного DOM-таймера.
+function createCombatSignal(schedule, clock = () => Date.now()) {
+  const listeners=new Set();let revision=0;
+  function wait(test,timeout=1000,step=40){return new Promise((resolve,reject)=>{
+    const end=clock()+Math.max(0,timeout);let active=true,armed=false;
+    const finish=(value,error,failed=false)=>{if(!active)return;active=false;listeners.delete(check);failed?reject(error):resolve(value);};
+    function check(){if(!active)return;let value;try{value=test();}catch(e){finish(null,e,true);return;}
+      if(value){finish(value);return;}const left=end-clock();if(left<=0){finish(null);return;}
+      if(!armed){armed=true;Promise.resolve().then(()=>schedule(Math.min(Math.max(1,step),left))).then(()=>{armed=false;check();},e=>finish(null,e,true));}}
+    listeners.add(check);check();
+  });}
+  return {wait,pulse(ms){const before=revision;return wait(()=>revision!==before,ms,ms);},notify(){revision++;for(const check of [...listeners])check();}};
+}
+const combatSignal=createCombatSignal(ms=>sleep(ms)),battleReceipts=new Map();
+const combatWait=(...args)=>combatSignal.wait(...args),combatPulse=ms=>combatSignal.pulse(ms);
 // 15.10, ревизия: ответ без имени героя (TvT/карта/дейлики) принадлежит контексту начала запроса.
 // Отдельно от трёхсекундного busy: поздний ответ не становится ответом нового персонажа.
 const NET_CONTEXT = new Map();
@@ -4633,9 +4760,10 @@ addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
   netContextStart(e.data);
   const p = e.data.path || '/game/battle/action';
-  if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); }   // 8.0.3: GET /character — не «ход ушёл»
+  if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); ACT_NET.startRid=e.data.rid; ACT_NET.startOwner=observeOwner(); }   // GET /character — не «ход ушёл»
   if (p === '/game/battle/hunt-continue') ACT_NET.huntT = Date.now();             // 10.0: «Охотиться дальше» в полёте (сервер замирает до ≈8,4 с)
   if (e.data.rid != null && BUSY_PATH.test(p)) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
+  combatSignal.notify();
 });
 async function weaponEquipNote(req) {
   const char = rt.char, id = +req.itemId;
@@ -4682,7 +4810,7 @@ async function weaponEquipNote(req) {
 async function syncShotWeapon() {
   if (!on || !tabOwner || !rt.shotMismatchPending && Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
   const char = rt.char;
-  await setRt({shotEquipCheckT:Date.now()});
+  setRt({shotEquipCheckT:Date.now()})?.catch?.(() => {});   // 20.41: отметка «проверено» — память вкладки сразу, запись без ожидания
   try {
     const r = await gameGet('/character');
     if (!r?.ok || !on || !tabOwner || rt.char !== char) return;
@@ -4725,7 +4853,7 @@ const zoneMoveNet = (d, path) => ZONE_MOVE_RE.test(path) && d.method === 'POST' 
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
-  if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();
+  if (d.rid != null && GAME_REQ.delete(d.rid)) { GAME_END = Date.now(); combatSignal.notify(); }
   const netContext=netContextTake(d);if(netContext===false)return;
   // 18.10, журнал 22:27: точный запрос из позднего ответа дополняет потерянный netStart только в прежнем контексте.
   try { L2V7Modules.fishing?.castResponseNote?.(path,d,netContext); } catch (_) {}
@@ -4743,7 +4871,7 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
-  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
+  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = !d.error && d.status >= 200 && d.status < 300 && !d.res?.error && d.res?.ok !== false && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
     if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
@@ -4758,7 +4886,7 @@ addEventListener('message', e => {
   // 8.0.3 (лог 11.10 10:32:17: «POST /game/battle/action → 409 · 28586 мс», через 1 с — смерть у Барды): ответ на ход дольше 8 с — сервер
   // висел; отметка во вкладке (переживает перезагрузку) — смерть в ближайшие 60 с не «не по силам» (survival.onDeath)
   // 9.2: анализатор боя — ход за ходом из ответа сервера (hook.js bt): урон по цели, удары по нам, спецудары, итог боя → rt.fightMem
-  if (d.bt && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path)) try { L2V7Modules.fightlab?.onNet(path, d); } catch (e) { console.warn(TAG, 'fightlab', e); }
+  if ((d.bt || d.be) && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path)) try { L2V7Modules.fightlab?.onNet(path, d); } catch (e) { console.warn(TAG, 'fightlab', e); }
   // 9.2: лист врагов — смерть от игрока, игроки на локации, кто напал, начало и победа в ответном бою (hook.js pv)
   if (d.pv || d.bt?.win || path === '/game/battle/pvp/start') try { L2V7Modules.enemies?.onNet(path, d); } catch (e) { console.warn(TAG, 'враги', e); }
   if (path === '/game/battle/action' && +d.ms > 8000) srvHangMark(`ответ на ход ${Math.round(d.ms / 1000)} с`);
@@ -4886,13 +5014,20 @@ addEventListener('message', e => {
   if (path === '/game/battle/action' && d.res && d.req?.action) {
     if (d.req.battleSpawnId) GAME_SPAWN = String(d.req.battleSpawnId);
     combatCooldown.observe(d.req, d.res, d.status, cdSpawn());
+    if(d.be?.schema===1)combatCooldown.observe(d.req,d.be,d.status,cdSpawn());
   }
   // Mage rotations must respect server GCD from background battle sync.
   // The page hotbar often reports a spell ready while globalCooldownUntilMs
   // still prohibits every action (observed Wind Strike HTTP 400).
   if (['/game/battle/sync', '/game/battle', '/game/battle/start', '/game/battle/hunt-continue'].includes(path) && d.res && !d.res.error && d.status >= 200 && d.status < 300) {
     combatCooldown.observeSync(d.res, cdSpawn());
+    if(d.be?.schema===1)combatCooldown.observeSync(d.be,cdSpawn());
   }
+  if(path==='/game/battle/action'&&d.rid!=null){
+    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error});
+    if(battleReceipts.size>64)battleReceipts.delete(battleReceipts.keys().next().value);
+  }
+  if(BUSY_PATH.test(path)||path==='/game/battle/sync'||path==='/game/battle')combatSignal.notify();
   if (/^\/game\/battle(?:\/(?:sync|action))?$/.test(path) && d.res) alignServerSkillCooldowns();
   // 7.1.16-fix: слуга мага — из ответа сервера (activeSummon: {key, hp, maxHp…} или null). Только явное поле, без догадок по разметке
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
@@ -4927,7 +5062,7 @@ addEventListener('message', e => {
   // рейдовая — ещё и в sessionStorage: удачный телепорт уводит со страницы, а переменная вкладки теряется.
   if (path === '/game/raid-boss/teleport' && d.method === 'POST') { RAID_PAY_NET = { t: Date.now(), id: String(d.req?.spawnId || ''), status: d.status, paymentId: d.paymentId || '', outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error && d.res?.ok !== false };
     if (d.paymentId) try { sessionStorage.setItem('l2bot.raidPayReceipt', JSON.stringify(RAID_PAY_NET)); } catch (_) {} }
-  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
+  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, outcome: L2V7Modules.payments?.classify?.(d) || '', msg: String(d.res?.message || '').slice(0, 60), ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
   if(path==='/game/drops-shop/buy'&&d.method==='POST'&&d.paymentId)try{sessionStorage.setItem('l2bot.shopReceipt',JSON.stringify(SHOP_BUY));}catch(_){}
   // v5.3: для сторожа рыбалки. 8.0.3 (лог 11.10): + обрыв запроса (err — fishAct сразу жмёт снова, а не ждёт 15 с), отметка сервера
   // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
@@ -5230,7 +5365,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get dailyWorkReady(){return dailyWorkReady}, get fishTaskWaitKey(){return ()=>L2EngineCore.fishTaskWaitKey(cfg,rt)}, get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get badgeSync(){return badgeSync}, get dailyWorkReady(){return dailyWorkReady}, get fishTaskWaitKey(){return ()=>L2EngineCore.fishTaskWaitKey(cfg,rt)}, get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -5310,7 +5445,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
@@ -5363,7 +5498,9 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+  get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
+  get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get campChampMin() { return campChampMin; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
@@ -5372,7 +5509,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FORCE_KNOWN() { return FORCE_KNOWN; }, set FORCE_KNOWN(value) { FORCE_KNOWN = value; },
   get FORCE_NEED() { return FORCE_NEED; }, set FORCE_NEED(value) { FORCE_NEED = value; },
-  get FORCE_SPEND() { return FORCE_SPEND; }, set FORCE_SPEND(value) { FORCE_SPEND = value; },
+  get FORCE_CNT() { return FORCE_CNT; }, get FORCE_SPEND() { return FORCE_SPEND; }, set FORCE_SPEND(value) { FORCE_SPEND = value; },
   get SK_NET() { return SK_NET; }, set SK_NET(value) { SK_NET = value; },
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
@@ -5485,7 +5622,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get waitX() { return waitX; }, set waitX(value) { waitX = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get dailyWorkReady(){return dailyWorkReady}, get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get badgeSync(){return badgeSync}, get dailyWorkReady(){return dailyWorkReady}, get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -5562,7 +5699,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modul
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
   get catGo() { return catGo; }, set catGo(value) { catGo = value; },
-  get catNext() { return () => L2V7Modules.dungeons.catNext(); },
+  get catNext() { return () => L2V7Modules.dungeons.catNext(); }, get catNatOk() { return () => L2V7Modules.dungeons.catNatOk(); }, get catNatArm() { return () => L2V7Modules.dungeons.catNatArm(); },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get deepN() { return deepN; }, set deepN(value) { deepN = value; },
   get draw() { return draw; }, set draw(value) { draw = value; },
@@ -5755,7 +5892,7 @@ L2V7Modules.equipment = L2V7Factories.equipment({ get actionGeneration(){return 
   get slotKind() { return slotKind; }, set slotKind(value) { slotKind = value; }, get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BSPS_IDS() { return BSPS_IDS; }, set BSPS_IDS(value) { BSPS_IDS = value; },
   get HP_BIG_RE() { return HP_BIG_RE; }, set HP_BIG_RE(value) { HP_BIG_RE = value; },
   get HP_SHOP_RE() { return HP_SHOP_RE; }, set HP_SHOP_RE(value) { HP_SHOP_RE = value; },
@@ -5905,7 +6042,7 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
   const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
-L2V7Modules.fightlab = L2V7Factories.fightlab({ get routeLocation(){return actionLocation},
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get routeLocation(){return actionLocation},
   get cfg() { return cfg; },
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; },
@@ -6540,6 +6677,18 @@ chrome.storage.onChanged.addListener(ch => {
     const m0 = modeSig(cfg); cfg = mergeCfg(ch.cfg.newValue); const m1 = modeSig(cfg);
     if (m0 !== m1 && tabOwner) try { rec('U', 'меню', `режим: ${m0} → ${m1}`); } catch (e) {}
   }
+  // 20.41 (ревью: отложенная статистика до 8 с воскрешала сброс из меню — ↺ сессии, лут, память боя): ключи, которые меню изменило,
+  // убираем из своей ещё не отправленной очереди — решение игрока новее.
+  if (ch.rt?.newValue?._src === 'menu' && ch.rt.oldValue) {
+    // 20.41 (ревью): только чистая статистика (MENU_STAT_KEYS). rbTimer сливается, а намерения/оплаты/маршруты вкладки, как и раньше,
+    // пишутся последней записью — их отмена из-за постороннего изменения меню потеряла бы подтверждённое намерение перед действием.
+    // Повторный сброс тех же нулей значение не меняет — признак сброса тогда новая метка menuKeyRev. Смена класса в очереди (classCur
+    // с памятью боя нового класса из classStash) — замена набора, а не старая статистика: её не трогаем.
+    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], rev = k => +(n.menuKeyRev?.[k] || 0) !== +(o.menuKeyRev?.[k] || 0);
+    const swap = q.classCur && JSON.stringify([q.classCur.prof, q.classCur.slot]) !== JSON.stringify([n.classCur?.prof, n.classCur?.slot]);
+    const keys = swap ? [] : Object.keys(q).filter(k => stat.includes(k) && (rev(k) || JSON.stringify(o[k]) !== JSON.stringify(n[k])));
+    if (keys.length) rtWriter.drop(keys);
+  }
   const timerPrevious = rt;
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
   if (ch.rt?.newValue?.rbTimer) {
@@ -6755,6 +6904,43 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // Заводское значение и новый герой (NEW_HERO_PAID) — по-прежнему ВЫКЛ: платный режим включается только явно.
   // Только герою, который уже рыбачил: новый герой без своей рыбалки остаётся с выключенной докупкой.
   once('fishTimeAuto20261018', () => { if ((rt.fish?.casts || 0) > 0) cf.fishTimeAuto = true; });
+  // 20.41 (лог 20.10 21:09, Bounty Hunter — слот 1): общий ДПС/потери по РБ не были памятью класса — саб брал замер Warlock (≈34k/с) и
+  // шёл на Sobekk 3.6M с прогнозом «≈1:45» вместо 23–25 мин. Теперь они в story.CLASS_KEYS; старый замер без владельца, найденный у саба,
+  // переносим в память основного класса (единственный другой класс в classStash), у саба — с нуля (осторожная оценка до своих замеров).
+  once('rbDpsClass2041', () => {
+    const cur = rt.classCur, st = rt.classStash || {};
+    if (!cur?.prof || !(+cur.slot > 0) || rt.rbDpsOwner || !(rt.rbDps > 0 || rt.rbLossK > 0)) return;
+    const others = Object.keys(st).filter(p => p !== cur.prof && st[p] && typeof st[p] === 'object');
+    if (others.length !== 1 || st[others[0]].rbDps != null) return;
+    rf.classStash = { ...st, [others[0]]: { ...st[others[0]], rbDps: rt.rbDps ?? null, rbDpsContext: rt.rbDpsContext ?? null, rbLossK: rt.rbLossK ?? null, rbGapK: rt.rbGapK ?? null } };
+    Object.assign(rf, { rbDps: null, rbDpsContext: null, rbLossK: null, rbGapK: null });
+  });
+  // 20.41 (лог 20.10 21:09, Bounty Hunter): до PR#316 native Whirlwind/Wild Sweep учились по снятым HP главной цели и DOM-нулям
+  // (Whirlwind ≈4.4k вместо 10–20k, Wild Sweep ≈40k вместо 6–15k): на РБ Whirlwind вырезался, добивание всегда брало Wild Sweep.
+  // Стираем их damageEvidence и средние (dmg/spl) в rt.skills и в каждой памяти класса rt.classStash[*].skills, и выборки rolls/s в
+  // fightMem — до новых замеров expDmg оценивает по power. Счётчики нажатий и откаты не трогаем.
+  once('nativeDmg2041', () => {
+    const NATIVE = ['whirlwind', 'wild sweep'];
+    const fixSkills = sks => { let ch = false; const o = { ...(sks || {}) };
+      for (const k of NATIVE) { const p = o[k]; if (!p || typeof p !== 'object') continue;
+        const { damageEvidence, ...rest } = p; o[k] = { ...rest, dmg: 0, dmgN: 0, spl: 0, splN: 0 }; ch = true; }
+      return ch ? o : null; };
+    const fixMem = fm => { let ch = false; const o = { ...(fm || {}) };
+      for (const [key, m] of Object.entries(o)) { if (!m?.a || typeof m.a !== 'object') continue;
+        let a = null;
+        for (const k of NATIVE) { const x = m.a[k]; if (!x || typeof x !== 'object') continue;
+          const { rolls, legacyRolls, ...rest } = x; (a ||= { ...m.a })[k] = { ...rest, s: [] }; }
+        if (a) { o[key] = { ...m, a }; ch = true; } }
+      return ch ? o : null; };
+    const s2 = fixSkills(S); if (s2) { S = s2; sk = true; }
+    const f2 = fixMem(rt.fightMem); if (f2) rf.fightMem = f2;
+    const st = rf.classStash || rt.classStash;
+    if (st && typeof st === 'object') { let ch = false; const o = { ...st };
+      for (const [cls, v] of Object.entries(st)) { if (!v || typeof v !== 'object') continue;
+        const ss = fixSkills(v.skills), fm = fixMem(v.fightMem);
+        if (ss || fm) { o[cls] = { ...v, ...(ss ? { skills: ss } : {}), ...(fm ? { fightMem: fm } : {}) }; ch = true; } }
+      if (ch) rf.classStash = o; }
+  });
   once('rbKill30_20261018', () => { if (+C('rbMaxKillMin') === 20) cf.rbMaxKillMin = 30; });
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено, иначе нас замечают в статистике»):
@@ -6795,6 +6981,12 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (on && !tabOwner) deferredMigrations.cfg = { ...deferredMigrations.cfg, ...cf };
     else setCfg(cf).catch(() => {});
   }
+  // 20.41 (лог 20.10 21:09: память 1,3 МБ, из них ≈1 МБ — 100 полных снимков petCohorts): ужать старые строки сравнения суммонов при каждой
+  // загрузке, пока они есть. Не once(): флаг once() ложится и в общий cfg — другие герои очистки не получили бы. У героя без суммона
+  // (активный Bounty Hunter на нике Warlock) noteBattle не идёт, и без этого старые строки остались бы навсегда. Запись — вместе с rf;
+  // вкладка без замка при включённом боте откладывает только намерение (deferredMigrations.petSlim): словарь считается после замка по свежему rt
+  // (loopMigrations), иначе снимок загрузки затёр бы строки, которые хозяин дописал позже. После очистки следующая загрузка ничего не пишет.
+  { const slim = L2V7Modules.warlock?.slimCohorts; if (slim && petCohortsFat(rt.petCohorts)) { if (on && !tabOwner) deferredMigrations.petSlim = true; else rf.petCohorts = slim(rt.petCohorts); } }
   if (Object.keys(rf).length) {
     if (on && !tabOwner) deferredMigrations.rt = { ...deferredMigrations.rt, ...rf };
     else setRt(rf);

@@ -6,6 +6,10 @@
  // Явный отказ сервера (4xx из списка или 2xx с error / ok:false: «не хватает», не та цена, нет подтверждения) —
  // оплата точно не применилась, повтор разрешён. 5xx, обрыв связи, нет ответа — исход неизвестен, повтор запрещён.
  const REJECT = [400, 401, 403, 404, 409, 412, 422, 423, 429];
+ // 20.41 (лог 20.10 22:03, Кристал C для пояса): сумка полна — игра отвечает HTTP 500 с явным кодом «inventory_full».
+ // Это не сбой сервера, а отказ: адена не списана (ревизия героя та же), иначе бот держал «неизвестную оплату» и стоял в магазине.
+ // Только точные коды отказа; обычный 500 («Internal server error» без кода) по-прежнему неизвестен.
+ const BIZ_REJECT = /^(?:inventory_full|not_enough_[a-z_]+|insufficient_[a-z_]+)$/;
  const PROBE_AFTER = 120000, PROBE_WAIT = 15000, PROBE_GAP = 30000, PROBE_SLOW = 300000, PROBE_N = 20;
  function classify(d) {
   if (!d || typeof d !== 'object') return 'unknown';
@@ -20,6 +24,7 @@
    if (r && typeof r === 'object' && (r.error || r.ok === false)) return 'rejected';
    return d.error ? 'unknown' : 'applied';
   }
+  if (s >= 500 && d.res && typeof d.res === 'object' && BIZ_REJECT.test(String(d.res.message || ''))) return 'rejected';
   return 'unknown';
  }
  const money = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? +v : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
@@ -29,7 +34,7 @@
   if (before.adena == null) return true;
   const a = money(ch.adena); return a != null && a >= before.adena;
  }
- root.L2PayOutcome = { REJECT, classify, unchanged };
+ root.L2PayOutcome = { REJECT, BIZ_REJECT, classify, unchanged };
  root.L2V7Factories.payments = function create_payments(env) {
   let serial = 0, writing = false, permit = null, requestPermit = null, nativeClaim = null;
   const unsettled = new Map();

@@ -30,33 +30,34 @@ test('серверный каталог: Water1357 входит в greater, об
  assert.ok(!serverMage.skills.some(x=>x.skillId===1357));
  assert.deepEqual(serverGreater.skills.map(x=>x.skillId),[1356,1357,1355,1363,1413,1414,1323]);
 });
-test('подтверждённый бесплатный quote: настоящий mage → greater → доказанный PoW1357',async()=>{
+test('подтверждённый бесплатный quote: mage → PoW1357 → Noblesse1323',async()=>{
  const f=fixture();await ticks(f,1);assert.deepEqual(postSets(f),['mage']);assert.ok(f.env.rt.tbuff);assert.equal(f.B.vipSession().ready,false);
- await ticks(f,1);assert.deepEqual(postSets(f),['mage','greater']);assert.equal(f.env.rt.tbuff,null);assert.equal(f.B.vipSession().ready,true);
+ await ticks(f,1);assert.deepEqual(postSets(f),['mage','greater']);assert.equal(f.posts[1].q.skillId,1357);assert.ok(f.env.rt.tbuff);assert.equal(f.B.vipSession().ready,false);
+ await ticks(f,1);assert.deepEqual(postSets(f),['mage','greater','greater']);assert.equal(f.posts[2].q.skillId,1323);assert.equal(f.env.rt.tbuff,null);assert.equal(f.B.vipSession().ready,true);
  assert.ok(f.env.rt.vipApplied.ids.includes(1357));assert.equal(f.env.rt.vipApplied.skills.find(x=>x.skillId===1357).level,1);
  for(const p of f.posts){assert.equal(p.q.expectedFeeAdena,'0');assert.equal(p.q.expectedFeeCoinOfLuck,0);}
 });
 test('исчезновение только PoW снимает готовность и требует именно greater, не нового mage',async()=>{
- const f=fixture();await ticks(f,2);removePoW(f);assert.equal(f.B.vipSession().ready,false);assert.equal(f.B.townBuffNeed().vipFree,true);
- openVisit(f);await ticks(f,1);assert.deepEqual(postSets(f),['mage','greater','greater']);assert.equal(f.B.vipSession().ready,true);
+ const f=fixture();await ticks(f,3);removePoW(f);assert.equal(f.B.vipSession().ready,false);assert.equal(f.B.townBuffNeed().vipFree,true);
+ openVisit(f);await ticks(f,1);assert.deepEqual(postSets(f),['mage','greater','greater','greater']);assert.equal(f.posts.at(-1).q.skillId,1357);assert.equal(f.B.vipSession().ready,true);
  assert.ok(f.env.rt.vipApplied.ids.includes(1357));
 });
 test('истёкший PoW не считается действующим при сохранении остальных эффектов',async()=>{
- const f=fixture();await ticks(f,2);const pow=f.ch.activeBuffs.find(x=>x.skillId===1357);pow.expiresAtMs=Date.now()-1;f.H[1357]=pow.expiresAtMs;
+ const f=fixture();await ticks(f,3);const pow=f.ch.activeBuffs.find(x=>x.skillId===1357);pow.expiresAtMs=Date.now()-1;f.H[1357]=pow.expiresAtMs;
  assert.equal(f.B.vipSession().ready,false);openVisit(f);await ticks(f,1);assert.equal(postSets(f).at(-1),'greater');assert.equal(f.B.vipSession().ready,true);
 });
 test('платный greater не отправляет CoL и не записывает ложное подтверждение PoW',async()=>{
  const f=fixture();f.catalog.sets[2].feeCoinOfLuck=5;await ticks(f,1);
  assert.deepEqual(postSets(f),['mage']);assert.ok(!f.env.rt.vipApplied.ids.includes(1357));assert.ok(!f.env.rt.vipApplied.skills.some(x=>x.skillId===1357));
  assert.ok(f.posts.every(p=>p.q.expectedFeeCoinOfLuck===0));
- // Готовность относится только к реально разрешённому бесплатному набору, не означает наличие PoW.
- assert.equal(f.env.rt.vipApplied.set,'mage');assert.equal(f.env.rt.tbuff,null);
+ // Платный Greater не создаёт ни PoW-квитанции, ни ложной готовности всей VIP-подготовки.
+ assert.equal(f.env.rt.vipApplied.set,'mage');assert.equal(f.env.rt.tbuff,null);assert.equal(f.B.vipSession().ready,false);
 });
 test('сильный quote подорожал после mage: нет greaterPOST и ложного PoW',async()=>{
  const f=fixture();await ticks(f,1);f.catalog.sets[2].feeCoinOfLuck=5;await ticks(f,1);
  assert.deepEqual(postSets(f),['mage']);assert.ok(!f.env.rt.vipApplied.ids.includes(1357));assert.equal(f.env.rt.tbuff,null);
 });
 test('сервер не вернул PoW после greater: результат неизвестен, ready=false и повтора нет',async()=>{
- const f=fixture(),post=f.env.gamePost;f.env.gamePost=async(p,q)=>{const r=await post(p,q);if(q.set==='greater')removePoW(f);return r;};
- await ticks(f,5);assert.deepEqual(postSets(f),['mage','greater']);assert.equal(f.env.rt.tbuff.vipRequest.set,'greater');assert.equal(f.B.vipSession().ready,false);
+ const f=fixture(),post=f.env.gamePost;f.env.gamePost=async(p,q)=>{const r=await post(p,q);if(q.set==='greater'&&q.skillId===1357)removePoW(f);return r;};
+ await ticks(f,5);assert.deepEqual(postSets(f),['mage','greater']);assert.equal(f.env.rt.tbuff.vipRequest.set,'greater');assert.equal(f.env.rt.tbuff.vipRequest.skillId,1357);assert.equal(f.B.vipSession().ready,false);
 });

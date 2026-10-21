@@ -1,0 +1,92 @@
+{
+  "version": "20.38",
+  "flavor": "Chrome",
+  "checkedAt": "2026-10-20T19:51:43.312893+10:00",
+  "base": "ddd83e05a348f251e1d4820a88492c6ed7aaee29",
+  "problem": "Greater pickByIcon treated as bulk; false base-only ready and unsatisfiable all7 pending",
+  "cachedEvidence": [
+    "kb/raw/buffer-catalog.json:pickByIcon",
+    "kb/data/game-interface-20261016.json:data-skill-id",
+    "fa-full.js:GROUP"
+  ],
+  "fix": {
+    "exactSkillId": true,
+    "mutuallyExclusiveGroupPlusNoblesse": true,
+    "legacyReceiptsAndPendingRecovered": true,
+    "baseAndAdditionalReadinessSeparate": true,
+    "freshZeroPriceRequired": true,
+    "unknownOutcomeNotRepeated": true,
+    "baseDoesNotEraseRejectionBackoff": true
+  },
+  "baseline": {
+    "strictContractCasesPassed": 7,
+    "strictContractCasesFailed": 16,
+    "actualStartMalformedGreaterRequestReproduced": true,
+    "actualStartFalseBaseOnlyReadyReproduced": true,
+    "actualServerUsed": false
+  },
+  "node": {
+    "passFiles": 506,
+    "failFiles": 0,
+    "newUnitScenarios": 36,
+    "correctedLegacyVipScenarios": 26,
+    "logSHA256": "86728d8cdfaf371588f645e4654574944f9d5d4b56974c3245ee14c7faf1c763"
+  },
+  "syntax": {
+    "runtimeFiles": 49,
+    "changedJSAndCJS": 14,
+    "ok": true
+  },
+  "envcheck": {
+    "modules": 31,
+    "ok": true
+  },
+  "diffAndBashSyntax": true,
+  "independentReview": "PASS; backoff blocker reproduced then fixed",
+  "archive": {
+    "name": "l2wap-bot-v20.38.zip",
+    "bytes": 1452969,
+    "sha256": "2460eb3c298d21f87711909aa2c943e3e8c709c3cac4acb418720c5149c78042",
+    "files": 64,
+    "independentChecks": 175,
+    "resourceReferences": 88,
+    "sourceHashesMatch": true,
+    "runtimeDiff": [
+      "modules/buffs.js",
+      "content.js header",
+      "manifest.json metadata",
+      "README-CHROME.txt"
+    ]
+  },
+  "chrome": {
+    "packageVersion": "20.38",
+    "configKeys": 208,
+    "jsErrors": 0,
+    "browserScenariosPassed": 8,
+    "browserScenariosFailed": 0,
+    "realStartAndDispatcher": true,
+    "runtime64HashesBeforeAfterMatch": true,
+    "evidence": "browser/validation.json"
+  },
+  "preserved": {
+    "settings": true,
+    "baseProfile": true,
+    "firefox": "20.36"
+  },
+  "scope": {
+    "liveAccountOpened": false,
+    "liveCombatStarted": false,
+    "nativeGreaterWireCaptured": false,
+    "cachedRealCatalogAndDOM": true,
+    "strictLocalServerModel": true,
+    "publicTownBufferJsRead": "HTTP403; no bypass",
+    "fullHistoricalSmokeRunner": false
+  },
+  "next": "Update existing Chrome folder, reload extension and game tab; obtain a fresh real buff log.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/313",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/9bb1700aa787aba5ba4d9fb2a3529d553786c395/builds/l2wap-bot-v20.38.zip",
+    "bytesAndSHA256Match": true,
+    "evidence": "download.json"
+  }
+}

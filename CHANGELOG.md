@@ -1,6 +1,13 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.42 — быстрый удар: игра не ждёт лишнего обновления персонажа, Chrome + Firefox](docs/changelog/CHANGELOG-20.42.md)
+- [20.41 — быстрый бой без ожидания записей памяти и катакомбы без перезагрузок, Chrome + Firefox](docs/changelog/CHANGELOG-20.41.md)
+- [20.40 — бой без ожидания статистики и native-урон, Chrome](docs/changelog/CHANGELOG-20.40.md)
+- [20.39 — переходы между мобами катакомб, Chrome](docs/changelog/CHANGELOG-20.39.md)
+- [20.38 — исправлен дополнительный VIP Greater по иконке, Chrome](docs/changelog/CHANGELOG-20.38.md)
+- [20.37 — ход по ответу сервера и актуальная ротация, Chrome](docs/changelog/CHANGELOG-20.37.md)
+- [20.36 — анализ Маммона в Firefox и эффективность пачек](docs/changelog/CHANGELOG-20.36.md)
 - [20.35 — закупка материалов авто-ЛС на всю серию](docs/changelog/CHANGELOG-20.35.md)
 - [20.34 — авто-ЛС во встроенном меню Firefox](docs/changelog/CHANGELOG-20.34.md)
 - [L2wap Bot 20.33: Chrome + Firefox, сумка после саба и уровни авто-катакомб](docs/changelog/CHANGELOG-20.33.md)

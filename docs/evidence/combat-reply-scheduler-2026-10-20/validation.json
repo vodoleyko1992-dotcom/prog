@@ -1,0 +1,105 @@
+{
+  "task": "combat reply scheduler and adaptive short follow-up",
+  "checkedAtUTC": "2026-10-20T08:05:47.714634+00:00",
+  "checkedAtLocal": "2026-10-20T18:05:47.714634+10:00",
+  "baseCommit": "0c1ae4219cae07996c6b14d8ec14772888429d06",
+  "manifestVersion": "20.36",
+  "cfgVersion": 208,
+  "buildCreated": false,
+  "runtimeSHA256": {
+    "battle-cooldown.js": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+    "content.js": "5b35a4fc87f7714e37bdfb02641a79f1b9fd6183f0807156cf7e3e3f1d026493",
+    "modules/combat.js": "f1c703fe8f55529a7827c9fccd481c837d72ccd49e3cf979b01179880f17e4f6"
+  },
+  "node": {
+    "runner": "node tests/run-all.cjs",
+    "filesPassed": 505,
+    "filesFailed": 0,
+    "newScenarios": 80,
+    "newFiles": [
+      "v2036-combat-replan.test.cjs",
+      "v2036-combat-scheduler.test.cjs",
+      "v2036-combat-signal.test.cjs",
+      "v2036-cooldown-formats.test.cjs"
+    ],
+    "runnerLogSHA256": "ee525737d71159b1093b38a87ae3c9b9fbe4ea330415657e75abde391eac6e00"
+  },
+  "checks": {
+    "changedJSAndCJS": 18,
+    "syntax": "PASS",
+    "envcheckFactories": 31,
+    "envcheck": "PASS",
+    "bashSyntax": "PASS",
+    "diffCheck": "PASS",
+    "independentReview": "PASS"
+  },
+  "unitTiming": {
+    "acceptedReplyMs": 120,
+    "additionalReactionMs": 0,
+    "globalDeadlineMs": 740,
+    "firedAtGlobalDeadlineMs": 740,
+    "nativeGetAndAdaptiveSafetyPreserved": true,
+    "replyAt7000MsDoesNotPermitOverlappingOwnTurn": true
+  },
+  "browser": {
+    "runtime": "actual Chrome MV3, main world and hook",
+    "allHTTPSMocked": true,
+    "pageErrors": 0,
+    "scheduler": {
+      "file": "tests/v2036-combat-scheduler-browser.cjs",
+      "casesPassed": 5,
+      "configuredReactionMs": 2200,
+      "reportedBy": "isolated worktree execution; runtime SHA256 matched root",
+      "measurements": [
+        {
+          "case": "server GCD",
+          "responseToNextMs": 565,
+          "afterModelGcdMs": 3
+        },
+        {
+          "case": "native GET",
+          "responseToNextMs": 760,
+          "afterNativeGetMs": 53
+        },
+        {
+          "case": "MP changed",
+          "actions": [
+            "whirlwind",
+            "attack"
+          ],
+          "responseToNextMs": 960,
+          "note": "existing damage probe observation window retained"
+        },
+        {
+          "case": "global refusal",
+          "receiptOk": false,
+          "responseToNextMs": 423
+        },
+        {
+          "case": "Stop during native GET",
+          "actionPOSTs": 1,
+          "followupPOSTs": 0
+        }
+      ]
+    },
+    "provoke": {
+      "file": "tests/v205-warlord-provoke-browser.cjs",
+      "casesPassed": 4,
+      "cases": [
+        "on",
+        "off",
+        "stop",
+        "switch"
+      ]
+    }
+  },
+  "scopeLimits": {
+    "liveGameOpened": false,
+    "realDpsImprovementMeasured": false,
+    "firefoxExecutedForThisChange": false,
+    "zipChanged": false,
+    "rigidMultiTurnPlanAdded": false
+  },
+  "next": "Include in a separately requested build, then measure fresh real combat logs.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/311"
+}

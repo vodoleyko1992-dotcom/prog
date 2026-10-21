@@ -4,7 +4,7 @@ const src=fs.readFileSync(__dirname+'/../background.js','utf8'),core=require('..
 const clone=x=>structuredClone(x),defer=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{promise,resolve}};
 const tick=()=>new Promise(r=>setImmediate(r));
 function fixture(options={}){
- let now=Date.UTC(2026,9,17),listener,changed,probeCount=0,setHook,getHook,url='https://l2wap.com/map.html';
+ let now=Date.UTC(2026,9,17),listener,hotkey,probeCount=0,setHook,getHook,url='https://l2wap.com/map.html';
  const old={tab:1,t:now-180000,page:'/map.html'},reloads=[],updates=[],warnings=[];
  const state={on:true,hbBg:old,lock:{k:'tab1',tab:1,epoch:'one',t:now},rt:{char:'Hero',manualKickAt:1},cfg:{},wdog:[],wdDown:null,...clone(options.state||{})};
  const gate=options.probe||{promise:Promise.resolve('up')};
@@ -12,20 +12,23 @@ function fixture(options={}){
   set:async patch=>{await setHook?.(patch);Object.assign(state,clone(patch))}};
  const box={URL,Date:class extends Date{static now(){return now}},console:{warn:(...a)=>warnings.push(a)},L2EngineCore:core,crypto:{randomUUID:()=> 'lease'},
   hbMem:clone(old),hbPersistedAt:0,watchdogRunning:false,buf:[],flush(){},paint(){},
-  chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p},storage:{local,onChanged:{addListener:f=>{changed=f}}},
+  chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p},storage:{local},commands:{onCommand:{addListener:f=>{hotkey=f}}},
    alarms:{onAlarm:{addListener:f=>{listener=f}}},tabs:{get:async id=>({id,url}),reload:async id=>reloads.push(id),update:async(id,p)=>updates.push([id,clone(p)])}},
   srvProbe:async()=>{probeCount++;return gate.promise}};
  vm.createContext(box);
  vm.runInContext(src.slice(src.indexOf('const LOCK_TTL ='),src.indexOf('async function lockCommand(')),box);
  vm.runInContext(src.slice(src.indexOf('async function botControl('),src.indexOf('async function switchCharacter(')),box);
- vm.runInContext(src.slice(src.indexOf('chrome.storage.onChanged.addListener('),src.indexOf('// после установки/обновления')),box);
+ // 20.41 (лог 20.10 21:09: память 1,3 МБ): слушателя storage.onChanged в фоне нет — Start/Stop сами зовут afterOnWrite после записи «on»;
+ // Start здесь — горячая клавиша при остановленном боте (настоящий переход off→on, как прежнее событие хранилища)
+ vm.runInContext(src.slice(src.indexOf('let paintedOn = null;'),src.indexOf("chrome.storage.local.get('on').then(s => paintOn")),box);
+ vm.runInContext(src.slice(src.indexOf('chrome.commands?.onCommand.addListener('),src.indexOf('// ===== журнал и снимки')),box);
  vm.runInContext(src.slice(src.indexOf('function wdPlan('),src.indexOf('async function srvProbe(')),box);
  vm.runInContext(src.slice(src.indexOf('chrome.alarms?.onAlarm.addListener('),src.indexOf('// Release immediately when')),box);
  const popup={id:'test',url:'chrome-extension://test/popup.html'},game={id:'test',frameId:0,url:'https://l2wap.com/map.html',tab:{id:1}};
  return{state,box,reloads,updates,warnings,gate,tick:()=>listener({name:'l2watch'}),probes:()=>probeCount,
   onGet:f=>{getHook=f},onSet:f=>{setHook=f},url:v=>{url=v},advance:n=>{now+=n},
   control:(m={},sender=popup)=>box.botControl({action:'stop',source:'test',reason:'Стоп',...m},sender),game,
-  start:()=>{state.on=true;changed({on:{newValue:true}})},drain:()=>box.serializeLock(async()=>{})};
+  start:()=>{state.on=false;return hotkey('toggle-bot')},drain:()=>box.serializeLock(async()=>{})};
 }
 for(const change of ['stop','lease','heartbeat','character','task','navigation'])test('probe не держит очередь, '+change+' отменяет восстановление',async()=>{
  const gate=defer(),f=fixture({probe:gate}),work=f.tick();await tick();assert.equal(f.probes(),1);

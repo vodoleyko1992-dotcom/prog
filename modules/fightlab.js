@@ -55,11 +55,20 @@ const RE_DOT = /^(.+?)\s*·\s*(.+?)\s+([\d][\d\s  ]*)\s*(?:HP|урона|ур
 const RE_PLAIN = /^([^\[\d+×:][^+×:]*?)\s+([\d][\d\s  ]*)\.?\s*$/;
 const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*(?:\[[^\]]+\]\s*)?([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
+// Лог20.10 10:43UTC: native skills содержат power/число целей перед фактическим уроном.
+// Берём только последний damage с единицей; ID-префикс должен соответствовать имени, splash идёт отдельной строкой.
+const RE_NATIVE_POWER = /^(?:\u2060(\d{1,6})\u200b)?(Вихор|Whirlwind|Дикий розмах|Wild Sweep)\s*:\s*power\s+\d+(?:\s*;\s*до\s+\d+\s+ціл(?:ей|і|ь)\s*\(головна\s*\+\s*\d+\s+поруч\))?\s*[—–-]\s*(\d+(?:[ \u00a0\u202f]\d{3})*)\s*урон[ау]\.?$/i;
 function parseLog(lines, mob, actor = '') {
   const player = low(actor);
   const m = low(mob).replace(/\s*·.*$/, '');
   const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], splash: [], extraKills: [], rewards: { exp: 0, sp: 0 }, pot: 0, selfHeal: 0, resist: 0, miss: 0 };
   for (const raw of lines || []) {
+    const source = String(raw || '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').trim(), native = source.match(RE_NATIVE_POWER);
+    if (native) {
+      const id = /^(?:Вихор|Whirlwind)$/i.test(native[2]) ? '36' : '245', damage = num(native[3]);
+      if ((!native[1] || native[1] === id) && Number.isSafeInteger(damage) && damage >= 0) { r.own += damage; r.ownN++; }
+      continue;
+    }
     // 14.10 (живой бой Changed Creation 74): «\u20601220\u200bПолум’я — 5002 урона» раньше давало ноль, особенно на добивании без mobHp.
     const l = String(raw || '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
     let x;
@@ -96,14 +105,21 @@ function parseLog(lines, mob, actor = '') {
 
 // ---------- текущий бой ----------
 const seenRequests = new Set();
-let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false;
+let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false, cacheRev = null;
+// 20.41 (ревью 2): «Сбросить память боя» в меню (метка menuKeyRev.fightMem) сбрасывает и кэш модуля с ещё не записанными боями —
+// иначе rebase/flush вернули бы в хранилище всю прежнюю память поверх сброса.
+function menuReset() {
+  const rev = +(env.rt.menuKeyRev?.fightMem || 0);
+  if (cacheRev === null) cacheRev = rev;
+  else if (rev !== cacheRev) { cacheRev = rev; cache = null; cacheCls = ''; dirty = false; lastFight = null; }
+}
 // 15.10, аудит: класс/персонаж сменился без reload — незавершённый старый бой не пишется в новую память.
 function syncOwner() {
   const current = groupOwner(); if (owner === current) return;
   ownerAwaiting = !!owner; owner = current; F = null; last = null; cache = null; cacheCls = ''; dirty = false; lastFight = null; flushT = 0;
 }
 function mem() {
-  syncOwner();
+  syncOwner(); menuReset();
   const cls = env.rt.classCur?.prof || '';
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
     cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
@@ -141,7 +157,7 @@ function groupNote(name, parsed, mainMax, now) {
     targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
   groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === GROUP_EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: GROUP_EVIDENCE, t: now, samples };
   const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
-  env.setRt({ fightGroups: recent })?.catch?.(() => {});
+  (env.setRtSoon || env.setRt)({ fightGroups: recent })?.catch?.(() => {});   // 20.41 (лог 20.10 21:09): статистика AoE-ходов — отложенной записью
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
@@ -149,6 +165,179 @@ function groupOn(name, hp) {
   if (!s.length) return null;
   const mean = k => s.reduce((n, x) => n + x[k], 0) / s.length;
   return { n: s.length, kills: mean('kills'), targets: mean('targets'), damage: mean('damage'), t: g.t };
+}
+// 20.10: сравнение агро по полным наблюдаемым циклам, отдельно от старой модели силы удара.
+// Неизвестные начало/награда/экипировка, смена баффов и зависание сервера не обучают ротацию.
+const PACK_MAX = 64, PACK_AGE = 24 * 3600000;
+let packDirty=null,packSerial=0,packAck=0,packWarnAt=0;
+const packPending=new Set();
+const packHash = s => { let a=2166136261,b=5381; for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,16777619);b=Math.imul(b,33)^c;}return (a>>>0).toString(36)+':'+(b>>>0).toString(36)+':'+s.length; };
+function packIdentity(name, max) {
+  const snapshot=env.recoveryContext?.(),setup = typeof snapshot==='string'?snapshot:'', scope = groupScope(), owner = groupOwner();
+  const target=packHash(JSON.stringify([owner,scope,env.rt.lvl || 0,low(name),max])),frame=packHash(JSON.stringify([owner,scope,env.rt.lvl||0,setup]));
+  return { owner, scope, target, frame, setup: packHash(setup), known: !!setup && !scope.includes('page-') && !scope.endsWith(':auto'),key: packHash(target+'|'+setup) };
+}
+function packRows() { return (env.rt.packLab?.samples || []).filter(x=>x.v===1 && x.owner===groupOwner() && Date.now()-x.t>=0 && Date.now()-x.t<PACK_AGE); }
+function packSave(active, samples = env.rt.packLab?.samples || [], totals=env.rt.packLab?.totals) {
+  const snapshot=active?{...active,extras:active.extras.map(x=>({...x})),seen:[...active.seen],skills:Object.fromEntries(Object.entries(active.skills).map(([k,v])=>[k,{...v}]))}:null;
+  const seq=++packSerial,write=groupPage+':'+seq,patch = { packLab: { v:1, write, active:snapshot, samples:samples.slice(-PACK_MAX),totals } };
+  packDirty={seq,owner:groupOwner(),patch,before:env.rt.packLab};packWrite(packDirty);
+}
+function packWrite(op) {
+  if(packPending.has(op.seq))return;packPending.add(op.seq);
+  let result;try{result=env.setRt(op.patch);}catch(e){result=Promise.reject(e);}
+  Promise.resolve(result).then(r=>{
+    if(r?.ok===false)throw Error('write_rejected');
+    if(op.owner!==groupOwner())return;
+    packAck=Math.max(packAck,op.seq);if(packDirty?.seq<=packAck)packDirty=null;
+  }).catch(()=>{if(op.owner===groupOwner()&&op.seq>packAck&&(!packWarnAt||Date.now()-packWarnAt>=600000)){packWarnAt=Date.now();try{env.rec?.('B','ошибки','Не удалось сохранить замеры пачек — повторю при следующей сверке');}catch(_){}}}).finally(()=>packPending.delete(op.seq));
+}
+function packFlush() {
+  const op=packDirty;if(!op)return;
+  // Reset/новый владелец не воскрешают старую незаписанную статистику.
+  if(op.owner!==groupOwner()||env.rt.packLab!==op.before&&env.rt.packLab?.write!==op.patch.packLab.write){packDirty=null;return;}
+  packWrite(op);
+}
+function packRejected(path,d,unchanged=false) {
+  const p=F?.pack;if(path!=='/game/battle/action'||!p||p.done||p.owner!==groupOwner())return;
+  if(!env.rt.packLab){F.pack=null;return;}
+  if(d.bt?.actor&&low(d.bt.actor)!==low(env.rt.char))return;
+  if(d.req?.expectedRevision!=null&&p.rev!=null&&d.req.expectedRevision!==p.rev)return;
+  const id=d.rid==null?'':groupPage+':'+d.rid;if(id&&p.seen.includes(id))return;
+  if(id)p.seen=[...p.seen,id].slice(-128);p.attempts++;if(unchanged)p.unchanged=(p.unchanged||0)+1;else p.rejected++;
+  if(['provoke','howl'].includes(d.req?.action))p.tried=true;
+  if(d.error||d.ms>5000)p.slow=true;
+  packSave(p);
+}
+function packRewards(be) {
+  const reward={};
+  for(const [k,label] of [['adena','аден(?:а|и|ы)?'],['sp','SP'],['exp','EXP']]) {
+    const direct=be.reward?.[k]??be.reward?.['reward'+k[0].toUpperCase()+k.slice(1)];
+    if(Number.isFinite(direct)&&direct>=0){reward[k]=direct;continue;}
+    const log=be.finalLog||be.log;if(!log||log.omitted||log.shortened)continue;
+    const re=new RegExp('^(?:'+label+'\\s*\\+\\s*([\\d\\s  ]+)|\\+?\\s*([\\d\\s  ]+)\\s*'+label+')[.!]?$','i');
+    const values=log.lines.map(s=>String(s).replace(/^\\[\\d{1,2}:\\d{2}(?::\\d{2})?\\]\\s*/, '').trim().match(re)).filter(Boolean).map(m=>num(m[1]||m[2]));
+    if(values.length)reward[k]=values.reduce((a,b)=>a+b,0);
+  }return reward;
+}
+function packObserve(path,d,bt,now) {
+  const be=d.be;if(be?.schema!==1||!F||F.rb||F.champ||F.groupOwner!==groupOwner())return;
+  if(bt.actor&&env.rt.char&&low(bt.actor)!==low(env.rt.char)||bt.prof&&env.rt.classCur?.prof&&bt.prof!==env.rt.classCur.prof||bt.slot!=null&&env.rt.classCur?.slot!=null&&bt.slot!==env.rt.classCur.slot)return;
+  const act=path==='/game/battle/action',fresh=/\/(?:start|hunt-continue)$/.test(path), identity=packIdentity(F.name,be.mobMax??F.mobMax);
+  if(F.pack&&!env.rt.packLab)F.pack=null;
+  let p=F.pack;
+  if(!p){
+    const saved=env.rt.packLab?.active;
+    const restore=saved?.owner===identity.owner&&saved.spawn===F.spawn&&saved.target===identity.target&&(saved.key===identity.key||!identity.known)&&now-saved.t>=0&&now-saved.t<15*60000&&!(fresh&&be.revision!==saved.startRev);
+    const start=now-Math.max(0,Math.min(30000,+d.ms||0));
+    const complete=!act&&(fresh||be.log?.source==='battle.log'&&be.log.total<=1&&be.log.lines.some(x=>/^(?:Бой начат|Бій розпочато)/i.test(x)))&&be.mobHp===be.mobMax;
+    p=F.pack=restore?{...saved,seen:[...(saved.seen||[])],skills:{...saved.skills},extras:(saved.extras||[]).map(x=>({...x}))}:{...identity,v:1,uid:packHash(identity.owner+'|'+F.spawn+'|'+be.revision+'|'+start),spawn:F.spawn,name:F.name,start,startRev:be.revision,
+      t:now,rev:be.revision,seq:be.seq,session:env.rt.sessT0||0,run:env.rt.manualKickAt||0,complete,changed:false,slow:false,attempts:0,accepted:0,rejected:0,unchanged:0,repeat:0,tried:false,mode:'none',peak:1,hpMin:100,hpLoss:0,mpDelta:0,raw:0,useful:0,damageUnknown:0,
+      startHp:be.hpMax>0?100*be.hp/be.hpMax:null,startMp:be.mpMax>0?100*be.mp/be.mpMax:null,
+      pullAt:null,collectMs:null,skills:{},seen:[],mob:be.mobHp,hp:be.hp,mp:be.mp,extras:[]};
+  }
+  if(p.done||be.revision!=null&&p.rev!=null&&be.revision<p.rev)return;
+  const rid=d.rid==null?'':groupPage+':'+d.rid;
+  if(act&&rid&&p.seen.includes(rid))return;
+  if(!act&&!fresh&&p.t!==now&&p.rev===be.revision&&p.seq===be.seq&&p.hp===be.hp&&p.mp===be.mp&&!be.end)return;
+  if(identity.known&&identity.key!==p.key||act&&!identity.known||p.run!==(env.rt.manualKickAt||0)||p.session!==(env.rt.sessT0||0))p.changed=true;
+  if(d.ms>5000)p.slow=true;
+  const extras=Array.isArray(be.extras)?be.extras:null,alive=(extras||[]).filter(x=>x.hp>0).length;
+  p.peak=Math.max(p.peak,1+alive);
+  if(be.hpMax>0&&be.hp!=null)p.hpMin=Math.min(p.hpMin,100*be.hp/be.hpMax);
+  if(be.cut?.extras)p.damageUnknown++;
+  if(act){
+    if(rid)p.seen=[...p.seen,rid].slice(-128);p.attempts++;p.accepted++;
+    if(d.req?.expectedRevision!=null&&p.rev!=null&&d.req.expectedRevision!==p.rev)p.complete=false;
+    const requested=String(d.req?.action||''),action=/^[a-z][a-z0-9_]{0,79}$/i.test(requested)&&!['constructor','prototype'].includes(requested)?requested:'unknown',pull=['provoke','howl'].includes(action);
+    if(pull){p.tried=true;if(p.mode!=='none')p.repeat++;p.mode=p.mode==='none'||p.mode===action?action:'mixed';p.pullAt=Math.max(p.start,now-(+d.ms||0));}
+    if(p.hp!=null&&be.hp!=null)p.hpLoss+=Math.max(0,p.hp-be.hp);
+    if(p.mp!=null&&be.mp!=null)p.mpDelta+=p.mp-be.mp;
+    const log=be.log,delta=be.seq!=null&&p.seq!=null?be.seq-p.seq:null;
+    const lines=log&&delta>0?log.lines.slice(-Math.min(delta,log.lines.length)):[];
+    if(log&&(log.omitted||log.shortened)||delta==null||delta>0&&delta>(log?.lines.length||0))p.damageUnknown++;
+    const L=parseLog(lines,F.name,bt.actor),raw=L.own+L.splash.reduce((s,x)=>s+x.damage,0);
+    let useful=0,unknown=!!(log?.shortened||delta==null||delta>(log?.lines.length||0));
+    if(raw>0){
+      if(p.collectMs==null&&p.pullAt!=null)p.collectMs=now-p.pullAt;
+      if(L.own>0){if(p.mob!=null)useful+=Math.min(p.mob,L.own);else unknown=true;}
+      const used=new Set();
+      for(const hit of L.splash){const a=p.extras.map((x,i)=>({...x,i})).filter(x=>!used.has(x.i)&&low(x.name)===low(hit.name)&&x.hp!=null);
+        if(a.length===1||a.length&&a.every(x=>x.hp===a[0].hp)){useful+=Math.min(Math.max(0,a[0].hp),hit.damage);used.add(a[0].i);}else unknown=true;}
+      if(unknown)p.damageUnknown++;
+      const skill=p.skills[action]||{name:String(env.actName?.(action)||action).slice(0,80),n:0,raw:0,useful:0,known:0};
+      skill.n++;skill.raw+=raw;if(!unknown){skill.useful+=useful;skill.known++;p.useful+=useful;}p.raw+=raw;
+      if(Object.keys(p.skills).length<12||p.skills[action])p.skills[action]=skill;
+    }
+  }else if(!fresh&&p.seq!=null&&be.seq!=null&&be.seq>p.seq)p.complete=false; // ход пришёл вне наблюдаемого POST
+  p.t=now;if(be.revision!=null)p.rev=be.revision;if(be.seq!=null)p.seq=be.seq;
+  if(be.mobHp!=null)p.mob=be.mobHp;if(be.hp!=null)p.hp=be.hp;if(be.mp!=null)p.mp=be.mp;
+  if(extras)p.extras=extras.map(x=>({...x}));
+  if(!be.end){packSave(p);return;}
+  p.done=true;
+  const samples=env.rt.packLab?.samples||[];
+  if(samples.some(x=>x.uid===p.uid||x.owner===p.owner&&x.spawn===p.spawn&&p.rev!=null&&x.endRev===p.rev))return;
+  const mode=p.mode==='none'&&p.tried?'failed':p.mode,prev=samples.at(-1),gap=prev&&p.start-prev.t,cycle=!!(p.complete&&prev?.quality&&prev.win&&prev.mode===mode&&prev.key===p.key&&gap>=0&&gap<=30000&&prev.run===(env.rt.manualKickAt||0));
+  const quality=!!(p.complete&&p.known&&!p.changed&&!p.slow),ms=Math.max(1,now-p.start);
+  const row={v:1,uid:p.uid,owner:p.owner,key:p.key,frame:p.frame,scope:p.scope,spawn:p.spawn,name:p.name,t:now,start:p.start,endRev:p.rev,session:p.session,run:p.run,startHp:p.startHp,startMp:p.startMp,
+    quality,partial:!p.complete,changed:p.changed,slow:p.slow,cycle,ms,cycleMs:cycle?ms+gap:null,mode,win:!!be.win,lose:!!be.lose,peak:p.peak,hpMin:Math.round(p.hpMin),hpLoss:p.hpLoss,mpDelta:p.mpDelta,
+    attempts:p.attempts,accepted:p.accepted,rejected:p.rejected,unchanged:p.unchanged||0,repeat:p.repeat,collectMs:p.collectMs,raw:p.raw,useful:p.useful,damageUnknown:p.damageUnknown,skills:p.skills,reward:packRewards(be)};
+  const old=env.rt.packLab?.totals,totals=old?.owner===row.owner&&old.session===row.session?{...old}:{owner:row.owner,session:row.session,first:row.start,n:0,w:0,l:0,adena:0,sp:0,adenaN:0,spN:0,rejected:0,unchanged:0,repeat:0};
+  totals.n++;totals.w+=Number(row.win);totals.l+=Number(row.lose);totals.last=row.t;totals.rejected+=row.rejected;totals.unchanged+=row.unchanged;totals.repeat+=row.repeat;
+  for(const k of ['adena','sp'])if(Number.isFinite(row.reward[k])){totals[k]+=row.reward[k];totals[k+'N']++;}
+  packSave(null,[...samples,row],totals);
+  env.rec?.('B','пачка',`${p.name}: ${row.mode==='none'?'без агро':row.mode}, целей до ${p.peak}, ${Math.round(ms/100)/10} с, ${row.win?'победа':row.lose?'смерть':'конец'}${quality?'':' · неполный замер'}`,{data:{pack:row}});
+}
+function packStats(rows) {
+  const rate=k=>{const r=rows.filter(x=>x.quality&&x.cycle&&Number.isFinite(x.reward?.[k]));const ms=r.reduce((s,x)=>s+x.cycleMs,0);return {n:r.length,ms,value:ms>0?r.reduce((s,x)=>s+x.reward[k],0)*60000/ms:null};};
+  return {n:rows.length,deaths:rows.filter(x=>x.lose).length,adena:rate('adena'),sp:rate('sp'),peak:rows.length?Math.max(...rows.map(x=>x.peak)):0};
+}
+function packAdvice(name,max,resources={}) {
+  const id=packIdentity(name,max);if(!id.known)return {blocked:[],minHp:75,reason:'нужен свежий контекст экипировки/баффов и зона'};
+  const bin=(hp,mp)=>Number.isFinite(hp)&&Number.isFinite(mp)?Math.min(9,Math.floor(hp/10))+':'+Math.min(9,Math.floor(mp/10)):'';
+  const wanted=bin(resources.hp,resources.mp),rows=packRows().filter(x=>x.key===id.key&&x.quality&&Date.now()-x.t<=30*60000),baseline=rows.filter(x=>x.mode==='none'),blocked=[];let preferred='',best=0,minHp=75;
+  for(const mode of ['provoke','howl']){
+    const r=rows.filter(x=>x.mode===mode).slice(-12),safety=packStats(r),buckets=new Set(r.map(x=>bin(x.startHp,x.startMp)).filter(x=>x&&(!wanted||x===wanted)));
+    const matched=baseline.filter(x=>buckets.has(bin(x.startHp,x.startMp))),common=new Set(matched.map(x=>bin(x.startHp,x.startMp))),arm=r.filter(x=>common.has(bin(x.startHp,x.startMp))),s=packStats(arm),base=packStats(matched);
+    const enough=k=>base[k].n>=6&&s[k].n>=6&&base[k].ms>=60000&&s[k].ms>=60000&&base[k].value>0&&[matched,arm].every(a=>a.filter(x=>x.cycle||x.lose).every(x=>Number.isFinite(x.reward[k])));
+    if(r.length>=6&&safety.deaths>=3){blocked.push(mode);continue;}
+    if(enough('adena')&&enough('sp')){
+      const gain=Math.min(s.adena.value/base.adena.value,s.sp.value/base.sp.value);
+      if(Math.max(s.adena.value/base.adena.value,s.sp.value/base.sp.value)<.85&&s.deaths/Math.max(1,s.n)>=base.deaths/Math.max(1,base.n)){blocked.push(mode);continue;}
+      if(gain>1.1&&gain>best){best=gain;preferred=mode;}
+    }
+  }
+  const safe=rows.filter(x=>x.mode===(preferred||'provoke')&&x.win).slice(-12);
+  if(safe.length>=5)minHp=Math.min(100,Math.max(75,q(safe.map(x=>100-x.hpMin),.9)+(+env.cfg.stopHp||25)+10));
+  return {blocked,preferred,minHp,reason:blocked.length?'по подтверждённым потерям/темпу наград':'по полным циклам; расходники в награду не вычтены'};
+}
+function packReport() {
+  const rows=packRows(),session=rows.filter(x=>x.session===(env.rt.sessT0||0)),out=[];
+  if(!rows.length&&!env.rt.packLab?.totals?.n)return 'Пачки: замеров ещё нет. Нужны полные ответы боя; агро сравнивается после 6 циклов каждого варианта и минуты наблюдений.';
+  const by={};for(const r of session){const a=by[r.mode]||=[];a.push(r);}
+  const totals=env.rt.packLab?.totals;
+  if(totals?.owner===groupOwner()&&totals.session===(env.rt.sessT0||0)){
+    out.push(`Сессия: боёв ${totals.n}, побед ${totals.w}, смертей ${totals.l}, отказов ${totals.rejected}, без новой ревизии ${totals.unchanged}, повторных агро ${totals.repeat}.`);
+    out.push(`Подтверждённые награды: ${totals.adena} адены (${totals.adenaN}/${totals.n} боёв), ${totals.sp} SP (${totals.spN}/${totals.n}).`);
+    const elapsed=Date.now()-totals.first;if(elapsed>=120000)out.push(`С начала наблюдений, включая простои: ≈${Math.round(totals.adena*60000/elapsed)} адены/мин, ${Math.round(totals.sp*60000/elapsed)} SP/мин.`);
+  }
+  out.push('Последние замеры сессии (до 64 боёв; награды без стоимости расходников):');
+  for(const [mode,r]of Object.entries(by)){const s=packStats(r),label=mode==='none'?'Без агро':mode==='failed'?'Агро отклонено':mode;
+    out.push(`${label}: боёв ${s.n}, смертей ${s.deaths}, целей до ${s.peak}, отказов ${r.reduce((n,x)=>n+x.rejected,0)}, без новой ревизии ${r.reduce((n,x)=>n+(x.unchanged||0),0)}, повторных агро ${r.reduce((n,x)=>n+x.repeat,0)}, неполных ${r.filter(x=>!x.quality).length}`);
+    const collect=r.filter(x=>x.collectMs!=null);if(collect.length)out.push(`  Агро → первый урон: ≈${Math.round(collect.reduce((n,x)=>n+x.collectMs,0)/collect.length/100)/10} с; изменение MP суммарно ${r.reduce((n,x)=>n+x.mpDelta,0)} (с регеном).`);}
+  const groups=new Map();for(const r of rows){if(!groups.has(r.key))groups.set(r.key,[]);groups.get(r.key).push(r);}
+  for(const r of [...groups.values()].slice(-4)){
+    out.push(`${r.at(-1).name} · ${r.at(-1).scope}:`);
+    for(const mode of ['none','provoke','howl']){const s=packStats(r.filter(x=>x.mode===mode));if(!s.n)continue;
+      out.push(`  ${mode==='none'?'Без агро':mode}: адена/мин ${s.adena.value==null?'нет полного цикла':Math.round(s.adena.value)}, SP/мин ${s.sp.value==null?'нет полного цикла':Math.round(s.sp.value)} · циклов ${s.adena.n}`);}
+  }
+  const frame=rows.at(-1)?.frame,leaders=[];
+  for(const r of groups.values())if(r.at(-1).frame===frame)for(const mode of ['none','provoke','howl']){const s=packStats(r.filter(x=>x.mode===mode));if(s.adena.n>=6&&s.adena.ms>=60000)leaders.push({name:r.at(-1).name,mode,...s});}
+  if(leaders.length)out.push('Лучший наблюдаемый темп в условиях последнего замера:\n'+leaders.sort((a,b)=>b.adena.value-a.adena.value).slice(0,3).map(x=>`• ${x.name}, ${x.mode==='none'?'без агро':x.mode}: ≈${Math.round(x.adena.value)} адены/мин${x.sp.value!=null?', '+Math.round(x.sp.value)+' SP/мин':''}`).join('\n'));
+  const skills={};for(const r of session)for(const [k,x]of Object.entries(r.skills||{})){const s=skills[k]||={name:x.name,n:0,raw:0,useful:0,known:0};s.n+=x.n;s.raw+=x.raw;s.useful+=x.useful;s.known+=x.known;}
+  for(const s of Object.values(skills).sort((a,b)=>b.n-a.n).slice(0,5))out.push(`${s.name}: принятых ударов ${s.n}, полезный урон ${s.known===s.n?s.useful:'не полностью измерен'}${s.known===s.n&&s.raw>0?', лишний '+Math.round((s.raw-s.useful)/s.raw*100)+'%':''}`);
+  out.push('Наблюдаемое сравнение: для ротации нужны 6 полных циклов каждого варианта и ≥60 с, одинаковые начальные диапазоны HP/MP и контекст не старше 30 мин; переходы до 30 с включены, длинные паузы исключены.');
+  return out.join('\n');
 }
 function begin(bt, spawn, now) {
   const title = env.mobTitle?.() || '';
@@ -248,7 +437,7 @@ function ensure() {
 function onNet(path, d) {
   syncOwner();
   if (env.pvpPending?.() || d?.pv?.defeat) { F = null; last = null; return null; } // чужой PvP-урон не принадлежит окну PvE
-  const bt = d?.bt; if (!bt || typeof bt !== 'object') return null;
+  const bt = d?.bt || (d?.be ? {} : null); if (!bt || typeof bt !== 'object') return null;
   const now = Date.now(), act = path === '/game/battle/action', fresh = /\/(?:start|hunt-continue)$/.test(path);
   // Native /sync часто содержит только serverNowMs. Это не снимок боя:
   // иначе следующий action заменял logPrev пустым журналом и итоговый fullLog
@@ -257,8 +446,8 @@ function onNet(path, d) {
       && bt.seq == null && !bt.log?.length && !bt.end) return null;
   // После смены класса нужен старт/снимок нового боя; запоздалый ход старого класса не открывает его.
   if (ownerAwaiting && act) return null;
-  const ok = d.status >= 200 && d.status < 300 && !d.res?.error;
-  if (!ok || d.res?.blockedBy) { if (act && F && !F.done) F.lost++; return null; }
+  const ok = !d.error && d.status >= 200 && d.status < 300 && !d.res?.error && d.res?.ok !== false;
+  if (!ok || d.res?.blockedBy) { packRejected(path,d); if (act && F && !F.done) F.lost++; return null; }
   if (!act) ownerAwaiting = false;
   if (d.rid != null) { if (seenRequests.has(d.rid)) return null; seenRequests.add(d.rid); if (seenRequests.size > 128) seenRequests.delete(seenRequests.values().next().value); }
   // spawnId боя — из самого боя (начало, GET /game/battle); в ходе цепочки «Охотиться дальше» игра шлёт battleSpawnId первого боя
@@ -268,13 +457,14 @@ function onNet(path, d) {
   if (F && (!bt.actorId || !F.actorId || bt.actorId === F.actorId) && bt.rev != null && F.rev != null && bt.rev < F.rev) return null;
   if (!fresh && F && ((bt.actorId && F.actorId && bt.actorId !== F.actorId) || (bt.rev != null && F.rev != null && bt.rev < F.rev)
       || (act && spawnB && F.spawn && spawnB !== F.spawn))) return null;
-  if (act && F && bt.rev != null && F.rev != null && bt.rev === F.rev) return null;
+  if (act && F && bt.rev != null && F.rev != null && bt.rev === F.rev) { packRejected(path,d,true); return null; }
   if (!act && !fresh && F && (!spawnB || spawnB === F.spawn)) {
     // GET может обогнать ответ нашего хода. Сохраняем отдельно: та же ревизия принадлежит
     // этому action, более ранняя — исходное состояние следующего action (в том числе чужой урон).
     if (F.mob == null && !F.turns) { begin(bt, spawnB || F.spawn, now); F.logPrev = (bt.log || []).slice(-40); }
     else if (!F.pendingSnapshot || (bt.rev != null && bt.rev >= (F.pendingSnapshot.rev ?? -1))) F.pendingSnapshot = bt;
     killNote(bt, d, now, fresh);
+    packObserve(path,d,bt,now);
     return null;
   }
   const spawn = spawnB || (F && !F.done ? F.spawn : '') || String(d.req?.battleSpawnId || urlSpawn() || '');
@@ -287,6 +477,7 @@ function onNet(path, d) {
       // 14.10: стартовый лог — уже виденная часть. Иначе после delta финальный fullLog повторно засчитывает первый удар и кота.
       F.logPrev = (bt.log || []).map(x => String(x ?? '')).slice(-40);
       killNote(bt, d, now, fresh);
+      packObserve(path,d,bt,now);
       if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F;
     }
   }
@@ -356,6 +547,7 @@ function onNet(path, d) {
     // 10.0.7 (ценность баффов): доля критов заклинаний под текущими крит-баффами → content.critNote (rt.critStat)
     if (L.ownN > 0 && !/^battle_potion|_toggle$|^attack$/.test(action)) try { env.critNote?.(L.ownN, Math.min(L.ownN, L.crit)); } catch (e) {}
   }
+  packObserve(path,d,bt,now);
   if (bt.rev != null) F.rev = bt.rev;
   if (Array.isArray(bt.extras)) F.extras = bt.extras.map(x => ({...x}));
   if (bt.mob != null) F.mob = bt.mob;
@@ -449,7 +641,8 @@ function finish(outcome, now = Date.now()) {
   return sum;
 }
 function flush() {
-  syncOwner();
+  syncOwner(); menuReset();
+  packFlush();
   if (!dirty || !cache) return;
   rebase();
   dirty = false; flushT = Date.now();
@@ -516,6 +709,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, raidKillsFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, raidKillsFor, healOn, groupOn, packAdvice, packReport, packStats, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

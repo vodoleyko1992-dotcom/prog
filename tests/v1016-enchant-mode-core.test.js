@@ -49,8 +49,9 @@ function chainFixture({cat=false,changeAt='',mode='farm'}={}) {
  vm.runInNewContext(read('modules/mobfarm.js'),box);
  // 20.32: этот стенд проверяет отмену native-цепочки при смене режима; «Авто» теперь использует отдельный fresh-list путь.
  const env={on:true,tabOwner:true,cfg:{chain:true,catMode:cat,catDungeon:cat?'crypt':'auto',priority:'[все]',shopAuto:false},rt:{catIn:cat?'crypt':null},
-  autonomyMode:()=>mode,tvtSoon:()=>false,rnd:()=>0,sleep:async()=>{if(changeAt==='sleep')mode='enchant'},victory:()=>true,pvpPending:()=>false,
-  pvpStep:async()=>{calls.push('pvp');return false},huntOn:()=>false,epicOn:()=>false,toMap:async()=>calls.push('map'),
+  autonomyMode:()=>mode,tvtSoon:()=>false,rnd:()=>0,sleep:async()=>{if(changeAt==='sleep')mode='enchant'},   // 20.41: пауза 40–120 мс после победы убрана — смена режима моделируется в ожидании pvpStep
+  victory:()=>true,pvpPending:()=>false,
+  pvpStep:async()=>{calls.push('pvp');if(changeAt==='pvp')mode='enchant';return false},huntOn:()=>false,epicOn:()=>false,toMap:async()=>calls.push('map'),
   townBuffStart:async()=>{calls.push('buff');return false},shopNeedByPanel:()=>'',resQuests:()=>[],campOn:()=>false,campEnabled:()=>false,campMobOpen:()=>[],campActive:()=>false,
   farmRules:()=>[],recipeRules:()=>[],mapDue:()=>false,searchActive:()=>false,antibotState:()=>false,
   waitFor:async fn=>{if(changeAt==='wait')mode='enchant';return fn()},$q:()=>({}),shown:()=>true,
@@ -59,7 +60,7 @@ function chainFixture({cat=false,changeAt='',mode='farm'}={}) {
 }
 for(const cat of [false,true]) {
  test((cat?'катакомбы':'обычная цепочка')+': заточка после победы не запускает обслуживание и следующий бой',async()=>{const f=chainFixture({cat,mode:'enchant'});await f.M.nextFight();assert.deepEqual(f.calls,['map'])});
- for(const changeAt of ['sleep','wait'])test((cat?'катакомбы':'обычная цепочка')+': смена режима во время '+changeAt+' не нажимает охотиться дальше',async()=>{const f=chainFixture({cat,changeAt});await f.M.nextFight();assert.equal(f.calls.includes('fire'),false);assert.equal(f.calls.at(-1),'map')});
+ for(const changeAt of ['pvp','wait'])test((cat?'катакомбы':'обычная цепочка')+': смена режима во время '+changeAt+' не нажимает охотиться дальше',async()=>{const f=chainFixture({cat,changeAt});await f.M.nextFight();assert.equal(f.calls.includes('fire'),false);assert.equal(f.calls.at(-1),'map')});
  test((cat?'катакомбы':'обычная цепочка')+': прежний режим продолжает охоту',async()=>{const f=chainFixture({cat});await f.M.nextFight();assert.ok(f.calls.includes('fire'))});
 }
 test('выход из режима в core сохраняет pending и не продолжает серию при возврате',async()=>{const c=coreFixture();c.rt.enchant={runId:'run',status:'running',pending:{id:'receipt'},history:[{id:'past'}]};c.cfg.enchantMode=false;await vm.runInContext('enchantDispatch()',c);assert.equal(c.rt.enchant.status,'paused');assert.equal(c.rt.enchant.pending.id,'receipt');assert.equal(c.rt.enchant.history[0].id,'past');c.cfg.enchantMode=true;await vm.runInContext('enchantDispatch()',c);assert.equal(c.rt.enchant.status,'paused')});

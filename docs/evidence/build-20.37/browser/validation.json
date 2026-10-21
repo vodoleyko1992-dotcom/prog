@@ -1,0 +1,87 @@
+{
+  "checkedAtUTC": "2026-10-20T08:56:52.715725+00:00",
+  "chromeVersion": "Google Chrome for Testing 156.0.8078.4",
+  "zipSHA256": "1eb84da9465a92bd0b160cfc218c8dee2cd22db0bf823b9f4247751d2aec56eb",
+  "zipBytes": 1451443,
+  "manifestVersion": "20.37",
+  "cfgKeys": 208,
+  "runtimeFiles": 64,
+  "runtimeBeforeAfterSame": true,
+  "runtimeAllMatchSource": true,
+  "zipload": {
+    "status": "PASS",
+    "pageErrors": 0
+  },
+  "scheduler": {
+    "status": "PASS",
+    "cases": 5,
+    "pageErrors": 0,
+    "measurements": [
+      {
+        "case": "server GCD",
+        "actions": [
+          "attack",
+          "attack"
+        ],
+        "responseToNextMs": 564,
+        "afterGcdMs": 1,
+        "afterNativeGetMs": 439,
+        "receiptOk": true
+      },
+      {
+        "case": "native GET",
+        "actions": [
+          "attack",
+          "attack"
+        ],
+        "responseToNextMs": 758,
+        "afterGcdMs": 593,
+        "afterNativeGetMs": 53,
+        "receiptOk": true
+      },
+      {
+        "case": "MP changed during wait",
+        "actions": [
+          "whirlwind",
+          "attack"
+        ],
+        "responseToNextMs": 957,
+        "afterGcdMs": 464,
+        "afterNativeGetMs": 751,
+        "receiptOk": true
+      },
+      {
+        "case": "global refusal",
+        "actions": [
+          "attack",
+          "attack"
+        ],
+        "responseToNextMs": 427,
+        "afterGcdMs": 3,
+        "afterNativeGetMs": 322,
+        "receiptOk": false
+      }
+    ],
+    "stopFollowupPOSTs": 0,
+    "configuredReactionMs": 2200
+  },
+  "provoke": {
+    "status": "PASS",
+    "cases": 4,
+    "modes": [
+      "on",
+      "off",
+      "stop",
+      "switch"
+    ],
+    "pageErrors": 0
+  },
+  "gameTraffic": "all HTTPS responses locally mocked in battle harness",
+  "liveGameOpened": false,
+  "realDpsMeasured": false,
+  "logsSHA256": {
+    "zipload": "ee0d0e02bed202c551472c26e08be44034b3cf71542e20222dc6fdc2da9755be",
+    "scheduler": "d23d76308397e5bf3fad5f4360f4b9a07f8a68aebee53ebea2b5d80875a77cea",
+    "provoke": "16b0feb9d3c908a08f91559e09b57aa58e8074a176a2fa4f9e990c249f201be3"
+  }
+}

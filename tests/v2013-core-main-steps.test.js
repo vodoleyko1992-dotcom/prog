@@ -51,21 +51,23 @@ test('M1: смена героя состоялась — круг продолж
 });
 
 // --- core-a/L1: частый статус — в маленьком ключе live@Ник, rt.status — не чаще раза в минуту
+// 20.41 (замер цепочки катакомб, память 1,3 МБ): при записанном live@Ник минутная копия rt.status — отложенной записью (setRtSoon);
+// без live — по-прежнему обычной setRt. writes — обычные записи, soon — отложенные.
 function statusBox(opt={}){
- let now=1e12;const sets=[],writes=[];
+ let now=1e12;const sets=[],writes=[],soon=[];
  const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,on:opt.on??true,tabOwner:opt.owner??true,leaseEpoch:opt.owner===false?null:'e1',document:{prerendering:false},Date:{now:()=>now},String,
   chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},
-  setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})}};
+  setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})},setRtSoon:p=>{soon.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true,deferred:true})}};
  vm.createContext(c);vm.runInContext(slice(core,'const RECENT = [];','// Команда остановки сериализуется')+';this.S=setStatus;this.save=statusSave;',c);
- return {c,sets,writes,tick:ms=>{now+=ms}};
+ return {c,sets,writes,soon,tick:ms=>{now+=ms}};
 }
 test('L1: статус каждые 2,5 с идёт в live@Ник, весь rt — раз в минуту',()=>{
  const b=statusBox();
- b.c.S('Бой: моб 1');assert.equal(b.writes.length,1,'первая запись rt');assert.deepEqual(Object.keys(b.sets[0]),['live@Hero']);
+ b.c.S('Бой: моб 1');assert.equal(b.soon.length,1,'первая запись rt (20.41: отложенная)');assert.equal(b.writes.length,0,'20.41: без обычной записи');assert.deepEqual(Object.keys(b.sets[0]),['live@Hero']);
  for(let i=2;i<=20;i++){b.tick(3000);b.c.S('Бой: моб '+i);}   // ≈57 с
- assert.equal(b.writes.length,1,'rt не переписывается на каждый статус');assert.equal(b.sets.length,20);
+ assert.equal(b.soon.length,1,'rt не переписывается на каждый статус');assert.equal(b.sets.length,20);
  assert.equal(b.sets.at(-1)['live@Hero'].s,'Бой: моб 20');assert.equal(b.c.rt.status,'Бой: моб 20','память вкладки — свежая');
- b.tick(5000);b.c.S('Бой: моб 21');assert.equal(b.writes.length,2,'раз в минуту rt.status освежается');
+ b.tick(5000);b.c.S('Бой: моб 21');assert.equal(b.soon.length,2,'раз в минуту rt.status освежается');assert.equal(b.writes.length,0);
 });
 test('L1: вкладка, ждущая чужой замок, не пишет live (старый путь — setRt, он сам откажет)',()=>{
  const b=statusBox({idle:true});b.c.S('⏸ Бот уже работает в другой вкладке');assert.equal(b.sets.length,0);assert.equal(b.writes.length,1);

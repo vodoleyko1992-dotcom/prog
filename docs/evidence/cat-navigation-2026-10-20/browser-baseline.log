@@ -1,0 +1,6 @@
+FAIL AssertionError [ERR_ASSERTION]: пока новый документ грузится, старый не перечитывает список целей
+
+4 !== 1
+
+    at scenario (/workspace/work/cat-navigation-browser/tests/v2038-cat-navigation-browser.cjs:44:10)
+    at async /workspace/work/cat-navigation-browser/tests/v2038-cat-navigation-browser.cjs:60:47

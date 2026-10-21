@@ -1,0 +1,397 @@
+✖ native victory 20:41:06.999 wild_sweep — точный основной урон и подтверждённые соседи (6.530274ms)
+✖ native victory 20:41:36.778 wild_sweep — точный основной урон и подтверждённые соседи (1.551296ms)
+✖ native victory 20:41:48.308 whirlwind — точный основной урон и подтверждённые соседи (1.075917ms)
+✖ native victory 20:42:00.406 wild_sweep — точный основной урон и подтверждённые соседи (1.009566ms)
+✖ native victory 20:42:13.402 whirlwind — точный основной урон и подтверждённые соседи (0.83298ms)
+✖ native victory 20:42:26.917 wild_sweep — точный основной урон и подтверждённые соседи (0.699968ms)
+✖ native victory 20:42:39.853 whirlwind — точный основной урон и подтверждённые соседи (1.028215ms)
+✖ native victory 20:42:51.291 wild_sweep — точный основной урон и подтверждённые соседи (0.761121ms)
+✖ native victory 20:43:01.973 whirlwind — точный основной урон и подтверждённые соседи (0.887732ms)
+✖ native формат: Wild Sweep: power 326 — 12 909 урона (0.974824ms)
+✖ native формат: Дикий розмах: power 326 — 12 909 урону. (0.639668ms)
+✖ native формат: ⁠245​Дикий розмах: power 326 — 0 урона (0.713449ms)
+✖ native формат: [20:41:48.308] ⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20 394 урона (0.784717ms)
+✖ native формат: Whirlwind: power 2033; до 4 цілей (головна + 3 поруч) — 20394 урона (0.781702ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 (1.1374ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — (0.618335ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — 12 (0.563942ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — 12909 уро (0.673479ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — 12x909 урона (0.726208ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — -12909 урона (0.574739ms)
+✔ не считаем чужую/неполную строку: Дикий розмах: power 326 — 9007199254740992 урона (0.590643ms)
+✔ не считаем чужую/неполную строку: ⁠36​Дикий розмах: power 326 — 12909 урона (0.559877ms)
+✔ не считаем чужую/неполную строку: ⁠245​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20394 урона (0.788453ms)
+✔ не считаем чужую/неполную строку: [Stranger] Дикий розмах: power 326 — 12909 урона (0.558965ms)
+✔ не считаем чужую/неполную строку: Main · Дикий розмах: power 326 — 12909 урона (0.814391ms)
+✔ не считаем чужую/неполную строку: Main: Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20394 урона (0.910427ms)
+✔ не считаем чужую/неполную строку: Spoil Festival: power 326 — 12909 урона (0.663754ms)
+✔ не считаем чужую/неполную строку: Дикий розмах на 120 с. (0.519676ms)
+✔ не считаем чужую/неполную строку: Buff: power 326 — 12909 урона (0.544714ms)
+✖ настоящий onNet: Whirlwind учит3соседей, Wild Sweep не выдумывает их (3.996502ms)
+✔ onNet отвергает native damage чужого героя до обучения группы (2.104978ms)
+✖ onNet→groupOn→chooseAction выбирает подтверждённый Whirlwind вместо большего одиночного overkill (18.093088ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 16
+ℹ fail 16
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.397375
+
+✖ failing tests:
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:41:06.999 wild_sweep — точный основной урон и подтверждённые соседи (6.530274ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 12909
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 12909,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:41:36.778 wild_sweep — точный основной урон и подтверждённые соседи (1.551296ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 12497
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 12497,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:41:48.308 whirlwind — точный основной урон и подтверждённые соседи (1.075917ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 20394
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 20394,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:42:00.406 wild_sweep — точный основной урон и подтверждённые соседи (1.009566ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 13817
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 13817,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:42:13.402 whirlwind — точный основной урон и подтверждённые соседи (0.83298ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 20710
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 20710,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:42:26.917 wild_sweep — точный основной урон и подтверждённые соседи (0.699968ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 12130
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 12130,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:42:39.853 whirlwind — точный основной урон и подтверждённые соседи (1.028215ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 19371
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 19371,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:42:51.291 wild_sweep — точный основной урон и подтверждённые соседи (0.761121ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 11602
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 11602,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:17:25
+✖ native victory 20:43:01.973 whirlwind — точный основной урон и подтверждённые соседи (0.887732ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 18862
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:19:67)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 18862,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:30:3
+✖ native формат: Wild Sweep: power 326 — 12 909 урона (0.974824ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 12909
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:30:96)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 12909,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:30:3
+✖ native формат: Дикий розмах: power 326 — 12 909 урону. (0.639668ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 12909
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:30:96)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 12909,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:30:3
+✖ native формат: ⁠245​Дикий розмах: power 326 — 0 урона (0.713449ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:30:123)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:30:3
+✖ native формат: [20:41:48.308] ⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20 394 урона (0.784717ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 20394
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:30:96)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 20394,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:30:3
+✖ native формат: Whirlwind: power 2033; до 4 цілей (головна + 3 поруч) — 20394 урона (0.781702ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 20394
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:30:96)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 20394,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:48:1
+✖ настоящий onNet: Whirlwind учит3соседей, Wild Sweep не выдумывает их (3.996502ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3636 !== 20394
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:52:32)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3636,
+    expected: 20394,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-native-damage.test.cjs:61:1
+✖ onNet→groupOn→chooseAction выбирает подтверждённый Whirlwind вместо большего одиночного overkill (18.093088ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+
+    {
+      getAttribute: [Function: getAttribute],
+  +   title: 'Wild Sweep'
+  -   title: 'Whirlwind'
+    }
+
+      at TestContext.<anonymous> (/workspace/work/native-damage1043/tests/v2039-native-damage.test.cjs:76:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: [Object],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

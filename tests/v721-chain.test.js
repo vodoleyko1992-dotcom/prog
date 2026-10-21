@@ -19,8 +19,10 @@ assert.match(content, /const cdSpawn = \(\) => GAME_SPAWN \|\| battleSpawn\(\);/
 assert.match(content, /get cdSpawn\(\) \{ return cdSpawn; \}/);
 assert.ok(!/env\.combatCooldown\.\w+\([^)]*env\.battleSpawn\(\)/.test(combat), 'combat: cooldown checks use the game spawn id');
 // ход принят сервером → засчитан; клик потерян → без ожидания отката
-assert.match(content, /ACT_NET\.ok = d\.status >= 200 && d\.status < 300/);
-assert.match(combat, /const netOk = sent && env\.actNet\(\)\.ok && \(!exact \|\| env\.actNet\(\)\.action === exact\);/);
+// 20.36: transport-error и ok:false — отказ; точная квитанция приоритетнее общего счётчика.
+assert.match(content, /ACT_NET\.ok = !d\.error && d\.status >= 200 && d\.status < 300/);
+assert.match(combat, /const netOk = sent && \(env\.actReceipt&&ownStart\.rid!=null\?!!matched&&receipt\.ok:/);
+assert.match(combat, /env\.actNet\(\)\.ok&&\(!exact\|\|env\.actNet\(\)\.action===exact\)/);
 assert.match(combat, /let done = lost \|\| refused \? false : env\.slotCd\(b\) \? !!\(await env\.waitFor\(\(\) => !uiReady\(b\) \|\| dead\(\) \|\| netOk, 1000, 40\)\) : true;/);
 // средний урон: 5 373 старых замера по ≈900, новые по ≈1800 — среднее догоняет за десятки боёв
 let p = { dmg: 900 * 5373, dmgN: 5373 };

@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-20",
+  "base": "a19b6fe",
+  "nodeFiles": 500,
+  "nodeFail": 0,
+  "newScenarios": 34,
+  "syntaxFiles": 9,
+  "envcheckFactories": 31,
+  "diffCheck": "PASS",
+  "liveGame": false,
+  "buildRequested": false,
+  "versionChanged": false,
+  "zipCreated": false,
+  "browser": {
+    "runtime": "Chromium MV3",
+    "mocked": "All game HTTP traffic; fixed heroContext fixture for pack browser test",
+    "files": {
+      "tests/v2034-pack-efficiency-browser.cjs": [
+        "PASS actual fetch → full battle ledger → background persistence → reload restores pull → popup totals/useful damage",
+        "PASS actual TXT includes the same session report; 0 page errors; no live game traffic"
+      ],
+      "tests/v2034-battle-evidence-browser.cjs": [
+        "PASS actual MAIN fetch ×2 + XHR → three distinct IDB events, 31 targets / 70 long lines / final reward / no secrets",
+        "PASS downloaded TXT and JSONL preserve identical bounded evidence, zero page errors; all game traffic mocked"
+      ]
+    },
+    "pageErrors": 0
+  },
+  "limits": {
+    "samplesPerClass": 64,
+    "summary": "cumulative within the session",
+    "comparableCyclesPerArm": 6,
+    "comparableMsPerArm": 60000,
+    "controlDataMaxAgeMs": 1800000,
+    "maxObservedTransitionMs": 30000,
+    "resourceBucketsPercent": 10
+  },
+  "sourceSha256": {
+    "content.js": "373ae63b5662c67dcb79bbb9ad87e7e373160309c4743f950b4fa38912dac71f",
+    "modules/combat.js": "53f8db5a6bb680a5b2775ebd4ff6f645760db0c97e9fa3a7fb0827c1077620ac",
+    "modules/fightlab.js": "8645b82f48e28176be7da2fef1d4057031ae050a7d96ab359758ae64583e0c9c",
+    "modules/story.js": "7e0a816268c5858115cfc16875a055a16b698e08d5840fb1f2b3e8ad1fdc8ed5",
+    "popup.html": "7503366eb57a4911fbed2815a6579f5e2732fca847f387bc5d038806317befd1",
+    "popup.js": "9f17ecc8d69eaf2e719a583f46828cae7da8c5bbd3bc83fc9ab3d04ac7e6fe87",
+    "tests/v2034-pack-efficiency.test.cjs": "20a2bc6c41793c638f1525fbc8e825f973d9f0d58660deba897630114463f803",
+    "tests/v2034-pack-efficiency-browser.cjs": "148d8da83504c3268ca1812a89a945b03021ffbfbcf049e8138717e0b5aab191",
+    "tests/v92-fightlab.test.js": "09db5951475b51639e63cd331e30b59a7ca13dbee443ccf1262e2e2089dbe575",
+    "tests/run-all.cjs": "c53d53bad17edef06ecd3f15e5c41b0f86b243187361565646a02aca302410f9"
+  }
+}

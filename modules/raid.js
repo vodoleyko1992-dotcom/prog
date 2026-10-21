@@ -140,6 +140,14 @@ function rbContext(id, preflight = false) {
   catch (_) { return { managed: true, key: null }; }
 }
 const rbSameContext = (c, saved) => c?.managed ? !!c.key && saved === c.key : !saved;
+// 20.41 (лог 20.10 21:09:44, Bounty Hunter 71, слот 1; основной слот Arcana Lord 78): общий rt.rbDps/rbLossK не входят в
+// story.CLASS_KEYS, а у «неуправляемого» класса контекст null — legacy-замер Warlock без контекста считался своим:
+// Krokian Padisha Sobekk 3.6M «≈1:45» (≈34k/с), реально ≈2,1k/с → 23–25 мин и ≈800 банок. Общие замеры без владельца-класса
+// принимаем, только пока класс героя неизвестен; иначе — запасная осторожная оценка (1150/с × поправка на уровни).
+const rbClassOwner = () => env.rt.classCur?.prof || null;
+// Замер без владельца (до 20.41) — от основного слота: у саба (slot ≠ 0) не принимаем, у основного — свой.
+const rbOwnerOk = owner => !rbClassOwner() || owner === rbClassOwner() || owner == null && !(+env.rt.classCur?.slot > 0);
+const rbSharedDps = c => env.rt.rbDps > 0 && rbSameContext(c, env.rt.rbDpsContext) && (c?.managed || rbOwnerOk(env.rt.rbDpsOwner)) ? env.rt.rbDps : 0;
 function rbDpsTarget(id) {
   const s = rbStatsOf(id), lvl = s?.lvl || s?.level || rbLvlOf(id), pdef = s?.pdef ?? s?.pDef, mdef = s?.mdef ?? s?.mDef;
   return !isEpicId(id) && s && !s.est && [lvl,pdef,mdef].every(x => Number.isFinite(x) && x > 0) ? { lvl, pdef, mdef } : null;
@@ -158,8 +166,8 @@ function rbTransferredDps(id, c) {
 }
 function rbDpsOn(id) {
   const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), c = rbContext(id, true);
-  const base = rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : 1150;
-  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : rbTransferredDps(id, c) || Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
+  const base = rbSharedDps(c) || 1150;
+  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSharedDps(c) || rbTransferredDps(id, c) || Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
   if (d.dps > 0 && rbSameContext(c, d.dpsContext)) {
     const kb = d.dpsBase > 0 ? Math.min(3, Math.max(0.5, base / d.dpsBase)) : 1;
     const kl = lvl && L && d.dpsLvl ? gapF(lvl - L) / gapF(lvl - d.dpsLvl) : 1;
@@ -169,7 +177,7 @@ function rbDpsOn(id) {
 }
 function rbDpsEvidence(id) {
   const c = rbContext(id, true), d = env.rt.rbDb?.[id] || {};
-  const own = d.dps > 0 && rbSameContext(c, d.dpsContext), shared = env.rt.rbDps > 0 && rbSameContext(c, env.rt.rbDpsContext);
+  const own = d.dps > 0 && rbSameContext(c, d.dpsContext), shared = rbSharedDps(c) > 0;
   return { source: own ? 'own' : shared ? 'shared' : rbTransferredDps(id, c) ? 'transfer' : 'unknown', dps: rbDpsOn(id),
     prepared: !c?.managed || !!c.key || !!c.prepared, planned: !!c?.planned };
 }
@@ -178,7 +186,7 @@ async function rbDpsLearn(id, dps) {
   const c = rbContext(id);
   if (!(dps > 0) || !Number.isFinite(dps) || c?.managed && !c.key) return;
   const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id);
-  const base = rbSameContext(c, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+  const base = rbSharedDps(c);
   const od = d.dps > 0 && rbSameContext(c, d.dpsContext) ? rbDpsOn(id) : 0;
   if (c?.managed) return rbNote(id, { dps: Math.round(od > 0 ? od * .6 + dps * .4 : dps), dpsLvl: L || null, dpsBase: null, dpsContext: c.key });
   const gap = lvl && L ? lvl - L : 0;
@@ -248,7 +256,7 @@ function rbPreflightForecast(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id, true), incoming = rbIncoming(id, context);
   const ownDps = historical.dps > 0 && rbSameContext(context, historical.dpsContext);
-  const transferred = !dpsOver && !ownDps && !(env.rt.rbDps > 0 && rbSameContext(context, env.rt.rbDpsContext)) && rbTransferredDps(id, context);
+  const transferred = !dpsOver && !ownDps && !rbSharedDps(context) && rbTransferredDps(id, context);
   const evidence = rbDpsEvidence(id), unknownDps = !dpsOver && evidence.source === 'unknown' && !!context?.managed;
   const k = env.rt.rbK || 0.109, base0 = Math.max(0, st.patk || 0) * k;
   // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
@@ -266,8 +274,8 @@ function rbPreflightForecast(id, st, slack = 1, dpsOver, hpOver) {
   const spPrior = Math.max(base0*rbSpK(),(st.matk||0)*rbSpM());
   const sp = incoming.source === 'prior' ? Math.max(incoming.sp||0,spPrior) : incoming.sp>0 ? incoming.sp : spPrior;
   const measured = incoming.sp > 0 && incoming.source !== 'prior';
-  const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext);
-  let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext) && (context?.managed || rbOwnerOk(st.lossOwner));
+  let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK && rbOwnerOk(env.rt.rbLossKOwner) ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
   if (epic && !ownLoss) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
   const need = loss * t;
   const potRate = pot?.rate || 0;
@@ -356,7 +364,8 @@ async function rbScout(r) {
   if (!st) return null;
   // 8.0: сливаем с прошлой записью — раньше повторный осмотр стирал замер потерь HP по этому РБ (loss)
   const merged = { ...(env.rt.rbStats?.[r.id] || {}), ...st, t: Date.now() };
-  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: merged } });
+  // 20.41: цифры окна — в памяти вкладки сразу; запись цели боя ниже (с ожиданием) дописывает очередь целиком
+  env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: merged } });
   return rbPreCheck(r.id, merged);
 }
 
@@ -386,9 +395,9 @@ async function rbEngage(r, label, opt = {}) {
     return 'skip';
   }
   if (chk) env.rec('B', 'РБ', `${r.name} (${r.lvl}): иду — ${chk.why}`);
-  if (chk?.probe && (chk.measure || !probeFight(r.id))) await rbNote(r.id, { name: r.name, lvl: r.lvl,
-    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey, ...(chk.probeSeconds ? { checkpointSeconds: chk.probeSeconds, reserve: chk.probeReserve, loss: chk.probeLoss, p90: chk.probeP90, defense: chk.probeDefense } : {}) } : {}) } });
-  await env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });
+  if (chk?.probe && (chk.measure || !probeFight(r.id))) rbNote(r.id, { name: r.name, lvl: r.lvl,
+    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey, ...(chk.probeSeconds ? { checkpointSeconds: chk.probeSeconds, reserve: chk.probeReserve, loss: chk.probeLoss, p90: chk.probeP90, defense: chk.probeDefense } : {}) } : {}) } })?.catch?.(() => {});   // 20.41: без ожидания — запись цели ниже дописывает очередь
+  env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });   // 20.41: без ожидания
   const go = env.$q('#map-mob-modal-battle');
   if (chk && rbModalIs(r) && env.shown(go)) {
     env.setStatus(label);
@@ -425,7 +434,7 @@ async function rbInfoNote(id, j, from = 'api') {
     ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}),
     ...(+j.rewardExp > 0 ? { exp: +j.rewardExp } : {}), ...(+j.rewardSp > 0 ? { sp: +j.rewardSp } : {}), ...(top?.length ? { top } : {}),
     ...(typeof j.canAttackRaidBoss === 'boolean' ? { canAttack: j.canAttackRaidBoss } : {}), ...(+j.minRaidBossLevelForAttack > 0 ? { minLvl: +j.minRaidBossLevelForAttack } : {}) };
-  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });
+  env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });   // 20.41: ответ API — в памяти сразу, запись в фоне
   return st;
 }
 
@@ -623,6 +632,18 @@ function rbPriceParse(text, id, page) {
 }
 const rbPriceWhy = r => r && r.unit != null && r.unit !== 'аден' ? `${r.unit ? 'телепорт не за адену' : 'цена и валюта телепорта не подтверждены'} («${r.priceText || r.price}») — другую валюту не трачу` : '';
 const btnPrice = b => rbPriceParse(b?.closest?.('.l2-rb-row')?.querySelector('.l2-rb-row__price')?.textContent,b?.dataset?.spawnId,rbPageNow());
+// 20.41: строки открытой страницы → rt.rbList. Как listNote таймеров: «жив» ≤10 мин после своего килла — список игры отстал.
+function rbListDomMerge(rows, now = Date.now()) {
+  const L = { ...(env.rt.rbList || {}) }, T = env.rbTimer?.state?.()?.b || {};
+  for (const [id, r] of Object.entries(rows || {})) {
+    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000, p = L[id] || {};
+    // 20.41 (ревью): подпись «VIP»/«0»/пусто без котировки сервера не стирает цену, уже подтверждённую JSON списка (listNote).
+    // Перед телепортом шаг go всё равно перечитывает строку после rbPriceRefresh; явная цена страницы (адена/CoL/FA) заменяет сохранённую.
+    const keep = !r.unit && (!Number.isFinite(r.price) || r.price === 0) && p.unit === 'аден' && Number.isFinite(p.price) ? { price: p.price, unit: p.unit, priceText: p.priceText } : {};
+    L[id] = { ...p, ...r, ...keep, ...(lag ? { alive: false, status: 'Убит' } : {}) };
+  }
+  return L;
+}
 function rbRowsParse() {
   const page = rbPageNow();
   const out = {};
@@ -1055,7 +1076,7 @@ async function rbGoStep() {                       // список РБ → ну�
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); }
     return;
   }
-  const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === g.page, 4000, 200);
+  const pageReady = isRbPage() && (rbPageNow() === g.page || +(new URLSearchParams(location.search).get('page') || 1) === g.page && await env.waitX(() => rbPageNow() === g.page, 4000, 200));   // 20.41: см. шаг go
   if (!active() || !sameJob()) return;
   if (!pageReady) { env.setStatus(`РБ: лечу к ${g.name} (${g.lvl})`); location.href = `/rb-bosses.html?page=${g.page}`; await env.sleep(4000); return; }
   const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${g.id}"]`), 8000, 200);
@@ -1182,7 +1203,9 @@ async function rbRefreshState(id, active, force = false) {
   if (old?.nextAt > Date.now()) return false;
   if (typeof env.gameGet !== 'function') return !c?.managed;
   const char = env.rt.char, at = Date.now();
-  await env.setRt({ rbStateRead: { t: at, nextAt: at + 15000, why: 'читаю состав и запас адены' } });
+  // 20.41 (лог 21:09:11–13,6: две записи вокруг GET по 0,5–1,4 с): метки сверки и кошелёк — в памяти вкладки сразу, на диск без
+  // ожидания; перед оплатой телепорта payments.prepare всё равно дописывает очередь
+  env.setRt({ rbStateRead: { t: at, nextAt: at + 15000, why: 'читаю состав и запас адены' } });
   if (!active()) return false;
   try {
     const response = await env.gameGet('/character'), body = response.ok ? await response.json() : null, ch = body?.character;
@@ -1191,12 +1214,12 @@ async function rbRefreshState(id, active, force = false) {
     env.warlock?.noteSnapshot?.(ch);
     const next = rbContext(id, true), ready = ordinaryLiveTour(id) || !next?.managed || !!next.key || !!next.prepared;
     const adena = typeof ch.adena === 'string' && /^\d+$/.test(ch.adena) ? Number(ch.adena) : ch.adena;
-    await env.setRt({ rbStateRead: { t: Date.now(), nextAt: ready ? 0 : Date.now() + 15000,
+    env.setRt({ rbStateRead: { t: Date.now(), nextAt: ready ? 0 : Date.now() + 15000,
       why: ready ? '' : 'состав или заряды ещё не подтверждены' },
       ...(Number.isSafeInteger(adena) && adena >= 0 ? { adenaSeen: { v: adena, t: Date.now() } } : {}) });
     return active() && ready;
   } catch (_) {
-    if (active()) await env.setRt({ rbStateRead: { t: Date.now(), nextAt: Date.now() + 60000, why: 'сверка персонажа не ответила' } });
+    if (active()) env.setRt({ rbStateRead: { t: Date.now(), nextAt: Date.now() + 60000, why: 'сверка персонажа не ответила' } });
     return false;
   }
 }
@@ -1222,17 +1245,20 @@ async function rbFaBudgetWhy(row, active) {
   return rbTravelBudget(env.rt.rbList?.[row.id] || row);
 }
 
+// 20.41 (лог 20.10 21:09: 3–5 смен этапа на цель, каждая ждала полную запись памяти 1,3 МБ ≈0,7–1,4 с): этап и подсказка — для
+// меню, шаг тура (step) пишется отдельно с ожиданием; память вкладки обновлена сразу
 async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
-  if (phase !== 'wait' && env.rt.rbFishWait) await env.setRt({rbFishWait:null});
+  if (phase !== 'wait' && env.rt.rbFishWait) env.setRt({rbFishWait:null});
   if (H.phase === phase && H.next === next && !Object.keys(extra).length) return;
-  await huntSet({ phase, next, ...extra });
+  huntSet({ phase, next, ...extra }).catch(() => {});
   env.setStatus(`Тур РБ: ${next}`);
 }
 
 async function huntDone(id, why, attempted = true) {
   // 15.10: отказ до клика не считается попыткой; пополнение адены сразу открывает подходящую цель.
-  if (id) await env.setRt({ ...(attempted ? { rbGoTried: { ...(env.rt.rbGoTried || {}), [id]: Date.now() } } : {}), rbWant: null, rbCur: null });
+  // 20.41: одна точка ожидания записи — шаг pick ниже (очередь FIFO дописывает и эту запись)
+  if (id) env.setRt({ ...(attempted ? { rbGoTried: { ...(env.rt.rbGoTried || {}), [id]: Date.now() } } : {}), rbWant: null, rbCur: null });
   env.rec('B', 'тур РБ', why);
   await huntSet({ step: 'pick', phase: 'learn', id: null, last: why, next: 'выбираю следующего живого РБ', kills0: null, fightAt: null });
 }
@@ -1389,7 +1415,17 @@ async function rbHuntStep() {
   if (H.step === 'go') {
     const sameJob = () => env.rt.rbHunt?.step === 'go' && env.rt.rbHunt?.id === H.id && env.rt.rbHunt?.t === H.t;
     if (!active() || !sameJob()) return;
-    const g = env.rt.rbList?.[H.id] || H;
+    let g = env.rt.rbList?.[H.id] || H;
+    // 20.41 (лог 20.10 21:09:13–21:09:31): Cloe «осталось 4%» и Bumbalump уже были убиты, а тур узнавал это только после сверки
+    // состава/подготовки и перехода на страницу списка. Один JSON-GET страницы цели освежает все её строки; строка свежее 60 с
+    // или нужная страница уже открыта — без запроса. Занятый опрос/ошибка — прежний путь через страницу.
+    if (!(isRbPage() && rbPageNow() === H.page) && Date.now() - (+env.rt.rbList?.[H.id]?.t || 0) > 60000 && typeof env.rbTimer?.pageCheck === 'function') {
+      const fresh = await env.rbTimer.pageCheck(H.page, H.id, () => active() && sameJob());
+      if (!active() || !sameJob()) return;
+      if (fresh && (!fresh.alive || fresh.deny || rbPriceWhy(fresh)))
+        return huntDone(H.id, `${H.name}: ${fresh.deny || rbPriceWhy(fresh) || fresh.status || 'Убит'} по свежему списку игры (стр. ${H.page}) — пропускаю без перехода`, false);
+      if (fresh) g = fresh;
+    }
     const freshWallet = env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000;
     if (!await rbRefreshState(H.id, active, !freshWallet)) {
       if (active()) env.setStatus(`Тур РБ: перед полётом ${env.rt.rbStateRead?.why || 'нужна сверка состава и адены'}`);
@@ -1405,7 +1441,10 @@ async function rbHuntStep() {
       // Изменение силы/банок не делает прочитанный список мёртвым: повторная подготовка без 14 новых страниц.
       return huntDone(H.id, `${H.name}: перед телепортом ${reason || 'список устарел'} — проверю повторно`, false);
     }
-    const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === H.page, 4000, 200);
+    // 20.41 (лог 20.10 21:09:21–26: показана стр. 11, цель на стр. 12 — 4 с ждали страницу, которая сама не сменится): ждём
+    // отрисовку только адреса нужной страницы; на другой странице списка — сразу переход
+    const urlPage = +(new URLSearchParams(location.search).get('page') || 1);
+    const pageReady = isRbPage() && (rbPageNow() === H.page || urlPage === H.page && await env.waitX(() => rbPageNow() === H.page, 4000, 200));
     if (!active() || !sameJob()) return;
     if (!pageReady) {
       env.setStatus(`Тур РБ: к ${H.name} (${H.lvl}) — список, стр. ${H.page}`);
@@ -1413,12 +1452,24 @@ async function rbHuntStep() {
     }
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
     if (!active() || !sameJob()) return;
-    if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
+    // 20.41: записи перед huntDone не ждём — его запись шага дописывает очередь целиком (FIFO)
+    if (!b) { env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
+    // 20.41 (лог 21:09:15–18, Cloe «Убит — пропускаю»): убитый/запрещённый РБ виден в строке сразу — без запроса свежей цены
+    // 20.41 (ревью): и здесь освежаем все строки открытой страницы — иначе следующий выбор шёл к соседу, убитому на этой же странице.
+    let pageRows = rbRowsParse(), row = pageRows[H.id];
+    if (row && (!row.alive || row.deny)) { env.rbTimer?.domNote(pageRows)?.catch?.(() => {}); env.setRt({ rbList: rbListDomMerge(pageRows) }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`, false); }
     if (!await rbPriceRefresh(() => active() && sameJob(),H.id)) return;
     if (!active() || !sameJob()) return;
-    let row = rbRowsParse()[H.id];
-    if (row) env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {});
-    if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
+    pageRows = rbRowsParse();
+    row = pageRows[H.id];
+    // 20.41 (лог 21:12:12 Kernon): страница уже открыта — таймеры и очередь тура по всем её строкам, а не только по цели,
+    // иначе следующие выборы шли по тому же старому списку.
+    if (Object.keys(pageRows).length) {
+      env.rbTimer?.domNote(pageRows)?.catch?.(() => {});
+      await env.setRt({ rbList: rbListDomMerge(pageRows) });
+      if (!active() || !sameJob()) return;
+    }
+    if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
     if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`, false);
     // Stop во время паузы — ещё не попытка телепорта: сохраняем шаг «go» и прежний лимит.
     await env.pause();
@@ -1488,7 +1539,8 @@ async function rbHuntStep() {
     if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
-    await huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
+    // 20.41 (лог 21:09:40–45: 4–6 записей подряд перед боем): шаг fight и текущий РБ — одной точкой ожидания (FIFO)
+    huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() }).catch(() => {});
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;
@@ -1854,10 +1906,10 @@ function rbAssess(ctx, me, mob) {
   }
   if (dt >= 20 && damageSamples >= 5 && dps > 0 && (!context?.managed || context.key) && now - (S.dpsT || 0) > 30000) {
     S.dpsT = now;
-    const old = rbSameContext(context, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+    const old = rbSharedDps(context);
     const target = rbDpsTarget(S.id);
     // Источник переноса создаётся только здесь: полный урон по HP за проверенное окно, не fightlab и не прогноз другого РБ.
-    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null,
+    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null, rbDpsOwner: rbClassOwner(),
       rbDpsSample: context?.powerKey && target ? { id: S.id, powerKey: context.powerKey, dps: Math.round(dps), target, t: now } : null });
   }   // v4.46: наш ДПС по РБ — для оценки до боя
   // чистая потеря HP героя без банок: банки, выпитые в окне, возвращаем в расчёт (их лечение не «держится» само)
@@ -1876,8 +1928,9 @@ function rbAssess(ctx, me, mob) {
       loss: Math.round(old == null ? Math.max(0, loss) : old * .6 + Math.max(0, loss) * .4), lossContext: context.key } } });
   }
   if (!context?.managed && dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
+    const kOld = env.rt.rbLossK && rbOwnerOk(env.rt.rbLossKOwner) ? env.rt.rbLossK : 0, lOld = stL.loss && !stL.lossContext && rbOwnerOk(stL.lossOwner) ? stL.loss : 0;
     S.lossT = now; const k = loss / stL.patk, epicL = isEpicId(S.id);   // 8.0.3: потери на эпике — только в его цифры, не в общий rbLossK
-    env.setRt({ ...(epicL ? {} : { rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4) }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss && !stL.lossContext ? stL.loss * 0.6 + loss * 0.4 : loss), lossContext: null } } });
+    env.setRt({ ...(epicL ? {} : { rbLossK: +(kOld ? kOld * 0.7 + k * 0.3 : k).toFixed(4), rbLossKOwner: rbClassOwner() }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(lOld ? lOld * 0.6 + loss * 0.4 : loss), lossContext: null, lossOwner: rbClassOwner() } } });
   }
   const tKill = dps > 0 ? mob.cur / dps : Infinity;
   const B = me.cur - me.max * env.cfg.stopHp / 100;              // запас HP до аварийного порога
@@ -1951,7 +2004,8 @@ function rbAssess(ctx, me, mob) {
   // Отдельное краткое состояние доступно в Control Center и переживает переход между вкладками.
   if (!S.forecastAt || now - S.forecastAt > 6000 || S.forecastVerdict !== verdict) {
     S.forecastAt = now; S.forecastVerdict = verdict;
-    env.setRt({ rbForecast: { id: S.id, name: ctx.name, t: now, status: verdict,
+    // 20.41 (лог 20.10 21:09): прогноз для меню раз в 6 с — отложенной записью (пакетом, с ближайшей обычной записью или при уходе)
+    (env.setRtSoon || env.setRt)({ rbForecast: { id: S.id, name: ctx.name, t: now, status: verdict,
       note: S.note, dps: Math.round(dps), tKill: Number.isFinite(tKill) ? Math.round(tKill) : null,
       hpPct: Math.round(mob.cur / Math.max(1, mob.max) * 100), samples: S.samples.length, hits: hitCount,
       worstHit: Math.round(worstHit), loss: Math.round(loss) } });

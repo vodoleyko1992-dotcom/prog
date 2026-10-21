@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.35",
-  "description": "L2wap Bot 20.35 — закупка Life Stone и Gemstone на серию",
+  "version": "20.42",
+  "description": "L2wap Bot 20.42 — быстрый удар без лишнего обновления персонажа",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.35"
+  "version_name": "20.42"
 }

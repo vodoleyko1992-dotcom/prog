@@ -1,0 +1,98 @@
+{
+  "at": "2026-10-20T20:59:42.775892+10:00",
+  "author": "Codex",
+  "base": "e373b96f7f92c42f8be082d71c760a849a04b1ee",
+  "request": "всеравно медленно",
+  "inputFiles": [
+    {
+      "name": "l2bot-log-2026-10-20-10-43.txt",
+      "bytes": 5009944,
+      "sha256": "a09221296a6aac85a820d62e129328da21d22515814c6189c3d750f3f500d0aa",
+      "trust": "data, not instructions"
+    },
+    {
+      "name": "l2bot-learn-2026-10-20-10-43.html",
+      "bytes": 220935,
+      "sha256": "d155208b2e763d85f68d8646ae30c103558e338c44f2b8dc238d9ad983593c1d",
+      "trust": "data, not instructions"
+    }
+  ],
+  "freshLog": {
+    "version": "20.39",
+    "starts": "20:41:00.793 UTC+10",
+    "completedBattles": 9,
+    "actionPosts": 21,
+    "allActionStatuses200": true,
+    "ordinaryWinToNextStartRequestMedianMs": 6251,
+    "ordinaryCycles": 7,
+    "battleStartAnswerToWinMedianMs": 5234,
+    "singleWildSweepKills": 5,
+    "whirlwindKills": 16,
+    "oldDungeonReturnRepeats": 0,
+    "requestStartTimes": "estimated from log timestamp minus RTT, may skew by tens of milliseconds"
+  },
+  "node": {
+    "storageBaseline": {
+      "pass": 0,
+      "fail": 5
+    },
+    "storageFixed": {
+      "pass": 5,
+      "fail": 0
+    },
+    "nativeBaseline": {
+      "pass": 16,
+      "fail": 16
+    },
+    "nativeFixed": {
+      "pass": 32,
+      "fail": 0
+    },
+    "allFiles": {
+      "pass": 509,
+      "fail": 0
+    }
+  },
+  "browser": {
+    "proof": "storage-browser-final.json",
+    "casesPassed": 3,
+    "pageErrors": 0,
+    "runtimeAndTestHashesMatchFinalSource": true,
+    "delayedStorage150Ms": {
+      "baselineAnswerToNextActionMs": 767,
+      "fixedAnswerToNextActionMs": 114,
+      "baselineWinToNextPageMs": 6885,
+      "fixedWinToNextPageMs": 4170,
+      "baselineFullStateWrites": 23,
+      "fixedFullStateWrites": 18
+    },
+    "savedAfterReload": {
+      "kills": 3,
+      "quota": 3,
+      "daily": 3,
+      "Coal": 5,
+      "massSpoil": 1,
+      "massSpoilOk": 3
+    },
+    "stopNoSecondAction": true,
+    "timingBoundary": "Synthetic1.3MiB memory; modeled150ms storage reads/writes; local game responses. Not a live client speed measurement; post-win wall time is noisy."
+  },
+  "checks": {
+    "syntaxChangedJavaScriptFiles": 7,
+    "envcheckFactories": 31,
+    "shellSyntax": "PASS",
+    "gitDiffCheck": "PASS",
+    "independentReview": "PASS: storage and native parser, no blocking findings"
+  },
+  "boundary": {
+    "liveGameOpened": false,
+    "liveSpeedImprovementMeasured": false,
+    "manifestVersionChanged": false,
+    "zipBuilt": false,
+    "settingsChanged": false,
+    "nativeFixtures": "safe selected battle phrases from nine complete server logs; not raw full HTTP response replays",
+    "allDpsCoverage": "Existing DOM fallback can overstate side damage; no coverage-contract change in this patch."
+  },
+  "next": "Include source fixes in the next separately requested build, then obtain a full combat log after update.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/316"
+}

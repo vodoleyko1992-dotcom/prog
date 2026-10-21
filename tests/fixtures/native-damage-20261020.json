@@ -1,0 +1,180 @@
+{
+  "source": "l2bot-log-2026-10-20-10-43.txt; 20.39 victory logs; retained damage/splash/kill/reward phrases only",
+  "cases": [
+    {
+      "at": "20:41:06.999",
+      "action": "wild_sweep",
+      "name": "Nephilim Praetorian",
+      "originalLogLines": 17,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 12909,
+      "extraKills": 0,
+      "lines": [
+        "⁠245​Дикий розмах: power 326 — 12909 урона",
+        "EXP + 33903",
+        "SP + 1541"
+      ]
+    },
+    {
+      "at": "20:41:36.778",
+      "action": "wild_sweep",
+      "name": "Nephilim Praetorian",
+      "originalLogLines": 12,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 12497,
+      "extraKills": 0,
+      "lines": [
+        "⁠245​Дикий розмах: power 326 — 12497 урона",
+        "EXP + 33903",
+        "SP + 1541"
+      ]
+    },
+    {
+      "at": "20:41:48.308",
+      "action": "whirlwind",
+      "name": "Lilim Knight Banneret",
+      "originalLogLines": 49,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 20394,
+      "extraKills": 3,
+      "lines": [
+        "⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20394 урона",
+        "Вихор вразив ворогів поруч: Grave Wanderer −20394, Grave Wanderer −20394, Grave Overlord −20394.",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Overlord.",
+        "EXP + 2315",
+        "SP + 322",
+        "EXP + 3600",
+        "SP + 2160"
+      ]
+    },
+    {
+      "at": "20:42:00.406",
+      "action": "wild_sweep",
+      "name": "Nephilim Praetorian",
+      "originalLogLines": 15,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 13817,
+      "extraKills": 0,
+      "lines": [
+        "⁠245​Дикий розмах: power 326 — 13817 урона",
+        "EXP + 33903",
+        "SP + 1541"
+      ]
+    },
+    {
+      "at": "20:42:13.402",
+      "action": "whirlwind",
+      "name": "Nephilim Praetorian",
+      "originalLogLines": 55,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 20710,
+      "extraKills": 3,
+      "lines": [
+        "⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 20710 урона",
+        "Вихор вразив ворогів поруч: Grave Wanderer −20710, Grave Wanderer −20710, Grave Overlord −20710.",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Overlord.",
+        "EXP + 2315",
+        "SP + 322",
+        "EXP + 33903",
+        "SP + 1541"
+      ]
+    },
+    {
+      "at": "20:42:26.917",
+      "action": "wild_sweep",
+      "name": "Nephilim Praetorian",
+      "originalLogLines": 18,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 12130,
+      "extraKills": 0,
+      "lines": [
+        "⁠245​Дикий розмах: power 326 — 12130 урона",
+        "EXP + 33903",
+        "SP + 1541"
+      ]
+    },
+    {
+      "at": "20:42:39.853",
+      "action": "whirlwind",
+      "name": "Lilim Knight Banneret",
+      "originalLogLines": 57,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 19371,
+      "extraKills": 3,
+      "lines": [
+        "⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 19371 урона",
+        "Вихор вразив ворогів поруч: Grave Wanderer −19371, Grave Wanderer −19371, Grave Overlord −19371.",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Overlord.",
+        "EXP + 2315",
+        "SP + 322",
+        "EXP + 3600",
+        "SP + 2160"
+      ]
+    },
+    {
+      "at": "20:42:51.291",
+      "action": "wild_sweep",
+      "name": "Lilim Knight Banneret",
+      "originalLogLines": 10,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 11602,
+      "extraKills": 0,
+      "lines": [
+        "⁠245​Дикий розмах: power 326 — 11602 урона",
+        "EXP + 3600",
+        "SP + 2160"
+      ]
+    },
+    {
+      "at": "20:43:01.973",
+      "action": "whirlwind",
+      "name": "Lilim Knight Banneret",
+      "originalLogLines": 46,
+      "omitted": 0,
+      "shortened": 0,
+      "ownDamage": 18862,
+      "extraKills": 3,
+      "lines": [
+        "⁠36​Вихор: power 2033; до 4 цілей (головна + 3 поруч) — 18862 урона",
+        "Вихор вразив ворогів поруч: Grave Wanderer −18862, Grave Wanderer −18862, Grave Overlord −18862.",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Wanderer.",
+        "EXP + 4123",
+        "SP + 574",
+        "Додаткова ціль повалена: Grave Overlord.",
+        "EXP + 2315",
+        "SP + 322",
+        "EXP + 3600",
+        "SP + 2160"
+      ]
+    }
+  ]
+}

@@ -71,8 +71,9 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\)\(\?:\\\/\|\$\)\/;/);
   // 10.0.27: fetch также передаёт retryOf; rid остаётся во всех ответах.
   assert.equal((hook.match(/, rid(?:,retryOf)? \}\)/g) || []).length >= 4, true, 'every end message carries the rid');
-  assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); \}/);
-  assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) GAME_END = Date\.now\(\);/);
+  // 20.36: старт хранит rid/owner, завершение GET будит проверку готовности.
+  assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); ACT_NET\.startRid=e\.data\.rid; ACT_NET\.startOwner=observeOwner\(\); \}/);
+  assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) \{ GAME_END = Date\.now\(\); combatSignal\.notify\(\); \}/);
   assert.match(content, /get gameBusy\(\) \{ return gameBusy; \}/);
   assert.match(content, /if \(\/\^\\\/game\\\/battle\\\/\(\?:action\|start\|hunt-continue\)\$\/\.test\(path\)\) ACT_NET\.doneT = Date\.now\(\);/);
   // 4. откаты из delta-ответа (лог 11.10 09:11:56)
@@ -85,7 +86,7 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   assert.match(content, /mysticSkillCdUntil: r\.mysticSkillCdUntil \?\? inner\.mysticSkillCdUntil \?\? null,/, 'unknown field logged for the next analysis');
   // 5. короткие настоящие откаты под баффами не выбрасываются; старые замеры стёрты
   const lc = content.slice(content.indexOf('async function learnCd('), content.indexOf('let lastObserve = 0;'));
-  const saved = []; const sb = { ilOf: () => ({ reuse: 3000 }), slotKind: () => 'скилл', rt: { skills: {} }, setRt: async p => saved.push(p), Math };
+  const saved = []; const sb = { ilOf: () => ({ reuse: 3000 }), slotKind: () => 'скилл', rt: { skills: {} }, setRt: async p => saved.push(p), setRtSoon: async p => saved.push(p) /* 20.41: замеры навыков — отложенная запись */, Math };
   vm.runInNewContext(`${lc}; this.learnCd = learnCd;`, sb);
   await sb.learnCd('blaze', 'Blaze', 0.8, {});
   assert.equal(saved.length, 1, '0.8 s Blaze (reference 3 s) is accepted now');
