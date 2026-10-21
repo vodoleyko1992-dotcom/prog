@@ -2,8 +2,12 @@
 // 20.10.2026, тред «Упрошенка под Дестра»: Старт/Стоп, место охоты и число мобов, TvT, выбор скиллов, журнал.
 // Меню пишет только настройки (lite.cfg) и разовые команды (lite.cmd); память бота (lite.rt) пишет вкладка игры.
 // Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): в игре другой класс — предупреждение; скиллы — только панель Дестра.
+// Lite 1.4 (21.10): то же меню — окном на странице игры (#dock), сворачивается в плавающую кнопку.
 'use strict';
 if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
+// 1.4: меню в окне на странице игры (bot.js, кнопка «—» сворачивает его в плавающую «Lite»): во всю ширину окна; странице — «готово»,
+// иначе через 8 с там появится подсказка открыть меню во вкладке.
+if (location.hash === '#dock') { document.documentElement.classList.add('dock'); try { parent.postMessage({ __l2liteDock: 'ready' }, '*'); } catch (e) {} }
 const L = globalThis.L2Lite;
 const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
 const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
