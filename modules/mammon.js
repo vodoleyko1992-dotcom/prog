@@ -461,7 +461,8 @@ function goalNote() {                             // раз на изменен�
 function modeFree(afterWin = false, allowEnchant = false, priceOnly = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
   if (env.cfg.enchantMode === true && !allowEnchant) return false; // 15.10: отдельная заточка запрещает новые служебные походы.
   const r = env.rt;                               // afterWin — 10.0: экран победы в цепочке (страница боя, но бой окончен)
-  if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc || r.petBufferTrip || r.enchantJob || r.subTrip || env.payments?.blocked()) return false;
+  // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo: исход платного клика не сверен
+  if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.travelCheck || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc || r.petBufferTrip || r.enchantJob || r.subTrip || env.payments?.blocked()) return false;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return false;
   // 20.41 (игрок 20.10 «не покупает С кристаллы»): в туре РБ цену кузнеца не узнавали никогда → план Маммона пуст → закупка без кристаллов.
   // priceOnly — разовый поход только за ценой и только пока тур простаивает ещё ≥ 3 мин (rbHuntIdle); отдельный поход на улучшение, бой и эпики — по-прежнему нет

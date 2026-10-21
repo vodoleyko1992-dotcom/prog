@@ -23,7 +23,8 @@ test('сбой /game/time не перекрывает PvP-восстановле
  assert.equal(await c.loopGate(),undefined);assert.deepEqual(events,['pvp']);assert.deepEqual(f.requests,['/game/time']);
  // Этот результат передаёт круг следующим шагам mainTick, а не возвращает true из gate.
  vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),c);
- for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopRaid','loopActivity'])c[key]=async()=>false;
+ // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
+ for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopRaid','loopActivity'])c[key]=async()=>false;
  c.loopSideJobs=async()=>{events.push('services');return true};await c.mainTick();assert.deepEqual(events,['pvp','pvp','services']);
 });
 test('без серверного stamp новый фарм закрыт, повтор GET ограничен15с',async()=>{
