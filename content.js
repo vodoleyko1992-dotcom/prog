@@ -3081,7 +3081,11 @@ async function loopGate() {
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
-  if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
+  // 20.43 (разбор 21.10): удержание ЛС уступает и открытой записи на TvT — раньше только уже записанному герою (tvtSoon), а записаться
+  // было нельзя: кнопка и POST /game/tvt/register под запретом ЛС, до tvtStep круг не доходил. Статус TvT, пока ЛС держит, перечитываем
+  // не чаще раза в 30 с и без ожидания ответа (ход ЛС не задерживается). Неизвестная попытка/покупка (pending) держит, как прежде.
+  if (rt.autoLs?.hold && !rt.autoLs.pending && cfg.tvtOn) lsTvtPoll();
+  if (rt.autoLs?.hold && !rt.autoLs.pending && (tvtSoon() || lsTvtRegOpen())) await L2V7Modules.lifestone.yieldToUrgent();
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
   if (rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
   await enchantModePause();
@@ -6104,6 +6108,11 @@ const classSwitched = () => { PET = null; };
 
 // Авто-ЛС удерживает обычные задачи до явного завершения серии; работа только на странице игры.
 let lifestoneCommandBusy = false;
+// 20.43 (разбор 21.10): опрос /game/tvt, пока серия ЛС держит бота (loopGate), — не чаще раза в 30 с; tvtRefresh сам решает, пора ли читать.
+let lsTvtReadT = 0;
+const lsTvtPoll = () => { if (Date.now() - lsTvtReadT < 30000) return; lsTvtReadT = Date.now(); try { void L2V7Modules.tvt?.tvtRefresh?.()?.catch?.(() => {}); } catch (e) {} };
+// Запись открыта по свежему ответу сервера (≤2 мин), а не по старому rt.tvt: ложная уступка ставила бы серию на ручную паузу.
+const lsTvtRegOpen = () => { const T = L2V7Modules.tvt; return !!T?.tvtRegistrationDue?.() && !!T.tvtState?.()?.fresh; };
 const lifestonePrepareFree = () => location.pathname === '/augmentation.html' && !!rt.char && heroNick() === rt.char && !serverDown() && !loginPage() && !antibotState() && !abHold()
   && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
   && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending

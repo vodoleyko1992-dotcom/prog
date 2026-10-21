@@ -24,7 +24,9 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  assert.equal(n,0,'выбор не тратит камни');
  await h.popup.locator('#lsStart').click();
  await until(async()=>{const s=(await h.get(['rt'])).rt.autoLs;return s?.status==='done';},25000).catch(async e=>{console.log('STATE',JSON.stringify(await h.get(['rt','on','lock'])));console.log('GUARDS',await h.g.core('JSON.stringify({on,tabOwner,free:lifestonePrepareFree(),actions:L2V7Modules.actions.canAct(),tvt:tvtSoon(),gen:automationGeneration})'));console.log('TOAST',await h.popup.locator('body').innerText());throw e;});
- let state=await h.get(['rt']);assert.equal(n,2);assert.equal(state.rt.autoLs.attempts,2);assert.equal(state.rt.autoLs.last,'prominence');assert.equal(state.rt.autoLs.hold,true);
+ let state=await h.get(['rt']);assert.equal(n,2);assert.equal(state.rt.autoLs.attempts,2);assert.equal(state.rt.autoLs.last,'prominence');
+ // 20.43 (разбор 21.10): завершённая серия (цель/лимит) больше не держит бота до «Закончить серию» — удержание снято сразу.
+ assert.equal(state.rt.autoLs.hold,false);
  await delay(2000);assert.equal(n,2,'после цели не повторяет');assert.equal(snap.inventory.stacks[0].qty,6);
  await h.popup.reload();await h.openTab('lifestone');await until(()=>h.popup.locator('#lsRun').textContent().then(s=>s.includes('2/3')));
  assert.deepEqual(await h.popup.locator('#lsTargets').evaluate(e=>[...e.selectedOptions].map(o=>o.value)),['prominence','matk_6']);
