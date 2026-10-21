@@ -8,6 +8,15 @@
 
 Время в ответах — мс эпохи; `serverNowMs` есть в `/game/time`, `/game/fishing/state` и `/game/siege/schedule`. Числа EXP/SP у РБ приходят **строкой с пробелами** (`"1 837 252"`), у обычных мобов — числом.
 
+## Обновление 21.10: форум «Фарм ресурсов» (GET /game/farm-guide, 22:48 UTC)
+
+Анонс игры 21.10: раздел форума обновлён. Источник тот же — `GET /game/farm-guide` (3,2 МБ), снят одним GET под аккаунтом игрока.
+
+- **Новые разделы ответа:** `rareResources` 8 (Mold Lubricant, Mold Hardener, Maestro Mold — дроп 9 % ×1–4 с мобов 77–79 Monastery of Silence/Silent Valley; Mold Glue и Thons — Swamp of Screams/Varka 77–78; Enria — мобы 62 Frozen Labyrinth/Antharas' Lair; Asofe — 84 моба 52+ по 16 % ×1–3 (Forest of Mirrors, Blazing Swamp, Enchanted Valley); у Maestro Anvil Lock источников нет). `gradePieces` 15 (itemId 920001–920015: Weapon/Armor Piece и Accessory Gemstone D–S, только дроп ×1: D мобы 20 — 20 %, C 40 — 12 %, B 52 — 8 %, A 61 — 5 %, S 76 — 3 %). `craftedResources` 24 рецепта (`createItemLevel`, `mpCost`, `outputQuantity`, `ingredients`) — совпадают с `MM_RECIPES` в modules/mammon.js. `shopMaterials` 10 (Gemstone D–S 1 000/3 000/10 000/30 000/100 000, Crystal D–S 650/3 000/9 000/15 000/25 000) — совпадают с `MM_SHOP`.
+- **Спойл изменён:** базовые ресурсы спойлятся со всех мобов уровня ресурса до 80 (11.10: обычное сырьё только 3–35, Suede/Silver до 50, Stone of Purity до 60, Mithril до 75). С мобов 40+ шанс +5 %: Stem/Thread/Iron Ore/Coal/Charcoal/Animal Bone 55 → 60 %, Varnish/Animal Skin/Suede/Silver Nugget 48 → 53 %, Mithril/Stone of Purity 42 → 47 %, Oriharukon/Adamantite 36 → 41 %. Дроп не изменился (16/11/7/4 %).
+- `keyMaterials` 116 и `raidEquipment` 254 — без изменений. Телепорт к району — по-прежнему `POST /game/farm-guide/resource-teleport {teleportId, expectedRevision, expectedAdenaCost}`, 50 000 адены, с VIP бесплатно; переносит в район, не к мобу.
+- Бот (20.44) читает `rareResources` и `gradePieces` вместе с `resources` (content.farmGuideMerge).
+
 ## Обновление 12.10 (повторный сбор, только GET)
 
 Сбор 12.10 ≈04:00 UTC: **1 POST `/auth/login` + 1 134 GET** (≈640 к API, ≈490 статических HTML/JS — 126 страниц, 365 скриптов). Статусы: 200 — 1 125; 403 — 3 (`/game/clans/items/catalog` и `/game/mammon/blacksmith/upgrades`, как и 11.10; `/game/ashen-bastion/mobs` → `not_in_ashen_bastion`); 404 — 5 (2 страницы, 3 пробы spawnId); 502 — 2 (повтор прошёл). 429 и 423 не было. Ничего не потрачено.
@@ -41,7 +50,7 @@
 | `kb/data/game-items.json` | каталог предметов из `/character/catalog-hints`: 463 вещи с полными статами, 18 комплектов брони, имена EN 607 / UK 934, грейд, слот, статы, мин. уровень | — |
 | `kb/data/game-fishing.json` | рыбалка: стартовый магазин, обмен Proof, удочки, наживка, пакеты времени, откаты pumping/reeling | — |
 | `kb/data/game-skills-warlock.json` | 35 выученных скиллов Warlock (ранг/макс., подсказки UK/RU, иконки), кот, скиллы TvT | 35 |
-| `kb/data/game-farm-guide.json` | «форумная база» фарма: resources 14, keyMaterials 116, raidEquipment 254 — источники (drop/spoil, моб, ур., локация, шанс, кол-во) | 384 предмета |
+| `kb/data/game-farm-guide.json` | «форумная база» фарма (21.10): resources 14, rareResources 8, gradePieces 15, craftedResources 24, shopMaterials 10, keyMaterials 116, raidEquipment 254 — источники (drop/spoil, моб, ур., локация, шанс, кол-во), рецепты, цены | 441 предмет |
 | `kb/data/game-recipes.json` | `/game/recipes/sources` D/C/B: где дропается/спойлится рецепт | 29/30/39 |
 | `kb/data/game-other-shops.json` | магазин TvT, кристаллы Олимпиады, GM-премиум, Маммон, катакомбы, премиум/VIP, тату, бонусы, ивенты, ежедневки, расписание TvT/осад | — |
 | `kb/raw/*.json` | сырые ответы (обёртка `{_path,_status,data}`), в т.ч. `spawn-info-bosses.json` (205 боссов) и `probe-mobs.json` (≈1330 spawnId) | 80+ файлов |
