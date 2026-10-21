@@ -9,7 +9,7 @@ const html = read('popup.html'), js = (read('defaults.js') + '\n' + read('popup.
 const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
-const SECS = ['overview', 'hunt', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply'];
+const SECS = ['overview', 'hunt', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
 // 20.25: снятая автозаточка остаётся скрытым контейнером, доступных вкладок на одну меньше.
@@ -35,7 +35,7 @@ for (const m of tt.matchAll(/:'(\w+)'/g)) assert.ok(secs.includes(m[1]) || OLD[m
 for (const m of html.matchAll(/data-goto="(\w+)"/g)) assert.ok(secs.includes(m[1]) || OLD[m[1]], 'data-goto ' + m[1]);
 
 // 3. «Дополнительно» в каждом разделе, сворачивается и помнится (uiState.adv), поиск и ссылки его раскрывают
-for (const s of SECS.filter(s => !['overview', 'enchant', 'lifestone', 'supply'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
+for (const s of SECS.filter(s => !['overview', 'enchant', 'lifestone', 'supply', 'sub'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
 assert.match(js, /uiState\.adv \|\|= \{\};/);
 assert.match(js, /function revealEl\(el\)/); assert.match(js, /function advSet\(a, open\)/);
 assert.match(js, /showTab\(r\.tab\); revealEl\(r\.el\);/, 'поиск раскрывает блок «Дополнительно»');

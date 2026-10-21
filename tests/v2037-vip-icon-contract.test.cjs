@@ -1,4 +1,5 @@
 'use strict';
+// 20.43: в настоящем каталоге есть бесплатный «resists» — основной набор не повторяется, но резисты берутся отдельной кнопкой.
 // 20.37: реальный Greater pickByIcon, точный skillId и один совместимый большой бафф.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=process.env.L2_TEST_ROOT||path.resolve(__dirname,'..');
@@ -91,7 +92,7 @@ for(const role of ['mage','fighter'])test(role+': класс → точная и
  assert.deepEqual(f.activeGroup(),[f.chosen]);confirmed(f);
 });
 test('наличие полного базового набора не мешает добавить выбранный Greater',async()=>{
- const f=fixture();f.installBase();await f.ticks();assert.ok(f.posts.every(x=>x.body.set==='greater'));assert.deepEqual(f.greaterPosts().map(q=>q.skillId),[1357,1323]);confirmed(f);
+ const f=fixture();f.installBase();await f.ticks();assert.ok(f.posts.every(x=>x.body.set!==f.baseSet));assert.deepEqual(f.greaterPosts().map(q=>q.skillId),[1357,1323]);confirmed(f);
 });
 test('действующий совместимый Greater сохраняется до истечения при авто-выборе',async()=>{
  const f=fixture();f.installBase();f.install([1413]);await f.ticks();assert.deepEqual(f.activeGroup(),[1413]);assert.deepEqual(f.greaterPosts().map(q=>q.skillId),[1323]);confirmed(f);
@@ -108,10 +109,10 @@ test('отсутствующий основной выбор заменяетс�
 test('старый lower-level cache обычного набора не запрещает путь к дополнительному баффу',async()=>{
  const f=fixture();f.installBase();const first=f.row(f.baseSet).skills.find(x=>x.level>1);f.env.rt.tbLvl={[f.baseSet]:{[first.skillId]:first.level-1}};f.env.rt.tbuff=null;
  const need=f.B.townBuffNeed();assert.equal(need?.vipFree,true,'Greater должен планироваться отдельно от защиты обычного набора');
- assert.equal(await f.B.townBuffStart('перед РБ fixture',true),true);await f.ticks();assert.ok(f.posts.every(x=>x.body.set==='greater'));confirmed(f);
+ assert.equal(await f.B.townBuffStart('перед РБ fixture',true),true);await f.ticks();assert.ok(f.posts.every(x=>x.body.set!==f.baseSet));confirmed(f);
 });
 test('сильный обычный эффект не понижается и не отменяет выбранную дополнительную иконку',async()=>{
- const f=fixture();f.installBase();const first=f.row(f.baseSet).skills.find(x=>x.level>1);f.install([first.skillId],first.level+1);await f.ticks();assert.equal(f.ch.activeBuffs.find(x=>x.skillId===first.skillId).level,first.level+1);assert.ok(f.posts.every(x=>x.body.set==='greater'));confirmed(f);
+ const f=fixture();f.installBase();const first=f.row(f.baseSet).skills.find(x=>x.level>1);f.install([first.skillId],first.level+1);await f.ticks();assert.equal(f.ch.activeBuffs.find(x=>x.skillId===first.skillId).level,first.level+1);assert.ok(f.posts.every(x=>x.body.set!==f.baseSet));confirmed(f);
 });
 test('истекает именно выбранный Greater: готовность снимается и обновляется та же иконка',async()=>{
  const f=fixture();await f.ticks();confirmed(f);f.expire(1357);assert.equal(f.B.vipSession().ready,false);assert.equal(f.B.townBuffNeed()?.vipFree,true);f.open();await f.ticks();assert.deepEqual(f.greaterPosts().map(q=>q.skillId),[1357,1323,1357]);confirmed(f);

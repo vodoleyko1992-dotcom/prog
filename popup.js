@@ -268,12 +268,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax', 'craftMpKeep',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'vipResists', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'craftAuto', 'craftMammon', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -389,7 +389,7 @@ async function load() {
   renderEpics(rt, d);
   renderRbTimer(rt, d);
   renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
-  renderStory(rt); renderSub(rt, d);
+  renderStory(rt); renderSub(rt, d); renderSubGo(rt); renderCraft(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
   renderHunt(rt, d);
   renderRb(rt);
@@ -1695,6 +1695,74 @@ function renderSub(rt, d) {
   const say = rt.subHandReq?.t ? '⏳ по кнопке: передам основному, как только закончу бой/тур' : rt.subHandSay && Date.now() - rt.subHandSay.t < 600000 ? `✗ по кнопке не передал: ${rt.subHandSay.why}` : '';
   $('subBox').textContent = [say, rt.subInfo || 'Класс и роль бот узнает у игры сам (после первого ответа /character)'].filter(Boolean).join('\n');
 }
+// 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса и лучший комплект (modules/subgo.js, команда rt.subGo)
+const SUBGO_UI = 'l2bot-subGo';
+const profName2 = p => String(p || '?').replace(/^(?:human|elf|dark_elf|orc|dwarf)_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+let subGoSig = '', subGoRt = {};
+function renderSubGo(rt) {
+  subGoRt = rt || {};
+  const sel = $('subGoSlot'); if (!sel) return;
+  const sl = (rt.subSlots || []).filter(x => x && x.prof);
+  const opts = sl.map(x => `<option value="${+x.slot}">${x.slot}: ${profName2(x.prof)} ${x.lvl || ''}${x.on ? ' — сейчас' : ''}</option>`).join('');
+  if (opts && opts !== subGoSig) { const keep = sel.value; subGoSig = opts; sel.innerHTML = opts;
+    let ui = {}; try { ui = JSON.parse(localStorage.getItem(SUBGO_UI) || '{}'); } catch (_) {}
+    const want = keep !== '' && sl.some(x => String(x.slot) === keep) ? keep : String(ui.slot ?? '') !== '' && sl.some(x => String(x.slot) === String(ui.slot)) ? String(ui.slot) : String((sl.find(x => !x.on) || sl[0]).slot);
+    sel.value = want;
+    for (const k of ['Kit', 'Wt', 'Shield']) if (ui[k] && $('subGo' + k)) $('subGo' + k).value = ui[k]; }
+  const J = rt.subGo, S = rt.subGoSay;
+  $('subGoBox').textContent = J?.t ? `⏳ по кнопке: ${J.gearOnly ? 'одеваю лучшее' : `меняю класс на слот ${J.slot}`} — начну, как только закончу бой (бот должен быть запущен)`
+    : S?.t ? `${S.ok ? '✓' : '✗'} ${new Date(S.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${S.why}${S.worn?.length ? '\n' + S.worn.join('\n') : ''}` : '';
+}
+async function subGoSend(gearOnly) {
+  const sel = $('subGoSlot'), ui = { slot: sel.value, Kit: $('subGoKit').value, Wt: $('subGoWt').value, Shield: $('subGoShield').value };
+  try { localStorage.setItem(SUBGO_UI, JSON.stringify(ui)); } catch (_) {}
+  const cur = (subGoRt.subSlots || []).find(x => x.on)?.slot;
+  if (!gearOnly && sel.value === '') return toast('Слоты классов ещё не прочитаны — откройте игру с запущенным ботом');
+  const slot = gearOnly ? cur ?? null : +sel.value;
+  await menuPatch({ subGo: { t: Date.now(), slot, gearOnly: !!gearOnly, kit: ui.Kit, wt: ui.Wt, shield: ui.Shield }, subGoSay: null });
+  const { on = false } = await chrome.storage.local.get('on');
+  if (!on) await $('start').onclick();
+  toast(gearOnly ? '👕 Одеваю лучшее для текущего класса' : '🧬 Меняю класс и одеваю лучшее');
+}
+$('subGoStart')?.addEventListener('click', () => subGoSend(false));
+$('subGoGear')?.addEventListener('click', () => subGoSend(true));
+// 20.43 (John 21.10): свой крафт материалов (modules/craft.js) — книга рецептов rt.craftBook, список rt.craftQueue, прогресс rt.craftMade
+let craftSig = '', craftListSig = null, craftRt = {};
+function renderCraft(rt, d) {
+  if (!$('craftBox')) return;
+  craftRt = rt;
+  const b = rt.craftBook, q = rt.craftQueue || [], made = rt.craftMade || {}, s = rt.craftSay, out = [];
+  const opts = (b?.list || []).map(([code, nm, , oq, lvl, mp]) => `<option value="${esc(code)}">${esc(nm)}${oq > 1 ? ` (×${oq})` : ''} · ур. ${lvl} · ${mp} MP${b.lvl < lvl ? ' · закрыт' : ''}</option>`).join('');
+  // пустая книга (другой герой) — снова заглушка, а не рецепты прошлого героя; в списке нет полей ввода — перерисовываем всегда
+  const html = opts || '<option value="">— рецепт (появится после первого чтения книги) —</option>';
+  if (craftSig !== html) { craftSig = html; $('craftPick').innerHTML = html; }
+  // перерисовка только при изменении: иначе запись бота (до 3 раз/с) пересоздаёт кнопку ✕ между нажатием и отпусканием — клик терялся
+  const listHtml = q.map(x => { const m = +made[x.id] || 0;
+    return `<div class="rule"><span class="t">${m >= x.n ? '✅' : '⚒'} ${esc(x.nm || x.code)} — ${fmt(m)}/${fmt(x.n)}</span><button data-craftdel="${esc(x.id)}" title="Убрать">✕</button></div>`; }).join('');
+  if (craftListSig !== listHtml) { craftListSig = listHtml; $('craftList').innerHTML = listHtml; }
+  if (d.craftAuto !== true) out.push('Выключено: бот сам не крафтит');
+  if (b) out.push(`Книга ${new Date(b.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}: Create Item ур. ${b.lvl}${b.lvl ? '' : ' — навык не выучен (магистр)'} · MP ${fmt(b.mp)}/${fmt(b.maxMp)}`);
+  else out.push('Книгу рецептов бот прочитает сам, когда активен крафтер и включено «Крафтить самому»');
+  if (s && Date.now() - s.t < 3600000) out.push(`${new Date(s.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${s.ok ? '✓' : '·'} ${s.why}`);
+  $('craftBox').textContent = out.join('\n');
+}
+// ревью 21.10: строка добавляется/удаляется в фоне по одной (craftQueueEdit), герой — тот, чей список показан
+const craftEdit = async (edit, okText) => {
+  if (!craftRt.char) { toast('Дождитесь загрузки персонажа'); return false; }
+  try { await menuPatch({}, { craftQueueEdit: edit, expectedChar: craftRt.char }); if (okText) toast(okText); return true; }
+  catch (e) { toast('⚠ ' + (e?.message || e), 'var(--bad)'); return false; }
+};
+$('craftAdd')?.addEventListener('click', async () => {
+  const code = $('craftPick').value, n = Math.floor(+$('craftN').value || 0); if (!code) return $('craftPick').focus(); if (n < 1) return $('craftN').focus();
+  const row = (craftRt.craftBook?.list || []).find(x => x[0] === code);
+  const ok = await craftEdit({ action: 'add', row: { id: 'c' + Date.now().toString(36), code, nm: row?.[1] || code, item: row?.[2] || 0, n } }, `⚒ В список крафта: ${row?.[1] || code} ×${n}`);
+  if (ok) $('craftN').value = '';
+});
+$('craftList')?.addEventListener('click', async e => {
+  const id = e.target.closest('[data-craftdel]')?.dataset.craftdel; if (!id) return;
+  // только список: craftMade пишет бот после каждой партии (id строк уникальны)
+  await craftEdit({ action: 'remove', id });
+});
 $('subHandNow')?.addEventListener('click', async () => { await menuPatch({ subHandReq: { t: Date.now() }, subHandSay: null }); toast('📤 Передам основному сырьё из сумки'); });
 $('mmGuideNow')?.addEventListener('click', async () => { await menuPatch({ farmGuideReq: Date.now() }); toast('🔄 Обновлю источники дропа и спойла из игры'); });
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));

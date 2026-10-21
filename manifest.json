@@ -92,6 +92,8 @@
         "modules/rbtimer.js",
         "modules/rbrun.js",
         "modules/subclass.js",
+        "modules/craft.js",
+        "modules/subgo.js",
         "modules/enchant.js",
         "modules/lifestone.js",
         "modules/warlock.js",

@@ -63,6 +63,7 @@ NPC 31126, иконка `/nps/76.png`. Одна функция: **улучшен
 Модуль `modules/mammon.js` и раздел меню «🏺 Маммон»: заказ из сумки исполняется сам (телепорт ≤ лимита → «Здати» → обратно), цель «Копить на улучшение» добывает недостающие материалы по очереди, цены кузнеца бот читает сам. Важно: свои GET бота идут с `Authorization: Bearer <localStorage.token>` (`content.gameGet`), без токена сервер отвечает 401.
 
 Крафт материалов (`GET /game/craft/materials`): только у Artisan/Warsmith/Maestro (`canCraftProfession`, `createItemLevel`), у Warlock — 0. Рецепты: Steel = 5 Iron Ore + 5 Varnish, Cokes = 3 Charcoal + 3 Coal, Braided Hemp = 5 Stem, Coarse Bone Powder = 10 Animal Bone, Leather = 6 Animal Skin, Mithril Alloy = 1 Mithril Ore + 1 Varnish of Purity + 2 Steel и др. (`MM_CRAFT` в модуле). Заказы идут окнами по 2 ч (`expiresAt` 14:00, 16:00 …).
+- 21.10 (ответ игры на Warsmith 40): `{createItemLevel, currentMp, maxMp, canCraftProfession, recipes[24]{code, output{itemId,nameEn,quantity}, ingredients[{itemId,quantity,have}], createItemLevel, mpCost, successChance:100, maxCraftable, lockedReason}}`; крафт — POST тот же путь `{recipeCode, craftCount, expectedRevision}`. MP: ур.1 рецепта 10, ур.2 — 20, ур.4 — 40, Maestro Holder/Craftsman Mold — 183 за штуку. Create Item на Warsmith 40 ещё не выучен. У Fortune Seeker есть Create Common Item 9/9, но книга отвечает «Крафт доступний тільки професіям Artisan, Warsmith і Maestro». Бот крафтит сам — `modules/craft.js` (20.43, выключено по умолчанию).
 
 ## Что может пригодиться боту (версия 9)
 

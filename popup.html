@@ -210,6 +210,7 @@
   <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика (Alt+0)"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
   <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
   <button data-tab="supply" data-short="Снабжение" title="Закупка банок, сосок и руды, резерв адены"><span class="ic">🛒</span><span class="lb">Снабжение</span></button>
+  <button data-tab="sub" data-short="Сабкласс" title="Сменить класс у Maestro Reorin и одеть лучшее из сумки"><span class="ic">🧬</span><span class="lb">Сабкласс</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -374,12 +375,19 @@
 
   <h4>🧬 Сабклассы: крафтер и спойлер (заготовка 10.0.7)</h4>
   <div id="subBox" class="camp" style="white-space:pre-line">Класс и роль бот узнает у игры сам</div>
-  <label title="Активный класс — Artisan/Warsmith/Maestro: сырьё на крафт вещи-цели Маммона крафтеру (Skye) не отправляется, план крафта показывается здесь. Сам крафт на странице игры пока жмёшь ты (бот эту страницу ещё не видел)">Саб крафтера: крафтить самому, крафтеру не слать <input id="subCraftSelf" type="checkbox"></label>
+  <label title="Активный класс — Artisan/Warsmith/Maestro: сырьё на крафт вещи-цели Маммона крафтеру (Skye) не отправляется, план крафта показывается здесь. Крафтит бот, если включено «Крафтить самому» ниже">Саб крафтера: крафтить самому, крафтеру не слать <input id="subCraftSelf" type="checkbox"></label>
   <label title="Активный класс — Dwarven Fighter/Scavenger/Bounty Hunter/Fortune Seeker: точка фарма считается по дропу + спойлу, спойл в начале каждого боя (роль «Спойл» на панели)">Саб спойлера: спойл в приоритете <input id="subSpoilFirst" type="checkbox"></label>
   <label title="Ник основного персонажа аккаунта (например Warlock). На вкладке основного бот раз в 5 мин записывает, какого сырья не хватает его цели Маммона; на другом персонаже (WestSPOIL) с этим ником в поле бот добывает это сырьё и по кнопке передаёт через «Передача предмета» (комиссия игры 5 %)">Ник основного персонажа <input id="subMainNick" type="text" maxlength="32" placeholder="Warlock"></label>
   <label title="На персонаже-помощнике: когда своей цели фарма нет, добывать сырьё, которого не хватает основному (точка по всем материалам сразу)">Помощник: добывать сырьё для основного <input id="subHelpMain" type="checkbox"></label>
   <div class="row"><button id="subHandNow" title="Передать основному сейчас всё его недостающее сырьё, что есть в сумке (одна партия, через «Передача предмета»; не в бою и не в туре)">📤 Передать основному сейчас</button></div>
   <div class="hint">Заготовка: роль класса и слоты бот узнаёт из ответа игры, сабкласс не берёт и не переключает (только ты, у Maestro Reorin / Magister Ladd). Квест на сабкласс — 75 ур. основного и 4 РБ; первый саб по плану Warsmith (свой крафт), второй — Bounty Hunter (спойл Mithril Ore / Stone of Purity / Oriharukon / Adamantite в 6–9 раз чаще дропа).</div>
+  <h4>⚒ Свой крафт материалов</h4>
+  <label title="Только пока активен класс крафтера (Artisan/Warsmith/Maestro) и не в бою. Бот читает книгу рецептов игры (вкладка «Матеріали») и крафтит сам: недостающее для улучшения у кузнеца Маммона и свой список ниже. Тратит только сырьё и MP, шанс 100 %. Класс бот не переключает">Крафтить самому (саб крафтера) <input id="craftAuto" type="checkbox"></label>
+  <label title="Крафтить полуфабрикаты и материалы, которых не хватает вещи-цели из раздела «Маммон» — только по свежей сумке, при видимом уровне вещи и цене от кузнеца (не по оценке). Снятая галка «Саб крафтера: крафтить самому» тоже выключает крафт для Маммона">Крафтить для цели Маммона <input id="craftMammon" type="checkbox"></label>
+  <label title="Сколько процентов MP оставлять (на бой). Бот всё равно не опускает MP ниже порога банки MP в бою («MP у воина» + 10 %), чтобы следующий бой не начинался с банки. Во время тура РБ, эпиков и служебных походов крафт ждёт">Оставлять MP, % <input id="craftMpKeep" type="number" min="0" max="90" step="5"></label>
+  <div class="row add"><select id="craftPick" style="flex:1"><option value="">— рецепт (появится после первого чтения книги) —</option></select><input id="craftN" type="number" min="1" placeholder="Штук" style="width:72px;flex:0 0 72px"><button id="craftAdd" title="Добавить в список крафта" style="flex:0 0 34px">+</button></div>
+  <div id="craftList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
+  <div id="craftBox" class="hint" style="white-space:pre-line"></div>
 
 
 
@@ -506,6 +514,7 @@
   <h4>✨ Городской баффер</h4>
   <label>Набор <select id="townBuffSet"><option value="basic">Звичайний баф — бесплатно</option><option value="warrior">Повний баф воїна — 15 Coin of Luck</option><option value="mage">Повний баф мага — 15 Coin of Luck</option><option value="off">Не брать</option></select></label>
   <label title="При обычном наборе и активном VIP бот берёт полный бафф по активному классу только с нулевой ценой из свежего каталога. По окончании VIP снова обычный набор.">Бесплатный полный бафф по классу во время VIP <input id="vipBuffAuto" type="checkbox"></label>
+  <label title="Вместе с бесплатным VIP-баффом бот берёт у городского баффера и «Резисти» (яд, вода, ветер, огонь, стихийная защита), только если свежий каталог показывает цену 0.">Резисты в бесплатном VIP-баффе <input id="vipResists" type="checkbox"></label>
   <div class="hint">Для воина и спойлера — полный бафф воина, для мага — мага. Действует при выборе обычного набора выше; платный бафф суммона не входит.</div>
   <div class="hint" style="margin:8px 0 2px;color:var(--txt)">💎 Баффы за Fast Aden (3 ч) — берутся по порядку списка</div>
   <div class="row add" style="margin-top:2px"><select id="faPick" style="flex:1" aria-label="Бафф за Fast Aden"></select><button id="faAdd" title="Добавить бафф в список" style="flex:0 0 38px">+</button></div>
@@ -916,6 +925,17 @@
   <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
   <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
   <div id="shopBox" class="hint" style="white-space:pre-line"></div>
+</section>
+
+<section id="tab-sub">
+  <h4>🧬 Смена класса и комплекта</h4>
+  <div class="hint">Выберите класс и нажмите «Старт»: бот телепортируется к Maestro Reorin (Oren, с VIP бесплатно), меняет класс и надевает лучшее, что лежит в сумке: оружие, щит (если оружие одноручное), броню и бижутерию. Грейд важнее цифр, вещи выше уровня класса не берутся. Пояс, плащ и тату общие — их не трогает. Смена класса снимает баффы и слугу: дальше бот бафается по обычному порядку старта.</div>
+  <label>Класс <select id="subGoSlot"><option value="">— слоты появятся после первого ответа игры —</option></select></label>
+  <label title="Для крафтера (Warsmith): на РБ — булава и щит, на фарм — пика. «Авто» — по выбранной задаче">Сборка <select id="subGoKit"><option value="auto">Авто — по задаче</option><option value="rb">На РБ</option><option value="farm">На фарм</option></select></label>
+  <label title="«Авто» — вид по классу: маг — магическое, спойлер — дубина, Warlord — пика, Дестр — двуручное…">Оружие <select id="subGoWt"><option value="auto">Авто — по классу</option><option value="blunt">Дубина / булава</option><option value="bigblunt">Двуручная дубина</option><option value="pole">Древковое (пика)</option><option value="sword">Меч</option><option value="bigsword">Двуручный меч</option><option value="dual">Парные мечи</option><option value="dagger">Кинжал</option><option value="bow">Лук</option><option value="fist">Кастеты</option></select></label>
+  <label>Щит <select id="subGoShield"><option value="auto">Авто — если оружие одноручное</option><option value="on">Надевать</option><option value="off">Не надевать</option></select></label>
+  <div class="row"><button id="subGoStart" class="main">▶ Старт: сменить класс и одеть</button><button id="subGoGear" title="Класс не менять — только одеть лучшее для текущего класса">👕 Только одеть</button></div>
+  <div id="subGoBox" class="hint" style="white-space:pre-line"></div>
 </section>
 
 </div><!-- /.workarea -->

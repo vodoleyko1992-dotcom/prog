@@ -372,6 +372,21 @@ async function statePatch(m, sender) {
 // Popup writes also go through the same queue as content-script patches.
 // A stale popup snapshot can no longer roll back unrelated runtime keys.
 // Меняем одну явную PvP-цель внутри serializeLock, не переписывая устаревший список из меню.
+// 20.43 (ревью 21.10): список «скрафтить N штук» меняется по одной строке внутри serializeLock — два быстрых клика меню
+// (✕ и ✕, ✕ и «+») больше не восстанавливают удалённую строку из старой копии списка.
+function craftQueueChange(rt, edit) {
+  const q = Array.isArray(rt.craftQueue) ? rt.craftQueue.filter(x => x && typeof x === 'object' && typeof x.id === 'string') : [];
+  const okId = id => typeof id === 'string' && /^[a-z0-9_-]{1,40}$/i.test(id) && !['__proto__','constructor','prototype'].includes(id);
+  if (edit?.action === 'remove') return okId(edit.id) ? { ok: true, queue: q.filter(x => x.id !== edit.id) } : { ok: false, reason: 'Строка списка крафта не найдена' };
+  if (edit?.action !== 'add') return { ok: false, reason: 'Неизвестное изменение списка крафта' };
+  const r = edit.row || {}, n = Number(r.n), item = Number(r.item || 0);
+  if (!okId(r.id) || typeof r.code !== 'string' || !/^[a-z0-9_.:-]{1,80}$/i.test(r.code) || !Number.isSafeInteger(n) || n < 1 || n > 1e6
+      || !Number.isSafeInteger(item) || item < 0 || (r.nm != null && (typeof r.nm !== 'string' || r.nm.length > 100)))
+    return { ok: false, reason: 'Строка списка крафта неверна' };
+  if (q.some(x => x.id === r.id)) return { ok: true, queue: q };
+  if (q.length >= 50) return { ok: false, reason: 'В списке крафта уже 50 строк — удалите лишние' };
+  return { ok: true, queue: [...q, { id: r.id, code: r.code, nm: r.nm || r.code, item, n }] };
+}
 function pvpTargetChange(rt, edit) {
   const low=x=>String(x||'').trim().toLowerCase(),id=edit?.id,name=edit?.name;
   if(!['add','enabled','remove'].includes(edit?.action)||typeof id!=='string'||!/^[a-z0-9][a-z0-9_-]{0,99}$/i.test(id)
@@ -423,6 +438,11 @@ async function menuPatch(m, sender) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
       const edit=pvpTargetChange(state.rt||{},m.pvpTargetEdit);if(!edit.ok)return edit;
       rtPatch.pvpTargets=edit.targets;if(edit.seedHandled)rtPatch.pvpSeedDremia1410=true;
+    }
+    if (m.craftQueueEdit) {
+      if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
+      const edit=craftQueueChange(state.rt||{},m.craftQueueEdit);if(!edit.ok)return edit;
+      rtPatch.craftQueue=edit.queue;
     }
     if (Object.hasOwn(rtPatch, 'rbTimer')) rtPatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, rtPatch.rbTimer);
     // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.

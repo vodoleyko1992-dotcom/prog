@@ -2154,7 +2154,8 @@ function farmPick(goal) {
   return best ? { ...best, names: Object.keys(best.mobs) } : null;
 }
 // 7.2: персонаж умеет спойлить — спойл в роли «Спойл» или профессия гнома-спойлера
-const canSpoil = () => !!names(cfg.nSpoil || '').length || /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i.test(String(rt.prof || ''));
+// 20.43 (John 21.10 12:48): крафтер без дубины не спойлит — и точку фарма по спойлу не выбираем
+const canSpoil = () => !L2V7Modules.loot?.crafterPike?.() && (!!names(cfg.nSpoil || '').length || /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i.test(String(rt.prof || '')));
 // 7.2: активная цель «фарм ресурса» / «охота на рецепт» с подходящей зоной. Пока она есть, автофарм не уводит с её локации
 // (раньше: прилетел за ресурсом → через 10 мин автофарм улетал в «лучшую по опыту» зону → через 3 мин фарм тянул обратно — по кругу)
 function lootGoal() {
@@ -3473,7 +3474,8 @@ async function loopTaskList() {
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); return true; }
       if (isBattle()) await battle();
       else if (isFishing() && fishState()) await fishFight();
-      else await tasksIdle();
+      // 20.43 (ревью 21.10): «ожидание» без служебных задач — естественная стоянка крафтера; свой крафт идёт и здесь
+      else if (!(await L2V7Modules.craft?.step?.())) await tasksIdle();
       return true;
     }
   }
@@ -3540,6 +3542,8 @@ async function loopPriority() {
 // Разовые команды меню: сумка, список баффов FA, базы рецептов/фарма/РБ, проверка эпиков, полёт к РБ, каталог и полёт в зону.
 async function loopMenuJobs() {
   if (loopStale()) return true;
+  // 20.43 (John 21.10): «▶ Старт» во вкладке «Сабкласс» — сменить класс и одеть лучшее (раньше задач и подготовки старта)
+  if (rt.subGo && !isBattle() && await L2V7Modules.subgo.step()) return true;
   if (rt.bagCheck && !isBattle()) {              // «Пересчитать в сумке» (квесты на ресурсы)
     if (!isChar()) { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(4000); return true; }
     setStatus('Квесты на ресурсы: считаю сумку'); await bagCounts(); await setRt({ bagCheck: null });
@@ -3685,6 +3689,9 @@ async function loopSideJobs() {
   farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
   L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
   if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); return true; }
+  if (loopStale()) return true;
+  // 20.43 (John 21.10: саб крафтера): свой крафт материалов — цель Маммона + список из меню (modules/craft.js), вне боя, только у крафтера
+  if (await L2V7Modules.craft?.step?.()) { await sleep(200); return true; }
   if (loopStale()) return true;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
   // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
   if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
@@ -6378,7 +6385,7 @@ L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_PO
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.loot = L2V7Factories.loot({ get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch}, get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.loot = L2V7Factories.loot({ get weaponNow(){return ()=>L2V7Modules.combat?.combatWeapon?.()}, get roleNow(){return ()=>L2V7Modules.subclass?.role?.()}, get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch}, get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LOOT_RE() { return LOOT_RE; }, set LOOT_RE(value) { LOOT_RE = value; },
   get SPECIAL_RE() { return SPECIAL_RE; }, set SPECIAL_RE(value) { SPECIAL_RE = value; },
   get SPOIL_FAIL() { return SPOIL_FAIL; }, set SPOIL_FAIL(value) { SPOIL_FAIL = value; },
@@ -6454,6 +6461,18 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
   get heroNick() { return heroNick; }, get heroLvl() { return heroLvl; }, get mammon() { return L2V7Modules.mammon; }, get canSpoil() { return canSpoil; },
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
+// 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
+L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+  get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
+  get free() { return () => L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
+// 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса у Reorin и лучший комплект из сумки (modules/subgo.js). Свой POST идёт мимо hook.js,
+// поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры
+L2V7Modules.subgo = L2V7Factories.subgo({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
+  get on() { return on; }, get tabOwner() { return tabOwner; }, get isBattle() { return isBattle; }, get sleep() { return sleep; }, get rtCommit() { return rtCommit; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get crafterKit() { return L2V7Modules.crafterkit; },
+  get taskNow() { return () => L2EngineCore.selectedTask(cfg, rt) ?? autonomyMode(); },
+  get classNote() { return ch => { L2V7Modules.story.charNote(ch); L2V7Modules.subclass.charNote(ch); L2V7Modules.buffs?.vipNote?.(ch); L2V7Modules.warlock?.autoEnableClass?.(ch)?.catch?.(() => {}); }; } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
