@@ -2061,7 +2061,8 @@ async function battle() {
         if (P.has) { ctx.pet.alive = true; if (P.key && !ctx.pet.key) ctx.pet.key = P.key; }
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
-      if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000) {
+      // 20.43 (John 21.10 13:05 «голем только на РБ»): у крафтера с набором на фарме слугу в бою не призываем
+      if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000 && !env.crafterKit?.noSummon?.()) {
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && servitorSummonSlot(b));   // 9.2: Feline Queen — бафф, не кот; 20.13 (C4): и не кубик
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10 && affordable(sb, mp, 10))) {   // 20.12: и цена act()
@@ -2087,7 +2088,7 @@ async function battle() {
         const hb = slots.find(b => /^(?:servitor heal|heal servitor)/i.test(env.cleanTitle(b.title)) || (env.ilOf(b)?.target === 'PET' && env.ilOf(b)?.c === 'Лечение'));
         const mpOk = b => !mp || mp.cur >= (env.skillMp(env.cleanTitle(b.title)) || 0) + 10 && affordable(b, mp, 10);   // 20.12: и цена act()
         const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb);
-        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb);
+        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.();
         const useSummon = !!canSummon && (env.cfg.petHealPrefer === 'resummon' || !canHeal);
         const pick = useSummon ? sb : canHeal ? hb : null;
         if (pick) {

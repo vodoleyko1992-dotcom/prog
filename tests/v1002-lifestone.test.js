@@ -79,7 +79,7 @@ assert.match(content, /if \(d\.aug && tabOwner\) try \{ augNote\(d\.aug, path\);
 // ---- equipment: оружие с полезным ЛС бот сам не меняет ----
 const equip = read('modules/equipment.js');
 assert.match(equip, /augHold = !!\(aw && aw\.o && \(aw\.k === 'active' \|\| aw\.k === 'positive'\)/);
-assert.match(equip, /&& better && !augHold\) \{/);
+assert.match(equip, /&& better && !augHold(?: && !env\.gearHold\?\.\(\))?\) \{/);   // 20.43: и набор крафтера
 // ---- проводка ----
 assert.match(read('manifest.json'), /"fa-full.js",\s*"augment.js",/); assert.match(read('popup.html'), /<script src="augment.js"><\/script>/);
 assert.match(read('popup.js'), /function augLine\(rt\)/);

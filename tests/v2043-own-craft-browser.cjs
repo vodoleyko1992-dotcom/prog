@@ -40,6 +40,10 @@ async function until(fn, ms = 10000) { const end = Date.now() + ms; let last; do
     // галка и запас MP — обычные поля настроек
     await p.evaluate(() => { document.getElementById('craftAuto').click(); });
     await until(async () => (await read()).cfg.craftAuto === true);
+    // 20.43 (John 21.10 13:44): набор крафтера — по умолчанию ВКЛ, галка пишет cfg.crafterKit
+    assert.equal(await p.evaluate(() => document.getElementById('crafterKit').checked), true, 'набор крафтера по умолчанию включён');
+    await p.evaluate(() => { document.getElementById('crafterKit').click(); });
+    await until(async () => (await read()).cfg.crafterKit === false);
     // другой герой без книги — в выборе снова заглушка, а не рецепты прошлого героя
     await sw.evaluate(async () => { const s = await chrome.storage.local.get(null), k = s['rt@CraftHero'] ? 'rt@CraftHero' : 'rt'; const r = { ...s[k] }; delete r.craftBook; await chrome.storage.local.set({ [k]: r }); });
     await until(() => p.evaluate(() => document.querySelectorAll('#craftPick option').length === 1 && document.getElementById('craftPick').value === ''));

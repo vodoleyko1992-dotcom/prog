@@ -3393,8 +3393,12 @@ async function loopStartPrep() {
   }
   return false;
 }
-// Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати.
+// Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати; первым — набор крафтера.
 async function loopTownJobs() {
+  if (loopStale()) return true;
+  // 20.43 (John 21.10 13:44 «Весь тур — набор РБ»): набор крафтера — булава+щит+голем на РБ/эпиках, пика без голема на фарме
+  // и в катакомбах (modules/crafterkit.js); вне боя, до задачи и до похода к бафферу
+  if (await L2V7Modules.crafterkit?.step?.()) { await sleep(300); return true; }
   if (loopStale()) return true;
   // v5.5: сторож баффов — в любом режиме вне боя (раньше проверка была только после победы и на карте)
   if (!isBattle() && !fishNow() && !tvtSoon() && !/tvt/i.test(location.pathname) && !(prepHold() && rt.startPrep.phase === 'summon') && Date.now() - (rt.tbWatchT || 0) > 15000) { rt.tbWatchT = Date.now(); setRt({ tbWatchT: rt.tbWatchT });
@@ -4912,7 +4916,8 @@ async function weaponEquipNote(req) {
   }
   if (!id) return;
   const known = L2V7Modules.equipment.weaponItem(id);
-  if (known && (known.k !== 'W' || /удочка|питомца/.test(known.wt || ''))) return;
+  // 20.43 (набор крафтера): щит (в справочнике k 'W', тип «—») — не оружие: раньше записывался надетым оружием, булава уходила «в сумку»
+  if (known && (known.k !== 'W' || /удочка|питомца/.test(known.wt || '') || known.wt === '—')) return;
   const oldT = rt.weaponsT;
   const oldEquipped = (rt.weapons || []).find(w => w.where === 'надето');
   const mark = {char,id,inst:String(req.targetInstanceId || ''),revision:req.expectedRevision,t:Date.now(),status:'pending'};
@@ -4926,7 +4931,7 @@ async function weaponEquipNote(req) {
   const it = await L2V7Modules.equipment.resolveWeaponItem(id);
   if (!current()) return;
   if (!it) { await setRt({weaponMetaPending:{...mark,status:'unknown'},weaponsT:0}); return; }
-  if (it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) { await setRt({weaponMetaPending:null,weaponsT:oldT}); return; }
+  if (it.k !== 'W' || /удочка|питомца/.test(it.wt || '') || it.wt === '—') { await setRt({weaponMetaPending:null,weaponsT:oldT}); return; }
   const W = (rt.weapons || []).map(x=>x.where==='надето'?{...x,where:'сумка'}:{...x});
   const ench = +req.enchant || 0, bonusesKnown = !ench || Number.isFinite(req.enchantPAtkBonus) && Number.isFinite(req.enchantMAtkBonus);
   const w = {id, en:it.n, name:it.n, wt:it.wt || '—', g:it.g || 'NG',
@@ -5645,7 +5650,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
@@ -5826,7 +5831,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get crafterKit(){return L2V7Modules.crafterkit}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -5994,7 +5999,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get toggleState() { return toggleState; }, set toggleState(value) { toggleState = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.equipment = L2V7Factories.equipment({ get actionGeneration(){return ()=>automationGeneration}, get damageSkills() { return damageSkills(); }, get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.equipment = L2V7Factories.equipment({ get gearHold(){return ()=>!!L2V7Modules.crafterkit?.holds?.()}, get actionGeneration(){return ()=>automationGeneration}, get damageSkills() { return damageSkills(); }, get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CLASS_W() { return CLASS_W; }, set CLASS_W(value) { CLASS_W = value; },
   get EQUIP_OK() { return EQUIP_OK; }, set EQUIP_OK(value) { EQUIP_OK = value; },
   get FREE_HIT() { return FREE_HIT; }, set FREE_HIT(value) { FREE_HIT = value; },
@@ -6039,7 +6044,7 @@ L2V7Modules.equipment = L2V7Factories.equipment({ get actionGeneration(){return 
   get slotKind() { return slotKind; }, set slotKind(value) { slotKind = value; }, get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; }, get crafterShop() { return list => L2V7Modules.crafterkit?.shopRows?.(list); },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BSPS_IDS() { return BSPS_IDS; }, set BSPS_IDS(value) { BSPS_IDS = value; },
   get HP_BIG_RE() { return HP_BIG_RE; }, set HP_BIG_RE(value) { HP_BIG_RE = value; },
   get HP_SHOP_RE() { return HP_SHOP_RE; }, set HP_SHOP_RE(value) { HP_SHOP_RE = value; },
@@ -6188,6 +6193,20 @@ L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { 
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
   get free() { return () => L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
+// 20.43 (John 21.10): набор крафтера — оружие/щит/голем по задаче; надевание своим POST, поэтому учёт оружия и слуги — вручную
+function kitPetNote(c) {
+  if (!c || !('activeSummon' in c)) return;
+  const s = c.activeSummon;
+  petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || '', name: s?.nameUk || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
+}
+const kitPetHas = re => { const p = petState(); return !!p?.has && Date.now() - (+p.t || 0) < 10 * 60000 && re.test(String(p.key || '')); };
+L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get cfg() { return cfg; }, get rt() { return rt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
+  get on() { return on; }, get tabOwner() { return tabOwner; }, get role() { return () => L2V7Modules.subclass.role(); }, get mode() { return autonomyMode; }, get lootGoal() { return lootGoal; },
+  get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); },
+  get gearBusy() { return () => !!rt.invScan || !!rt.autoLs?.hold || !!rt.autoLs?.pending || rt.weaponMetaPending?.status === 'pending'; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get itemsDb() { return itemsDb; }, get itemOf() { return itemOf; }, get GRADE_LV() { return GRADE_LV; },
+  get heroLevel() { return heroLevel; }, get equipNote() { return weaponEquipNote; }, get weaponNow() { return () => L2V7Modules.combat?.combatWeapon?.(); },
+  get petNote() { return kitPetNote; }, get petHas() { return kitPetHas; }, get shopRow() { return (...a) => L2V7Modules.mammon?.shopRow?.(...a); } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —

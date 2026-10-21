@@ -468,7 +468,8 @@ async function invScanStep() {
       && (R.inClass(eq) ? atk(R.main) > atk(eq) * 1.05 : atk(R.main) >= atk(eq) * 0.85));
     // выбор в меню: если поле пустое или такого оружия нет — подставляем «в класс» (или надетое, если «в класс» слабее)
     const has = n => n && list.some(w => (w.name || '').toLowerCase().startsWith(String(n).toLowerCase().split(',')[0].trim()));
-    if (env.cfg.weaponClassPick !== false && !manualWeaponChoice()) {
+    // 20.43 (John 21.10 13:44): у крафтера оружие ведёт набор (булава+щит на РБ, пика на фарме) — подбор «в класс» не переписывает выбор
+    if (env.cfg.weaponClassPick !== false && !manualWeaponChoice() && !env.gearHold?.()) {
       const mainPick = (better ? R.main : eq) || R.main || eq;
       const curMain = list.find(w => has(env.cfg.nWeaponMain) && (w.name || '').toLowerCase().startsWith(String(env.cfg.nWeaponMain).toLowerCase().split(',')[0].trim()));
       const offClass = curMain && R.main && !R.inClass(curMain) && !manualWeaponChoice();   // выбор не «в класс» и игрок его не ставил сам
@@ -479,7 +480,7 @@ async function invScanStep() {
     // ЛС остаётся на старом оружии, умение пропадёт. Рекомендация в меню остаётся, надеть может игрок
     const aw = env.rt.weaponAug, augHold = !!(aw && aw.o && (aw.k === 'active' || aw.k === 'positive') && (!eq?.id || !aw.w || +eq.id === +aw.w));
     // 7.1.30 (лог 15:38:22→24): игрок нажал «Стоп», а бот через 2 с всё равно переодел оружие — после остановки не надеваем
-    if (env.on && env.cfg.weaponClassEquip !== false && !manualWeaponChoice() && R.main && R.main.where !== 'надето' && better && !augHold) {
+    if (env.on && env.cfg.weaponClassEquip !== false && !manualWeaponChoice() && R.main && R.main.where !== 'надето' && better && !augHold && !env.gearHold?.()) {
       if (await wearFromBag(R.main, () => active() && env.on && env.cfg.weaponClassEquip !== false && !manualWeaponChoice())) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
     if (!active()) return false;

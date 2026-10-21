@@ -11,7 +11,7 @@ vm.runInNewContext(slice(enchantCore,'function coreFixture(){',"test('выбра
 
 test('охранная строка цикла — один помощник, старого повтора нет',()=>{
  assert.equal((steps.match(/if \(!on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant'\) continue;/g)||[]).length,0);
- assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,28); // 20.43: +5 в loopStartPrep, +1 в сторож (призыв тура РБ), +1 после Маммона перед своим крафтом
+ assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,29); // 20.43: +5 в loopStartPrep, +1 в сторож (призыв тура РБ), +1 после Маммона перед своим крафтом, +1 после набора крафтера
  assert.match(steps,/const loopStale = \(\) => !on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant';/);
  // в шагах нет continue/break — только return true / LOOP_BREAK (иначе шаг не выйдет из круга)
  const bodies=steps.slice(steps.indexOf('async function mainTick()'));

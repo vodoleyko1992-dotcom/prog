@@ -266,6 +266,8 @@ async function nextFight(ctx) {
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.autonomyMode() === 'fish') return env.goFishing();
+  // 20.43 (John 21.10 13:44): крафтеру нужен другой набор (пика ↔ булава+щит+голем) — после победы на карту, набор сменится там
+  if (env.victory() && env.canAct?.() !== false && env.crafterKit?.chainWant?.()) return env.toMap();
   // 19.10, аудит: служебные шаги после победы доступны и при сбое дневного API; новый бой — только после сверки.
   if(env.dailyWorkReady && !await env.dailyWorkReady('mobs')) { if(env.on && env.tabOwner!==false && env.victory() && env.canAct?.()!==false)return env.toMap();return; }
   // 10.0.22 (лог15.10 05:06): Ashen поддерживает штатную цепочку; список — только запасной путь.
