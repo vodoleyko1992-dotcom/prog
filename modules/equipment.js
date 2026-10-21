@@ -278,7 +278,9 @@ function classWeaponTypes() {
 
 function weaponOf(id, extra = {}) {
   const it = weaponItem(+id);
-  if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) return null;
+  // 20.43 (лог 21.10 23:07:57): щит в справочнике — k 'W' с видом «—» (Full Plate Shield 2497); как и в weaponEquipNote, это не оружие:
+  // скан сумки не пишет его в rt.weapons, а weaponRescanWhy не перечитывает инвентарь ради «нового оружия»-щита
+  if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '') || it.wt === '—') return null;
   return { id: +id, en: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: Number.isFinite(it.pa) ? it.pa + (extra.pb || 0) : null, ma: Number.isFinite(it.ma) ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, requiredLevel:it.requiredLevel, weaponMode:it.weaponMode, ...extra };
 }
 

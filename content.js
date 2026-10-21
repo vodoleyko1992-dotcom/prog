@@ -2565,7 +2565,9 @@ cw('Human Knight, Knight, Paladin, Phoenix Knight, Dark Avenger, Hell Knight, El
 cw('Human Fighter, Elven Fighter, Dark Elven Fighter, Dark Fighter', ['меч', 'дубина', 'двуруч. меч', 'древковое']);
 cw('Orc Fighter', ['кастеты', 'двуруч. меч', 'двуруч. дубина']);
 cw('Dwarven Fighter, Scavenger, Bounty Hunter, Fortune Seeker', ['дубина', 'двуруч. дубина', 'древковое']);
-cw('Artisan, Warsmith, Maestro', ['дубина', 'двуруч. дубина']);
+// 20.43 (лог 21.10 22:40:30): у Warsmith есть Polearm Mastery, Whirlwind и Wild Sweep, фарм крафтера — с пикой (John 21.10 12:48);
+// без «древковое» скан писал надетую Оркську алебарду «в класс: нет»
+cw('Artisan, Warsmith, Maestro', ['дубина', 'двуруч. дубина', 'древковое']);
 cw('Mage, Human Mage, Mystic, Human Wizard, Wizard, Sorcerer, Sorceror, Necromancer, Warlock, Cleric, Bishop, Prophet, Elven Mage, Elven Wizard, Spellsinger, Elemental Summoner, Elven Oracle, Elven Elder, Dark Elven Mage, Dark Mage, Dark Wizard, Spellhowler, Phantom Summoner, Shillien Oracle, Shillien Elder, Orc Mage, Orc Shaman, Overlord, Warcryer, Archmage, Soultaker, Arcana Lord, Cardinal, Hierophant, Mystic Muse, Elemental Master, Evas Saint, Eva\'s Saint, Storm Screamer, Spectral Master, Shillien Saint, Dominator, Doomcryer', [MAGE]);
 const heroLevel = () => heroLvl();   // 10.0.10: один источник с запасом (см. heroLvl)
 const iconStem = src => (src || '').split('/').pop().replace(/\.\w+$/, '').replace(/_i\d+$/, '').replace(/[_-]+/g, ' ').trim();
@@ -5175,7 +5177,10 @@ addEventListener('message', e => {
     if(d.be?.schema===1)combatCooldown.observeSync(d.be,cdSpawn());
   }
   if(path==='/game/battle/action'&&d.rid!=null){
-    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error});
+    // 20.43 (лог 21.10 22:07:37): код отказа battle_skill_not_allowed один и для «навык не под это оружие», и для «боя нет»
+    // (error battle_none, reason not_in_battle) — в квитанции и error/reason/текст сервера, combat различает их без тоста страницы
+    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error,
+      error:String(d.res?.error||''),reason:String(d.res?.reason||''),message:String(d.res?.messageRu||d.res?.messageUk||d.res?.message||'').slice(0,200)});
     if(battleReceipts.size>64)battleReceipts.delete(battleReceipts.keys().next().value);
   }
   if(BUSY_PATH.test(path)||path==='/game/battle/sync'||path==='/game/battle')combatSignal.notify();
