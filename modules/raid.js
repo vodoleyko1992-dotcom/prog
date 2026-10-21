@@ -1431,6 +1431,9 @@ async function rbIdleMap(text,active) {
 
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 const RB_MAP_WAITS = [30000, 60000, 120000];      // 20.43 (автономность): ожидание карты после прилёта перед 1-й, 2-й и 3-й перезагрузкой
+// 20.43 (ревью au/breather): метка «карта не подтверждена» (rt.mapBad, ставит отсрочка raidMap/epicMap) — бесплатная проверка карты
+// (content.mapGate) до подготовки, выбора и оплаты перелёта; не загрузилась — передышка тура (вид raidMap), без телепорта
+const rbMapGate = active => !!env.rt.mapBad?.at && typeof env.mapGate === 'function' && env.mapGate('raidMap', 'Тур РБ', active);
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
   if(env.payments?.blocked()){await paymentReconcile();return;}
@@ -1465,6 +1468,9 @@ async function rbHuntStep() {
   if (H.step === 'exit') return rbExitAshen(H,active);
   if (H.step === 'go') {
     const sameJob = () => env.rt.rbHunt?.step === 'go' && env.rt.rbHunt?.id === H.id && env.rt.rbHunt?.t === H.t;
+    if (!active() || !sameJob()) return;
+    // 20.43 (ревью au/breather): после отсрочки «карта не загрузилась» платный перелёт — только когда карта подтверждена бесплатно
+    if (await rbMapGate(active)) return;
     if (!active() || !sameJob()) return;
     let g = env.rt.rbList?.[H.id] || H;
     // 20.41 (лог 20.10 21:09:13–21:09:31): Cloe «осталось 4%» и Bumbalump уже были убиты, а тур узнавал это только после сверки
@@ -1577,10 +1583,14 @@ async function rbHuntStep() {
       if (!env.selfHold) return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
       const held = await env.selfHold('raidMap', `Тур РБ: карта не загрузилась после 3 обновлений (цель ${H.name})`, { noWait: true });
       if (held !== 'defer' || !active() || env.rt.rbHunt?.id !== H.id) return;
-      await env.setRt({ rbSkip: { ...(env.rt.rbSkip || {}), [H.id]: { t: Date.now(), until: Date.now() + 30 * 60000, why: 'карта не загрузилась' } } });
+      // 20.43 (ревью au/breather): и метка «карта не подтверждена» (rt.mapBad) — следующий платный перелёт тура только после бесплатной
+      // проверки карты (content.mapGate); иначе при общем сбое карты тур платил за каждого следующего РБ (до 4 перелётов за ≈15 мин)
+      await env.setRt({ rbSkip: { ...(env.rt.rbSkip || {}), [H.id]: { t: Date.now(), until: Date.now() + 30 * 60000, why: 'карта не загрузилась' } },
+        mapBad: { at: Date.now(), why: `тур РБ, ${H.name}`, loadAt: 0 } });
       if (!active()) return;
-      return huntDone(H.id, `${H.name}: карта не загрузилась после 3 обновлений — откладываю этого РБ на 30 мин, тур идёт дальше`);
+      return huntDone(H.id, `${H.name}: карта не загрузилась после 3 обновлений — откладываю этого РБ на 30 мин; следующий платный перелёт — только после проверки карты`);
     }
+    if (env.rt.mapBad) { await env.setRt({ mapBad: null }); if (!active() || !sameJob()) return; }   // 20.43 (ревью): карта загрузилась — метка снята
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;
     if (!r) {
@@ -1694,6 +1704,9 @@ async function rbHuntStep() {
     return rbIdleMap(`Тур РБ: ${next}`, active);
   }
   const preparing = rbPreparationCandidates()[0];
+  // 20.43 (ревью au/breather): карта не подтверждена после сбоя — ни подготовки (банки, баффы за FA), ни выбора платной цели до бесплатной проверки
+  if (preparing && await rbMapGate(active)) return;
+  if (!active()) return;
   if (preparing) {
     await rbHuntPhase('prepare', `подготовка к живым РБ: банки, баффы, HP/MP и состав`);
     if (!active()) return;
@@ -1777,6 +1790,8 @@ async function rbHuntStep() {
     if (!active()) return;
     return rbIdleMap(`Тур РБ: ${next}`,active);
   }
+  if (await rbMapGate(active)) return;              // 20.43 (ревью au/breather): см. выше — до выбора цели и записи шага «go»
+  if (!active()) return;
   await rbHuntPhase('choose', `выбран ${p.name} (${p.lvl}); проверяю маршрут и цифры игры`);
   if (!active()) return;
   const st = await rbInfo(p.id), real = !!st && st.hp > 0 && (st.matk > 0 || st.patk > 0) && !st.est;

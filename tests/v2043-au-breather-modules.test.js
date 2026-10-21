@@ -97,5 +97,6 @@ test('actions: запрет баффера держит и сторожа баф
 test('epics: карта после 3 обновлений — отсрочка эпика на 30 мин через учёт передышки, пауза только у старого ядра', () => {
   const s = read('modules/epics.js');
   assert.match(s, /const EPIC_MAP_WAITS = \[30000, 60000, 120000\];/);
-  assert.match(s, /const held = await env\.selfHold\('epicMap', `Эпики: карта не загрузилась после 3 обновлений \(цель \$\{e\.nm\}\)`, \{ noWait: true \}\);\s+if \(held !== 'defer' \|\| !active\(\)\) return;\s+return epicGiveUp\(E\.k, 30, 'карта не загрузилась после 3 обновлений'\);/);
+  // 20.43 (ревью au/breather): между учётом и отсрочкой — метка «карта не подтверждена» (rt.mapBad), поведение — v2043-au-breather-review
+  assert.match(s, /const held = await env\.selfHold\('epicMap', `Эпики: карта не загрузилась после 3 обновлений \(цель \$\{e\.nm\}\)`, \{ noWait: true \}\);\s+if \(held !== 'defer' \|\| !active\(\)\) return;[\s\S]{0,400}await env\.setRt\(\{ mapBad: \{ at: Date\.now\(\), why: `эпики, \$\{e\.nm\}`, loadAt: 0 \} \}\);\s+if \(!active\(\)\) return;\s+return epicGiveUp\(E\.k, 30, 'карта не загрузилась после 3 обновлений'\);/);
 });

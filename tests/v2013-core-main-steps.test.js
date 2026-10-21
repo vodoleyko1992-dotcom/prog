@@ -20,8 +20,10 @@ test('охранная строка цикла — один помощник, с
 test('mainTick: шаги в прежнем порядке',()=>{
  const tick=steps.match(/async function mainTick\(\) \{\s*return ([^;]+);/)[1].replace(/\s+/g,' ');
  const order=[...tick.matchAll(/await (\w+)\(\)/g)].map(m=>m[1]);
- // 20.43 (автономность): шаг передышки loopSelfHold — сразу после срочных (сервер, вход, воскрешение, TvT), до задач; прежний порядок цел
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopRaid','loopActivity']);
+ // 20.43 (автономность): шаг передышки loopSelfHold — сразу после срочных (сервер, вход, воскрешение, TvT), до задач; прежний порядок цел.
+ // 20.43 (ревью au/breather): loopSelfHold только завершает истёкшую передышку, а ждёт loopSelfHoldWait — после всех служб, перед туром и
+ // основной работой (Маммон, квесты, дейлики, команды меню и сверка оплаты на передышке идут)
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};

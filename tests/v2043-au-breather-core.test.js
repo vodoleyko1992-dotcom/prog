@@ -47,7 +47,7 @@ test('selectedTask: задача на передышке уступает сле
 function core({ tasks = ['farm', 'fish'], mode = 'farm', rt: rt0 = {}, path: page = '/map.html', battle = false } = {}) {
   const calls = [], recs = [], status = [];
   const c = { L2EngineCore: E, Date, String, Number, Math, Object, Array, JSON, console,
-    rt: { char: 'Hero', manualKickAt: 5, ...rt0 }, cfg: tasks ? { autoTasks: tasks } : {}, on: true, tabOwner: true,
+    rt: { char: 'Hero', manualKickAt: 5, ...rt0 }, cfg: tasks ? { autoTasks: tasks } : {}, on: true, tabOwner: true, LOOP: { holdWaitT: 0 },
     location: { pathname: page, href: '' }, L2V7Modules: { actions: { canAct: () => false } },   // кадр действий сменился вместе с задачей — не помеха
     automationGeneration: 0, leaseEpoch: 'e1', antibotState: () => null,
     setRt: async p => { Object.assign(c.rt, p); return { ok: true }; }, rtCommit: async () => { calls.push('commit'); return true; },
@@ -56,7 +56,7 @@ function core({ tasks = ['farm', 'fish'], mode = 'farm', rt: rt0 = {}, path: pag
     isBattle: () => battle, battle: async () => calls.push('battle'), isFishing: () => false, fishState: () => null, fishFight: async () => calls.push('fishFight') };
   vm.createContext(c);
   vm.runInContext(slice(content, 'const SELF_HOLD_STEPS =', '// ---------- переходы') + '\n' + slice(content, 'async function loopSelfHold() {', '// Режим «Задачи бота»')
-    + ';this.start=selfHoldStart;this.loop=loopSelfHold;this.applies=selfHoldApplies;this.on_=selfHoldOn;this.text=selfHoldText;', c);
+    + ';this.start=selfHoldStart;this.loop=loopSelfHold;this.wait=loopSelfHoldWait;this.main_=selfHoldMain;this.applies=selfHoldApplies;this.on_=selfHoldOn;this.text=selfHoldText;', c);
   return { c, calls, recs, status };
 }
 test('selfHoldStart(mob): передышка 5 мин на текущей задаче фарма, уход на нейтральную страницу после сохранения; stall другой задачи — идёт следующая', async () => {
@@ -110,15 +110,18 @@ test('selfHoldStart: Стоп, новый Старт или другая вкл�
   const t = Date.now(), s = core({ rt: { selfHoldLog: { mob: [t - 3, t - 2, t - 1] } } }); s.c.setRt = async p => { Object.assign(s.c.rt, p); s.c.on = false; return { ok: true }; };
   assert.equal(await s.c.start('mob', 'x'), null); assert.ok(!s.calls.some(x => x[0] === 'halt'));
 });
-test('loopSelfHold: ждёт с пульсом (статус), доводит бой; истекла или новый Старт — одна строка «окончена»/«снята», дальше работа', async () => {
+// 20.43 (ревью au/breather): ждёт теперь loopSelfHoldWait (после служб), а loopSelfHold круг не держит — только завершает истёкшую передышку
+test('loopSelfHoldWait: ждёт с пульсом (статус), доводит бой; loopSelfHold: истекла или новый Старт — одна строка «окончена»/«снята», дальше работа', async () => {
   const t = Date.now(), base = { kind: 'stall', why: 'нет прогресса', at: t - MIN, until: t + 20 * MIN, task: 'tasks', kick: 5 };
-  // передышка, взятая в «tasks» (основных задач нет) — держит ожидание целиком
+  // передышка, взятая в «tasks» (основных задач нет) — держит основную работу; сам шаг loopSelfHold круг не держит
   let f = core({ tasks: [], rt: { selfHold: { ...base } } });
-  assert.equal(await f.c.loop(), true); assert.match(f.status.at(-1), /^Передышка до \d\d:\d\d: нет прогресса/); assert.equal(f.recs.length, 0);
+  assert.equal(await f.c.loop(), undefined, 'службы ниже идут'); assert.equal(f.recs.length, 0);
+  assert.equal(await f.c.wait(), true); assert.match(f.status.at(-1), /^Передышка до \d\d:\d\d: нет прогресса/); assert.equal(f.recs.length, 0);
+  assert.ok(Date.now() - f.c.LOOP.holdWaitT < 1000, 'круг дошёл до ожидания — сторож вкладки это видит');
   f = core({ tasks: null, mode: 'farm', rt: { selfHold: { ...base, task: null, mode: 'farm' } }, battle: true });
-  assert.equal(await f.c.loop(), true); assert.deepEqual(f.calls, ['battle'], 'начатый бой доводится');
+  assert.equal(await f.c.wait(), true); assert.deepEqual(f.calls, ['battle'], 'начатый бой доводится');
   f = core({ tasks: null, mode: 'raid', rt: { selfHold: { ...base, task: null, mode: 'farm' } } });
-  assert.equal(await f.c.loop(), undefined, 'другая работа (режим сменился) — передышка её не держит');
+  assert.equal(await f.c.wait(), undefined, 'другая работа (режим сменился) — передышка её не держит'); assert.equal(f.c.main_(), false);
   f = core({ rt: { selfHold: { ...base, until: t - 1 } } });
   assert.equal(await f.c.loop(), undefined); assert.equal(f.c.rt.selfHold, null); assert.match(f.recs[0][2], /^окончена: нет прогресса — продолжаю сам/);
   f = core({ rt: { selfHold: { ...base }, manualKickAt: 6 } });
@@ -132,8 +135,10 @@ test('ручной Стоп во время передышки — ничего 
 
 test('исходник: главный цикл, сторож вкладки, следующий бой и ожидание задач знают о передышке', () => {
   assert.match(content, /await loopUrgent\(\) \|\| await loopSelfHold\(\)\s+\|\| await loopTaskList\(\)/);
+  // 20.43 (ревью au/breather): ожидание — после служб, перед туром и основной работой; сторож молчит, только пока круг дошёл до ожидания
+  assert.match(content, /await loopSideJobs\(\) \|\| await loopSelfHoldWait\(\) \|\| await loopRaid\(\) \|\| await loopActivity\(\);/);
   const wd = slice(content, 'async function loopWatchdog() {', 'async function loopUrgent() {');
-  assert.match(wd, /if \(rt\.selfHold && selfHoldApplies\(\)\) \{ progressMonitor\.tick\('', false\); return; \}/);
+  assert.match(wd, /if \(selfHoldMain\(\) && Date\.now\(\) - \(LOOP\.holdWaitT \|\| 0\) < 15000\) \{ progressMonitor\.tick\('', false\); return; \}/);
   assert.match(wd, /if \(history\.length >= 3\) \{\s+await setRt\(\{ stallRecoveries: \[\] \}\);[\s\S]{0,120}selfHoldStart\('stall', `Автономный режим не продвигается после 3 восстановлений за 30 мин[^`]*`, \{ hard: true, page: '\/map\.html' \}\);\s+return r === 'stop' \? LOOP_BREAK : true;/);
   assert.doesNotMatch(wd, /halt\('Автономный режим не продвигается/);
   assert.match(content, /async function nextFight\(\.\.\.args\) \{[^\n]*if \(rt\.selfHold && selfHoldApplies\(\)\) return toMap\(\);/);
