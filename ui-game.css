@@ -212,6 +212,13 @@ label{column-gap:5px}
 .task-board{margin:0 0 11px;padding:10px 12px;border:1px solid #766044;border-radius:9px;background:#2b2118}
 .task-board-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
 .task-board-head strong{font-size:14px;color:#f4d39a}
+/* 21.10: «Свернуть» прячет простые плитки задач, вместо них — одна строка-перечень (нажатие разворачивает) */
+.task-board-btns{display:flex;gap:5px;flex:0 0 auto}
+.task-board-btns button[hidden]{display:none}
+.task-board.folded .task-row.plain{display:none}
+.task-folded{display:none;grid-column:1/-1;min-height:24px;padding:4px 8px;border:1px dashed #5f4e38;border-radius:7px;background:none;box-shadow:none;font-size:11.5px;line-height:1.4;color:#bca685;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.task-board.folded .task-folded{display:block}
+.task-folded:hover{background:#211a13;color:#f3ddba}
 .task-board-note{font-size:11.5px;line-height:1.45;color:#c6b69d;margin:5px 0 9px}
 #taskBoardRows{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:7px}
 .task-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:4px 7px;min-width:0;padding:8px;border:1px solid #5f4e38;border-radius:7px;background:#211a13}
@@ -259,12 +266,13 @@ header>.row{margin-top:0;gap:6px}
 #modeToggle .mode-toggle-edit{flex:0 0 auto;font-size:11px;font-weight:700;color:#f3d294;border:1px solid #84663d;border-radius:5px;padding:1px 7px}
 /* что делает бот: состояние, действие, подсказка и счётчики сессии — один блок (раньше «панель активности» дублировала #status) */
 .activity-panel{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;margin-top:6px;padding:5px 9px;border:1px solid #66533c;border-left:3px solid #72966f;
- border-radius:7px;background:#211b13;color:#f3e5ce;overflow-wrap:anywhere;max-height:76px;overflow-y:auto}
-.activity-head{display:flex;align-items:baseline;gap:8px;flex:1 1 100%;min-width:0}
-.activity-state{flex:0 0 auto;font-size:11px;font-weight:750;color:#baddaf;white-space:nowrap}
-#activityText{flex:1;min-width:0;font-size:12.5px;line-height:1.35;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ border-radius:7px;background:#211b13;color:#f3e5ce;overflow-wrap:anywhere;max-height:118px;overflow-y:auto}
+.activity-head{display:flex;align-items:flex-start;gap:8px;flex:1 1 100%;min-width:0}
+.activity-state{flex:0 0 auto;font-size:11px;line-height:1.55;font-weight:750;color:#baddaf;white-space:nowrap}
+/* 21.10 (игрок: «сделай это окно чуть больше»): статус и подсказка переносятся до 2 строк вместо обрезки «…» в одну */
+#activityText{flex:1;min-width:0;font-size:12.5px;line-height:1.35;font-weight:650;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2}
 #activityDetails{flex:0 0 auto;min-height:22px;padding:1px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
-#activityHint{flex:1 1 180px;min-width:0;font-size:11.5px;line-height:1.35;color:#c9b69a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#activityHint{flex:1 1 180px;min-width:0;font-size:11.5px;line-height:1.35;color:#c9b69a;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2}
 #activityHint:empty{display:none}
 /* 18.10: быстрый запуск на первом экране — одно нажатие выбирает основное дело и запускает бота (игрок: «непонятно, как запускать») */
 .quick-start{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));align-items:center;gap:4px;flex:1 1 100%;min-width:0}
@@ -355,5 +363,5 @@ input:not([type=checkbox]),select{min-height:30px;padding:4px 8px}
  .champ-row>label:last-child{flex-basis:100%}
 }
 /* короткое окно: несколько постоянных предупреждений — раздел остаётся доступным общей прокруткой */
-@media(max-height:620px){.activity-panel{max-height:62px}.activity-panel:has(.payment-pending:not([hidden])){max-height:none}}
+@media(max-height:620px){.activity-panel{max-height:92px}.activity-panel:has(.payment-pending:not([hidden])){max-height:none}}
 @media(max-height:740px){.workarea{overflow-y:auto;overflow-x:hidden}section.act{flex:1 0 170px;min-height:170px}}
