@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.43",
-  "description": "L2wap Bot 20.43 — автономность, быстрые улучшения, свой крафт и смена саба",
+  "version": "20.44",
+  "description": "L2wap Bot 20.44 — набор крафтера по задаче и разбор логов 21.10",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.43"
+  "version_name": "20.44"
 }
