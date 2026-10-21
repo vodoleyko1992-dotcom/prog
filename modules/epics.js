@@ -484,12 +484,23 @@ function epicLair(k, now = Date.now()) {
 }
 // он на этой карте — бесплатно (метка эпика)
 const epicHereNow = k => env.isMap() && epicPins().some(x => x.k === k);
+// 20.43 (автономность, доводка 21.10): перелёт по локациям (rt.zoneGo) запрещён после циклов (actions: rt.actionBan, 2 ч; кнопки меню —
+// urgent/manual/cmd — не запрещаются, у маршрута эпика их нет). since — запрет действовал уже тогда: созданный позже маршрут диспетчер
+// снимает до запуска (actions.banDrop), телепорта не было
+const zoneGoBan = (since, now = Date.now()) => { const b = env.rt.actionBan?.zoneGo; return b && +b.until > now && (since == null || +b.t <= since) ? b : null; };
+// выбор «он на этой карте» ещё верен: после смерти герой в городе («Вернуться в город» → статуя), дорога снова логово или страница
+const epicHereRoute = E => E?.route === 'here' && !E.deaths;
+const lairBanWhy = (z, zb) => `перелёт в логово ${z} запрещён до ${when(+zb.until)} (${String(zb.why || 'цикл маршрута').slice(0, 80)}) — жду конца запрета, без резерва и без платной страницы`;
 // как туда попасть (без сети, для выбора цели): 'here' | 'zone' | 'page' | '' (+ why)
 function epicRoute(k, now = Date.now()) {
   if (epicHereNow(k)) return { via: 'here' };
   const d = (env.rt.epicDb || {})[k] || {};
   if (d.verdict?.v !== 'ok') return { via: '', why: d.verdict ? `${VLBL[d.verdict.v] || d.verdict.v}: ${d.verdict.why}` : '❔ нет оценки' };
-  const lz = epicLair(k, now); if (lz.ok) return { via: 'zone', zone: lz.zone, price: lz.price };
+  const lz = epicLair(k, now);
+  // 20.43 (автономность, доводка 21.10, ревью fx/raid): дорога — логово, а перелёты запрещены (rt.actionBan.zoneGo) — эпика не выбираем до
+  // конца запрета. Раньше выбор шёл дальше: подготовка покупала набор за FA или «Повний баф» за 15 Coin of Luck, и только шаг go видел
+  // запрет и откладывал заход до 2 ч — баффы истекали без боя. Платной страницей вместо логова тоже не идём (правило R3)
+  if (lz.ok) { const zb = zoneGoBan(null, now); return zb ? { via: '', ban: zb, why: lairBanWhy(lz.zone, zb) } : { via: 'zone', zone: lz.zone, price: lz.price }; }
   const q = epicTpBudgetQuote(epicPrice(k, null, now, 6 * H), k, { now });
   if (q.ok) return { via: 'page', q };
   return { via: '', why: `платно нельзя: ${q.why}${lz.why ? ' (логово: ' + lz.why + ')' : ''}` };
@@ -528,18 +539,56 @@ function epicWhyNone() {
 const EPIC_MAP_WAITS = [30000, 60000, 120000];   // 20.43 (автономность): ожидание карты после прилёта перед 1-й, 2-й и 3-й перезагрузкой
 // 20.43 (ревью au/breather): метка «карта не подтверждена» (rt.mapBad) — бесплатная проверка карты (content.mapGate) до подготовки и дороги;
 // не загрузилась — передышка режима эпиков (вид epicMap), без логова и телепорта
-const epicMapGate = active => !!env.rt.mapBad?.at && typeof env.mapGate === 'function' && env.mapGate('epicMap', 'Эпики', active);
-async function epicGiveUp(k, min, why) {
+// 20.43 (автономность, доводка 21.10): перед этим — отложенный из-за незагрузившейся карты эпик снова на этой карте (epicMapSwitch)
+const epicMapGate = async (active, E) => {
+  if (E && await epicMapSwitch(E, active)) return true;
+  return !!env.rt.mapBad?.at && typeof env.mapGate === 'function' && env.mapGate('epicMap', 'Эпики', active);
+};
+// 20.43 (автономность, доводка 21.10): отсрочка «карта не загрузилась» — про сломанную карту, а не про эпика. Перелёт уже оплачен (Coin of
+// Luck со страницы или адена за логово) и мог состояться: карта снова показывает его метку здесь — отсрочку снимаем, а промах логова,
+// записанный только из-за карты, откатываем (epicDb.mapFail хранит прежние lairMiss/lairBadT); бой — без телепорта (дорога «он на этой
+// карте»). Раньше эпик ждал 30 мин или до следующего появления (второй платный заход в это появление запрещён), а режим платил за следующего
+const EPIC_MAP_WHY = 'карта не загрузилась после 3 обновлений';
+const epicMapFailMark = E => { const d = (env.rt.epicDb || {})[E.k] || {}; return { mapFail: { t: Date.now(), via: E.via || '', lairMiss: +d.lairMiss || 0, lairBadT: +d.lairBadT || 0 } }; };
+async function epicMapRelease() {
+  if (!env.isMap()) return [];
+  const now = Date.now(), db = env.rt.epicDb || {}, pins = epicPins();
+  if (!pins.length) return [];
+  const here = new Set(pins.map(x => x.k));
+  // 20.43 (доводка 21.10, ревью fx/raid): откат промаха логова — при любой следующей встрече на карте, а не только пока жива 30-минутная
+  // отсрочка (её могла целиком съесть передышка epicMap, и пауза логова 6 ч оставалась). Отсрочку снимаем только свою, «карта не загрузилась»
+  const marked = epicWant().filter(k => here.has(k) && db[k]?.mapFail);
+  const ks = marked.filter(k => db[k].skipT > now && String(db[k].why || '').includes(EPIC_MAP_WHY));
+  const back = marked.filter(k => !ks.includes(k) && db[k].mapFail.via === 'zone');
+  for (const k of marked) {
+    const mf = db[k].mapFail;
+    await epicDbSet(k, { ...(ks.includes(k) ? { skipT: 0, why: '' } : {}), mapFail: null, ...(mf.via === 'zone' ? { lairMiss: +mf.lairMiss || 0, lairBadT: +mf.lairBadT || 0 } : {}) });
+  }
+  if (back.length) env.rec('B', 'эпики', `${back.map(k => epicOf(k)?.nm || k).join(', ')}: карта работает и показывает его здесь — промах логова из-за сбоя карты откатываю`);
+  if (ks.length) env.rec('B', 'эпики', `${ks.map(k => epicOf(k)?.nm || k).join(', ')}: карта снова загружается и показывает его здесь — отсрочку «карта не загрузилась» снимаю, бой без телепорта`);
+  return ks;
+}
+// Подготовка/дорога к другому эпику: отложенный из-за карты эпик нашёлся здесь — сначала он (бесплатно). Начатый заход (смерти, отходы,
+// «только бесплатно или логово») не бросаем: его ограничения живут в rt.epic; снятый отложенный эпик подождёт своей очереди
+async function epicMapSwitch(E, active) {
+  const ks = await epicMapRelease();
+  if (!ks.length || !active() || ks.includes(E.k) || E.deaths || E.retreats || E.noPay || E.lairOnly || E.tries) return false;
+  const k = ks[0], nm = epicOf(k)?.nm || k;
+  env.rec('B', 'эпики', `${nm} здесь, на этой карте — сначала он, без телепорта${E.k ? `; ${epicOf(E.k)?.nm || E.k} — после` : ''}`);
+  await env.setRt({ epic: { step: 'pick', k, t: Date.now(), last: `${nm}: снова на карте после сбоя карты` }, rbCur: null, rbWant: null, target: null });
+  return true;
+}
+async function epicGiveUp(k, min, why, extra = null) {
   const e = epicOf(k);
-  await epicDbSet(k, { skipT: Date.now() + min * 60000, why });
+  await epicDbSet(k, { skipT: Date.now() + min * 60000, why, ...(extra || {}) });
   env.rec('B', 'эпики', `${e?.nm || k}: ${why} — откладываю на ${min >= 60 ? Math.round(min / 6) / 10 + ' ч' : min + ' мин'}, дальше следующий`);
   await env.setRt({ epic: { step: 'pick', t: Date.now(), last: `${e?.nm || k}: ${why}` }, rbCur: null, rbWant: null, target: null });
 }
 // до следующего появления: жив (мы погибли / не долетели) — следующее не раньше чем через респаун; мёртв — до начала окна
-async function epicGiveUpNext(k, why) {
+async function epicGiveUpNext(k, why, extra = null) {
   const d = (env.rt.epicDb || {})[k] || {}, now = Date.now();
   const until = d.alive === false ? (d.until?.lo || 0) : now + (d.respH || 12) * H;
-  return epicGiveUp(k, Math.max(15, Math.ceil((until - now) / MIN)), why + ' — жду следующего появления');
+  return epicGiveUp(k, Math.max(15, Math.ceil((until - now) / MIN)), why + ' — жду следующего появления', extra);
 }
 
 // 8.0.3 (P0-8): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах того же лимита Coin of Luck.
@@ -572,9 +621,14 @@ function epicBuffWhy(now = Date.now(), noBudget = false) {
   const v = epicVerdict(k, now); if (v.v !== 'ok') return `эпик ${VLBL[v.v] || v.v}`;
   const d1h = (env.rt.deaths1h || []).filter(t => now - t < H).length; if (d1h >= 2) return `${d1h} смерти за последний час`;
   if (!E.route) return 'дорога к эпику ещё не выбрана';
+  // 20.43 (автономность, доводка 21.10, ревью fx/raid): дорога — логово, а перелёты по локациям запрещены (rt.actionBan.zoneGo) — шаг go
+  // отложит заход до конца запрета (до 2 ч), набор за FA / 15 Coin of Luck истёк бы без боя. «Он на этой карте» (выбор 'here') — бесплатно,
+  // запрет не мешает: баффер — страница, герой с места не уходит (после смерти — уже в городе)
+  const lzOk = epicLair(k, now).ok, zb = lzOk && !epicHereRoute(E) && !epicHereNow(k) ? zoneGoBan(null, now) : null;
+  if (zb) return `перелёт в логово запрещён до ${when(+zb.until)} — заход отложится до конца запрета`;
   // 20.12 (ревизия 17.10): после смерти/отхода (noPay) или «только логово» платный телепорт запрещён — без бесплатной дороги
   // (он на этой карте или логово за адену) шаг go сразу отменит заход, и набор за FA пропал бы зря
-  if ((E.noPay || E.lairOnly) && !epicHereNow(k) && !epicLair(k, now).ok) return 'после смерти/отхода — только бесплатно или через логово, а дороги нет';
+  if ((E.noPay || E.lairOnly) && !epicHereNow(k) && !lzOk) return 'после смерти/отхода — только бесплатно или через логово, а дороги нет';
   return '';
 }
 function epicBuffCol() { return epicOn() ? !epicBuffWhy() : null; }
@@ -620,12 +674,20 @@ function epicTpReqFor(d, path, id) {
   return true;
 }
 // не долетели / на месте его нет. Страницей второй раз не идём (CoL); логово — только подтверждённое
-async function epicArriveFail(E, e, why) {
+// 20.43 (автономность, доводка 21.10): opt.map — карта не загрузилась (прилёт не подтверждён): метка mapFail, чтобы отсрочку и промах логова
+// откатить, если карта снова покажет его здесь (epicMapRelease)
+// 20.43 (автономность, доводка 21.10, ревью fx/raid): сбой карты — не довод, что логово неверное. Неподтверждённое логово (из таблицы EPICS)
+// раньше сразу получало паузу 6 ч (lairBadT), а откат (epicMapRelease) жил только 30 мин отсрочки — их съедала передышка epicMap, если и
+// бесплатная проверка карты падала. Дальше эпик, не видный с этой точки, шёл страницей за Coin of Luck вместо логова за адену. Теперь
+// по сбою карты — только счёт промахов; пауза логова — со второго промаха подряд и у неподтверждённого. Прочие промахи — прежнее правило;
+// opt.mapOk (карта загрузилась, а его в логове нет) — настоящий промах логова: прежняя метка mapFail снимается, чтобы откат не стёр его
+async function epicArriveFail(E, e, why, opt = {}) {
   const d = (env.rt.epicDb || {})[E.k] || {}, now = Date.now();
+  const mark = opt.map ? epicMapFailMark(E) : opt.mapOk && E.via === 'zone' && d.mapFail ? { mapFail: null } : null;
   if (E.via === 'zone') {
-    const miss = (d.lairMiss || 0) + 1;
-    await epicDbSet(E.k, { lairMiss: miss, ...(!d.lairOkT || miss >= 2 ? { lairBadT: now } : {}) });
-    return epicGiveUp(E.k, 30, `логово: ${why}`);
+    const miss = (d.lairMiss || 0) + 1, bad = opt.map ? miss >= 2 : !d.lairOkT || miss >= 2;
+    await epicDbSet(E.k, { lairMiss: miss, ...(bad ? { lairBadT: now } : {}) });
+    return epicGiveUp(E.k, 30, `логово: ${why}`, mark);
   }
   if (E.via === 'page') {
     if (d.lairOkT && epicLair(E.k, now).ok) {
@@ -633,9 +695,9 @@ async function epicArriveFail(E, e, why) {
       await epicSet({ step: 'go', noPay: true, mapChecked: true, lairOnly: true, at: now });
       return;
     }
-    return epicGiveUpNext(E.k, `после платного телепорта ${why}`);
+    return epicGiveUpNext(E.k, `после платного телепорта ${why}`, mark);
   }
-  return epicGiveUp(E.k, 15, `${why} (убит другими или ушёл)`);
+  return epicGiveUp(E.k, 15, `${why} (убит другими или ушёл)`, mark);
 }
 
 async function epicStep() {
@@ -731,6 +793,11 @@ async function epicStep() {
     if (!active()) return;
     if (need || now - vAllT > MIN) { vAllT = now; await epicVerdictAll(); }   // 8 вердиктов — не чаще раза в минуту (шаг выбора идёт каждый круг)
     if (!active()) return;
+    // 20.43 (автономность, доводка 21.10): отложенный из-за незагрузившейся карты эпик снова на этой карте — отсрочку снимаем и берём его
+    // первым (дорога «он на этой карте», бесплатно), а не платим за следующего
+    const back = await epicMapRelease();
+    if (!active()) return;
+    if (back.length && E.k !== back[0]) { await epicSet({ step: 'pick', k: back[0] }); return; }
     const p = epicPick();
     if (!p) {
       if (!env.isMap() && !env.cfg.fishMode) { location.href = '/map.html'; await env.sleep(3000); return; }   // с рыбалкой — не на карту (было: карта ↔ рыбалка по кругу)
@@ -758,8 +825,12 @@ async function epicStep() {
   // ---- подготовка: банки → бафф → хил (полные HP/MP) ----
   if (E.step === 'prep') {
     // 20.43 (ревью au/breather): карта не подтверждена после сбоя — ни подготовки (банки, платный бафф), ни дороги до бесплатной проверки
-    if (await epicMapGate(active)) return;
+    if (await epicMapGate(active, E)) return;      // 20.43 (доводка 21.10): и отложенный из-за карты эпик, снова видный здесь, — первым
     if (!active()) return;
+    // 20.43 (автономность, доводка 21.10, ревью fx/raid): дорога — логово, а перелёты запрещены (запрет появился уже после выбора) — не
+    // готовимся (банки, набор за FA, «Повний баф» за Coin of Luck): сразу откладываем до конца запрета; проверка в шаге go — страховка
+    { const lz = !epicHereRoute(E) && !epicHereNow(E.k) ? epicLair(E.k) : null, zb = lz?.ok ? zoneGoBan() : null;
+      if (zb) return epicGiveUp(E.k, Math.max(1, Math.ceil((+zb.until - Date.now()) / MIN)), lairBanWhy(lz.zone, zb)); }
     if (await env.rbShopFirst(e.nm)) return;
     if (!active()) return;
     // 8.0.3 (ревью): платный набор разрешён только по свежему (≤3 мин) ответу сервера «жив» — спросим заранее (GET, бесплатно)
@@ -786,7 +857,7 @@ async function epicStep() {
   }
   // ---- дорога: (1) он на этой карте → (2) логово за адену → (3) «Телепорт» за Coin of Luck через epicPayGate ----
   if (E.step === 'go') {
-    if (await epicMapGate(active)) return;           // 20.43 (ревью au/breather): платная дорога — только после подтверждённой карты
+    if (await epicMapGate(active, E)) return;        // 20.43 (ревью au/breather): платная дорога — только после подтверждённой карты
     if (!active()) return;
     if (env.isMap()) {
       const here = await env.waitX(() => epicPins().find(x => x.k === E.k), 3000, 300);
@@ -805,11 +876,17 @@ async function epicStep() {
     if (!active()) return;
     if (v.v !== 'ok') return epicGiveUp(E.k, 30, `в дорогу не иду — ${VLBL[v.v] || v.v}: ${v.why}`);
     const lz = epicLair(E.k);
+    // 20.43 (автономность, доводка 21.10): перелёт по локациям запрещён после циклов (rt.actionBan.zoneGo, 2 ч) — диспетчер снял бы маршрут в
+    // логово сразу после резерва адены, до телепорта, а прилёт через 25–90 с счёл бы это промахом логова (lairMiss, lairBadT на 6 ч) и дальше
+    // выбрал бы платный «Телепорт» со страницы за Coin of Luck. Теперь эпик ждёт конца запрета: без резерва, без промаха логова и без страницы
+    const zb = lz.ok && zoneGoBan();
+    if (zb) return epicGiveUp(E.k, Math.max(1, Math.ceil((+zb.until - Date.now()) / MIN)), lairBanWhy(lz.zone, zb));
     if (lz.ok) {
       const res = await epicTpBudgetReserve(E.k, { known: true, col: 0, adena: lz.price }, { kind: 'lair' });
       if (!active()) { await cancelUnsent(res); return; }
       if (!res.ok) return epicGiveUp(E.k, 60, `логово: ${res.why}`);
-      await epicSet({ step: 'arrive', at: Date.now(), via: 'zone', lair: lz.zone, seenSaved: false });   // lair — куда летим (rt.zone обновится только на карте)
+      // 20.43 (доводка 21.10): lairT — когда создан маршрут, tpRes — время резерва адены: маршрут снят запретом до телепорта — резерв снимается на прилёте
+      { const at = Date.now(); await epicSet({ step: 'arrive', at, via: 'zone', lair: lz.zone, lairT: at, tpRes: res.reservationAt || 0, seenSaved: false }); }   // lair — куда летим (rt.zone обновится только на карте)
       if (!active()) { await cancelUnsent(res); return; }
       await env.setRt({ zoneGo: { id: lz.zone, t: Date.now(), why: `эпик ${e.nm}` }, zoneGoT: 0 });
       if (!active()) { await cancelUnsent(res); return; }
@@ -864,6 +941,14 @@ async function epicStep() {
   }
   // ---- прилёт: ищем метку эпика, в бой ----
   if (E.step === 'arrive') {
+    // 20.43 (автономность, доводка 21.10): маршрут в логово снял запрет перелётов, действовавший ещё до него (actions.banDrop снимает такой
+    // zoneGo до запуска — телепорта и траты не было): не промах логова — резерв адены снимаем, эпика откладываем до конца запрета
+    const zb = E.via === 'zone' && !E.seenSaved && +E.lairT > 0 && !env.rt.zoneGo && zoneGoBan(+E.lairT);
+    if (zb) {
+      await epicTpBudgetRelease(E.k, E.tpRes, 'маршрут в логово снят запретом перелётов до телепорта');
+      if (!active()) return;
+      return epicGiveUp(E.k, Math.max(1, Math.ceil((+zb.until - Date.now()) / MIN)), `маршрут в логово снят запретом перелётов до ${when(+zb.until)} — телепорта не было, это не промах логова; жду конца запрета`);
+    }
     if (E.via === 'page') {
       const ack = epicTpAck(E);
       if (ack && ack.ok === false) {
@@ -903,7 +988,12 @@ async function epicStep() {
       // бесплатной проверки карты (content.mapGate), иначе при общем сбое карты режим платил бы за каждого следующего эпика
       await env.setRt({ mapBad: { at: Date.now(), why: `эпики, ${e.nm}`, loadAt: 0 } });
       if (!active()) return;
-      return epicGiveUp(E.k, 30, 'карта не загрузилась после 3 обновлений');
+      // 20.43 (автономность, доводка 21.10): прилёт не подтверждён — общее правило epicArriveFail, а не отсрочка на 30 мин: после платного
+      // телепорта со страницы второй раз страницей не идём (только подтверждённое логово или следующее появление), логово — учёт промаха
+      // (lairMiss/lairBadT). Раньше через 30 мин эпик снова выбирался: при epicCoinPerBoss ≥ 2 — второй Coin of Luck на то же появление, а
+      // логово за адену повторялось каждые 30 мин. Карта снова покажет его здесь — отсрочка и промах откатываются (epicMapRelease)
+      if (E.via === 'page' || E.via === 'zone') return epicArriveFail(E, e, EPIC_MAP_WHY, { map: true });
+      return epicGiveUp(E.k, 30, EPIC_MAP_WHY, epicMapFailMark(E));
     }
     if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
     if (env.rt.mapBad) { await env.setRt({ mapBad: null }); if (!active()) return; }   // 20.43 (ревью): карта загрузилась — метка снята
@@ -911,7 +1001,7 @@ async function epicStep() {
     if (!active()) return;
     if (!r) {
       if (now - (E.at || 0) < 25000) { await env.sleep(1500); return; }
-      return epicArriveFail(E, e, 'на карте его нет');
+      return epicArriveFail(E, e, 'на карте его нет', { mapOk: true });
     }
     if (!E.seenSaved) {                             // на месте: запомнить локацию (бесплатный путь в следующий раз), логово подтверждено
       // 8.0.3 (ревью, probe1): rt.zone меняется только в zoneHere (фарм на карте) — сразу после телепорта там старая зона фарма, и
@@ -919,7 +1009,10 @@ async function epicStep() {
       // «он здесь» — rt.zone, только если перелёт не в пути (zonePend) и это настоящая точка телепорта
       const zp = env.rt.zonePend && now - (env.rt.zonePend.t || 0) < 120000, zh = E.via === 'here' && !zp ? env.rt.zone : '';
       const sz = E.via === 'zone' ? E.lair || '' : zh && env.rt.zoneCat?.[zh]?.city ? zh : '';
-      await epicDbSet(E.k, { id: r.id, ...(r.lvl ? { lvl: r.lvl } : {}), ...(sz ? { seenZone: sz } : {}), ...(E.via === 'zone' ? { lairOkT: now, lairMiss: 0, lairBadT: 0 } : {}) });
+      // 20.43 (доводка 21.10, ревью fx/raid): он здесь и карта работает — метка «карта не загрузилась» больше не нужна; промах логова,
+      // записанный только из-за карты, откатываем (логово подтверждено — счёт и так обнуляется)
+      const mf = (env.rt.epicDb || {})[E.k]?.mapFail, mfBack = mf ? { mapFail: null, ...(mf.via === 'zone' && E.via !== 'zone' ? { lairMiss: +mf.lairMiss || 0, lairBadT: +mf.lairBadT || 0 } : {}) } : {};
+      await epicDbSet(E.k, { id: r.id, ...(r.lvl ? { lvl: r.lvl } : {}), ...(sz ? { seenZone: sz } : {}), ...mfBack, ...(E.via === 'zone' ? { lairOkT: now, lairMiss: 0, lairBadT: 0 } : {}) });
       if (!active()) return;
       await epicSet({ seenSaved: true });
       if (!active()) return;
