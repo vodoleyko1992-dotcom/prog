@@ -1404,7 +1404,10 @@ function modErr(tag, e, codeOnly = false) { const code = codeErr(e); if (code ||
 // 20.13 (ревизия 17.10, шаг 7, аудит «Код»): пустые catch вокруг записи памяти (setRt/rtWriter) и замка вкладки глушили
 // потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
-let rtBigWarnT = 0, rtSizeT = 0, rtRetryT = null;
+// 20.43 (логи 21.10 13:21/13:30: 156 строк «состояние размер … — сброшены только временные кэши: нет» за 2 ч, почти на каждой загрузке):
+// метка «раз в 30 мин» жила в памяти страницы и обнулялась каждым переходом (карта ↔ бой). Теперь — в sessionStorage вкладки
+const RT_BIG_SS = 'l2bot-rtBigWarnT';
+let rtBigWarnT = (() => { try { return +sessionStorage.getItem(RT_BIG_SS) || 0; } catch (e) { return 0; } })(), rtSizeT = 0, rtRetryT = null;
 // 20.41 (лог 20.10 21:09: «размер 1328 КБ», каждая запись ≈0,5 с): в строку о размере — самые крупные части памяти, чтобы по журналу
 // было видно, что разрослось (замеры других классов classStash — по классам)
 function rtSizeTop() {
@@ -1473,7 +1476,7 @@ function setRt(p) {
       // 20.14 (лог 17.10–18.10: 550 одинаковых строк «размер 1149 КБ — сброшены: нет» из 11 002 событий, раз в минуту): нечего
       // сбросить — строка раз в 30 мин, иначе она вытесняет из журнала (лимит 20 000 событий) полезные события
       if (Date.now() - rtBigWarnT > (cleared.length ? 60000 : 30 * 60000)) {
-        rtBigWarnT = Date.now();
+        rtBigWarnT = Date.now(); try { sessionStorage.setItem(RT_BIG_SS, String(rtBigWarnT)); } catch (e) {}
         try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена${rtSizeTop()}`); } catch (e) {}
       }
     }
@@ -2155,7 +2158,18 @@ function farmPick(goal) {
 }
 // 7.2: персонаж умеет спойлить — спойл в роли «Спойл» или профессия гнома-спойлера
 // 20.43 (John 21.10 12:48): крафтер без дубины не спойлит — и точку фарма по спойлу не выбираем
-const canSpoil = () => !L2V7Modules.loot?.crafterPike?.() && (!!names(cfg.nSpoil || '').length || /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i.test(String(rt.prof || '')));
+// 20.43 (разбор логов 21.10 13:21/13:30): роли n* — одни на ник, не на класс: «Spoil» от Bounty Hunter/Fortune Seeker осталась и у
+// Arcana Lord — маг считался спойлером, и план фарма материалов Маммона брал источники спойла по чужому шансу. Класс известен —
+// роль «Спойл» в счёт, только если это крафтер (с дубиной) или Spoil есть в памяти умений этого класса (skillDb/skills — story.CLASS_KEYS)
+const canSpoil = () => !L2V7Modules.loot?.crafterPike?.() && (L2V7Modules.subclass?.role?.() === 'spoiler' || spoilRoleOwn());
+function spoilRoleOwn() {
+  const sp = names(cfg.nSpoil || '');
+  if (!sp.length) return false;
+  if (L2V7Modules.subclass?.role?.() === 'crafter' || !rt.classCur?.prof && !rt.prof) return true;   // класс неизвестен — по роли, как раньше
+  // 20.43 (ревью): в skills — только нажатое (uses > 0). Заглушка v5.5.5 skills.spoil {cdNet, cdFloor} (spoilCdMig) есть у первого
+  // класса любого ника без базового профиля, и classPromo2043 переносит её Warlock → Arcana Lord — это не знание умения
+  return sp.some(n => !!rt.skillDb?.[n] || (+rt.skills?.[n]?.uses || 0) > 0);
+}
 // 7.2: активная цель «фарм ресурса» / «охота на рецепт» с подходящей зоной. Пока она есть, автофарм не уводит с её локации
 // (раньше: прилетел за ресурсом → через 10 мин автофарм улетал в «лучшую по опыту» зону → через 3 мин фарм тянул обратно — по кругу)
 function lootGoal() {
@@ -7469,6 +7483,18 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
+  // 20.43 (лог 21.10 22:01–22:03: Bounty Hunter → Fortune Seeker в слоте 1; раньше Warlock → Arcana Lord в слоте 0): повышение профессии
+  // считалось сменой класса — память прежней профессии лежала в classStash мёртвым грузом (358 + 59 КБ из ≈1,1 МБ), вернуться к ней нельзя.
+  // Сливаем её с памятью профессии-наследника того же класса (story.stashPromote: своё у наследника важнее, из старой — только недостающее).
+  // Не уверены (слоты неизвестны и наследник не активен, два возможных наследника) — запись остаётся
+  once('classPromo2043', () => {
+    const P = L2V7Modules.story?.stashPromote?.({ ...rt, ...rf, skills: S });
+    if (!P) return;
+    rf.classStash = P.stash;
+    for (const [k, v] of Object.entries(P.active)) if (k === 'skills') { S = { ...(v || {}) }; sk = true; } else rf[k] = v;
+    if (P.rbStats) rf.rbStats = P.rbStats;   // 20.43 (ревью): замеры потерь у РБ (rbStats[id].lossOwner) — тоже наследнику
+    try { rec('S', 'класс', `память прежних профессий перенесена: ${P.moved.map(([a, b]) => `${a} → ${b}`).join(', ')}`); } catch (e) {}
+  });
   if (sk) rf.skills = S;
   if (Object.keys(cf).length) {
     cfg = withRb({ ...L2EngineCore.rawTaskConfig(cfg), ...cf });
