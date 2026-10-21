@@ -64,7 +64,7 @@ test('меню: один общий лимит мобов, остаток в «�
  const day=engine.dailyDay(),rt={dailyQuota:{day,auto:1200,cat:300,fish:10}};
  ctx.renderDailyLimits(rt,{dailyKillLimit:3000,dailyFishLimit:0});
  assert.equal(els.mobsDailyProgress.textContent,'1500 / 3000 (автофарм 1200, катакомбы 300) · осталось 1500');assert.equal(els.fishDailyProgress.textContent,'Без дневного лимита');
- ctx.renderDailyLimits(rt,{dailyKillLimit:1500,dailyFishLimit:0});assert.match(els.mobsDailyProgress.textContent,/1500 \/ 1500 .* до 00:00$/);
+ ctx.renderDailyLimits(rt,{dailyKillLimit:1500,dailyFishLimit:0});assert.match(els.mobsDailyProgress.textContent,/1500 \/ 1500 .* сброс в \d\d:\d\d по Владивостоку \(через [^)]+\)$/);   // 20.43: было «до 00:00» — теперь время сброса по часам игрока
  // обзор задач: строка автофарма показывает общий счётчик и остаток
  const st={on:true},board={L2EngineCore:engine,Date};
  vm.runInNewContext(js.slice(js.indexOf('const AUTO_TASK_LABELS ='),js.indexOf('function workspaceState('))+'\n'+js.slice(js.indexOf('function taskBoardRows('),js.indexOf('function autoTaskPatch(')),board);

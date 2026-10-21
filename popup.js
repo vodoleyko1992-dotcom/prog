@@ -768,13 +768,14 @@ $('sealNow').onclick = async () => {
 // 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
 const dailyLimitKeys={fish:'dailyFishLimit',mobs:'dailyKillLimit'};
 const dailyGotOf=(rt,task,day)=>L2EngineCore.dailyCount(rt,task==='fish'?'fish':'auto');
+// 20.43 (разбор 21.10): вместо «до 00:00» — когда сброс по часам игрока и сколько осталось (L2EngineCore.dailyResetText)
 function renderDailyLimits(rt,d) {
-  const day=L2EngineCore.dailyDay(Date.now(),rt);
-  $('dailyLimitsDay').textContent=`Сегодня: ${day} · время сервера`;
+  const now=Date.now(),day=L2EngineCore.dailyDay(now,rt),reset=L2EngineCore.dailyResetText(now,rt);
+  $('dailyLimitsDay').textContent=`Сегодня: ${day} · время сервера · ${reset}`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
     const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&L2EngineCore.dailyCurrent(rt.dailyQuota,rt) ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0}${+rt.dailyQuota.raid?`, рядом с РБ ${+rt.dailyQuota.raid}`:''}${+rt.dailyQuota.server?`, ранее по серверу ${+rt.dailyQuota.server}`:''})` : '';
     if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got}${parts} · цель выберется при запуске`;continue;}
-    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · до 00:00':` · осталось ${limit-got}`}` : 'Без дневного лимита';
+    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · '+reset:` · осталось ${limit-got}`}` : 'Без дневного лимита';
   }
 }
 for(const task of Object.keys(dailyLimitKeys)) $(task+'DailyReset').onclick=async()=>{
@@ -797,7 +798,9 @@ function renderCat(rt, d) {
   const lv = id => { const k = rt.catLv?.[id]; return k?.n >= 3 ? `${k.lo}–${k.hi} ур. (видел)` : `≈${CAT_NM[id][1]}–${CAT_NM[id][2]} ур. (прикидка)`; };
   const cur = rt.catIn || rt.catCur, now = Date.now();
   const seen = Object.keys(CAT_NM).filter(id => rt.catLv?.[id]);
-  $('catBox').textContent = (d.catMode ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
+  // 20.43 (разбор 21.10): «Катакомбы», выбранные в «Задачах бота», флаг catMode не ставят — строка писала «Выключено» при верной галке;
+  // включена ли задача — по тому же источнику, что галка и ядро (taskSel: список autoTasks, без него прежний catMode)
+  $('catBox').textContent = (taskSel(d, 'cat') ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
     + (seen.length ? `\nУвиденные подземелья: ${seen.map(id => `${CAT_NM[id][0]} ${lv(id).replace(/ \(.*\)/, '')}${now - (rt.catBad?.[id] || 0) < 3600000 ? ' (пропускаю)' : ''}`).join(' · ')}` : '');
 }
 // ---------- 7.2.1 (просьба игрока): список «что фармить» как на форуме — разделы раскрываются, предмет раскрывается
@@ -2020,7 +2023,7 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     }
     else if (dailyLimit > 0) {
       progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' + (+q.server?' · ранее по серверу: '+q.server:'') : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
-      if (dailyGot >= dailyLimit) { label = 'До 00:00 сервера'; state = 'waiting'; }
+      if (dailyGot >= dailyLimit) { label = 'Ждёт сброса суток'; state = 'waiting'; progress.push(L2EngineCore.dailyResetText(now,rt)); }   // 20.43 (разбор 21.10): было «До 00:00 сервера»
     }
     else if (key === 'fish') progress.push(`Сегодня: ${dailyGot} · без дневного лимита`);
     if (['auto','cat'].includes(key)) {
@@ -2045,7 +2048,7 @@ function dailyFishBoardRow(rt, d, now = Date.now()) {
   const pending=!!range && rt.limitRolls?.dailyFishLimit?.day!==day;
   return {key:'daily-fish',summary:'fish',name:'Рыба за сутки',tab:'limits',limits:true,
     label:!pending&&limit>0?(got>=limit?'Лимит достигнут':'Дневной лимит'):'Дневной счётчик',state:!pending&&limit>0&&got>=limit?'waiting':'selected',
-    progress:`Сегодня: ${got}${pending?` · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске`:limit>0?` / ${limit} · осталось ${Math.max(0,limit-got)}`:' · без дневного лимита'}`,
+    progress:`Сегодня: ${got}${pending?` · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске`:limit>0?` / ${limit} · осталось ${Math.max(0,limit-got)}${got>=limit?' · '+L2EngineCore.dailyResetText(now,rt):''}`:' · без дневного лимита'}`,   // 20.43: лимит достигнут — когда сброс
     percent:!pending&&limit>0?Math.min(100,Math.round(got/limit*100)):null};
 }
 // 19.10: дневные мобы видны рядом с рыбалкой независимо от выбранной охоты; это сводка, а не задача.
@@ -2057,7 +2060,7 @@ function dailyMobBoardRow(rt, d, now = Date.now()) {
   return { key:'daily-mobs', summary:'mobs', name:'Мобы за сутки', tab:'limits',
     label:pending || !limit ? 'Дневной счётчик' : got >= limit ? 'Лимит достигнут' : 'Дневной лимит',
     state:!pending && limit > 0 && got >= limit ? 'waiting' : 'selected',
-    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ)${+quota.server?' · ранее по серверу: '+quota.server:''} · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) : 'без дневного лимита'}`,
+    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ)${+quota.server?' · ранее по серверу: '+quota.server:''} · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) + (got >= limit ? ' · ' + L2EngineCore.dailyResetText(now, rt) : '') : 'без дневного лимита'}`,   // 20.43: лимит достигнут — когда сброс
     percent:!pending && limit > 0 ? Math.min(100, Math.round(got / limit * 100)) : null };
 }
 function renderWorkspace(rt, d, st) {
@@ -2097,6 +2100,12 @@ function selectedAutoTasks(d) {
 }
 // 18.10: задача выбрана так же, как её видит ядро — список autoTasks, без него прежние плоские флаги
 function taskSel(d, key) { return selectedAutoTasks(d).includes(key); }
+// 20.43 (разбор 21.10): «эта задача идёт сейчас» — в режиме задач первая по приоритету у ядра (L2EngineCore.selectedTask, как autonomyMode
+// во вкладке), без списка — прежний плоский флаг
+function taskNow(d, rt, key) {
+  if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
+  return Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) === key : taskSel(d, key);
+}
 function autoTaskPatch(d, key, enabled) {
   const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
   const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto' };
@@ -2366,7 +2375,8 @@ $('fishReset').onclick = async () => {
 async function shopNowGo() {
   await save();
   const { rt = {}, cfg = {}, on = false } = await chrome.storage.local.get(['rt', 'cfg', 'on']);
-  await menuPatch({ shop: { step: 'count', back: cfg.fishMode ? '/fishing.html' : '/map.html', t: Date.now(), force: true, urgent: true, why: 'вручную' } });
+  // 20.43 (разбор 21.10): рыбалка из «Задач бота» не ставит fishMode — «Закупить сейчас» возвращал на карту; теперь по текущей задаче
+  await menuPatch({ shop: { step: 'count', back: taskNow({ ...DEF, ...cfg }, rt, 'fish') ? '/fishing.html' : '/map.html', t: Date.now(), force: true, urgent: true, why: 'вручную' } });
   $('shopBox').textContent = on ? '🛒 Иду в магазин прямо сейчас (текущий бой брошен)' : '⏳ Закупка начнётся после ▶ Старт';
   if (typeof toast === 'function') toast(on ? '🛒 Закупка — иду сейчас' : '🛒 Закупка — после ▶ Старт', 'var(--gold)');
 }
@@ -2390,7 +2400,8 @@ $('start').onclick = async () => {
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
     await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return;
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
-    await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true, expectedChar });
+    // 20.43 (разбор 21.10): «Автофарм» из «Задач бота»/быстрого запуска не ставит zoneAuto — Старт не будил подбор зоны; выбран ли — по taskSel
+    await menuPatch({ ...(taskSel({ ...DEF, ...cfg }, 'auto') ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true, expectedChar });
     if (generation === controlGeneration && formChar === expectedChar) await showWakeResult();
   } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 };
@@ -2914,6 +2925,8 @@ if ($('reloadBot')) $('reloadBot').onclick = reloadBotUpdate;
 void checkExtensionUpdate();
 window.addEventListener('focus', () => { void checkExtensionUpdate(); });
 setInterval(() => { if (!document.hidden && !dockMin) void checkExtensionUpdate(); }, 30000);
+// 20.43 (разбор 21.10): «сброс … (через N мин)» в «Лимитах» и в обзоре задач не стоит на месте, пока бот остановлен и не пишет rt
+setInterval(() => { if (!document.hidden && !dockMin) loadSoon(); }, 60000);
 
 // ===================== v5: удобство интерфейса =====================
 // 1) разделы вкладок — сворачиваемые карточки (состояние запоминается); 2) длинные пояснения — под «ⓘ»;
@@ -3006,6 +3019,12 @@ function toast(msg, color) {
 }
 // Успех сохранения показывает ответ menuPatch; change ещё не означает запись.
 // поиск настройки по всем вкладкам
+// 20.43 (разбор 21.10): поиск искал только по названию — «coin», «FA», «почта» не находили поля, где эти слова только в пояснении.
+// Теперь help = title поля/кнопки + пояснение HELP (ui-v7.js, L2V7Help); совпадение только по пояснению — ниже совпадений по названию
+const searchHelp = el => [el.getAttribute?.('title'), ...[...(el.querySelectorAll?.('[title]:not(.inline-info)') || [])].map(x => x.getAttribute('title')),
+  globalThis.L2V7Help?.[el.querySelector?.('input,select,textarea')?.id || '']].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+// …и не ведёт в пустоту: карточка/поле скрыты фильтром класса (data-cls, ui-v7.css) — пометка «(для другого класса)», переход включает «все классы»
+const searchClsHidden = el => { for (let p = el; p && p.nodeType === 1; p = p.parentElement) if (p.dataset?.cls && getComputedStyle(p).display === 'none') return true; return false; };
 function searchIndex() {
   const out = [];
   document.querySelectorAll('section').forEach(sec => {
@@ -3018,17 +3037,18 @@ function searchIndex() {
     };
     sec.querySelectorAll('.card').forEach(card => {
       const title = card.querySelector('.ch h4')?.textContent.trim() || '', sub = subOf(card), where = sub ? tabName + ' › ' + sub : tabName;
-      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел' });
+      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел', help: '' });
       card.querySelectorAll('.cb > label, .cb > .champ-row > label, .cb > .row > button, .cb > .row button').forEach(el => {
         const t = (el.tagName === 'LABEL' ? [...el.childNodes].filter(n => n.nodeType === 3 || n.tagName === 'SPAN' && !n.querySelector('input')).map(n => n.textContent).join(' ') : el.textContent).replace(/\s+/g, ' ').trim();
-        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
+        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка', help: searchHelp(el) });
       });
     });
   });
   return out;
 }
 let IDX = null, resSel = 0;
-function goTo(r) {
+async function goTo(r) {
+  if (r.otherCls && !showAllCls) await $('showAllCls').onclick();   // 20.43: результат из подраздела другого класса — сначала «показать все классы»
   showTab(r.tab); revealEl(r.el);
   r.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
@@ -3040,9 +3060,11 @@ function runSearch() {
   if (q.length < 2) { box.classList.remove('show'); return; }
   IDX ||= searchIndex();
   const words = q.split(/\s+/);
-  const hits = IDX.filter(r => words.every(w => (r.text + ' ' + r.where).toLowerCase().includes(w))).slice(0, 12);
+  const name = r => (r.text + ' ' + r.where).toLowerCase(), all = r => name(r) + ' ' + String(r.help || '').toLowerCase();
+  const hits = [...IDX.filter(r => words.every(w => name(r).includes(w))), ...IDX.filter(r => !words.every(w => name(r).includes(w)) && words.every(w => all(r).includes(w))).map(r => ({ ...r, byHelp: true }))]
+    .slice(0, 12).map(r => ({ ...r, otherCls: searchClsHidden(r.el || r.card) }));
   resSel = 0;
-  box.innerHTML = hits.length ? hits.map((r, i) => `<div data-i="${i}" class="${i ? '' : 'sel'}">${esc(r.text)}<small>${esc(r.where)}${r.kind ? ' · ' + r.kind : ''}</small></div>`).join('')
+  box.innerHTML = hits.length ? hits.map((r, i) => `<div data-i="${i}" class="${i ? '' : 'sel'}">${esc(r.text)}${r.otherCls ? ' <span class="other-cls">(для другого класса)</span>' : ''}<small>${esc(r.where)}${r.kind ? ' · ' + r.kind : ''}${r.byHelp ? ' · по пояснению' : ''}</small></div>`).join('')
     : `<div style="cursor:default;color:var(--mute)">Ничего не нашлось</div>`;
   box.classList.add('show');
   box._hits = hits;

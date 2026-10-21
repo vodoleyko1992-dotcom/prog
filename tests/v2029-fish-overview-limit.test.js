@@ -19,7 +19,7 @@ test('точный лимит и выбранный сегодня диапаз�
  }
 });
 test('достигнутый лимит продолжает показывать ожидание сервера и остаток0',()=>{
- const r=row({dailyFishLimit:100});assert.equal(r.state,'waiting');assert.match(r.label,/00:00 сервера/);assert.equal(r.percent,100);assert.match(r.progress,/осталось 0/);
+ const r=row({dailyFishLimit:100});assert.equal(r.state,'waiting');assert.match(r.label,/сброса суток/);assert.match(r.progress,/сброс в \d\d:\d\d по Владивостоку/);   // 20.43: было «До 00:00 сервера»assert.equal(r.percent,100);assert.match(r.progress,/осталось 0/);
 });
 test('вчерашние счётчик и выбор диапазона не выглядят сегодняшним лимитом',()=>{
  const r=row({limitRanges:{dailyFishLimit:{min:1511,max:1564}}},{dailyQuota:{day:'2000-01-01',fish:1600},limitRolls:{dailyFishLimit:{day:'2000-01-01',value:1550}}});
