@@ -96,7 +96,9 @@ function champTier(id, a, unknown = 'blue') {      // в бою неизвест
 // ни по окну из меню (больше 5 или «0» = 5), ни чемпионов (было −8), ни «мягким окном», когда тут все мобы ниже. Исключения — только явные
 // задачи: ★ квест, источник ресурса/рецепта, чемпион главы
 const lowCap = () => Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : FA_BELOW, FA_BELOW);
-const faChance = (champ, tier, lvl, hl = env.heroLvl() || env.rt.lvl || 0) => hl && lvl && lvl < hl - FA_BELOW ? 0 : champ ? FA_P[tier] || FA_P.blue : FA_MOB;
+// 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: ≥ 4 % FA за обычный бой против 1 % анонса): шанс — свой замер класса (champs.faRate,
+// сглажен анонсом); без модуля чемпионов — анонс, как раньше
+const faChance = (champ, tier, lvl, hl = env.heroLvl() || env.rt.lvl || 0) => hl && lvl && lvl < hl - FA_BELOW ? 0 : env.champs?.faRate ? env.champs.faRate(champ ? (FA_P[tier] ? tier : 'blue') : 'mob') : champ ? FA_P[tier] || FA_P.blue : FA_MOB;
 
 async function netSpawns(list) {
   const kind = {}, tier = {}, hp = {}, exp = {}, sp = { ...(env.rt.spawns || {}) };
@@ -581,7 +583,7 @@ function candidates(rules, sig, types, limitIdx, evidence = {}) {
       if (cr) { cancelSkip(r, cr); return; }
     }
     let k = rank({ ...r, champ: campEligible }, rules);
-    const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) >= FA_P.orange && faRank >= 0;
+    const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) > 0 && (FA_P[r.tier] || 0) >= FA_P.orange && faRank >= 0;   // 20.43: порог — цвет по анонсу, r.fa — свой замер
     if (faHot) k = Math.min(k, faRank);
     if (k >= 0) out.push({ ...r, rank: k, ql: qLike, faHot });
   });
@@ -645,7 +647,17 @@ function mobValRank(out, champOn = champRuleOn()) {
   const list = keep.length ? keep : out;
   const cap = hl ? hl + 5 : 999, lv = c => (c.lvl || 0) <= cap ? c.lvl || 0 : 2 * cap - c.lvl;   // выше героя +5 — чем выше, тем позже
   // 10.0.5: в одном приоритете FA-чемпион (оранжевый/красный в окне −5) первым, красный раньше оранжевого
-  return list.sort((a, b) => a.rank - b.rank || (b.faHot ? b.fa : 0) - (a.faHot ? a.fa : 0) || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, FA, выгода, уровень, ближе
+  return list.sort((a, b) => a.rank - b.rank || (b.faHot ? FA_P[b.tier] || 0 : 0) - (a.faHot ? FA_P[a.tier] || 0 : 0) || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, FA, выгода, уровень, ближе
+}
+// 20.43 (разбор 21.10): вклад одного боя в замеры охоты (mobVal, zoneStat, rt.eff) — не больше 3× обычного времени на такую награду:
+// у этого вида (≥ 3 боёв этого класса), для нового вида — у способа прихода (rt.eff[via], ≥ 5 боёв). Пример: у вида 30 боёв по 3 с, один
+// разрыв в 60 с (поход, ожидание оплаты) менял 90 с на 150 с — EXP/с 60 %, и при < 70 % медианы зоны вид выпадал с карты (c.low) и больше не
+// перемерялся. Предел — по награде, а не по бою: пачка агро даёт ×N EXP за ×N времени и не обрезается. mapX — дорога картой (с)
+function winSecCap(name, champ, exp, via, mapX = 0) {
+  const o = name ? env.rt.mobVal?.[mobKey(name, champ)] : null, c = env.rt.prof || undefined;
+  if (o && o.n >= 3 && o.sec > 0 && o.exp > 0 && (!o.c || !c || o.c === c)) return 3 * (Math.max(o.sec / o.n, (exp || 0) * o.sec / o.exp) + Math.max(0, +mapX || 0));
+  const e = env.rt.eff?.[via];
+  return e?.n >= 5 && e.sec > 0 ? 3 * Math.max(e.sec, e.rate > 0 ? (exp || 0) * 60 / e.rate : 0) : Infinity;
 }
 // после победы (из trackEfficiency, без ожидания): EXP и время на этот вид — скользящее по ≈30 последним боям
 function mobValNote(name, champ, exp, sec) {
@@ -1079,6 +1091,6 @@ async function ashenStep() {
   env.setStatus(rows.length ? 'Ashen Bastion: подходящие мобы возрождаются' : 'Ashen Bastion: жду список мобов');
   await env.sleep(2000);
 }
- return { dungeonCancelBlocked, scanChampPages, farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
+ return { dungeonCancelBlocked, scanChampPages, farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, winSecCap, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
  };
 })(globalThis);

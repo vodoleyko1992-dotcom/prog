@@ -29,7 +29,9 @@ assert.ok(a.ok || a.kind !== 'strong', 'estimate only: not rejected as «strong�
 // 4. код: оценка до боя — пропуск 30 мин, а не вечный вердикт; иммунитет к дебаффам; самопроверка HP; миграция
 const raid = fs.readFileSync(path.join(root, 'modules/raid.js'), 'utf8'), combat = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), content = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
 assert.ok(!/verdict: 'no', name: r\.name, lvl: r\.lvl, note: 'оценка до боя/.test(raid), 'no permanent verdict from an estimate');
-assert.match(combat, /if \(env\.rt\.debuffImmune\?\.\[ctx\.rb \? 'rb' : ctx\.champ \? 'champ' : 'mob'\]\) return null;/);
+// 20.43 (разбор 21.10): у РБ общий флаг прежний, мобы/чемпионы — по виду на сутки (поведение — tests/v2043-learn-honest.test.js)
+assert.match(combat, /if \(dbfImmune\(ctx\)\) return null;/);
+assert.match(combat, /const dbfImmune = ctx => ctx\.rb \? !!env\.rt\.debuffImmune\?\.rb : /);
 assert.match(combat, /\/імунітет\|иммунитет\|immune\/i\.test\(added\)/);
 assert.match(combat, /в памяти были чужие цифры/);
 assert.match(content, /once\('rbFix721'/);
