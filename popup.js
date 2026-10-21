@@ -1696,31 +1696,41 @@ function renderSub(rt, d) {
   $('subBox').textContent = [say, rt.subInfo || 'Класс и роль бот узнает у игры сам (после первого ответа /character)'].filter(Boolean).join('\n');
 }
 // 20.43 (John 21.10): свой крафт материалов (modules/craft.js) — книга рецептов rt.craftBook, список rt.craftQueue, прогресс rt.craftMade
-let craftSig = '', craftRt = {};
+let craftSig = '', craftListSig = null, craftRt = {};
 function renderCraft(rt, d) {
   if (!$('craftBox')) return;
   craftRt = rt;
   const b = rt.craftBook, q = rt.craftQueue || [], made = rt.craftMade || {}, s = rt.craftSay, out = [];
   const opts = (b?.list || []).map(([code, nm, , oq, lvl, mp]) => `<option value="${esc(code)}">${esc(nm)}${oq > 1 ? ` (×${oq})` : ''} · ур. ${lvl} · ${mp} MP${b.lvl < lvl ? ' · закрыт' : ''}</option>`).join('');
-  if (opts && craftSig !== opts) { craftSig = opts; $('craftPick').innerHTML = opts; }
-  if (!$('craftList').contains(document.activeElement)) $('craftList').innerHTML = q.map(x => { const m = +made[x.id] || 0;
+  // пустая книга (другой герой) — снова заглушка, а не рецепты прошлого героя; в списке нет полей ввода — перерисовываем всегда
+  const html = opts || '<option value="">— рецепт (появится после первого чтения книги) —</option>';
+  if (craftSig !== html) { craftSig = html; $('craftPick').innerHTML = html; }
+  // перерисовка только при изменении: иначе запись бота (до 3 раз/с) пересоздаёт кнопку ✕ между нажатием и отпусканием — клик терялся
+  const listHtml = q.map(x => { const m = +made[x.id] || 0;
     return `<div class="rule"><span class="t">${m >= x.n ? '✅' : '⚒'} ${esc(x.nm || x.code)} — ${fmt(m)}/${fmt(x.n)}</span><button data-craftdel="${esc(x.id)}" title="Убрать">✕</button></div>`; }).join('');
+  if (craftListSig !== listHtml) { craftListSig = listHtml; $('craftList').innerHTML = listHtml; }
   if (d.craftAuto !== true) out.push('Выключено: бот сам не крафтит');
   if (b) out.push(`Книга ${new Date(b.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}: Create Item ур. ${b.lvl}${b.lvl ? '' : ' — навык не выучен (магистр)'} · MP ${fmt(b.mp)}/${fmt(b.maxMp)}`);
   else out.push('Книгу рецептов бот прочитает сам, когда активен крафтер и включено «Крафтить самому»');
   if (s && Date.now() - s.t < 3600000) out.push(`${new Date(s.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${s.ok ? '✓' : '·'} ${s.why}`);
   $('craftBox').textContent = out.join('\n');
 }
+// ревью 21.10: строка добавляется/удаляется в фоне по одной (craftQueueEdit), герой — тот, чей список показан
+const craftEdit = async (edit, okText) => {
+  if (!craftRt.char) { toast('Дождитесь загрузки персонажа'); return false; }
+  try { await menuPatch({}, { craftQueueEdit: edit, expectedChar: craftRt.char }); if (okText) toast(okText); return true; }
+  catch (e) { toast('⚠ ' + (e?.message || e), 'var(--bad)'); return false; }
+};
 $('craftAdd')?.addEventListener('click', async () => {
   const code = $('craftPick').value, n = Math.floor(+$('craftN').value || 0); if (!code) return $('craftPick').focus(); if (n < 1) return $('craftN').focus();
-  const rt = craftRt, row = (rt.craftBook?.list || []).find(x => x[0] === code);
-  const q = [...(rt.craftQueue || []), { id: 'c' + Date.now().toString(36), code, nm: row?.[1] || code, item: row?.[2] || 0, n }];
-  $('craftN').value = ''; await menuPatch({ craftQueue: q }); toast(`⚒ В список крафта: ${row?.[1] || code} ×${n}`);
+  const row = (craftRt.craftBook?.list || []).find(x => x[0] === code);
+  const ok = await craftEdit({ action: 'add', row: { id: 'c' + Date.now().toString(36), code, nm: row?.[1] || code, item: row?.[2] || 0, n } }, `⚒ В список крафта: ${row?.[1] || code} ×${n}`);
+  if (ok) $('craftN').value = '';
 });
 $('craftList')?.addEventListener('click', async e => {
   const id = e.target.closest('[data-craftdel]')?.dataset.craftdel; if (!id) return;
-  const rt = craftRt, made = { ...(rt.craftMade || {}) }; delete made[id];
-  await menuPatch({ craftQueue: (rt.craftQueue || []).filter(x => x.id !== id), craftMade: made });
+  // только список: craftMade пишет бот после каждой партии (id строк уникальны)
+  await craftEdit({ action: 'remove', id });
 });
 $('subHandNow')?.addEventListener('click', async () => { await menuPatch({ subHandReq: { t: Date.now() }, subHandSay: null }); toast('📤 Передам основному сырьё из сумки'); });
 $('mmGuideNow')?.addEventListener('click', async () => { await menuPatch({ farmGuideReq: Date.now() }); toast('🔄 Обновлю источники дропа и спойла из игры'); });
