@@ -78,7 +78,9 @@
     if(O&&O.key!=='shop'){await clear(O);O=null;}job=jobs.find(j=>j.key==='shop');
    }
    const now=Date.now(),value=env.rt[job.key],p=phase(value),page=env.page();
-   if(!O){O={id:env.id(),key:job.key,context:context(),stamp:stamp(value),at:now,phase:p,progressAt:now,page,visits:1,seen:{[JSON.stringify([page,p])]:1}};if(!await save({actionOwner:O})||!canAct())return true;env.rec('B','действия',`${job.key}: владелец маршрута (${env.mode()})`);}
+   // 20.43 (разбор 21.10): служебный маршрут (магазин, бафф, Маммон, телепорт зоны, сумка…) — разрыв охоты: время до следующей победы
+   // не время на моба (content.trackEfficiency), прошлую победу забываем той же записью
+   if(!O){O={id:env.id(),key:job.key,context:context(),stamp:stamp(value),at:now,phase:p,progressAt:now,page,visits:1,seen:{[JSON.stringify([page,p])]:1}};if(!await save({actionOwner:O,lastWinT:0})||!canAct())return true;env.rec('B','действия',`${job.key}: владелец маршрута (${env.mode()})`);}
    else{
     const changed=p!==O.phase;
     const node=JSON.stringify([page,p]),seen={...(O.seen||{})};

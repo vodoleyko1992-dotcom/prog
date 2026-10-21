@@ -103,6 +103,7 @@
     fishGoal:'Пустая очередь означает «Просто копим Proof». Покупка плащей, татуировок и поясов отключена. Заточка удочки настраивается отдельно.',
     dock:'Показывать панель управления справа внутри страницы игры.',
     indMode:'Формат индикатора состояния бота непосредственно в игре.',
+    notifyStops:'Бот остановился или встал на паузу сам (ошибка, смерти, сторож, сбой карты/телепорта) — системное уведомление с причиной и красный «!» на значке до Старта/«Продолжить»; оплата без подтверждения дольше 15 мин — одно уведомление. Ручной Стоп/Пауза — без уведомления. Причина остановки видна в «Обзоре» всегда (и на Android, где уведомлений нет).',
     rec:'Вести журнал пользовательских кликов и действий бота для последующего анализа.',
     autoSnap:'Запоминать DOM-снимки страниц при изменении их состояния.',
     autoLearn:'Запоминать структуру игровых страниц и ответы серверных API.',
@@ -119,26 +120,41 @@
     if (typeof showTab === 'function') return showTab(b.dataset.goto);
     document.querySelector('nav button[data-tab="'+b.dataset.goto+'"]')?.click();
   }));
-  for(const [id,description] of Object.entries(HELP)) {
-    const el=document.getElementById(id);
-    const label=el?.closest('label');
-    if (!label || label.querySelector('.inline-info')) continue;
+  // 20.43 (разбор 21.10): пояснения 39 настроек жили только в title (в том числе «тратит Coin of Luck», «баффы за FA не покупать»),
+  // а на планшете/сенсорном экране наведения нет — их не было видно. У label с title без записи в HELP — такая же «i» с текстом title
+  // (класс auto-info); title остаётся для ПК. auto-info видна только при (hover:none) или во вкладке Android (html.tabbed) — ui-v7.css,
+  // на ПК меню прежнее. HELP отдаём поиску настроек (popup.js searchIndex ищет и по пояснениям).
+  const addInfo=(label,id,description,auto)=>{
     const tip=document.createElement('button');
-    tip.type='button';tip.className='inline-info';tip.textContent='i';
+    tip.type='button';tip.className='inline-info'+(auto?' auto-info':'');tip.textContent='i';
     tip.title='Объяснение настройки';tip.setAttribute('aria-label','Пояснение: '+(label.textContent||id).trim());
     tip.setAttribute('aria-expanded','false');
     const box=document.createElement('div');box.className='field-help';box.textContent=description;
     const ctrl=label.querySelector('input,select,textarea');
     if (ctrl) ctrl.before(tip); else label.appendChild(tip);
-    label.after(box);
+    // auto-info: блок пояснения вставляется только при первом нажатии (на ПК кнопки не видно — соседи label прежние: иначе
+    // .champ-row>label:last-child терял ширину и строка «Обход Cancel» вылезала вбок на 360 px); в строке-ряду — после ряда
+    if (!auto) label.after(box);
     tip.addEventListener('click', e => {
       e.preventDefault();e.stopPropagation();
+      if (!box.isConnected) (label.parentElement?.matches('.champ-row,.row') ? label.parentElement : label).after(box);
       const open=!box.classList.contains('open');
       document.querySelectorAll('.field-help.open').forEach(e=>e.classList.remove('open'));
       document.querySelectorAll('.inline-info[aria-expanded=true]').forEach(e=>e.setAttribute('aria-expanded','false'));
       box.classList.toggle('open',open);tip.setAttribute('aria-expanded',String(open));
     });
+  };
+  for(const [id,description] of Object.entries(HELP)) {
+    const el=document.getElementById(id);
+    const label=el?.closest('label');
+    if (!label || label.querySelector('.inline-info')) continue;
+    addInfo(label,id,description,false);
   }
+  document.querySelectorAll('section label[title]').forEach(label=>{
+    const description=String(label.getAttribute('title')||'').trim();
+    if (description && !label.querySelector('.inline-info')) addInfo(label,'',description,true);
+  });
+  globalThis.L2V7Help=Object.freeze({...HELP});
   // 8.0 (аудит меню): плитки «Обзора» и сводку рисует popup.js (renderDash) в общем цикле перерисовки —
   // здесь был второй опрос хранилища на каждую запись бота (и плитки-дубли счётчиков шапки)
 })();

@@ -1210,23 +1210,35 @@ function parseRules(...args) { return L2V7Modules.mobfarm.parseRules(...args); }
 function champRuleOn(...args) { return L2V7Modules.mobfarm.champRuleOn(...args); }
 // эффективность: опыт в минуту за «цепочку» и за «поиск по карте» (включая время на карту и листание)
 function chainBetter(...args) { return L2V7Modules.mobfarm.chainBetter(...args); }
+// 20.43 (разбор 21.10): время на моба = «эта победа − прошлая», отсекался только разрыв > 180 с, а lastWinT больше нигде не обнулялся —
+// поход в магазин/к бафферу, ожидание оплаты, пауза или Стоп/Старт короче 3 мин целиком доставались следующему виду (mobVal), зоне
+// (zoneStat) и темпу цепочки/карты (rt.eff). Теперь бой не меряется, если после прошлой победы был служебный маршрут (actions: владелец
+// маршрута обнуляет lastWinT), страница вне охоты (метка HUNT_GAP_SS) или Старт/Продолжить (manualKickAt новее победы); после РБ — с нуля;
+// вклад одного боя — не больше 3× обычного времени на такую награду (mobfarm.winSecCap). Бои в подземелье (spawnId sdms_*) — своя корзина
+// rt.eff.cat: zoneStat прошлой зоны «Окрестностей» и общие «цепочка/карта» они больше не пополняют (rt.zone телепорт в катакомбы не меняет)
+const HUNT_PAGE_RE = /\/(?:battle|map|dungeon|catacombs|ashen-bastion)\.html$/i, HUNT_GAP_SS = 'l2bot-huntGapT';
+const huntGapT = () => { try { return +sessionStorage.getItem(HUNT_GAP_SS) || 0; } catch (e) { return 0; } };
+const catBattleOf = (ctx, via0) => /^sdms_/i.test(ctx?.spawnId || '') || via0 === 'dungeon' || L2V7Modules.mobfarm.dungeonBattle();
 async function trackEfficiency(exp, ctx) {
   // 8.0: вызывается без ожидания — способ прихода к этому мобу (цепочка/карта) берём сразу, пока nextFight не записал новый
-  const now = Date.now(), dt = rt.lastWinT ? (now - rt.lastWinT) / 1000 : 0, via0 = rt.via;
-  setRt({ lastWinT: now });
+  const now = Date.now(), last = +rt.lastWinT || 0, via0 = rt.via, gap = Math.max(+rt.manualKickAt || 0, huntGapT()) > last;
+  let dt = last && !gap ? (now - last) / 1000 : 0;
+  setRt({ lastWinT: ctx?.rb ? 0 : now });          // 20.43: после РБ дорога назад к мобам — не время следующего моба
   const pct = expPctGain();                       // прирост полоски опыта, % (с учётом нового уровня)
-  if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, долгий перерыв или РБ — не считаем
+  if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, перерыв (служебный маршрут, пауза, > 3 мин) или РБ — не считаем
+  const cat = catBattleOf(ctx, via0), via = cat ? 'cat' : via0 === 'chain' ? 'chain' : 'map';
   // 8.0 (аудит фарма B1): ценность вида моба (EXP/с) для выбора цели на карте — без ожидания записи. Приход через карту дольше
   // цепочки на одну и ту же величину для любого моба — вычитаем её, чтобы виды, добытые цепочкой и картой, сравнивались честно
-  { const E0 = rt.eff || {}, mapX = via0 === 'chain' ? 0 : Math.max(0, (E0.map?.sec || 0) - (E0.chain?.sec || 0));
+  { const E0 = rt.eff || {}, mapX = cat || via0 === 'chain' ? 0 : Math.max(0, (E0.map?.sec || 0) - (E0.chain?.sec || 0));
+    dt = Math.min(dt, L2V7Modules.mobfarm.winSecCap(ctx?.name, !!ctx?.champ, exp, via, mapX));
     try { L2V7Modules.mobfarm.mobValNote(ctx?.name, !!ctx?.champ, exp, Math.max(dt * 0.5, dt - mapX))?.catch?.(e => console.warn(TAG, 'ценность моба', e)); } catch (e) { console.warn(TAG, 'ценность моба', e); } }
-  await zoneTrack(exp, dt, pct);
-  const via = via0 === 'chain' ? 'chain' : 'map';
+  if (!cat) await zoneTrack(exp, dt, pct);
   const E = { ...(rt.eff || {}) }, e = E[via] || { n: 0, rate: 0 };
   const rate = exp / dt * 60, k = e.n < 20 ? 1 / (e.n + 1) : 0.05;
   E[via] = { n: e.n + 1, rate: Math.round(e.rate ? e.rate * (1 - k) + rate * k : rate), sec: +((e.sec || dt) * (1 - k) + dt * k).toFixed(1) };
   await setRt({ eff: E });
-  if (E.chain?.n === 5 || E.map?.n === 5) rec('B', 'эффективность', `цепочка ${E.chain?.rate || '?'} EXP/мин (${E.chain?.sec || '?'} с/моб) · карта ${E.map?.rate || '?'} EXP/мин (${E.map?.sec || '?'} с/моб)`);
+  // 20.43: строка — когда корзина этого боя набрала 5 боёв (раньше — на каждом бою, пока у другой корзины ровно 5)
+  if (E[via].n === 5) rec('B', 'эффективность', via === 'cat' ? `катакомбы ${E.cat.rate} EXP/мин (${E.cat.sec} с/моб)` : `цепочка ${E.chain?.rate || '?'} EXP/мин (${E.chain?.sec || '?'} с/моб) · карта ${E.map?.rate || '?'} EXP/мин (${E.map?.sec || '?'} с/моб)`);
 }
 // ---------- локации для кача: где герой сейчас, EXP/ч и %/ч по каждой, рекомендации ----------
 // Каталог зон — со страницы «Телепорт» (Окрестности городов: имя, цена, уровни мобов «60-70»).
@@ -1373,6 +1385,12 @@ function quietErr(tag, e) {
   const n = q.n; q.n = 0; q.t = Date.now();
   try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
 }
+// 20.43 (разбор 21.10): тихие ошибки модулей — в журнал (env.quietErr). Сбой записи памяти setRt не бросает (возвращает {ok:false}, его
+// пишет очередь rtWriter), поэтому .catch у записей тура РБ и try/catch вокруг обучения ловили только ошибки самого кода — TypeError в
+// расчёте молча ломал прогноз РБ. Ошибка кода — отдельным тегом «ошибка кода: …»; сеть и разбор ответа (SyntaxError JSON) — своим тегом,
+// а с codeOnly не пишутся вовсе. Одна строка на тег раз в 10 мин, в журнал — только текст ошибки
+const codeErr = e => ['TypeError', 'ReferenceError', 'RangeError'].includes(e?.name) && !/fetch|network|load failed/i.test(String(e?.message || ''));
+function modErr(tag, e, codeOnly = false) { const code = codeErr(e); if (code || !codeOnly) quietErr(code ? `ошибка кода: ${tag}` : tag, e); }
 // 20.13 (ревизия 17.10, шаг 7, аудит «Код»): пустые catch вокруг записи памяти (setRt/rtWriter) и замка вкладки глушили
 // потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
@@ -1458,7 +1476,7 @@ function setRt(p) {
 // ждал запись начала боя за ними): статистика обычного боя — награды, ДПС, замеры, счётчики, путь к цели — пишется отложенно, одним
 // пакетом раз в 8 с или вместе с любой обычной записью. Память вкладки обновлена сразу, при уходе со страницы остаток уходит по pagehide.
 const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 'sp', 'lastWinT', 'lastBattle', 'packLab', 'buffAudit', 'dps', 'mobVal',
-  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'eff', 'skills', 'via', 'catInT']);
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
 // уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
@@ -1561,7 +1579,16 @@ async function halt(msg, hard, user = false) {
 }
 // 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
 // как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
-async function pauseBot(msg) {
+// 20.43 (разбор 21.10): halt при неотвечающем сервере ждёт сервер, а pauseBot — нет: минутный лаг при выходе из Ashen Bastion, загрузке
+// карты или телепорте ставил бота на паузу до утра. Пауза из-за сбоя (opt.fault: карта, Ashen, телепорт) сначала спрашивает сервер:
+// не отвечает — ждём его, как halt (serverWait), шаг повторится после ответа/перезагрузки. «Один РБ» и визит к Маммону (без fault) — пауза
+// сразу, как раньше. Повторной оплаты здесь нет: ожидание только откладывает паузу, маршруты сами запрещают повтор неподтверждённого.
+async function pauseBot(msg, opt = {}) {
+  if (opt.fault && on) {
+    const stamp = automationSnapshot();
+    if (!(await srvUp())) { if (!automationCurrent(stamp)) return; rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, на паузу не встаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
+    if (!automationCurrent(stamp)) return;
+  }
   rec('B', 'пауза', msg);
   await automationStop(msg, 'pause');
 }
@@ -1895,14 +1922,14 @@ async function farmGuideSync(why = 'раз в сутки') {
     await setRt({ farmGuideT: Date.now(), farmN: Object.keys(db.res).length, farmGuideReq: null });
     rec('B', 'фарм', `источники из игры (${why}): ресурсов ${m.n}, источников дропа ${m.dr}, спойла ${m.sp}${+j?.resourceTeleportAdenaCost ? ` · телепорт к точке ${(+j.resourceTeleportAdenaCost).toLocaleString('ru')} адены` : ''}`);
     return true;
-  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(() => {}); return false; }
+  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(e => modErr('справочник фарма', e)); return false; }
   finally { farmGuideBusy = false; }
 }
 function farmGuideTick() {                        // фоном, только GET; нужна цели Маммона, цели «Фарм ресурса» и помощнику основного
-  if (rt.farmGuideReq) { farmGuideSync('по кнопке').catch(() => {}); return; }
+  if (rt.farmGuideReq) { farmGuideSync('по кнопке').catch(e => modErr('справочник фарма', e)); return; }   // 20.43: ошибки — в журнал
   if (cfg.mmFarmGuide === false || !(cfg.mmGoalItem || (cfg.farmRes || '').trim() || (cfg.subMainNick || '').trim())) return;
   if (Date.now() - (rt.farmGuideT || 0) < FARM_GUIDE_EVERY) return;
-  farmGuideSync().catch(() => {});
+  farmGuideSync().catch(e => modErr('справочник фарма', e));
 }
 // цель фарма: из меню (ресурс + сколько) или ресурс главы кампании («Нужно сдать: Stone of Purity 48/50»)
 function farmGoal() {
@@ -2137,8 +2164,12 @@ const fmtT = sec => { if (!isFinite(sec)) return '∞'; const s = Math.max(0, Ma
 // перейти на страницу спавна и кликнуть его строку (через обработчик карты)
 async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...args); }
 
+// 20.43 (разбор 21.10): «Тур РБ» + «На месте» — в простое и подготовке тура бьём мобов там, где стоим. Раньше выбранный тур забирал
+// задачу целиком: rbIdleMap писал «жду новые РБ… фарм мобов сейчас не выбран», а map() уходил в tasksIdle, хотя галка фарма стоит.
+// Только фарм на месте: при выбранном туре cfg.zoneAuto/catMode остаются false, автофарм и катакомбы (платные перелёты) по-прежнему ждут.
+const raidIdleFarm = () => Array.isArray(cfg.autoTasks) && L2EngineCore.selectedTask(cfg,rt) === 'raid' && L2EngineCore.taskAllowed(cfg,'farm');
 async function map(...args) {
-  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
+  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !raidIdleFarm() && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
   if(!await dailyWorkReady('mobs'))return;
   return L2V7Modules.mobfarm.map(...args);
 }
@@ -3081,9 +3112,15 @@ async function loopGate() {
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
-  if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
+  // 20.43 (разбор 21.10): удержание ЛС уступает и открытой записи на TvT — раньше только уже записанному герою (tvtSoon), а записаться
+  // было нельзя: кнопка и POST /game/tvt/register под запретом ЛС, до tvtStep круг не доходил. Статус TvT, пока ЛС держит, перечитываем
+  // не чаще раза в 30 с и без ожидания ответа (ход ЛС не задерживается). Неизвестная попытка/покупка (pending) держит, как прежде.
+  if (rt.autoLs?.hold && !rt.autoLs.pending && cfg.tvtOn) lsTvtPoll();
+  if (rt.autoLs?.hold && !rt.autoLs.pending && (tvtSoon() || lsTvtRegOpen())) await L2V7Modules.lifestone.yieldToUrgent();
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
-  if (rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
+  // 20.43 (разбор 21.10): ожидание подготовки кота перед РБ не держит круг, когда подошла запись на TvT или сам TvT: tvtStep стоит
+  // после loopGate, и на /skill-panel.html статус TvT иначе не освежался (idleTvtBreak сам перечитывает /game/tvt по своему расписанию)
+  if (rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
@@ -3298,7 +3335,7 @@ async function loopSideJobs() {
   if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); return true; }
   if (loopStale()) return true;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
   // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
-  if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(() => {});
+  if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
   if (L2EngineCore.taskAllowed(cfg,'quests') && await L2V7Modules.story.storyStep()) { await sleep(200); return true; }
   if (loopStale()) return true;
   // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
@@ -5445,7 +5482,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
@@ -5498,7 +5535,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
@@ -6027,7 +6064,7 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get actionGeneration(){return ()=>au
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 
 // 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
-L2V7Modules.story = L2V7Factories.story({ get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+L2V7Modules.story = L2V7Factories.story({ get quietErr(){return modErr}, get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; }, get on() { return on; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 
@@ -6104,6 +6141,11 @@ const classSwitched = () => { PET = null; };
 
 // Авто-ЛС удерживает обычные задачи до явного завершения серии; работа только на странице игры.
 let lifestoneCommandBusy = false;
+// 20.43 (разбор 21.10): опрос /game/tvt, пока серия ЛС держит бота (loopGate), — не чаще раза в 30 с; tvtRefresh сам решает, пора ли читать.
+let lsTvtReadT = 0;
+const lsTvtPoll = () => { if (Date.now() - lsTvtReadT < 30000) return; lsTvtReadT = Date.now(); try { void L2V7Modules.tvt?.tvtRefresh?.()?.catch?.(() => {}); } catch (e) {} };
+// Запись открыта по свежему ответу сервера (≤2 мин), а не по старому rt.tvt: ложная уступка ставила бы серию на ручную паузу.
+const lsTvtRegOpen = () => { const T = L2V7Modules.tvt; return !!T?.tvtRegistrationDue?.() && !!T.tvtState?.()?.fresh; };
 const lifestonePrepareFree = () => location.pathname === '/augmentation.html' && !!rt.char && heroNick() === rt.char && !serverDown() && !loginPage() && !antibotState() && !abHold()
   && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
   && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending
@@ -6721,6 +6763,9 @@ chrome.storage.onChanged.addListener(ch => {
 // запускался и в этой невидимой копии: второй бот в той же вкладке («⏸ работает в другой вкладке», лог 09.10 12:08; вероятно, и
 // «две вкладки» 08.10). Теперь в предзагруженной странице бот спит, пока игрок на неё не перейдёт
 const whenActive = fn => document.prerendering ? document.addEventListener('prerenderingchange', fn, { once: true }) : fn();
+// 20.43 (разбор 21.10): страница вне охоты (магазин, баффер, Маммон, рыбалка, телепорт, город, TvT, вход…) — метка разрыва во вкладке:
+// время до следующей победы — не время на моба (trackEfficiency). sessionStorage: переживает переходы, запись памяти не нужна
+whenActive(() => { if (!HUNT_PAGE_RE.test(location.pathname)) try { sessionStorage.setItem(HUNT_GAP_SS, String(Date.now())); } catch (e) {} });
 whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; on = !!s.on;
   onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
@@ -6972,6 +7017,12 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
       delete rolls[key]; changed = true;
     }
     if (changed) { cf.limitRanges = R; rf.limitRolls = rolls; }
+  });
+  // 20.43 (разбор 21.10): общие флаги 7.2.1 «мобы/чемпионы невосприимчивы к дебаффам» без срока выключали дебаффы на всех таких целях.
+  // Теперь иммунитет моба/чемпиона — по виду на сутки (combat: rt.debuffImmune.sp); старые флаги снимаем, РБ (.rb) остаётся
+  once('dbfImm2043', () => {
+    const I = rf.debuffImmune || rt.debuffImmune;
+    if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
   });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5

@@ -83,7 +83,10 @@
   async function snapshot(){const who=char(),j=await get('/character'),s=j?.character;
    return char()===who&&s?.name===who&&s.inventory?.eq&&Array.isArray(s.inventory.stacks)&&Number.isSafeInteger(s.revision)&&s.revision>=0?s:null;}
   async function pause(reason){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;await save({...s,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;}
-  async function finish(s,reason){trusted=null;permit=null;supplyPermit=null;await save({...s,status:'done',reason});env.rec?.('B','ЛС',reason);return true;}
+  // 20.43 (разбор 21.10): серия с целью/лимитом больше ничего не тратит — удержание снимаем, бот сам возвращается к рыбалке/фарму
+  // (раньше стоял на аугментации до «Закончить серию»). Новая трата — только «Начать новую серию»; неизвестная попытка держит, как прежде.
+  const DONE_NOTE='Серия завершена — возвращаюсь к задачам';
+  async function finish(s,reason){trusted=null;permit=null;supplyPermit=null;const free=!s.pending&&!current()?.pending,ok=await save({...s,status:'done',reason,...(free?{hold:false}:{})});env.rec?.('B','ЛС',reason);if(ok&&free)env.rec?.('B','ЛС',DONE_NOTE);return true;}
   // 20.35: закупка на остаток серии; при нехватке AA предел уменьшается до доступного числа попыток.
   const policy=c=>JSON.stringify([c.buyMaterials,c.aaBudget,c.adenaBudget,c.aaReserve,c.adenaReserve,c.tpMax]);
   const policyValid=c=>[c.aaBudget,c.adenaBudget,c.aaReserve,c.adenaReserve,c.tpMax].every(x=>x!==null);
@@ -143,15 +146,36 @@
    if(!running){trusted=null;permit=null;supplyPermit=null;}
    env.rec?.('B','ЛС',`${p.action==='travel'?'Прибытие к Маммону подтверждено':p.name+' +'+p.qty+' подтверждено'}: ${p.amount} ${p.currency==='aa'?'AA':'адены'}; попытки ${s.attempts}/${s.maxAttempts}`);return true;
   }
+  // Оружие, материалы, AA/адена, CoL/FA и место (для телепорта) точно такие же, как до POST.
+  const untouched=(s,snap)=>{const p=s.pending;return fingerprint(snap.inventory.eq.l1)===s.weapon&&qty(snap,A.LIFE_STONE[s.grade])===p.ls&&qty(snap,A.GEMSTONE[s.grade])===p.gem
+   &&qty(snap,5575)===p.aa&&money(snap.adena)===p.adena&&qty(snap,4037)===p.col&&qty(snap,920048)===p.fa&&!(p.action==='travel'&&!at(position(snap),p.origin));};
   async function recoverSupply(s,snap){
    const p=s.pending,L=ledger(s);
    // Новая revision делает старый POST неприменимым; неизменные остатки доказывают отсутствие покупки.
-   if(!validSupply(s,p)||!L||snap.revision<=p.revision||fingerprint(snap.inventory.eq.l1)!==s.weapon||qty(snap,A.LIFE_STONE[s.grade])!==p.ls||qty(snap,A.GEMSTONE[s.grade])!==p.gem
-    ||qty(snap,5575)!==p.aa||money(snap.adena)!==p.adena||qty(snap,4037)!==p.col||qty(snap,920048)!==p.fa||p.action==='travel'&&!at(position(snap),p.origin))return false;
+   if(!validSupply(s,p)||!L||snap.revision<=p.revision||!untouched(s,snap))return false;
    const key=p.currency==='aa'?'AA':'Adena';if(L['reserved'+key]<p.amount)return false;
    trusted=null;permit=null;supplyPermit=null;
    return save({...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,pending:null,status:'paused',reason:'Новая ревизия подтверждает отсутствие закупки; продолжение вручную',
     supplies:[{t:now(),id:p.id,action:p.action,itemId:p.itemId||0,name:p.name,qty:0,currency:p.currency,amount:0,revision:snap.revision,status:'not_applied'},...(s.supplies||[])].slice(0,40)});
+  }
+  // 20.43 (разбор 21.10): Gemstone идёт через тот же /game/drops-shop/buy, где 20.10 22:03 пришёл HTTP 500 {"message":"inventory_full"}.
+  // Свой список 4xx его не знал: pending висел «неизвестным», сверка ждала новую ревизию (а при отказе она прежняя), «Закрыть»/«Учесть»
+  // запрещены, и главный цикл крутил только шаг ЛС — ни задач, ни TvT, пока игрок сам что-то не сделает. Теперь точный код отказа
+  // (L2PayOutcome.BIZ_REJECT, как у магазина в 20.41) + свежий GET с той же ревизией и неизменными остатками = покупки не было:
+  // резерв снят, серия на ручной паузе, удержание снято (бот возвращается к задачам). Обычный 5xx, 409 и обрыв связи — по-прежнему неизвестно.
+  const bizCode=c=>typeof c==='string'&&root.L2PayOutcome?.BIZ_REJECT?.test?.(c)===true?c:'';
+  const refusal=(status,res)=>Number.isInteger(status)&&status>=500&&status<=599&&res&&typeof res==='object'&&!Array.isArray(res)?bizCode(res.message):'';
+  const refusalWhy=c=>/inventory|space|slot/.test(c)?'сумка полна — освободите место в сумке':/ancient|_aa$/.test(c)?'не хватает AA':/aden/.test(c)?'не хватает адены':'отказ игры';
+  async function refusedSupply(s,snap){
+   const p=s.pending,L=ledger(s),code=bizCode(p?.refused);
+   if(!code||!validSupply(s,p)||!L||snap.revision!==p.revision||!untouched(s,snap))return false;
+   const key=p.currency==='aa'?'AA':'Adena';if(L['reserved'+key]<p.amount)return false;
+   trusted=null;permit=null;supplyPermit=null;
+   const why=refusalWhy(code),reason=`Игра отказала в закупке: ${why}. Покупки не было, резерв снят; серия на паузе, продолжение вручную`;
+   if(!await save({...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,pending:null,status:'paused',hold:false,reason,
+    supplies:[{t:now(),id:p.id,action:p.action,itemId:p.itemId||0,name:p.name,qty:0,currency:p.currency,amount:0,revision:snap.revision,code,status:'rejected'},...(s.supplies||[])].slice(0,40)}))return false;
+   env.rec?.('B','ЛС',`${p.action==='travel'?'Телепорт к Маммону':p.name+' ×'+p.qty}: ${why} (${code}); ревизия ${snap.revision} и остатки прежние — покупки не было. Серия на паузе, возвращаюсь к задачам`);
+   env.setStatus?.('ЛС: '+reason);return true;
   }
   function consumeSupplyPermit(id,path,body){const s=current(),p=s?.pending,c=config();
    if(!validSupply(s,p)||supplyPermit!==p.id||id!==p.id||!supplyActive(s,p.policy)||p.path!==path||fingerprint(body)!==fingerprint(p.body)||!policyValid(c))return false;
@@ -212,6 +236,15 @@
    if([400,401,403,404,412,422,423,429].includes(response.status)){
     const cur=current(),funds=ledger(cur);if(!funds)return pause('Не подтверждён резерв отклонённой закупки');
     trusted=null;await save({...cur,pending:null,['reserved'+key]:Math.max(0,funds['reserved'+key]-p.amount),status:'paused',reason:`Игра отклонила закупку (${response.status}); продолжение вручную`});return true;
+   }
+   // 20.43 (разбор 21.10): 5xx с точным кодом отказа — сразу свежий GET; не подтвердился — код остаётся в pending для сверки раз в 15 с.
+   const code=refusal(response.status,result);
+   if(code){
+    const snap=await supplySnapshot();if(!own(s)||current()?.pending?.id!==p.id)return true;
+    const marked={...current(),pending:{...current().pending,refused:code}};
+    if(snap&&await refusedSupply(marked,snap))return true;
+    trusted=null;permit=null;supplyPermit=null;const reason=`Игра отказала в закупке (${code}), но свежее состояние героя это не подтвердило; повтор запрещён, нужна сверка`;
+    await save({...marked,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;
    }
    if(!response.ok||result?.error||result?.ok===false||!result?.character)return pause('Ответ не подтверждает закупку; повтор запрещён, нужна сверка');
    const after=await supplySnapshot(),freshMerchant=p.action==='travel'?await supplyGet('/game/mammon/merchant'):null;
@@ -279,17 +312,18 @@
    const attempts=s.attempts+1,matched=s.targets.includes(a.outcomeId),done=matched||attempts>=s.maxAttempts;
    const row={...s,attempts,weapon:fingerprint(w),pending:null,last:a.outcomeId,nextAt:now()+1500,
     history:[{t:now(),outcomeId:a.outcomeId,attempt:attempts},...s.history].slice(0,100),
-    status:done?'done':allowed(s)?'running':'paused',reason:matched?'Получен выбранный эффект: '+A.OUT[a.outcomeId].n:done?'Достигнут лимит попыток':allowed(s)?'':'Состояние сверено; продолжение вручную'};
+    status:done?'done':allowed(s)?'running':'paused',reason:matched?'Получен выбранный эффект: '+A.OUT[a.outcomeId].n:done?'Достигнут лимит попыток':allowed(s)?'':'Состояние сверено; продолжение вручную',
+    ...(done?{hold:false}:{})};   // 20.43 (разбор 21.10): попытка сверена, цель/лимит — серия отпускает бота (см. finish)
    if(!await save(row,snap.inventory.eq))return false;
    if(done)trusted=null;
-   env.rec?.('B','ЛС',`${attempts}/${s.maxAttempts}: ${A.OUT[a.outcomeId].n}${done?' · '+row.reason:''}`);return true;
+   env.rec?.('B','ЛС',`${attempts}/${s.maxAttempts}: ${A.OUT[a.outcomeId].n}${done?' · '+row.reason:''}`);if(done)env.rec?.('B','ЛС',DONE_NOTE);return true;
   }
   async function reconcile(){const s=current(),p=s?.pending;if(!own(s)||!p)return false;
    trusted=null;permit=null;supplyPermit=null;
    if(p.kind==='supply'){
     const snap=await supplySnapshot(),merchant=p.action==='travel'?await supplyGet('/game/mammon/merchant'):null;
     if(!own(s)||current()?.pending?.id!==p.id)return false;
-    if(snap&&(await settleSupply({...current(),status:'paused'},snap,merchant)||await recoverSupply(current(),snap)))return true;
+    if(snap&&(await settleSupply({...current(),status:'paused'},snap,merchant)||await recoverSupply(current(),snap)||await refusedSupply(current(),snap)))return true;
     await save({...current(),status:'paused',reason:'Закупка не подтверждена; повтор запрещён. Проверьте материалы и оплату',pending:{...p,lastCheck:now()}});return false;
    }
    const snap=await snapshot();if(!own(s)||current()?.pending?.id!==p.id)return false;
@@ -300,6 +334,8 @@
    try{
     let s=current();
     if(s.pending){if(now()-(s.pending.lastCheck||s.pending.t)<15000)return true;await reconcile();return true;}
+    // 20.43 (разбор 21.10): серия, завершённая до обновления (done + удержание), тоже отпускает бота — после 'done' ЛС ничего не тратит.
+    if(s.status==='done'){trusted=null;if(await save({...s,hold:false}))env.rec?.('B','ЛС',DONE_NOTE);return true;}
     if(!allowed(s)){if(s.status==='running')await pause('Остановлено, страница или настройки изменились; продолжение вручную');env.setStatus?.('ЛС: '+(current()?.reason||'Ожидание команды'));return true;}
     if(now()<s.nextAt)return true;
     if(s.attempts>=s.maxAttempts)return await finish(s,'Достигнут лимит попыток');
@@ -330,7 +366,9 @@
     return true;
    }finally{permit=null;supplyPermit=null;busy=false;}
   }
-  async function yieldToUrgent(){trusted=null;permit=null;const s=current();if(!own(s)||s.pending)return false;return save({...s,status:'paused',hold:false,reason:'ЛС прерван для TvT; продолжение вручную'});}
+  // 20.43 (разбор 21.10): зовётся и при открытой записи на TvT (content loopGate), не только когда уже записаны.
+  async function yieldToUrgent(){trusted=null;permit=null;const s=current();if(!own(s)||s.pending)return false;const done=s.status==='done';
+   const ok=await save(done?{...s,hold:false}:{...s,status:'paused',hold:false,reason:'ЛС прерван для TvT; продолжение вручную'});if(ok)env.rec?.('B','ЛС',done?DONE_NOTE:'Серия прервана ради TvT; продолжение вручную');return ok;}
   return {command,step,reconcile,consumePermit,consumeSupplyPermit,yieldToUrgent,interrupt:()=>{trusted=null;permit=null;supplyPermit=null;},config};
  };
 })(globalThis);

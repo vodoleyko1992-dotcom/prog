@@ -470,6 +470,7 @@ async function menuPatch(m, sender) {
     if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
+    if (m.on === false) await stopAlert(change.stopMeta, state.cfg);   // 20.43: Стоп из меню снимает «!» самоостановки, уведомления нет
     return { ok: true };
   });
 }
@@ -486,7 +487,7 @@ async function botControl(m, sender) {
   if ((!popup && !game) || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['on', 'lock', 'rt']);
+    const state = await chrome.storage.local.get(['on', 'lock', 'rt', 'cfg']);
     // 20.13 (ревизия 17.10, шаг 5, core-b/F3): (а) Esc ×2 — настоящая клавиша игрока (content проверил isTrusted) на любой вкладке игры:
     // это та же ручная остановка, что из меню; раньше вкладка без замка получала ownership_lost и бот продолжал работать в другой вкладке.
     // (б) «жёсткий» стоп самого бота (ошибка программы повторилась, 3 восстановления, аккаунт заблокирован) больше не отклоняется из-за нового
@@ -502,9 +503,10 @@ async function botControl(m, sender) {
     }
     if (user && !state.on) return { ok: true };
     const now = Date.now(), reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240);
-    await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null,
-      stopMeta: { source: String(user ? 'content-user' : m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
+    const stopMeta = { source: String(user ? 'content-user' : m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now };
+    await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null, stopMeta });
     await afterOnWrite(state.on, false);
+    await stopAlert(stopMeta, state.cfg);            // 20.43: после afterOnWrite — иначе пустой значок затёр бы «!»
     return { ok: true };
   });
 }
@@ -580,7 +582,8 @@ async function switchCharacter(m, sender) {
 }
 // 8.0.6 (Firefox для Android): значка на панели там нет — вызовы под защитой, иначе фоновый скрипт ловит ошибку
 const paint = on => {
-  try { chrome.action?.setBadgeText?.({ text: on ? 'ON' : '' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#27ae60' })?.catch?.(() => {}); } catch (e) {}
+  const warn = !on && attn;
+  try { chrome.action?.setBadgeText?.({ text: on ? 'ON' : warn ? '!' : '' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: warn ? '#c0392b' : '#27ae60' })?.catch?.(() => {}); } catch (e) {}
 };
 // 20.41 (лог 20.10 21:09: память rt 1,3 МБ — каждая запись rt доставлялась двум слушателям storage.onChanged фона целиком, старое+новое
 // значение, ≈100–190 мс на каждый цикл statePatch в том же потоке фона): слушателей хранилища в фоне больше нет. Их работу делают сами
@@ -589,11 +592,60 @@ const paint = on => {
 // Прямые записи on:false (модули, импорт памяти) зовут badgeSync; сторож и так перечитывает on/замок/эпоху под очередью перед reload.
 let paintedOn = null;                              // что сейчас на значке: «работает/стоит» ('!' капчи это значение не меняет)
 const paintOn = on => { paintedOn = !!on; paint(on); };
+// 20.43 (разбор 21.10: бот ночью вставал сам — «Персонаж погиб», «3 смерти за 30 минут», сторож «3 перезагрузки … не помогли»,
+// пауза «выход из Ashen Bastion не подтверждён», — а значок просто гас; уведомление было только у капчи и автовхода, причина — лишь
+// в подсказке меню). Самоостановка и пауза от самого бота (content-halt/content-pause) и стоп сторожа фона (watchdog): одно системное
+// уведомление с причиной и красный «!» на значке до следующего Старта/«▶ Продолжить». Ручной Стоп/Пауза из меню, Alt+Shift+B, Esc ×2
+// (content-user) и импорт памяти — без уведомления. Галка cfg.notifyStops («Уведомлять об остановках», по умолчанию ВКЛ): выключена —
+// всё как раньше. На Firefox для Android уведомлений и значка нет — вызовы под «?.», там остаётся строка причины в меню.
+const SELF_STOP = new Set(['content-halt', 'content-pause', 'watchdog']);
+const selfStop = meta => !!meta && SELF_STOP.has(String(meta.source || '')) && !meta.resumed;
+const attnOf = s => !s?.on && selfStop(s?.stopMeta) && s?.cfg?.notifyStops !== false;
+let attn = false;                                  // красный «!» самоостановки: paint рисует его вместо пустого значка (и после перезапуска фона)
+// 20.43: уведомление — без requireInteraction, если браузер его не принимает (Firefox); шум — не чаще раза на ключ (причина/оплата) за ms.
+// Отметки — в storage.session (переживают перезапуск фона MV3, не попадают в экспорт и память бота), без него — в памяти фона.
+const notify = (id, title, message, sticky) => {
+  const o = { type: 'basic', iconUrl: 'icons/128.png', title, message: String(message || '').slice(0, 400), priority: 2 };
+  const plain = () => { try { chrome.notifications?.create?.(id, o)?.catch?.(() => {}); } catch (_) {} };
+  try { const p = chrome.notifications?.create?.(id, sticky ? { ...o, requireInteraction: true } : o); if (sticky) p?.catch?.(plain); } catch (_) { if (sticky) plain(); }
+};
+let noteMem = {}, noteQ = Promise.resolve();
+const noteOnce = (key, ms) => (noteQ = noteQ.then(async () => {
+  const now = Date.now(), S = chrome.storage?.session;
+  let seen = noteMem; try { if (S) seen = (await S.get('noteSeen'))?.noteSeen || {}; } catch (_) {}
+  if (now - (+seen[key] || 0) < ms) return true;
+  noteMem = Object.fromEntries(Object.entries({ ...seen, [key]: now }).filter(([, t]) => now - t < 86400000).slice(-40));
+  try { await S?.set({ noteSeen: noteMem }); } catch (_) {}
+  return false;
+}).catch(() => false));
+// Остановка/пауза записана (on:false + stopMeta): своя — «!» и одно уведомление на причину за 30 мин (цифры в причине не различают её:
+// «бот молчит 160 с» и «… 172 с» — одна причина); чужая (игрок) снимает прежний «!» самоостановки
+async function stopAlert(meta, cfg) {
+  const own = selfStop(meta) && cfg?.notifyStops !== false;
+  if (attn !== own) { attn = own; if (paintedOn === false) paint(false); }
+  if (!own || await noteOnce('stop:' + String(meta.reason || '').replace(/\d+/g, '#').slice(0, 120), 30 * 60000)) return;
+  const at = new Date(+meta.t || Date.now()).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+  notify('l2bot-stop', meta.source === 'content-pause' ? 'L2wap Bot сам встал на паузу' : 'L2wap Bot остановлен', `${at} · ${meta.source === 'watchdog' ? 'сторож: ' : ''}${meta.reason || 'причина не указана'}`, true);
+}
+// 20.43: неподтверждённая оплата висит дольше 15 мин — одно уведомление на её id (платные задачи стоят до сверки; бот её сам не снимает)
+const PAY_NOTE_MS = 15 * 60000, PAY_KIND = { shop: 'закупка в магазине', fishing: 'покупка на рыбалке', 'cat-teleport': 'телепорт в катакомбы', 'raid-teleport': 'телепорт к РБ', mammon: 'Маммон', 'fa-buff': 'бафф за FA', 'town-buff': 'городской бафф', 'tvt-shop': 'магазин TvT', 'story-teleport': 'телепорт квеста' };
+async function payAlert(rt, cfg, now = Date.now()) {
+  const p = rt?.actionPayments?.pending;
+  if (!p?.id || cfg?.notifyStops === false || !(now - (+p.at || now) >= PAY_NOTE_MS) || await noteOnce('pay:' + p.id, 86400000)) return false;
+  const sum = Number.isFinite(+p.quote?.amount) ? ` · ${(+p.quote.amount).toLocaleString('ru')} ${p.quote.currency || ''}`.trimEnd() : '';
+  notify('l2bot-pay', 'L2wap Bot: оплата без подтверждения', `${PAY_KIND[p.kind] || p.kind || 'оплата'}${sum} ждёт сверки ${Math.floor((now - p.at) / 60000)} мин. Проверьте адену; если списания не было — в меню бота кнопка «Считать оплату не прошедшей».`, false);
+  return true;
+}
 async function afterOnWrite(prevOn, nextOn) {      // только внутри serializeLock и только после удачной записи «on»
   if (!!prevOn === !!nextOn) { if (paintedOn !== !!nextOn) paintOn(nextOn); return; }
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
+  if (nextOn) attn = false;                        // 20.43: Старт/«▶ Продолжить» снимает «!» самоостановки
   paintOn(nextOn);
   if (!nextOn) return;
+  // 20.43: …и её уведомление; причина в меню больше не показывается (stopMeta.resumed; t прежнее — по нему stopPendRetry узнаёт
+  // уже дошедшую остановку)
+  try { chrome.notifications?.clear?.('l2bot-stop')?.catch?.(() => {}); } catch (_) {}
+  try { const { stopMeta } = await chrome.storage.local.get('stopMeta'); if (stopMeta && !stopMeta.resumed) await chrome.storage.local.set({ stopMeta: { ...stopMeta, resumed: Date.now() } }); } catch (_) {}
   try {   // старт — отсчёт сторожа заново, в очереди владельца
     const { on, hbBg, lock } = await chrome.storage.local.get(['on', 'hbBg', 'lock']);
     if (!on) return; // Пока ждали хранилище, игрок мог уже остановить бота.
@@ -605,6 +657,8 @@ async function afterOnWrite(prevOn, nextOn) {      // только внутри 
   } catch (_) {}
 }
 chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {});
+// 20.43: перезапуск фона MV3 не стирает «!» самоостановки — он восстанавливается из stopMeta/cfg (в любом порядке с чтением «on» выше)
+chrome.storage.local.get(['on', 'stopMeta', 'cfg']).then(s => { attn = attnOf(s); if (attn && paintedOn === false) paint(false); }).catch(() => {});
 
 // после установки/обновления расширения старый скрипт во вкладках игры «отключается» —
 // перезагружаем открытые вкладки l2wap, чтобы бот подхватил новую версию
@@ -703,6 +757,7 @@ chrome.commands?.onCommand.addListener(async c => {
     } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };
     await chrome.storage.local.set(change);
     await afterOnWrite(on, !on);
+    if (on) await stopAlert(change.stopMeta, cfg);    // 20.43: ручной стоп клавишей — без уведомления, прежний «!» снят
   });
 });
 
@@ -993,6 +1048,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
     const before = await serializeLock(async () => {
       const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']);
       if (!!state.on !== paintedOn) paintOn(state.on);   // 20.41: страховка значка раз в минуту; совпадает — не трогаем ('!' капчи остаётся)
+      void payAlert(state.rt, state.cfg).catch(() => {});   // 20.43: оплата без сверки дольше 15 мин — и при остановленном боте; очередь не ждёт
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
       if (!state.on || !Number.isInteger(hb?.tab) || state.lock?.k !== 'tab' + hb.tab) return null;
       const quiet = Date.now() - hb.t, wdDown = state.wdDown;
@@ -1070,8 +1126,10 @@ chrome.alarms?.onAlarm.addListener(async a => {
       if (recent.length >= 3) {
         ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
         buf.push(ev); flush();
-        await chrome.storage.local.set({ on: false, wdog: recent, stopMeta: { source: 'watchdog', reason: ev.what, t: Date.now() } });
+        const stopMeta = { source: 'watchdog', reason: ev.what, t: Date.now() };
+        await chrome.storage.local.set({ on: false, wdog: recent, stopMeta });
         await afterOnWrite(on, false);
+        await stopAlert(stopMeta, cfg);              // 20.43: уведомление и «!» — rt.status при стопе сторожа не меняется, меню читает stopMeta
         return;
       }
       ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
@@ -1166,7 +1224,55 @@ async function lifestoneDockCommand(m, sender) {
   }catch(_){return denied('Не удалось передать команду ЛС во вкладку игры — обновите страницу');}
 }
 
+// 20.43 (разбор 21.10): во встроенном меню Firefox (iframe с runtime/storage, без tabs) Старт, кнопки Warlock и проверки панели
+// падали на chrome.tabs: kick не уходил (ложное «вкладка игры не отвечает»), неизвестную оплату кота нельзя было закрыть.
+// Фон пересылает команду только родительской вкладке этого меню (frame 0) и только из белого списка; отправитель и герой —
+// как у lifestoneDockCommand. Ответ — только поля, которые читает меню (роли «Предложить» — целиком: «Применить» пишет их в настройки).
+// Ожидание ответа: kick 6 с (меню повторяет до 12 с, как в Chrome), кот 20 с, проверки панели 8–15 с.
+const DOCK_GAME_WAIT = { kick: 6000, warlockCommand: 20000, slots: 8000, suggest: 15000, dom: 15000 };
+function dockGameAnswer(cmd, a) {
+  if (!a || typeof a !== 'object') return null;
+  const s = (x, n = 220) => typeof x === 'string' ? x.slice(0, n) : '', list = x => Array.isArray(x) ? x.slice(0, 400).map(y => s(y, 400)) : [];
+  if (cmd === 'kick') return { ok: a.ok === true, v: s(a.v, 40), running: a.running === true, owner: a.owner === true, reason: s(a.reason) };
+  if (cmd === 'warlockCommand') return { ok: a.ok === true, reason: s(a.reason) };
+  if (cmd === 'slots') return { battle: a.battle === true, roles: list(a.roles), panel: list(a.panel) };
+  if (cmd === 'suggest') return { battle: a.battle === true, roles: Object.fromEntries(Object.entries(a.roles && typeof a.roles === 'object' ? a.roles : {}).filter(([k]) => /^n[A-Z]\w{0,40}$/.test(k)).map(([k, v]) => [k, typeof v === 'string' ? v : ''])),
+    buffsNote: s(a.buffsNote, 400), why: list(a.why) };
+  return { html: typeof a.html === 'string' ? a.html.slice(0, 1000000) : '', page: s(a.page, 80) };
+}
+async function dockGameCommand(m, sender) {
+  const fail = (reason, retry = false) => ({ relayed: false, reason, retry });
+  try {
+    const page = new URL(sender?.url || ''), menu = new URL(chrome.runtime.getURL('popup.html'));
+    if (sender?.id !== chrome.runtime.id || page.protocol !== menu.protocol || page.host !== menu.host || page.pathname !== menu.pathname || page.searchParams.get('dock') !== '1'
+      || !Number.isInteger(sender.frameId) || sender.frameId <= 0 || !Number.isInteger(sender.tab?.id) || sender.tab.id < 0) return fail('Команда доступна только из встроенного меню игры');
+    const q = m?.message, cmd = q?.cmd;
+    if (!q || typeof q !== 'object' || !Object.hasOwn(DOCK_GAME_WAIT, cmd) || typeof m.char !== 'string' || m.char.length > 64) return fail('Команда не поддерживается встроенным меню');
+    let command = { cmd };
+    if (cmd === 'warlockCommand') {
+      const num = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
+      if (!['preview', 'resetBudget', 'archiveUnknown'].includes(q.action) || typeof q.id !== 'string' || !q.id || q.id.length > 80 || !m.char || q.char !== m.char
+        || !num(q.budgetEpoch) || !num(q.spent) || q.pendingId != null && (typeof q.pendingId !== 'string' || !q.pendingId || q.pendingId.length > 80)) return fail('Некорректная команда кота');
+      command = { cmd, id: q.id, action: q.action, char: q.char, budgetEpoch: q.budgetEpoch, spent: q.spent, ...(q.pendingId != null ? { pendingId: q.pendingId } : {}) };
+    }
+    const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
+    if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl) return fail('Вкладка игры закрыта или загружается — повторите после загрузки', true);
+    const { rt = {} } = await chrome.storage.local.get('rt');
+    if ((rt.char || '') !== m.char) return fail('Персонаж изменился — обновите меню');
+    const late = {}; let timer;
+    try {
+      const answer = await Promise.race([chrome.tabs.sendMessage(sender.tab.id, command, { frameId: 0 }),
+        new Promise(resolve => { timer = setTimeout(() => resolve(late), DOCK_GAME_WAIT[cmd]); })]);
+      if (answer === late) return fail(cmd === 'warlockCommand' ? 'Ответ ещё не получен. Команда могла быть принята; проверьте состояние перед повтором.' : 'Вкладка игры не ответила — обновите страницу', cmd !== 'warlockCommand');
+      return { relayed: true, answer: dockGameAnswer(cmd, answer) };
+    } finally { clearTimeout(timer); }
+  } catch (_) { return fail('Не удалось передать команду во вкладку игры — обновите страницу', true); }
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'dockGameCommand') {
+    dockGameCommand(m, _s).then(reply).catch(() => reply({ relayed: false, reason: 'Команда не передана во вкладку игры', retry: false })); return true;
+  }
   if (m?.cmd === 'mammonBagDockAnalyze') {
     mammonBagDockAnalyze(m, _s).then(reply).catch(() => reply({ ok: false, reason: 'Не удалось прочитать рюкзак' })); return true;
   }
@@ -1286,7 +1392,8 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   }
   if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
   // 20.41: прямая запись on:false (модуль/импорт памяти) — значок по факту; та же запись при уже остановленном боте значок не трогает
-  if (m?.cmd === 'badgeSync') chrome.storage.local.get('on').then(s => { if (!!s.on !== paintedOn) paintOn(s.on); }).catch(() => {});
+  // 20.43: …и «!» самоостановки по stopMeta (импорт памяти пишет свою причину — прежний «!» снимается)
+  if (m?.cmd === 'badgeSync') chrome.storage.local.get(['on', 'stopMeta', 'cfg']).then(s => { const a = attnOf(s); if (!!s.on !== paintedOn || a !== attn) { attn = a; paintOn(s.on); } }).catch(() => {});
   if (m?.cmd === 'rec') { buf.push(m.ev); if (!timer) timer = setTimeout(flush, 1500); }
   if (m?.cmd === 'snap' && m.key && m.html) addSnap(m);
   if (m?.cmd === 'shot' && _s?.tab) addShot(_s.tab, m);

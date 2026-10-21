@@ -51,7 +51,8 @@ const mk = rt => {
   // ядро: пауза = как кнопка «⏸ Пауза» (on:false + paused), геттер модуля есть
   const content = read('content.js');
   // Реворк20.9: автоматическая пауза использует ту же сериализованную команду фона, что меню.
-  assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  await automationStop\(msg, 'pause'\);/);
+  // 20.43 (разбор 21.10): pauseBot(msg, opt) — пауза из-за сбоя (opt.fault) сначала проверяет сервер; «один РБ» зовёт без fault — пауза сразу, тем же automationStop
+  assert.match(content, /async function pauseBot\(msg, opt = \{\}\) \{\n  if \(opt\.fault && on\) \{[\s\S]{0,600}?\n  \}\n  rec\('B', 'пауза', msg\);\n  await automationStop\(msg, 'pause'\);/);
   assert.match(read('background.js'), /paused: m\.action === 'pause' \? \{ t: now, why: reason\.slice\(0, 160\) \} : null/);
   // 10.0.15: новые lazy getters не меняют контракт pauseBot и не обязаны идти после него.
   assert.match(content.match(/L2V7Modules\.raid = L2V7Factories\.raid\(\{([\s\S]*?)\}\);/)?.[1] || '', /get pauseBot\(\) \{ return pauseBot; \}/);

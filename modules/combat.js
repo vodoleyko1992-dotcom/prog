@@ -597,9 +597,13 @@ function debuffGain() {                                   // медиана от
   const ratio = a[a.length >> 1];
   return { ratio, n: a.length, minActs: ratio > 1.001 ? Math.ceil(1 / (ratio - 1)) + 1 : Infinity };
 }
+// 20.43 (разбор 21.10): иммунитет к дебаффам — у РБ общий флаг (7.2.1), у мобов/чемпионов — по виду цели на 24 ч, потом одна проба.
+// Старые общие флаги .mob/.champ не действуют (миграция dbfImm2043 их снимает; у других классов в classStash они просто лежат)
+const IMM_MS = 24 * 3600000, immKey = ctx => (ctx?.champ ? 'ч:' : '') + String(ctx?.name || '?').trim().toLowerCase();
+const dbfImmune = ctx => ctx.rb ? !!env.rt.debuffImmune?.rb : Date.now() - (+env.rt.debuffImmune?.sp?.[immKey(ctx)] || 0) < IMM_MS;
 function debuffPlan(ctx, mp, me) {
   if (env.cfg.debuffAuto === false) return null;
-  if (env.rt.debuffImmune?.[ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob']) return null;   // 7.2.1: «має імунітет до негативних ефектів»
+  if (dbfImmune(ctx)) return null;   // 7.2.1: «має імунітет до негативних ефектів»; 20.43: мобы/чемпионы — по виду и со сроком
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
   const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto', g = debuffGain();
   const pet = petExpect(ctx), actsLeft = mob.cur / Math.max(1, avg + pet);
@@ -2233,11 +2237,21 @@ async function battle() {
         const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|опира|сопротивл|resist|не подіяв|не подействовал/i.test(added);   // 8.0.3: и «Ціль опирається ефекту» (34 строки 10.10, fail = 0)
         if (fail && !ok && ctx.debuffed) delete ctx.debuffed[dbf.k];   // 7.2.1: не прошёл — цель не под дебаффом (иначе замер выгоды врёт)
         // 7.2.1 (лог 10.10 21:32–21:39): «Raid Boss має імунітет до негативних ефектів» — 3 хода на каждый заход к РБ (и Surrender снова
-        // каждые 15 с) впустую. Запоминаем: на этот вид целей дебаффы не вешаем (rt.debuffImmune.rb / .champ / .mob)
+        // каждые 15 с) впустую. Запоминаем: на этот вид целей дебаффы не вешаем (rt.debuffImmune.rb)
+        // 20.43 (разбор 21.10): общий флаг .mob/.champ без срока выключал дебаффы на ВСЕХ мобах/чемпионах навсегда из-за одного вида
+        // (особый моб катакомб или рядом с РБ). Теперь моб/чемпион — по виду цели на сутки (rt.debuffImmune.sp, потом одна проба);
+        // «Raid Boss» прямо в тексте — РБ при любом ctx (и вид этой цели, чтобы в бою не вешать снова)
         if (/імунітет|иммунитет|immune/i.test(added)) {
-          const kind = ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob';
+          const line = (added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim(), rb = ctx.rb || /raid\s*boss|рейд-?бос/i.test(line);
           if (ctx.debuffed) delete ctx.debuffed[dbf.k];
-          if (!env.rt.debuffImmune?.[kind]) { rtSoon({ debuffImmune: { ...(env.rt.debuffImmune || {}), [kind]: Date.now() } }); env.rec('B', 'дебафф', `${kind === 'rb' ? 'рейд-боссы' : kind === 'champ' ? 'чемпионы' : 'мобы'} невосприимчивы к дебаффам («${(added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim()}») — больше не вешаю`); }
+          const I0 = env.rt.debuffImmune || {}, { mob: _m, champ: _c, ...I } = I0, k = immKey(ctx), was = !ctx.rb && +I.sp?.[k] || 0, now = Date.now();   // старые общие флаги при записи не переносим
+          if (rb && !I.rb) { I.rb = now; env.rec('B', 'дебафф', `рейд-боссы невосприимчивы к дебаффам («${line}») — больше не вешаю`); }
+          if (!ctx.rb) {
+            const sp = Object.fromEntries(Object.entries(I.sp || {}).filter(([, t]) => now - t < 7 * IMM_MS).sort((a, b) => b[1] - a[1]).slice(0, 59));
+            sp[k] = now; I.sp = sp;
+            env.rec('B', 'дебафф', `${ctx.name || 'цель'}${ctx.champ ? ' (чемпион)' : ''}: невосприимчив к дебаффам («${line}») — ${was && now - was >= IMM_MS ? 'проба после суток: всё ещё иммунитет, ' : ''}не вешаю на этот вид 24 ч, на остальных — как обычно`);
+          }
+          if (I.rb !== env.rt.debuffImmune?.rb || !ctx.rb || _m || _c) rtSoon({ debuffImmune: I });
           return AGAIN;
         }
         if (ok || fail) {
@@ -2624,7 +2638,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     }
   }
   debuffGainFlush(ctx).catch(e => console.warn(env.TAG, 'выгода дебаффов', e));   // 7.2.1
-  try { warlordSkipNote(ctx); } catch (e) {}   // 20.13 (шаг 7, combat/C6)
+  try { warlordSkipNote(ctx); } catch (e) { env.quietErr?.('агро Warlord', e); }   // 20.13 (шаг 7, combat/C6); 20.43 (разбор 21.10): ошибка — в журнал
   if (ctx.pet) { try { petTick(ctx); petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))).catch(e => console.warn(env.TAG, 'статистика кота', e)); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   env.trackEfficiency(rewards.exp + (ctx.extraCredited?.exp || 0), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
@@ -2729,6 +2743,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

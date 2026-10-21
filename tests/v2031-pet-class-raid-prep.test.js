@@ -28,14 +28,16 @@ function setup(o={}){
  await run('bare cat поддержан существующей платной логикой',async()=>{const f=setup({char:{l2Profession:'arcana_lord'},cfg:{petFullAuto:true}});await f.step();assert.equal(f.calls.length,1)});
  await run('перед РБ кот сначала призывается с родной панели и подтверждается свежим GET',async()=>{
   const f=setup({char:{activeSummon:null},cfg:{petBuffAuto:false}});assert.equal(f.api().raidReady(),false);await f.prep();assert.equal(f.nav[0],'/skill-panel.html');assert.equal(f.fires.length,0);await f.prep();assert.deepEqual(f.fires,[1276]);assert.equal(f.e.rt.petRaidPrep.pending.kind,'summon');await f.prep();assert.equal(f.fires.length,1);
-  f.ch.revision++;f.ch.activeSummon={kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:100,activeBuffs:[]};await f.prep();assert.equal(f.page(),'/map.html');assert.equal(f.e.rt.petRaidPrep,null);assert.equal(f.api().raidReady(),true);assert.equal(f.calls.length,0);
+  // 20.43 (разбор 21.10): неподтверждённое ожидание перечитывает /character не чаще раза в 1,5 с (первые 15 с после клика)
+  f.tick(1500);f.ch.revision++;f.ch.activeSummon={kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:100,activeBuffs:[]};await f.prep();assert.equal(f.page(),'/map.html');assert.equal(f.e.rt.petRaidPrep,null);assert.equal(f.api().raidReady(),true);assert.equal(f.calls.length,0);
  });
  await run('три собственных баффа — каждый строго после подтверждения предыдущего',async()=>{
   const f=setup();await f.prep();await f.prep();assert.deepEqual(f.fires,[1331]);f.effect(4699);await f.prep();assert.deepEqual(f.fires,[1331,1346]);f.effect(1346);await f.prep();assert.deepEqual(f.fires,[1331,1346,1349]);f.effect(1349);await f.prep();assert.equal(f.api().raidReady(),true);assert.equal(f.page(),'/map.html');assert.equal(f.calls.length,0);
  });
  await run('Queen героя не подменяет отсутствующий бафф кота',async()=>{const f=setup({char:{activeBuffs:[{skillId:4699,expiresAtMs:1792009999999}]}});await f.prep();await f.prep();assert.deepEqual(f.fires,[1331])});
  await run('native OFF не покупает полный платный набор',async()=>{const f=setup({cfg:{petBuffAuto:false,petFullAuto:false}});assert.equal(await f.prep(),false);assert.equal(f.api().raidReady(),true);assert.equal(f.calls.length,0);assert.equal(f.fires.length,0)});
- await run('неизвестный native после reload/нового Start не повторяется',async()=>{const f=setup();await f.prep();await f.prep();f.reload();f.e.rt.manualKickAt=777;await f.prep();assert.deepEqual(f.fires,[1331]);assert.equal(f.e.rt.petRaidPrep.pending.skillId,1331);f.effect(4699);await f.prep();assert.deepEqual(f.fires,[1331,1346])});
+ // 20.43 (разбор 21.10): до 2 мин без подтверждения — без повтора и после reload/нового Start; один повтор после 2 мин — tests/v2043-warlock-raid-prep.test.js
+ await run('неизвестный native после reload/нового Start в пределах 2 мин не повторяется',async()=>{const f=setup();await f.prep();await f.prep();f.reload();f.e.rt.manualKickAt=777;await f.prep();assert.deepEqual(f.fires,[1331]);assert.equal(f.e.rt.petRaidPrep.pending.skillId,1331);f.tick(1500);f.effect(4699);await f.prep();assert.deepEqual(f.fires,[1331,1346])});
  await run('Stop между свежим GET и родным кликом запрещает действие',async()=>{const f=setup({page:'/skill-panel.html'});f.e.nativePanelOpen=async()=>{f.e.on=false};await f.prep();assert.equal(f.fires.length,0)});
  await run('недостаток MP/откат/неполная панель ждёт до клика',async()=>{for(const kind of ['mp','cd','incomplete']){const f=setup({page:'/skill-panel.html'});if(kind==='mp')f.ch.mp=0;if(kind==='cd')f.panel.buffs[0].ready=false;if(kind==='incomplete')f.panel.incomplete=true;await f.prep();assert.equal(f.fires.length,0)}});
  await run('потеря конкретной кнопки до fire снимает точно не отправленную попытку',async()=>{const f=setup({page:'/skill-panel.html'});let n=0;f.e.nativePanel=()=>++n===1?f.panel:{...f.panel,buffs:[]};await f.prep();assert.equal(f.fires.length,0);assert.equal(f.e.rt.petRaidPrep.pending,null)});
@@ -52,6 +54,7 @@ function setup(o={}){
  const raid=fs.readFileSync(path.join(__dirname,'../modules/raid.js'),'utf8'),content=fs.readFileSync(path.join(__dirname,'../content.js'),'utf8');
  const beforeFull=raid.indexOf('await env.warlock?.step?.({ forceRead: true })');assert(beforeFull>0);assert(raid.lastIndexOf('await env.warlock?.raidPrepare?.()',beforeFull)>0);
  const go=raid.slice(raid.indexOf("if (H.step === 'go')"),raid.indexOf("if (H.step === 'arrive')"));assert(go.indexOf('await env.warlock?.raidPrepare?.()')>=0);assert(go.indexOf('await env.warlock?.raidPrepare?.()')<go.indexOf('!rbSummonBuffReady()'));
- assert(content.indexOf('rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()')<content.indexOf('await enchantModePause();'));
+ // 20.43: ожидание подготовки уступает TvT (idleTvtBreak), порядок раньше заточки прежний
+ const prepAt=content.indexOf('rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()');assert(prepAt>0&&prepAt<content.indexOf('await enchantModePause();'));
  console.log(passed+' сценариев PASS');
 })().catch(e=>{console.error(e);process.exitCode=1});

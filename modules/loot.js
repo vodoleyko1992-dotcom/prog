@@ -144,10 +144,11 @@ const faKind = info => {
   if (hl && info.lvl && info.lvl < hl - 5) return 'low';
   return info.champ ? (FA_TIER[info.tier] ? info.tier : 'blue') : 'mob';
 };
+// сколько Fast Aden в строках добычи победы (и «Спойл: Fast Aden ×N»)
+const faQty = lines => { let q = 0; for (const l of lines) { const m = l.match(env.LOOT_RE); if (m && FA_RE.test(m[1].replace(/^\s*(?:Спойл|Spoil)\s*:?\s*/i, '').trim())) q += +m[2] || 0; } return q; };
 function faNote(lines, mob, info) {
   if (!info) return null;                          // РБ — не считаем (у них свой дроп)
-  let q = 0;
-  for (const l of lines) { const m = l.match(env.LOOT_RE); if (m && FA_RE.test(m[1].replace(/^\s*(?:Спойл|Spoil)\s*:?\s*/i, '').trim())) q += +m[2] || 0; }
+  const q = faQty(lines);
   const kind = faKind(info), D = env.rt.faDrop || {}, k = { ...(D.k || {}) }, f = { ...(D.f || {}) };
   k[kind] = (k[kind] || 0) + 1;
   if (q) f[kind] = (f[kind] || 0) + q;
@@ -159,12 +160,25 @@ function faNote(lines, mob, info) {
   else if (info.champ && kind !== 'blue' && kind !== 'mob') env.rec('B', 'FA', `${mob} (${info.lvl || '?'}, ${who}): FA не выпал${kind === 'low' ? ' — ниже героя больше чем на 5 ур., FA с него не падает' : ''} · ${tot}`);
   return fd;
 }
+// 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: 40 FA за 572 боя): шанс FA за бой — свой у класса (агро собирает пачку, у Warlock
+// одиночные цели). rt.faDrop остаётся общим (buffs.faDropSum/raid.faDropNow сверяют его сумму с балансом FA — «FA пополнились»), а
+// цена чемпионов считается по rt.faRate[класс] = { k: {вид: боёв}, f: {вид: FA}, t } (champs.faRate). «Низкие» бои FA не дают — не считаем
+function faRateNote(lines, info) {
+  if (!info) return null;
+  const kind = faKind(info); if (kind === 'low') return null;
+  const q = faQty(lines), C = root.L2EngineCore, cls = C?.faClass ? C.faClass(env.rt.classCur?.prof || env.rt.prof) : String(env.rt.prof || '?').toLowerCase();
+  const R = { ...(env.rt.faRate || {}) }, o = R[cls] || {}, k = { ...(o.k || {}) }, f = { ...(o.f || {}) };
+  k[kind] = (k[kind] || 0) + 1; if (q) f[kind] = (f[kind] || 0) + q;
+  R[cls] = { k, f, t: Date.now() };
+  const ks = Object.keys(R); if (ks.length > 12) ks.sort((a, b) => (R[a].t || 0) - (R[b].t || 0)).slice(0, ks.length - 12).forEach(x => delete R[x]);
+  return R;
+}
 
 async function trackLoot(lines, mob, info) {
   const char=env.rt.char,lease=env.leaseEpoch;
   await env.itemsDb();
   if(env.rt.char!==char||env.leaseEpoch!==lease||env.tabOwner===false)return;
-  const faDrop = faNote(lines, mob, info);
+  const faDrop = faNote(lines, mob, info), faRate = faRateNote(lines, info);
   const L = { ...(env.rt.loot || {}) }, S = { ...(env.rt.lootSpecial || {}) };
   const LS = { ...(env.rt.lootStat || {}) }, MK = { ...(env.rt.mobKills || {}) }, RG = { ...(env.rt.resGot || {}) };
   const mk = (mob || '?').trim();
@@ -208,7 +222,7 @@ async function trackLoot(lines, mob, info) {
   }
   if (Object.keys(LS).length > 120) for (const [k] of Object.entries(LS).sort((a, b) => a[1].n - b[1].n).slice(0, 20)) delete LS[k];
   if (Object.keys(MK).length > 120) for (const [k] of Object.entries(MK).sort((a, b) => a[1] - b[1]).slice(0, 20)) delete MK[k];
-  const patch = { lootStat: LS, mobKills: MK, lootStatT0: env.rt.lootStatT0 || Date.now(), ...(faDrop ? { faDrop } : {}) };
+  const patch = { lootStat: LS, mobKills: MK, lootStatT0: env.rt.lootStatT0 || Date.now(), ...(faDrop ? { faDrop } : {}), ...(faRate ? { faRate } : {}) };
   // 10.0 (аудит): у словаря «имя → число» поля .n нет — сортировка не работала, и после 200 видов каждый новый предмет отрезался сразу
   const cv = x => typeof x === 'number' ? x : +x?.n || 0;
   const cap = (o, n) => { const k = Object.keys(o); if (k.length <= n) return o; return Object.fromEntries(Object.entries(o).sort((a, b) => cv(b[1]) - cv(a[1])).slice(0, n)); };   // v5.6: без бесконечного роста
@@ -217,6 +231,6 @@ async function trackLoot(lines, mob, info) {
   if (campCh) Object.assign(patch, { campaign: { ...campaign, live: Date.now() }, campaignDue: campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
- return { faKind, faNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
+ return { faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
  };
 })(globalThis);
