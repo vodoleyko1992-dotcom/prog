@@ -9,7 +9,7 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  assert.match(await h.popup.locator('#activityText').innerText(),/Выберите, чем заняться/);assert.equal(await h.popup.locator('#quickStart').isVisible(),true);   // 18.10: быстрый запуск вместо «после «Старт»»
  assert.match(await h.popup.locator('#activityText').getAttribute('title'),/Последнее:/);   // 18.10: бот стоит — строка «Последнее» уходит в подсказку, место под быстрый запуск
  assert.match(await h.popup.locator('#taskBoardRows').innerText(),/Сегодня: 10 \/ 10/);
- assert.match(await h.popup.locator('#taskBoardRows').innerText(),/До 00:00 сервера/);
+ assert.match(await h.popup.locator('#taskBoardRows').innerText(),/Ждёт сброса суток/);assert.match(await h.popup.locator('#taskBoardRows').innerText(),/сброс в \d\d:\d\d по Владивостоку \(через /);   // 20.43: было «До 00:00 сервера»
  assert.equal((await h.get(['on'])).on,false);
  await h.popup.locator('#taskBoardRows [data-task-tab="limits"]').first().click();assert.equal(await h.popup.locator('#tab-limits').isVisible(),true);await h.openTab('overview');
  await h.popup.locator('#taskBoardEdit').click();assert.equal(await h.popup.locator('#autoTaskSelection').isVisible(),true);assert.equal(await h.popup.locator('#modeToggle').getAttribute('aria-expanded'),'true');

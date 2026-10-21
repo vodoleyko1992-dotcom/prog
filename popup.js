@@ -131,8 +131,49 @@ function paintWakeWarn(show, text) {
   el.hidden = !show;
   if (show) el.textContent = '⚠ ' + text;
 }
+// 20.43 (разбор 21.10): одна отправка команды в игру — Старт/быстрый запуск/смена режима, кнопки Warlock, проверки панели.
+// Есть chrome.tabs (Chrome, отдельное меню Firefox) — как раньше: вкладка от вызывающего или активная вкладка игры.
+// Нет (встроенное меню Firefox: iframe с runtime/storage, без tabs) — команда уходит в фон, а он пересылает её только
+// родительской вкладке этого меню (frame 0) и только из белого списка (dockGameCommand в background.js).
+const gameTabsApi = () => !!chrome.tabs?.sendMessage;
+async function gameSend(message, { tab = null, char = '' } = {}) {
+  if (!gameTabsApi()) {
+    const r = await chrome.runtime.sendMessage({ cmd: 'dockGameCommand', char, message });
+    if (r?.relayed === true) return r.answer;
+    throw Object.assign(Error(r?.reason || 'Команда не передана во вкладку игры — обновите страницу'), { dock: true, retry: r?.retry === true });
+  }
+  const target = tab || await activeTab();
+  if (!Number.isInteger(target?.id) || target.id < 0) throw Error('Откройте вкладку l2wap.com');
+  return chrome.tabs.sendMessage(target.id, message);
+}
+// те же подсказки, что у ответа движка в wakeGame ниже (путь с chrome.tabs оставлен как был)
+const WAKE_HINTS = {
+  stopped: 'Режим не включён в хранилище',
+  stopped_during_start: 'Запуск был отменён',
+  loop_not_running: 'Игровой цикл не запустился',
+  another_tab_or_lock_unavailable: 'Вкладка не получила управление: закройте другие вкладки L2WAP и повторите Старт'
+};
+const wakeAck = pong => pong.ok === true && pong.running === true && pong.owner === true ? { ok: true, status: 'Движок запущен и управляет вкладкой' }
+  : { ok: false, reason: WAKE_HINTS[pong.reason] || ('Движок не подтвердил запуск: ' + (pong.reason || 'неизвестно')) };
+// 20.43 (разбор 21.10): встроенное меню Firefox — kick через фон в свою родительскую вкладку. Вкладку не ищем и не перезагружаем:
+// это меню создал content той же страницы. Подтверждение то же, что в Chrome: версия, игровой цикл, владелец вкладки.
+async function wakeDockGame(expected) {
+  const char = formChar ?? '', deadline = Date.now() + 12000;
+  let pong = null, why = '';
+  for (let attempt = 0; pong?.v !== expected && Date.now() < deadline && attempt < 4; attempt++) {
+    if (attempt) await new Promise(resolve => setTimeout(resolve, 900));
+    if ((await chrome.storage.local.get('on')).on !== true) return { ok: false, reason: 'Запуск был отменён (бот выключен)' };
+    let timer;
+    try { pong = await Promise.race([gameSend({ cmd: 'kick' }, { char }), new Promise(resolve => { timer = setTimeout(() => resolve(null), 7000); })]); }
+    catch (e) { why = String(e?.message || e); if (!e?.retry) return { ok: false, reason: why }; pong = null; }
+    finally { clearTimeout(timer); }
+  }
+  if (pong?.v === expected) return wakeAck(pong);
+  return { ok: false, reason: pong?.v ? 'Вкладка игры работает со старой версией бота — обновите страницу игры' : why || 'Вкладка игры не ответила на запуск — обновите страницу игры' };
+}
 // Запуск режимов централизован: запись on=true НЕ доказывает, что игра исполняет цикл.
 async function wakeGame() {
+  if (!chrome.tabs?.sendMessage) return wakeDockGame(chrome.runtime.getManifest().version);   // 20.43: встроенное меню Firefox (без tabs)
   let tabs = [];
   try {
     const active = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -232,7 +273,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champM
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -281,7 +322,7 @@ async function liveStatusInto(rt) {
   return rt;
 }
 async function load() {
-  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
+  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
   await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
@@ -309,6 +350,8 @@ async function load() {
     if (!on || heartbeatValid) { if (w) wakeWarnSet(null); paintWakeWarn(false); }
     else if (w) paintWakeWarn(true, w.text);
     else paintWakeWarn(!booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000, WAKE_NOTAB); }
+  { const line = on ? '' : selfStopLine(stopMeta, paused), w = $('stopWarn');   // 20.43: причина самоостановки — постоянной строкой
+    if (w) { if (w.textContent !== line) w.textContent = line; w.hidden = !line; } }
   // 20.12 (ревизия 17.10, UI-6): версия — только в подвале; строка героя короче, шапка не выше 200 px
   $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
@@ -383,6 +426,7 @@ async function load() {
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
   renderFaDrop(rt);
+  renderDebuffImm(rt);   // 20.43
   renderCancelList(rt);
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderFight(rt);
@@ -768,13 +812,14 @@ $('sealNow').onclick = async () => {
 // 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
 const dailyLimitKeys={fish:'dailyFishLimit',mobs:'dailyKillLimit'};
 const dailyGotOf=(rt,task,day)=>L2EngineCore.dailyCount(rt,task==='fish'?'fish':'auto');
+// 20.43 (разбор 21.10): вместо «до 00:00» — когда сброс по часам игрока и сколько осталось (L2EngineCore.dailyResetText)
 function renderDailyLimits(rt,d) {
-  const day=L2EngineCore.dailyDay(Date.now(),rt);
-  $('dailyLimitsDay').textContent=`Сегодня: ${day} · время сервера`;
+  const now=Date.now(),day=L2EngineCore.dailyDay(now,rt),reset=L2EngineCore.dailyResetText(now,rt);
+  $('dailyLimitsDay').textContent=`Сегодня: ${day} · время сервера · ${reset}`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
     const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&L2EngineCore.dailyCurrent(rt.dailyQuota,rt) ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0}${+rt.dailyQuota.raid?`, рядом с РБ ${+rt.dailyQuota.raid}`:''}${+rt.dailyQuota.server?`, ранее по серверу ${+rt.dailyQuota.server}`:''})` : '';
     if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got}${parts} · цель выберется при запуске`;continue;}
-    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · до 00:00':` · осталось ${limit-got}`}` : 'Без дневного лимита';
+    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · '+reset:` · осталось ${limit-got}`}` : 'Без дневного лимита';
   }
 }
 for(const task of Object.keys(dailyLimitKeys)) $(task+'DailyReset').onclick=async()=>{
@@ -797,7 +842,9 @@ function renderCat(rt, d) {
   const lv = id => { const k = rt.catLv?.[id]; return k?.n >= 3 ? `${k.lo}–${k.hi} ур. (видел)` : `≈${CAT_NM[id][1]}–${CAT_NM[id][2]} ур. (прикидка)`; };
   const cur = rt.catIn || rt.catCur, now = Date.now();
   const seen = Object.keys(CAT_NM).filter(id => rt.catLv?.[id]);
-  $('catBox').textContent = (d.catMode ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
+  // 20.43 (разбор 21.10): «Катакомбы», выбранные в «Задачах бота», флаг catMode не ставят — строка писала «Выключено» при верной галке;
+  // включена ли задача — по тому же источнику, что галка и ядро (taskSel: список autoTasks, без него прежний catMode)
+  $('catBox').textContent = (taskSel(d, 'cat') ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
     + (seen.length ? `\nУвиденные подземелья: ${seen.map(id => `${CAT_NM[id][0]} ${lv(id).replace(/ \(.*\)/, '')}${now - (rt.catBad?.[id] || 0) < 3600000 ? ' (пропускаю)' : ''}`).join(' · ')}` : '');
 }
 // ---------- 7.2.1 (просьба игрока): список «что фармить» как на форуме — разделы раскрываются, предмет раскрывается
@@ -1163,7 +1210,7 @@ function renderEff(rt) {
   const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1]);
   const special = top(rt.lootSpecial), loot = top(rt.loot).slice(0, 12);
   const valueLine = rt.lootValue ? `\n💰 Добыча при продаже в магазин ≈ ${fmt(rt.lootValue)} аден (цены Interlude ÷ 2)` : '';
-  box.textContent = `${line('🔁 Цепочка', c)}\n${line('🗺 Через карту', m)}\n${verdict}`;
+  box.textContent = `${line('🔁 Цепочка', c)}\n${line('🗺 Через карту', m)}\n${verdict}${E.cat ? `\n${line('🏛 Катакомбы (отдельно, 20.43)', E.cat)}` : ''}`;
   if ($('lootExtra')) $('lootExtra').textContent = (special.length ? `⭐ Особая: ${special.map(([k, v]) => `${k} ×${v}`).join(', ')}` : '⭐ Особой добычи пока нет')
     + (loot.length ? `\n🎒 За сессию: ${loot.map(([k, v]) => `${k} ×${fmt(v)}`).join(', ')}` : '') + valueLine;
 }
@@ -1674,7 +1721,8 @@ const dockUiSave = () => { try { localStorage.setItem(DOCK_UI_KEY, JSON.stringif
 function taskListOpen(open, remember = true) {
   const grid = $('quickModeGrid'), tog = $('modeToggle');
   if (grid) grid.hidden = !open; tog?.setAttribute('aria-expanded', String(!!open));
-  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Свернуть' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
+  // 21.10: «Свернуть» теперь у плиток задач (#taskBoardFold); раскрытый список галок закрывается «Готово»
+  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Готово' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
   if (remember) { dockUi.tasksOpen = !!open; dockUiSave(); }
 }
 // 20.12 (ревизия 17.10): галки задач переехали из шапки в «Обзор» (в шапке — одна строка-сводка). Нажатие на сводку или «Изменить»
@@ -1686,6 +1734,16 @@ function taskListToggle() {
   setTimeout(() => $('taskBoard')?.scrollIntoView({ block: 'start' }), 30);
 }
 if (typeof dockUi.tasksOpen === 'boolean') taskListOpen(dockUi.tasksOpen, false);
+// 21.10 (игрок: «Кнопка свернуть не работает и должна сворачивать выделенную часть», скрин): «Свернуть» прячет простые плитки
+// выбранных задач — без счётчиков, прогресса и не первую по приоритету (TvT, Враги, Дейлики… на паузе); плитки с лимитами/полосой
+// и текущая задача остаются. Скрытые перечислены одной строкой. Состояние запоминается на устройстве (dockUi.boardMin).
+const taskRowPlain = r => !r.progress && r.percent == null && r.state === 'selected';
+function taskBoardFold(min, remember = true) {
+  const b = $('taskBoardFold'); if (b) { b.textContent = min ? 'Развернуть' : 'Свернуть'; b.setAttribute('aria-expanded', String(!min)); }
+  $('taskBoard')?.classList.toggle('folded', !!min);
+  if (remember) { dockUi.boardMin = !!min; dockUiSave(); }
+}
+taskBoardFold(dockUi.boardMin === true, false);
 const tabScroll = new Map(Object.entries(dockUi.scroll).filter(([k, v]) => /^tab-[\w-]+$/.test(k) && Number.isFinite(v) && v > 0));
 let scrollSaveT = null;
 document.querySelectorAll('section[id^="tab-"]').forEach(sec => sec.addEventListener('scroll', () => {
@@ -1752,7 +1810,23 @@ function champLearnText(M) {
   }
   return out.join('\n');
 }
-function renderFaDrop(rt) { const el = $('faDropBox'); if (el) el.textContent = faDropText(rt.faDrop) + '\n' + champLearnText(rt.champLearn); }
+// 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: ≥ 4 % FA за обычный бой при анонсе 1 %): по какому шансу бот сейчас считает цену
+// чемпионов и «Cancel» — свой замер класса (rt.faRate, loot.faRateNote), сглаженный анонсом (L2EngineCore.faRate — та же формула, что в бою)
+function faRateText(rt) {
+  const C = globalThis.L2EngineCore; if (!C?.faRate) return '';
+  const cls = C.faClass(rt.classCur?.prof || rt.prof), S = rt.faRate?.[cls], n = Object.values(S?.k || {}).reduce((a, x) => a + (+x || 0), 0);
+  const pc = k => (C.faRate(S, k) * 100).toFixed(1).replace('.', ',') + ' %';
+  return `Цена чемпионов считается по: обычный бой ${pc('mob')}, синий ${pc('blue')}, оранжевый ${pc('orange')}, красный ${pc('red')} (${n ? `свои замеры класса «${cls}»: ${n} боёв, сглажены анонсом` : 'по анонсу — своих замеров у класса ещё нет'})`;
+}
+// 20.43 (разбор 21.10): невосприимчивые к дебаффам цели — РБ общим флагом, мобы и чемпионы по виду на сутки (rt.debuffImmune.sp, combat.js)
+function debuffImmText(I) {
+  const now = Date.now(), day = 24 * 3600000, sp = Object.entries(I?.sp || {}).filter(([, t]) => +t > 0).sort((a, b) => b[1] - a[1]).slice(0, 20);
+  const rows = sp.map(([k, t]) => `· ${k.startsWith('ч:') ? k.slice(2) + ' (чемпион)' : k}: ${now - t < day ? `не вешаю ещё ≈${Math.max(1, Math.ceil((day - (now - t)) / 3600000))} ч` : 'сутки прошли — в следующем бою одна проба'}`);
+  return `🛡 Иммунитет к дебаффам: рейд-боссы — ${I?.rb ? 'да, на РБ не вешаю' : 'не замечен'}\n`
+    + (rows.length ? `Мобы и чемпионы — только эти виды (на сутки, потом одна проба):\n${rows.join('\n')}` : 'Мобы и чемпионы: невосприимчивых видов не встречал — дебаффы вешаются по обычным правилам');
+}
+function renderDebuffImm(rt) { const el = $('debuffImmBox'); if (el) el.textContent = debuffImmText(rt.debuffImmune); }
+function renderFaDrop(rt) { const el = $('faDropBox'); if (el) el.textContent = faDropText(rt.faDrop) + (faRateText(rt) ? '\n' + faRateText(rt) : '') + '\n' + champLearnText(rt.champLearn); }
 // 10.0.7: выученные мобы, снимающие баффы (rt.buffCancel — buffs.cancelNote)
 function cancelListText(C) {
   const L = Object.values(C || {}).filter(o => o && o.name).sort((a, b) => (b.n || 0) - (a.n || 0));
@@ -1885,6 +1959,7 @@ confirmClick('rbReset', async () => {                 // сбросить вер
 
 // 8.0.6 (Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — активная вкладка там само меню, берём вкладку игры
 async function activeTab() {
+  if (!chrome.tabs?.query) return null;   // 20.43: встроенное меню Firefox — вкладок не видно, команды идут через gameSend/фон
   const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (t && /^https:\/\/([\w-]+\.)?l2wap\.com\//.test(t.url || '')) return t;
   const g = (await chrome.tabs.query({ url: ['https://l2wap.com/*', 'https://*.l2wap.com/*'] }).catch(() => [])).filter(x => x.id != null);
@@ -1925,10 +2000,10 @@ $('check').onclick = async () => {
   const box = $('slots');
   box.style.whiteSpace = 'pre-line';
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'slots' });
+    const r = await gameSend({ cmd: 'slots' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox (без chrome.tabs)
     box.textContent = !r.battle ? '⚠ Откройте страницу боя и нажмите ещё раз'
       : r.roles.join('\n') + '\n— панель —\n' + (r.panel.join('\n') || 'слоты не найдены');
-  } catch { box.textContent = '⚠ Откройте вкладку l2wap.com (страницу боя)'; }
+  } catch (e) { box.textContent = '⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com (страницу боя)'); }
 };
 let proposed = null;
 const ROLE_RU = { nWeaponMain: 'Основное оружие', nAttack: 'Атака', nPower: 'Силовые', nStun: 'Станы', nBuffs: 'Баффы', nShots: 'Соски', nMpPot: 'Банка MP', nHpPot: 'Банка HP', nHeal: 'Лечение', nKeyBuffs: 'Важные баффы', nToggles: 'Постоянные баффы', nSpoil: 'Спойл', nSpoilMass: 'Масс-спойл', nSweep: 'Сбор спойла', nUltra: 'Сверхсильные', nDrain: 'Вампиризм', nCharge: 'Копит энергию', nForce: 'Тратит энергию', nDebuff: 'Дебаффы' };
@@ -1936,7 +2011,7 @@ $('suggest').onclick = async () => {
   await save();
   const box = $('slots'); box.style.whiteSpace = 'pre-line';
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'suggest' });
+    const r = await gameSend({ cmd: 'suggest' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox
     proposed = r.roles;
     const { cfg = {} } = await chrome.storage.local.get('cfg');
     box.textContent = '🤖 Предложение (сейчас → будет):\n'
@@ -1944,7 +2019,7 @@ $('suggest').onclick = async () => {
       + `\n(${r.buffsNote})\n\nЧто бот знает о скиллах:\n` + (r.why.join('\n') || 'скиллов на панели нет')
       + (r.battle ? '' : '\n\n⚠ Не на странице боя — использована последняя сохранённая панель');
     $('applyRow').hidden = false;
-  } catch { box.textContent = '⚠ Откройте вкладку l2wap.com (лучше страницу боя)'; }
+  } catch (e) { box.textContent = '⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com (лучше страницу боя)'); }
 };
 $('apply').onclick = async () => {
   if (!proposed) return;
@@ -1988,6 +2063,19 @@ function paymentPendingView(rt, now = Date.now()) {
   const min = Math.max(0, Math.floor((now - (+p.at || now)) / 60000));
   return { id: p.id, char: p.char || rt.char || '', text: `Ждёт сверки: ${what}${sub}${p.evidence?.name ? ' «' + p.evidence.name + '»' : ''}${sum ? ' · ' + sum : ''} · ${min ? min + ' мин назад' : 'только что'}. Бот не повторит её, пока не подтвердит результат; бесплатные задачи идут.` };
 }
+// 20.43 (разбор 21.10): бот встал сам («Персонаж погиб», «3 смерти за 30 минут», «Клик по мобу 3 раза…», сторож «3 перезагрузки…»,
+// пауза «выход из Ashen не подтверждён») — в меню было только «Бот остановлен — Выберите, чем заняться», причина пряталась в подсказке
+// у мыши (на планшете не видна), а при стопе сторожа rt.status вообще оставался прежним действием. Теперь — постоянная строка из stopMeta
+// фона (#stopWarn под кнопками, переносится по словам, а не обрезается) — только для своих остановок (content-halt/content-pause/watchdog),
+// не для Стопа/Паузы из меню, Alt+Shift+B, Esc ×2 и импорта памяти; после Старта (stopMeta.resumed) строка исчезает. Пауза от бота —
+// только пока пауза записана (paused).
+function selfStopLine(meta, paused, now = Date.now()) {
+  const src = String(meta?.source || ''), pause = src === 'content-pause';
+  if (!meta || meta.resumed || !['content-halt', 'content-pause', 'watchdog'].includes(src) || pause && !paused || !(+meta.t > 0)) return '';
+  const t = new Date(+meta.t), day = new Date(now).toDateString() === t.toDateString() ? '' : ' ' + t.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' });
+  const at = `${day} в ${t.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`, why = String(meta.reason || 'причина не записана').slice(0, 240);
+  return pause ? `Сам встал на паузу${at}: ${why}` : src === 'watchdog' ? `Остановлен сторожем${at}: ${why}` : `Остановлен сам${at}: ${why}`;
+}
 function workspaceState(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
   const last = String(rt.status || 'Состояние от игры ещё не получено');
@@ -2020,7 +2108,7 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     }
     else if (dailyLimit > 0) {
       progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' + (+q.server?' · ранее по серверу: '+q.server:'') : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
-      if (dailyGot >= dailyLimit) { label = 'До 00:00 сервера'; state = 'waiting'; }
+      if (dailyGot >= dailyLimit) { label = 'Ждёт сброса суток'; state = 'waiting'; progress.push(L2EngineCore.dailyResetText(now,rt)); }   // 20.43 (разбор 21.10): было «До 00:00 сервера»
     }
     else if (key === 'fish') progress.push(`Сегодня: ${dailyGot} · без дневного лимита`);
     if (['auto','cat'].includes(key)) {
@@ -2035,7 +2123,8 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
       const phase = {done:'Завершено',completed:'Завершено',paused:'Серия на паузе',unknown:'Проверка результата',running:st.on && st.heartbeatValid ? 'Серия запущена' : 'Серия ожидает работы'}[rt.enchant?.status];
       if (phase) { label = phase; state = ['done','completed'].includes(rt.enchant?.status) ? 'done' : rt.enchant?.status === 'unknown' ? 'waiting' : state; }
     }
-    if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = 'Ждёт доступного РБ'; state = 'waiting'; }
+    // 20.43 (ревью): ход рыбалке отдан на время отсрочки призыва кота (rbFishWait.pet) — тур ждёт кота, а не доступного РБ
+    if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = rt.rbFishWait.pet ? 'Ждёт кота: призыв не подтвердился' : 'Ждёт доступного РБ'; state = 'waiting'; }
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
   });
 }
@@ -2045,7 +2134,7 @@ function dailyFishBoardRow(rt, d, now = Date.now()) {
   const pending=!!range && rt.limitRolls?.dailyFishLimit?.day!==day;
   return {key:'daily-fish',summary:'fish',name:'Рыба за сутки',tab:'limits',limits:true,
     label:!pending&&limit>0?(got>=limit?'Лимит достигнут':'Дневной лимит'):'Дневной счётчик',state:!pending&&limit>0&&got>=limit?'waiting':'selected',
-    progress:`Сегодня: ${got}${pending?` · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске`:limit>0?` / ${limit} · осталось ${Math.max(0,limit-got)}`:' · без дневного лимита'}`,
+    progress:`Сегодня: ${got}${pending?` · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске`:limit>0?` / ${limit} · осталось ${Math.max(0,limit-got)}${got>=limit?' · '+L2EngineCore.dailyResetText(now,rt):''}`:' · без дневного лимита'}`,   // 20.43: лимит достигнут — когда сброс
     percent:!pending&&limit>0?Math.min(100,Math.round(got/limit*100)):null};
 }
 // 19.10: дневные мобы видны рядом с рыбалкой независимо от выбранной охоты; это сводка, а не задача.
@@ -2057,7 +2146,7 @@ function dailyMobBoardRow(rt, d, now = Date.now()) {
   return { key:'daily-mobs', summary:'mobs', name:'Мобы за сутки', tab:'limits',
     label:pending || !limit ? 'Дневной счётчик' : got >= limit ? 'Лимит достигнут' : 'Дневной лимит',
     state:!pending && limit > 0 && got >= limit ? 'waiting' : 'selected',
-    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ)${+quota.server?' · ранее по серверу: '+quota.server:''} · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) : 'без дневного лимита'}`,
+    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ)${+quota.server?' · ранее по серверу: '+quota.server:''} · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) + (got >= limit ? ' · ' + L2EngineCore.dailyResetText(now, rt) : '') : 'без дневного лимита'}`,   // 20.43: лимит достигнут — когда сброс
     percent:!pending && limit > 0 ? Math.min(100, Math.round(got / limit * 100)) : null };
 }
 function renderWorkspace(rt, d, st) {
@@ -2070,7 +2159,8 @@ function renderWorkspace(rt, d, st) {
       const main = selectedAutoTasks(d).find(k => AUTO_MAIN_TASKS.includes(k));
       $('quickStart').hidden = !activity.quick;
       if (activity.quick && !/неподтверждённый/.test(activity.hint)) $('activityHint').textContent = '';   // «Последнее: …» — подсказкой при наведении
-      $('activityText').title = activity.quick ? activity.hint : '';
+      $('activityText').title = activity.quick ? activity.hint : activity.text;   // 21.10: текст длиннее двух строк — целиком при наведении
+      $('activityHint').title = $('activityHint').textContent;
       document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => b.classList.toggle('on', b.dataset.quickTask === main));
     }
     $('activityDetails').dataset.goto = activity.tab; $('activityDetails').textContent = activity.tab === 'overview' ? 'Обзор ↗' : 'Подробнее ↗';
@@ -2086,8 +2176,11 @@ function renderWorkspace(rt, d, st) {
   const display = [...rows], fishAt = rows.findIndex(r => r.key === 'fish');
   if (fishAt < 0) display.push(dailyFishBoardRow(rt, d));
   display.splice(fishAt < 0 ? display.length : fishAt + 1, 0, dailyMobBoardRow(rt, d));
-  const markup = display.map(r => `<div class="task-row" data-state="${r.state}"${r.summary ? ` data-task-summary="${esc(r.summary)}"` : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
-  const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
+  const plain = display.filter(taskRowPlain).map(r => r.name);
+  if ($('taskBoardFold')) $('taskBoardFold').hidden = !plain.length;
+  const markup = display.map(r => `<div class="task-row${taskRowPlain(r) ? ' plain' : ''}" data-state="${r.state}"${r.summary ? ` data-task-summary="${esc(r.summary)}"` : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
+  const folded = plain.length ? `<button type="button" class="task-folded" data-task-unfold>Свёрнуто: ${plain.map(esc).join(' · ')}</button>` : '';
+  const board = $('taskBoardRows'); if (board._markup !== markup + folded) { board.innerHTML = markup + folded; board._markup = markup + folded; }
 }
 function selectedAutoTasks(d) {
   if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
@@ -2097,6 +2190,12 @@ function selectedAutoTasks(d) {
 }
 // 18.10: задача выбрана так же, как её видит ядро — список autoTasks, без него прежние плоские флаги
 function taskSel(d, key) { return selectedAutoTasks(d).includes(key); }
+// 20.43 (разбор 21.10): «эта задача идёт сейчас» — в режиме задач первая по приоритету у ядра (L2EngineCore.selectedTask, как autonomyMode
+// во вкладке), без списка — прежний плоский флаг
+function taskNow(d, rt, key) {
+  if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
+  return Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) === key : taskSel(d, key);
+}
 function autoTaskPatch(d, key, enabled) {
   const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
   const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto' };
@@ -2335,6 +2434,12 @@ $('farmReset').onclick = async () => {
   await menuPatch({ farmGot: {} });
 };
 // 8.0: confirm() во встроенном меню Chrome молча блокирует — подтверждение вторым нажатием
+// 20.43 (разбор 21.10): замеры охоты — EXP/с видов (rt.mobVal), EXP/ч зон (rt.zoneStat) и темп цепочки/карты/катакомб (rt.eff) — с нуля
+// (после смены оружия/ЛС или испорченные паузами до 20.43). Все три ключа — чистая статистика (MENU_STAT_KEYS): отложенная запись вкладки сброс не вернёт
+confirmClick('huntStatReset', async () => {
+  try { await menuPatch({ mobVal: {}, zoneStat: {}, eff: {}, lastWinT: 0 }); toast('↺ Замеры охоты сброшены: виды мобов, зоны, цепочка/карта/катакомбы'); await load(); }
+  catch (e) { toast(e.message); }
+});
 confirmClick('petStatReset', async () => {
   await menuPatch({ petStat: {}, petAdvice: null });
   toast('🐱 Статистика котов сброшена');   // 8.0: в #status текст стирала ближайшая перерисовка
@@ -2366,7 +2471,8 @@ $('fishReset').onclick = async () => {
 async function shopNowGo() {
   await save();
   const { rt = {}, cfg = {}, on = false } = await chrome.storage.local.get(['rt', 'cfg', 'on']);
-  await menuPatch({ shop: { step: 'count', back: cfg.fishMode ? '/fishing.html' : '/map.html', t: Date.now(), force: true, urgent: true, why: 'вручную' } });
+  // 20.43 (разбор 21.10): рыбалка из «Задач бота» не ставит fishMode — «Закупить сейчас» возвращал на карту; теперь по текущей задаче
+  await menuPatch({ shop: { step: 'count', back: taskNow({ ...DEF, ...cfg }, rt, 'fish') ? '/fishing.html' : '/map.html', t: Date.now(), force: true, urgent: true, why: 'вручную' } });
   $('shopBox').textContent = on ? '🛒 Иду в магазин прямо сейчас (текущий бой брошен)' : '⏳ Закупка начнётся после ▶ Старт';
   if (typeof toast === 'function') toast(on ? '🛒 Закупка — иду сейчас' : '🛒 Закупка — после ▶ Старт', 'var(--gold)');
 }
@@ -2390,7 +2496,8 @@ $('start').onclick = async () => {
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
     await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return;
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
-    await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true, expectedChar });
+    // 20.43 (разбор 21.10): «Автофарм» из «Задач бота»/быстрого запуска не ставит zoneAuto — Старт не будил подбор зоны; выбран ли — по taskSel
+    await menuPatch({ ...(taskSel({ ...DEF, ...cfg }, 'auto') ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true, expectedChar });
     if (generation === controlGeneration && formChar === expectedChar) await showWakeResult();
   } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 };
@@ -2634,9 +2741,9 @@ $('snapAll').onclick = async () => exportSnaps(await readSnaps(0), 'все сн�
 
 $('recDom').onclick = async () => {
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'dom' });
+    const r = await gameSend({ cmd: 'dom' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox
     download(`l2wap-${r.page}-${stamp()}.html`, r.html, 'text/html');
-  } catch { toast('⚠ Откройте вкладку l2wap.com'); }
+  } catch (e) { toast('⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com')); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
 const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
@@ -2914,6 +3021,8 @@ if ($('reloadBot')) $('reloadBot').onclick = reloadBotUpdate;
 void checkExtensionUpdate();
 window.addEventListener('focus', () => { void checkExtensionUpdate(); });
 setInterval(() => { if (!document.hidden && !dockMin) void checkExtensionUpdate(); }, 30000);
+// 20.43 (разбор 21.10): «сброс … (через N мин)» в «Лимитах» и в обзоре задач не стоит на месте, пока бот остановлен и не пишет rt
+setInterval(() => { if (!document.hidden && !dockMin) loadSoon(); }, 60000);
 
 // ===================== v5: удобство интерфейса =====================
 // 1) разделы вкладок — сворачиваемые карточки (состояние запоминается); 2) длинные пояснения — под «ⓘ»;
@@ -3006,6 +3115,12 @@ function toast(msg, color) {
 }
 // Успех сохранения показывает ответ menuPatch; change ещё не означает запись.
 // поиск настройки по всем вкладкам
+// 20.43 (разбор 21.10): поиск искал только по названию — «coin», «FA», «почта» не находили поля, где эти слова только в пояснении.
+// Теперь help = title поля/кнопки + пояснение HELP (ui-v7.js, L2V7Help); совпадение только по пояснению — ниже совпадений по названию
+const searchHelp = el => [el.getAttribute?.('title'), ...[...(el.querySelectorAll?.('[title]:not(.inline-info)') || [])].map(x => x.getAttribute('title')),
+  globalThis.L2V7Help?.[el.querySelector?.('input,select,textarea')?.id || '']].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+// …и не ведёт в пустоту: карточка/поле скрыты фильтром класса (data-cls, ui-v7.css) — пометка «(для другого класса)», переход включает «все классы»
+const searchClsHidden = el => { for (let p = el; p && p.nodeType === 1; p = p.parentElement) if (p.dataset?.cls && getComputedStyle(p).display === 'none') return true; return false; };
 function searchIndex() {
   const out = [];
   document.querySelectorAll('section').forEach(sec => {
@@ -3018,17 +3133,18 @@ function searchIndex() {
     };
     sec.querySelectorAll('.card').forEach(card => {
       const title = card.querySelector('.ch h4')?.textContent.trim() || '', sub = subOf(card), where = sub ? tabName + ' › ' + sub : tabName;
-      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел' });
+      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел', help: '' });
       card.querySelectorAll('.cb > label, .cb > .champ-row > label, .cb > .row > button, .cb > .row button').forEach(el => {
         const t = (el.tagName === 'LABEL' ? [...el.childNodes].filter(n => n.nodeType === 3 || n.tagName === 'SPAN' && !n.querySelector('input')).map(n => n.textContent).join(' ') : el.textContent).replace(/\s+/g, ' ').trim();
-        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
+        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка', help: searchHelp(el) });
       });
     });
   });
   return out;
 }
 let IDX = null, resSel = 0;
-function goTo(r) {
+async function goTo(r) {
+  if (r.otherCls && !showAllCls) await $('showAllCls').onclick();   // 20.43: результат из подраздела другого класса — сначала «показать все классы»
   showTab(r.tab); revealEl(r.el);
   r.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
@@ -3040,9 +3156,11 @@ function runSearch() {
   if (q.length < 2) { box.classList.remove('show'); return; }
   IDX ||= searchIndex();
   const words = q.split(/\s+/);
-  const hits = IDX.filter(r => words.every(w => (r.text + ' ' + r.where).toLowerCase().includes(w))).slice(0, 12);
+  const name = r => (r.text + ' ' + r.where).toLowerCase(), all = r => name(r) + ' ' + String(r.help || '').toLowerCase();
+  const hits = [...IDX.filter(r => words.every(w => name(r).includes(w))), ...IDX.filter(r => !words.every(w => name(r).includes(w)) && words.every(w => all(r).includes(w))).map(r => ({ ...r, byHelp: true }))]
+    .slice(0, 12).map(r => ({ ...r, otherCls: searchClsHidden(r.el || r.card) }));
   resSel = 0;
-  box.innerHTML = hits.length ? hits.map((r, i) => `<div data-i="${i}" class="${i ? '' : 'sel'}">${esc(r.text)}<small>${esc(r.where)}${r.kind ? ' · ' + r.kind : ''}</small></div>`).join('')
+  box.innerHTML = hits.length ? hits.map((r, i) => `<div data-i="${i}" class="${i ? '' : 'sel'}">${esc(r.text)}${r.otherCls ? ' <span class="other-cls">(для другого класса)</span>' : ''}<small>${esc(r.where)}${r.kind ? ' · ' + r.kind : ''}${r.byHelp ? ' · по пояснению' : ''}</small></div>`).join('')
     : `<div style="cursor:default;color:var(--mute)">Ничего не нашлось</div>`;
   box.classList.add('show');
   box._hits = hits;
@@ -3086,7 +3204,8 @@ if ($('paymentDismiss')) $('paymentDismiss').onclick = async () => {
   } catch (e) { toast('⚠ ' + e.message, 'var(--bad)'); }
   finally { b.disabled = false; b.textContent = 'Считать оплату не прошедшей'; }
 };
-if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
+if ($('taskBoardFold')) $('taskBoardFold').onclick = () => taskBoardFold(!$('taskBoard').classList.contains('folded'));
+if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { if (e.target.closest('[data-task-unfold]')) return taskBoardFold(false); const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
 cardify();
 foldHints();
 
@@ -3142,9 +3261,11 @@ panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);
 async function warlockMenuCommand(action,context={}) {
   const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
   if (!context.char || rt.char!==context.char) throw Error('Персонаж изменился — обновите меню');
-  const tab=on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
-  if (!tab?.id) throw Error('Откройте вкладку игры');
-  const answer=await Promise.race([chrome.tabs.sendMessage(tab.id,{cmd:'warlockCommand',id:crypto.randomUUID(),action,...context}),
+  // 20.43 (разбор 21.10): без chrome.tabs (встроенное меню Firefox) — через фон в родительскую вкладку меню: «Проверить цену»,
+  // «Сбросить бюджет» и «Завершить неопределённую попытку» кота раньше падали там на chrome.tabs; с tabs — как раньше.
+  const tabs=gameTabsApi(),tab=!tabs?null:on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
+  if (tabs&&!tab?.id) throw Error('Откройте вкладку игры');
+  const answer=await Promise.race([gameSend({cmd:'warlockCommand',id:crypto.randomUUID(),action,...context},{tab,char:context.char}),
     new Promise((_,reject)=>setTimeout(()=>reject(Error('Ответ ещё не получен. Команда могла быть принята; проверьте состояние перед повтором.')),20000))]);
   if (!answer?.ok) throw Error(answer?.reason||'Команда не выполнена');
 }

@@ -137,7 +137,10 @@ test('сторож без слушателя: прямая on:false во вре�
 test('сторож останавливает бота после 3 неудачных перезагрузок — значок гаснет без слушателя хранилища', async () => {
   const now = Date.now(), f = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null })); await tick(); const seq0 = f.seq();
   await f.alarm(); await tick();
-  assert.equal(f.state.on, false); assert.equal(f.state.stopMeta.source, 'watchdog'); assert.equal(f.badges.at(-1), ''); assert.equal(f.painted(), false); assert.equal(f.seq(), seq0 + 1);
+  // 20.43 (разбор 21.10): стоп сторожа — самоостановка: «ON» гаснет, затем красный «!» (tests/v2043-notify-stop); при выключенной галке — пусто, как раньше
+  assert.equal(f.state.on, false); assert.equal(f.state.stopMeta.source, 'watchdog'); assert.deepEqual(f.badges.slice(-2), ['', '!']); assert.equal(f.painted(), false); assert.equal(f.seq(), seq0 + 1);
+  const g = load(running({ wdog: [now - 360000, now - 420000, now - 480000], wdDown: null, cfg: { notifyStops: false } })); await tick();
+  await g.alarm(); await tick(); assert.equal(g.state.on, false); assert.equal(g.badges.at(-1), ''); assert.equal(g.painted(), false);
 });
 
 // Минимальная IndexedDB для снимков: хранит, считает, отдаёт курсор по времени (как tests/v2013-core-step7-misc.test.js).

@@ -11,6 +11,11 @@
 // 1 FA с обычных мобов = время на моба ÷ 1 %). Пример Warlock 66, Wild Beast Pastures: обычный моб ≈8,4 тыс. EXP за ≈1,5 с → красный
 // (250 тыс. EXP, FA 60 %) окупается за ≈45 + 0,6 × 150 ≈ 135 с боя, оранжевый ≈64 с, синий ≈38 с. Дольше — невыгодно, бот не идёт или уходит.
 const FA_P = { blue: 0.1, orange: 0.2, red: 0.6 }, FA_MOB = 0.01;
+// 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: 40 FA за 572 боя, из них чемпионов 18 — обычным боям ≥ 22 FA на 554, т. е. ≥ 4 %,
+// а бот считал 1 %): 1 FA стоил в 4–6 раз меньше секунд фарма, чем в расчёте — предел красного по расчёту ≈186 с, по честному шансу ≈46 с; «Cancel» тоже
+// переоценён. Шанс FA за бой — свой замер класса, сглаженный анонсом (L2EngineCore.faRate, rt.faRate[класс] от loot.faRateNote);
+// без замеров — прежние цифры анонса. FA_P/FA_MOB остаются анонсом (порог «FA-чемпион первым» в mobfarm сравнивает цвета)
+const faRate = kind => { const C = root.L2EngineCore, k = kind === 'mob' || Object.hasOwn(FA_P, kind || '') ? kind : 'blue'; return C?.faRate ? C.faRate(env.rt.faRate?.[C.faClass(env.rt.classCur?.prof || env.rt.prof)], k) : k === 'mob' ? FA_MOB : FA_P[k]; };
 const T_DEF = { blue: 40, orange: 70, red: 120 };     // предел боя, пока своего темпа фарма нет, с
 const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'красный' };
 // 10.0.8 (анонс игры 13.10 «Обновление чемпионов и оружия»): с 73 ур. оранжевые и красные чемпионы — HP ×3, P/M.Atk ×4, P/M.Def ×4 поверх
@@ -79,7 +84,7 @@ function cancelCost(c, sec) {
   if (!(p > 0) || !(paid > 0) || !(sec > 0)) return { p, paid, buffs: 0, s: 0 };
   let fires = sec / HIT_S * HIT_ACC * p;
   if (CANCEL_GAP[c.tier]) fires = Math.min(fires, 1 + sec / CANCEL_GAP[c.tier]);
-  const buffs = Math.min(paid, fires * CANCEL_MAX), r = env.farmRate?.(), perFa = r?.sk > 0 ? r.sk / FA_MOB : 150;
+  const buffs = Math.min(paid, fires * CANCEL_MAX), r = env.farmRate?.(), perFa = r?.sk > 0 ? r.sk / faRate('mob') : 150;   // 20.43: своя доля FA за обычный бой
   return { p, paid, fires: +fires.toFixed(2), buffs: +buffs.toFixed(1), s: Math.round(buffs * perFa) };
 }
 // 10.0.8: не цель из-за «Cancel»? → { p, paid, s } или null (режим cfg.champCancel: paid — по цене, never — оранжевых/красных не бить, always — не считать)
@@ -96,9 +101,9 @@ function cancelBlock(c, sec, lim) {
 }
 // предел боя с этим чемпионом, с: сколько стоит он в секундах обычного фарма (EXP + FA)
 function limitS(c) {
-  const r = env.farmRate?.(), p = c.fa != null ? c.fa : FA_P[c.tier] ?? FA_P.blue;
+  const r = env.farmRate?.(), p = c.fa != null ? c.fa : faRate(c.tier);   // 20.43: шанс чемпиона и обычного боя — свои замеры класса
   if (!r || !(r.eps > 0) || !(r.sk > 0) || !(c.exp > 0)) return T_DEF[c.tier] || T_DEF.blue;
-  return Math.round(Math.max(15, Math.min(300, c.exp / r.eps + p * r.sk / FA_MOB)));
+  return Math.round(Math.max(15, Math.min(300, c.exp / r.eps + p * r.sk / faRate('mob'))));
 }
 // 10.0.10 (игрок 13.10 11:33: «включены нападения на красных, которые кидают кансел, мы договаривались их избегать… добавь опции, каких
 // чемпионов бить, а каких нет, особенно на лоу лвлах»): галки по цвету (cfg.champBlue/champOrange/champRed; красные по умолчанию ВЫКЛ) и
@@ -136,9 +141,9 @@ function valueJudge(c) {
   const rate = env.farmRate?.(), d = dpsOn(isHard(c));
   if (!(rate?.eps > 0 && rate?.sk > 0 && c.hp > 0 && c.exp > 0 && d.dps > 0))
     return { ok: false, lim: 0, why: 'окупаемость оранжевого: недостаточно данных об HP, награде или темпе фарма' };
-  const fa = c.lvl && L() && c.lvl < L() - 5 ? 0 : Math.max(0, Math.min(1, c.fa ?? FA_P.orange));
+  const fa = c.lvl && L() && c.lvl < L() - 5 ? 0 : Math.max(0, Math.min(1, c.fa ?? faRate('orange')));
   // Не используем нижний предел15с limitS: он служит пробе, а не доказывает прибыль.
-  const eta = c.hp / d.dps + 2, value = Math.min(300, c.exp / rate.eps + fa * rate.sk / FA_MOB), cancel = cancelCost(c, eta).s;
+  const eta = c.hp / d.dps + 2, value = Math.min(300, c.exp / rate.eps + fa * rate.sk / faRate('mob')), cancel = cancelCost(c, eta).s;
   const travel = Math.max(0, (env.rt.eff?.map?.sec || 0) - (env.rt.eff?.chain?.sec || 0));
   const reserve = value * (d.known ? 0.2 : 0.4), lim = Math.max(0, value - cancel - travel - reserve);
   const ok = eta < lim;
@@ -222,6 +227,6 @@ async function learn(ctx, outcome, dealt, sec) {
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { questQuick, valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
+ return { questQuick, valueMode, valueJudge, FA_P, FA_MOB, faRate, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

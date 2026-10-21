@@ -9,7 +9,7 @@ test('дневная сводка суммирует автофарм, ката�
 });
 test('ровно достигнутый и превышенный лимит не дают отрицательный остаток или полосу свыше100%',()=>{
  for(const got of [8000,8011]){
-  const row=ctx.dailyMobBoardRow({dailyQuota:{day,raid:got}},cfg,now);assert.equal(row.label,'Лимит достигнут');assert.equal(row.percent,100);assert.match(row.progress,/осталось 0$/);
+  const row=ctx.dailyMobBoardRow({dailyQuota:{day,raid:got}},cfg,now);assert.equal(row.label,'Лимит достигнут');assert.equal(row.percent,100);assert.match(row.progress,/осталось 0 · сброс в \d\d:\d\d по Владивостоку \(через [^)]+\)$/);   // 20.43: лимит достигнут — когда сброс
  }
 });
 test('полночь сервера обнуляет только отображение вчерашнего счётчика',()=>{

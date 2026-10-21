@@ -16,12 +16,13 @@ test('10 побед за 45 с с потерянным оплаченным ба
  assert.ok(chars(f)-g0<=1,'GET после побед: '+(chars(f)-g0));
  assert.equal(f.status(),'early-loss');assert.equal(f.calls.length,1,'повторной оплаты нет');
 });
-test('без изменений статус после победы не переписывается; через 60 с проверка повторяется',async()=>{
+// Слияние с PR #324: early-loss ждёт конца оплаченного срока (v2043-warlock-recheck), а не 60 с ворот после победы
+test('без изменений статус после победы не переписывается; early-loss ждёт конца оплаченного срока',async()=>{
  const f=earlyLoss();await f.step({afterWin:true});f.tick(61000);f.ch.activeSummon.activeBuffs=[];f.ch.revision++;
  await f.step({afterWin:true});assert.equal(f.status(),'early-loss');
  const w=f.writes.length,g=chars(f);f.tick(61000);await f.step({afterWin:true});
- assert.equal(chars(f),g+1,'через 60 с — снова проверка');
- assert.ok(f.writes.length<=w+1,'только запись наблюдения (раз в 50+ с), статус тот же');
+ assert.equal(chars(f),g,'через 60 с — без GET: срок ещё оплачен');
+ assert.ok(f.writes.length<=w,'статус тот же — без записей');
 });
 test('новый призыв кота снимает ворота: проверка сразу после победы',async()=>{
  const f=earlyLoss();await f.step({afterWin:true});f.tick(61000);f.ch.activeSummon.activeBuffs=[];f.ch.revision++;
