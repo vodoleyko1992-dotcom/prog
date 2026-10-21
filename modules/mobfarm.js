@@ -222,6 +222,10 @@ async function nextFight(ctx) {
   // Сверка по GET один раз в 10 мин не уводит катакомбы на карту.
   if (env.cfg.shopAuto) await env.syncShotWeapon?.();
   if (!env.on || !env.tabOwner) return;
+  // 20.43 (ревью разбора лога 21.10 21:57–21:59): окно TvT на странице победы — до любых служебных походов (закупка тура, плановая
+  // проверка запасов, бафф, карта тура/эпика): стоим и пишем «жду TvT», как ядро на карте. Как и там, пропускаем только уже
+  // заказанную срочную закупку (rt.shop.urgent, «🛒 Закупить сейчас»). На арену за минуту до старта уводят tvtStep/tvtSoon выше
+  if (env.victory() && !env.rt.shop?.urgent && await env.tvtHoldWait?.()) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   // 20.12 (ревизия 17.10, аудит PAY-1): при неизвестной оплате после победы не уходим в магазин/телепорт — цепочка продолжается.
   const payHold = !!env.paymentHold?.();
@@ -254,7 +258,9 @@ async function nextFight(ctx) {
   if (env.magisterAfterWin && env.victory()) {
     if (await env.magisterAfterWin(ctx)) return;
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
-    if (env.tvtSoon() || env.magisterHold?.()) return; // Условия могли измениться во время чтения персонажа.
+    if (env.tvtSoon()) return; // Условия могли измениться во время чтения персонажа.
+    // 20.43 (лог 21.10 21:57:02–21:58:56): окно TvT — новый бой не начинаем, как и на карте, но пишем «TvT через N с — жду»
+    if (env.magisterHold?.()) { await env.tvtHoldWait?.(); return; }
   }
   if (!env.on || env.tabOwner === false) return;
   // Автобаф кота — обслуживание между целями, без выхода из выбранной зоны.

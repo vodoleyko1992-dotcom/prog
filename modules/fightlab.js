@@ -58,6 +58,10 @@ const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|П
 // Лог20.10 10:43UTC: native skills содержат power/число целей перед фактическим уроном.
 // Берём только последний damage с единицей; ID-префикс должен соответствовать имени, splash идёт отдельной строкой.
 const RE_NATIVE_POWER = /^(?:\u2060(\d{1,6})\u200b)?(Вихор|Whirlwind|Дикий розмах|Wild Sweep)\s*:\s*power\s+\d+(?:\s*;\s*до\s+\d+\s+ціл(?:ей|і|ь)\s*\(головна\s*\+\s*\d+\s+поруч\))?\s*[—–-]\s*(\d+(?:[ \u00a0\u202f]\d{3})*)\s*урон[ау]\.?$/i;
+// 20.43 (лог 21.10 23:22:04, Warsmith на РБ): своё умение с пояснением — «(ID-префикс 260)Скрушний молот: удар пройшов; оглушення не діє на РБ/епіків —
+// 11955 урона». RE_PLAIN не берёт двоеточие, RE_DOT — только «кто · что»: удар не считался, на РБ ход был «урон не измерен», и замер
+// забирал строку босса «Gwindorr · Удар вітру — 66». Свой — по ID-префиксу игры, без «·» и без [имени] в строке
+const RE_OWN_NOTE = /^\u2060\d{1,6}\u200b([^·\[\]:]{2,40}):[^·\[\]]*?[—–-]\s*(\d+(?:[ \u00a0\u202f]\d{3})*)\s*урон[ау]\.?$/i;
 function parseLog(lines, mob, actor = '') {
   const player = low(actor);
   const m = low(mob).replace(/\s*·.*$/, '');
@@ -91,6 +95,7 @@ function parseLog(lines, mob, actor = '') {
     const reward = l.match(/^(EXP|SP)\s*\+\s*[\d\s  ]+[.!]?$/i);
     if (reward) { r.rewards[low(reward[1])]++; continue; }
     if (RE_SKIP.test(l)) continue;
+    if ((x = source.match(RE_OWN_NOTE)) && low(x[1]) !== m) { r.own += num(x[2]); r.ownN++; continue; }
     if ((x = l.match(RE_PHYSICAL))) { r.own += num(x[2]); r.ownN++; if (x[1]) r.crit++; continue; }
     if ((x = l.match(RE_DOT))) {
       const a = low(x[1]), b = x[2].trim();

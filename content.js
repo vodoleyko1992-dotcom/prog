@@ -865,9 +865,15 @@ const NAME_ALIAS = { 'force buster': 'force burst',
   'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля',
   // 20.41 (лог 20.10 21:09, Bounty Hunter): native-удары в журнале по-украински — «Дикий розмах: power 326 · КРИТ 14635»,
   // «Вихор: power 2033; до 4 цілей (головна + 3 поруч) 9893». Без алиаса урон из DOM не читался (запасной путь не учит алиас при «power N»)
-  'wild sweep': 'дикий розмах', 'whirlwind': 'вихор' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
+  'wild sweep': 'дикий розмах', 'whirlwind': 'вихор',
+  // 20.43 (лог 21.10 23:22:04, Warsmith на РБ Gwindorr): Hammer Crush пишется «Скрушний молот: удар пройшов; … 11955» — без алиаса
+  // строка длиннее 40 символов, и запасной путь взял строку РБ «Gwindorr · Удар вітру 66» (урон 66 → умение выпало из ротации на РБ)
+  'hammer crush': 'скрушний молот' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
 const apos = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '’');
-const logName = n => apos(rt.logAlias?.[(n || '').toLowerCase()] || NAME_ALIAS[(n || '').toLowerCase()] || n);
+// 20.43: «Моб · умение» — строка босса/моба, не своё имя: такой выученный алиас (старые версии) не используем
+const ALIAS_FOREIGN = /\s·\s(?!крит)/i;
+const logAliasOf = n => { const v = rt.logAlias?.[n]; return v && !ALIAS_FOREIGN.test(v) ? v : ''; };
+const logName = n => apos(logAliasOf((n || '').toLowerCase()) || NAME_ALIAS[(n || '').toLowerCase()] || n);
 for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL_BY_NAME[a] == null) IL_BY_NAME[a] = IL_BY_NAME[b];
 // 10.0.2: Life Stone (augment.js) — активные умения оружия. На L2WAP все Power 109 (код игры, weapon-augmentation-display.js)
 const AUG = typeof L2Aug !== 'undefined' ? L2Aug : null;
@@ -1030,10 +1036,14 @@ function dmgFromLog(name, lines, allowAlt = true) {
   if (i < 0) i = lines.findIndex(l => has(l, ln) || has(l, eng));
   if (i < 0) {                                   // строка «<название на языке игры><урон>» — первая новая такая
     if (!allowAlt) return 0;
-    const alt = lines.find(l => /^[^\d⏎]{3,40}?\s*\d{2,}$/.test(l) && !/нан[её]с|ударив|промах|HP|MP|EXP|SP|аден|×|Побед|Бой начат|енергі|энерги|Квест|осталось|Слуга|Servitor/i.test(l));
+    // 20.43 (лог 21.10 23:22:04): «Gwindorr · Удар вітру 66» — умение РБ/моба («кто · что»), не наш удар; своё «Имя · КРИТ N» остаётся
+    const foreign = l => /нан[её]с|ударив|промах|HP|MP|EXP|SP|аден|×|Побед|Бой начат|енергі|энерги|Квест|осталось|Слуга|Servitor/i.test(l) || ALIAS_FOREIGN.test(l);
+    // своё умение с описанием: «Скрушний молот: удар пройшов; оглушення не діє на РБ/епіків 11955» — имя до двоеточия
+    const note = l => /^[^\d⏎:·]{3,40}:\s[^\d⏎·]{1,120}?\s\d{2,}$/.test(l);
+    const alt = lines.find(l => (/^[^\d⏎]{3,40}?\s*\d{2,}$/.test(l) || note(l)) && !foreign(l));
     if (!alt) return 0;
     // запоминаем, как игра пишет это заклинание (только в «чистом» окне — одно нажатие), дальше узнаём и в цепочке
-    const nm = apos(alt.replace(/\s*(?:·\s*КРИТ\s*)?\d{2,}$/i, '').trim());
+    const nm = apos((note(alt) ? alt.slice(0, alt.indexOf(':')) : alt.replace(/\s*(?:·\s*КРИТ\s*)?\d{2,}$/i, '')).trim());
     // 7.1.30: имя, которое уже принадлежит другому заклинанию («Полум’я» = Blaze), — это чужая строка: урон не наш, алиас не учим
     // (в базе было «Surrender to Fire → Полум’я»: дебафф и Blaze в одном окне)
     if (Object.entries({ ...NAME_ALIAS, ...(rt.logAlias || {}) }).some(([k, v]) => apos(v) === nm && k !== (name || '').toLowerCase())) return 0;
@@ -3791,6 +3801,9 @@ async function loopActivity() {
 const MAG_SKIP_DEF = 'Curse Weakness, Poisonous Cloud';
 // После GET магистра проверка активности или TvT могли прервать обучение: новую охоту не начинаем.
 function magisterHold() { return abHold() || !!antibotState() || !!L2V7Modules.tvt?.tvtHold?.(); }
+// 20.43 (лог 21.10 21:57:02–21:58:56): в окне TvT на странице победы цепочка стояла молча ≈2 мин (статус «Бой: загрузка»), а потом
+// сторож баффов увёл к бафферу посреди окна. В окне — статус и одна строка журнала (tvt.tvtWait), служебные походы не начинаем
+async function tvtHoldWait() { if (!L2V7Modules.tvt?.tvtHold?.()) return false; await L2V7Modules.tvt.tvtWait(); return true; }
 const magActive = () => on && tabOwner && cfg.enchantMode !== true && cfg.autoMagister === true && !abHold() && !antibotState() && !!rt.char && heroNick() === rt.char;
 const magIdentity = () => {
   const prof = String(rt.classCur?.prof || '').trim();
@@ -3952,7 +3965,10 @@ async function magisterStep() {
     if (!Number.isInteger(npc) || npc <= 0) return magPause(M, 'гильдия не указала учителя');
     if (location.pathname !== '/magister.html' || new URLSearchParams(location.search).get('npcId') !== String(npc)
         || new URLSearchParams(location.search).has('mode')) {
-      if (await rtCommit() && magSame(M)) (L2V7Modules.actions?.canAct?.() !== false && (location.href = `/magister.html?npcId=${npc}`));
+      // 20.43 (лог 21.10 21:46–23:23, 10 походов из 11): после перехода сразу выходили, через ≈200 мс главный цикл начинал новый
+      // magisterStep, уход со страницы обрывал его GET → «гильдия временно не ответила», magRetry на минуту и magBack наперегонки
+      // с нашим же переходом. Ждём переход под magBusy, как raid.js после смены страницы
+      if (await rtCommit() && magSame(M) && L2V7Modules.actions?.canAct?.() !== false) { location.href = `/magister.html?npcId=${npc}`; await sleep(3000); }
       return;
     }
     // Общий endpoint может возвращать skills:[]; полный каталог доступен по npcId.
@@ -4036,7 +4052,12 @@ async function magisterStep() {
           || !await magConfirm(M, catalog)) return magPause(M, 'ранг ещё не подтверждён — следующий запрос не отправляю');
       if (!magSame(M)) return;
     }
-  } catch (_) { if (magSame(M)) await magPause(M, 'гильдия временно не ответила — повторю чтение позже'); }
+  } catch (e) {
+    // 20.43: запрос оборвал уход со страницы (наш переход или игрока) — это не ответ гильдии: ни журнала, ни паузы, ни возврата.
+    // Ответ с кодом (HTTP …) — настоящий; отменённый переход оставил бы pageLeaving — пауза 1 с, чтобы не крутить GET впустую
+    if ((pageLeaving || pageGone) && !/HTTP \d/.test(String(e?.message || ''))) { await sleep(1000); return; }
+    if (magSame(M)) await magPause(M, 'гильдия временно не ответила — повторю чтение позже');
+  }
   finally { magBusy = false; }
 }
 
@@ -4730,6 +4751,13 @@ function rec(src, kind, what, extra = {}) {
 const learnPk = () => location.pathname.replace(/^\/|\.html$/g, '') || 'index';
 const hashStr = str => { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
 let LEARN = null, learnDirty = false, learnSavedT = 0;
+// 20.43 (лог 21.10 23:29:46, страница «Создание предметов»): свои GET страницы при открытии (/game/craft/*) приходили раньше, чем
+// загружалось обучение (learnStart через 1,5 с), и терялись. До загрузки копим до 50 событий сети, после — дописываем (learnLoad)
+// Копим только до первой загрузки (learnBoot): обучение выключено при открытии или хранилище не ответило — копилку не держим
+// (иначе включённое потом в меню обучение копило бы до 50 ответов боя/персонажа до перезагрузки, их никто не прочтёт)
+const LEARN_EARLY = [];
+let learnBoot = true;
+const learnBootEnd = () => { learnBoot = false; LEARN_EARLY.length = 0; };
 // v5.6: раньше весь объект обучения (сотни КБ) писался в хранилище каждые 20 с и при КАЖДОМ переходе страницы (бой ↔ карта —
 // раз в 15–30 с), а каждая запись рассылалась всем вкладкам и меню. Теперь: счётчики переживают переходы в памяти вкладки
 // (sessionStorage), в хранилище — раз в 3 мин; новые находки (изменения игры, новый запрос API) — сразу. Пишет только рабочая вкладка
@@ -4739,8 +4767,29 @@ const learnLoad = () => LEARN ? Promise.resolve(LEARN) : chrome.storage.local.ge
   try { const ss = JSON.parse(sessionStorage.getItem(LEARN_SS) || 'null');
     if (ss?.L?.v === 1 && ss.t > (L.saved || 0) && (ss.L.t0 || 0) === (L.t0 || 0)) { L = ss.L; learnDirty = true; } } catch (e) {}
   learnSavedT = Date.now();
-  return (LEARN = L);
-});
+  // 20.43: старые ключи с номером спавна (l2dop_rb_25063 …) сливаем в ключ своего вида (l2dop_rb_:n); их «новый запрос API» в списке
+  // изменений — шум. Схемы (forms) складываем счётчиками: иначе слитый ключ взял бы схему одного РБ (у части есть
+  // raidBossAttackBlockedReasonUk — 16 из 242 ответов) и следующий РБ без этого поля дал бы ложное «ответ API изменился»
+  for (const k of Object.keys(L.api || {})) { const nk = learnKey(k); if (nk === k) continue;
+    const x = L.api[k], y = L.api[nk]; delete L.api[k]; learnDirty = true;
+    L.api[nk] = learnMerge(y, x); }
+  if (Array.isArray(L.changes)) { const ch = L.changes.filter(c => !(c?.kind === 'новый запрос API' && learnKey(c.what) !== c.what)); if (ch.length !== L.changes.length) { L.changes = ch; learnDirty = true; } }
+  // 20.43 (лог 21.10 23:29:46): запросы, пришедшие до загрузки обучения (свои GET страницы при открытии), — дописываем сейчас
+  const early = LEARN_EARLY.splice(0);
+  LEARN = L; learnBootEnd();
+  if (cfg.autoLearn !== false) for (const [k, d] of early) try { learnApi(k, d); } catch (e) {}
+  return L;
+}).catch(e => { learnBootEnd(); throw e; });
+// 20.43: слияние двух записей обучения одного запроса — счётчики полей, схем и статусов складываются
+const learnCnt = (a, b) => { const o = { ...(a || {}) }; for (const [k, v] of Object.entries(b || {})) o[k] = (o[k] || 0) + (+v || 0); return o; };
+function learnMerge(y, x) {
+  if (!y || typeof y !== 'object') return x;
+  if (!x || typeof x !== 'object') return y;
+  const forms = { ...(y.forms || {}) };
+  for (const [f, v] of Object.entries(x.forms || {})) forms[f] = forms[f] ? { n: (forms[f].n || 0) + (v?.n || 0), keys: learnCnt(forms[f].keys, v?.keys) } : v;
+  return { ...y, n: (y.n || 0) + (x.n || 0), keys: learnCnt(y.keys, x.keys), forms, st: learnCnt(y.st, x.st),
+    first: Math.min(+y.first || Date.now(), +x.first || Date.now()), last: Math.max(+y.last || 0, +x.last || 0) };
+}
 const learnSave = () => {
   if (!learnDirty || !LEARN || tabIdle || document.prerendering) return;
   learnDirty = false; learnSavedT = Date.now(); LEARN.saved = learnSavedT;
@@ -4816,6 +4865,12 @@ function learnPage() {
 }
 // API: ключи ответа (верхний уровень и поле data), статусы; новый запрос / пропавшее поле — изменение
 const apiPath = u => u.split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:n').replace(/[0-9a-f]{16,}/gi, ':h');
+// 20.43 (отчёт обучения 21.10 13:30: 147 из 283 запросов — GET /game/spawn/l2dop_rb_<id>/info): номер спавна/боя в пути — тот же запрос.
+// Сворачиваем только ключ обучения; apiPath не трогаем — по нему сетевой обработчик узнаёт РБ (spawn/l2dop_rb_N/info → rbInfoNote).
+// Вид спавна остаётся в ключе (l2dop_rb_:n, l2dop_eg_:n, sdms_saints_necropolis_:n): у ответа РБ свои поля (canAttackRaidBoss,
+// minRaidBossLevelForAttack, scrollDrops), у катакомб и охраны эпика их нет — общий ключ давал ложное «ответ API изменился».
+// Сворачиваются только номера в конце (_25063, _29001_29002_0); l2dop_dion, dwarf_artisan — как были
+const learnKey = k => String(k).replace(/\/([a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*?)((?:_\d+)+)(?=\/|$)/gi, '/$1_:n');
 function respKeys(r) {
   if (!r || typeof r !== 'object' || Array.isArray(r)) return [];
   const k = Object.keys(r);
@@ -4825,6 +4880,7 @@ function respKeys(r) {
   return [...k, ...d].slice(0, 100);
 }
 function learnApi(key, d) {
+  key = learnKey(key);
   const A = LEARN.api, x = A[key], keys = respKeys(d.res), total = Object.values(A).reduce((a, y) => a + y.n, 0);
   const status = Number(d.status || 0);
   const success = status >= 200 && status < 300 && !d.error && !d.res?.error;
@@ -4857,6 +4913,12 @@ function learnApi(key, d) {
   }
   const ak = Object.keys(A); if (ak.length > 300) ak.sort((a, b) => A[a].last - A[b].last).slice(0, ak.length - 300).forEach(k => delete A[k]);
   learnDirty = true;
+}
+// 20.43: событие сети → обучение; пока обучение грузится в первый раз — в копилку (до 50), её дописывает learnLoad
+function learnNet(key, d) {
+  if (cfg.autoLearn === false) return;
+  if (LEARN) return learnApi(key, d);
+  if (learnBoot && LEARN_EARLY.length < 50) LEARN_EARLY.push([key, d]);
 }
 // Replace stale local fallbacks with explicit server deadlines. Missing fields
 // remain unknown; this never interprets an absent cooldown map as ready.
@@ -5522,7 +5584,7 @@ addEventListener('message', e => {
   // 7.1.30: квест профессии (Алхімік Орфеус: «★ Giant Fungus ×100 і ★ Dire Wyrm ×15»). Сервер отдаёт счётчики убийств —
   // делаем этих мобов целями квеста: уровень-окно к ним не применяется, бот не улетает «в зону своего уровня» (лог 10.10 13:22)
   if (/\/character\/profession-quest\/[\w-]+\/status$/.test(path) && d.res?.status && !d.res.error) try { profQuestNote(d.res.status); } catch (er) {}
-  if (cfg.autoLearn !== false && LEARN) try { learnApi(key, secret ? {} : d); } catch (er) {}
+  try { learnNet(key, secret ? {} : d); } catch (er) {}   // 20.43: до первой загрузки обучения — в копилку (learnLoad допишет)
   recordNetworkLog(d, path, key, body, secret);
 });
 // сообщения игры: тосты, ошибки, результаты действий — всё, что всплывает на экране
@@ -5556,7 +5618,7 @@ function gameMsgWatch() {
 }
 // такт обучения: структура страницы — через 4 с после загрузки, селекторы — через 20 с и потом раз в минуту
 function learnStart() {
-  if (cfg.autoLearn === false) return;
+  if (cfg.autoLearn === false) { learnBootEnd(); return; }
   learnLoad().then(() => {
     setTimeout(() => { try { learnPage(); } catch (e) {} }, 4000);
     setTimeout(() => { try { learnSelectors(); } catch (e) {} }, 20000);
@@ -6209,6 +6271,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modul
   get toMap() { return toMap; }, set toMap(value) { toMap = value; },
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get tvtSoon() { return tvtSoon; }, set tvtSoon(value) { tvtSoon = value; },
+  get tvtHoldWait() { return tvtHoldWait; },   // 20.43: окно TvT — статус/журнал «жду» вместо молчания на странице победы
   get victory() { return victory; }, set victory(value) { victory = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get zoneCatThin() { return zoneCatThin; }, set zoneCatThin(value) { zoneCatThin = value; },
@@ -6273,6 +6336,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{
   get IL() { return IL; }, set IL(value) { IL = value; },
   get IL_BY_NAME() { return IL_BY_NAME; }, set IL_BY_NAME(value) { IL_BY_NAME = value; },
   get TB_KEYS() { return TB_KEYS; }, set TB_KEYS(value) { TB_KEYS = value; },
+  get tvtHoldWait() { return tvtHoldWait; },   // 20.43: в окне TvT к бафферу не уходим
   get TOTEM_MIN() { return TOTEM_MIN; }, set TOTEM_MIN(value) { TOTEM_MIN = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
@@ -7480,6 +7544,24 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('dbfImm2043', () => {
     const I = rf.debuffImmune || rt.debuffImmune;
     if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
+  });
+  // 20.43 (лог 21.10 23:22:04, Warsmith на РБ Gwindorr): запасной путь замера выучил «hammer crush → gwindorr · удар вітру» и записал
+  // урон 66 вместо 11955 — Hammer Crush выпал из ротации на РБ (урон < 1,6 атаки). Алиасы «кто · что» (строки РБ/мобов) стираем,
+  // урон этих умений (dmg/dmgN и damageEvidence) — заново по новым замерам, в активном классе и в rt.classStash; нажатия/MP/откаты не трогаем
+  once('aliasDot2043', () => {
+    const A = { ...(rt.logAlias || {}) }, bad = Object.keys(A).filter(k => ALIAS_FOREIGN.test(String(A[k] || '')));
+    if (!bad.length) return;
+    for (const k of bad) delete A[k];
+    rf.logAlias = A;
+    const fix = sks => { let ch = false; const o = { ...(sks || {}) };
+      for (const k of bad) { const p = o[k]; if (!p || typeof p !== 'object') continue;
+        const { damageEvidence, ...rest } = p; o[k] = { ...rest, dmg: 0, dmgN: 0 }; ch = true; }
+      return ch ? o : null; };
+    const s2 = fix(S); if (s2) { S = s2; sk = true; }
+    const st = rf.classStash || rt.classStash;
+    if (st && typeof st === 'object') { let ch = false; const o = { ...st };
+      for (const [cls, v] of Object.entries(st)) { const ss = v && typeof v === 'object' ? fix(v.skills) : null; if (ss) { o[cls] = { ...v, skills: ss }; ch = true; } }
+      if (ch) rf.classStash = o; }
   });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5

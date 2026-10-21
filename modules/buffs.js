@@ -600,6 +600,10 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < BUFF_LOW_MS);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
+  // 20.43 (лог 21.10 21:58:56): «баффы кончились» после победы увели к бафферу за 62 с до TvT. В окне TvT (до старта < tvtHoldMin мин)
+  // поход не начинаем: ждём на месте (статус/журнал TvT), true — вызывающий не идёт дальше (ни в новый бой, ни к РБ)
+  if (await env.tvtHoldWait?.()) return true;
+  if(!active())return false;
   await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode), epicFa: !!(urgent && /^перед эпиком/.test(why) && env.cfg.epicFaFull !== false && env.epicFaOk?.()) }, tbT: Date.now(), tbWant: wantOf(n), tbInterrupted:null, tbWaitUntil:0 });
   if(!active())return false;
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
