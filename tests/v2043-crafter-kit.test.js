@@ -2,67 +2,8 @@
 // 20.43 (John 21.10 12:48 «Крафтом на Рб буду ходить с булавой и щитом, а фарм с пикой», 13:05 голем «Только на РБ»,
 // 13:44 «Весь тур — набор РБ»): набор крафтера — modules/crafterkit.js. Сервер — модель по живым запросам 16.10/21.10:
 // POST /character/equip (equip/unequip), POST /character/skills/cast {battleId:'l2_25'}, POST /character/companion/dismiss.
-const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
-const root = path.join(__dirname, '..'), read = n => fs.readFileSync(path.join(root, n), 'utf8');
-const ITEMS = JSON.parse(read('items-il.json'));
-const GRADE_LV = { NG: 0, D: 20, C: 40, B: 52, A: 61, S: 76 };
-const POLE = 299, YAKSA = 2503, BONE = 159, KNIGHT = 632, BRONZE = 626, VICTORY = 104, B_MACE = 171, CRYSTAL = 1459;
-
-function hero(over = {}) {
-  return { id: 7, name: 'Craft', revision: 100, level: 42, mp: 500, l2Profession: 'dwarf_warsmith', inBattle: false, activeSummon: null,
-    inventory: { eq: { l1: { itemId: POLE, enchant: 0 }, l2: 0 },
-      stacks: [{ itemId: YAKSA, qty: 1, enchant: 4, enchantPAtkBonus: 16, enchantMAtkBonus: 0 }, { itemId: BONE, qty: 1 }, { itemId: KNIGHT, qty: 1 },
-        { itemId: BRONZE, qty: 1 }, { itemId: VICTORY, qty: 1 }, { itemId: B_MACE, qty: 1 }, { itemId: CRYSTAL, qty: 40 }] }, ...over };
-}
-// сервер: revision, сумка/надетое, голем; hook — подмена ответа на конкретный запрос
-function server(h) {
-  const S = { h, posts: [], gets: 0, hook: null };
-  const res = (status, j) => ({ ok: status >= 200 && status < 300, status, json: async () => j });
-  const tokenOf = s => `bag:${s.itemId}:${+s.enchant || 0}` + (s.enchantPAtkBonus || s.enchantMAtkBonus ? `:${+s.enchantPAtkBonus || 0}:${+s.enchantMAtkBonus || 0}` : '');
-  const bagPut = v => { if (v && (+v.itemId || +v)) S.h.inventory.stacks.push(typeof v === 'object' ? { ...v, qty: 1 } : { itemId: +v, qty: 1 }); };
-  S.get = async p => { S.gets++; assert.equal(p, '/character'); return res(200, { character: JSON.parse(JSON.stringify(S.h)) }); };
-  S.post = async (p, b) => {
-    S.posts.push([p, JSON.parse(JSON.stringify(b))]);
-    if (S.hook) { const r = await S.hook(p, b, S); if (r) return r; }
-    if (b.expectedRevision !== S.h.revision) return res(409, { error: 'revision' });
-    const inv = S.h.inventory;
-    if (p === '/character/equip' && b.action === 'equip') {
-      const i = inv.stacks.findIndex(s => +s.itemId === b.itemId && tokenOf(s) === b.targetInstanceId);
-      if (i < 0) return res(400, { messageUk: 'Предмет не знайдено' });
-      const it = ITEMS[b.itemId], slot = it.wt === '—' ? 'l2' : 'l1';
-      if (slot === 'l2' && ITEMS[inv.eq.l1?.itemId]?.two) return res(400, { messageUk: 'Дворучна зброя' });
-      const [s] = inv.stacks.splice(i, 1); bagPut(inv.eq[slot]); inv.eq[slot] = { itemId: s.itemId, enchant: +s.enchant || 0, enchantPAtkBonus: s.enchantPAtkBonus, enchantMAtkBonus: s.enchantMAtkBonus };
-      if (slot === 'l1' && it.two && inv.eq.l2) { bagPut(inv.eq.l2); inv.eq.l2 = 0; }
-    } else if (p === '/character/equip' && b.action === 'unequip') { bagPut(inv.eq[b.slot]); inv.eq[b.slot] = 0; }
-    else if (p === '/character/skills/cast') {
-      assert.equal(b.battleId, 'l2_25'); const c = inv.stacks.find(s => +s.itemId === CRYSTAL);
-      if (!c || c.qty < 7) return res(400, { messageUk: 'Немає кристалів' });
-      c.qty -= 7; S.h.mp -= 88; S.h.activeSummon = { key: 'mechanic_golem', hp: 2400, maxHp: 2400, summonSkillId: 25 };
-    } else if (p === '/character/companion/dismiss') { assert.equal(b.characterId, 7); S.h.activeSummon = null; }
-    else return res(404, {});
-    S.h.revision++;
-    return res(200, { character: JSON.parse(JSON.stringify(S.h)) });
-  };
-  return S;
-}
-function make(o = {}) {
-  const st = {}, clock = { now: 1792000000000 };
-  const box = { console, JSON, sessionStorage: { getItem: k => st[k] ?? null, setItem: (k, v) => { st[k] = String(v); } }, Date: class extends Date { static now() { return clock.now; } } };
-  vm.runInNewContext(read('modules/crafterkit.js'), box);
-  const S = server(hero(o.hero)), recs = [], notes = [], pets = [];
-  const M = { mode: o.mode || 'raid', role: 'crafter', loot: false, battle: false, pet: null, weapon: null };
-  const env = { cfg: { crafterKit: true, ...o.cfg }, rt: { char: 'Craft', weapons: o.weapons || [] }, on: true, tabOwner: true,
-    role: () => M.role, mode: () => M.mode, lootGoal: () => M.loot, isBattle: () => M.battle, busy: () => false, canAct: () => true, gearBusy: () => false,
-    rec: (...a) => recs.push(a.join(' ')), setStatus: () => {}, itemsDb: async () => ITEMS, itemOf: id => ITEMS[id] ? { id, ...ITEMS[id] } : null, GRADE_LV, heroLevel: () => 42,
-    gameGet: p => S.get(p), gamePost: (p, b) => S.post(p, b), equipNote: async b => notes.push(b), petNote: c => pets.push(c.activeSummon),
-    petHas: re => !!M.pet && re.test(M.pet), weaponNow: () => M.weapon };
-  const K = box.L2V7Factories.crafterkit(env);
-  // прогон шагов, как главный цикл: true — набор держит цикл; время идёт на 1 с за шаг
-  const drive = async (n = 30, dt = 1000) => { const out = []; for (let i = 0; i < n; i++) { out.push(await K.step()); clock.now += dt; } return out; };
-  return { K, S, env, M, recs, notes, pets, clock, drive, box, st };
-}
-const eqOf = S => [S.h.inventory.eq.l1?.itemId || 0, S.h.inventory.eq.l2?.itemId || 0, S.h.activeSummon?.key || ''];
-
+const test = require('node:test'), assert = require('node:assert/strict');
+const { ITEMS, POLE, YAKSA, BONE, KNIGHT, BRONZE, CRYSTAL, hero, make, eqOf, read, vm } = require('./kit-harness.cjs');
 test('какой набор нужен: тур РБ/эпики — РБ, фарм/катакомбы/кампания/ресурсы — пика; прочее и не крафтер — не трогаем', () => {
   const { K, M, env } = make();
   for (const [m, want] of [['raid', 'rb'], ['epic', 'rb'], ['farm', 'farm'], ['cat', 'farm'], ['campaign', 'farm'], ['tasks', null], ['fish', null], ['enchant', null]]) { M.mode = m; assert.equal(K.want(), want, m); }
@@ -71,6 +12,13 @@ test('какой набор нужен: тур РБ/эпики — РБ, фар�
   M.role = 'crafter'; env.cfg.crafterKit = false; assert.equal(K.want(), null); assert.equal(K.holds(), false); assert.equal(K.noSummon(), false, 'выключенный набор не мешает бою');
   env.cfg.crafterKit = true; M.mode = 'farm'; assert.equal(K.noSummon(), true, 'на фарме голема в бою не призываем');
   M.mode = 'raid'; assert.equal(K.noSummon(), false);
+  // 20.44: бой с РБ ради ресурса (rt.farmRb) — голема можно, а прилетели к живому РБ — набор РБ
+  M.mode = 'farm'; assert.equal(K.noSummon(true), false, 'бой с РБ на фарме — голем можно');
+  env.farmRbOn = () => true; env.rt.farmRb = { id: 'l2dop_rb_7', t: 1 }; env.rt.rbWant = 'l2dop_rb_7'; let alive = [{ id: 'l2dop_rb_7' }]; env.rbCandidates = () => alive;
+  assert.equal(K.want(), 'rb', 'РБ ресурса жив на карте — набор РБ');
+  alive = []; assert.equal(K.want(), 'farm', 'РБ убит/не на этой карте — снова пика');
+  alive = [{ id: 'l2dop_rb_7' }]; env.farmRbOn = () => false; assert.equal(K.want(), 'farm', 'окно фарма ресурса с РБ кончилось');
+  M.mode = 'fish'; env.farmRbOn = () => true; assert.equal(K.want(), null, 'рыбалка — не трогаем');
 });
 
 test('выбор вещей: лучшая одноручная дубина и щит по уровню; B/клановые/с ЛС бот сам не берёт; токен с бонусом заточки', () => {
@@ -148,7 +96,7 @@ test('409 — перечитать и продолжить; отказ игры 
   A.S.hook = async (p, b, S) => { if (!once++) { S.h.revision += 3; } };
   await A.drive(14); assert.deepEqual(eqOf(A.S), [YAKSA, KNIGHT, 'mechanic_golem'], '409 не мешает');
   A = make(); A.S.hook = async (p, b) => b.itemId === KNIGHT ? { ok: false, status: 400, json: async () => ({ messageUk: 'Не можна' }) } : null;
-  await A.drive(14); assert.deepEqual(eqOf(A.S), [YAKSA, 0, 'mechanic_golem']); assert.match(A.recs.join('\n'), /игра отказала — Не можна; это действие пропускаю 30 мин/);
+  await A.drive(14); assert.deepEqual(eqOf(A.S), [YAKSA, BRONZE, 'mechanic_golem'], '20.44: отказанный щит — следующий по силе'); assert.match(A.recs.join('\n'), /игра отказала — Не можна; это действие пропускаю 30 мин/);
   assert.equal(A.S.posts.filter(([, b]) => b.itemId === KNIGHT).length, 1, 'отказанный щит не долбим');
   A = make(); A.S.hook = async () => ({ ok: false, status: 409, json: async () => ({}) });
   const out = await A.drive(200, 1000);
@@ -191,7 +139,7 @@ test('подключение: цикл, оружие «в класс», бой, 
   assert.match(eq, /better && !augHold && !env\.gearHold\?\.\(\)\) \{/);
   assert.match(content, /get gearHold\(\)\{return \(\)=>!!L2V7Modules\.crafterkit\?\.holds\?\.\(\)\}/);
   const cb = read('modules/combat.js');
-  assert.equal((cb.match(/!env\.crafterKit\?\.noSummon\?\.\(\)/g) || []).length, 2, 'призыв и перепризыв слуги');
+  assert.equal((cb.match(/!env\.crafterKit\?\.noSummon\?\.\(!!ctx\.rb\)/g) || []).length, 2, 'призыв и перепризыв слуги (20.44: в бою с РБ голема можно)');
   assert.match(read('modules/mobfarm.js'), /env\.victory\(\) && env\.canAct\?\.\(\) !== false && env\.crafterKit\?\.chainWant\?\.\(\)\) return env\.toMap\(\);/);
   assert.match(content, /known\.wt === '—'\)\) return;/, 'щит не записывается надетым оружием');
   const js = JSON.parse(read('manifest.json')).content_scripts.find(x => x.js.includes('content.js')).js;
@@ -200,12 +148,20 @@ test('подключение: цикл, оружие «в класс», бой, 
   assert.match(read('popup.js'), /'crafterKit'/); assert.match(read('popup.html'), /id="crafterKit" type="checkbox"/);
 });
 
-test('закупка: в туре РБ запас Crystal C голему (поверх нужды Маммона), на фарме — нет', () => {
+test('закупка: в туре РБ запас Crystal C голему (поверх нужды Маммона), на фарме — нет', async () => {
   const A = make({ mode: 'raid' }), rows = [];
   A.env.shopRow = (id, mm, tag) => ({ key: 'mm' + id, label: `Кристал: ранг C (${tag})`, ids: [id], grade: 'C', mm });
+  assert.deepEqual(A.K.shopRows([]), [], '20.44: ранг голема ещё не прочитан — кристаллы не покупаем');
+  await A.drive(1);
   assert.deepEqual(A.K.shopRows(rows).map(r => [r.key, r.mm.join('/')]), [['mm1459', '30/100']]);
   const mm = [{ key: 'mm1459', label: 'Кристал: ранг C (Маммон)', ids: [1459], mm: [200, 200] }];
   assert.deepEqual(A.K.shopRows(mm).map(r => [r.label, r.mm.join('/')]), [['Кристал: ранг C (Маммон + голем)', '230/300']]);
+  // 20.44: цель Маммона уже собрана (строки Маммона нет) — запас голему поверх её кристаллов; прошлая закупка не смогла купить — час без строки
+  A.env.mmNeed = id => id === 1459 ? { need: 300, have: 300 } : null;
+  assert.deepEqual(A.K.shopRows([]).map(r => r.mm.join('/')), ['330/400']);
+  A.env.mmNeed = () => ({ need: 300, have: 120 }); assert.deepEqual(A.K.shopRows([]).map(r => r.mm.join('/')), ['30/100'], 'цель не собрана — её недостачу при выключенной докупке не покупаем');
+  A.env.rt.shopFail = { n: 1, t: A.clock.now, keys: ['mm1459'] }; assert.deepEqual(A.K.shopRows([]), [], 'сумка полна / нет в магазине — строку час не добавляем');
+  A.clock.now += 61 * 60000; assert.equal(A.K.shopRows([]).length, 1);
   A.M.mode = 'farm'; assert.deepEqual(A.K.shopRows([]), []);
   assert.match(read('modules/economy.js'), /env\.crafterShop\?\.\(list\)/);
   assert.match(read('content.js'), /get crafterShop\(\) \{ return list => L2V7Modules\.crafterkit\?\.shopRows\?\.\(list\); \}/);

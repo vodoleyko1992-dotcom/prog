@@ -6484,7 +6484,9 @@ L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get cfg() { return cfg; }, g
   get gearBusy() { return () => !!rt.invScan || !!rt.autoLs?.hold || !!rt.autoLs?.pending || rt.weaponMetaPending?.status === 'pending' || !!L2V7Modules.subgo?.gearBusy?.(); },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get itemsDb() { return itemsDb; }, get itemOf() { return itemOf; }, get GRADE_LV() { return GRADE_LV; },
   get heroLevel() { return heroLevel; }, get equipNote() { return weaponEquipNote; }, get weaponNow() { return () => L2V7Modules.combat?.combatWeapon?.(); },
-  get petNote() { return kitPetNote; }, get petHas() { return kitPetHas; }, get shopRow() { return (...a) => L2V7Modules.mammon?.shopRow?.(...a); } });
+  get petNote() { return kitPetNote; }, get petHas() { return kitPetHas; }, get shopRow() { return (...a) => L2V7Modules.mammon?.shopRow?.(...a); },
+  get weaponItem() { return id => L2V7Modules.equipment?.weaponItem?.(id); }, get resolveItem() { return id => L2V7Modules.equipment?.resolveWeaponItem?.(id); },
+  get farmRbOn() { return farmRbOn; }, get rbCandidates() { return () => L2V7Modules.raid?.rbCandidates?.(); }, get mmNeed() { return id => L2V7Modules.mammon?.rawNeed?.(id); } });
 // 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса у Reorin и лучший комплект из сумки (modules/subgo.js). Свой POST идёт мимо hook.js,
 // поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры
 L2V7Modules.subgo = L2V7Factories.subgo({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
