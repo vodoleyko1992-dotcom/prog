@@ -108,7 +108,9 @@ test('не откладываются: квота/итог боя, оплаты,
  for(const k of ['farmQuota','dailyQuota','farmKillMark','raidMobMarks','actionPayments','actionOwner','epic','rbCur','rbPending','rbWound','rbSkip','battleReload','mobClickAt','bounce','buffAt','status','clickLockA','combatWait','subSlots'])
   assert.doesNotMatch(soon,new RegExp(`'${k}'`),k);
  assert.match(combat,/env\.setRt\(\{ buffAt: \{ \.\.\.\(env\.rt\.buffAt \|\| \{\}\), \[bn\]: Date\.now\(\) \} \}\)/,'buffAt — обычной записью: следующая страница боя решает по нему, не повторить ли бафф');
- assert.match(combat,/if \(env\.rt\.bounce \|\| env\.rt\.mobClickAt\) env\.setRt\(\{ bounce: 0, mobClickAt: 0 \}\);/,'сброс петли — обычной записью: карта считает mobClickAt моложе 8 с отскоком');
+ // 20.43 (лог 21.10 15:47–15:51): сброс петли — отложенной записью (rtSoon); память вкладки обновлена сразу, уход со страницы (pagehide → peek)
+ // отправляет его раньше, чем новая страница возьмёт замок — карта не примет свежий mobClickAt за отскок
+ assert.match(combat,/if \(env\.rt\.bounce \|\| env\.rt\.mobClickAt\) rtSoon\(\{ bounce: 0, mobClickAt: 0 \}\);/,'сброс петли — отложенной записью без ожидания');
  assert.match(content,/\(live \? setRtSoon : setRt\)\(\{ status: s \}\)/);assert.match(content,/function statusSave\(s\) \{ liveStatus\(s\); rtStatusW = Date\.now\(\); return setRt\(\{ status: s \}\); \}/,'разовая запись статуса (остановка) — обычной');
 });
 

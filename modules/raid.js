@@ -1619,6 +1619,9 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await rbShopFirst(preparing.name)) return;
     if (!active()) return;
+    // 20.43 (лог 21.10 15:47–15:51, порядок игрока): сначала только призыв кота, затем баффы героя, баффы кота — после них (raidPrepare ниже).
+    if (await env.warlock?.raidPrepare?.({ buffs: false })) { if (active()) await rbHuntPhase('prepare', 'призываю кота до баффов героя'); return; }
+    if (!active()) return;
     // 20.12 (ревизия 17.10): набор за FA — только когда на телепорт к этой цели хватает адены по свежему кошельку.
     // Иначе кандидат «нет денег» покупал 22–30 FA каждые 3 ч, а перелёт потом отсекался бюджетом.
     const faBudget = await rbFaBudgetWhy(preparing, active);

@@ -65,6 +65,20 @@ function extraMobs() {
 // 20.13 (ревизия 17.10, шаг 7, аудит combat/C7): env.damageSkills — геттер ядра, на каждое обращение заново строит словарь всех навыков.
 // Внутри одной синхронной функции словарь не меняется — берём его один раз (DS = skillView()) вместо обращения на каждый слот/вариант
 const skillView = () => env.damageSkills || env.rt.skills;
+// 20.43 (лог 21.10 15:47–15:51: «АОЕ: проверяю дополнительную добычу» в каждом бою катакомб, модель группы так и не появилась):
+// не больше 3 проб одного умения в одном месте без модели группы, затем 10 мин без проб. Память вкладки (sessionStorage) переживает
+// переход к следующему мобу катакомб.
+const AOE_PROBE_KEY = 'l2bot.aoeProbe', AOE_PROBE_MAX = 3, AOE_PROBE_MS = 600000;
+const aoeProbeId = name => String(name || '').replace(/\s*\(.*$/, '').toLowerCase() + '|' + (env.cfg.catMode ? 'cat:' + (env.rt.catIn || env.cfg.catDungeon || '') : 'map:' + (env.rt.zone || ''));
+let aoeProbeMem = {};
+function aoeProbeRead() { try { const v = JSON.parse(sessionStorage.getItem(AOE_PROBE_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return { ...aoeProbeMem }; } }
+function aoeProbeCapped(name) { const r = aoeProbeRead()[aoeProbeId(name)]; return !!r && r.n >= AOE_PROBE_MAX && Date.now() - r.t < AOE_PROBE_MS && Date.now() >= r.t; }
+function aoeProbeNote(name) {
+  const all = aoeProbeRead(), k = aoeProbeId(name), now = Date.now(), r = all[k] && now - all[k].t < AOE_PROBE_MS && now >= all[k].t ? all[k] : { n: 0, t: now };
+  all[k] = { n: r.n + 1, t: r.n + 1 >= AOE_PROBE_MAX ? now : r.t };
+  aoeProbeMem = Object.fromEntries(Object.entries(all).filter(([, x]) => now - x.t < AOE_PROBE_MS).slice(-20));
+  try { sessionStorage.setItem(AOE_PROBE_KEY, JSON.stringify(aoeProbeMem)); } catch (e) {}
+}
 // Общая оценка группового хода для мага и бойца. Оверкилл основной цели не даёт
 // преимущества над дополнительными убийствами; личный откат готового умения — не время каста.
 function groupPlan(ctx, opts, eco = false) {
@@ -90,7 +104,7 @@ function groupPlan(ctx, opts, eco = false) {
     const each = Math.min(o.dmg, model?.damage || (near.length && p?.splN && p.spl ? p.spl / p.splN / near.length : ilArea ? o.dmg : 0));
     const sideKills = visible ? near.filter(x => each * .85 >= x.cur).length : model?.kills || 0;
     const useful = Math.min(mob.cur, o.dmg) + (visible ? near.reduce((s, x) => s + Math.min(x.cur, each), 0) : 0);
-    const probe = !visible && !model && reliable && !!p?.aoe;
+    const probe = !visible && !model && reliable && !!p?.aoe && !aoeProbeCapped(o.name);
     if (!(!ctx.rb && reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * rbK || !ctx.rb && probe)) continue;
     ranked.push({ ...o, group: true, sideKills, useful, probe,
       why: ctx.rb ? `РБ: АОЕ по мобам рядом · живых ${near.length}${ctx.nearSpoiled > 0 ? ' · проспойлено ' + ctx.nearSpoiled : ''} · доп. убийств ≈${sideKills.toFixed(1)}` : probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
@@ -419,7 +433,10 @@ function petTick(ctx) {
 }
 // кот жив: свежий ответ сервера (activeSummon), иначе шапка «Активний слуга» (#l2-hud-companion: «Kai the CatLv.3HP1 880/1 880…»)
 function petAlive() {
-  const P = env.petState?.();
+  const P = env.petState?.(), born = +env.rt.petSummonOkT || 0;
+  // 20.43 (лог 21.10 15:50:24): призыв принят после последнего «кота нет» — кот жив до нового ответа сервера; баффы кота — в этом же бою.
+  // Ревью: отдельная отметка принятого призыва (petSummonOkT), не petBornT — его пишет и смерть кота в бою.
+  if (P && !P.has && (P.t || 0) < born && Date.now() - born < 20000) return true;
   if (P && Date.now() - (P.t || 0) < 20000) return !!P.has && !(P.maxHp && P.hp <= 0);
   const box = env.$q('#l2-hud-companion'), m = box && env.shown(box) ? box.textContent.replace(/\s+/g, '').match(/HP(\d+)\/(\d+)/i) : null;
   return !!m && +m[1] > 0;
@@ -493,6 +510,9 @@ function petBuffPick(ctx, me, mp, mob) {
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
     let confirmedMissing = false;
+    // 20.43: бафф уже поставлен вне боя (подготовка после Старта/перед РБ) — по свежему снимку сервера не повторяем.
+    const nativeRow = env.slotAction(b) !== 'l2_1331' && (env.rt.petRaidSkills?.rows || []).find(r => String(r?.name || '').trim().toLowerCase() === String(n).trim().toLowerCase());
+    if (nativeRow && +nativeRow.effectId > 0 && env.warlock?.petBuffState?.(+nativeRow.effectId, at) === true) continue;
     if (env.slotAction(b) === 'l2_1331') {
       // Подтверждённый бафф слуги важнее локального таймера, в том числе оплаченный набор.
       const petBuff = env.warlock?.petBuffState?.(4699, at) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
@@ -1684,11 +1704,12 @@ async function battle() {
     if ((s = await exitCheckStep(me, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await stallStep(me, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
 
+    // 20.43 (лог 21.10 15:49): призыв кота — первым действием боя, раньше включения зарядов.
+    if ((s = await petStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     await env.keepShots();
     const ex = extraMobs().filter(x => x.cur > 0);
     const tc = (ctx.rb ? ` [РБ ${ctx.rb.note}]` : ctx.champ ? ' [чемп]' : '') + (ex.length ? ` +${ex.length} рядом` : '');
 
-    if ((s = await petStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await healStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     // банка HP (если задана)
     // v4.46: на РБ — при HP ≤ 45 % и по недостаче (≥1500 — большая); на мобах как было
@@ -2043,7 +2064,7 @@ async function battle() {
           env.setRt({ petSummonT: Date.now() })?.catch?.(() => {});   // 20.41: таймеры призыва — без ожидания записи (память вкладки обновлена сразу)
           env.rec('B', 'питомец', `кота нет (умер или не призван) — призываю первым действием: ${env.cleanTitle(sb.title)}`);
           const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`);
-          if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } env.setRt({ petBornT: Date.now() })?.catch?.(() => {}); }   // 7.1.31
+          if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } env.rt.petSummonOkT = env.rt.petBornT = Date.now(); env.setRt({ petBornT: env.rt.petBornT, petSummonOkT: env.rt.petSummonOkT })?.catch?.(() => {}); }   // 7.1.31; 20.43: в памяти сразу
           // 7.2.2 (лог 10.10 23:18:59): клик призыва не ушёл в игру (сразу после включения зарядов) — раньше следующая попытка через 15 с,
           // и игрок призвал кота сам. Теперь повтор через ≈2 с; 8.0.3 (лог 11.10 10:00:45, 10:33:01): потерян в окне занятости игры ('lock') — сразу
           else env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 })?.catch?.(() => {});   // 20.12: 'nomp' — повтор через ≈2 с, как непрошедший клик
@@ -2265,7 +2286,10 @@ async function battle() {
       if(done==='lock'||done==='nomp')return AGAIN;
       if(a.key.startsWith('stun')&&done===true)ctx.lastStun=Date.now();
       if (a.damageProbe && done === true) { const k = env.skKey(a.b), counts = ctx.damageProbeActs ||= {}; counts[k] = (counts[k] || 0) + 1; }
-      if ((a.probe || a.damageProbe) && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
+      if (a.probe && done === true) aoeProbeNote(a.name);
+      // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе). 20.43 (лог 21.10 15:47–15:51: 13 из 13 боёв Arcana
+      // Lord в катакомбах — Flame Strike убивал с одного хода, и ещё 950 мс стояли после победы): бой окончен/моб мёртв — не ждём
+      if ((a.probe || a.damageProbe) && done === true) await env.waitFor(() => victory() || defeat() || !(mobHp()?.cur > 0), 950, 30);
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
       if (a.charge || a.cost) {                     // энергия силы: по новым строкам лога, иначе свой учёт
         // 20.41: строка энергии обычно уже пришла с ответом хода — не ждём лишние 150 мс; без строки — те же 150 мс
@@ -2398,7 +2422,9 @@ async function battleOpen() {
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
   if (st === 'win') { const owner=killOwner(); await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
-  if (env.rt.bounce || env.rt.mobClickAt) env.setRt({ bounce: 0, mobClickAt: 0 });   // 8.0: без ожидания записи   // бой открылся — счётчик петли сброшен
+  // бой открылся — счётчик петли сброшен. 8.0: без ожидания; 20.43 (лог 21.10 15:47–15:51): отложенной записью — полная запись
+  // памяти ≈960 КБ в начале каждого боя катакомб стояла в очереди фона перед записями победы
+  if (env.rt.bounce || env.rt.mobClickAt) rtSoon({ bounce: 0, mobClickAt: 0 });
 
   // панель: инвентаризация (в журнал — при изменении) и автоназначение ролей
   const inv = env.panelInventory(), invSig = inv.map(x => x.idx + ':' + x.name).join('|');
@@ -2729,6 +2755,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

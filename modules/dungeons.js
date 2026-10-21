@@ -160,11 +160,16 @@ function catNatFail(id) {
   return true;
 }
 function catNative(id, list, pick, cur) {
-  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = Math.abs((+cur.level || 0) - nat.lvl) <= 1 ? 0 : nat.bad + 1; catNatOk(); }
+  // 20.43 (решение игрока 21.10 06:19 «Да, быстрее»; лог 21.10 15:50–15:51: Catacomb of Dark Omens 72–78 ур., выбор всегда 78 → ±1 не
+  // проходил никогда, каждый моб — перезагрузка ≈1 с): годится любой моб в окне уровней героя (catWin, не ниже −5 — FA), без Cancel/запретов.
+  // Хороший выбор сервера — тоже в этом окне; два выбора вне окна подряд — снова свой выбор и переход.
+  const L = catLevel();
+  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = (!env.cfg.catDungeon || env.cfg.catDungeon === 'auto' ? catPick([{ id: cur.id, name: cur.name, lvl: +cur.level || 0, rb: false, champ: false }], L) : Math.abs((+cur.level || 0) - nat.lvl) <= 1) ? 0 : nat.bad + 1; catNatOk(); }
   if (nat?.id === id && nat.bad >= 2) return false;
   if ((+natMark().off?.[id] || 0) > Date.now()) return false;
-  const L = catLevel(), fit = list.filter(x => Math.abs(x.lvl - pick.lvl) <= 1 && catPick([x], L));
-  if (list.length < 3 || fit.length < list.length * 0.8) return false;
+  const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';   // ручное подземелье (окно 0–999) — прежнее правило ±1 к выбору
+  const fit = list.filter(x => (auto || Math.abs(x.lvl - pick.lvl) <= 1) && catPick([x], L));
+  if (list.length < 3 || fit.length < 3 || fit.length < list.length * 0.6) return false;
   if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
   nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
   return true;
@@ -208,7 +213,11 @@ async function catNext() {
     const next = catTarget(); if (next && next !== id) return false;
   }
   if (catNative(id, list, pick, rows.find(x => x.id === sid))) return 'native';
-  await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
+  // 20.43 (лог 21.10 15:47–15:51: «итог боя» → «следующий бой» ≈1,0 с — эта запись ждала две полные записи памяти ≈960 КБ в очереди):
+  // здесь только обычный моб, путь к нему — отложенной записью без ожидания; уход со страницы (pagehide) отправляет её до нового боя.
+  // Чемпионы и квестовые цели (mobfarm/catGo) по-прежнему ждут записи.
+  const route = { target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() };
+  if (env.setRtSoon) env.setRtSoon(route)?.catch?.(() => {}); else await env.setRt(route);
   if (!active() || !catPick([pick], catLevel())) return true;
   if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active() || !catPick([pick], catLevel()))return true;
   env.setStatus(`Катакомбы: следующий бой с ${pick.name} (${pick.lvl})`);

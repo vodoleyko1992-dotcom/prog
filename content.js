@@ -559,7 +559,16 @@ const skKey  = b => cleanTitle(b?.title || '').toLowerCase();
 const combatCooldown = L2BattleCooldown.createBattleCooldown();
 const slotAction = b => b?.getAttribute('data-slot-cd') || b?.querySelector('[data-slot-cd]')?.getAttribute('data-slot-cd') || '';
 let PET = null;                                  // 7.1.16-fix: последний известный слуга (activeSummon из ответа боя)
-const petState = () => PET;
+// 20.43 (лог 21.10 15:49): бой катакомб начинается на dungeon.html, ответ start с activeSummon:null терялся при переходе на battle.html —
+// призыв ждал 3-го боя. Свежий (≤10 с) слуга того же героя переносится через sessionStorage.
+// Восстанавливаем лениво: имя героя в шапке появляется после загрузки страницы.
+let petRestored = false;
+function petRestore() {
+  try { const nick = heroNick(); if (!nick) return; petRestored = true; const s = JSON.parse(sessionStorage.getItem('l2bot.pet') || 'null');
+    if (s && s.char === nick && Number.isFinite(+s.t) && Date.now() - s.t < 10000 && Date.now() >= s.t) { const { char: _c, ...p } = s; PET = p; } } catch (e) {}
+}
+function petSet(p) { PET = p; petRestored = true; try { sessionStorage.setItem('l2bot.pet', JSON.stringify({ ...p, char: rt.char || '' })); } catch (e) {} }
+const petState = () => { if (!PET && !petRestored) petRestore(); return PET; };
 // 7.1.31 (скрин магистра 10.10): на L2WAP у части скиллов в описании «В бою эффекта нет: 0 изменения HP и статов, только трата MP
 // и откат» — Servitor Wind Walk, Body To Mind. Бот их никогда не жмёт (раньше Body To Mind жался при нехватке MP — ход впустую).
 // Кроме встроенного списка — описание со страницы магистра (learnSkillDb → rt.skillDb[имя].desc; «Умения» = /magister.html?mode=learned).
@@ -1458,6 +1467,9 @@ function setRt(p) {
 // ждал запись начала боя за ними): статистика обычного боя — награды, ДПС, замеры, счётчики, путь к цели — пишется отложенно, одним
 // пакетом раз в 8 с или вместе с любой обычной записью. Память вкладки обновлена сразу, при уходе со страницы остаток уходит по pagehide.
 const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 'sp', 'lastWinT', 'lastBattle', 'packLab', 'buffAudit', 'dps', 'mobVal',
+  // 20.43 (лог 21.10 15:47–15:51): статистика кота (petStat/petAdvice, когорты petCohorts) и отметка EXP% (expMark) после каждой
+  // победы — тоже отложенно; сброс из меню не воскрешается (те же ключи в L2EngineCore.MENU_STAT_KEYS)
+  'petStat', 'petAdvice', 'petCohorts', 'expMark',
   'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'eff', 'skills', 'via', 'catInT']);
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
@@ -3003,7 +3015,7 @@ const loopStale = () => !on || !tabOwner || autonomyMode() === 'enchant';
 // Один круг главного цикла: первый шаг, вернувший true/LOOP_BREAK, заканчивает круг.
 async function mainTick() {
   return await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent()
-    || await loopTaskList() || await loopEnchant() || await loopPriority() || await loopMenuJobs() || await loopTownJobs()
+    || await loopTaskList() || await loopEnchant() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
     || await loopSideJobs() || await loopRaid() || await loopActivity();
 }
 // Замок вкладки: «один бот на все вкладки»; новая выдача замка перечитывает хранилище.
@@ -3084,6 +3096,7 @@ async function loopGate() {
   if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
   if (rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
+  if (rt.petPrep && await L2V7Modules.warlock.startPrepare()) { await sleep(300); return true; }   // 20.43: начатая подготовка кота после Старта
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
@@ -3128,7 +3141,7 @@ async function loopWatchdog() {
 async function loopUrgent() {
   if (serverDown()) { await serverWait(); await sleep(200); return true; }      // 20.12: повтор после долгих шагов выше (страница могла смениться)
   if (loginPage()) { await autoLogin(); await sleep(200); return true; }
-  if (rt.revive) { await reviveStep(); await sleep(300); return true; }
+  if (rt.revive) { await reviveStep(); if (!rt.revive && rt.startPrep && tabOwner) await setRt({ startPrep: null }); await sleep(300); return true; }   // 20.43: после воскрешения кот и баффы — заново
   if (isMap() && await leaveCheck()) return true;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
   if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); return true; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
 }
@@ -3271,11 +3284,77 @@ async function sealQueue() {
   const saved = await setRt({ sealEx: { t: Date.now(), auto: true } });
   return saved?.ok === true && await rtCommit();
 }
+// 20.43 (лог 21.10 15:47–15:51): игрок — «Старт → призыв кота → задача → бафф себя → бафф кота → только потом задача». Кот появлялся
+// лишь в 3-м бою катакомб, баффы кота — в 4-м, городской набор кота не брался (нужен живой кот). Подготовка — котоводам (cfg.petAuto)
+// и задачам с боем: катакомбы/автофарм/фарм/квесты. Рыбалка, заточка, «Только задачи», TvT и эпики — без неё; тур РБ готовит кота сам.
+// Повтор — по Старту (rt.dailyStart), задаче, классу и герою: правка лимитов (manualKickAt) подготовку не повторяет.
+// Каждый этап ≤ 2 мин: задача не может застрять, кот и баффы тогда — в бою.
+const START_PREP_MS = 120000;
+const START_PREP_TASK = { cat: 'катакомбы', auto: 'автофарм', farm: 'фарм', quests: 'квесты' };
+function startPrepTask() { const t = L2EngineCore.selectedTask(cfg, rt); if (t != null) return t; const m = autonomyMode(); return m === 'campaign' ? 'quests' : m; }
+function startPrepProf() { return String(rt.classCur?.prof || rt.prof || '').trim().toLowerCase().replace(/[ -]+/g, '_').replace(/^human_/, ''); }
+function startPrepEligible() { return cfg.petAuto !== false && /^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(startPrepProf()) && Object.hasOwn(START_PREP_TASK, startPrepTask()); }
+function startPrepKey() { return { char: rt.char || '', classKey: `${rt.classCur?.slot}:${startPrepProf()}`, start: +rt.dailyStart || 0, task: startPrepTask() }; }
+function startPrepSame(S, K = startPrepKey()) { return !!S && S.char === K.char && S.classKey === K.classKey && S.start === K.start && S.task === K.task; }
+function startPrepWanted() {
+  return !!(on && tabOwner && startPrepEligible() && !isBattle() && !fishNow() && !tvtSoon() && !/tvt/i.test(location.pathname) && !L2V7Modules.payments?.blocked?.()
+    && !rt.shop?.urgent && !rt.revive && startPrepSame(rt.startPrep) && rt.startPrep.phase !== 'done');
+}
+function prepHold() { return !isBattle() && startPrepEligible() && startPrepSame(rt.startPrep) && rt.startPrep.phase !== 'done'; }
+async function loopStartPrep() {
+  if (loopStale()) return true;
+  if (!startPrepEligible()) { if (rt.petPrep && !rt.petPrep.pending) await setRt({ petPrep: null }); return false; }
+  const K = startPrepKey();
+  let S = rt.startPrep;
+  if (!startPrepSame(S, K)) {
+    // 20.43 (ревью): на странице боя (цепочка «Охотиться дальше» после «Продолжить») подготовку не заводим — её 2 мин истекли бы
+    // в бою; начнём на первом тике вне боя. id — поколение подготовки для отметок warlock (старая задача/отметка не подходят).
+    if (isBattle()) return false;
+    S = { ...K, phase: 'summon', t: Date.now(), id: Date.now() }; await setRt({ startPrep: S }); await rtCommit();
+    if (loopStale()) return true;
+    rec('B', 'старт', `подготовка перед задачей «${START_PREP_TASK[K.task]}»: призыв кота → баффы героя → баффы кота`);
+  }
+  if (S.phase === 'done' || isBattle()) return false;
+  const next = async (phase, line) => { await setRt({ startPrep: { ...rt.startPrep, phase, t: Date.now() } }); await rtCommit(); if (line) rec('B', 'старт', line); return loopStale(); };
+  if (Date.now() - (+S.t || 0) > START_PREP_MS) { await setRt({ petPrep: null }); return next('done', `этап «${S.phase}» не уложился в 2 мин — начинаю задачу; кот и его баффы будут в бою`); }
+  if (!startPrepWanted()) return false;          // временный запрет (ЛС, оплата, магистр…): задачу держит prepHold, этап — таймаут
+  const W = L2V7Modules.warlock;
+  if (S.phase === 'summon') {
+    if (await W.startPrepare({ buffs: false })) return true;
+    if (!W.startReady('summon')) { setStatus('Старт: жду возможности призвать кота'); return false; }
+    return next('self', 'кот на месте — баффы героя');
+  }
+  if (S.phase === 'self') {
+    if (rt.tbuff) return false;                  // поход к бафферу ведёт loopPriority
+    rt.tbWatchT = Date.now(); setRt({ tbWatchT: rt.tbWatchT });
+    if (await townBuffStart('старт: баффы героя')) return true;
+    if (loopStale()) return true;
+    return next('pet', 'баффы героя готовы — баффы кота');
+  }
+  if (S.phase === 'pet') {
+    if (rt.petBufferTrip) return false;          // платный набор кота в пути — его ведёт loopSideJobs
+    if (await W.startPrepare({ buffs: true })) return true;
+    if (!W.startReady('pet')) { setStatus('Старт: жду возможности бафнуть кота'); return false; }
+    // 20.43 (ревью): свежее чтение — только при первом заходе этапа; дальше step соблюдает свою паузу (nextCheckAt 15 с после отказа
+    // или неизвестного исхода) и вернёт false — этап завершается, без платного POST на каждом тике
+    if (cfg.petFullAuto === true && L2EngineCore.taskAllowed(cfg, 'petbuff')) {
+      const first = !S.paid; if (first) { await setRt({ startPrep: { ...rt.startPrep, paid: 1 } }); if (loopStale()) return true; }
+      if (await W.step({ forceRead: first })) return true;
+    }
+    if (loopStale()) return true;
+    return next('done', 'кот призван и забафан — начинаю задачу');
+  }
+  return false;
+}
 // Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати.
 async function loopTownJobs() {
   if (loopStale()) return true;
   // v5.5: сторож баффов — в любом режиме вне боя (раньше проверка была только после победы и на карте)
-  if (!isBattle() && !fishNow() && !tvtSoon() && !/tvt/i.test(location.pathname) && Date.now() - (rt.tbWatchT || 0) > 15000) { rt.tbWatchT = Date.now(); setRt({ tbWatchT: rt.tbWatchT }); if (await townBuffStart('сторож: баффы слетели')) return true; }
+  if (!isBattle() && !fishNow() && !tvtSoon() && !/tvt/i.test(location.pathname) && !(prepHold() && rt.startPrep.phase === 'summon') && Date.now() - (rt.tbWatchT || 0) > 15000) { rt.tbWatchT = Date.now(); setRt({ tbWatchT: rt.tbWatchT });
+    // 20.43 (ревью): тур РБ — сначала призыв кота (тот же шаг, что в rbHuntStep), потом сторож ведёт к бафферу героя
+    if (autonomyMode() === 'raid' && !rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare({ buffs: false })) return true;
+    if (loopStale()) return true;
+    if (await townBuffStart('сторож: баффы слетели')) return true; }
   if (loopStale()) return true;
   // «🔪 Разделать всю рыбу → Proof» из меню — сразу, в любом режиме (бой с мобом и вываживание рыбы — доводим до конца)
   if (rt.fishSvc && !isBattle() && !(isFishing() && fishState())) {
@@ -3312,7 +3391,7 @@ async function loopSideJobs() {
   if (loopStale()) return true;
   if (rt.petBufferTrip && await warlockTripStep()) { await sleep(200); return true; }
   if (loopStale()) return true;
-  if (on && tabOwner && !isBattle() && await L2V7Modules.warlock.step()) { await sleep(200); return true; }
+  if (on && tabOwner && !isBattle() && !prepHold() && await L2V7Modules.warlock.step()) { await sleep(200); return true; }   // 20.43: платный набор кота — после призыва
   if (loopStale()) return true;
   if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
   if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); return true; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
@@ -3347,6 +3426,7 @@ async function loopActivity() {
   else if (fishNow() && isFishing()) { await fishing(); await sleep(30); return true; }
   else if (isBattle()) await battle();
   else if (fishNow()) await goFishing();
+  else if (prepHold()) { setStatus('Старт: подготовка кота перед задачей'); await sleep(500); return true; }   // 20.43: катакомбы/кампания/фарм — после кота и баффов
   else if (autonomyMode() === 'cat') await catGo();         // 🏛 фарм катакомб: телепорт → «Войти в подземелье» → мобы
   else if (campOn() && isCampaign()) await campaign();
   else if (campOn() && (rt.campaignDue || !rt.campaign) && !isMap()) await goCampaign();
@@ -4755,11 +4835,17 @@ function catPaymentNote(path,d,c){
   try{sessionStorage.setItem('l2bot.catTpReceipt',JSON.stringify(a));}catch(_){}
 }
 
+// 20.43 (лог 21.10 15:47–15:51): снимок имён слотов панели боя на момент отправки хода — для actName после победы
+const ACT_NAMES = new Map();
+function actNameSnap() {
+  try { for (const b of document.querySelectorAll('.l2-battle-hotbar-slot')) { const id = b.getAttribute('data-slot-cd') || b.querySelector('[data-slot-cd]')?.getAttribute('data-slot-cd') || '', t = cleanTitle(b.title || '').toLowerCase(); if (/^(?:l2_\d+|ls_[a-z_]+)$/.test(id) && t) ACT_NAMES.set(id, t); } } catch (e) {}
+}
 const gameBusy = () => { const now = Date.now(); for (const [rid, t] of GAME_REQ) { if (now - t > 3000) GAME_REQ.delete(rid); else return { busy: true, end: GAME_END }; } return { busy: false, end: GAME_END }; };
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
   netContextStart(e.data);
   const p = e.data.path || '/game/battle/action';
+  if (p === '/game/battle/action') actNameSnap();   // 20.43: имена слотов — пока панель боя на месте
   if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); ACT_NET.startRid=e.data.rid; ACT_NET.startOwner=observeOwner(); }   // GET /character — не «ход ушёл»
   if (p === '/game/battle/hunt-continue') ACT_NET.huntT = Date.now();             // 10.0: «Охотиться дальше» в полёте (сервер замирает до ≈8,4 с)
   if (e.data.rid != null && BUSY_PATH.test(p)) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
@@ -4919,6 +5005,16 @@ addEventListener('message', e => {
   if (meNow) { L2V7Modules.quests?.campLocationNote(path, d); L2V7Modules.fishing?.paymentNote?.(path,d); L2V7Modules.buffs?.paymentNote?.(path,d); L2V7Modules.mammon?.paymentNote?.(path,d); L2V7Modules.tvtshop?.onNet?.(path,d); L2V7Modules.story?.onNet?.(path,d); }
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
+  // 20.43: собственный GET /character игры — тоже свежий источник слуги (поле есть только когда сервер его прислал)
+  if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char && d.pet.activeSummon !== undefined) {
+    const s = d.pet.activeSummon; petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || PET?.key || '', name: PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
+    // Кот пропал вне боя после готовой подготовки — подготовить снова (не чаще раза в минуту и не больше 3 раз за Старт).
+    const S = rt.startPrep;
+    if (!s && tabOwner && d.pet.inBattle === false && !isBattle() && S?.phase === 'done' && startPrepEligible() && startPrepSame(S) && (+S.resets || 0) < 3 && Date.now() - (+S.resetT || 0) > 60000) {
+      setRt({ startPrep: { ...S, phase: 'summon', t: Date.now(), id: Date.now(), paid: 0, resets: (+S.resets || 0) + 1, resetT: Date.now() } })   // 20.43 (ревью): новое id — прежняя отметка «кот готов» не действует.catch(e => quietErr('запись памяти', e));
+      rec('B', 'старт', 'кота нет вне боя — снова призыв и баффы перед задачей');
+    }
+  }
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
     Promise.resolve(L2V7Modules.enchant.note(d.req, d.res, d.status)).catch(e => console.warn(TAG, 'заточка: результат', e));
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res) try {
@@ -5031,8 +5127,9 @@ addEventListener('message', e => {
   if (/^\/game\/battle(?:\/(?:sync|action))?$/.test(path) && d.res) alignServerSkillCooldowns();
   // 7.1.16-fix: слуга мага — из ответа сервера (activeSummon: {key, hp, maxHp…} или null). Только явное поле, без догадок по разметке
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
-    const src = d.res.battle && typeof d.res.battle === 'object' && 'activeSummon' in d.res.battle ? d.res.battle : d.res;
-    if ('activeSummon' in src) { const s = src.activeSummon; PET = { t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 };
+    // 20.43: ответ хода несёт слугу в delta.activeSummon — без него «кота нет» из start держалось весь бой
+    const src = d.res.battle && typeof d.res.battle === 'object' && 'activeSummon' in d.res.battle ? d.res.battle : d.res.delta && typeof d.res.delta === 'object' && 'activeSummon' in d.res.delta ? d.res.delta : d.res;
+    if ('activeSummon' in src) { const s = src.activeSummon; petSet({ t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 });
       if (s?.key && rt.petLast !== s.key && tabOwner) setRt({ petLast: s.key }).catch(e => quietErr('запись памяти', e)); }   // 8.0.3: последний живой кот — переживает перезагрузку (combat.petPick)
   } catch (er) {}
   // v5.5.1: темп обычной атаки — от сервера. С луком (лог 08.10 19:32) интервал атаки длиннее, кнопка «готова» раньше, игра
@@ -5622,7 +5719,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, g
   get waitX() { return waitX; }, set waitX(value) { waitX = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get badgeSync(){return badgeSync}, get dailyWorkReady(){return dailyWorkReady}, get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get badgeSync(){return badgeSync}, get setRtSoon(){return setRtSoon}, get dailyWorkReady(){return dailyWorkReady}, get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -6041,7 +6138,10 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
   const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
-  return b ? cleanTitle(b.title || '').toLowerCase() : a; };
+  // 20.43 (лог 21.10 15:47–15:51): ответ на убивающий ход приходит, когда игра уже убрала панель боя (экран победы) — имя бралось
+  // как «l2_1181», модель группы Flame Strike писалась под чужим ключом и не находилась: проба АОЕ (+950 мс) в каждом бою.
+  // Имя — из снимка панели на момент отправки хода (actNameSnap в netStart)
+  return b ? cleanTitle(b.title || '').toLowerCase() : ACT_NAMES.get(a) || a; };
 L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get routeLocation(){return actionLocation},
   get cfg() { return cfg; },
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
@@ -6100,7 +6200,7 @@ L2V7Modules.rbrun = L2V7Factories.rbrun({ get cfg() { return cfg; }, get rt() { 
 // 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
 const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
-const classSwitched = () => { PET = null; };
+const classSwitched = () => { PET = null; petRestored = true; try { sessionStorage.removeItem('l2bot.pet'); } catch (e) {} };
 
 // Авто-ЛС удерживает обычные задачи до явного завершения серии; работа только на странице игры.
 let lifestoneCommandBusy = false;
@@ -6510,13 +6610,21 @@ function warlockNativePanel() {
   const summon=desc(combat.petPick(selected,'')),wanted=cfg.petBuffAuto!==false?names(cfg.nPetBuffs||''):[];
   const buffs=[],missing=[];
   for(const n of wanted){const b=combat.slotsBy(n)[0];if(b&&noEffect(b))continue;const d=b&&ilOf(b)?.target==='PET'?desc(b):null;if(d)buffs.push(d);else missing.push(n);}
-  return {summon,buffs,incomplete:!document.querySelector('.l2-battle-hotbar')||missing.length>0};
+  const hotbar=!!document.querySelector('.l2-battle-hotbar');   // 20.43: Старт отличает «нет панели» от «нет отдельного баффа»
+  return {summon,buffs,missing,hotbar,incomplete:!hotbar||missing.length>0};
 }
-L2V7Modules.warlock = L2V7Factories.warlock({ get leaseEpoch(){return leaseEpoch},
+// 20.43: эффекты баффов кота по справочнику (имя → id слота, 1331 → 4699) — проверка готового кота без поездки на панель.
+function warlockPetBuffGuess() {
+  if (cfg.petBuffAuto === false) return [];
+  const out = [];
+  for (const n of names(cfg.nPetBuffs || '')) { const il = ilOf(n); if (!il || il.target !== 'PET' || !Number.isSafeInteger(il.id)) return null; out.push({ effectId: il.id === 1331 ? 4699 : il.id, name: n }); }
+  return out;
+}
+L2V7Modules.warlock = L2V7Factories.warlock({ get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
   get setCfg(){return setCfg}, get setStatus(){return setStatus}, get classNote(){return ch=>{L2V7Modules.story.charNote(ch);L2V7Modules.subclass.charNote(ch)}},
-  get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
+  get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get startPrepWanted(){return startPrepWanted}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
   get nativePanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()}, get nativePanelPath(){return ()=>location.pathname},
-  get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},
+  get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character|dungeon|fishing)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},   // 20.43: и подземелье/рыбалка
   get nativeNavigate(){return path=>{if(on&&tabOwner&&L2V7Modules.actions?.canAct?.()!==false&&/^\/[a-z-]+\.html(?:\?[^#]*)?$/.test(path))location.href=path}}, get nativeFire(){return fire},
   get townBufferReady() { return warlockTownReady; }, get townBufferStart() { return warlockTownStart; },
   get shotContext() { return warlockShotContext; }, get canRun() { return warlockCanRun; }, get cfg() { return cfg; }, get rt() { return rt; }, get on() { return on; }, get tabOwner() { return tabOwner; },
