@@ -15,7 +15,9 @@ const priority = afterWin => env.canRun?.() !== false && !env.rt.autoLs?.hold &&
 const signature = () => JSON.stringify([option('petFullAuto'), option('petFullBudget'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
 const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature() });
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
-const patch = p => env.setRt({ petFull: { ...state(), ...p } });
+// 20.43 (разбор 21.10, ревью): каждый срок следующей проверки пишется вместе с ключом, при котором он назначен (waitKey). Иначе после
+// Старта/смены настроек срок из веток «нет кота»/«класс»/«каталог»/«бой»/«ошибка чтения» не совпадал с ключом и не действовал — GET на каждом круге
+const patch = p => env.setRt({ petFull: { ...state(), ...p, ...('nextCheckAt' in p ? { waitKey: waitKey() } : {}) } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
@@ -60,6 +62,23 @@ const raidManaged = () => /^(warlock|arcana_lord|dark_avenger|hell_knight)$/.tes
 const raidSafe = () => env.on && env.tabOwner && priority(false) && env.canAct?.() !== false && env.raidWanted?.() !== false;
 const effectEnd = b => Number.isFinite(b?.expiresAtMs) ? b.expiresAtMs : Number.isFinite(b?.expiresAt) ? b.expiresAt : 0;
 const hasNative = (ch,x) => ch.activeSummon?.activeBuffs?.some(b => +b.skillId === x.effectId && effectEnd(b) > Date.now()+5000) === true;
+// 20.43 (разбор 21.10): один потерянный клик призыва/баффа кота перед РБ навсегда держал loopGate — pending ждал свежую ревизию без срока,
+// а каждый круг (≈0,3 с) уходил свой GET /character. Теперь ожидание читает /character не чаще раза в 1,5 с первые 15 с после клика
+// (обычное подтверждение) и раза в 12 с дальше; через 2 мин без подтверждения — один повтор (навык стоит только MP). Второй провал:
+// бафф пропускается на час (к РБ без него), без призыва тур РБ откладывается на 30 мин (Warlock без кота слаб; raid → raidBlocked).
+// Пропуск снимают новый Старт, смена настроек кота/класса, для призыва — живой кот в свежем полном снимке /character игры.
+const RAID_CONFIRM_MS = 120000, RAID_READ_FAST = 1500, RAID_READ_SLOW = 12000, RAID_READ_WAIT = 3000, RAID_SKIP_BUFF_MS = 3600000, RAID_HOLD_SUMMON_MS = 1800000;
+let raidReadAt = null;                 // {char, until} — следующее чтение /character во время ожидания
+const raidWaitSince = new Map();       // вид ожидания → {at, last, said}: с какого момента ждём панель/призыв (перерыв > 30 с — заново)
+const raidSkip = () => { const S = env.rt.petRaidSkip; return S && S.char === charName() && S.classKey === raidClass() && S.settings === raidSettings() && S.kick === (+env.rt.manualKickAt || 0) ? S : null; };
+const buffSkipped = x => (raidSkip()?.buffs?.[x.effectId] || 0) > Date.now();
+const summonHeld = () => { const S = raidSkip(); return S?.summonUntil > Date.now() && !(latest && latest.char === charName() && latest.at > (S.summonAt || 0)); };
+// 20.43 (ревью): срок отсрочки — туру, чтобы на это время передать ход выбранной рыбалке (rbFishWait), как при пустом туре
+const raidHoldUntil = () => raidManaged() && summonHeld() ? env.rt.petRaidSkip.summonUntil : 0;
+function raidBlocked() {
+  const until = raidHoldUntil(); if (!until) return '';
+  return `призыв кота перед РБ не подтвердился и после повтора — тур отложен до ${new Date(until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} (снимут новый Старт или кот, призванный вручную)`;
+}
 function raidReady() {
   return !raidManaged() || !!raidProof && raidProof.char === charName() && raidProof.classKey === raidClass() && raidProof.settings === raidSettings()
     && raidProof.kick === (+env.rt.manualKickAt || 0) && raidProof.until > Date.now() && !env.rt.petRaidPrep;
@@ -70,10 +89,29 @@ async function raidPrepare() {
   if (!raidManaged()) { if (env.rt.petRaidPrep && env.tabOwner) await env.setRt({petRaidPrep:null}); return false; }
   if (!raidSafe()) return false;
   if (raidReady()) return false;
+  // 20.43 (разбор 21.10): отсрочка после двух неподтверждённых призывов — без GET и родной панели; тур ждёт сам (raid → raidBlocked)
+  if (summonHeld()) return false;
+  // 20.43: ожидание (подтверждение, MP/откат, панель) не перечитывает /character на каждом круге главного цикла
+  if (env.rt.petRaidPrep && raidReadAt?.char === charName() && Date.now() < raidReadAt.until) return true;
   raidBusy = true;
   const who=charName(),epoch=env.leaseEpoch,kick=+env.rt.manualKickAt||0,key=raidClass(),settings=raidSettings();
   const valid=()=>raidSafe()&&charName()===who&&env.heroNick()===who&&env.leaseEpoch===epoch&&(+env.rt.manualKickAt||0)===kick&&raidClass()===key&&raidSettings()===settings;
   const save=async j=>valid()&&(await env.setRt({petRaidPrep:j}))?.ok===true&&await env.rtCommit()&&valid();
+  const later=ms=>{raidReadAt={char:who,until:Date.now()+ms};return true;};
+  // 20.43: окончательный отказ от навыка — бафф пропускается на час, призыв откладывает тур на 30 мин; запись до снятия pending
+  const giveUp=async(P,note)=>{
+    const now=Date.now(),old=raidSkip(),buffs=Object.fromEntries(Object.entries(old?.buffs||{}).filter(([,t])=>t>now));
+    const S={char:who,classKey:key,settings,kick,buffs,summonUntil:old?.summonUntil>now?old.summonUntil:0,summonAt:old?.summonAt||0};
+    if(P.kind==='summon'){S.summonUntil=now+RAID_HOLD_SUMMON_MS;S.summonAt=now;}else if(P.effectId)S.buffs[P.effectId]=now+RAID_SKIP_BUFF_MS;
+    if(!valid()||(await env.setRt({petRaidSkip:S}))?.ok!==true||!valid())return false;
+    env.rec?.('B','суммон',note||(P.kind==='summon'?`Перед РБ: призыв «${P.name}» не подтвердился и после повтора — без кота тур РБ отложен на 30 мин`
+      :`Перед РБ: «${P.name}» не подтвердился и после повтора — иду к РБ без него (снова попробую через час)`));
+    return true;
+  };
+  // 20.43: без кота подготовка невозможна (призыв дважды не подтвердился или его нет на панели) — назад и отсрочка тура
+  const holdSummon=async(J,P,note)=>{if(!await giveUp(P,note))return true;raidWaitSince.clear();const back=J?.back;if(await save(null)&&valid()&&env.nativePanelPath?.()==='/skill-panel.html'&&back&&back!=='/skill-panel.html')env.nativeNavigate?.(back);return true;};
+  const waited=(kind,on)=>{const k=[who,key,settings,kind].join('|'),now=Date.now();let w=raidWaitSince.get(k);if(!on){raidWaitSince.delete(k);return null;}
+    if(!w||now-w.last>30000)raidWaitSince.set(k,w={at:now,last:now,said:false});w.last=now;return now-w.at>=RAID_CONFIRM_MS?w:null;};
   try {
     const data=await read('/character'),ch=data.character||data;
     if(!valid()||ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return true;
@@ -84,13 +122,19 @@ async function raidPrepare() {
     const pet=summon(ch),pending=J?.pending;
     if(pending){
       const confirmed=ch.revision>pending.revision&&(pending.kind==='summon'?pet&&+pet.summonSkillId===pending.skillId:pet&&hasNative(ch,pending));
-      if(!confirmed){env.setStatus?.(Date.now()-pending.at>15000?'Перед РБ: подтвердите «'+pending.name+'» вручную на панели — продолжу после свежей сверки; автоматически не повторяю':'Подготовка кота: жду подтверждения навыка');return true;}
-      J={...J,settings,kick,pending:null};if(!await save(J))return true;
-      if(pending.kind==='summon')await env.setRt({petBornT:Date.now()});
+      const age=Date.now()-pending.at,tries=+pending.tries||1;
+      if(!confirmed&&age<RAID_CONFIRM_MS){env.setStatus?.(age>15000?'Перед РБ: жду подтверждения «'+pending.name+'» — можно нажать вручную на панели, иначе через 2 мин '+(tries<2?'повторю один раз':'продолжу без него'):'Подготовка кота: жду подтверждения навыка');return later(age<15000?RAID_READ_FAST:RAID_READ_SLOW);}
+      if(confirmed){J={...J,settings,kick,pending:null,retry:null};if(!await save(J))return true;if(pending.kind==='summon')await env.setRt({petBornT:Date.now()});}
+      // 20.43: кот уже есть (другой призыв) — повтор призыва и отсрочка тура не нужны, дальше баффы
+      else if(pending.kind==='summon'&&pet){J={...J,settings,kick,pending:null,retry:null};if(!await save(J))return true;}
+      // 20.43: 2 мин без подтверждения — клик, видимо, потерялся: один повтор того же навыка (только MP), затем без него
+      else if(tries<2){J={...J,settings,kick,pending:null,retry:{action:pending.action,tries}};if(!await save(J))return true;env.rec?.('B','суммон',`Перед РБ: «${pending.name}» не подтвердился за 2 мин — повторю один раз (тратится только MP)`);}
+      else if(pending.kind==='summon')return holdSummon(J,pending);
+      else {if(!await giveUp(pending))return true;J={...J,settings,kick,pending:null,retry:null};if(!await save(J))return true;}
     }
     const cache=env.rt.petRaidSkills,cacheOk=cache?.char===who&&cache.classKey===key&&cache.settings===settings;
     const buffWanted=env.cfg.petBuffAuto!==false&&String(env.cfg.nPetBuffs||'').trim();
-    let needs=!pet||buffWanted&&(!cacheOk||cache.rows.some(x=>!hasNative(ch,x)));
+    let needs=!pet||buffWanted&&(!cacheOk||cache.rows.some(x=>!hasNative(ch,x)&&!buffSkipped(x)));
     if(!needs){
       raidProof={char:who,classKey:key,settings,kick,until:Date.now()+30000};
       if(J){const back=J.back;if(!await save(null))return true;if(env.nativePanelPath?.()==='/skill-panel.html'&&back&&back!=='/skill-panel.html'){if(valid())env.nativeNavigate?.(back);return true;}}
@@ -105,20 +149,25 @@ async function raidPrepare() {
     if(!J){J={char:who,classKey:key,settings,kick,back:'/map.html',pending:null,t:Date.now()};if(!await save(J))return true;}
     await env.nativePanelOpen?.();if(!valid())return true;
     const panel=env.nativePanel?.(ch)||{},rows=panel.buffs||[];
-    if(panel.incomplete){env.setStatus?.('Перед РБ: жду родную панель навыков кота');return true;}
+    // 20.43: навыка из настроек нет на панели — неполная панель держала цикл без срока; через 2 мин готовим кота тем, что есть
+    const pw=waited('panel',!!panel.incomplete),sw=waited('summon',!pet&&!panel.summon);
+    if(panel.incomplete){
+      if(!pw){env.setStatus?.('Перед РБ: жду родную панель навыков кота');return later(RAID_READ_WAIT);}
+      if(!pw.said){pw.said=true;env.rec?.('B','суммон','Перед РБ: за 2 мин на панели не нашлись все навыки кота из настроек — готовлю кота тем, что есть');}
+    }
     if((await env.setRt({petRaidSkills:{char:who,classKey:key,settings,rows:rows.map(({effectId,name})=>({effectId,name}))}}))?.ok!==true||!valid())return true;
-    const action=!pet?panel.summon:rows.find(x=>!hasNative(ch,x));
+    const action=!pet?panel.summon:rows.find(x=>!hasNative(ch,x)&&!buffSkipped(x));
     if(!action){
-      if(!pet){env.setStatus?.('Перед РБ: нужен навык призыва кота на панели');return true;}
+      if(!pet){if(sw)return holdSummon(J,{kind:'summon'},'Перед РБ: за 2 мин на панели не нашёлся навык призыва кота — без кота тур РБ отложен на 30 мин');env.setStatus?.('Перед РБ: нужен навык призыва кота на панели');return later(RAID_READ_WAIT);}
       raidProof={char:who,classKey:key,settings,kick,until:Date.now()+30000};const back=J.back;if(await save(null)&&valid()&&back!=='/skill-panel.html')env.nativeNavigate?.(back);return true;
     }
-    if(!action.ready||!Number.isFinite(ch.mp)||ch.mp<(action.mp||0)){env.setStatus?.('Перед РБ: жду готовность и MP для '+action.name);return true;}
-    const P={kind:pet?'buff':'summon',action:action.action,skillId:action.skillId,effectId:action.effectId,name:action.name,revision:ch.revision,at:Date.now()};
+    if(!action.ready||!Number.isFinite(ch.mp)||ch.mp<(action.mp||0)){env.setStatus?.('Перед РБ: жду готовность и MP для '+action.name);return later(RAID_READ_WAIT);}
+    const P={kind:pet?'buff':'summon',action:action.action,skillId:action.skillId,effectId:action.effectId,name:action.name,revision:ch.revision,at:Date.now(),tries:(J.retry?.action===action.action?+J.retry.tries||1:0)+1};
     if(!await save({...J,pending:P}))return true;
     const fresh=env.nativePanel?.(ch),button=[fresh?.summon,...(fresh?.buffs||[])].find(x=>x?.action===P.action&&x.ready);
     if(!valid()||!button){if(valid())await save({...J,pending:null});return true;}
     if(!env.nativeFire?.(button.button)){await save({...J,pending:null});return true;}
-    env.rec?.('B','суммон','Перед РБ: '+P.name);return true;
+    env.rec?.('B','суммон','Перед РБ: '+P.name+(P.tries>1?' (повтор)':''));return true;
   } catch (_) { if(valid())env.setStatus?.('Перед РБ: не удалось подтвердить подготовку кота');return true; }
   finally {raidBusy=false;}
 }
@@ -185,14 +234,25 @@ function summary() {
     price: S.lastPrice ?? null, budget, spent: S.spent || 0, reserved, remaining: budget === null ? null : Math.max(0, budget - (S.spent || 0) - reserved),
     lifetimeSpent: S.lifetimeSpent || 0, purchases: S.purchases || 0, expiresAt: S.expiresAt || 0, observedMs: S.observedMs || 0, renew: option('petFullRenew') === true, budgetEpoch: S.budgetEpoch || 0 };
 }
+// 20.43 (разбор 21.10): у Warlock проверка набора после победы (свой GET /character + каталог + две записи памяти ≈1–1,3 с) шла раз
+// в минуту при действующем наборе и раз в 10 с, когда купить нельзя, — почти на каждой второй победе цепочки. Свой оплаченный набор
+// (квитанция бота, тот же суммон и срок) до конца ничего не требует — следующая проверка за 1,5 мин до конца срока; «купить нельзя»
+// (бюджет, автообновление, цена, резерв, архив) — раз в 10 мин, early-loss — к концу оплаченного срока. Смена настроек автобафа,
+// новый Старт или смена класса снимают ожидание (waitKey); сброс бюджета/архив и так ставят nextCheckAt 0. Покупка и сверка прежние.
+const NO_BUY_MS = 600000;
+const waitKey = () => JSON.stringify([signature(), +env.rt.manualKickAt || 0, env.rt.classCur?.slot ?? null, env.rt.classCur?.prof || '']);
 async function observe(T, ch, set, full) {
   if (!mine(T)) return;
-  const S = state(), now = Date.now(), p = summon(ch), prev = S.observation;
-  const continuity = full && prev?.stamps === full.stamps && prev.petKey === p?.key && now >= prev.at && now - prev.at <= 60000;
+  const S = state(), now = Date.now(), p = summon(ch), prev = S.observation, last = S.lastReceipt;
+  const own = !!full && !!last && last.petKey === p?.key && Math.abs(full.expiresAt - (+last.expiresAt || 0)) <= 60000;
+  const plan = full ? Math.min(60000, Math.max(1000, full.expiresAt - now)) : 10000, gap = own ? Math.max(plan, full.expiresAt - now - 90000) : plan;
+  // 20.43: у своего набора непрерывность — по плану редкой проверки (+5 мин запаса): те же точные сроки всех эффектов на обоих концах
+  // доказывают, что набор не терялся и не перекупался; чужой/ручной набор — как раньше, только при проверках не реже раза в минуту
+  const continuity = full && prev?.stamps === full.stamps && prev.petKey === p?.key && now >= prev.at && now - prev.at <= (prev.own ? Math.max(60000, (+prev.gap || 0) + 300000) : 60000);
   const observedMs = (S.observedMs || 0) + (continuity ? Math.max(0, Math.min(now, prev.expiresAt) - prev.at) : 0);
   await patch({ lastPrice: set.price, lastCheckAt: now, expiresAt: full?.expiresAt || 0, observedMs,
-    observation: { at: now, petKey: p?.key || '', stamps: full?.stamps || '', expiresAt: full?.expiresAt || 0 },
-    snapshot: snapshot(ch), nextCheckAt: now + (full ? Math.min(60000, Math.max(1000, full.expiresAt - now)) : 10000) });
+    observation: { at: now, petKey: p?.key || '', stamps: full?.stamps || '', expiresAt: full?.expiresAt || 0, own, gap },
+    snapshot: snapshot(ch), nextCheckAt: now + gap });
 }
 async function reconcile(T, ch, afterWin, confirmedWrite) {
   const P = state().pending; if (!P) return false;
@@ -246,7 +306,9 @@ async function step({ afterWin = false, forceRead = false } = {}) {
   const T = token(); if (!mine(T)) return false;
   // 20.13 (ревизия 17.10, шаг 5, combat/C10, ревью): пауза 10 с после «бой на сервере» — против опроса на каждом тике цикла; проверка после
   // победы (одна на бой) её не ждёт, иначе в цепочке «Охотиться дальше» (≈5 с/моб) автобаф пропускал каждую вторую победу
-  if (!forceRead && state().nextCheckAt > Date.now() && !(afterWin && state().status === 'battle')) return false;
+  // 20.43: ожидание, назначенное при других настройках/Старте/классе (waitKey), не держит проверку
+  const W = state();
+  if (!forceRead && W.nextCheckAt > Date.now() && (!W.waitKey || W.waitKey === waitKey()) && !(afterWin && W.status === 'battle')) return false;
   busy = true;
   try {
     const data = await read('/character'); if (!same(T, afterWin)) return false;
@@ -263,18 +325,19 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     const full = coverage(p, set.skills); await observe(T, ch, set, full); if (!same(T, afterWin)) return false;
     if (full) { await status(T, 'active', 'Полный баф уже действует'); return false; }
     const S = state(), last = S.lastReceipt;
-    if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери суммона повторно не покупаю'); return false; }
-    if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено'); return false; }
+    if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери суммона повторно не покупаю', { nextCheckAt: Math.max(Date.now() + 10000, last.expiresAt) }); return false; }
+    if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     if (last && ch.revision < last.revision) { await status(T, 'stale', 'Снимок старее последней покупки; жду свежее состояние'); return false; }
     const budget = number(option('petFullBudget')), cap = number(option('petFullMaxPrice'));
     const reserve = number(option('petFullReserve') ?? env.cfg.shopReserve ?? 0), adena = number(ch.adena);
     const fence = S.archiveFence;
     if (fence && (ch.revision < fence.verifiedRevision || (Date.now() < fence.possibleUntil && !(budget > fence.budgetAtArchive)))) {
-      await status(T, 'archived', 'Неопределённый расход остаётся в резерве; дождитесь возможного срока или задайте дополнительный бюджет'); return false;
+      await status(T, 'archived', 'Неопределённый расход остаётся в резерве; дождитесь возможного срока или задайте дополнительный бюджет',
+        { nextCheckAt: ch.revision < fence.verifiedRevision ? Date.now() + 10000 : Math.min(Date.now() + NO_BUY_MS, Math.max(Date.now() + 10000, +fence.possibleUntil || 0)) }); return false;
     }
-    if (cap === null || set.price > cap) { await status(T, 'price', `Цена ${set.price} выше разрешённой ${cap ?? '?'}`); return false; }
-    if (budget === null || set.price > budget - (S.spent || 0) - (S.unknownReserved || 0)) { await status(T, 'budget', 'Бюджет автобафа исчерпан; увеличьте лимит или явно сбросьте расход'); return false; }
-    if (reserve === null || adena === null || adena - set.price < reserve) { await status(T, 'reserve', 'Не хватает адены с учётом резерва'); return false; }
+    if (cap === null || set.price > cap) { await status(T, 'price', `Цена ${set.price} выше разрешённой ${cap ?? '?'}`, { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
+    if (budget === null || set.price > budget - (S.spent || 0) - (S.unknownReserved || 0)) { await status(T, 'budget', 'Бюджет автобафа исчерпан; увеличьте лимит или явно сбросьте расход', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
+    if (reserve === null || adena === null || adena - set.price < reserve) { await status(T, 'reserve', 'Не хватает адены с учётом резерва', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     // Оплата только после подтверждённого штатного входа в город; прямой POST с карты не предполагаем.
     if (env.townBufferReady?.() !== true) {
       await status(T, 'travel', 'Для покупки нужен подтверждённый вход в город');
@@ -446,6 +509,10 @@ function noteSnapshot(ch, shots) {
   }
   latest = snapshot(ch, shots); latestSeen = true;
   if (latest) latest.proofAt = snapshotEvidenceAt || latest.at;
+  // 20.43 (ревью): живой кот в свежем снимке снимает отсрочку тура и тогда, когда ход отдан рыбалке — срок её передачи (rbFishWait.pet)
+  // истекает сейчас; начатый заброс доводится (selectedTask держит рыбалку, пока fishBusy). Запись одна: дальше until уже прошёл
+  const FW = env.rt.rbFishWait;
+  if (latest && FW?.pet && FW.until > Date.now() && env.tabOwner && !summonHeld()) Promise.resolve(env.setRt({ rbFishWait: { ...FW, until: Date.now() } })).catch(() => {});
   // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
   // расходников, не выдавая его за реально включённые заряды и не подмешивая в обучение боя.
   prepared = null; preparedSource = null;
@@ -585,6 +652,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { autoEnableClass, classAutoTick, raidPrepare, raidReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, raidPrepare, raidReady, raidBlocked, raidHoldUntil, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);

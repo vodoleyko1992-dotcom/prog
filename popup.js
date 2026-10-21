@@ -2050,7 +2050,8 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
       const phase = {done:'Завершено',completed:'Завершено',paused:'Серия на паузе',unknown:'Проверка результата',running:st.on && st.heartbeatValid ? 'Серия запущена' : 'Серия ожидает работы'}[rt.enchant?.status];
       if (phase) { label = phase; state = ['done','completed'].includes(rt.enchant?.status) ? 'done' : rt.enchant?.status === 'unknown' ? 'waiting' : state; }
     }
-    if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = 'Ждёт доступного РБ'; state = 'waiting'; }
+    // 20.43 (ревью): ход рыбалке отдан на время отсрочки призыва кота (rbFishWait.pet) — тур ждёт кота, а не доступного РБ
+    if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = rt.rbFishWait.pet ? 'Ждёт кота: призыв не подтвердился' : 'Ждёт доступного РБ'; state = 'waiting'; }
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
   });
 }

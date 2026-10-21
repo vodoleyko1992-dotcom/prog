@@ -1236,7 +1236,7 @@ function rbTravelBudget(row) {
 
 // 20.12 (ревизия 17.10): бюджет телепорта до покупки набора за FA. РБ на этой карте — без телепорта, бюджет не нужен.
 // Несвежий кошелёк перечитывается (GET /character, бесплатно); не подтвердился — FA не тратим.
-let rbFaBudgetSaid = '';
+let rbFaBudgetSaid = '', rbPetHoldSaid = '';
 async function rbFaBudgetWhy(row, active) {
   if (!row || !tourFaOn()) return '';
   if (env.isMap?.() && raidList().some(r => r.id === row.id)) return '';
@@ -1612,6 +1612,24 @@ async function rbHuntStep() {
     if (!active()) return;
     if (!isRbPage()) { env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return; }
     return rbListScan();
+  }
+  // 20.43 (разбор 21.10): призыв кота перед РБ не подтвердился и после повтора (warlock.raidBlocked) — Warlock без кота слаб: тур ждёт
+  // отсрочку, а не крутит выбор → «подготовлю снова» каждый круг.
+  // 20.43 (ревью): в режиме задач тур оставался выбранной задачей и 30 мин спал (фарм на месте там не разрешён) — выбранная рыбалка
+  // не запускалась, хотя журнал обещал «остальные задачи продолжаю». Теперь ход рыбалке передаётся так же, как при пустом туре
+  // (rbFishWait до конца отсрочки, pet — снимает живой кот в свежем снимке); без рыбалки — фарм на месте, если разрешён, иначе
+  // ожидание. Журнал говорит, что именно будет дальше, один раз на отсрочку
+  const petHold = env.warlock?.raidBlocked?.();
+  if (petHold) {
+    const until = +env.warlock?.raidHoldUntil?.() || 0, fishSelected = Array.isArray(env.cfg.autoTasks) && env.cfg.autoTasks.includes('fish');
+    const fish = fishSelected && until > Date.now() && !env.payments?.blocked?.() && !env.rt.actionPayments?.pending;
+    const next = `${petHold}; ${fish ? 'перехожу к выбранной рыбалке' : rbIdleFarmAllowed() ? 'фарм на месте при наличии мобов' : 'жду, фарм мобов сейчас не выбран'}`;
+    if (rbPetHoldSaid !== until + next) { rbPetHoldSaid = until + next; env.recBot(`Тур РБ: ${next}`); }
+    await rbHuntPhase('wait', next);
+    if (!active()) return;
+    if (fish && env.rt.rbFishWait?.until !== until) await env.setRt({ rbFishWait: { at: Date.now(), until, listT: env.rt.rbListT || 0, pet: true } });
+    if (!active()) return;
+    return rbIdleMap(`Тур РБ: ${next}`, active);
   }
   const preparing = rbPreparationCandidates()[0];
   if (preparing) {
