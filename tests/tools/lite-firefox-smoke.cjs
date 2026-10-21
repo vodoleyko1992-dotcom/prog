@@ -5,6 +5,8 @@
 // Lite 1.3 (John: «это сборка под БХ, а нужна под дестра»): герой — Титан (слот 2), панель в памяти помечена классом Титана.
 // Lite 1.4: вместо язычка — окно меню на странице (iframe moz-extension://…/popup.html#dock), «—» → плавающая кнопка «Lite»,
 // нажатие — окно снова; «⧉» в шапке открывает меню во вкладке.
+// Lite 1.5 (John: «есть сабкласс Лука», «отдельный профиль на дестра, отдельный профиль на лука»): герой — Phantom Ranger (слот 3,
+// Титан — слот 2), выстрелы под именем игры, стрелы в сумке; в меню открыт профиль «Лук · в игре», стрелы, скиллы лука.
 // FIREFOX=…/firefox GECKODRIVER=…/geckodriver NODE_PATH=…(selenium-webdriver) node tests/tools/lite-firefox-smoke.cjs <l2wap-lite-…-firefox.zip>
 const fs = require('fs'), os = require('os'), path = require('path'), https = require('https'), { execFileSync } = require('child_process');
 const { Builder } = require('selenium-webdriver'), firefox = require('selenium-webdriver/firefox');
@@ -14,9 +16,10 @@ execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days
 const page = `<!doctype html><html><head><meta charset="utf-8"><title>L2WAP — Карта</title></head><body><div id="l2-hud-legacy-name">Dstr</div>
 <div id="map-mob-list"><a class="l2-map-mob-link" href="#">Giant Fungus · ур. 40</a></div>
 <script>setTimeout(() => fetch('/character').then(r => r.json()).then(j => { document.title = 'ok ' + j.character.name; }), 3000)</script></body></html>`;
-const hero = { name: 'Dstr', level: 76, l2Profession: 'orc_titan', classSlots: { activeSlot: 2, slots: [{ slot: 0, owned: true, profession: 'human_arcana_lord', level: 78 },
-  { slot: 1, owned: true, profession: 'dwarf_bounty_hunter', level: 70 }, { slot: 2, owned: true, profession: 'orc_titan', level: 76 }] }, currentZoneId: 'giran_harbor', currentZoneNameUk: 'Гавань Гірана', locationType: 'field',
-  battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'l2_190' }], learnedBattleSkillsDetail: [{ battleId: 'l2_190', nameUk: 'Fatal Strike' }] };
+const hero = { name: 'Dstr', level: 70, l2Profession: 'dark_elf_phantom_ranger', classSlots: { activeSlot: 3, slots: [{ slot: 0, owned: true, profession: 'dark_elf_storm_screamer', level: 78 },
+  { slot: 1, owned: true, profession: 'dark_elf_spectral_master', level: 76 }, { slot: 2, owned: true, profession: 'orc_titan', level: 77 }, { slot: 3, owned: true, profession: 'dark_elf_phantom_ranger', level: 70 }] },
+  currentZoneId: 'giran_harbor', currentZoneNameUk: 'Гавань Гірана', locationType: 'field', inventory: { stacks: [{ itemId: 1342, qty: 221 }, { itemId: 728, qty: 9 }] },
+  battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'double_shot' }, { k: 'a', a: 'power_shot' }], learnedBattleSkillsDetail: [{ battleId: 'double_shot', nameUk: 'Double Shot' }, { battleId: 'power_shot', nameUk: 'Power Shot' }] };
 const srv = https.createServer({ key: fs.readFileSync(path.join(tmp, 'k.pem')), cert: fs.readFileSync(path.join(tmp, 'c.pem')) }, (q, r) => {
   if (/\.(png|jpg|ico)$/.test(q.url)) { r.writeHead(404); return r.end(); }
   if (q.url.startsWith('/character')) { r.writeHead(200, { 'content-type': 'application/json' }); return r.end(JSON.stringify({ character: hero })); }
@@ -66,8 +69,10 @@ const UUID = '7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5f';
     for (const h of await drv.getAllWindowHandles()) { if (h === game) continue; await drv.switchTo().window(h); res.menuUrl = await drv.getCurrentUrl(); break; }
     if (res.menuUrl) Object.assign(res, await drv.executeAsyncScript(`const done = arguments[arguments.length - 1];
       (async () => { const s = await chrome.storage.local.get('lite.rt'), rt = s['lite.rt'] || {};
-        done({ ver: chrome.runtime.getManifest().version, status: rt.status, char: rt.char, bar: (rt.bar || []).map(x => x.a), barCls: rt.barCls,
-          warn: document.getElementById('cls').hidden ? '' : document.getElementById('cls').textContent, skills: document.querySelectorAll('#skills .sk').length,
+        done({ ver: chrome.runtime.getManifest().version, status: rt.status, char: rt.char, bar: (rt.bar || []).map(x => x.a), barCls: rt.barCls, kind: rt.kind,
+          warn: document.getElementById('cls').hidden ? '' : document.getElementById('cls').textContent, skills: [...document.querySelectorAll('#skills .sk')].map(e => [e.dataset.key, e.querySelector('input').checked]),
+          profs: [...document.querySelectorAll('#profs button')].map(b => b.dataset.kind + (b.classList.contains('sel') ? '*' : '') + b.querySelector('i').textContent),
+          arw: document.getElementById('arw').hidden ? '' : document.getElementById('arw').textContent,
           tabClass: document.documentElement.className, run: !!document.getElementById('run') }); })().catch(e => done({ err: String(e) }));`));
   } catch (e) { res.error = String(e && e.message || e).slice(0, 300); }
   finally { await drv.quit(); srv.close(); }
@@ -77,8 +82,10 @@ const UUID = '7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5f';
     && res.fab && !res.fab.win && res.fab.fab && res.fab.text === 'Lite' && !res.fab.frame && JSON.parse(res.fab.mem || '{}').open === false
     && res.reopen && res.reopen.win && res.reopen.frame
     && /^moz-extension:\/\/.+\/popup\.html#tab$/.test(res.menuUrl || '') && res.tabClass === 'tab' && res.run
-    && res.status === 'Выключен' && res.char && res.char.name === 'Dstr' && res.char.prof === 'orc_titan' && res.char.slot === 2 && res.bar.includes('l2_190')
-    && res.barCls === 'orc_titan' && res.warn === '' && res.skills === 1;
+    && res.status === 'Выключен' && res.char && res.char.name === 'Dstr' && res.char.prof === 'dark_elf_phantom_ranger' && res.char.slot === 3 && res.bar.includes('double_shot')
+    && res.barCls === 'dark_elf_phantom_ranger' && res.kind === 'archer' && res.warn === ''
+    && JSON.stringify(res.skills) === JSON.stringify([['double_shot', true], ['power_shot', true]])
+    && JSON.stringify(res.profs) === JSON.stringify(['destr', 'archer* · в игре']) && res.arw === 'Стрелы: Fine Steel (C) 221';
   console.log((ok ? 'PASS' : 'FAIL') + ' lite firefox: ' + JSON.stringify(res));
   process.exit(ok ? 0 : 1);
 })().catch(e => { console.error('FAIL', e); srv.close(); process.exit(1); });

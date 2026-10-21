@@ -12,10 +12,16 @@
 // Сценарий E (Lite 1.3, John: «это сборка под БХ, а нужна под дестра»): у героя активен сабкласс Bounty Hunter, Титан — слот 2:
 //   меню предупреждает и не показывает скиллы БХ, после Старта бот ничего не жмёт; в игре переключили на Титана — охота пошла,
 //   в меню скиллы Титана; снова БХ — панель Титана в меню остаётся, бот ждёт.
+// Сценарий F (Lite 1.5, John: «есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный профиль
+//   на лука»): у героя активен Phantom Ranger (слоты как на аккаунте из разбора лука). Меню — вкладки «Дестр»/«Лук» со своими
+//   лимитами (старые настройки 1.4 — профиль Дестра); лук бьёт выстрелами под именем игры, баффы — да, Hex/стойка — нет;
+//   стрелы кончились (сервер: not_enough_arrows) — выход из боя и ожидание; стрелы появились — охота до 3; в игре Титан —
+//   профиль Дестра (свой лимит 4, Fatal Strike, без выстрелов); снова лук — его 3 из 3 уже выполнены, бот стоит.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const EXT = path.resolve(process.env.LITE_EXT || path.join(__dirname, '..', 'lite'));   // LITE_EXT — распакованный ZIP для проверки сборки
+const L = require('../lite/logic.js');           // 1.5: настройки профиля (lite.cfg p.destr / p.archer) — L.profCfg
 const delay = ms => new Promise(r => setTimeout(r, ms));
 async function until(fn, ms = 30000, what = 'условие') {
   const t0 = Date.now();
@@ -38,8 +44,12 @@ function makeServer() {
       { teleportId: 'giran_harbor', labelUk: 'Гавань Гірана', adenaCost: 2500, mobLevelMin: 25, mobLevelMax: 51 },
       { teleportId: 'forge_gods', labelUk: 'Кузня богів', adenaCost: 20000, mobLevelMin: 70, mobLevelMax: 80 } ],
   };
-  const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000 };
-  const ch = () => { S.hero.revision++; return { ...S.hero, activeBuffs: S.hero.activeBuffs.filter(b => b.expiresAt > Date.now()) }; };
+  const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000,
+    double_shot: 2500, power_shot: 2500, stun_shot: 1500, soul_of_sagittarius: 1000, l2_77: 1000, l2_91: 1000, l2_122: 1000, vicious_stance: 1000 };
+  // 1.5: лук тратит стрелы (Double Shot — две); не хватает — отказ сервера (код — догадка, настоящий ждёт пробного боя)
+  const ARROW_NEED = { attack: 1, power_shot: 1, stun_shot: 1, double_shot: 2 };
+  const ch = () => { S.hero.revision++; return { ...S.hero, activeBuffs: S.hero.activeBuffs.filter(b => b.expiresAt > Date.now()),
+    ...(S.arrows != null ? { inventory: { stacks: [{ itemId: 1342, qty: S.arrows }, { itemId: 728, qty: 50 }] } } : {}) }; };
   const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [] });
   function action(body) {
     const now = Date.now(), a = String(body.action || '');
@@ -49,9 +59,16 @@ function makeServer() {
     if (!b || !S.hero.inBattle) return [400, { error: 'no_battle' }];
     if (now < S.gcd) return [400, { error: 'global_cooldown', blockedBy: 'global', serverNowMs: now, globalCooldownUntilMs: S.gcd }];
     if (a !== 'battle_potion_use' && now < (S.cd[a] || 0)) return [400, { error: 'skill_cooldown', blockedBy: 'skill', serverNowMs: now, cooldownUntilMs: S.cd[a] }];
+    const h = S.hero, bow = /ranger|hawkeye|sagittarius|sentinel/.test(h.l2Profession);
+    if (bow && ARROW_NEED[a] && (S.arrows || 0) < ARROW_NEED[a]) return [400, { error: 'not_enough_arrows' }];
+    if (bow && ARROW_NEED[a]) S.arrows -= ARROW_NEED[a];
     S.gcd = now + (S.gcdMs || 250);
-    const h = S.hero;
     if (a === 'attack') b.mobHp -= 700;
+    else if (a === 'double_shot') { b.mobHp -= 1500; h.mp -= 98; }
+    else if (a === 'power_shot') { b.mobHp -= 1000; h.mp -= 70; }
+    else if (a === 'stun_shot') { b.mobHp -= 800; h.mp -= 98; }
+    else if (a === 'soul_of_sagittarius') { h.activeBuffs.push({ skillId: 303, expiresAt: now + 1200000 }); h.hp -= 185; }
+    else if (a === 'l2_77' || a === 'l2_91') h.activeBuffs.push({ skillId: +a.slice(3), expiresAt: now + 1200000 });
     else if (a === 'l2_190') { b.mobHp -= 1800; h.mp -= 83; }
     else if (a === 'battle_trance') h.hp = Math.round(h.maxHp * 0.25);
     else if (a === 'l2_176') h.activeBuffs.push({ skillId: 176, expiresAt: now + 90000 });
@@ -128,7 +145,9 @@ ch();setInterval(ch,2500);
 </script>`;
 const NAV = `<nav id="l2-nav-bottom"><a data-nav-role="outskirts" href="#" onclick="event.preventDefault();post('/game/world/outskirts').then(()=>location.href='/map.html')">Окрестности</a></nav>`;
 function page(title, body) { return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>${HUD}${COMMON}${body}${NAV}</body></html>`; }
-const TITLES = { attack: 'Атака', l2_190: 'Fatal Strike — сильный удар', battle_trance: 'Battle Trance — HP до 25 %', l2_176: 'Frenzy — при HP ≤ 30 %', l2_420: 'Zealot', l2_286: 'Provoke — агро' };
+const TITLES = { attack: 'Атака', l2_190: 'Fatal Strike — сильный удар', battle_trance: 'Battle Trance — HP до 25 %', l2_176: 'Frenzy — при HP ≤ 30 %', l2_420: 'Zealot', l2_286: 'Provoke — агро',
+  double_shot: 'Double Shot — две стрелы', power_shot: 'Power Shot', stun_shot: 'Stun Shot — оглушение', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura',
+  soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance' };
 function hotbar(H, pots) {
   const slots = H.battleHotbarSlots.map(s => s.k === 'a'
     ? `<button class="l2-battle-hotbar-slot" title="${TITLES[s.a]}" data-slot-cd="${s.a}">${s.a === 'attack' ? '' : `<img src="/skills/${s.a}.gif">`}<span class="l2-battle-hotbar-slot-cd" hidden><span class="l2-battle-hotbar-slot-cd__timer"></span></span></button>`
@@ -239,12 +258,13 @@ async function launch() {
   const store = keys => sw.evaluate(k => chrome.storage.local.get(k), keys);
   const rt = async () => (await store(['lite.rt']))['lite.rt'] || {};
   const cfg = async () => (await store(['lite.cfg']))['lite.cfg'] || {};
+  const pcfg = async (kind = 'destr') => L.profCfg(await cfg(), kind);
   async function popup() {
     const pp = await ctx.newPage(); pp.on('pageerror', e => errors.push('popup: ' + e.message));
     await pp.goto(`chrome-extension://${id}/popup.html`); await until(() => pp.evaluate(() => !!document.getElementById('run').onclick), 5000, 'меню');
     return pp;
   }
-  return { sv, S: sv.S, ctx, sw, game, store, rt, cfg, popup, errors, logs, id };
+  return { sv, S: sv.S, ctx, sw, game, store, rt, cfg, pcfg, popup, errors, logs, id };
 }
 const logText = r => (r.log || []).map(x => x.x).join('\n');
 
@@ -262,8 +282,9 @@ async function scenarioA() {
     assert.deepEqual(skillRows.map(r => r[0]), ['l2_190', 'battle_trance', 'l2_176', 'l2_420', 'l2_286']);
     assert.deepEqual(skillRows.find(r => r[0] === 'l2_286').slice(1), [false, 'other']);
     assert.deepEqual(skillRows.find(r => r[0] === 'battle_trance').slice(1), [true, 'trance']);
-    await until(async () => (await h.cfg()).killLimit === 5 && (await h.cfg()).zone === 'giran_harbor', 5000, 'настройки записаны');
-    assert.equal((await h.cfg()).zoneName, 'Гавань Гірана');
+    await until(async () => (await h.pcfg()).killLimit === 5 && (await h.pcfg()).zone === 'giran_harbor', 5000, 'настройки записаны');
+    assert.equal((await h.pcfg()).zoneName, 'Гавань Гірана');
+    assert.equal((await h.cfg()).p.destr.killLimit, 5, '1.5: в профиль Дестра (в игре Титан)');
     await pp.click('#run');
     await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
     await h.game.bringToFront();
@@ -478,14 +499,14 @@ async function scenarioD() {
     const pp = await h.popup();
     assert.equal(await pp.evaluate(() => document.getElementById('fastTurn').checked), true, 'по умолчанию ВКЛ');
     await pp.click('details > summary'); await pp.click('#fastTurn');
-    await until(async () => (await h.cfg()).fastTurn === false, 5000, 'галка ВЫКЛ');
+    await until(async () => (await h.pcfg()).fastTurn === false, 5000, 'галка ВЫКЛ');
     await pp.click('#run');
     await h.game.bringToFront();
     await until(() => S.acts.length >= 3, 30000, 'бой начат');
     const off = await run(20, '20 ударов ВЫКЛ');
     assert.equal(await h.game.evaluate(() => document.documentElement.dataset.l2liteFastN), undefined, 'при ВЫКЛ ответы не трогаются');
     await pp.click('#fastTurn');
-    await until(async () => (await h.cfg()).fastTurn === true, 5000, 'галка ВКЛ');
+    await until(async () => (await h.pcfg()).fastTurn === true, 5000, 'галка ВКЛ');
     await run(3, 'переход');
     const on = await run(20, '20 ударов ВКЛ');
     const fastN = +(await h.game.evaluate(() => document.documentElement.dataset.l2liteFastN || 0));
@@ -528,19 +549,19 @@ async function scenarioE() {
     const pp = await h.popup();
     await until(() => pp.evaluate(() => !document.getElementById('cls').hidden), 5000, 'предупреждение в меню');
     const warn = await pp.textContent('#cls');
-    assert.match(warn, /Сейчас в игре Dstr — Dwarf Bounty Hunter/); assert.match(warn, /переключите в игре сабкласс 2 на Orc Titan \(76 ур\.\)/);
+    assert.match(warn, /Сейчас в игре Dstr — Dwarf Bounty Hunter/); assert.match(warn, /переключите в игре класс на Orc Titan \(сабкласс 2, 76 ур\.\)/);
     assert.match(await pp.textContent('#hero'), /Dstr, 70 ур\. · Dwarf Bounty Hunter/);
     assert.equal(await pp.$$eval('#skills .sk', e => e.length), 0, 'скиллы БХ в меню');
     assert.match(await pp.textContent('#skills'), /когда в игре будет активен Дестр\/Титан/);
     assert.deepEqual((await h.rt()).bar || [], [], 'панель БХ в памяти');
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
+    await until(async () => /Lite ведёт только Дестра\/Титана и лучника/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
     await delay(6000);
     assert.equal(S.spawnN, 0, 'начат бой'); assert.deepEqual(S.acts, []); assert.deepEqual(S.tp, []); assert.equal(S.tvt.isRegistered, false);
     assert.equal(h.game.url(), 'https://l2wap.com/map.html');
     const r1 = await h.rt();
-    assert.match(r1.status, /Сейчас в игре Dstr — Dwarf Bounty Hunter\. Lite ведёт только Дестра\/Титана: переключите в игре сабкласс 2 на Orc Titan/);
-    assert.equal(logText(r1).match(/Lite только для Дестра/g)?.length, 1, 'запись в журнале одна');
+    assert.match(r1.status, /Сейчас в игре Dstr — Dwarf Bounty Hunter\. Lite ведёт только Дестра\/Титана и лучника: переключите в игре класс на Orc Titan \(сабкласс 2\)/);
+    assert.equal(logText(r1).match(/Lite только для Дестра и лучника/g)?.length, 1, 'запись в журнале одна');
     // игрок переключил в игре сабкласс на Титана (слот 2): игра перечитала героя → Lite охотится, меню без предупреждения, скиллы Титана
     Object.assign(S.hero, titan);
     await until(() => S.acts.length >= 5, 30000, 'охота на Титане');
@@ -558,7 +579,7 @@ async function scenarioE() {
     assert.equal((await h.rt()).barCls, 'orc_titan');
     const n = S.acts.length;
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
+    await until(async () => /Lite ведёт только Дестра\/Титана и лучника/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
     await delay(4000);
     assert.equal(S.acts.length, n, 'ходы на БХ');
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
@@ -568,6 +589,111 @@ async function scenarioE() {
   finally { await h.ctx.close(); }
 }
 
+
+async function scenarioF() {
+  const h = await launch(), { S } = h;
+  const SLOTS = act => ({ activeSlot: act, slots: [
+    { slot: 0, owned: true, active: act === 0, profession: 'dark_elf_storm_screamer', race: 'DarkElf', level: 78 },
+    { slot: 1, owned: true, active: act === 1, profession: 'dark_elf_spectral_master', race: 'DarkElf', level: 76 },
+    { slot: 2, owned: true, active: act === 2, profession: 'orc_titan', race: 'Orc', level: 77 },
+    { slot: 3, owned: true, active: act === 3, profession: 'dark_elf_phantom_ranger', race: 'DarkElf', level: 70 }] });
+  const titan = { l2Profession: 'orc_titan', level: 77, classSlots: SLOTS(2), battleHotbarSlots: S.hero.battleHotbarSlots, learnedBattleSkillsDetail: S.hero.learnedBattleSkillsDetail };
+  const ARCHER_BAR = ['double_shot', 'power_shot', 'stun_shot', 'l2_122', 'l2_77', 'l2_91', 'soul_of_sagittarius', 'vicious_stance'];
+  const NAMES = { double_shot: 'Double Shot', power_shot: 'Power Shot', stun_shot: 'Stun Shot', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura', soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance' };
+  const archer = { l2Profession: 'dark_elf_phantom_ranger', level: 70, classSlots: SLOTS(3),
+    battleHotbarSlots: [{ k: 'a', a: 'double_shot' }, { k: 'a', a: 'power_shot' }, { k: 'a', a: 'stun_shot' }, { k: 'a', a: 'attack' }, ...ARCHER_BAR.slice(3).map(a => ({ k: 'a', a })), { k: 'u', id: 1539 }],
+    learnedBattleSkillsDetail: ARCHER_BAR.map(a => ({ battleId: a, nameUk: NAMES[a] })) };
+  const SHOT = /^(?:double_shot|power_shot|stun_shot)$/;
+  const sel = pp => pp.evaluate(() => [...document.querySelectorAll('#profs button')].map(b => [b.dataset.kind, b.classList.contains('sel'), b.querySelector('i').textContent]));
+  try {
+    S.champAt = 99; S.arrows = 6;
+    Object.assign(S.hero, archer);
+    // настройки Lite 1.4 (до профилей): место и лимит Дестра, TvT выкл.
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, zone: 'giran_harbor', zoneName: 'Гавань Гірана', killLimit: 7, tvt: false } }));
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).kind === 'archer' && (await h.rt()).bar?.length === 9 && (await h.rt()).locs?.length === 2, 20000, 'профиль лука и его панель в памяти');
+    const pp = await h.popup();
+    // меню: открыт «Лук · в игре», скиллы лука с галками по умолчанию, стрелы в сумке
+    await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 8), 5000, 'скиллы лука в меню');
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре']]);
+    assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'лук — не «чужой класс»');
+    const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked]));
+    assert.deepEqual(rows, [['double_shot', true], ['power_shot', true], ['stun_shot', true], ['l2_122', false], ['l2_77', true], ['l2_91', true], ['soul_of_sagittarius', true], ['vicious_stance', false]]);
+    assert.equal(await pp.textContent('#arw'), 'Стрелы: Fine Steel (C) 6');
+    assert.equal(await pp.inputValue('#limit'), '0', 'у лука свой лимит (умолчание)');
+    await pp.fill('#limit', '3'); await pp.dispatchEvent('#limit', 'change');
+    // вкладка Дестра: старые настройки 1.4 — его; лимит 4 пишется в его профиль
+    await pp.click('#profs button[data-kind="destr"]');
+    await until(async () => (await sel(pp))[0][1] === true, 3000, 'вкладка Дестра');
+    assert.equal(await pp.inputValue('#limit'), '7'); assert.equal(await pp.inputValue('#zone'), 'giran_harbor'); assert.equal(await pp.isChecked('#tvt'), false);
+    assert.match(await pp.textContent('#profNote'), /бот возьмёт его сам, когда в игре станет активен Дестр\/Титан/);
+    assert.match(await pp.textContent('#skills'), /когда в игре будет активен Дестр\/Титан/);
+    assert.equal(await pp.isVisible('#arw'), false);
+    await pp.fill('#limit', '4'); await pp.dispatchEvent('#limit', 'change');
+    await until(async () => (await h.cfg()).p?.destr?.killLimit === 4 && (await h.cfg()).p?.archer?.killLimit === 3, 5000, 'лимиты в своих профилях');
+    assert.equal((await h.cfg()).killLimit, 7, 'старое поле не тронуто');
+    await pp.click('#profs button[data-kind="archer"]');
+    await until(async () => (await pp.inputValue('#limit')) === '3', 3000, 'вкладка лука');
+    await pp.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
+    await h.game.bringToFront();
+    // лук: баффы и выстрелы; 6 стрел кончаются — отказ сервера → выход из боя → ожидание (новых боёв нет)
+    await until(async () => (await h.rt()).arrowOut, 60000, 'стрелы кончились');
+    await until(async () => /Нет стрел/.test((await h.rt()).status || ''), 20000, 'статус «нет стрел»');
+    const sp = S.spawnN, a0 = S.acts.length;
+    await delay(4000);
+    assert.equal(S.spawnN, sp, 'без стрел начал бой'); assert.ok(S.acts.length - a0 <= 1, 'без стрел ходы: ' + S.acts.slice(a0).join(','));
+    assert.ok(!S.hero.inBattle, 'вышел из боя');
+    await until(() => pp.evaluate(() => /Нет стрел/.test(document.getElementById('arw').textContent)), 5000, 'меню: нет стрел');
+    const r1 = await h.rt();
+    assert.match(logText(r1), /сервер не дал выстрелить: «not_enough_arrows»/);
+    assert.match(logText(r1), /нет стрел — охоту остановил/);
+    // стрелы появились в сумке — охота до 3 мобов лука
+    S.arrows = 500;
+    let fastMax = 0;                                // счётчик быстрых ответов живёт на странице боя (цепочка — та же страница)
+    await until(async () => { fastMax = Math.max(fastMax, +(await h.game.evaluate(() => document.documentElement.dataset.l2liteFastN || 0).catch(() => 0))); return (await h.rt()).k?.kills >= 3; }, 90000, '3 моба лука');
+    await until(async () => /Цель выполнена: убито 3 из 3/.test((await h.rt()).status || ''), 20000, 'лимит лука');
+    const archerActs = S.acts.slice();
+    for (const a of ['double_shot', 'power_shot', 'stun_shot', 'soul_of_sagittarius', 'l2_77', 'l2_91']) assert.ok(archerActs.includes(a), a + ': ' + archerActs.join(','));
+    assert.ok(!archerActs.some(a => /^(?:l2_122|vicious_stance|l2_190)$/.test(a)), 'Hex/стойка/удар Дестра: ' + archerActs.join(','));
+    assert.ok(fastMax >= 3, 'быстрых ответов ' + fastMax);
+    const r2 = await h.rt();
+    assert.match(logText(r2), /стрелы есть \(500\) — продолжаю охоту/);
+    assert.equal(r2.k.kills, 3);
+    // в игре переключили на Титана: профиль Дестра — свой лимит 4 и место, Fatal Strike, выстрелов нет
+    const n1 = S.acts.length;
+    Object.assign(S.hero, titan);
+    await until(async () => (await h.rt()).kind === 'destr', 15000, 'профиль Дестра');
+    await until(async () => (await h.rt()).k?.kills >= 4 && /Цель выполнена: убито 4 из 4/.test((await h.rt()).status || ''), 90000, '4 моба Дестра');
+    const destrActs = S.acts.slice(n1);
+    assert.ok(destrActs.includes('l2_190') && !destrActs.some(a => SHOT.test(a)), 'ходы Дестра: ' + destrActs.join(','));
+    const r3 = await h.rt();
+    assert.match(logText(r3), /в игре Orc Titan \(Dstr\) — профиль «Дестр» вместо «Лук»: место охоты «Гавань Гірана», цель 4 мобов \(убито 0\)/);
+    assert.equal(r3.by.archer.kills, 3); assert.equal(r3.by.archer.bar.length, 9); assert.equal(r3.barCls, 'orc_titan');
+    // меню само перешло на Дестра; во вкладке лука — его 3 из 3 и его скиллы
+    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, '']]), 5000, 'меню: Дестр в игре');
+    await until(async () => (await pp.textContent('#kills')) === '4 / 4 ✔', 5000, 'счётчик Дестра');
+    await pp.click('#profs button[data-kind="archer"]');
+    await until(async () => (await pp.textContent('#kills')) === '3 / 3 ✔', 3000, 'счётчик лука');
+    assert.equal(await pp.$$eval('#skills .sk', els => els.length), 8);
+    assert.match(await pp.textContent('#profNote'), /Профиль лука — бот возьмёт его сам/);
+    await pp.click('#profs button[data-kind="destr"]');
+    // снова лук: его цель уже выполнена — бот стоит
+    Object.assign(S.hero, archer);
+    await until(async () => (await h.rt()).kind === 'archer', 15000, 'снова профиль лука');
+    await until(async () => /Цель выполнена: убито 3 из 3/.test((await h.rt()).status || ''), 15000, 'лимит лука держится');
+    const n2 = S.acts.length, s2 = S.spawnN;
+    await delay(4000);
+    assert.equal(S.spawnN, s2); assert.ok(S.acts.length - n2 <= 1);
+    await until(async () => (await sel(pp))[1][1] === true, 5000, 'меню снова на луке');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(logText(await h.rt()), '\nходы:', S.acts.join(','));
+    console.log(`PASS F: лук (Phantom Ranger) — вкладки профилей, свои лимиты (3 у лука, 4 у Дестра из настроек 1.4), выстрелы/баффы (${archerActs.length} ходов), Hex и стойка не жмутся; стрелы кончились — выход из боя и ожидание, появились — охота до 3; Титан — профиль Дестра до 4; снова лук — стоит`);
+  } catch (e) { console.error('DIAG F', { acts: h.S.acts.slice(-40).join(','), arrows: S.arrows, url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, k: r.k, by: r.by, arrowOut: r.arrowOut, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDE';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEF';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
