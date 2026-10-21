@@ -12,7 +12,7 @@ const wakeSource = slice(popup, 'const WAKE_KEY', 'async function activateMode('
 const warlockSource = slice(popup, 'async function warlockMenuCommand(', 'const warlockUI=');
 const panelSource = slice(popup, "$('check').onclick", "$('apply').onclick");
 const domSource = slice(popup, "$('recDom').onclick", '// ---------- 💾 память бота');
-const VERSION = '20.42';
+const VERSION = '20.42.1';
 const tick = async (n = 40) => { for (let i = 0; i < n; i++) await Promise.resolve(); };
 
 // ---------- фон: пересылка только родителю, только белый список ----------
