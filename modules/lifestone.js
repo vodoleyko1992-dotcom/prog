@@ -82,7 +82,18 @@
   async function get(p){try{const r=await env.gameGet(p);return r?.ok?await r.json():null;}catch(_){return null;}}
   async function snapshot(){const who=char(),j=await get('/character'),s=j?.character;
    return char()===who&&s?.name===who&&s.inventory?.eq&&Array.isArray(s.inventory.stacks)&&Number.isSafeInteger(s.revision)&&s.revision>=0?s:null;}
-  async function pause(reason){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;await save({...s,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;}
+  // 20.43 (автономность, доводка 21.10): пауза серии сама (не прочитались цены материалов, неверные лимиты закупки, перезагрузка посреди
+  // серии…) оставляла hold:true, а продолжить серию может только игрок: allowed() требует running и trusted, trusted сбрасывается и
+  // перезагрузкой. loopGate держал главный цикл без срока — ни задач, ни сторожа, ни отметки остановки с уведомлением, только статус «ЛС: …».
+  // Теперь такая пауза без неизвестной попытки/покупки (pending) снимает удержание, как finish/refusedSupply/yieldToUrgent: бот возвращается
+  // к задачам, серия ждёт ручного «Продолжить». Держат по-прежнему: неизвестный исход (pending), ручная пауза игрока и подготовленная серия.
+  // userHold — удержание выбрал игрок («Пауза»); подготовленная серия ждёт «Продолжить» (PREPARED) — тоже держит
+  const PREPARED='Серия подготовлена; нажмите «Продолжить»';
+  let userPause=false;   // «Пауза» нажата, пока шёл шаг: пауза этого шага — игрока, а не сбоя
+  const freeNote=reason=>env.rec?.('B','ЛС',`${reason||'Серия на паузе'} — серия на паузе, возвращаюсь к задачам; продолжение вручную`);
+  async function pause(reason,keep=false){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;
+   const user=keep||userPause,free=!user&&!s.pending&&s.hold===true;
+   const ok=await save({...s,status:'paused',reason,...(user?{userHold:true}:{}),...(free?{hold:false}:{})});env.setStatus?.('ЛС: '+reason);if(ok&&free)freeNote(reason);return true;}
   // 20.43 (разбор 21.10): серия с целью/лимитом больше ничего не тратит — удержание снимаем, бот сам возвращается к рыбалке/фарму
   // (раньше стоял на аугментации до «Закончить серию»). Новая трата — только «Начать новую серию»; неизвестная попытка держит, как прежде.
   const DONE_NOTE='Серия завершена — возвращаюсь к задачам';
@@ -271,16 +282,17 @@
    }
    const outcome=w?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект — обновите каталог');
    trusted=null;permit=null;supplyPermit=null;
-   const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:'Серия подготовлена; нажмите «Продолжить»',
+   userPause=false;
+   const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:PREPARED,
     weaponKey:c.weaponKey,weaponName:chosen?.name||h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id,targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0,spentAA:0,spentAdena:0,reservedAA:0,reservedAdena:0,supplies:[]};
    if(!await save(row,s.inventory.eq))throw Error('Не удалось сохранить серию; расход не выполнялся');return true;
   }
-  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;supplyPermit=null;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
+  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;supplyPermit=null;userPause=true;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
    try{
     if(action==='scan')return await scanWeapons();
     if(action==='prepare')return await prepare();
     const s=current();if(!own(s))throw Error('Нет серии этого персонажа');
-    if(action==='pause')return await pause('Пауза игрока');
+    if(action==='pause')return await pause('Пауза игрока',true);
     if(action==='reconcile')return await reconcile();
     if(action==='acknowledge'){
      const p=s.pending;if(!p)throw Error('Нет неизвестной попытки');if(p.kind==='supply')throw Error('Неизвестную покупку нельзя учесть как попытку; сначала сверьте материалы и оплату');
@@ -296,8 +308,8 @@
     if(!live()||!env.canPrepare())throw Error('Запустите бота на странице аугментации, без других служебных задач');
     if(!config().valid||s.configSig!==sig(config()))throw Error('Цели или лимит изменились — подготовьте новую серию');
     if(s.attempts>=s.maxAttempts||s.status==='closed')throw Error('Серия завершена; подготовьте новую');
-    const next={...s,status:'running',hold:true,reason:'',context:stamp()};
-    if(!await save(next))throw Error('Не удалось сохранить запуск');trusted=s.id;return true;
+    const next={...s,status:'running',hold:true,userHold:false,reason:'',context:stamp()};
+    userPause=false;if(!await save(next))throw Error('Не удалось сохранить запуск');trusted=s.id;return true;
    }finally{busy=false;}
   }
   // Одно разрешение только на конкретный долговечно записанный POST; чужие gamePost его не получают.
@@ -336,6 +348,8 @@
     if(s.pending){if(now()-(s.pending.lastCheck||s.pending.t)<15000)return true;await reconcile();return true;}
     // 20.43 (разбор 21.10): серия, завершённая до обновления (done + удержание), тоже отпускает бота — после 'done' ЛС ничего не тратит.
     if(s.status==='done'){trusted=null;if(await save({...s,hold:false}))env.rec?.('B','ЛС',DONE_NOTE);return true;}
+    // 20.43 (доводка 21.10): и серия на паузе после сбоя с удержанием (запись прежней версии) — пауза не игрока и не подготовка
+    if(s.status==='paused'&&s.hold===true&&!s.userHold&&s.reason!=='Пауза игрока'&&s.reason!==PREPARED){trusted=null;if(await save({...s,hold:false}))freeNote(s.reason);return true;}
     if(!allowed(s)){if(s.status==='running')await pause('Остановлено, страница или настройки изменились; продолжение вручную');env.setStatus?.('ЛС: '+(current()?.reason||'Ожидание команды'));return true;}
     if(now()<s.nextAt)return true;
     if(s.attempts>=s.maxAttempts)return await finish(s,'Достигнут лимит попыток');

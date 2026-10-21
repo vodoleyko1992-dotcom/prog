@@ -169,8 +169,9 @@ test('content.js: routeMode из baseTask — в контексте маршру
   assert.match(s, /L2V7Modules\.mammon = L2V7Factories\.mammon\(\{ get routeMode\(\)\{return routeMode\}, get routeBanned\(\)\{return routeBanned\},/);
   const raid = s.slice(s.indexOf('async function loopRaid() {'), s.indexOf('if (isMap() && campOn() && !fishNow()', s.indexOf('async function loopRaid() {')));
   assert.equal((raid.match(/!routeBanned\('invScan'\)/g) || []).length, 3, 'все три автоматических запуска чтения сумки');
-  assert.match(s, /L2EngineCore\.selfHoldPlan\(rt, kind, opt\.steps \|\| SELF_HOLD_STEPS\[kind\] \|\| \[30\], now, opt\.window\)/);
-  assert.match(s, /передышки за \$\{Math\.round\(\(\+opt\.window > 0 \? \+opt\.window : L2EngineCore\.SELF_HOLD_WINDOW\) \/ 3600000\)\} ч не помогли/);
+  // 20.43 (доводка 21.10): счёт отсрочек noWait (запрет маршрута) — отдельный (rt.selfHoldDefer), окно учёта по-прежнему из opt.window
+  assert.match(s, /const logKey = opt\.noWait \? 'selfHoldDefer' : 'selfHoldLog', logs = rt\[logKey\] \|\| \{\};\s+const plan = L2EngineCore\.selfHoldPlan\(\{ selfHoldLog: logs \}, kind, opt\.steps \|\| SELF_HOLD_STEPS\[kind\] \|\| \[30\], now, opt\.window\)/);
+  assert.match(s, /\$\{opt\.noWait \? 'отсрочки' : 'передышки'\} за \$\{Math\.round\(\(\+opt\.window > 0 \? \+opt\.window : L2EngineCore\.SELF_HOLD_WINDOW\) \/ 3600000\)\} ч не помогли/);
   const mm = read('modules/mammon.js');
   assert.match(mm, /const context = \(\) => \(\{ char: env\.rt\.char \|\| '', kick: \+env\.rt\.manualKickAt \|\| 0, mode: \(env\.routeMode \|\| env\.autonomyMode\)\?\.\(\) \|\| '' \}\);/);
 });

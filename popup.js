@@ -2091,13 +2091,15 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в разделе «Лимиты»; дополнительные задачи остаются разрешены.', tab:'overview' };
   // 17.10: бой стоит дольше 6 с — причина ожидания навыков из журнала показана рядом с задачей (свежая, не старше 2 мин)
   const combatWait = rt.combatWait && now - (+rt.combatWait.t || 0) < 120000 && /^\/?battle|бой/i.test(String(rt.status || '')) ? ' · Бой ждёт: ' + String(rt.combatWait.text || '').slice(0, 160) : '';
-  const hold = selfHoldView(rt, d, now), holdNote = hold ? `Передышка${hold.key && AUTO_TASK_LABELS[hold.key] ? ` «${AUTO_TASK_LABELS[hold.key]}»` : ''} до ${hold.hm}: ${hold.why}. ` : '';   // 20.43
+  // 20.43 (доводка 21.10): передышки — по задаче, в подсказке все
+  const holdNote = selfHoldViews(rt, d, now).map(hold => `Передышка${hold.key && AUTO_TASK_LABELS[hold.key] ? ` «${AUTO_TASK_LABELS[hold.key]}»` : ''} до ${hold.hm}: ${hold.why}. `).join('');
   return { state:'running', label:'Движок активен', text:last, hint:holdNote + 'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
 }
 function taskBoardRows(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
-  const day = L2EngineCore.dailyDay(now,rt), hold = selfHoldView(rt, d, now);
+  const day = L2EngineCore.dailyDay(now,rt), holds = selfHoldViews(rt, d, now);
   return selected.map(key => {
+    const hold = holds.find(h => h.key === key);   // 20.43 (доводка 21.10): у каждой задачи — своя передышка
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
     const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
@@ -2134,13 +2136,17 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
 }
 // 20.43 (автономность, разбор 21.10): передышка после временного сбоя (rt.selfHold) — в меню видно, какая задача ждёт, до скольки и почему
 // (стоит после taskBoardRows: срезы тестов доски задач берут код от taskBoardRows до сводки дневных мобов)
-function selfHoldView(rt, d, now = Date.now()) {
-  const h = typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldActive ? L2EngineCore.selfHoldActive(rt, now) : null;
-  if (!h) return null;
-  const key = h.task || { farm: d?.zoneAuto ? 'auto' : 'farm', campaign: 'quests', raid: 'raid', epic: 'epic', fish: 'fish', cat: 'cat' }[h.mode] || null;
-  const hm = new Date(+h.until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-  const why = String(h.why || 'сбой').slice(0, 160);
-  return { key, hm, why, text: `передышка до ${hm}: ${why}` };
+function selfHoldView(rt, d, now = Date.now()) { return selfHoldViews(rt, d, now)[0] || null; }
+// 20.43 (доводка 21.10): rt.selfHold — передышки по задаче (L2EngineCore.selfHoldList); ближайшая к концу — первой
+function selfHoldViews(rt, d, now = Date.now()) {
+  const list = typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldList ? L2EngineCore.selfHoldList(rt, now)
+    : typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldActive ? [L2EngineCore.selfHoldActive(rt, now)].filter(Boolean) : [];
+  return list.slice().sort((a, b) => +a.until - +b.until).map(h => {
+    const key = h.task || { farm: d?.zoneAuto ? 'auto' : 'farm', campaign: 'quests', raid: 'raid', epic: 'epic', fish: 'fish', cat: 'cat' }[h.mode] || null;
+    const hm = new Date(+h.until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    const why = String(h.why || 'сбой').slice(0, 160);
+    return { key, hm, why, text: `передышка до ${hm}: ${why}` };
+  });
 }
 // 20.10 (журнал 09:58:23): снятие задачи рыбалки не прячет дневной счётчик и его лимит.
 function dailyFishBoardRow(rt, d, now = Date.now()) {

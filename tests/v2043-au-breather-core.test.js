@@ -8,6 +8,8 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 const content = read('content.js'), popup = read('popup.js');
 const slice = (s, a, b) => { const i = s.indexOf(a), j = s.indexOf(b, i + a.length); assert.ok(i >= 0 && j > i, a); return s.slice(i, j); };
 const MIN = 60000, now = Date.parse('2026-10-21T03:00:00Z');
+// 20.43 (доводка 21.10): rt.selfHold — передышки по задаче {ключ: передышка}; ключ — задача, 'mode:<режим>' или 'kind:<вид>'
+const held = (rt, key) => E.selfHoldMap(rt)[key];
 
 // ---------- engine-core: selfHoldActive / selfHoldPlan / selectedTask ----------
 test('selfHoldActive: действует до until и только при том же запуске (manualKickAt); мусор и будущие записи не действуют', () => {
@@ -62,7 +64,7 @@ function core({ tasks = ['farm', 'fish'], mode = 'farm', rt: rt0 = {}, path: pag
 test('selfHoldStart(mob): передышка 5 мин на текущей задаче фарма, уход на нейтральную страницу после сохранения; stall другой задачи — идёт следующая', async () => {
   const f = core({ tasks: ['farm'], path: '/map.html' });
   const r = await f.c.start('mob', 'Клик по мобу 3 раза подряд не открыл бой', { page: '/char.html' });
-  assert.equal(r, 'hold'); const h = f.c.rt.selfHold;
+  assert.equal(r, 'hold'); const h = held(f.c.rt, 'farm');
   assert.equal(h.kind, 'mob'); assert.equal(h.task, 'farm'); assert.equal(h.n, 1); assert.equal(h.kick, 5);
   assert.ok(Math.abs(h.until - h.at - 5 * MIN) < 50); assert.equal(f.c.rt.selfHoldLog.mob.length, 1);
   assert.equal(f.c.location.href, '/char.html'); assert.ok(f.calls.includes('commit'), 'переход только после подтверждённой записи');
@@ -71,13 +73,15 @@ test('selfHoldStart(mob): передышка 5 мин на текущей зад
   assert.equal(E.selectedTask(f.c.cfg, f.c.rt), 'tasks'); assert.equal(f.c.on_('mob'), true); assert.equal(f.c.on_('stall'), false);
   // рыбалка не продвигается (stall) — на передышке она, идёт следующая выбранная задача (фарм)
   const g = core({ tasks: ['fish', 'farm'] }); await g.c.start('stall', 'нет прогресса', { page: '/map.html' });
-  assert.equal(g.c.rt.selfHold.task, 'fish'); assert.equal(E.selectedTask(g.c.cfg, g.c.rt), 'farm', 'другая выбранная задача идёт'); assert.match(g.recs[0][2], /пока идёт «farm»/);
-  assert.ok(Math.abs(g.c.rt.selfHold.until - g.c.rt.selfHold.at - 20 * MIN) < 50, 'stall: 20 мин');
+  assert.equal(held(g.c.rt, 'fish').task, 'fish'); assert.equal(E.selectedTask(g.c.cfg, g.c.rt), 'farm', 'другая выбранная задача идёт'); assert.match(g.recs[0][2], /пока идёт «farm»/);
+  assert.ok(Math.abs(held(g.c.rt, 'fish').until - held(g.c.rt, 'fish').at - 20 * MIN) < 50, 'stall: 20 мин');
 });
 test('selfHoldStart: вторая и третья — 15 и 30 мин; четвёртая за 6 ч — стоп с причиной, счёт вида с нуля; stall — жёсткий стоп', async () => {
   const t = Date.now(), f = core({ tasks: ['farm'], rt: { selfHoldLog: { mob: [t - 40 * MIN] } } });
-  await f.c.start('mob', 'x'); assert.ok(Math.abs(f.c.rt.selfHold.until - f.c.rt.selfHold.at - 15 * MIN) < 50); assert.equal(f.c.rt.selfHold.n, 2);
-  f.c.rt.selfHoldLog.mob = [t - 80 * MIN, t - 40 * MIN]; await f.c.start('mob', 'x'); assert.ok(Math.abs(f.c.rt.selfHold.until - f.c.rt.selfHold.at - 30 * MIN) < 50);
+  await f.c.start('mob', 'x'); assert.ok(Math.abs(held(f.c.rt, 'farm').until - held(f.c.rt, 'farm').at - 15 * MIN) < 50); assert.equal(held(f.c.rt, 'farm').n, 2);
+  // 20.43 (доводка): фарм на передышке — выбор «tasks»; сбой карты там — своя передышка «tasks», фермерская остаётся
+  f.c.rt.selfHoldLog.mob = [t - 80 * MIN, t - 40 * MIN]; await f.c.start('mob', 'x'); assert.ok(Math.abs(held(f.c.rt, 'tasks').until - held(f.c.rt, 'tasks').at - 30 * MIN) < 50);
+  assert.equal(held(f.c.rt, 'farm').n, 2, 'прежняя передышка фарма не затёрта');
   f.c.rt.selfHoldLog.mob = [t - 120 * MIN, t - 80 * MIN, t - 40 * MIN];
   assert.equal(await f.c.start('mob', 'Клик по мобу 3 раза вернул на карту'), 'stop');
   const halt = f.calls.find(x => x[0] === 'halt'); assert.match(halt[1], /^Клик по мобу 3 раза вернул на карту — 3 передышки за 6 ч не помогли/); assert.equal(halt[2], false);
@@ -87,17 +91,18 @@ test('selfHoldStart: вторая и третья — 15 и 30 мин; четв�
 });
 test('selfHoldStart(noWait): только учёт (карта тура/эпика, цикл маршрута) — передышки нет, страница не меняется', async () => {
   const f = core(); assert.equal(await f.c.start('raidMap', 'карта', { noWait: true }), 'defer');
-  assert.equal(f.c.rt.selfHold, undefined); assert.equal(f.c.rt.selfHoldLog.raidMap.length, 1); assert.equal(f.c.location.href, ''); assert.equal(f.recs.length, 0);
+  // 20.43 (доводка 21.10): отсрочка noWait — свой счёт selfHoldDefer, не в счёте настоящих передышек вида
+  assert.equal(f.c.rt.selfHold, undefined); assert.equal(f.c.rt.selfHoldDefer.raidMap.length, 1); assert.equal(f.c.rt.selfHoldLog, undefined); assert.equal(f.c.location.href, ''); assert.equal(f.recs.length, 0);
   // noCount (запрет маршрута до его конца): передышка без нового учёта и без стопа
   const t = Date.now(), g = core({ tasks: ['farm'], rt: { selfHoldLog: { 'route:shop': [t - 3, t - 2, t - 1] } } });
-  assert.equal(await g.c.start('route:shop', 'просится', { until: t + 30 * MIN, noCount: true }), 'hold'); assert.equal(g.c.rt.selfHold.until, t + 30 * MIN); assert.equal(g.c.rt.selfHoldLog['route:shop'].length, 3);
+  assert.equal(await g.c.start('route:shop', 'просится', { until: t + 30 * MIN, noCount: true }), 'hold'); assert.equal(held(g.c.rt, 'farm').until, t + 30 * MIN); assert.equal(g.c.rt.selfHoldLog['route:shop'].length, 3);
 });
 test('selfHoldStart(mob) вне фарма (тур/эпики/катакомбы): задача не держится, только запрет карты; без перехода', async () => {
   const f = core({ tasks: ['raid', 'farm'] }); await f.c.start('mob', 'x', { page: '/char.html' });
-  assert.equal(f.c.rt.selfHold.task, null); assert.equal(f.c.location.href, ''); assert.equal(E.selectedTask(f.c.cfg, f.c.rt), 'raid');
+  assert.equal(held(f.c.rt, 'kind:mob').task, null); assert.equal(f.c.location.href, ''); assert.equal(E.selectedTask(f.c.cfg, f.c.rt), 'raid');
   assert.equal(f.c.on_('mob'), true, 'map() всё равно не кликает'); assert.match(f.recs[0][2], /карту не трогаю/);
-  const legacy = core({ tasks: null, mode: 'farm' }); await legacy.c.start('mob', 'x'); assert.equal(legacy.c.rt.selfHold.mode, 'farm'); assert.equal(legacy.c.applies(), true);
-  const legacyRaid = core({ tasks: null, mode: 'raid' }); await legacyRaid.c.start('mob', 'x'); assert.equal(legacyRaid.c.rt.selfHold.mode, null); assert.equal(legacyRaid.c.applies(), false);
+  const legacy = core({ tasks: null, mode: 'farm' }); await legacy.c.start('mob', 'x'); assert.equal(held(legacy.c.rt, 'mode:farm').mode, 'farm'); assert.equal(legacy.c.applies(), true);
+  const legacyRaid = core({ tasks: null, mode: 'raid' }); await legacyRaid.c.start('mob', 'x'); assert.equal(held(legacyRaid.c.rt, 'kind:mob').mode, null); assert.equal(legacyRaid.c.applies(), false);
 });
 test('selfHoldStart: Стоп, новый Старт или другая вкладка во время записи — передышка не объявляется и перехода нет; капча — без перехода', async () => {
   for (const cut of [c => { c.on = false; }, c => { c.rt.manualKickAt = 6; }, c => { c.tabOwner = false; }, c => { c.automationGeneration++; }]) {
@@ -143,7 +148,8 @@ test('исходник: главный цикл, сторож вкладки, с
   assert.match(wd, /if \(history\.length >= 3\) \{\s+await setRt\(\{ stallRecoveries: \[\] \}\);[\s\S]{0,120}selfHoldStart\('stall', `Автономный режим не продвигается после 3 восстановлений за 30 мин[^`]*`, \{ hard: true, page: '\/map\.html' \}\);\s+return r === 'stop' \? LOOP_BREAK : true;/);
   assert.doesNotMatch(wd, /halt\('Автономный режим не продвигается/);
   assert.match(content, /async function nextFight\(\.\.\.args\) \{[^\n]*if \(rt\.selfHold && selfHoldApplies\(\)\) return toMap\(\);/);
-  assert.match(slice(content, 'async function tasksIdle() {', '\n}\n'), /const hold=L2EngineCore\.selfHoldActive\(rt\);\s+if\(hold\?\.task\)\{setStatus\(`⏸ \$\{selfHoldText\(hold\)\}/);
+  // 20.43 (доводка 21.10): передышек может быть несколько — в статусе ожидания все, ближайшая первой
+  assert.match(slice(content, 'async function tasksIdle() {', '\n}\n'), /const holds=L2EngineCore\.selfHoldList\(rt\)\.filter\(h=>h\.task\)\.sort\(\(a,b\)=>a\.until-b\.until\);\s+if\(holds\.length\)\{setStatus\(`⏸ \$\{holds\.map\(selfHoldText\)\.join\(' · '\)\}/);
   for (const m of ['mobfarm', 'raid', 'epics', 'actions']) {
     const factory = content.slice(content.indexOf(`L2V7Modules.${m} = L2V7Factories.${m}({`)).split('\n').slice(0, 2).join('\n');
     assert.match(factory, /get selfHold\(\)\{return selfHoldStart\}/, `геттер selfHold у ${m}`);
@@ -161,6 +167,7 @@ test('меню: задача на передышке — «Передышка д
   assert.equal(fish.label, 'Первая по приоритету');
   const off = ctx.taskBoardRows(rt, { autoTasks: ['farm', 'fish'] }, { on: false }, t).find(r => r.key === 'farm'); assert.doesNotMatch(off.label, /Передышка/, 'бот остановлен — передышки нет');
   const legacy = ctx.selfHoldView({ selfHold: { ...rt.selfHold, task: null, mode: 'farm' } }, { zoneAuto: true }, t); assert.equal(legacy.key, 'auto');
-  assert.match(slice(popup, 'function workspaceState(', 'function taskBoardRows('), /holdNote = hold \? `Передышка\$\{hold\.key && AUTO_TASK_LABELS\[hold\.key\] \? ` «\$\{AUTO_TASK_LABELS\[hold\.key\]\}»` : ''\} до \$\{hold\.hm\}: \$\{hold\.why\}\. `/);
+  // 20.43 (доводка 21.10): в подсказке — все передышки (по задаче)
+  assert.match(slice(popup, 'function workspaceState(', 'function taskBoardRows('), /holdNote = selfHoldViews\(rt, d, now\)\.map\(hold => `Передышка\$\{hold\.key && AUTO_TASK_LABELS\[hold\.key\] \? ` «\$\{AUTO_TASK_LABELS\[hold\.key\]\}»` : ''\} до \$\{hold\.hm\}: \$\{hold\.why\}\. `\)\.join\(''\)/);
   assert.match(popup, /const MEM_SKIP = [^\n]*'wdSilent'/);
 });

@@ -71,7 +71,8 @@ const hasNative = (ch,x) => ch.activeSummon?.activeBuffs?.some(b => +b.skillId =
 // бафф пропускается на час (к РБ без него), без призыва тур РБ откладывается на 30 мин (Warlock без кота слаб; raid → raidBlocked).
 // Пропуск снимают новый Старт, смена настроек кота/класса, для призыва — живой кот в свежем полном снимке /character игры.
 const RAID_CONFIRM_MS = 120000, RAID_READ_FAST = 1500, RAID_READ_SLOW = 12000, RAID_READ_WAIT = 3000, RAID_SKIP_BUFF_MS = 3600000, RAID_HOLD_SUMMON_MS = 1800000;
-let raidReadAt = null;                 // {char, until} — следующее чтение /character во время ожидания
+let raidReadAt = null;                 // {char, until, fail} — следующее чтение /character во время ожидания (fail — после сбоя чтения)
+let raidFailMs = 0;                    // 20.43 (доводка 21.10): растущая пауза после сбоя чтения /character перед РБ: 1,5 → 3 → 6 → 12 с
 const raidWaitSince = new Map();       // вид ожидания → {at, last, said}: с какого момента ждём панель/призыв (перерыв > 30 с — заново)
 const raidSkip = () => { const S = env.rt.petRaidSkip; return S && S.char === charName() && S.classKey === raidClass() && S.settings === raidSettings() && S.kick === (+env.rt.manualKickAt || 0) ? S : null; };
 const buffSkipped = x => (raidSkip()?.buffs?.[x.effectId] || 0) > Date.now();
@@ -116,7 +117,8 @@ async function petPrepare(o = {}) {
     // 20.43 (разбор 21.10): отсрочка после двух неподтверждённых призывов — без GET и родной панели; тур ждёт сам (raid → raidBlocked)
     if (summonHeld()) return false;
     // 20.43: ожидание (подтверждение, MP/откат, панель) не перечитывает /character на каждом круге главного цикла
-    if (env.rt.petRaidPrep && raidReadAt?.char === charName() && Date.now() < raidReadAt.until) return true;
+    // 20.43 (доводка 21.10): и сбой чтения (401/429/5xx, HTML вместо JSON, чужой/боевой снимок) — тоже, даже до записи задачи petRaidPrep
+    if ((env.rt.petRaidPrep || raidReadAt?.fail) && raidReadAt?.char === charName() && Date.now() < raidReadAt.until) return true;
   }
   raidBusy = true;
   const who=charName(),epoch=env.leaseEpoch,kick=+env.rt.manualKickAt||0,key=raidClass(),settings=raidSettings();
@@ -129,6 +131,10 @@ async function petPrepare(o = {}) {
     if(J?.back&&env.nativePanelPath?.()==='/skill-panel.html'&&J.back!=='/skill-panel.html'&&valid())env.nativeNavigate?.(J.back);return false;};
   // 20.43: тур РБ — ожидание с редким чтением /character (raidReadAt); на Старте ожидание прежнее (каждый круг)
   const later=ms=>{if(!start)raidReadAt={char:who,until:Date.now()+ms};return true;};
+  // 20.43 (автономность, доводка 21.10): сбой чтения /character (исключение, d.error, HTML) и снимок не того героя/в бою/не того класса
+  // возвращали true без later(): loopGate спал 0,3 с и снова слал свой GET /character — 2–3 раза в секунду всё время сбоя, а при 429 это
+  // ещё и усиливало ограничение игры. Теперь растущая пауза 1,5 → 3 → 6 → 12 с; удачное чтение её сбрасывает. На Старте — как раньше
+  const failLater=()=>{if(start)return true;raidFailMs=Math.min(RAID_READ_SLOW,raidFailMs?raidFailMs*2:RAID_READ_FAST);raidReadAt={char:who,until:Date.now()+raidFailMs,fail:true};return true;};
   // 20.43: тур РБ, окончательный отказ от навыка — бафф пропускается на час, призыв откладывает тур на 30 мин; запись до снятия pending
   const raidGiveUp=async(P,note)=>{
     const now=Date.now(),old=raidSkip(),buffs=Object.fromEntries(Object.entries(old?.buffs||{}).filter(([,t])=>t>now));
@@ -145,7 +151,9 @@ async function petPrepare(o = {}) {
     if(!w||now-w.last>30000)raidWaitSince.set(k,w={at:now,last:now,said:false});w.last=now;return now-w.at>=RAID_CONFIRM_MS?w:null;};
   try {
     const data=await read('/character'),ch=data.character||data;
-    if(!valid()||ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return true;
+    if(!valid())return true;
+    if(ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return failLater();
+    if(!start){raidFailMs=0;if(raidReadAt?.fail)raidReadAt=null;}
     noteSnapshot(ch);
     let J=env.rt[jobKey];
     if(J&&(J.char!==who||J.classKey!==key)){await save(null);return true;}
@@ -237,7 +245,7 @@ async function petPrepare(o = {}) {
     if(!valid()||!button){if(valid())await save({...J,pending:null});return true;}
     if(!env.nativeFire?.(button.button)){await save({...J,pending:null});return true;}
     env.rec?.('B','суммон',tag+': '+P.name+(P.tries>1?' (повтор)':''));return true;
-  } catch (_) { if(valid())env.setStatus?.(tag+': не удалось подтвердить подготовку кота');return true; }
+  } catch (_) { if(!valid())return true;env.setStatus?.(tag+': не удалось подтвердить подготовку кота');return failLater(); }
   finally {raidBusy=false;}
 }
 // Таймаут сохранённой задачи Старта до чтения сервера: снимаем её без новой сверки (касты бесплатные).

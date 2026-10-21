@@ -17,7 +17,9 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
     await until(() => h.g.core('L2V7Modules.actions.canAct() && rt.dailyStart > 0'), 30000); await delay(3000);
     const r = await h.g.core("selfHoldStart('stall', 'Тест: нет прогресса 9 мин после 3 восстановлений', {}).then(r => r || 'none')");
     assert.equal(r, 'hold', await h.g.core('JSON.stringify({on, tabOwner, canAct: L2V7Modules.actions.canAct(), hold: rt.selfHold, status: rt.status})'));
-    assert.equal(await h.g.core('rt.selfHold && rt.selfHold.task'), 'farm');
+    // 20.43 (доводка 21.10): rt.selfHold — передышки по задаче ({задача: передышка}); проверка та же — передышка у фарма
+    assert.equal(await h.g.core("L2EngineCore.selfHoldList(rt).map(x => x.task).join()"), 'farm');
+    assert.equal(await h.g.core("Object.keys(rt.selfHold).join()"), 'farm');
     assert.equal(await h.g.core("L2EngineCore.selectedTask(cfg, rt)"), 'tasks', 'фарм на передышке — других задач нет, ожидание');
     await until(async () => /Передышка до \d\d:\d\d/.test(await board()), 20000);
     assert.match(await board(), /передышка до \d\d:\d\d: Тест: нет прогресса/);
