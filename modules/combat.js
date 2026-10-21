@@ -1156,10 +1156,16 @@ function weaponNeed(b) {
 // облачная сессия). Правая рука из GET /character игры (hook aug → rt.weaponAug.w = eq.l1, приходит и после каждого хода) другая
 // и не старше записи — записи не верим: навык не прячем, решает отказ сервера (unavailW), как до 20.43. Старше записи — верим записи:
 // свой POST набора крафтера (gamePost) мимо hook, rt.weaponAug догонит на первом GET игры (content.augNote освежает t при расхождении)
+// 20.44 (ревью): запись «надето» устарела — игра (свой GET /character, rt.weaponAug.w) показывает в руке другое, и не раньше записи:
+// оружие неизвестно (так же считают и спойл, и запрет умений по виду оружия)
+function combatWeaponLive() {
+  const w = combatWeapon(), live = env.rt.weaponAug;
+  return w && live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0) ? null : w;
+}
 function weaponBarred(b) {
   const need = weaponNeed(b); if (!need) return false;
-  const w = combatWeapon(), live = env.rt.weaponAug;
-  if (!w || live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0)) return false;
+  const w = combatWeaponLive();
+  if (!w) return false;
   const wt = wtKind(w.wt);
   return !!wt && !need.includes(wt);
 }
@@ -2801,6 +2807,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

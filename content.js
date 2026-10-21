@@ -6476,7 +6476,7 @@ L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_PO
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.loot = L2V7Factories.loot({ get weaponNow(){return ()=>L2V7Modules.combat?.combatWeapon?.()}, get roleNow(){return ()=>L2V7Modules.subclass?.role?.()}, get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch}, get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.loot = L2V7Factories.loot({ get weaponNow(){return ()=>L2V7Modules.combat?.combatWeaponLive?.()}, get roleNow(){return ()=>L2V7Modules.subclass?.role?.()}, get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch}, get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LOOT_RE() { return LOOT_RE; }, set LOOT_RE(value) { LOOT_RE = value; },
   get SPECIAL_RE() { return SPECIAL_RE; }, set SPECIAL_RE(value) { SPECIAL_RE = value; },
   get SPOIL_FAIL() { return SPOIL_FAIL; }, set SPOIL_FAIL(value) { SPOIL_FAIL = value; },

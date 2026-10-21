@@ -191,6 +191,15 @@ function classNote(prof, slot, lvl, slotProfs) {
     const patch = { classCur: { prof, slot: slot ?? cur.slot ?? null, t: Date.now() }, classSwT: Date.now(), faSnap: null, hudLong: {}, profQuest: null };
     for (const k of ['rbDpsOwner', 'rbLossKOwner']) if (env.rt[k] === cur.prof) patch[k] = prof;
     const rbStats = lossOwnerMove(env.rt.rbStats, new Map([[cur.prof, prof]])); if (rbStats) patch.rbStats = rbStats;
+    // 20.44 (ревью): у новой профессии уже есть память в тайнике (запоздалый ответ /character на миг вернул старую профессию —
+    // «смена класса» убрала туда настоящую память) — возвращаем её: своё в тайнике важнее, из живой — только недостающее
+    const left = env.rt.classStash?.[prof];
+    if (left && typeof left === 'object') {
+      const live = {}; for (const k of CLASS_KEYS) live[k] = patch[k] !== undefined ? patch[k] : env.rt[k] ?? null;
+      const m = memMerge(left, live, cur.prof, prof);
+      for (const k of CLASS_KEYS) if (k !== 'profQuest' && m[k] !== live[k]) patch[k] = m[k];
+      const st = { ...env.rt.classStash }; delete st[prof]; patch.classStash = st;
+    }
     env.setRt(patch);
     env.classSwitched?.();
     env.rec('B', 'класс', `профессия: ${profName(cur.prof)} → ${profName(prof)}${lvl ? ' ' + lvl + ' ур.' : ''} (тот же класс${slot != null ? ', слот ' + slot : ''}) · замеры скиллов, кота, зон и РБ сохранены; новые умения поставь на панель боя`);
