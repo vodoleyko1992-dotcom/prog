@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-22T08:55:00+10:00",
+  "author": "Claude",
+  "version": "20.44",
+  "flavor": "Chrome",
+  "request": "Быстрая сборка под хром (John 22.10, тред «Крафт ресурсов крафтером»)",
+  "includes": [
+    "PR #340: crafter kit (modules/crafterkit.js, cfg.crafterKit): RB tour/one RB/RB session/epics — one-handed mace + shield + golem (rank 1-2 Crystal D, higher Crystal C, tour stock 30->100); autofarm/farm on the spot/catacombs/campaign/resources — pike without golem",
+    "PR #340: 18 fixes from logs 21.10 13:21/13:30 (shield is not a weapon, shot grade swap, battle_skill_not_allowed, skill weapon type, crafter pike, Crush first with blunt, Festival with pike and after captcha, profession promotion keeps class memory, spoil only with Spoil skill, Hammer Crush on RB, magister unload abort, single RB list load, TvT window, learn keys)",
+    "PR #340: final review fixes — combat.combatWeaponLive for spoil, profession memory back from classStash"
+  ],
+  "archives": {
+    "/mnt/project-files/builds/l2wap-bot-v20.44.zip": { "bytes": 1614993, "sha256": "bf29ebbd42fbd11416f587580dc79559059133e13dcbdca8c766885cdd450e9c", "files": 67, "fileList": "20.43 list + modules/crafterkit.js" }
+  },
+  "checks": {
+    "nodeAllFiles": { "pass": 589, "fail": 0 },
+    "syntaxAllRuntimeJs": "PASS (52 files)",
+    "envcheck": "PASS",
+    "baseProfileNoAuth": true,
+    "zipEqualsSource": "all 67 files byte-identical (cmp)",
+    "manifestAndPopupRefsInZip": true,
+    "chromeZipload": { "version": "20.44", "cfgKeys": 208, "pageErrors": 0 },
+    "independentPackageAudit": { "result": "no blocker/major", "isolatedLoad": "popup 0 errors, crafterKit checkbox on, game page 34/34 modules, crafterkit.step present", "minorFixed": ["README-CHROME.txt said 20.41", "CHANGELOG-20.44 quoted 584 and 589"] },
+    "browserFromSource": {
+      "run": "20 scenarios, 3 in parallel, on the release tree (runtime = zip)",
+      "pass": 18,
+      "failedOnlyInParallel": { "v2043-subgo-browser": "Start before storage on=true under load; alone PASS" },
+      "failSameOnBase20_43": { "v2036-combat-scheduler-browser": "Stop cancels the waiting next turn", "v92-combat-menu-browser": "harness does not inject augment.js (L2Aug is not defined)" },
+      "list": ["v2043-own-craft", "v2043-subgo", "v2043-menu", "v2043-au-breather", "v2043-au-travel", "v2043-learn-reset", "v2043-notify-stop", "v2032-subclass-bag-startup", "v2031-pet-raid-prep", "v209-combat-contract", "v2039-combat-storage", "v207-no-crafter", "v207-warlord-weapon-proof", "v208-tyrant-weapon", "v90-story", "v1016-raid-tour-ui", "v2029-raid-fresh-start", "v2036-combat-scheduler", "v92-combat-menu", "v2014-quick-start"]
+    }
+  },
+  "notChecked": ["live game and l2wap.com", "browser scenarios that download public game files", "game answers to pike over shield, companion/dismiss, unequip slot l2, golem crystal on ranks 1-2", "Firefox (stays 20.43)"]
+}

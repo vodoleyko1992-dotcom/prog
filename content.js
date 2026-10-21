@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.43 — автономность: сверка перелёта и «передышка» вместо стопа; быстрые улучшения, свой крафт, смена саба =====
+// ===== L2wap Bot v20.44 — набор крафтера (булава+щит+голем в туре РБ, пика на фарме); разбор логов 21.10 13:21/13:30 =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -2058,7 +2058,7 @@ function farmCatOf(row) {
 // в базе был только счётчиком. Раз в сутки (или по кнопке): дроп и спойл 14 базовых ресурсов → FARM.res[имя].drop / .sp в формате farmRowParse
 const FARM_GUIDE_URL = '/game/farm-guide', FARM_GUIDE_EVERY = 24 * 3600000;
 let farmGuideBusy = false;
-// 20.44 (форум «Фарм ресурсов» обновлён 21.10): кроме resources[] игра отдаёт rareResources[] (Mold Lubricant/Hardener/Glue, Enria, Asofe,
+// 20.45 (форум «Фарм ресурсов» обновлён 21.10): кроме resources[] игра отдаёт rareResources[] (Mold Lubricant/Hardener/Glue, Enria, Asofe,
 // Thons, Maestro Mold — сырьё рецептов Maestro Holder/Craftsman Mold/Warsmith's Holder) и gradePieces[] (Weapon/Armor Piece, Accessory
 // Gemstone D–S) в том же формате sources[] — читаем и их, у каждого свой раздел (craftedResources/shopMaterials бот уже знает: MM_RECIPES/MM_SHOP)
 function farmGuideMerge(db, data) {

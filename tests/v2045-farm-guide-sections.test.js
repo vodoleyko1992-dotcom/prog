@@ -1,5 +1,5 @@
 'use strict';
-// 20.44 (форум «Фарм ресурсов» обновлён 21.10, ответ GET /game/farm-guide 21.10 22:48 — kb/data/game-farm-guide.json):
+// 20.45 (форум «Фарм ресурсов» обновлён 21.10, ответ GET /game/farm-guide 21.10 22:48 — kb/data/game-farm-guide.json):
 // кроме resources[] игра отдаёт rareResources[] и gradePieces[] в том же формате sources[] — бот кладёт их в FARM.res со своим разделом,
 // чтобы у редкого сырья рецептов (Mold Lubricant, Enria…) и у частей экипировки D–S появились точки фарма; меню ставит разделы по порядку игры.
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');

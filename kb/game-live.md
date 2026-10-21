@@ -15,7 +15,7 @@
 - **Новые разделы ответа:** `rareResources` 8 (Mold Lubricant, Mold Hardener, Maestro Mold — дроп 9 % ×1–4 с мобов 77–79 Monastery of Silence/Silent Valley; Mold Glue и Thons — Swamp of Screams/Varka 77–78; Enria — мобы 62 Frozen Labyrinth/Antharas' Lair; Asofe — 84 моба 52+ по 16 % ×1–3 (Forest of Mirrors, Blazing Swamp, Enchanted Valley); у Maestro Anvil Lock источников нет). `gradePieces` 15 (itemId 920001–920015: Weapon/Armor Piece и Accessory Gemstone D–S, только дроп ×1: D мобы 20 — 20 %, C 40 — 12 %, B 52 — 8 %, A 61 — 5 %, S 76 — 3 %). `craftedResources` 24 рецепта (`createItemLevel`, `mpCost`, `outputQuantity`, `ingredients`) — совпадают с `MM_RECIPES` в modules/mammon.js. `shopMaterials` 10 (Gemstone D–S 1 000/3 000/10 000/30 000/100 000, Crystal D–S 650/3 000/9 000/15 000/25 000) — совпадают с `MM_SHOP`.
 - **Спойл изменён:** базовые ресурсы спойлятся со всех мобов уровня ресурса до 80 (11.10: обычное сырьё только 3–35, Suede/Silver до 50, Stone of Purity до 60, Mithril до 75). С мобов 40+ шанс +5 %: Stem/Thread/Iron Ore/Coal/Charcoal/Animal Bone 55 → 60 %, Varnish/Animal Skin/Suede/Silver Nugget 48 → 53 %, Mithril/Stone of Purity 42 → 47 %, Oriharukon/Adamantite 36 → 41 %. Дроп не изменился (16/11/7/4 %).
 - `keyMaterials` 116 и `raidEquipment` 254 — без изменений. Телепорт к району — по-прежнему `POST /game/farm-guide/resource-teleport {teleportId, expectedRevision, expectedAdenaCost}`, 50 000 адены, с VIP бесплатно; переносит в район, не к мобу.
-- Бот (20.44) читает `rareResources` и `gradePieces` вместе с `resources` (content.farmGuideMerge).
+- Бот (20.45) читает `rareResources` и `gradePieces` вместе с `resources` (content.farmGuideMerge).
 
 ## Обновление 12.10 (повторный сбор, только GET)
 
