@@ -1440,3 +1440,8 @@
 
 - Скрин игрока 12:08 UTC: «Придбано Fishing Soulshot×250», окно «Магазин рыбака» висит. После клика «Купить» оплата ждёт сверки, а общий запрет кликов при неизвестной оплате (`fire` → `payments.blocked`) глотал «Закрыть». Теперь на странице рыбалки `#fishing-shop-close` и `#fishing-rod-select-close` разрешены (`paymentFreeClick`): закрытие окна оплату не отправляет.
 - Проверки: 440 Node-файлов PASS (новый v2016-fish-shop-close), node --check, envcheck. ZIP не собирался.
+
+### 22.10.2026 08:55 (UTC+10) — Claude — обновлённый форум «Фарм ресурсов»
+
+- Сделано: по анонсу игры прочитан `GET /game/farm-guide` (данные страницы форума). Новые разделы `rareResources` и `gradePieces` теперь попадают в базу фарма бота (content.farmGuideMerge), в меню — свои разделы после «Ресурсы». Рецепты и цены магазина совпали с MM_RECIPES/MM_SHOP. В игре спойл базовых ресурсов теперь со всех мобов, с 40+ на 5 % выше. kb: `game-farm-guide.json`, `raw/farm-guide.json`, раздел «Обновление 21.10» в `kb/game-live.md`.
+- Проверки: 590 Node-файлов PASS (новый v2045-farm-guide-sections), node --check, envcheck PASS. ZIP не собирался; в игре только один GET.

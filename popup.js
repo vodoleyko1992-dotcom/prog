@@ -858,7 +858,7 @@ const treeSig = {}, treeOpen = { farm: new Set(), recipe: new Set() };
 const BASIC_RES = /^(animal (bone|skin)|charcoal|coal|iron ore|mithril ore|oriharukon ore|silver nugget|adamantite nugget|stem|stone of purity|suede|thread|varnish|asofe|thons|enria|mold \w+|cokes|steel|leather|braided hemp|coarse bone powder|cord|metallic (fiber|thread)|crafted leather|high grade suede|compound braid|durable metal plate|metal hardener|oriharukon|mithril alloy|synthetic cokes|varnish of purity|artisan's frame|blacksmith's frame|crafter's frame|reorin|maestro (holder|anvil lock|mold)|warsmith's (holder|mold)|craftsman mold)$/i;
 const treeCat = r => r.cat || (BASIC_RES.test(String(r.name || '').trim()) ? 'Ресурсы' : 'Прочее');
 const treePath = (kind, r) => kind === 'farm' ? String(treeCat(r)).split(/\s*›\s*/) : [r.grade || 'Без грейда', r.group || 'Прочее'];
-const TREE_ORDER = ['Ресурсы', 'Кейматы', 'Шмот с РБ'];          // как на странице «Фарм ресурсов»; остальное — по алфавиту, «Прочее» в конце
+const TREE_ORDER = ['Ресурсы', 'Редкие материалы', 'Части экипировки', 'Кейматы', 'Шмот с РБ'];          // как на странице «Фарм ресурсов»; остальное — по алфавиту, «Прочее» в конце
 const treeRank = p => { const i = TREE_ORDER.findIndex(x => p.replace(/^[^\p{L}]+/u, '').startsWith(x)); return i >= 0 ? i : p === 'Прочее' ? 99 : 50; };
 // иконка: путь игры из базы (content.farmIconOf), у базовых ресурсов без неё — /icons/resources/basic/<имя>.jpg (так их рисует журнал боя)
 const treeIcon = (kind, r) => {

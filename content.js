@@ -2058,10 +2058,14 @@ function farmCatOf(row) {
 // в базе был только счётчиком. Раз в сутки (или по кнопке): дроп и спойл 14 базовых ресурсов → FARM.res[имя].drop / .sp в формате farmRowParse
 const FARM_GUIDE_URL = '/game/farm-guide', FARM_GUIDE_EVERY = 24 * 3600000;
 let farmGuideBusy = false;
+// 20.45 (форум «Фарм ресурсов» обновлён 21.10): кроме resources[] игра отдаёт rareResources[] (Mold Lubricant/Hardener/Glue, Enria, Asofe,
+// Thons, Maestro Mold — сырьё рецептов Maestro Holder/Craftsman Mold/Warsmith's Holder) и gradePieces[] (Weapon/Armor Piece, Accessory
+// Gemstone D–S) в том же формате sources[] — читаем и их, у каждого свой раздел (craftedResources/shopMaterials бот уже знает: MM_RECIPES/MM_SHOP)
 function farmGuideMerge(db, data) {
-  const list = Array.isArray(data?.resources) ? data.resources : [];
+  const secs = [['resources', 'Ресурсы'], ['rareResources', 'Редкие материалы'], ['gradePieces', 'Части экипировки D–S']];
+  const list = secs.flatMap(([k, cat]) => (Array.isArray(data?.[k]) ? data[k] : []).map(r => [r, cat]));
   let n = 0, sp = 0, dr = 0;
-  for (const r of list) {
+  for (const [r, cat] of list) {
     const name = String(r?.nameEn || '').trim(); if (!name || !Array.isArray(r.sources)) continue;
     const drop = [], spl = [];
     for (const x of r.sources) {
@@ -2071,7 +2075,7 @@ function farmGuideMerge(db, data) {
       (x.mode === 'spoil' ? spl : drop).push([mob, +x.mobLevel || 0, ch, a, b, tp, String(x.locationEn || '').trim()]);
     }
     const k = name.toLowerCase(), old = db.res[k] || {};
-    db.res[k] = { ...old, name: old.name || name, id: +r.itemId || old.id || 0, drop, sp: spl, spoil: spl.length, bosses: old.bosses || [], cat: old.cat || 'Ресурсы',
+    db.res[k] = { ...old, name: old.name || name, id: +r.itemId || old.id || 0, drop, sp: spl, spoil: spl.length, bosses: old.bosses || [], cat: old.cat || cat,
       icon: old.icon || (typeof r.iconUrl === 'string' && /^\/(?:icons|game\/item-icon|assets)\//.test(r.iconUrl) ? r.iconUrl.slice(0, 200) : ''), t: Date.now(), api: 1 };
     n++; dr += drop.length; sp += spl.length;
   }
