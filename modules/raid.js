@@ -1613,6 +1613,10 @@ async function rbHuntStep() {
     if (!isRbPage()) { env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return; }
     return rbListScan();
   }
+  // 20.43 (разбор 21.10): призыв кота перед РБ не подтвердился и после повтора (warlock.raidBlocked) — Warlock без кота слаб: тур ждёт
+  // отсрочку (фарм на месте, если разрешён; остальные задачи идут своим порядком), а не крутит выбор → «подготовлю снова» каждый круг
+  const petHold = env.warlock?.raidBlocked?.();
+  if (petHold) { await rbHuntPhase('wait', petHold); if (!active()) return; return rbIdleMap(`Тур РБ: ${petHold}`, active); }   // строку журнала пишет warlock
   const preparing = rbPreparationCandidates()[0];
   if (preparing) {
     await rbHuntPhase('prepare', `подготовка к живым РБ: банки, баффы, HP/MP и состав`);

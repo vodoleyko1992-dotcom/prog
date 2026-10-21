@@ -3083,7 +3083,9 @@ async function loopGate() {
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
   if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
-  if (rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
+  // 20.43 (разбор 21.10): ожидание подготовки кота перед РБ не держит круг, когда подошла запись на TvT или сам TvT: tvtStep стоит
+  // после loopGate, и на /skill-panel.html статус TvT иначе не освежался (idleTvtBreak сам перечитывает /game/tvt по своему расписанию)
+  if (rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
