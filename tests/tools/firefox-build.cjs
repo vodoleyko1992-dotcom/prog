@@ -12,7 +12,8 @@ ff.browser_specific_settings = {
   gecko_android: { strict_min_version: '128.0' }   // 128 — первая версия с content_scripts world:"MAIN" (hook.js)
 };
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'l2ff-')), dir = path.join(tmp, 'pkg');
-const skip = /^(tests|kb|docs|\.git|\.claude|__pycache__|node_modules)$|\.(zip|orig)$/;
+// 20.10: lite/ — отдельное облегчённое расширение (своя сборка tests/tools/lite-build.cjs), в основной пакет не входит
+const skip = /^(tests|kb|docs|lite|\.git|\.claude|__pycache__|node_modules)$|\.(zip|orig)$/;
 const copy = (s, d) => { fs.mkdirSync(d, { recursive: true }); for (const e of fs.readdirSync(s, { withFileTypes: true })) {
   if (skip.test(e.name)) continue; const a = path.join(s, e.name), b = path.join(d, e.name);
   if (e.isDirectory()) copy(a, b); else if (e.isFile()) fs.copyFileSync(a, b); } };
