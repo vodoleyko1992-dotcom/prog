@@ -2,6 +2,7 @@
 // Lite 1.3 (21.10, тред «Упрошенка под Дестра», John: «это сборка под БХ, а нужна под дестра»): Lite читал панель того класса,
 // что открыт в игре, и у героя с активным сабклассом Bounty Hunter показывал скиллы БХ. Теперь бот ведёт только Дестра/Титана
 // (Orc Fighter → Orc Raider → Destroyer → Titan): другой класс — ждёт и ничего не жмёт, панель для меню — только у Дестра.
+// Lite 1.5: и лучника (свой профиль) — проверки лука и профилей в tests/lite-archer.test.js.
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 const L = require('../lite/logic.js');
@@ -24,9 +25,11 @@ test('ветка Дестра: Orc Fighter → Orc Raider → Destroyer → Tita
 
 test('класс героя: БХ активен, Титан в слоте 2 — подсказка, какой слот переключить', () => {
   const slots = SLOTS(1).slots.filter(s => s.owned).map(s => ({ slot: s.slot, prof: s.profession, lvl: s.level }));
-  assert.deepEqual(L.heroClass('dwarf_bounty_hunter', slots, 1), { ok: false, name: 'Dwarf Bounty Hunter', alt: { slot: 2, name: 'Orc Titan', lvl: 76 } });
-  assert.deepEqual(L.heroClass('orc_titan', slots, 2), { ok: true, name: 'Orc Titan', alt: null });
-  assert.deepEqual(L.heroClass('human_arcana_lord', [], 0), { ok: false, name: 'Human Arcana Lord', alt: null }, 'другой герой без Дестра');
+  // 1.5: kind — чей профиль; alts — все слоты Дестра/лучника (здесь лучника нет)
+  const titan = { slot: 2, name: 'Orc Titan', lvl: 76, kind: 'destr' };
+  assert.deepEqual(L.heroClass('dwarf_bounty_hunter', slots, 1), { ok: false, kind: null, name: 'Dwarf Bounty Hunter', alt: titan, alts: [titan] });
+  assert.deepEqual(L.heroClass('orc_titan', slots, 2), { ok: true, kind: 'destr', name: 'Orc Titan', alt: null, alts: [] });
+  assert.deepEqual(L.heroClass('human_arcana_lord', [], 0), { ok: false, kind: null, name: 'Human Arcana Lord', alt: null, alts: [] }, 'другой герой без Дестра');
   assert.equal(L.heroClass('', null, null).ok, null, 'профессия не прочитана — не мешаем');
   assert.equal(L.slotRu(0), 'основной класс'); assert.equal(L.slotRu(2), 'сабкласс 2'); assert.equal(L.slotRu(null), 'класс');
 });
@@ -71,10 +74,12 @@ test('меню: предупреждение о другом классе; па�
   const pj = read('lite/popup.js'), html = read('lite/popup.html');
   assert.match(html, /<div id="cls" class="warn" hidden><\/div>/);
   assert.match(pj, /w\.hidden = hc\?\.ok !== false;/);
-  assert.match(pj, /const mine = L\.heroClass\(rt\.barCls \|\| rt\.char\?\.prof\)\.ok !== false;/);
+  // 1.5: панель — своего профиля (Дестр/лук), см. lite-archer.test.js
+  assert.match(pj, /const mine = P\.barCls \? L\.clsKind\(P\.barCls\) === view : view === L\.rtKind\(rt\) && L\.heroClass\(rt\.char\?\.prof\)\.ok !== false;/);
   // память 1.2.1: панель без barCls у героя, последним виденного как БХ, — чужая; панель Титана при активном БХ — своя
-  const mine = rt => L.heroClass(rt.barCls || rt.char?.prof).ok !== false;
+  const mine = (rt, view = 'destr') => { const P = L.profRt(rt, view); return P.barCls ? L.clsKind(P.barCls) === view : view === L.rtKind(rt) && L.heroClass(rt.char?.prof).ok !== false; };
   assert.equal(mine({ bar: [{ a: 'l2_254' }], char: { prof: 'dwarf_bounty_hunter' } }), false);
   assert.equal(mine({ bar: [{ a: 'l2_190' }], barCls: 'orc_titan', char: { prof: 'dwarf_bounty_hunter' } }), true);
   assert.equal(mine({ bar: [{ a: 'l2_190' }], barCls: '', char: { prof: '' } }), true);
+  assert.equal(mine({ bar: [{ a: 'l2_190' }], barCls: 'orc_titan', char: { prof: 'dwarf_bounty_hunter' } }, 'archer'), false, 'панель Титана — не лука');
 });

@@ -3,6 +3,8 @@
 // Меню пишет только настройки (lite.cfg) и разовые команды (lite.cmd); память бота (lite.rt) пишет вкладка игры.
 // Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): в игре другой класс — предупреждение; скиллы — только панель Дестра.
 // Lite 1.4 (21.10): то же меню — окном на странице игры (#dock), сворачивается в плавающую кнопку.
+// Lite 1.5 (21.10, John: «отдельный профиль на дестра, отдельный профиль на лука»): вкладки профилей «Дестр» и «Лук» — у каждого
+// свои место, лимит, TvT, скиллы и «Ещё»; открыт профиль активного в игре класса, другой можно настроить заранее.
 'use strict';
 if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
 // 1.4: меню в окне на странице игры (bot.js, кнопка «—» сворачивает его в плавающую «Lite»): во всю ширину окна; странице — «готово»,
@@ -10,18 +12,23 @@ if (location.hash === '#tab') document.documentElement.classList.add('tab');   /
 if (location.hash === '#dock') { document.documentElement.classList.add('dock'); try { parent.postMessage({ __l2liteDock: 'ready' }, '*'); } catch (e) {} }
 const L = globalThis.L2Lite;
 const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
-const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
 const $ = id => document.getElementById(id);
-let cfg = { ...DEF_CFG }, rt = {};
+// RAW — lite.cfg как есть; cfg — настройки открытого в меню профиля; pick — профиль, выбранный вкладкой (null — активный в игре).
+let RAW = {}, cfg = L.profCfg({}, 'destr'), rt = {}, pick = null;
+const kindAct = () => L.clsKind(rt.char?.prof) || L.rtKind(rt);
+const kindView = () => pick || kindAct();
+const syncCfg = () => { cfg = L.profCfg(RAW, kindView()); };
 const tm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 const hm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 const cmdId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 // Запись по одному полю: в хранилище всегда свежие настройки + это поле (два меню не затирают друг друга целиком).
+// Поле профиля пишется в профиль, открытый в меню (L.profPatch), on — общий.
 async function save(patch, cmd) {
+  const kind = kindView();                         // профиль — на момент правки (вкладку могли сменить, пока читаем хранилище)
   const cur = (await chrome.storage.local.get(K_CFG))[K_CFG] || {};
-  cfg = { ...DEF_CFG, ...cur, ...patch };
-  await chrome.storage.local.set(cmd ? { [K_CFG]: cfg, [K_CMD]: { id: cmdId(), type: cmd, t: Date.now() } } : { [K_CFG]: cfg });
+  RAW = L.profPatch(cur, kind, patch); syncCfg();
+  await chrome.storage.local.set(cmd ? { [K_CFG]: RAW, [K_CMD]: { id: cmdId(), type: cmd, kind, t: Date.now() } } : { [K_CFG]: RAW });
   paint();
 }
 const clampNum = (v, lo, hi, d) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -38,12 +45,18 @@ function paintStatus() {
   $('hero').textContent = c && c.name ? `${c.name}${c.lvl ? ', ' + c.lvl + ' ур.' : ''}${prof ? ' · ' + prof : ''}` : '';
   const hc = c && c.name ? L.heroClass(c.prof, c.slots, c.slot) : null, w = $('cls');
   w.hidden = hc?.ok !== false;
-  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана: `
-    + (hc.alt ? `переключите в игре ${L.slotRu(hc.alt.slot)} на ${hc.alt.name}${hc.alt.lvl ? ' (' + hc.alt.lvl + ' ур.)' : ''}.` : 'войдите в игру героем-Дестром или переключите сабкласс на Дестра/Титана.')
+  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника: `
+    + (hc.alts?.length ? `переключите в игре класс на ${hc.alts.map(a => `${a.name} (${L.slotRu(a.slot)}${a.lvl ? ', ' + a.lvl + ' ур.' : ''})`).join(' или ')}.`
+      : 'войдите в игру Дестром/Титаном или лучником либо переключите на него сабкласс.')
     + ' Пока активен другой класс, бот ничего не жмёт.' : '';
-  const k = rt.k?.kills || 0, lim = +cfg.killLimit || 0;
+  paintProfs();
+  const P = L.profRt(rt, kindView()), k = P.kills, lim = +cfg.killLimit || 0;
   $('kills').textContent = lim > 0 ? `${k} / ${lim}${k >= lim ? ' ✔' : ''}` : String(k);
-  $('now').textContent = rt.zone ? `Место охоты: ${rt.zone.name}` : cfg.on ? '' : 'Место охоты запомнится при Старте';
+  // 1.5: у лука — стрелы в сумке (бот их не покупает; кончились — охота стоит до новых).
+  const arw = $('arw'), atxt = L.arrowsText(rt.char?.arrows), out = kindView() === 'archer' && L.rtKind(rt) === 'archer' && (rt.arrowOut || rt.arrowNote);
+  arw.hidden = kindView() !== 'archer' || (!atxt && !out && !(rt.char?.arrows && L.clsKind(rt.char?.prof) === 'archer'));
+  arw.textContent = out ? `⚠ Нет стрел — охота стоит${atxt ? ' (в сумке: ' + atxt + ')' : ''}` : atxt ? `Стрелы: ${atxt}` : 'Стрел в сумке нет';
+  $('now').textContent = P.zone ? `Место охоты: ${P.zone.name}` : cfg.zone ? `Место охоты: ${cfg.zoneName || cfg.zone}` : cfg.on && kindView() === L.rtKind(rt) ? '' : 'Место охоты запомнится при Старте';
   const V = rt.tvt;
   let tv = '';
   if (cfg.tvt && V) {
@@ -79,17 +92,33 @@ function paintZone() {
   sel.value = want;
   sel.title = locs.length ? '' : 'Список локаций появится, когда бот откроет игру';
 }
+// 1.5: вкладки профилей. Активный в игре класс помечен «в игре»; выбор вкладки живёт, пока открыто меню.
+function paintProfs() {
+  const act = kindAct(), view = kindView(), inGame = L.clsKind(rt.char?.prof);
+  for (const b of $('profs').querySelectorAll('button')) {
+    const k = b.dataset.kind;
+    b.classList.toggle('sel', k === view);
+    b.setAttribute('aria-selected', String(k === view));
+    b.querySelector('i').textContent = k === inGame ? ' · в игре' : '';
+  }
+  $('profNote').textContent = view === act
+    ? (inGame ? `Бот работает по этому профилю: в игре ${view === 'archer' ? 'лучник' : 'Дестр'}.` : 'Последний профиль, по которому работал бот.')
+    : `Профиль ${view === 'archer' ? 'лука' : 'Дестра'} — бот возьмёт его сам, когда в игре станет активен ${view === 'archer' ? 'лучник' : 'Дестр/Титан'}. Здесь можно настроить его заранее.`;
+}
 function paintSkills() {
   // Панель другого класса (память 1.2.1 у сабкласса БХ) не показываем: rt.barCls — класс, у которого она прочитана.
-  const mine = L.heroClass(rt.barCls || rt.char?.prof).ok !== false;
-  const box = $('skills'), bar = mine ? (rt.bar || []).filter(x => x && x.a && x.a !== 'attack') : [];
-  if (!bar.length) { box.replaceChildren(el('p', { className: 'hint', textContent: L.heroClass(rt.char?.prof).ok === false
-    ? 'Скиллы появятся, когда в игре будет активен Дестр/Титан: бот прочитает его панель.' : 'Откройте игру с включённым расширением — бот прочитает панель скиллов Дестра.' })); box.dataset.sig = ''; return; }
+  // 1.5: у Дестра и у лука панели свои (L.profRt: активный профиль — в rt, другой — в rt.by).
+  const view = kindView(), P = L.profRt(rt, view);
+  const mine = P.barCls ? L.clsKind(P.barCls) === view : view === L.rtKind(rt) && L.heroClass(rt.char?.prof).ok !== false;
+  const box = $('skills'), bar = mine ? (P.bar || []).filter(x => x && x.a && x.a !== 'attack') : [];
+  const who = view === 'archer' ? 'лучник' : 'Дестр/Титан';
+  if (!bar.length) { box.replaceChildren(el('p', { className: 'hint', textContent: L.clsKind(rt.char?.prof) !== view
+    ? `Скиллы появятся, когда в игре будет активен ${who}: бот прочитает его панель.` : `Откройте игру с включённым расширением — бот прочитает панель скиллов (${who}).` })); box.dataset.sig = ''; return; }
   const rows = bar.map(x => {
-    const info = L.skillInfo(x.a, x.n), ch = (cfg.skills || {})[info.key], use = L.skillUse(info, ch);
+    const info = L.skillInfo(x.a, x.n), ch = (cfg.skills || {})[info.key], use = L.skillUse(info, ch, view);
     return { key: info.key, name: x.n || info.name, use, known: info.known };
   });
-  const sig = JSON.stringify(rows.map(r => [r.key, r.name, r.use.on, r.use.type]));
+  const sig = view + JSON.stringify(rows.map(r => [r.key, r.name, r.use.on, r.use.type]));
   if (box.dataset.sig === sig) return;
   box.dataset.sig = sig;
   box.replaceChildren(...rows.map(r => {
@@ -102,9 +131,11 @@ function paintSkills() {
     return row;
   }));
 }
-function paint() { paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills();
-  for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (document.activeElement !== $(k)) $(k).value = cfg[k];
-  if (document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;
+let painted = '';                                  // 1.5: чей профиль на экране — сменился, поля перерисовываем и под курсором
+function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills();
+  const fresh = painted !== cfg.kind; painted = cfg.kind;
+  for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (fresh || document.activeElement !== $(k)) $(k).value = cfg[k];
+  if (fresh || document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;
   $('tvt').checked = !!cfg.tvt;
   $('fastTurn').checked = cfg.fastTurn !== false;
   $('ver').textContent = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
@@ -127,6 +158,12 @@ $('skills').addEventListener('change', e => {
   skills[key] = { on: e.target.tagName === 'SELECT' ? type !== 'other' : on && type !== 'other', type };
   save({ skills });
 });
+$('profs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-kind]'); if (!b) return;
+  pick = b.dataset.kind === kindAct() ? null : b.dataset.kind;
+  $('skills').dataset.sig = '';
+  paint();
+});
 $('dl').onclick = () => {
   const txt = (rt.log || []).map(x => `${new Date(x.t).toLocaleString('ru')}  ${x.x}`).join('\n');
   const a = document.createElement('a');
@@ -137,9 +174,9 @@ $('dl').onclick = () => {
 
 chrome.storage.onChanged.addListener((ch, area) => {
   if (area !== 'local') return;
-  if (ch[K_CFG]) cfg = { ...DEF_CFG, ...(ch[K_CFG].newValue || {}) };
+  if (ch[K_CFG]) RAW = ch[K_CFG].newValue || {};
   if (ch[K_RT]) rt = ch[K_RT].newValue || {};
   if (ch[K_CFG] || ch[K_RT]) paint();
 });
-chrome.storage.local.get([K_CFG, K_RT]).then(s => { cfg = { ...DEF_CFG, ...(s[K_CFG] || {}) }; rt = s[K_RT] || {}; paint(); });
+chrome.storage.local.get([K_CFG, K_RT]).then(s => { RAW = s[K_CFG] || {}; rt = s[K_RT] || {}; paint(); });
 setInterval(paintStatus, 5000);

@@ -3,6 +3,7 @@
 // только нужные поля по белому списку: герой (уровень, локация, HP/MP, счётчик убийств), откаты боя, TvT, антибот.
 // Заголовки, токены, пароли и тела запросов целиком наружу не уходят. Работу игры не меняет: ответ отдаётся как был —
 // кроме «быстрого удара» (Lite 1.2, решение John 21.10 «Разрешаю», «по умолчанию вкл»; выключатель в «Ещё»), см. fastTake ниже.
+// Lite 1.5: ещё число стрел в сумке (лучник) и выстрелы под именем игры в быстром ударе.
 (() => {
   if (window.__l2liteHook) return;
   window.__l2liteHook = 1;
@@ -40,7 +41,17 @@
       slot: num(c.classSlots && c.classSlots.activeSlot),
       slots: Array.isArray(c.classSlots && c.classSlots.slots) ? c.classSlots.slots.slice(0, 4).filter(s => s && typeof s === 'object' && s.owned === true)
         .map(s => ({ slot: num(s.slot), prof: str(s.profession, 60) || '', lvl: num(s.level) })) : undefined,
+      // Lite 1.5 (лучник): сколько стрел в сумке — по номерам стрел (тред «Изучение лука» 21.10: лук их требует, слота стрел нет).
+      arrows: arrowsOf(c),
     };
+  }
+  const ARROWS = [17, 1341, 1342, 1343, 1344, 1345];
+  function arrowsOf(c) {
+    const st = c.inventory && typeof c.inventory === 'object' && Array.isArray(c.inventory.stacks) ? c.inventory.stacks : null;
+    if (!st) return undefined;
+    const r = {};
+    for (const x of st.slice(0, 2000)) { const id = x && num(x.itemId), q = x && num(x.qty); if (ARROWS.includes(id) && q > 0) r[id] = (r[id] || 0) + q; }
+    return r;
   }
   // Откаты боя — ровно те поля, которые читает battle-cooldown.js.
   const CD_KEYS = ['serverNowMs', 'nowMs', 'globalCooldownUntilMs', 'blockedBy', 'globalRemainingMs', 'remainingMs', 'cooldownUntilMs', 'readyAtMs',
@@ -112,7 +123,8 @@
   // в середине боя снимаем hotbarStale, если свой GET /character игры был не позже 5 с назад — персонаж всё равно обновляется
   // не реже раза в 5 с. Победа/поражение/PvP/конец боя/банки/баффы/стойки, TvT и ручные клики игрока — как было.
   let charT = 0;
-  const FAST_ACT = /^(?:attack|l2_\d+)$/;
+  // 1.5: выстрелы лучника игра шлёт именем (power_shot, double_shot, stun_shot) — их метку ставит logic.js fastHit по таблице.
+  const FAST_ACT = /^(?:attack|l2_\d+|[a-z]+_shot)$/;
   const fastTake = (u, method, req) => { try {
     if (method !== 'POST' || u.pathname !== '/game/battle/action') return false;
     const h = document.documentElement, m = String((h && h.dataset && h.dataset.l2liteFast) || ''), i = m.lastIndexOf('|');

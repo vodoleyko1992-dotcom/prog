@@ -48,9 +48,18 @@ test('без метки Lite, метка основного бота, чужое
   assert.equal((await p.act('l2_190', 'attack')).delta.hotbarStale, true, 'метка другого действия');
   assert.equal((await p.act('battle_potion_use')).delta.hotbarStale, true, 'банка');
   assert.equal((await p.act('power_smash')).delta.hotbarStale, true, 'именованный actionId — как в основном боте, не трогаем');
+  assert.equal((await p.act('soul_of_sagittarius')).delta.hotbarStale, true, 'бафф лучника под именем игры');
   p.dataset.l2liteFast = 'attack|' + (1e9 - 2000);
   assert.equal((await p.act('attack', null)).delta.hotbarStale, true, 'метка старше 1,5 с');
   assert.equal(p.dataset.l2liteFastN, undefined);
+});
+
+test('1.5: выстрел лучника под именем игры (метка Lite) — hotbarStale снят', async () => {
+  const p = page();
+  p.routes.set('/character', {}); await p.call('/character');
+  p.routes.set('/game/battle/action', mid());
+  assert.equal((await p.act('double_shot')).delta.hotbarStale, undefined);
+  assert.equal((await p.act('power_shot', null)).delta.hotbarStale, true, 'выстрел игрока руками');
 });
 
 test('GET /character игры старше 5 с — игре даём обновить персонажа', async () => {
@@ -86,6 +95,12 @@ test('метку получают только обычная атака и из
   assert.equal(L.fastHit(sl('l2_440', 'Braveheart')), false, 'лечение');
   assert.equal(L.fastHit(sl('battle_trance', 'Battle Trance')), false, 'транс');
   assert.equal(L.fastHit(sl('power_smash', 'Power Smash')), false, 'именованный actionId');
+  // 1.5: выстрелы лучника приходят именем игры — тоже известный удар (тред «Изучение лука» 21.10)
+  assert.equal(L.fastHit(sl('power_shot', 'Power Shot')), true);
+  assert.equal(L.fastHit(sl('double_shot', 'Double Shot')), true);
+  assert.equal(L.fastHit(sl('stun_shot', 'Stun Shot')), true);
+  assert.equal(L.fastHit(sl('soul_of_sagittarius', 'Soul of Sagittarius')), false, 'бафф лучника');
+  assert.equal(L.fastHit(sl('rapid_shot', 'Rapid Shot')), false, 'Rapid Shot — бафф, хоть и «_shot»');
   assert.equal(L.fastHit(sl('l2_9999', 'Новый удар — урон')), false, 'незнакомый скилл');
   assert.equal(L.fastHit(sl('l2_94', 'Rage', { on: true, type: 'attack' })), false, 'игрок сменил тип баффа на удар');
   assert.equal(L.fastHit({ type: 'item', pot: 'hp', action: '' }), false, 'банка');
@@ -105,10 +120,10 @@ test('бот: метка только перед кликом обычного �
   assert.match(bot, /fastMark\(!tvt && cfg\.fastTurn !== false && L\.fastHit\(s\) \? s\.action : ''\);\n\s+if \(!fire\(s\.b, g\)\) \{ fastMark\(''\); return false; \}/);
   assert.match(bot, /if \(!st\) \{[^\n]*\n\s+fastMark\(''\);/);
   assert.match(bot, /ds\.l2liteFast = a \+ '\|' \+ Date\.now\(\)/);
-  assert.match(bot, /maxDeaths: 3, fastTurn: true \}/, 'по умолчанию ВКЛ');
+  assert.equal(L.DEF_PROF.fastTurn, true, 'по умолчанию ВКЛ (1.5: умолчания профиля — в logic.js)');
+  assert.equal(L.profCfg({}, 'archer').fastTurn, true); assert.equal(L.profCfg({ fastTurn: false }, 'destr').fastTurn, false);
   assert.match(bot, /if \(d\.me && ok && !d\.err\) \{ hudMark\(\); BME = \{ \.\.\.d\.me, t \}; \}/);
   assert.match(bot, /return L\.meMerge\(/);
-  assert.match(read('lite/popup.js'), /maxDeaths: 3, fastTurn: true \}/);
   assert.match(read('lite/popup.js'), /\$\('fastTurn'\)\.checked = cfg\.fastTurn !== false;/);
   assert.match(read('lite/popup.js'), /\$\('fastTurn'\)\.onchange = e => save\(\{ fastTurn: e\.target\.checked \}\);/);
   assert.match(read('lite/popup.html'), /<input id="fastTurn" type="checkbox">/);

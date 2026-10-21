@@ -9,17 +9,20 @@
 // Lite 1.3 (21.10, John: «это сборка под БХ, а нужна под дестра»): Lite читал панель того класса, что открыт в игре, — у героя
 // с активным сабклассом Bounty Hunter меню показывало скиллы БХ. Теперь бот ведёт только Дестра/Титана: другой класс — ждёт
 // и ничего не жмёт, в меню предупреждение и панель Дестра (rt.barCls — с какого класса она прочитана).
+// Lite 1.5 (21.10, John: «есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный профиль на лука»):
+// ведёт и лучника; у Дестра и лука свои настройки (lite.cfg p.destr / p.archer, L.profCfg) и своя память — место охоты, счётчик,
+// панель (активный профиль в rt, другой в rt.by). Сменили в игре класс Дестр ↔ лук — бот сам переключает профиль (profSync).
 (() => {
   'use strict';
   if (window.__l2lite) return;
   window.__l2lite = 1;
   const L = globalThis.L2Lite, CDM = globalThis.L2BattleCooldown;
   const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
-  const DEF_CFG = { on: false, zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
   const DEF_RT = { k: { kills: 0 }, zone: null, status: '', statusT: 0, log: [], deaths: [], revive: null, goZone: '', tpTry: [], zoneBlockT: 0,
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
-    char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0 };
-  let cfg = { ...DEF_CFG }, rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
+    char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0, by: {}, arrowOut: null, arrowNote: 0, arrowLow: 0 };
+  // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
+  let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
   // ---------- мелочи ----------
   const $ = s => document.querySelector(s);
@@ -79,29 +82,35 @@
     if (prev.killLimit !== cfg.killLimit) setRt({ limitNoted: 0 });
   }
   // Команды меню (один раз каждая): start — новая точка отсчёта счётчика (убитое без бота не считаем), reset — счётчик в 0.
+  // 1.5: Старт заново запоминает место охоты и у спящего профиля (при его включении — выбранное в нём или где стоит герой);
+  // reset — счётчик того профиля, что открыт в меню (c.kind).
   function applyCmd(c) {
     if (!c || typeof c !== 'object' || !c.id || c.id === rt.cmdDone || !owner) return;
+    const kind = L.rtKind(rt), pr = `${L.KIND_RU[kind]}: `;
     if (c.type === 'start') {
-      setRt({ cmdDone: c.id, k: { ...(rt.k || {}), lastK: null }, revive: null, goZone: '', tpTry: [], zoneBlockT: 0, deaths: [], limitNoted: 0,
+      const by = Object.fromEntries(Object.entries(rt.by || {}).map(([k, v]) => [k, { ...(v || {}), zone: null, limitNoted: 0 }]));
+      setRt({ cmdDone: c.id, k: { ...(rt.k || {}), lastK: null }, revive: null, goZone: '', tpTry: [], zoneBlockT: 0, deaths: [], limitNoted: 0, by, arrowOut: null, arrowNote: 0,
         zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null });
-      log(`▶ Старт: ${cfg.zone ? 'место охоты «' + (cfg.zoneName || cfg.zone) + '»' : 'охочусь там, где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов' : 'без лимита мобов'}, TvT ${cfg.tvt ? 'вкл.' : 'выкл.'}`);
+      log(`▶ Старт (профиль «${L.KIND_RU[kind]}»): ${cfg.zone ? 'место охоты «' + (cfg.zoneName || cfg.zone) + '»' : 'охочусь там, где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов' : 'без лимита мобов'}, TvT ${cfg.tvt ? 'вкл.' : 'выкл.'}`);
       SNAP && onSnapZone(SNAP);
     } else if (c.type === 'reset') {
-      setRt({ cmdDone: c.id, k: { ...(rt.k || {}), kills: 0, lastK: null }, limitNoted: 0 });
-      log('счётчик мобов сброшен');
+      const k = L.KINDS.includes(c.kind) ? c.kind : kind;
+      if (k === kind) setRt({ cmdDone: c.id, k: { ...(rt.k || {}), kills: 0, lastK: null }, limitNoted: 0 });
+      else setRt({ cmdDone: c.id, by: { ...(rt.by || {}), [k]: { ...((rt.by || {})[k] || {}), kills: 0, limitNoted: 0 } } });
+      log(`${k === kind ? pr : L.KIND_RU[k] + ': '}счётчик мобов сброшен`);
     } else setRt({ cmdDone: c.id });
     void flushRt();
   }
   async function load() {
     const s = await chrome.storage.local.get([K_CFG, K_RT, K_CMD]);
-    cfg = { ...DEF_CFG, ...(s[K_CFG] || {}) }; rt = { ...DEF_RT, ...(s[K_RT] || {}) };
+    RAW = s[K_CFG] || {}; rt = { ...DEF_RT, ...(s[K_RT] || {}) }; cfg = L.profCfg(RAW, kindNow());
     ready = true;
     return s[K_CMD];
   }
   chrome.storage.onChanged.addListener((ch, area) => {
     if (area !== 'local' || !ready) return;
     // Меню пишет настройки и команду одним set: сначала настройки (Старт берёт из них место охоты и цель), потом команда.
-    if (ch[K_CFG]) { const prev = cfg; cfg = { ...DEF_CFG, ...(ch[K_CFG].newValue || {}) }; onCfg(prev); }
+    if (ch[K_CFG]) { const prev = cfg; RAW = ch[K_CFG].newValue || {}; cfg = L.profCfg(RAW, kindNow()); onCfg(prev); }
     if (ch[K_CMD] && owner) applyCmd(ch[K_CMD].newValue);
     if (ch[K_RT] && !owner) rt = { ...DEF_RT, ...(ch[K_RT].newValue || {}) };
   });
@@ -115,6 +124,7 @@
       if (owner && !was) {
         const s = await chrome.storage.local.get([K_RT, K_CMD]);
         rt = { ...DEF_RT, ...(s[K_RT] || {}), ...(lastStatus ? { status: lastStatus } : {}) };
+        profSync();
         applyCmd(s[K_CMD]);
       }
       if (!owner && was) gen++;
@@ -213,9 +223,12 @@
     if (r.st !== rt.k) setRt({ k: r.st });
     if (r.add > 0) { progress(); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
-    const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null };
+    if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows);
+    const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null,
+      ...(L.clsKind(ch.prof) === 'archer' && ARW ? { arrows: ARW.by } : {}) };
     if (JSON.stringify(c) !== JSON.stringify(rt.char)) setRt({ char: c });
     // 1.3: панель для меню — только у Дестра/Титана (или если профессия не прочитана); панель БХ и других классов не запоминаем.
+    // 1.5: и у лучника — в память его профиля (profSync уже переключил rt на профиль активного класса).
     if (Array.isArray(ch.bar) && ch.bar.length && L.heroClass(ch.prof).ok !== false) {
       const old = barMine() ? rt.bar || [] : [];
       const bar = [...new Set(ch.bar)].map(a => ({ a, n: (ch.names || {})[a] || old.find(x => x.a === a)?.n || '' }));
@@ -254,15 +267,58 @@
   const zoneBlocked = () => Date.now() - (rt.zoneBlockT || 0) < 15 * 60000;
   const zoneWrong = () => { const S = snapFresh(60000), z = rt.zone; return !!(S && z && z.id && S.zone && !zoneIs(S.zone) && !S.inBattle && !S.dung && !zoneBlocked()); };
 
-  // ---------- класс героя (1.3): ведём только Дестра/Титана ----------
+  // ---------- стрелы (1.5): лук без стрел не стреляет (тред «Изучение лука» 21.10: стрелы берутся из сумки) ----------
+  // ARW — последние увиденные стрелы {by: {id: шт.}, n, t}: не каждый ответ игры несёт сумку.
+  let ARW = null;
+  const ARROW_LOW = 50;
+  function arrowsSeen(by) {
+    const n = Object.values(by).reduce((a, b) => a + (+b || 0), 0);
+    ARW = { by: { ...by }, n, t: Date.now() };
+    if (!owner || cfg.kind !== 'archer') return;
+    if (rt.arrowOut && n > (rt.arrowOut.n || 0)) { setRt({ arrowOut: null, arrowNote: 0 }); log(`стрелы есть (${n}) — продолжаю охоту`); }
+    // «мало стрел» — один раз, пока их снова не станет больше порога (rt.arrowLow переживает перезагрузку страницы)
+    if (n > 0 && n < ARROW_LOW && !rt.arrowLow) { setRt({ arrowLow: 1 }); log(`стрел осталось ${n} — скоро кончатся`); notify('arrows', 'L2wap Lite: мало стрел', `Осталось ${n} стрел.`); }
+    else if (n >= ARROW_LOW && rt.arrowLow) setRt({ arrowLow: 0 });
+  }
+  // Нет стрел: в сумке 0 или сервер отказал в выстреле из-за стрел (rt.arrowOut — сколько их было тогда; прибавилось — снова охотимся).
+  function arrowsOut() {
+    if (cfg.kind !== 'archer') return false;
+    const o = rt.arrowOut;
+    if (o && !(ARW && ARW.t > o.t && ARW.n > (o.n || 0))) return true;
+    return !!ARW && ARW.n === 0 && Date.now() - ARW.t < 600000;
+  }
+  function arrowWait() {
+    status('Нет стрел: положите в сумку стрелы под грейд лука — бот продолжит сам' + (cfg.tvt ? ' · TvT жду' : ''));
+    if (rt.arrowNote) return;
+    setRt({ arrowNote: Date.now() });
+    log('нет стрел — охоту остановил, жду стрелы в сумке (бот их не покупает)');
+    notify('arrows', 'L2wap Lite: нет стрел', 'Лучник без стрел не охотится. Положите стрелы в сумку — бот продолжит сам.');
+  }
+
+  // ---------- класс героя (1.3): ведём только Дестра/Титана; 1.5 — и лучника, у каждого свой профиль ----------
   function clsSet(name, prof, slot, slots) {
     if (typeof name !== 'string' || !name) return;
     CLS = { name: name.slice(0, 60), prof: typeof prof === 'string' ? prof.slice(0, 60) : '', slot: Number.isInteger(slot) ? slot : null,
       slots: Array.isArray(slots) ? slots : null, t: Date.now() };
+    profSync();
   }
   const heroCls = () => (CLS ? L.heroClass(CLS.prof, CLS.slots, CLS.slot) : null);
-  // Панель в памяти прочитана у Дестра (или класс тогда не был известен; память 1.2.1 — по герою в rt.char).
-  const barMine = () => L.heroClass(rt.barCls || rt.char?.prof).ok !== false;
+  // Чей профиль сейчас: активный в игре Дестр или лук; другой класс или класс ещё не прочитан — последний профиль в памяти.
+  const kindNow = () => (CLS && L.clsKind(CLS.prof)) || L.rtKind(rt);
+  // 1.5: в игре сменили Дестра на лука (или обратно) — настройки и память нового профиля; текущее действие бросаем (gen).
+  function profSync() {
+    const k = CLS && L.clsKind(CLS.prof);
+    if (!k || !ready) return;
+    if (cfg.kind !== k) cfg = L.profCfg(RAW, k);
+    if (!owner || k === L.rtKind(rt)) return;
+    const from = L.rtKind(rt);
+    setRt(L.profSwap(rt, k, cfg));
+    gen++;
+    log(`в игре ${L.profName(CLS.prof)} (${CLS.name}) — профиль «${L.KIND_RU[k]}» вместо «${L.KIND_RU[from]}»: ${rt.zone ? 'место охоты «' + rt.zone.name + '»' : 'место охоты — где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов (убито ' + (rt.k?.kills || 0) + ')' : 'без лимита мобов'}`);
+    void flushRt();
+  }
+  // Панель в памяти прочитана у класса этого профиля (или класс тогда не был известен; память 1.2.1 — по герою в rt.char).
+  const barMine = () => (rt.barCls ? L.clsKind(rt.barCls) === L.rtKind(rt) : L.heroClass(rt.char?.prof).ok !== false);
   let pullT = 0;
   async function heroPull() {                       // игра ещё не присылала героя на этой странице — спросим сами (раз в 5 с)
     if (Date.now() - pageT0 < 1500 || Date.now() - pullT < 5000) { await sleep(300); return; }
@@ -270,13 +326,14 @@
     await heroNow();
   }
   function clsWait(hc) {
-    const who = CLS.name, how = hc.alt ? `переключите в игре ${L.slotRu(hc.alt.slot)} на ${hc.alt.name}` : 'войдите в игру героем-Дестром или переключите сабкласс на Дестра/Титана';
-    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана: ${how}. Пока жду и ничего не жму`);
+    const who = CLS.name, alts = (hc.alts || []).map(a => `${a.name} (${L.slotRu(a.slot)})`).join(' или ');
+    const how = alts ? `переключите в игре класс на ${alts}` : 'войдите в игру Дестром/Титаном или лучником либо переключите на него сабкласс';
+    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника: ${how}. Пока жду и ничего не жму`);
     const sig = who + '|' + hc.name;
     if (rt.clsNote === sig) return;
     setRt({ clsNote: sig });
-    log(`активен ${hc.name} (${who}) — Lite только для Дестра/Титана: ничего не жму, жду${hc.alt ? ' ' + hc.alt.name + ' (' + L.slotRu(hc.alt.slot) + ')' : ' Дестра'}`);
-    notify('cls', 'L2wap Lite: нужен Дестр', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана.`);
+    log(`активен ${hc.name} (${who}) — Lite только для Дестра и лучника: ничего не жму, жду ${alts || 'Дестра или лучника'}`);
+    notify('cls', 'L2wap Lite: нужен Дестр или лук', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника.`);
   }
 
   // ---------- антибот: решает только человек ----------
@@ -403,7 +460,7 @@
       }
       const src = b.querySelector('img')?.getAttribute('src') || '';
       if (!action && !/\/skills\//i.test(src)) return;                 // снаряжение: смену оружия бот не жмёт
-      const info = L.skillUse(L.skillInfo(action, title), (cfg.skills || {})[skillKey(action, title)]);
+      const info = L.skillUse(L.skillInfo(action, title), (cfg.skills || {})[skillKey(action, title)], cfg.kind);
       const s = { ...info, b, action: action.toLowerCase(), i, ready: slotReady(b, info.key, action.toLowerCase()) };
       if (s.type === 'buff' || s.type === 'lowhp') s.active = !!(s.id && act.has(s.id));
       if (s.type === 'toggle') s.active = toggleState(s);
@@ -473,6 +530,11 @@
     if (!(end.status >= 200 && end.status < 300) || end.err) {
       // Отказ сервера: общий откат держит модель откатов (не слот); откат этого скилла, который сервер прислал, — тоже модель.
       const cdErr = end.by === 'global' || end.by === 'skill' || /cooldown|перезаряд/i.test(end.err);
+      // 1.5: сервер не дал выстрелить из-за стрел (нет или не того грейда) — охоту ставим на паузу до новых стрел.
+      if (!tvt && cfg.kind === 'archer' && /arrow|стріл|стрел/i.test(end.err || '')) {
+        if (!rt.arrowOut) { setRt({ arrowOut: { t: Date.now(), n: ARW ? ARW.n : 0 } }); log(`сервер не дал выстрелить: «${String(end.err).slice(0, 60)}» — стрел нет или они не под грейд лука`); }
+        return false;
+      }
       if (end.by === 'global') { if (CD.globalWait('') <= 0) block.set(key, Date.now() + 300); quick = true; return false; }
       if (cdErr && s.action && CD.skillWait(s.action, '') > 0) { quick = true; return false; }
       block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : cdErr ? 700 : 1200));
@@ -504,6 +566,7 @@
   // Почему не продолжать охоту цепочкой: цель выполнена, пора на TvT, герой ушёл из места охоты, PvE заблокирован.
   function stopFarm() {
     if (limitDone()) return 'limit';
+    if (arrowsOut()) return 'arrows';
     if (TVT_ACT) return 'tvt';
     if (zoneWrong()) return 'zone';
     if (abState() === 'blocked') return 'blocked';
@@ -549,6 +612,8 @@
     }
     if (sp && battleWarn !== sp.key + ':fight') { battleWarn = sp.key + ':fight'; log(`${sp.name || 'противник'}: ${(leaveN[sp.key] || 0) >= 2 ? 'выйти из боя не получилось' : 'почти добит'} — бьюсь`); }
     if (!mob) { if (Date.now() - pageT0 > 15000) { log('страница боя без моба 15 с — на карту'); await toMap(g); } else await sleep(200); return; }
+    // 1.5: лучник без стрел не стреляет — выходим из боя, как от босса (на карте бот ждёт стрелы).
+    if (arrowsOut()) { arrowWait(); sess.set('l2lite.left', { id: sp?.key || spawnId(), t: Date.now() }); await toMap(g); return; }
     if (!rowsDone) { rowsDone = true; await rowsAll(g); barFromDom(); }
     if (Date.now() - Math.max(lastActOk, pageT0) > 45000) { log('45 с ни одного принятого хода — выхожу на карту'); lastActOk = Date.now(); await toMap(g); return; }
     const opt = () => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot });
@@ -602,6 +667,7 @@
     if (zoneWrong()) { setRt({ goZone: rt.zone.id }); log(`герой в «${SNAP.zoneName || SNAP.zone}», место охоты — «${rt.zone.name}»: лечу обратно`); await go('/teleport.html'); return; }
     if (S?.locType === 'city') return outskirts(g);
     if (limitDone()) { status(`Цель выполнена: убито ${rt.k?.kills || 0} из ${cfg.killLimit}${cfg.tvt ? ' · жду TvT' : ''}`); progress(); await sleep(3000); return; }
+    if (arrowsOut()) { arrowWait(); progress(); await sleep(3000); return; }
     if (abState() === 'blocked') { status('PvE-фарм заблокирован игрой — жду'); progress(); await sleep(5000); return; }
     const me = meStats(), pct = me.maxHp > 0 ? me.hp * 100 / me.maxHp : 100;
     if (pct < 30 && (!restT0 || Date.now() - restT0 < 90000)) { restT0 = restT0 || Date.now(); status(`HP ${Math.round(pct)} % — отдыхаю перед боем`); progress(); await sleep(1500); return; }
