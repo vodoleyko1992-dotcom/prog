@@ -79,21 +79,81 @@ test('Маммон: уровень не виден, сырьё у Skye, цена
     : { name: 'Belt', lvl: 1, to: 5, lv: [{ L: 1, est: 0 }, { L: 2, est: 1 }], craft: [{ id: 1880, qty: 20 }] };
   assert.deepEqual(JSON.parse(JSON.stringify(M.C.wants().map(w => [w.id, w.n]))), [[1880, 2]]);
 });
+// ожидание сверки считается от момента обрыва: «прошло 20 с» = сдвигаем время обрыва в craftPending.t
+const aged = (M, ms = 20000) => { M.env.rt.craftPending = { ...M.env.rt.craftPending, t: Date.now() - ms }; };
 test('ответ на крафт не пришёл (обрыв/5xx) — повтора нет до сверки по сумке; сверка засчитывает или разрешает повтор', async () => {
   for (const fail of [async () => { throw Object.assign(new Error('aborted'), { name: 'AbortError' }); }, async () => ({ ok: false, status: 502, json: async () => ({}) })]) {
     let calls = 0; const M = make({ gamePost: async (p, b) => { calls++; return fail(); } }); M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }];
     M.env.hero = { revision: 77, inventory: { stacks: [{ itemId: 1880, qty: 3 }] } };
     assert.equal(await M.C.step(), true); assert.equal(calls, 1); assert.equal(M.env.rt.craftPending.have0, 3); assert.equal(M.env.rt.craftPending.rev, 77);
     assert.match(M.recs.join('\n'), /результат неизвестен/);
+    // ревью 21.10: 15 с ждём от момента обрыва, даже если шаг начался давно — ни GET, ни POST
+    const g = M.gets.length; assert.equal(await M.C.step(Date.now() + 20000), false); assert.equal(M.gets.length, g); assert.equal(calls, 1);
     // сервер скрафтил: revision другая, Steel 3 → 8
-    M.env.hero = { revision: 78, inventory: { stacks: [{ itemId: 1880, qty: 8 }] } };
+    aged(M); M.env.hero = { revision: 78, inventory: { stacks: [{ itemId: 1880, qty: 8 }] } };
     assert.equal(await M.C.step(Date.now() + 20000), true); assert.equal(calls, 1, 'сверка без нового POST');
     assert.equal(M.env.rt.craftPending, null); assert.equal(M.env.rt.craftMade.a, 5); assert.match(M.recs.join('\n'), /сверка: скрафчено Steel ×5/);
   }
+  // revision ушла вперёд, выход не вырос — старый запрос уже не применится: не скрафчен, повтор разрешён
   const M = make({ gamePost: async () => { throw new Error('Failed to fetch'); } }); M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }];
+  assert.equal(await M.C.step(), true); aged(M); M.env.hero = { revision: 78 };
+  assert.equal(await M.C.step(Date.now() + 20000), true); assert.equal(M.env.rt.craftPending, null, 'revision другая, выхода нет — не скрафчен');
+  assert.equal(M.env.rt.craftMade, undefined); assert.match(M.recs.join('\n'), /не скрафчен \(revision героя ушла вперёд/);
+});
+test('ревью 21.10: та же revision — повтор ТОГО ЖЕ запроса с прежней expectedRevision (поздний ответ сервера не даёт двойного крафта)', async () => {
+  // обрыв, потом сервер отвечает на повтор: ok — засчитано, новый крафт с новой revision не шлётся
+  let n = 0; const M = make({ gamePost: async (p, b) => { M.posts.push(b); if (n++ === 0) throw Object.assign(new Error('aborted'), { name: 'AbortError' }); return { ok: true, status: 200, json: async () => ({}) }; } });
+  M.posts = []; M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }];
+  assert.equal(await M.C.step(), true); aged(M); M.env.hero = { revision: 77 };
+  assert.equal(await M.C.step(Date.now() + 20000), true);
+  assert.equal(M.posts.length, 2); assert.deepEqual(M.posts[1], M.posts[0], 'тот же recipeCode/craftCount/expectedRevision 77');
+  assert.equal(M.env.rt.craftPending, null); assert.equal(M.env.rt.craftMade.a, 5);
+  // повтор получил 409 (старый запрос успел пройти) — сверка по выходу засчитывает, третьего POST нет
+  let k = 0; const R = make({ gamePost: async (p, b) => { R.posts.push(b); if (k++ === 0) throw Object.assign(new Error('aborted'), { name: 'AbortError' }); return { ok: false, status: 409, json: async () => ({}) }; } });
+  R.posts = []; R.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }]; R.env.hero = { revision: 77, inventory: { stacks: [] } };
+  assert.equal(await R.C.step(), true); aged(R);
+  assert.equal(await R.C.step(Date.now() + 20000), true); assert.equal(R.posts.length, 2); assert.ok(R.env.rt.craftPending, '409 на повтор — ещё неизвестно');
+  R.env.hero = { revision: 78, inventory: { stacks: [{ itemId: 1880, qty: 5 }] } };
+  assert.equal(await R.C.step(Date.now() + 40000), true); assert.equal(R.posts.length, 2); assert.equal(R.env.rt.craftMade.a, 5);
+  assert.match(R.recs.join('\n'), /сверка: скрафчено Steel ×5/);
+});
+test('ревью 21.10: стойкий 5xx — не чаще раза в 10 мин после 3 повторов, журнал не засыпается; подтверждённый «не скрафчен» — рецепт пропускаем 30 мин', async () => {
+  const M = make({ gamePost: async (p, b) => { M.posts.push(b); return { ok: false, status: 500, json: async () => ({}) }; } });
+  M.posts = []; M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }]; M.env.hero = { revision: 77 };
   assert.equal(await M.C.step(), true);
-  assert.equal(await M.C.step(Date.now() + 20000), true); assert.equal(M.env.rt.craftPending, null, 'revision та же — не скрафчен');
-  assert.equal(M.env.rt.craftMade, undefined); assert.match(M.recs.join('\n'), /не скрафчен \(герой не менялся\)/);
+  for (let i = 0; i < 3; i++) { aged(M); assert.equal(await M.C.step(Date.now() + 11 * 60000 * (i + 1)), true); }
+  assert.equal(M.posts.length, 4); assert.ok(M.posts.every(b => b.expectedRevision === 77)); assert.equal(M.env.rt.craftPending.tries, 3);
+  aged(M); assert.equal(await M.C.step(Date.now() + 60000 * 5), false, 'после 3 повторов следующая сверка — через 10 мин');
+  assert.ok(M.recs.length <= 2, 'строки сверки — через note() раз в 10 мин: ' + M.recs.length);
+  // revision ушла вперёд без выхода — не скрафчен; была ошибка сервера — рецепт пропускается, POST больше нет
+  aged(M); M.env.hero = { revision: 90 };
+  assert.equal(await M.C.step(Date.now() + 60 * 60000), true); assert.equal(M.env.rt.craftPending, null);
+  assert.match(M.recs.join('\n'), /рецепт пропускаю 30 мин/);
+  const n = M.posts.length; await M.C.step(Date.now() + 5000); assert.equal(M.posts.length, n, 'рецепт после 5xx пропущен');
+});
+test('ревью 21.10: отказ gamePost до отправки (Stop, смена поколения, PvP) — не «неизвестный результат», сверки нет', async () => {
+  for (const msg of ['action_cancelled', 'bot_inactive', 'pvp_defeat_pending']) {
+    const M = make({ gamePost: async () => { throw new Error(msg); } }); M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }];
+    assert.equal(await M.C.step(), false); assert.equal(M.env.rt.craftPending, undefined, msg); assert.doesNotMatch(M.recs.join('\n'), /результат неизвестен/);
+  }
+});
+test('ревью 21.10: список крафта меняется в фоне по одной строке — два быстрых ✕ / ✕ и «+» не возвращают удалённое', async () => {
+  const bgSrc = read('background.js'), a = bgSrc.indexOf('const LOCK_TTL ='), b = bgSrc.indexOf("chrome.storage.local.get('on').then(s => paintOn", a);
+  const state = { rt: { char: 'Warlock', craftQueue: [{ id: 'a', code: 'steel', n: 5 }, { id: 'b', code: 'cord', n: 3 }, { id: 'c', code: 'leather', n: 1 }], craftMade: { a: 2 } }, cfg: {}, on: false };
+  const chrome = { runtime: { getURL: p => 'chrome-extension://t/' + p }, storage: { local: { async get(keys) { const o = {}; for (const k of [].concat(keys)) if (Object.hasOwn(state, k)) o[k] = structuredClone(state[k]); return o; }, async set(o) { Object.assign(state, structuredClone(o)); } } } };
+  const bg = vm.createContext({ L2EngineCore: require('../engine-core.js'), chrome, console, Date, URL, crypto: { randomUUID: () => 'u' }, noteAlive() {} });
+  vm.runInContext(bgSrc.slice(a, b) + '\nthis.menuPatch=menuPatch;', bg);
+  const S = { url: 'chrome-extension://t/popup.html' }, mp = (edit, ch = 'Warlock') => bg.menuPatch({ rtPatch: {}, craftQueueEdit: edit, expectedChar: ch }, S);
+  const [r1, r2] = await Promise.all([mp({ action: 'remove', id: 'a' }), mp({ action: 'remove', id: 'b' })]);
+  assert.equal(r1.ok && r2.ok, true); assert.deepEqual(state.rt.craftQueue.map(x => x.id), ['c']);
+  await Promise.all([mp({ action: 'remove', id: 'c' }), mp({ action: 'add', row: { id: 'd', code: 'steel', nm: 'Steel', item: 1880, n: 7 } })]);
+  assert.deepEqual(state.rt.craftQueue.map(x => x.id), ['d']); assert.equal(state.rt.craftMade.a, 2, 'прогресс бота не тронут');
+  assert.equal((await mp({ action: 'remove', id: 'd' }, 'Other')).ok, false, 'другой герой — отказ');
+  assert.equal((await mp({ action: 'add', row: { id: 'e', code: 'steel', n: 0 } })).ok, false, 'неверная строка — отказ');
+  assert.equal((await bg.menuPatch({ rtPatch: {}, craftQueueEdit: { action: 'remove', id: 'd' } }, S)).ok, false, 'без героя меню — отказ');
+  assert.deepEqual(state.rt.craftQueue.map(x => x.id), ['d']);
+  const popup = read('popup.js');
+  assert.match(popup, /craftQueueEdit: edit, expectedChar: craftRt\.char/); assert.doesNotMatch(popup, /menuPatch\(\{ craftQueue:/);
 });
 test('обрыв GET книги/героя не роняет главный цикл: шаг возвращает false и ставит паузу', async () => {
   const M = make({ gameGet: async () => { throw Object.assign(new Error('signal is aborted'), { name: 'AbortError' }); } });

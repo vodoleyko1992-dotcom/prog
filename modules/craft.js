@@ -90,16 +90,51 @@ async function credit(now, p, how) {
   try { await env.invRefresh?.(); } catch (e) {}
 }
 // Ответ на POST не пришёл: игра могла скрафтить. Прежде чем крафтить снова — сверка по сумке (выход рецепта до и после) и revision героя.
-async function reconcile(now, char) {
-  const p = env.rt.craftPending;
-  const C = await readJson('/character'), c = C.j?.character || C.j, rev = c?.revision;
-  if (env.rt.char !== char || !env.on) return false;
-  if (rev == null || c?.name && c.name !== char) { later(now, MP_WAIT); note('pend', `сверка крафта ${p.nm}: герой не прочитан (${C.err || 'нет revision'}) — повторю через минуту, крафт не повторяю`); return false; }
-  const got = countOf(c, p.outId) - (+p.have0 || 0);
-  if (rev !== p.rev && got >= p.out) { await credit(now, p, 'сверка: скрафчено '); later(now, BUSY); return true; }
+// 20.43 (ревью 21.10): ждём PEND_WAIT от момента обрыва (не от начала шага). Та же revision — старый запрос ещё может дойти, поэтому
+// новый крафт не шлём: повторяем ТОТ ЖЕ запрос с прежней expectedRevision — из двух сервер примет только один (как повтор заброса
+// в рыбалке). Revision ушла вперёд — старый запрос уже не применится (409): выход вырос на партию — скрафчено, иначе — нет.
+// Повторяющийся 5xx/обрыв: после 3 повторов — раз в 10 мин; подтверждённый «не скрафчен» после 5xx — рецепт пропускаем 30 мин,
+// после обрыва связи — 5 мин (иначе сервер, который не отвечает на POST, получал бы новый крафт каждые 16 с).
+const pendNote = (p, txt, end) => note((end ? 'pendEnd' : 'pend') + p.code, txt);
+// отказ самого gamePost до отправки (Stop/замок, смена поколения, PvP, Life Stone, неизвестная оплата): запрос не ушёл — это не «неизвестно»
+const NOT_SENT = /^(?:bot_inactive|action_cancelled|pvp_defeat_pending|payment_unconfirmed|lifestone_session_active)$/;
+async function pendKeep(p, why) {
+  const tries = (+p.tries || 0) + 1, at = Date.now();
+  await setInfo({ craftPending: { ...p, tries, t: at, err: p.err || 1 } });
+  later(at, tries >= 3 ? NOTE_EVERY : PEND_WAIT);
+  pendNote(p, `${p.nm} ×${fmtA(p.out)}: повтор того же запроса — ${why}; результат неизвестен, новый крафт не шлю${tries >= 3 ? ', следующая сверка через 10 мин' : ''}`);
+  return true;
+}
+async function pendNot(p, why) {
+  const at = Date.now(), skip = p.err === 1 ? FAIL_SKIP : p.err ? IDLE : 0;
+  if (skip) S().fails[p.code] = at + skip;
   await setInfo({ craftPending: null });
-  env.rec('B', 'крафт', `сверка: ${p.nm} ×${fmtA(p.out)} не скрафчен${rev === p.rev ? ' (герой не менялся)' : ''} — можно повторить`);
-  later(now, BUSY); return true;
+  later(at, BUSY);
+  pendNote(p, `сверка: ${p.nm} ×${fmtA(p.out)} не скрафчен (${why}) — ${skip ? `рецепт пропускаю ${skip / 60000} мин` : 'можно повторить'}`, 1);
+  return true;
+}
+async function reconcile(char) {
+  const p = env.rt.craftPending;
+  if (Date.now() - (+p.t || 0) < PEND_WAIT) { later(+p.t || Date.now(), PEND_WAIT); return false; }
+  const C = await readJson('/character'), c = C.j?.character || C.j, rev = c?.revision;
+  const same = () => env.rt.craftPending?.code === p.code && env.rt.craftPending?.t === p.t;   // ту же сверку не сделала другая вкладка
+  if (env.rt.char !== char || !env.on || !same()) return false;
+  if (rev == null || c?.name && c.name !== char) { later(Date.now(), MP_WAIT); pendNote(p, `сверка крафта ${p.nm}: герой не прочитан (${C.err || 'нет revision'}) — повторю через минуту, крафт не повторяю`); return false; }
+  const got = countOf(c, p.outId) - (+p.have0 || 0);
+  if (rev !== p.rev) {
+    if (got >= p.out) { await credit(Date.now(), p, 'сверка: скрафчено '); later(Date.now(), BUSY); return true; }
+    return pendNot(p, 'revision героя ушла вперёд, выход рецепта не вырос');
+  }
+  if (env.canAct?.() === false || !env.tabOwner) return false;
+  let res = null, j = null;
+  try { res = await env.gamePost('/game/craft/materials', { recipeCode: p.code, craftCount: p.count, expectedRevision: p.rev }); j = await res.json().catch(() => null); }
+  catch (e) { if (NOT_SENT.test(e?.message || '')) { later(Date.now(), BUSY); return false; } return pendKeep(p, e?.name === 'AbortError' ? 'ответ не пришёл' : `обрыв (${e?.message || e})`); }
+  if (env.rt.char !== char || !same()) return false;
+  if (res.status === 409) { await setInfo({ craftPending: { ...p, t: Date.now() - PEND_WAIT } }); later(Date.now(), BUSY); return true; }   // revision сменилась — сверим выход
+  if (res.status >= 500) return pendKeep({ ...p, err: 1 }, `HTTP ${res.status}`);
+  if (!res.ok) return pendNot(p, `игра отказала — ${j?.messageRu || j?.messageUk || j?.error || 'HTTP ' + res.status}`);
+  delete S().fails[p.code];
+  await credit(Date.now(), p, 'скрафтил '); later(Date.now(), BUSY); return true;
 }
 async function step(now = Date.now()) {
   if (env.cfg.craftAuto !== true || !env.on || !env.tabOwner) return false;
@@ -108,7 +143,7 @@ async function step(now = Date.now()) {
   // тур РБ/эпики/РБ-сессия, служебный поход, неизвестная оплата: мана нужна там, крафт подождёт
   if (env.free && env.free() === false) return false;
   const char = env.rt.char;
-  if (env.rt.craftPending?.code) return reconcile(now, char);
+  if (env.rt.craftPending?.code) return reconcile(char);
   let mm = mammonWants();
   if (mm.bag) { let m = null; try { m = await env.invRefresh?.(); } catch (e) {} if (env.rt.char !== char || !env.on) return false; if (m) mm = mammonWants(); }
   const list = [...queueWants(), ...mm.list];
@@ -129,19 +164,21 @@ async function step(now = Date.now()) {
   if (env.rt.char !== char || !env.on) return false;
   if (rev == null) { later(now, 60000); return false; }
   const job = { char, code: p.r.code, nm: nm(p.r), count: p.count, out: p.out, outId: outId(p.r), have0: countOf(ch, outId(p.r)), rev, qid: p.w.qid || null, src: p.w.src, mp: p.mp };
-  const unknown = async why => {             // результат неизвестен: не повторяем, пока сверка по сумке не ответит
-    await setInfo({ craftPending: { ...job, t: now }, craftSay: { t: now, why: `${job.nm} ×${fmtA(job.out)}: ${why} — сверю по сумке, повтора нет` } });
-    env.rec('B', 'крафт', `${job.nm} ×${fmtA(job.out)}: ${why} — результат неизвестен, сверю по сумке перед повтором`);
-    later(now, PEND_WAIT); return true;
+  // результат неизвестен: не повторяем, пока сверка по сумке не ответит. err: 1 — 5xx, 2 — обрыв/нет ответа (пропуск после сверки 30/5 мин)
+  const unknown = async (why, err = 2) => {
+    const at = Date.now();                    // ожидание сверки — от момента обрыва, не от начала шага
+    await setInfo({ craftPending: { ...job, t: at, tries: 0, err }, craftSay: { t: at, why: `${job.nm} ×${fmtA(job.out)}: ${why} — сверю по сумке, повтора нет` } });
+    pendNote(job, `${job.nm} ×${fmtA(job.out)}: ${why} — результат неизвестен, сверю по сумке перед повтором`);
+    later(at, PEND_WAIT); return true;
   };
   let res = null, j = null;
   try { res = await env.gamePost('/game/craft/materials', { recipeCode: p.r.code, craftCount: p.count, expectedRevision: rev }); j = await res.json().catch(() => null); }
-  catch (e) { return unknown(e?.name === 'AbortError' ? 'ответ не пришёл' : `обрыв (${e?.message || e})`); }
-  if (res.status === 409) { later(now, 3000); return true; }      // revision устарела — сразу перечитаем
-  if (res.status >= 500) return unknown(`HTTP ${res.status}`);
+  catch (e) { if (NOT_SENT.test(e?.message || '')) { later(Date.now(), BUSY); return false; } return unknown(e?.name === 'AbortError' ? 'ответ не пришёл' : `обрыв (${e?.message || e})`); }
+  if (res.status === 409) { later(Date.now(), 3000); return true; }      // revision устарела — сразу перечитаем
+  if (res.status >= 500) return unknown(`HTTP ${res.status}`, 1);
   if (!res.ok) {
     const msg = j?.messageRu || j?.messageUk || j?.error || `HTTP ${res.status}`;
-    S().fails[p.r.code] = now + FAIL_SKIP; later(now, BUSY);
+    S().fails[p.r.code] = Date.now() + FAIL_SKIP; later(Date.now(), BUSY);
     note('fail' + p.r.code, `${nm(p.r)} ×${p.count}: игра отказала — ${msg}; этот рецепт пропускаю 30 мин`);
     await say(now, `${nm(p.r)}: ${msg}`); return true;
   }
