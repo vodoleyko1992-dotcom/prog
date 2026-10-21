@@ -83,8 +83,28 @@ async function massSpoilStep(ctx, act, mob) {
   return true;
 }
 
+// 20.43 (бой из облака 21.10: Fortune Seeker 76 с Elysian — Spoil Crush 14 747 урона, Buffalo 70 убит с одного удара, «Spoil успішний (59%)»;
+// John 21.10 12:47: «давай действовать от того какое я оружие одел»): надета дубина — первым жмём Spoil Crush (удар + спойл за один ход),
+// пика и другое оружие — первым Festival, как раньше. Не прошёл спойл Crush'ем, а моб жив — следующий ход снова через Festival (100 %);
+// соседи, появившиеся после первого хода, тоже идут под Festival. Оружие — только подтверждённое сканом сумки (combat.combatWeapon).
+const BLUNT = /^(?:двуруч\. )?дубина$|^(?:big)?blunt$/i;
+const blunt = () => BLUNT.test(String(env.weaponNow?.()?.wt || ''));
+const crushFirst = (ctx, mob) => !ctx.rb && !ctx.spoilTry && !ctx.spoiled && !ctx.massTried && mob?.max > 0 && mob.cur > 0
+  && blunt() && /crush/i.test(spoilPick(ctx)?.bn || '');
+// 20.43 (John 21.10 12:48: «у крафта тоже есть СОЛО споил, юзаем если одета булава, с пикой нафиг»): у крафтера (Artisan/Warsmith/Maestro)
+// спойл — только с подтверждённой дубиной. С пикой Warsmith 42 кладёт мобов с одного удара (бой из облака 21.10: 20 тыс. по площади),
+// ход на Spoil — потерянный ход. Спойлер (Fortune Seeker) с пикой по-прежнему спойлит Festival'ом.
+let noSpoilKey = '';
+const crafterPike = () => env.roleNow?.() === 'crafter' && !blunt();      // чистая проверка: и для выбора точки фарма (content.canSpoil)
+function crafterNoSpoil() {
+  if (!crafterPike()) { noSpoilKey = ''; return false; }
+  const w = env.weaponNow?.(), key = (env.rt.char || '') + '|' + (w?.id || '?');
+  if (key !== noSpoilKey) { noSpoilKey = key; env.rec('B', 'спойл', `крафтер ${w ? 'с оружием «' + (w.wt || w.name || '?') + '»' : 'без подтверждённого оружия'} — спойл не жму (только с дубиной)`); }
+  return true;
+}
 async function spoilStep(ctx, act, mob) {
-  if (await massSpoilStep(ctx, act, mob)) return true;
+  if (crafterNoSpoil()) return false;
+  if (!crushFirst(ctx, mob) && await massSpoilStep(ctx, act, mob)) return true;
   if (!env.cfg.nSpoil || ctx.spoiled || (ctx.rb && !env.cfg.spoilRb) || !mob?.max || mob.cur <= 0) return false;
   if (env.mobSpoiled()) { ctx.spoiled = true; return false; }           // уже висит значок спойла — не жмём (раньше жали ещё раз: «моб уже заспойлений»)
   // неудача — пробуем снова, пока моб жив и не слишком побит (спойл с шансом ~50–60 %): до 4 попыток, пока HP моба > 30 %
@@ -231,6 +251,6 @@ async function trackLoot(lines, mob, info) {
   if (campCh) Object.assign(patch, { campaign: { ...campaign, live: Date.now() }, campaignDue: campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
- return { faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
+ return { BLUNT, crushFirst, crafterPike, crafterNoSpoil, faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
  };
 })(globalThis);
