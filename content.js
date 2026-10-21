@@ -3211,7 +3211,8 @@ async function loopTaskList() {
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); return true; }
       if (isBattle()) await battle();
       else if (isFishing() && fishState()) await fishFight();
-      else await tasksIdle();
+      // 20.43 (ревью 21.10): «ожидание» без служебных задач — естественная стоянка крафтера; свой крафт идёт и здесь
+      else if (!(await L2V7Modules.craft?.step?.())) await tasksIdle();
       return true;
     }
   }
@@ -6187,6 +6188,7 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
 // 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
 L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
+  get free() { return () => L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
 // 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса у Reorin и лучший комплект из сумки (modules/subgo.js). Свой POST идёт мимо hook.js,
 // поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры

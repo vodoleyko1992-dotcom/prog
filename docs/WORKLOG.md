@@ -1,12 +1,23 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-
 ## 21.10.2026, 23:50 UTC+10 — Claude — вкладка «Сабкласс»: смена класса и лучший комплект (тред «Раздел Сабкласс со сменой шмота»)
 
 - John: «выбрал сабкласс нажал старт, он его сменил и одел топ шмот и топ бижутерию, и оружие с щитом (если щит предусмотрен в сборке)»; «научись одевать шмот после смены класса… чтобы работало все шустро»; «да, полный доступ к герою».
 - Факты из облака (по разрешению): POST /game/teleport {teleportId:'oren'} ставит прямо к Reorin (nearClassMaster=true); switch ≈1–1,4 с, снимает баффы и голема; переход main→Warsmith снял в сумку всё надетое S/A. Токены экземпляров: клановые 'bag:id:ench:clanUid', ЛС 'bag:id:ench:aug-uid', заточенное оружие 'bag:id:ench:pb:mb'. Unequip — {action:'unequip', slot}. Пробы: FS/AL/Warsmith одеты, Warsmith возвращён как был (кроме места — Oren и без голема).
 - Сделано: modules/subgo.js (L2SubGear.planGear/diff/body/bagToken + шаг ядра в loopMenuJobs), вкладка «Сабкласс» в popup, cfg.subMasterTp/subTpMax. С тредом крафта разведено: он — оружие/голем Warsmith в бою, gearBusy() для его gearHold.
 - Проверки: v2043-subgo.test.js (план по снимкам живой игры, токены, шаг с 409), v2043-subgo-browser.cjs, правки ожиданий v2012-panel-layout/v7-modules/v71-ui/v1015-pvp-registration; run-all PASS. ZIP не собирался.
+
+## 21.10.2026, 23:55 UTC+10 — Claude — свой крафт: вторая проверка правок (тред «Крафт ресурсов крафтером»)
+
+- Ревью коммита правок workflow (3 направления, по 2 скептика): подтверждены 4 находки + 3 мелкие.
+- Сделано: `craft.js` — ожидание сверки от момента обрыва; при той же revision повтор того же запроса с прежней `expectedRevision` (не новый крафт); revision ушла вперёд без выхода — «не скрафчен»; стойкий 5xx — после 3 повторов раз в 10 мин, после подтверждённого «не скрафчен» рецепт пропускается 30 мин (обрыв — 5 мин), строки через `note()`; отказ `gamePost` до отправки — не «неизвестно». `background.js` — `craftQueueEdit` (добавить/удалить строку внутри serializeLock); `popup.js` — правки списка через `craftQueueEdit`, перерисовка только при изменении, ошибка записи видна.
+- Проверки: `v2043-own-craft.test.js` 19 сценариев, `v2043-own-craft-browser.cjs` PASS, `node tests/run-all.cjs` 559 PASS / 0 FAIL, `node --check`, envcheck PASS. ZIP не собирался.
+
+## 21.10.2026, 23:35 UTC+10 — Claude — свой крафт: правки по ревью (тред «Крафт ресурсов крафтером»)
+
+- Ревью PR #332 workflow (5 направлений, по 2 скептика на находку): 23 находки, сведены в 16 правок.
+- Сделано: `craft.js` — Маммон только по свежей сумке после своего крафта (`invSnapshot`, `bagAfter`), причины пропуска (уровень не виден, сырьё у Skye, оценка цены, `subCraftSelf=false`), неизвестный ответ POST → `rt.craftPending` и сверка по сумке/revision без повтора, try/catch GET, паузы/отказы в sessionStorage `l2bot-craft`, `env.free` = `mammon.modeFree`, запас MP ≥ `fighterMpPct`+10 % и `mpPotAt`, без второго `reverse()`; `content.js` — геттеры `free`/`invSnapshot`, крафт в «ожидании» режима задач; `mammon.js` — рецепты 4045/4047/5554; меню — перерисовка списка без фокус-фильтра, удаление только `craftQueue` с `expectedChar`, заглушка выбора, блок крафта ниже «Передать основному».
+- Проверки: `v2043-own-craft.test.js` 15 сценариев, `v2043-own-craft-browser.cjs` PASS (на старом меню падает), `node tests/run-all.cjs` 559 PASS / 0 FAIL, `node --check`, envcheck PASS. ZIP не собирался.
 
 ## 21.10.2026, 23:20 UTC+10 — Claude — резисты в бесплатном VIP-баффе (тред «Резисты на VIP в фулл баффе»)
 
