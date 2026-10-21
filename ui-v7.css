@@ -89,6 +89,11 @@ details:not(.help) summary{color:#b6dbed;cursor:pointer}
 .inline-info:hover,.inline-info[aria-expanded=true]{color:#091923;background:#7ce4d6;border-color:#7ce4d6}
 .field-help{display:none;background:#102537;border:1px solid #35616b;border-left:3px solid #4fc2b4;border-radius:8px;color:#bfd8e2;padding:9px 11px;margin:0 0 7px;font-size:11px;line-height:1.6}
 .field-help.open{display:block}
+/* 20.43 (разбор 21.10): «i» из title — только на сенсорном экране и во вкладке Android; на ПК пояснение по-прежнему при наведении */
+.inline-info.auto-info{display:none!important}
+@media (hover:none){.inline-info.auto-info{display:inline-grid!important}}
+html.tabbed .inline-info.auto-info{display:inline-grid!important}
+#uiResults .other-cls{color:var(--mute);font-weight:400}
 /* dashboard */
 .intro-callout{background:linear-gradient(115deg,#153b46,#152b43 70%);border:1px solid #326978;border-radius:11px;padding:12px 14px;color:#e3f5fb}
 .intro-callout b{color:#9beedc;font-size:12px}

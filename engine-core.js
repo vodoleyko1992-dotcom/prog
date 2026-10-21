@@ -145,6 +145,31 @@
     }
     return serverDay(now);
   };
+  // 20.43 (разбор 21.10): меню писало «до 00:00 сервера», а сервер считает сутки по Киеву — у игрока (UTC+10) это 07:00 или 08:00
+  // смотря по переходу Киева на зимнее время. Момент сброса в часах этого компьютера: из /game/time (rt.serverClock, с поправкой на
+  // расхождение часов), без него — ближайшая полночь Europe/Kyiv. Только показ: сам дневной счёт по-прежнему решает dailyDay.
+  const wallFormats = new Map();
+  const zoneMidnightAfter = (t, zone) => {
+    if(!wallFormats.has(zone))wallFormats.set(zone,new Intl.DateTimeFormat('en-CA',{timeZone:zone,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+    const wall=x=>Object.fromEntries(wallFormats.get(zone).formatToParts(x).map(p=>[p.type,+p.value])), off=x=>{const p=wall(x);return Date.UTC(p.year,p.month-1,p.day,p.hour%24,p.minute,p.second)-Math.floor(x/1000)*1000;};
+    const p=wall(t), target=Date.UTC(p.year,p.month-1,p.day+1);
+    let at=target-off(t); at=target-off(at); return target-off(at);   // два уточнения: полночь после перевода часов внутри этих суток
+  };
+  const dailyResetAt = (now=Date.now(),rt={}) => {
+    const c=rt?.serverClock;
+    if(c && Number.isFinite(c.at) && Number.isFinite(c.serverNowMs) && now>=c.at) {
+      const serverNow=c.serverNowMs+(now-c.at);
+      if(Number.isFinite(c.nextDailyResetAt) && serverNow<c.nextDailyResetAt)return now+(c.nextDailyResetAt-serverNow);
+      try{return now+(zoneMidnightAfter(serverNow,c.timeZone)-serverNow);}catch(_){}
+    }
+    return zoneMidnightAfter(now,'Europe/Kyiv');
+  };
+  // «сброс в 07:00 по Владивостоку (через 3 ч 12 мин)» — часы игрока, как у блока PvE в меню (Asia/Vladivostok)
+  const dailyResetText = (now=Date.now(),rt={}) => {
+    const at=dailyResetAt(now,rt), m=Math.max(1,Math.ceil((at-now)/60000)), h=Math.floor(m/60), mm=m%60;
+    const hhmm=new Date(Math.round(at/60000)*60000).toLocaleTimeString('ru-RU',{timeZone:'Asia/Vladivostok',hour:'2-digit',minute:'2-digit'});
+    return `сброс в ${hhmm} по Владивостоку (через ${h?h+' ч'+(mm?' '+mm+' мин':''):mm+' мин'})`;
+  };
   // Однократно переносим старые сутки UTC+10 без выдачи дополнительного дневного бюджета.
   const dailyCurrent = (row,rt={},now=Date.now()) => !!row && (row.day===dailyDay(now,rt) || row.basis!=='server' && row.day===new Date(now+10*3600000).toISOString().slice(0,10));
   const dailyQuotaToday = (rt={},now=Date.now()) => ({...(dailyCurrent(rt.dailyQuota,rt,now)?rt.dailyQuota:{fish:0,auto:0,cat:0,raid:0}),day:dailyDay(now,rt),basis:'server'});
@@ -365,6 +390,6 @@
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
   const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups']);
-  root.L2EngineCore = { MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
