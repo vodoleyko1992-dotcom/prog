@@ -43,6 +43,20 @@ test('новый Старт и смена класса снимают ожида
  }
 });
 
+// 20.43 (ревью): waitKey писал только observe(); ветки «нет кота», «класс», «каталог», «бой», «ошибка чтения» ставили nextCheckAt без
+// ключа — после Старта/смены класса старый ключ не совпадал, срок не действовал, и каждый круг цикла (≈0,3 с) шёл свой GET /character
+test('после Старта/смены класса ветки без observe держат свой срок: 100 кругов по 300 мс — не больше 3 GET',async()=>{
+ for(const change of ['kick','class'])for(const kind of ['pet','class','catalog','battle','read']){
+  let broken=false;const f=fixture({cfg:{petFullMaxPrice:9999999},read:p=>{if(broken&&p==='/character')throw Error('read_failed')}});
+  await f.step();assert.equal(f.status(),'price');assert.ok(f.env.rt.petFull.waitKey,'ключ записан при наблюдении');
+  if(kind==='pet')f.ch.activeSummon=null;if(kind==='class')f.ch.l2Profession='human_sorcerer';if(kind==='catalog')f.cat.sets=[];if(kind==='battle')f.ch.inBattle=true;if(kind==='read')broken=true;
+  if(change==='kick')f.env.rt.manualKickAt=55;else f.env.rt.classCur={prof:'human_warlock',slot:1};
+  const g=reads(f);for(let i=0;i<100;i++){f.tick(300);await f.step();}
+  const n=reads(f)-g;assert.ok(n>=1&&n<=3,`${change}/${kind}: ${n} GET за 30 с (было 100)`);assert.equal(f.status(),kind);
+  assert.equal(f.calls.length,0,'покупок нет');
+ }
+});
+
 test('early-loss: проверка к концу оплаченного срока, не каждые 10 с',async()=>{
  const f=fixture({cfg:{petFullBudget:30000000},char:{adena:'50000000'}});await f.step();const end=f.env.rt.petFull.lastReceipt.expiresAt;
  f.tick(61000);f.ch.activeSummon.activeBuffs=[];f.ch.revision++;await f.step({afterWin:true});assert.equal(f.status(),'early-loss');

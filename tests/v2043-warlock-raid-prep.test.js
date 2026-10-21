@@ -80,7 +80,9 @@ test('призыв не подтвердился дважды — тур отл�
   assert.deepEqual(f.fires,[1276,1276],'третьего призыва нет');assert.equal(f.page(),'/map.html','назад со страницы навыков');
   assert.ok(f.e.rt.petRaidSkip.summonUntil>f.now()+1790000);
   assert.match(f.api().raidBlocked(),/призыв кота перед РБ не подтвердился и после повтора — тур отложен до \d\d:\d\d/);
-  assert.ok(f.logs.some(l=>/без кота тур РБ отложен на 30 мин, остальные задачи продолжаю/.test(l)));
+  // 20.43 (ревью): warlock не обещает «остальные задачи продолжаю» — что будет дальше, пишет тур (рыбалка / фарм на месте / ожидание)
+  assert.ok(f.logs.some(l=>/без кота тур РБ отложен на 30 мин$/.test(l)));assert.ok(!f.logs.some(l=>/остальные задачи продолжаю/.test(l)));
+  assert.equal(f.api().raidHoldUntil(),f.e.rt.petRaidSkip.summonUntil);
   assert.equal(f.api().raidReady(),false,'к РБ без кота не идём');
   const g=f.chars(),n=f.nav.length;for(let i=0;i<20;i++){f.tick(300);assert.equal(await f.prep(),false);}
   assert.equal(f.chars(),g,'во время отсрочки свой GET не идёт');assert.equal(f.nav.length,n);
@@ -143,11 +145,59 @@ test('ядро: loopGate уступает записи на TvT и самому 
 // Тур РБ: отсрочка призыва — ожидание (фарм на месте), а не выбор → «подготовлю снова» каждый круг
 const raidFile=path.join(__dirname,'v1021-raid-buff-order.test.js'),source=fs.readFileSync(raidFile,'utf8'),box={require:require('node:module').createRequire(raidFile),console,Date};
 vm.runInNewContext(source.slice(0,source.indexOf("test('"))+'\nthis.raidFixture=fixture;',box);
+const HOLD='призыв кота перед РБ не подтвердился и после повтора — тур отложен до 05:30 (снимут новый Старт или кот, призванный вручную)';
 test('тур РБ ждёт отсрочку призыва кота, затем продолжает выбор',async()=>{
- const f=box.raidFixture({cat:false});let hold='призыв кота перед РБ не подтвердился и после повтора — тур отложен до 05:30 (снимут новый Старт или кот, призванный вручную)';
- f.env.warlock.raidBlocked=()=>hold;
+ const f=box.raidFixture({cat:false});let hold=HOLD;
+ f.env.warlock.raidBlocked=()=>hold;f.env.warlock.raidHoldUntil=()=>hold?Date.now()+1800000:0;
  for(let i=0;i<3;i++)await f.R.rbHuntStep();
- assert.equal(f.env.rt.rbHunt.step,'pick');assert.equal(f.env.rt.rbHunt.phase,'wait');assert.equal(f.env.rt.rbHunt.next,hold);assert.equal(f.fires.length,0);
- assert.equal(f.buffCalls(),0,'баффер за FA во время отсрочки не зовём');
+ assert.equal(f.env.rt.rbHunt.step,'pick');assert.equal(f.env.rt.rbHunt.phase,'wait');assert.equal(f.env.rt.rbHunt.next,HOLD+'; фарм на месте при наличии мобов');assert.equal(f.fires.length,0);
+ assert.equal(f.buffCalls(),0,'баффер за FA во время отсрочки не зовём');assert.equal(f.env.rt.rbFishWait,undefined,'без выбранной рыбалки ход ей не передаётся');
  hold='';await f.R.rbHuntStep();assert.equal(f.env.rt.rbHunt.step,'go');
+});
+
+// 20.43 (ревью): в режиме задач тур во время отсрочки оставался выбранной задачей и спал 30 мин — рыбалка [raid, fish] не запускалась,
+// а журнал обещал «остальные задачи продолжаю». Теперь ход рыбалке передаётся как при пустом туре (rbFishWait до конца отсрочки).
+const core={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../engine-core.js'),'utf8'),core);const E=core.L2EngineCore;
+test('режим задач [raid, fish]: на время отсрочки призыва выбрана рыбалка; после срока — снова тур (начатый заброс доводится)',async()=>{
+ const f=box.raidFixture({cat:false}),until=Date.now()+1800000;f.env.cfg.autoTasks=['tvt','raid','fish'];
+ f.env.warlock.raidBlocked=()=>HOLD;f.env.warlock.raidHoldUntil=()=>until;
+ assert.equal(E.selectedTask(f.env.cfg,f.env.rt),'raid','до отсрочки — тур');
+ for(let i=0;i<3;i++)await f.R.rbHuntStep();
+ const W=f.env.rt.rbFishWait;assert.ok(W&&W.pet===true&&W.until===until,'передача рыбалке до конца отсрочки');
+ assert.equal(f.env.rt.rbHunt.phase,'wait');assert.equal(f.env.rt.rbHunt.step,'pick');assert.ok(!f.env.rt.rbHunt.id);
+ assert.equal(E.selectedTask(f.env.cfg,f.env.rt),'fish','во время отсрочки работает выбранная рыбалка');
+ assert.equal(E.taskJobAllowed(E.taskConfig(f.env.cfg,()=>f.env.rt),'rbHunt',f.env.rt),true,'отложенный тур не стирается');
+ const said=f.logs.filter(l=>/перехожу к выбранной рыбалке/.test(l));assert.equal(said.length,1,'одна строка журнала на отсрочку: '+said.length);
+ assert.ok(!f.logs.some(l=>/остальные задачи продолжаю/.test(l)));assert.equal(f.fires.length,0);assert.equal(f.buffCalls(),0);
+ const late=until+1000;assert.equal(E.selectedTask(f.env.cfg,f.env.rt,late),'raid','после срока — снова тур');
+ assert.equal(E.selectedTask(f.env.cfg,{...f.env.rt,fishCastActive:true},late),'fish','начатый заброс доводится');
+ // Оплата в ожидании сверки — ход рыбалке не передаётся (как при пустом туре)
+ const g=box.raidFixture({cat:false});g.env.cfg.autoTasks=['raid','fish'];g.env.rt.actionPayments={pending:{kind:'raid-teleport'}};
+ g.env.warlock.raidBlocked=()=>HOLD;g.env.warlock.raidHoldUntil=()=>until;await g.R.rbHuntStep();assert.equal(g.env.rt.rbFishWait,undefined);
+});
+test('режим задач без рыбалки: журнал честно говорит «жду», выбор задач не меняется',async()=>{
+ const f=box.raidFixture({cat:false}),until=Date.now()+1800000;f.env.cfg.autoTasks=['raid','auto'];
+ f.env.warlock.raidBlocked=()=>HOLD;f.env.warlock.raidHoldUntil=()=>until;
+ for(let i=0;i<3;i++)await f.R.rbHuntStep();
+ assert.equal(f.env.rt.rbFishWait,undefined);assert.equal(f.env.rt.rbHunt.next,HOLD+'; жду, фарм мобов сейчас не выбран');
+ assert.equal(f.logs.filter(l=>/жду, фарм мобов сейчас не выбран/.test(l)).length,1);assert.equal(E.selectedTask(f.env.cfg,f.env.rt),'raid');
+});
+test('кот, призванный вручную, снимает отсрочку и при переданной рыбалке (срок передачи истекает сразу)',async()=>{
+ const f=setup({char:{activeSummon:null},cfg:{petBuffAuto:false}});
+ await f.prep();await f.prep();await f.until(()=>f.fires.length===2,140000);await f.until(()=>!f.e.rt.petRaidPrep,140000);
+ const until=f.api().raidHoldUntil();assert.ok(until>f.now());
+ f.e.rt.rbFishWait={at:f.now(),until,listT:0,pet:true};
+ f.tick(1000);f.ch.revision++;f.api().noteSnapshot(f.ch);assert.equal(f.e.rt.rbFishWait.until,until,'без кота — передача рыбалке продолжается');
+ f.e.rt.rbFishWait={at:f.now(),until:f.now()+600000,listT:0};f.ch.activeSummon=cat();f.ch.revision++;f.api().noteSnapshot(f.ch);
+ assert.equal(f.e.rt.rbFishWait.until,f.now()+600000,'ожидание пустого тура (без pet) кот не трогает');
+ f.e.rt.rbFishWait={at:f.now(),until,listT:0,pet:true};f.tick(1000);f.ch.revision++;f.api().noteSnapshot(f.ch);
+ assert.equal(f.api().raidBlocked(),'');assert.ok(f.e.rt.rbFishWait.until<=f.now(),'живой кот — ход снова туру');
+});
+test('меню задач: отсрочка призыва кота с переданной рыбалкой — «Ждёт кота», пустой тур — прежнее «Ждёт доступного РБ»',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../popup.js'),'utf8'),ctx={L2EngineCore:E,selectedAutoTasks:d=>d.autoTasks,AUTO_TASK_LABELS:{raid:'Тур РБ',fish:'Рыбалка'},AUTO_MAIN_TASKS:['raid','fish'],TASK_TABS:{raid:'rb',fish:'fish'},Date};
+ vm.runInNewContext(src.slice(src.indexOf('function taskBoardRows('),src.indexOf('// 19.10: дневные мобы')),ctx);
+ const now=Date.now(),cfg={autoTasks:['raid','fish']},hunt={step:'pick',phase:'wait',id:null};
+ const raid=w=>ctx.taskBoardRows({rbHunt:hunt,rbFishWait:w},cfg,{on:true,heartbeatValid:true},now).find(r=>r.key==='raid');
+ assert.equal(raid({at:now,until:now+1800000,listT:0,pet:true}).label,'Ждёт кота: призыв не подтвердился');
+ assert.equal(raid({at:now,until:now+300000,listT:0}).label,'Ждёт доступного РБ');
 });

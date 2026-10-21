@@ -15,7 +15,9 @@ const priority = afterWin => env.canRun?.() !== false && !env.rt.autoLs?.hold &&
 const signature = () => JSON.stringify([option('petFullAuto'), option('petFullBudget'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
 const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature() });
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
-const patch = p => env.setRt({ petFull: { ...state(), ...p } });
+// 20.43 (разбор 21.10, ревью): каждый срок следующей проверки пишется вместе с ключом, при котором он назначен (waitKey). Иначе после
+// Старта/смены настроек срок из веток «нет кота»/«класс»/«каталог»/«бой»/«ошибка чтения» не совпадал с ключом и не действовал — GET на каждом круге
+const patch = p => env.setRt({ petFull: { ...state(), ...p, ...('nextCheckAt' in p ? { waitKey: waitKey() } : {}) } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
@@ -71,9 +73,11 @@ const raidWaitSince = new Map();       // вид ожидания → {at, last,
 const raidSkip = () => { const S = env.rt.petRaidSkip; return S && S.char === charName() && S.classKey === raidClass() && S.settings === raidSettings() && S.kick === (+env.rt.manualKickAt || 0) ? S : null; };
 const buffSkipped = x => (raidSkip()?.buffs?.[x.effectId] || 0) > Date.now();
 const summonHeld = () => { const S = raidSkip(); return S?.summonUntil > Date.now() && !(latest && latest.char === charName() && latest.at > (S.summonAt || 0)); };
+// 20.43 (ревью): срок отсрочки — туру, чтобы на это время передать ход выбранной рыбалке (rbFishWait), как при пустом туре
+const raidHoldUntil = () => raidManaged() && summonHeld() ? env.rt.petRaidSkip.summonUntil : 0;
 function raidBlocked() {
-  if (!raidManaged() || !summonHeld()) return '';
-  return `призыв кота перед РБ не подтвердился и после повтора — тур отложен до ${new Date(env.rt.petRaidSkip.summonUntil).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} (снимут новый Старт или кот, призванный вручную)`;
+  const until = raidHoldUntil(); if (!until) return '';
+  return `призыв кота перед РБ не подтвердился и после повтора — тур отложен до ${new Date(until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} (снимут новый Старт или кот, призванный вручную)`;
 }
 function raidReady() {
   return !raidManaged() || !!raidProof && raidProof.char === charName() && raidProof.classKey === raidClass() && raidProof.settings === raidSettings()
@@ -100,7 +104,7 @@ async function raidPrepare() {
     const S={char:who,classKey:key,settings,kick,buffs,summonUntil:old?.summonUntil>now?old.summonUntil:0,summonAt:old?.summonAt||0};
     if(P.kind==='summon'){S.summonUntil=now+RAID_HOLD_SUMMON_MS;S.summonAt=now;}else if(P.effectId)S.buffs[P.effectId]=now+RAID_SKIP_BUFF_MS;
     if(!valid()||(await env.setRt({petRaidSkip:S}))?.ok!==true||!valid())return false;
-    env.rec?.('B','суммон',note||(P.kind==='summon'?`Перед РБ: призыв «${P.name}» не подтвердился и после повтора — без кота тур РБ отложен на 30 мин, остальные задачи продолжаю`
+    env.rec?.('B','суммон',note||(P.kind==='summon'?`Перед РБ: призыв «${P.name}» не подтвердился и после повтора — без кота тур РБ отложен на 30 мин`
       :`Перед РБ: «${P.name}» не подтвердился и после повтора — иду к РБ без него (снова попробую через час)`));
     return true;
   };
@@ -154,7 +158,7 @@ async function raidPrepare() {
     if((await env.setRt({petRaidSkills:{char:who,classKey:key,settings,rows:rows.map(({effectId,name})=>({effectId,name}))}}))?.ok!==true||!valid())return true;
     const action=!pet?panel.summon:rows.find(x=>!hasNative(ch,x)&&!buffSkipped(x));
     if(!action){
-      if(!pet){if(sw)return holdSummon(J,{kind:'summon'},'Перед РБ: за 2 мин на панели не нашёлся навык призыва кота — без кота тур РБ отложен на 30 мин, остальные задачи продолжаю');env.setStatus?.('Перед РБ: нужен навык призыва кота на панели');return later(RAID_READ_WAIT);}
+      if(!pet){if(sw)return holdSummon(J,{kind:'summon'},'Перед РБ: за 2 мин на панели не нашёлся навык призыва кота — без кота тур РБ отложен на 30 мин');env.setStatus?.('Перед РБ: нужен навык призыва кота на панели');return later(RAID_READ_WAIT);}
       raidProof={char:who,classKey:key,settings,kick,until:Date.now()+30000};const back=J.back;if(await save(null)&&valid()&&back!=='/skill-panel.html')env.nativeNavigate?.(back);return true;
     }
     if(!action.ready||!Number.isFinite(ch.mp)||ch.mp<(action.mp||0)){env.setStatus?.('Перед РБ: жду готовность и MP для '+action.name);return later(RAID_READ_WAIT);}
@@ -248,7 +252,7 @@ async function observe(T, ch, set, full) {
   const observedMs = (S.observedMs || 0) + (continuity ? Math.max(0, Math.min(now, prev.expiresAt) - prev.at) : 0);
   await patch({ lastPrice: set.price, lastCheckAt: now, expiresAt: full?.expiresAt || 0, observedMs,
     observation: { at: now, petKey: p?.key || '', stamps: full?.stamps || '', expiresAt: full?.expiresAt || 0, own, gap },
-    snapshot: snapshot(ch), nextCheckAt: now + gap, waitKey: waitKey() });
+    snapshot: snapshot(ch), nextCheckAt: now + gap });
 }
 async function reconcile(T, ch, afterWin, confirmedWrite) {
   const P = state().pending; if (!P) return false;
@@ -505,6 +509,10 @@ function noteSnapshot(ch, shots) {
   }
   latest = snapshot(ch, shots); latestSeen = true;
   if (latest) latest.proofAt = snapshotEvidenceAt || latest.at;
+  // 20.43 (ревью): живой кот в свежем снимке снимает отсрочку тура и тогда, когда ход отдан рыбалке — срок её передачи (rbFishWait.pet)
+  // истекает сейчас; начатый заброс доводится (selectedTask держит рыбалку, пока fishBusy). Запись одна: дальше until уже прошёл
+  const FW = env.rt.rbFishWait;
+  if (latest && FW?.pet && FW.until > Date.now() && env.tabOwner && !summonHeld()) Promise.resolve(env.setRt({ rbFishWait: { ...FW, until: Date.now() } })).catch(() => {});
   // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
   // расходников, не выдавая его за реально включённые заряды и не подмешивая в обучение боя.
   prepared = null; preparedSource = null;
@@ -644,6 +652,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { autoEnableClass, classAutoTick, raidPrepare, raidReady, raidBlocked, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, raidPrepare, raidReady, raidBlocked, raidHoldUntil, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
