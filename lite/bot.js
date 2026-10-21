@@ -3,6 +3,7 @@
 // Один цикл: антибот → смерть → TvT → страница (бой, карта, телепорт, город, баффер). Настройки — только в меню расширения.
 // Правила проекта сохранены: капчу не решаем (бот замирает и зовёт игрока), пароль не храним, Coin of Luck и FA не тратим
 // (адена — только на телепорт к месту охоты), клик — только когда игра свободна (иначе она его теряет).
+// Lite 1.1 (21.10, «на основе нового кода, внеси правки»): ход по ответу сервера и подстройка запаса клика из основного бота 20.36–20.41.
 (() => {
   'use strict';
   if (window.__l2lite) return;
@@ -21,13 +22,17 @@
   const visible = el => !!el && el.getClientRects().length > 0;
   const shown = el => !!el && !el.hidden && !el.closest('[hidden]') && visible(el);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // Lite 1.1 (ход по ответу сервера, основной бот 20.37/20.41): ожидание просыпается сразу по концу любого запроса игры, а не по таймеру.
+  const waiters = new Set();
+  const nap = ms => new Promise(r => { const done = () => { clearTimeout(t); waiters.delete(done); r(); }, t = setTimeout(done, ms); waiters.add(done); });
+  const wakeAll = () => { for (const f of [...waiters]) f(); };
   const rnd = (a, b) => Math.round(a + Math.random() * (b - a));
   const num = t => { const s = String(t ?? '').replace(/[\s  ]/g, ''); return /^\d+$/.test(s) ? +s : NaN; };
   const byText = (re, sel = 'a,button') => $$(sel).find(e => shown(e) && re.test((e.textContent || '').trim())) || null;
   const alive = g => !dead && cfg.on && owner && g === gen && !mainBotOn();
   async function waitFor(fn, ms, step = 100, g = 0) {
     const t0 = Date.now();
-    for (;;) { let v = null; try { v = fn(); } catch (e) {} if (v) return v; if (Date.now() - t0 >= ms || (g && !alive(g))) return null; await sleep(step); }
+    for (;;) { let v = null; try { v = fn(); } catch (e) {} if (v) return v; if (Date.now() - t0 >= ms || (g && !alive(g))) return null; await nap(step); }
   }
   // Основной L2wap Bot ставит data-l2bot-on на <html>, пока он включён: два бота на одной странице мешали бы друг другу.
   const mainBotOn = () => document.documentElement?.dataset?.l2botOn === '1';
@@ -126,7 +131,7 @@
   function netEnd(d) {
     const t = Date.now(), ok = d.status >= 200 && d.status < 300;
     NET.inflight.delete(d.rid);
-    NET.ends.set(d.rid, { status: d.status, err: d.err || (d.bt && (d.bt.error || (!ok && d.bt.code))) || (d.tvt && d.tvt.error) || '', t });
+    NET.ends.set(d.rid, { status: d.status, err: d.err || (d.bt && (d.bt.error || (!ok && d.bt.code))) || (d.tvt && d.tvt.error) || '', by: String(d.bt?.blockedBy || ''), t });
     if (NET.ends.size > 60) NET.ends.delete(NET.ends.keys().next().value);
     if (d.path === '/character') NET.charEnd = t;
     if (/^\/game\/(?:battle|tvt)\/action$/.test(d.path)) NET.actEnd = t;
@@ -142,6 +147,7 @@
     if (d.tvt) tvtNet(d);
     if (d.ab) abNet(d.ab, d.path);
     if (d.locs && owner && d.locs.length && JSON.stringify(d.locs) !== JSON.stringify(rt.locs)) setRt({ locs: d.locs, locsT: t });
+    wakeAll();
   }
   window.addEventListener('message', e => {
     if (e.source !== window || e.origin !== location.origin) return;
@@ -149,18 +155,29 @@
     if (!d || typeof d !== 'object' || (d.__l2lite !== 'start' && d.__l2lite !== 'end')) return;
     if (d.__l2lite === 'start') netStart(d); else netEnd(d);
   });
-  // Игра свободна: нет её запросов в полёте и прошёл запас после ответа на ход / после её GET /character (основной бот 8.0.3).
-  let lockA = sess.get('l2lite.lockA', 150);
-  async function gameIdle(maxMs = 1500) {
+  // Игра свободна: нет её запросов в полёте и прошёл запас после ответа на ход (A) / после её GET /character (B) (основной бот 8.0.3).
+  // Lite 1.1: запасы подстраиваются, как в основном боте (A 60–400, B 30–200 мс): потерянный клик — запас растёт, клик впритык прошёл — чуть меньше.
+  const LOCK_A = [60, 400, 120], LOCK_B = [30, 200, 50];
+  const clampL = (v, L) => Math.min(L[1], Math.max(L[0], Number.isFinite(+v) ? +v : L[2]));
+  let lockA = clampL(sess.get('l2lite.lockA', LOCK_A[2]), LOCK_A), lockB = clampL(sess.get('l2lite.lockB', LOCK_B[2]), LOCK_B);
+  const ACT_PATH = /^\/game\/(?:battle|tvt)\/action$|^\/game\/battle\/hunt-continue$/;
+  // → true — можно жать; false — наш прошлый ход всё ещё без ответа (второй ход до ответа на первый не шлём, основной бот 20.37).
+  async function gameIdle(maxMs = 1500, g = 0) {
     const t0 = Date.now();
     for (;;) {
       const now = Date.now();
-      for (const [rid, x] of NET.inflight) if (now - x.t > 4000) NET.inflight.delete(rid);
-      const need = NET.inflight.size ? 40 : Math.max(NET.actEnd + lockA - now, NET.charEnd + 60 - now);
-      if (need <= 0 || now - t0 > maxMs) return;
-      await sleep(Math.min(Math.max(need, 15), 60));
+      let act = false, other = false;
+      for (const [rid, x] of NET.inflight) {
+        const isAct = ACT_PATH.test(x.path);
+        if (now - x.t > (isAct ? 10000 : 4000)) NET.inflight.delete(rid); else if (isAct) act = true; else other = true;
+      }
+      if (act) { if (now - t0 > 8000 || (g && !alive(g))) return false; await nap(40); continue; }
+      const need = other ? 40 : Math.max(NET.actEnd + lockA - now, NET.charEnd + lockB - now);
+      if (need <= 0 || now - t0 > maxMs) return true;
+      await nap(Math.min(Math.max(need, 15), 60));
     }
   }
+  const lockSave = () => { sess.set('l2lite.lockA', lockA); sess.set('l2lite.lockB', lockB); };
   // Свои запросы к игре — с токеном страницы (без него сервер отвечает 401); токен никуда не пишем.
   async function gameGet(path, ms = 8000) {
     if (abHold()) throw new Error('antibot');
@@ -380,33 +397,43 @@
     }
   }
   // Нажатие: ждём свободную игру, жмём, проверяем, что ход ушёл (≤ 0,45 с) и сервер его принял (≤ 6 с).
-  async function press(plan, g, tvt) {
+  // still() — план ещё тот же (Lite 1.1, основной бот 20.37): пока ждали игру, ответ мог назначить новый откат или сменить HP —
+  // тогда не жмём старое, а сразу выбираем заново.
+  let quick = false;                               // ход подтверждён сервером — следующий круг без «человеческой» паузы
+  async function press(plan, g, tvt, still = null) {
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
-    await gameIdle();
-    if (!alive(g) || !s.b.isConnected) return false;
+    if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
+    if (!tvt && (CD.globalWait('') > 0 || (s.action && CD.skillWait(s.action, '') > 0 && CD.skillKnown(s.action, '', pressAt.get(s.action) || 0)))) { quick = true; return false; }
+    if (still && !still()) { quick = true; return false; }
     status(`${tvt ? 'TvT' : 'Бой'}: ${s.name} — ${plan.why}`);
     const t0 = Date.now(), frozen = frozenSince.has(key);
+    const slackA = NET.actEnd ? t0 - (NET.actEnd + lockA) : 1e9, slackB = NET.charEnd ? t0 - (NET.charEnd + lockB) : 1e9, bindB = slackB < slackA, gap = Math.min(slackA, slackB);
     if (s.action) pressAt.set(s.action, t0);
     pressAt.set(key, t0);
     if (!fire(s.b, g)) return false;
     if (s.pot) lastPot = { ...lastPot, [s.pot]: t0 };
     const st = await waitFor(() => NET.starts.find(x => x.t >= t0 && x.path === path && x.method === 'POST'), 450, 15);
-    if (!st) {                                       // игра клик не отправила: слот «занят» 0,7 с, запас после ответа хода растёт
+    if (!st) {                                       // игра клик не отправила: слот «занят» 0,7 с, запас, решавший впритык, растёт
       block.set(key, Date.now() + 700);
       if (frozen) frozenLost.set(key, (frozenLost.get(key) || 0) + 1);
-      if (NET.actEnd && t0 - NET.actEnd < lockA + 250) { lockA = Math.min(400, lockA + 30); sess.set('l2lite.lockA', lockA); }
+      if (gap < 250) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
       const n = (lostN.get(key) || 0) + 1; lostN.set(key, n);
       if (n >= 3) { block.set(key, Date.now() + 3000); lostN.set(key, 0); }
       return false;
     }
+    if (gap < 60) { if (bindB) lockB = Math.max(LOCK_B[0], lockB - 1); else lockA = Math.max(LOCK_A[0], lockA - 2); lockSave(); }   // прошёл впритык — чуть быстрее
     const end = await waitFor(() => NET.ends.get(st.rid), 6000, 20, g);
     if (!end) return false;
     lostN.set(key, 0);
     if (!(end.status >= 200 && end.status < 300) || end.err) {
-      block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : 1200));
+      // Отказ сервера: общий откат держит модель откатов (не слот); откат этого скилла, который сервер прислал, — тоже модель.
+      const cdErr = end.by === 'global' || end.by === 'skill' || /cooldown|перезаряд/i.test(end.err);
+      if (end.by === 'global') { if (CD.globalWait('') <= 0) block.set(key, Date.now() + 300); quick = true; return false; }
+      if (cdErr && s.action && CD.skillWait(s.action, '') > 0) { quick = true; return false; }
+      block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : cdErr ? 700 : 1200));
       return false;
     }
-    progress(); lastActOk = Date.now();
+    progress(); lastActOk = Date.now(); quick = true;
     if ((s.type === 'buff' || s.type === 'lowhp') && s.id) markBuff(s.id, s.dur || 20);
     if (s.type === 'trance') log(`Battle Trance: HP до 25 % — дальше ${plan.why.replace(/^транс → /, '')}`);
     if (s.type === 'lowhp') log(`${s.name} включён при HP ${Math.round(meStats().hp * 100 / (meStats().maxHp || 1))} %`);
@@ -479,9 +506,21 @@
     if (!mob) { if (Date.now() - pageT0 > 15000) { log('страница боя без моба 15 с — на карту'); await toMap(g); } else await sleep(200); return; }
     if (!rowsDone) { rowsDone = true; await rowsAll(g); barFromDom(); }
     if (Date.now() - Math.max(lastActOk, pageT0) > 45000) { log('45 с ни одного принятого хода — выхожу на карту'); lastActOk = Date.now(); await toMap(g); return; }
-    const plan = L.planTurn(slotsNow(false), meStats(), mob, { now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot });
-    if (!plan) { status('Бой: жду отката'); await sleep(100); return; }
-    await press(plan, g, false);
+    const opt = () => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot });
+    const slots = slotsNow(false), plan = L.planTurn(slots, meStats(), mob, opt());
+    // Lite 1.1: всё на откате — ждём ровно до ближайшей готовности по ответу сервера (не дольше 0,1 с), а не круг с паузой.
+    if (!plan) { status('Бой: жду отката'); await nap(Math.max(10, Math.min(readyIn(slots) + 5, 100))); quick = true; return; }
+    await press(plan, g, false, () => { const p = L.planTurn(slotsNow(false), meStats(), mobHp(), opt()); return !!p && p.slot.key === plan.slot.key; });
+  }
+  // Через сколько мс станет готов ближайший нужный слот — по модели откатов сервера и своим блокировкам (Infinity — не знаем).
+  function readyIn(slots) {
+    const now = Date.now(); let w = Infinity;
+    for (const s of slots) {
+      if (s.on === false || s.type === 'other') continue;
+      const t = Math.max((block.get(s.key) || 0) - now, CD.globalWait(''), s.action ? CD.skillWait(s.action, '') : 0);
+      if (t > 0) w = Math.min(w, t);
+    }
+    return w;
   }
 
   // ---------- карта: ближайший обычный моб; цепочка «Охотиться дальше» — в бою ----------
@@ -856,10 +895,12 @@
   }
   async function loop() {
     for (;;) {
+      quick = false;
       try { await tick(); } catch (e) { if (dead) return; log('ошибка: ' + String(e?.message || e).slice(0, 160)); await sleep(1500); }
       // Сторож: 4 мин без продвижения (ход, победа, переход, честное ожидание) — карта заново.
       if (cfg.on && owner && !dead && Date.now() - progT > 240000) { log('4 мин без продвижения — начинаю с карты'); progress(); try { await go('/map.html'); } catch (e) {} }
-      await sleep(rnd(60, 140));
+      // Lite 1.1 (основной бот 20.37): после хода, подтверждённого сервером, следующий круг ждёт только сервер и готовность игры.
+      await sleep(quick ? 0 : rnd(60, 140));
     }
   }
 

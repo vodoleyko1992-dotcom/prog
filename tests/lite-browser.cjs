@@ -4,6 +4,8 @@
 //   лимит → TvT: запись, бой на арене, итог → игра выкинула в город → телепорт за адену обратно → после лимита не охотится.
 // Сценарий B: «где стоит герой» → смерть → город → статуя (бафф + восстановление) → телепорт назад → проверка активности
 //   (бот замирает, ни одного клика) → игрок прошёл её → охота дальше; Стоп.
+// Сценарий C (Lite 1.1): задержки сервера (ход 150 мс, GET /character 300 мс, откат атаки 200 мс): удар→удар без лишних пауз
+//   (медиана < 600 мс, Lite 1.0 — 530–585 мс), клики не теряются, второй ход не уходит, пока первый ждёт ответа 7 с.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
@@ -23,6 +25,7 @@ function makeServer() {
       battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'l2_190' }, { k: 'a', a: 'battle_trance' }, { k: 'a', a: 'l2_176' }, { k: 'a', a: 'l2_420' }, { k: 'a', a: 'l2_286' }, { k: 'u', id: 1539 }],
       learnedBattleSkillsDetail: [{ battleId: 'l2_190', nameUk: 'Fatal Strike' }, { battleId: 'battle_trance', nameUk: 'Battle Trance' }, { battleId: 'l2_176', nameUk: 'Frenzy' }, { battleId: 'l2_420', nameUk: 'Zealot' }, { battleId: 'l2_286', nameUk: 'Provoke' }] },
     battle: null, spawnN: 0, chainN: 0, champAt: 2, cd: {}, gcd: 0, pots: 50, acts: [], tvtActs: [], tp: [], leaves: 0, antibot: 0, abActs: 0, killHero: false,
+    mobHp: 4000, lat: { action: 0, character: 0 }, slowNext: 0, actT: [], pending: 0, overlap: 0, charN: 0,
     tvt: { phase: 'IDLE', eventId: 'tvt-0800', isRegistered: false, registeredCount: 4, maxPlayers: 20, schedule: { enabled: true, next: { slotKey: 'tvt-0800', registrationOpensAt: Date.now() + 100000 } } },   // запись скоро — бот опрашивает часто
     enemies: [{ characterId: 'e1', name: 'Enemy1', level: 70, hp: 3000, maxHp: 3000, cp: 0, alive: true }, { characterId: 'e2', name: 'Enemy2', level: 72, hp: 2000, maxHp: 2000, cp: 0, alive: true }],
     target: null, buffer: [], locations: [
@@ -31,10 +34,10 @@ function makeServer() {
   };
   const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000 };
   const ch = () => { S.hero.revision++; return { ...S.hero, activeBuffs: S.hero.activeBuffs.filter(b => b.expiresAt > Date.now()) }; };
-  const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: 4000, mobMaxHp: 4000, log: [] });
+  const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [] });
   function action(body) {
     const now = Date.now(), a = String(body.action || '');
-    S.acts.push(a);
+    S.acts.push(a); S.actT.push(now);
     if (S.antibot) { S.abActs++; return [423, { error: 'anti_bot_challenge', code: 'anti_bot_challenge' }]; }
     const b = S.battle;
     if (!b || !S.hero.inBattle) return [400, { error: 'no_battle' }];
@@ -49,11 +52,13 @@ function makeServer() {
     else if (a === 'l2_420') { h.activeBuffs.push({ skillId: 420, expiresAt: now + 60000 }); h.hp -= 204; h.mp -= 136; }
     else if (a === 'battle_potion_use') { S.pots--; h.hp = Math.min(h.maxHp, h.hp + 3000); }
     else if (a === 'l2_286') {}
-    if (a !== 'battle_potion_use') S.cd[a] = now + (CD[a] || 1000);
+    if (a !== 'battle_potion_use') S.cd[a] = now + ((S.cdSet || CD)[a] || 1000);
     h.hp -= S.killHero ? 9000 : 150;
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
     if (b.mobHp <= 0) { b.mobHp = 0; h.inBattle = false; h.mobsKilled++; return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now } }]; }
-    return [200, { kind: 'delta', delta: { mobHp: b.mobHp, characterHp: h.hp, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [a]: S.cd[a] } } }];
+    // Как настоящая игра (battle-action-result.js): почти каждый ответ на ход несёт hotbarStale — страница перечитывает персонажа.
+    return [200, { kind: 'delta', delta: { mobHp: b.mobHp, mobMaxHp: b.mobMaxHp, characterHp: h.hp, characterMaxHp: h.maxHp, characterMp: h.mp, characterMaxMp: h.maxMp,
+      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [a]: S.cd[a] } } }];
   }
   function tvtState() {
     const t = S.tvt, now = Date.now();
@@ -61,7 +66,7 @@ function makeServer() {
   }
   async function api(p, method, body) {
     const now = Date.now();
-    if (p === '/character') return [200, { character: ch() }];
+    if (p === '/character') { S.charN++; return [200, { character: ch() }]; }
     if (p === '/game/teleport/locations') return [200, { locations: S.locations }];
     if (p === '/game/battle' && method === 'GET') return [200, { battle: S.battle && { ...S.battle }, character: ch(), serverNowMs: now }];
     if (p === '/game/battle/start') {
@@ -126,17 +131,17 @@ function hotbar(H, pots) {
 }
 // Бой: клик во время своего запроса игра теряет (как настоящая); после ответа — GET /character; откат рисуется на слоте.
 const BATTLE_JS = `<script>
-let busy=false;const sid=new URLSearchParams(location.search).get('spawnId');
+let busy=false;window.__lost=0;const sid=new URLSearchParams(location.search).get('spawnId');
 function render(b){if(!b)return;$('#battle-mob-title').textContent=b.mobName+' · ур. '+b.mobLevel+(b.kind==='champion'?' · чемпион':'');$('#battle-mob-hp-val').textContent=b.mobHp+' / '+b.mobMaxHp;}
 fetch('/game/battle?spawnId='+sid).then(r=>r.json()).then(j=>render(j.battle));
 document.querySelectorAll('.l2-battle-hotbar-slot').forEach(el=>el.onclick=async()=>{
- if(busy)return;busy=true;const a=el.dataset.slotCd;
+ if(busy){window.__lost++;return;}busy=true;const a=el.dataset.slotCd;
  const {status,j}=await post('/game/battle/action',a==='battle_potion_use'?{action:a,itemId:+el.dataset.item}:{action:a});
  if(j.victory){$('#battle-mob-hp-val').textContent='0 / 4000';$('#battle-victory-inline').hidden=false;$('#battle-victory-hunt').hidden=false;}
  else if(j.defeat){$('#battle-defeat-root').hidden=false;}
- else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / 4000';const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
+ else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / '+(j.delta.mobMaxHp||4000);const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
   if(cd&&until){cd.hidden=false;cd.classList.add('l2-battle-hotbar-slot-cd--on');const tick=()=>{const left=until-Date.now();const tm=cd.querySelector('.l2-battle-hotbar-slot-cd__timer');if(left<=0){cd.hidden=true;cd.classList.remove('l2-battle-hotbar-slot-cd--on');return;}if(tm)tm.textContent=(left/1000).toFixed(1);setTimeout(tick,100);};tick();}}
- await ch();busy=false;});
+ if(j.victory||j.defeat||status!==200||(j.delta&&j.delta.hotbarStale))await ch();busy=false;});
 $('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;render(j.battle);}};
 $('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)await post('/game/battle/leave',{battleSpawnId:sid});location.href='/map.html';};
 $('#battle-defeat-tocity').onclick=async()=>{await post('/game/battle/defeat/to-city');location.href='/city.html';};
@@ -205,6 +210,13 @@ async function launch() {
     if (p === '/tvt-arena.html') return html(arenaPage(sv));
     if (/\.(gif|png|jpg|ico)$/.test(p)) return route.fulfill({ status: 404, body: '' }).catch(() => {});
     let body = {}; try { body = req.postDataJSON() || {}; } catch (e) {}
+    const S = sv.S, isAct = p === '/game/battle/action';
+    if (isAct) { if (++S.pending > 1) S.overlap++; }
+    try {
+      const lat = isAct ? S.lat.action + (S.slowNext ? S.slowNext : 0) : p === '/character' ? S.lat.character : 0;
+      if (isAct && S.slowNext) S.slowNext = 0;
+      if (lat) await delay(lat);
+    } finally { if (isAct) S.pending--; }
     const [status, json] = await sv.api(p, req.method(), body);
     return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) }).catch(() => {});
   });
@@ -330,4 +342,34 @@ async function scenarioB() {
   finally { await h.ctx.close(); }
 }
 
-(async () => { await scenarioA(); await scenarioB(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+async function scenarioC() {
+  const h = await launch(), { S } = h;
+  try {
+    S.champAt = 99; S.mobHp = 60000; S.lat = { action: 150, character: 300 }; S.cdSet = { attack: 200, l2_190: 2500 };
+    S.hero.battleHotbarSlots = S.hero.battleHotbarSlots.filter(x => x.a === 'attack' || x.a === 'l2_190');
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).locs?.length === 2, 20000, 'локации');
+    const pp = await h.popup();
+    await pp.click('#run');
+    await h.game.bringToFront();
+    await until(() => S.acts.length >= 25, 60000, '25 ходов');
+    // ход по ответу сервера: удар→удар внутри одного боя (без победы между ходами)
+    const gaps = S.actT.slice(1).map((t, i) => t - S.actT[i]).filter(x => x < 3000).sort((a, b) => a - b), med = gaps[gaps.length >> 1];
+    // второй ход не уходит, пока первый 7 с ждёт ответа сервера
+    const n0 = S.acts.length; S.slowNext = 7000;
+    await until(() => S.acts.length > n0, 10000, 'медленный ход');
+    await until(() => S.acts.length > n0 + 3, 20000, 'ходы после медленного');
+    assert.equal(S.overlap, 0, 'второй ход ушёл до ответа на первый');
+    const lost = await h.game.evaluate(() => window.__lost || 0);
+    assert.ok(lost <= 1, 'потерянных кликов ' + lost);
+    assert.ok(med < 600, 'удар→удар, медиана ' + med + ' мс (Lite 1.0 на этой модели — 530–585 мс и 2 потерянных клика)');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    console.log(`PASS C: ход 150 мс + GET /character 300 мс → удар→удар медиана ${med} мс, потерянных кликов ${lost}; второй ход не ушёл, пока первый 7 с ждал ответа`);
+  } catch (e) { console.error('DIAG C', { acts: h.S.acts.slice(-30).join(','), overlap: h.S.overlap, url: h.game.url(), log: logText(await h.rt().catch(() => ({}))), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
+// LITE_ONLY=AC — только эти сценарии
+const ONLY = process.env.LITE_ONLY || 'ABC';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
