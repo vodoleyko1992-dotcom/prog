@@ -219,7 +219,7 @@
   <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
   <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
   <!-- 8.0 (аудит меню): «Обзор» — живая сводка вместо статичного текста и плиток-дублей шапки -->
-  <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><button id="taskBoardEdit" type="button">Изменить</button></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div>
+  <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><span class="task-board-btns"><button id="taskBoardFold" type="button" aria-controls="taskBoardRows" aria-expanded="true" title="Свернуть плитки задач без счётчиков (на паузе / разрешено)">Свернуть</button><button id="taskBoardEdit" type="button">Изменить</button></span></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div>
     <div id="quickModeGrid" hidden>
     <fieldset id="autoTaskSelection"><legend>Разрешённые задачи</legend>
       <div class="task-group-title">Основная работа — одна за раз, по приоритету</div>

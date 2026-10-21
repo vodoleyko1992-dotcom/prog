@@ -212,6 +212,13 @@ label{column-gap:5px}
 .task-board{margin:0 0 11px;padding:10px 12px;border:1px solid #766044;border-radius:9px;background:#2b2118}
 .task-board-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
 .task-board-head strong{font-size:14px;color:#f4d39a}
+/* 21.10: «Свернуть» прячет простые плитки задач, вместо них — одна строка-перечень (нажатие разворачивает) */
+.task-board-btns{display:flex;gap:5px;flex:0 0 auto}
+.task-board-btns button[hidden]{display:none}
+.task-board.folded .task-row.plain{display:none}
+.task-folded{display:none;grid-column:1/-1;min-height:24px;padding:4px 8px;border:1px dashed #5f4e38;border-radius:7px;background:none;box-shadow:none;font-size:11.5px;line-height:1.4;color:#bca685;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.task-board.folded .task-folded{display:block}
+.task-folded:hover{background:#211a13;color:#f3ddba}
 .task-board-note{font-size:11.5px;line-height:1.45;color:#c6b69d;margin:5px 0 9px}
 #taskBoardRows{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:7px}
 .task-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:4px 7px;min-width:0;padding:8px;border:1px solid #5f4e38;border-radius:7px;background:#211a13}
