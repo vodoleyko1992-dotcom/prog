@@ -8,7 +8,8 @@ const hook = read('hook.js'), content = read('content.js');
 const btOf = vm.runInNewContext(hook.slice(hook.indexOf('  const btOf = '), hook.indexOf('  const pvOf =')) + ';btOf');
 function fixture() {
  let now = 100000, rid = 0;
- const location = {search: '?spawnId=main'}, rt = {char: 'Fixture', zone: 'cruma'}, logs = [];
+ // 20.49: снимок другого героя отклоняется до начала боя; текущий rt и raw.character относятся к одному Hero.
+ const location = {search: '?spawnId=main'}, rt = {char: 'Hero', zone: 'cruma'}, logs = [];
  const env = {rt, cfg: {}, routeLocation: location, actName: a => a === 'attack' ? 'атака' : a,
    setRt: async p => Object.assign(rt,p), setRtSoon: async p => Object.assign(rt,p) /* 20.41: замеры навыков — отложенная запись */, rec: (...a) => logs.push(a), mobTitle: () => 'Main'};
  const box = {Date: {now: () => now}, URLSearchParams, console};
@@ -155,6 +156,7 @@ test('older GET contains prior hero hit: fullLog of later skill learns only the 
 });
 test('explicit new character start has its own revision sequence; old character action is rejected',()=>{
  const f=fixture();f.start('Main',1000,[],'main',50);
+ f.rt.char='Alt'; // 20.49: ядро подтверждает смену текущего героя до его нового start.
  f.send('/game/battle/start',{character:{id:'new-character',name:'Alt',revision:1,hp:1000,mp:100},battle:{spawnId:'alt-mob',mobName:'Rat',mobHp:100,mobMaxHp:100,log:[]}});
  assert.equal(f.lab.fight().actorId,'new-character');assert.equal(f.lab.fight().rev,1);
  const old=f.hit(['[Hero] −100 HP.'],{name:'Main',spawn:'main',rev:51});assert.equal(old,null);assert.equal(f.lab.fight().actorId,'new-character');

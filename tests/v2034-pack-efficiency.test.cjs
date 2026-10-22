@@ -54,29 +54,30 @@ test('cycles include a short observed transition; a long pause or new run does n
  f.advance(40000);assert.equal(f.fight().cycle,false);f.env.rt.manualKickAt++;assert.equal(f.fight().cycle,false);
 });
 test('fresh death outcomes enter the sample; three deaths in six pull fights suppress only that skill',()=>{
- const f=fixture();for(let i=0;i<6;i++)f.fight('provoke',{win:i>=3,hp:i<3?0:9000});const a=f.L.packAdvice('Garden Guard',1000);assert.deepEqual(plain(a.blocked),['provoke']);assert.equal(a.preferred,'');
+ const f=fixture();for(let i=0;i<6;i++)f.fight('provoke',{win:i>=3,hp:i<3?0:9000});const a=f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100});assert.deepEqual(plain(a.blocked),['provoke']);assert.equal(a.preferred,'');
 });
+// 20.49: производственный вызов передаёт текущие HP/MP; неизвестный вход больше не разрешает выбор по темпу.
 test('comparison requires six timed cycles per arm; proven gains prefer that pull without extra trials',()=>{
- const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:100});for(let i=0;i<5;i++)f.fight('howl',{reward:1000});f.fight('howl',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'');
- f.fight('howl',{reward:1000});f.fight('howl',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'howl');
+ const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:100});for(let i=0;i<5;i++)f.fight('howl',{reward:1000});f.fight('howl',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'');
+ f.fight('howl',{reward:1000});f.fight('howl',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'howl');
  assert.match(f.L.packReport(),/адена\/мин/);assert.match(f.L.packReport(),/SP\/мин/);assert.match(f.L.packReport(),/лишний 17%/);
 });
 test('a slower reward rate in both currencies suppresses pull; competing currencies do not',()=>{
- const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:1000});for(let i=0;i<7;i++)f.fight('provoke',{reward:100});assert.ok(f.L.packAdvice('Garden Guard',1000).blocked.includes('provoke'));
- for(const r of f.rows.filter(x=>x.mode==='provoke'))r.reward.sp=10000;assert.equal(f.L.packAdvice('Garden Guard',1000).blocked.length,0);
+ const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:1000});for(let i=0;i<7;i++)f.fight('provoke',{reward:100});assert.ok(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).blocked.includes('provoke'));
+ for(const r of f.rows.filter(x=>x.mode==='provoke'))r.reward.sp=10000;assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).blocked.length,0);
 });
 test('different initial HP/MP ranges and old data cannot prefer or suppress a pull',()=>{
  const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:100});for(let i=0;i<7;i++)f.fight('provoke',{reward:1000});
  for(const r of f.rows.filter(x=>x.mode==='none'))r.startMp=20;
- assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'');
+ assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'');
  for(const r of f.rows.filter(x=>x.mode==='none'))r.startMp=100;
  assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:20}).preferred,'');
  assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'provoke');
- f.advance(31*60000);assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'');
+ f.advance(31*60000);assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'');
 });
 test('recent pressure can raise the HP requirement, never lower the original floor',()=>{
- const f=fixture();for(let i=0;i<5;i++)f.fight('provoke',{hp:4000});assert.equal(f.L.packAdvice('Garden Guard',1000).minHp,95);
- f.setup='other-gear';assert.equal(f.L.packAdvice('Garden Guard',1000).minHp,75);
+ const f=fixture();for(let i=0;i<5;i++)f.fight('provoke',{hp:4000});assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).minHp,95);
+ f.setup='other-gear';assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).minHp,75);
 });
 test('mixed pull skills are not attributed to one treatment',()=>{
  const f=fixture();f.start();f.pull('provoke');f.pull('howl');const r=f.end({mode:'howl'});assert.equal(r.mode,'mixed');assert.equal(r.repeat,1);
@@ -89,7 +90,7 @@ test('actor/class change and PvP do not publish a foreign result',()=>{
 test('the ledger is bounded and the same target in another zone does not share the learned preference',()=>{
  const f=fixture();for(let i=0;i<70;i++)f.fight();assert.equal(f.rows.length,64);
  assert.equal(f.env.rt.packLab.totals.n,70);assert.equal(f.env.rt.packLab.totals.adena,7000);assert.match(f.L.packReport(),/Сессия: боёв 70/);
- f.env.rt.zone='Other';assert.equal(f.L.packAdvice('Garden Guard',1000).blocked.length,0);assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'');
+ f.env.rt.zone='Other';assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).blocked.length,0);assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'');
 });
 test('missing side HP leaves useful damage unknown instead of inventing zero overkill',()=>{
  const f=fixture();f.start();const r=f.end({lines:['Ты нанёс [Garden Guard] 1200 урона.','Вихор вразив ворогів поруч: Unseen −1200.']});assert.equal(r.damageUnknown,1);assert.equal(r.skills.whirlwind.known,0);assert.match(f.L.packReport(),/не полностью измерен/);
@@ -129,8 +130,8 @@ test('a truncated damage line is not reported as a complete overkill measurement
  const f=fixture();f.start();const r=f.end({lines:['Ты нанёс [Garden Guard] 1200 урона.','Вихор вразив ворогів поруч: '+ 'Unseen −1200, '.repeat(250)]});assert.ok(r.damageUnknown>0);assert.equal(r.skills.whirlwind.known,0);
 });
 test('unknown payout after a death prevents survivor-only profit learning',()=>{
- const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:100});for(let i=0;i<7;i++)f.fight('provoke',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'provoke');
- f.fight('provoke',{win:false,reward:null,hp:0});assert.equal(f.L.packAdvice('Garden Guard',1000).preferred,'');
+ const f=fixture();for(let i=0;i<7;i++)f.fight('none',{reward:100});for(let i=0;i<7;i++)f.fight('provoke',{reward:1000});assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'provoke');
+ f.fight('provoke',{win:false,reward:null,hp:0});assert.equal(f.L.packAdvice('Garden Guard',1000,{hp:100,mp:100}).preferred,'');
 });
 test('a treatment boundary does not charge the previous method transition to the new method',()=>{
  const f=fixture();f.fight('none');assert.equal(f.fight('provoke').cycle,false);assert.equal(f.fight('provoke').cycle,true);
