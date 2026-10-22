@@ -1,0 +1,117 @@
+{
+  "scope": "real Chromium; reconstructed local DOM; exact navigation/shown/byText/fire; controlled waitFor/route/actor",
+  "liveRequests": [],
+  "pageErrors": [],
+  "checks": [
+    {
+      "name": "исходник повторяет семь неудачных выходов",
+      "ok": true
+    },
+    {
+      "name": "ссылка ошибки без ID возвращает на карту: cat=true",
+      "ok": true
+    },
+    {
+      "name": "поздняя отрисовка ссылки: cat=true",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=true {\"block\":\"captcha\"}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=true {\"block\":\"actions\"}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=true {\"stopWaiting\":true}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=true {\"loseOwner\":true}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=true {\"rejectRoute\":true}",
+      "ok": true
+    },
+    {
+      "name": "ссылка ошибки без ID возвращает на карту: cat=false",
+      "ok": true
+    },
+    {
+      "name": "поздняя отрисовка ссылки: cat=false",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=false {\"block\":\"captcha\"}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=false {\"block\":\"actions\"}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=false {\"stopWaiting\":true}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=false {\"loseOwner\":true}",
+      "ok": true
+    },
+    {
+      "name": "запрет не подменяется прямым URL: cat=false {\"rejectRoute\":true}",
+      "ok": true
+    },
+    {
+      "name": "скрытый предок ошибки не вытесняет штатную кнопку",
+      "ok": true
+    },
+    {
+      "name": "скрытая ошибка без штатной кнопки не нажимается",
+      "ok": true
+    }
+  ],
+  "source": {
+    "navigation": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+    "fire": "4377e820b0fd0aed672a0c095d48aaaeb004cbf8aa75ca7f82143718249d5082"
+  },
+  "browser": "154.0.8037.57",
+  "baseline": {
+    "clicks": [],
+    "statuses": [
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён",
+      "Возврат в подземелье",
+      "Выход из боя не завершён"
+    ],
+    "waitCalls": [
+      3000,
+      3000,
+      3000,
+      3000,
+      3000,
+      3000,
+      3000
+    ],
+    "polls": 42,
+    "pointerEvents": [],
+    "routes": 0,
+    "pathname": "/battle.html",
+    "href": "https://l2wap.test/battle.html?spawnId=sdms_catacomb_of_the_branded_128",
+    "on": true,
+    "tabOwner": true,
+    "shownError": true
+  },
+  "ok": true
+}
