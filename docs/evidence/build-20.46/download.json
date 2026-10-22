@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-22T01:00:22.375092+00:00",
+  "commit": "3bbe067b6fb057fd6461a662d1540dbd43364009",
+  "files": [
+    {
+      "name": "l2wap-bot-v20.46.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/3bbe067b6fb057fd6461a662d1540dbd43364009/builds/l2wap-bot-v20.46.zip",
+      "bytes": 1620025,
+      "sha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+      "byteIdentical": true
+    },
+    {
+      "name": "l2wap-lite-v1.5.2.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/3bbe067b6fb057fd6461a662d1540dbd43364009/builds/l2wap-lite-v1.5.2.zip",
+      "bytes": 79114,
+      "sha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "byteIdentical": true
+    }
+  ],
+  "result": "PASS"
+}
