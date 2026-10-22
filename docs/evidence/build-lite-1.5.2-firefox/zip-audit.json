@@ -1,0 +1,251 @@
+{
+  "result": "PASS",
+  "auditUtc": "2026-10-22T01:42:01.137670+00:00",
+  "boundary": "Independent static ZIP/source/extracted audit; no browser launch and no live game requests",
+  "artifact": "/workspace/work/lite-firefox-152/packages/l2wap-lite-v1.5.2-firefox.zip",
+  "artifactBytes": 79127,
+  "artifactSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+  "source": "/workspace/prog/lite",
+  "extracted": "/tmp/l2lite-OddB2V/l2wap-lite-v1.5.2-firefox",
+  "sourceFileCount": 14,
+  "nonManifestCompared": 13,
+  "checks": [
+    {
+      "name": "Published Chrome ZIP unchanged",
+      "pass": true,
+      "expectedSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "actualSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "bytes": 79114
+    },
+    {
+      "name": "Source exact fourteen-file allowlist",
+      "pass": true,
+      "files": [
+        "README.txt",
+        "background.js",
+        "battle-cooldown.js",
+        "bot.js",
+        "hook.js",
+        "icons/128.png",
+        "icons/16.png",
+        "icons/48.png",
+        "logic.js",
+        "manifest.json",
+        "notranslate.js",
+        "popup.css",
+        "popup.html",
+        "popup.js"
+      ]
+    },
+    {
+      "name": "Extracted exact fourteen-file allowlist",
+      "pass": true
+    },
+    {
+      "name": "ZIP exact fourteen-file allowlist",
+      "pass": true,
+      "files": 14,
+      "entries": 15
+    },
+    {
+      "name": "ZIP has no duplicate paths",
+      "pass": true
+    },
+    {
+      "name": "ZIP safe relative paths",
+      "pass": true,
+      "unsafe": []
+    },
+    {
+      "name": "ZIP only regular files and allowed directory",
+      "pass": true,
+      "unexpectedTypes": []
+    },
+    {
+      "name": "ZIP not encrypted",
+      "pass": true
+    },
+    {
+      "name": "ZIP CRC all entries",
+      "pass": true,
+      "firstBadEntry": null
+    },
+    {
+      "name": "All fourteen ZIP files equal extracted bytes",
+      "pass": true
+    },
+    {
+      "name": "All thirteen nonmanifest files equal source bytes",
+      "pass": true,
+      "compared": 13
+    },
+    {
+      "name": "Independent CRC32 matches metadata",
+      "pass": true
+    },
+    {
+      "name": "Firefox manifest only exact expected transforms",
+      "pass": true,
+      "version": "1.5.2",
+      "gecko": {
+        "gecko": {
+          "id": "l2wap-lite@local",
+          "strict_min_version": "128.0",
+          "data_collection_permissions": {
+            "required": [
+              "none"
+            ]
+          }
+        },
+        "gecko_android": {
+          "strict_min_version": "128.0"
+        }
+      },
+      "background": {
+        "scripts": [
+          "background.js"
+        ]
+      }
+    },
+    {
+      "name": "Every manifest file reference is packaged",
+      "pass": true,
+      "references": [
+        "background.js",
+        "battle-cooldown.js",
+        "bot.js",
+        "hook.js",
+        "icons/128.png",
+        "icons/16.png",
+        "icons/48.png",
+        "logic.js",
+        "notranslate.js",
+        "popup.css",
+        "popup.html",
+        "popup.js"
+      ]
+    },
+    {
+      "name": "All twelve runtime/assets unchanged from published Chrome ZIP",
+      "pass": true,
+      "compared": 12
+    },
+    {
+      "name": "Inputs unchanged during audit",
+      "pass": true
+    }
+  ],
+  "files": [
+    {
+      "file": "README.txt",
+      "bytes": 14692,
+      "sha256": "508266a7511a6ff599dd7efe5d72f86f9c13f2741dacda946aad43f160404f86",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "background.js",
+      "bytes": 5067,
+      "sha256": "db8192b0857149a9670558ea52ab12ab01c7381f93428f214c03895711c11e6c",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "battle-cooldown.js",
+      "bytes": 10549,
+      "sha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "bot.js",
+      "bytes": 107058,
+      "sha256": "926b42f7af348543c71cc948ecc5f9653bb8036527dd4f2b6734a45572485af7",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "hook.js",
+      "bytes": 17677,
+      "sha256": "1fed6ea942211a3050b266112d81e407e539a99e697dc6cccbb55634121d3125",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "icons/128.png",
+      "bytes": 1232,
+      "sha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "icons/16.png",
+      "bytes": 200,
+      "sha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "icons/48.png",
+      "bytes": 515,
+      "sha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "logic.js",
+      "bytes": 40880,
+      "sha256": "41ea26f509189cf84872e0863200f5aaa77f1c54cabb07657b476cccb0f6af72",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 1933,
+      "sha256": "7842e4c03c9a848da5f59f22b784e8c9442bdccaf0e49184fd35a4fb40a6d4ed",
+      "zipEqualsExtracted": true,
+      "crcValid": true
+    },
+    {
+      "file": "notranslate.js",
+      "bytes": 699,
+      "sha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "popup.css",
+      "bytes": 3472,
+      "sha256": "4acca64bc0b80718fa55747759a6471b69733e17126944bf24e12fb1545d87b0",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "popup.html",
+      "bytes": 3158,
+      "sha256": "4f22e9728485c7975d7e17de5d40e7776fcbd89bc1bcdd535a4f81a345b1dc6f",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    },
+    {
+      "file": "popup.js",
+      "bytes": 14586,
+      "sha256": "d864f49cb4f02765579ae42540c9c92084c530b82ed66834eb09c7593464a120",
+      "zipEqualsExtracted": true,
+      "crcValid": true,
+      "zipEqualsSource": true
+    }
+  ]
+}
