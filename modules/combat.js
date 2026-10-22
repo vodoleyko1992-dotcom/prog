@@ -1114,8 +1114,16 @@ function drainPick(ctx, mp) {                     // готовый скилл �
   return null;
 }
 
+// 20.48 (живой РБ 22.10): повтор Battle Roar принят при HP6958/11035, но HP не выросло.
+// Даже последние 4 с эффекта — ещё активный MaxHP-бафф, а не готовое экстренное лечение.
+function battleRoarActive(b) {
+  if (env.ilOf?.(b)?.id !== 121) return false;
+  const row = env.activeBuffs?.().find(x => +x.id === 121);
+  if (row) return !(+row.exp > 0) || +row.exp > Date.now();
+  return env.buffActive?.(env.cleanTitle(b.title).toLowerCase(), b) === true;
+}
 function healPick(ctx, mp) {                      // готовый лечащий скилл на себя из роли «Лечение» (порядок = приоритет)
-  return env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => heroHealSkill(b) && ready(b) &&
+  return env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => heroHealSkill(b) && !(env.ilOf?.(b)?.id === 121 && (ctx.roarPrepTried || battleRoarActive(b))) && ready(b) &&
     (ctx.block['heal:' + b.title] || 0) <= Date.now() && affordable(b, mp, 10)) || null;
 }
 
@@ -1161,6 +1169,25 @@ function weaponNeed(b) {
 function combatWeaponLive() {
   const w = combatWeapon(), live = env.rt.weaponAug;
   return w && live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0) ? null : w;
+}
+// MaxHP в начале текущего боя РБ: только выбранный игроком навык, подтверждённая пика и живые MP/КД/HUD.
+// Первое применение на раненом герое ещё не измерено полностью: роль «Лечение» и модель Interlude не меняем.
+function battleRoarPlan(ctx, me, mp) {
+  const prof = String(env.rt.classCur?.prof || env.rt.prof || '').replace(/[_-]/g, ' '), weapon = combatWeaponLive();
+  if (!ctx.rb || ctx.rb.retreated || env.epicById?.(ctx.rb.id) || ctx.roarPrepTried || ctx.seq?.length || env.on === false || env.tabOwner === false || env.canAct?.() === false
+      || env.isBattle?.() !== true || env.pvpPending?.() || !/^(?:human )?(?:warlord|dreadnought)$/i.test(prof) || !/^(?:древковое|polearm)$/i.test(weapon?.wt || '')) return null;
+  if (!me || ![me.cur, me.max, me.pct, mp?.cur].every(Number.isFinite) || !(me.cur > 0 && me.max > 0) || me.pct <= Math.max(+env.cfg.hpPotAt || 50, (+env.cfg.stopHp || 25) + 10)) return null;
+  const buffs = env.activeBuffs?.();
+  if (!Array.isArray(buffs) || !buffs.length || !env.shown(env.$q('#l2-hud-active-buffs'))) return null;
+  const selected = [...new Set([...env.names(env.cfg.nHeal), ...env.names(env.cfg.nBuffs), ...env.names(env.cfg.nKeyBuffs)])];
+  const b = selected.flatMap(slotsBy).find(b => env.ilOf(b)?.id === 121 && env.slotKind(b) === 'скилл' && env.shown(b) && ['battle_roar','l2_121'].includes(env.slotAction(b)));
+  if (!b || battleRoarActive(b) || env.noEffect?.(b) || !ready(b)) return null;
+  // Готовый навык сервер может опустить из skillCooldowns. Как у обычных баффов, ready проверяет UI/local и любой положительный серверный КД;
+  // неизвестный ready-КД допускает одну попытку, отправленный/неизвестный исход закрывает повтор до следующего боя.
+  const bn = env.cleanTitle(b.title).toLowerCase(), row = env.rt.skillDb?.[bn] || env.rt.skillDb?.['battle roar'];
+  if (!row || !Number.isFinite(row.mp) || !(row.mp > 0) || mp.cur < row.mp + 10
+      || (ctx.block['buff:' + bn] || 0) > Date.now() || (ctx.block['heal:' + b.title] || 0) > Date.now()) return null;
+  return { b, bn };
 }
 function weaponBarred(b) {
   const need = weaponNeed(b); if (!need) return false;
@@ -2247,9 +2274,19 @@ async function battle() {
     env.BUFF_CTX = ctx;
     if (await env.spoilStep(ctx, act, mob)) return AGAIN;      // v5.3: ⛏ спойл в начале боя
     if (await env.toggleStep(ctx, me, act)) return AGAIN;           // v5.3: постоянные баффы (тогглы) — вкл/выкл по MP
+    const roar = battleRoarPlan(ctx, me, mp);
+    if (roar) {
+      const start = env.actNet?.().start || 0;
+      const result = await act(roar.b, 'РБ: Battle Roar — увеличиваю Max HP в начале боя', false,
+        () => battleRoarPlan(ctx, env.meHp(), env.meMp())?.b === roar.b);
+      // 'lock' бывает и после отправленного хода без ответа: неизвестный исход не разрешает повтор.
+      if ((env.actNet?.().start || 0) > start || !['lock','nomp'].includes(result)) ctx.roarPrepTried = true;
+      return AGAIN;
+    }
     for (const bn of env.buffList(ctx)) {
       const b = slotsBy(bn)[0];
       if (!ready(b) || env.noEffect?.(b) || (ctx.block['buff:' + bn] || 0) > Date.now()) continue;   // 7.1.31: «в бою эффекта нет» — не жмём
+      if (env.ilOf(b)?.id === 121 && (ctx.roarPrepTried || battleRoarActive(b))) continue;
       const pcIL = env.ilOf(b)?.pc;                   // Frenzy/Zealot/Guts: только при HP ≤ 30 % — аварийные
       if (pcIL?.hp && (me?.pct ?? 100) > pcIL.hp) continue;
       if (!affordable(b, mp, 0)) continue;           // 20.12 (ревизия 17.10): MP ниже цены — act() откажет; не крутим цикл на этом баффе
@@ -2809,6 +2846,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
