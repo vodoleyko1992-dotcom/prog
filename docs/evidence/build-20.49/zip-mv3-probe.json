@@ -1,0 +1,16 @@
+{
+  "version": "20.49",
+  "chrome": "156.0.8078.4",
+  "extensionId": "bnalncddafmkheefdlhehkmhimlceihg",
+  "cfgKeys": 208,
+  "champEvery": 100,
+  "deepEvery": 100,
+  "defaults": true,
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedExtensionResources": [],
+  "blockedHttp": [],
+  "gamePagesOpened": 0,
+  "liveGame": false,
+  "result": "PASS"
+}

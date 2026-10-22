@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.48",
-  "description": "L2wap Bot 20.48 — Warlord: роли, Battle Roar и серверные откаты",
+  "version": "20.49",
+  "description": "L2wap Bot 20.49 — постоянные Focus Attack и Vicious Stance у Warlord",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.48"
+  "version_name": "20.49"
 }

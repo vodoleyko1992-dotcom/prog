@@ -1,0 +1,1470 @@
+{
+  "result": "PASS",
+  "version": "20.49",
+  "zip": "/workspace/prog/builds/l2wap-bot-v20.49.zip",
+  "extracted": "/workspace/work/warlord-always-focus/final-unpacked",
+  "bytes": 1615886,
+  "files": 67,
+  "sha256": "a6d3595fc53a7285712e70ff2c61a60b867f1f0410c9956443fe62a85256344a",
+  "expectedSha256": "a6d3595fc53a7285712e70ff2c61a60b867f1f0410c9956443fe62a85256344a",
+  "crc": "PASS",
+  "duplicates": "PASS",
+  "pathSafety": "PASS",
+  "forbiddenMembers": [],
+  "unsafeMembers": [],
+  "allSourceZipExtractedHashesMatch": true,
+  "aggregateSourceZipExtractedSha256": "4d2c874a21734d0395e11f5bf522abb91839677207f96be657e544d77d7ac6a9",
+  "manifestVersion": 3,
+  "manifestClosure": [
+    {
+      "reference": "augment.js",
+      "files": [
+        "augment.js"
+      ]
+    },
+    {
+      "reference": "background.js",
+      "files": [
+        "background.js"
+      ]
+    },
+    {
+      "reference": "battle-cooldown.js",
+      "files": [
+        "battle-cooldown.js"
+      ]
+    },
+    {
+      "reference": "buff-value.js",
+      "files": [
+        "buff-value.js"
+      ]
+    },
+    {
+      "reference": "content.js",
+      "files": [
+        "content.js"
+      ]
+    },
+    {
+      "reference": "defaults.js",
+      "files": [
+        "defaults.js"
+      ]
+    },
+    {
+      "reference": "enchant-ui.css",
+      "files": [
+        "enchant-ui.css"
+      ]
+    },
+    {
+      "reference": "enchant-ui.js",
+      "files": [
+        "enchant-ui.js"
+      ]
+    },
+    {
+      "reference": "engine-core.js",
+      "files": [
+        "engine-core.js"
+      ]
+    },
+    {
+      "reference": "fa-full.js",
+      "files": [
+        "fa-full.js"
+      ]
+    },
+    {
+      "reference": "hook.js",
+      "files": [
+        "hook.js"
+      ]
+    },
+    {
+      "reference": "icons/*",
+      "files": [
+        "icons/128.png",
+        "icons/16.png",
+        "icons/48.png"
+      ]
+    },
+    {
+      "reference": "icons/128.png",
+      "files": [
+        "icons/128.png"
+      ]
+    },
+    {
+      "reference": "icons/16.png",
+      "files": [
+        "icons/16.png"
+      ]
+    },
+    {
+      "reference": "icons/48.png",
+      "files": [
+        "icons/48.png"
+      ]
+    },
+    {
+      "reference": "items-il.json",
+      "files": [
+        "items-il.json"
+      ]
+    },
+    {
+      "reference": "mammon-gear.json",
+      "files": [
+        "mammon-gear.json"
+      ]
+    },
+    {
+      "reference": "modules/actions.js",
+      "files": [
+        "modules/actions.js"
+      ]
+    },
+    {
+      "reference": "modules/buffs.js",
+      "files": [
+        "modules/buffs.js"
+      ]
+    },
+    {
+      "reference": "modules/champs.js",
+      "files": [
+        "modules/champs.js"
+      ]
+    },
+    {
+      "reference": "modules/combat.js",
+      "files": [
+        "modules/combat.js"
+      ]
+    },
+    {
+      "reference": "modules/craft.js",
+      "files": [
+        "modules/craft.js"
+      ]
+    },
+    {
+      "reference": "modules/crafterkit.js",
+      "files": [
+        "modules/crafterkit.js"
+      ]
+    },
+    {
+      "reference": "modules/dailies.js",
+      "files": [
+        "modules/dailies.js"
+      ]
+    },
+    {
+      "reference": "modules/dungeons.js",
+      "files": [
+        "modules/dungeons.js"
+      ]
+    },
+    {
+      "reference": "modules/economy.js",
+      "files": [
+        "modules/economy.js"
+      ]
+    },
+    {
+      "reference": "modules/enchant.js",
+      "files": [
+        "modules/enchant.js"
+      ]
+    },
+    {
+      "reference": "modules/enemies.js",
+      "files": [
+        "modules/enemies.js"
+      ]
+    },
+    {
+      "reference": "modules/epics.js",
+      "files": [
+        "modules/epics.js"
+      ]
+    },
+    {
+      "reference": "modules/equipment.js",
+      "files": [
+        "modules/equipment.js"
+      ]
+    },
+    {
+      "reference": "modules/fightlab.js",
+      "files": [
+        "modules/fightlab.js"
+      ]
+    },
+    {
+      "reference": "modules/fishing.js",
+      "files": [
+        "modules/fishing.js"
+      ]
+    },
+    {
+      "reference": "modules/lifestone.js",
+      "files": [
+        "modules/lifestone.js"
+      ]
+    },
+    {
+      "reference": "modules/loot.js",
+      "files": [
+        "modules/loot.js"
+      ]
+    },
+    {
+      "reference": "modules/mammon.js",
+      "files": [
+        "modules/mammon.js"
+      ]
+    },
+    {
+      "reference": "modules/mobfarm.js",
+      "files": [
+        "modules/mobfarm.js"
+      ]
+    },
+    {
+      "reference": "modules/navigation.js",
+      "files": [
+        "modules/navigation.js"
+      ]
+    },
+    {
+      "reference": "modules/payments.js",
+      "files": [
+        "modules/payments.js"
+      ]
+    },
+    {
+      "reference": "modules/pvp.js",
+      "files": [
+        "modules/pvp.js"
+      ]
+    },
+    {
+      "reference": "modules/quests.js",
+      "files": [
+        "modules/quests.js"
+      ]
+    },
+    {
+      "reference": "modules/raid.js",
+      "files": [
+        "modules/raid.js"
+      ]
+    },
+    {
+      "reference": "modules/rbrun.js",
+      "files": [
+        "modules/rbrun.js"
+      ]
+    },
+    {
+      "reference": "modules/rbtimer.js",
+      "files": [
+        "modules/rbtimer.js"
+      ]
+    },
+    {
+      "reference": "modules/resources.js",
+      "files": [
+        "modules/resources.js"
+      ]
+    },
+    {
+      "reference": "modules/story.js",
+      "files": [
+        "modules/story.js"
+      ]
+    },
+    {
+      "reference": "modules/subclass.js",
+      "files": [
+        "modules/subclass.js"
+      ]
+    },
+    {
+      "reference": "modules/subgo.js",
+      "files": [
+        "modules/subgo.js"
+      ]
+    },
+    {
+      "reference": "modules/survival.js",
+      "files": [
+        "modules/survival.js"
+      ]
+    },
+    {
+      "reference": "modules/tvt.js",
+      "files": [
+        "modules/tvt.js"
+      ]
+    },
+    {
+      "reference": "modules/tvtshop.js",
+      "files": [
+        "modules/tvtshop.js"
+      ]
+    },
+    {
+      "reference": "modules/warlock.js",
+      "files": [
+        "modules/warlock.js"
+      ]
+    },
+    {
+      "reference": "notranslate.js",
+      "files": [
+        "notranslate.js"
+      ]
+    },
+    {
+      "reference": "popup.html",
+      "files": [
+        "popup.html"
+      ]
+    },
+    {
+      "reference": "popup.js",
+      "files": [
+        "popup.js"
+      ]
+    },
+    {
+      "reference": "pvp-ui.css",
+      "files": [
+        "pvp-ui.css"
+      ]
+    },
+    {
+      "reference": "pvp-ui.js",
+      "files": [
+        "pvp-ui.js"
+      ]
+    },
+    {
+      "reference": "skills-il.js",
+      "files": [
+        "skills-il.js"
+      ]
+    },
+    {
+      "reference": "warlock-ui.css",
+      "files": [
+        "warlock-ui.css"
+      ]
+    },
+    {
+      "reference": "warlock-ui.js",
+      "files": [
+        "warlock-ui.js"
+      ]
+    },
+    {
+      "reference": "zone-db.js",
+      "files": [
+        "zone-db.js"
+      ]
+    },
+    {
+      "reference": "zone-kpd.js",
+      "files": [
+        "zone-kpd.js"
+      ]
+    }
+  ],
+  "htmlResourceClosure": [
+    {
+      "html": "popup.html",
+      "tag": "link",
+      "attribute": "href",
+      "resource": "ui-v7.css",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "link",
+      "attribute": "href",
+      "resource": "ui-game.css",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "link",
+      "attribute": "href",
+      "resource": "enchant-ui.css",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "link",
+      "attribute": "href",
+      "resource": "warlock-ui.css",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "link",
+      "attribute": "href",
+      "resource": "pvp-ui.css",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "defaults.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "zone-db.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "zone-kpd.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "buff-value.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "fa-full.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "augment.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/enemies.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/tvtshop.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/dailies.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/rbtimer.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "engine-core.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/fightlab.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/enchant.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "enchant-ui.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "modules/warlock.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "warlock-ui.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "pvp-ui.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "popup.js",
+      "present": true
+    },
+    {
+      "html": "popup.html",
+      "tag": "script",
+      "attribute": "src",
+      "resource": "ui-v7.js",
+      "present": true
+    }
+  ],
+  "forbiddenCredentialKeyPathsInBaseProfile": [],
+  "extraExtractedFiles": [],
+  "extractedSymlinks": [],
+  "allowlistExactMatch": true,
+  "sameRuntimeMemberSetAs20_48": true,
+  "preservedFiles": 60,
+  "preservedArchives": 59,
+  "baseProfilePreserved": true,
+  "allPreservedHashesMatch": true,
+  "unexpectedNewArchives": [],
+  "preservation": [
+    {
+      "path": "base-profile.json",
+      "expectedSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "actualSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.16.zip",
+      "expectedSha256": "781d1c32525a8d33cf585e1d1316943b95852d2f0a280d55e77141b013c30cd7",
+      "actualSha256": "781d1c32525a8d33cf585e1d1316943b95852d2f0a280d55e77141b013c30cd7",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.17.zip",
+      "expectedSha256": "de1c6fe44f996e148d1948cd63be3ab4f1a30a23948573ca3b10ffceef7efbbc",
+      "actualSha256": "de1c6fe44f996e148d1948cd63be3ab4f1a30a23948573ca3b10ffceef7efbbc",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.18.zip",
+      "expectedSha256": "23d88895744efddd974410e8aa5ed6af7d7275dc4f20cb211114bc1965ac50e4",
+      "actualSha256": "23d88895744efddd974410e8aa5ed6af7d7275dc4f20cb211114bc1965ac50e4",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.19.zip",
+      "expectedSha256": "99cccf4cb192f13d60ba656bbd04a025b8ddf9ba9a934045d0dce0e6703a43d8",
+      "actualSha256": "99cccf4cb192f13d60ba656bbd04a025b8ddf9ba9a934045d0dce0e6703a43d8",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.20.zip",
+      "expectedSha256": "3ebf3b355589431c9663e0a996782d6afc1c44aa19d27b84b9439d45f0f90c9c",
+      "actualSha256": "3ebf3b355589431c9663e0a996782d6afc1c44aa19d27b84b9439d45f0f90c9c",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v10.0.21.zip",
+      "expectedSha256": "f6e72787fdca7cfe891980a0059e61ab1b362cfce9349d48be71a5ad2247d46d",
+      "actualSha256": "f6e72787fdca7cfe891980a0059e61ab1b362cfce9349d48be71a5ad2247d46d",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.10.zip",
+      "expectedSha256": "72c3f3202545df5af4fd7907e9c55b206d792f0290ae08f006b74dd1f44dbc20",
+      "actualSha256": "72c3f3202545df5af4fd7907e9c55b206d792f0290ae08f006b74dd1f44dbc20",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.11.zip",
+      "expectedSha256": "bb032809bf480c42bd403d131d7eb5480488b84939a1529668fe160eb0a0df6c",
+      "actualSha256": "bb032809bf480c42bd403d131d7eb5480488b84939a1529668fe160eb0a0df6c",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.12.zip",
+      "expectedSha256": "98cb7ccd94b1cccc991f9c3771edde05b39ff3f7c2da394ea22a3ec7096fbed6",
+      "actualSha256": "98cb7ccd94b1cccc991f9c3771edde05b39ff3f7c2da394ea22a3ec7096fbed6",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.13.zip",
+      "expectedSha256": "b656b9a238c544d0d10a160487f289efc9b24840cf7ef5349d1a292ef7049df1",
+      "actualSha256": "b656b9a238c544d0d10a160487f289efc9b24840cf7ef5349d1a292ef7049df1",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.14.zip",
+      "expectedSha256": "9586bab7b3b0718b326390805d4eaa9bbcbcf95aa1d539a8b85f3ce2100ddc28",
+      "actualSha256": "9586bab7b3b0718b326390805d4eaa9bbcbcf95aa1d539a8b85f3ce2100ddc28",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.15.zip",
+      "expectedSha256": "53e1b5ca27b80e0e1b8e3e9fb3de24211c44cca910a7b3c4792464a592f4f1d3",
+      "actualSha256": "53e1b5ca27b80e0e1b8e3e9fb3de24211c44cca910a7b3c4792464a592f4f1d3",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.18-firefox.zip",
+      "expectedSha256": "345223df0ccc6c5cd6cc668774a7178fdfc6907d8e337b858e2a8ed6a491d302",
+      "actualSha256": "345223df0ccc6c5cd6cc668774a7178fdfc6907d8e337b858e2a8ed6a491d302",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.18.zip",
+      "expectedSha256": "4e7bec807b7ae34e524b7050ecc8ef00307fb1bc78b1ecc30bb858f4b9f9800e",
+      "actualSha256": "4e7bec807b7ae34e524b7050ecc8ef00307fb1bc78b1ecc30bb858f4b9f9800e",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.19-firefox.zip",
+      "expectedSha256": "dc09e44e5f170c827c2ac5fcc2028e7e573e9d1399cdbdb28cc7817f5c689640",
+      "actualSha256": "dc09e44e5f170c827c2ac5fcc2028e7e573e9d1399cdbdb28cc7817f5c689640",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.19.zip",
+      "expectedSha256": "7fa6b35f575def577d6db1d28746b0ef6f7969b6bbe678220c601838cbb1cf04",
+      "actualSha256": "7fa6b35f575def577d6db1d28746b0ef6f7969b6bbe678220c601838cbb1cf04",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.20-firefox.zip",
+      "expectedSha256": "c0850b494a47fc5b529a416261477afd8b384134547b306f2ac47af84a833cd3",
+      "actualSha256": "c0850b494a47fc5b529a416261477afd8b384134547b306f2ac47af84a833cd3",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.20.zip",
+      "expectedSha256": "b6e074dcc0db172e18fc25b88db2b87a1e0acd8e70ccc1854e356622d7a355cb",
+      "actualSha256": "b6e074dcc0db172e18fc25b88db2b87a1e0acd8e70ccc1854e356622d7a355cb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.21-firefox.zip",
+      "expectedSha256": "a7565ec7ed197d9db78bd0baf72974e069a9fbaae71b24c124fdbafbb218dbd3",
+      "actualSha256": "a7565ec7ed197d9db78bd0baf72974e069a9fbaae71b24c124fdbafbb218dbd3",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.21.zip",
+      "expectedSha256": "c655ce2d290886816ab91295228794f6f023fc78dc65f527d3e8b1007ea5af6d",
+      "actualSha256": "c655ce2d290886816ab91295228794f6f023fc78dc65f527d3e8b1007ea5af6d",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.22-firefox.zip",
+      "expectedSha256": "c7d6892a9b8e3df7b1503b7b68a0f8ef3f4fe9222a817b662e01248a7e6f2fd5",
+      "actualSha256": "c7d6892a9b8e3df7b1503b7b68a0f8ef3f4fe9222a817b662e01248a7e6f2fd5",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.22.zip",
+      "expectedSha256": "3149b6ba6d97007e06373ef98812d7a20da72f3cc04ff4080c27dff84d375e81",
+      "actualSha256": "3149b6ba6d97007e06373ef98812d7a20da72f3cc04ff4080c27dff84d375e81",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.23-firefox.zip",
+      "expectedSha256": "8baabc308998517a53b8243c1fd39ad76c858955f5cc6680fbc8c9bebea3b7e2",
+      "actualSha256": "8baabc308998517a53b8243c1fd39ad76c858955f5cc6680fbc8c9bebea3b7e2",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.23.zip",
+      "expectedSha256": "42dd2c9ba14bc4b4d1d738335edae09d5dfe30f147297275bd37534591afc85a",
+      "actualSha256": "42dd2c9ba14bc4b4d1d738335edae09d5dfe30f147297275bd37534591afc85a",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.24.zip",
+      "expectedSha256": "8211c55085f93e189dd834f00241c5a705df88ae0594a80ae1d79258e75a6ef5",
+      "actualSha256": "8211c55085f93e189dd834f00241c5a705df88ae0594a80ae1d79258e75a6ef5",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.25.zip",
+      "expectedSha256": "01f59d7188b50628d6c6cb5485fca787bbf174f4229216f68c0d03b12dfb3c6a",
+      "actualSha256": "01f59d7188b50628d6c6cb5485fca787bbf174f4229216f68c0d03b12dfb3c6a",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.26.zip",
+      "expectedSha256": "3d7f9d9ac279176315ef6d94b791ad6f7aba4577c517c40ead442d651172b651",
+      "actualSha256": "3d7f9d9ac279176315ef6d94b791ad6f7aba4577c517c40ead442d651172b651",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.27-firefox.zip",
+      "expectedSha256": "0feae442a9c8ec2cabffaac9905501061119893506c2f410b2b7ddfb84dfdc1f",
+      "actualSha256": "0feae442a9c8ec2cabffaac9905501061119893506c2f410b2b7ddfb84dfdc1f",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.27.zip",
+      "expectedSha256": "87f0070aea3f947b836997c7a4b887dc2c140c3866387703168d0ea5b8ee4e8d",
+      "actualSha256": "87f0070aea3f947b836997c7a4b887dc2c140c3866387703168d0ea5b8ee4e8d",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.28-firefox.zip",
+      "expectedSha256": "03ae0a6f4e6482f2218ea8a68a959b7d3a1c95aaf0a2837c899c8d5e9c7c2528",
+      "actualSha256": "03ae0a6f4e6482f2218ea8a68a959b7d3a1c95aaf0a2837c899c8d5e9c7c2528",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.28.zip",
+      "expectedSha256": "426070c1358664a673a519ad03b91e9381a4031fad86203e9b99fa5a7b226017",
+      "actualSha256": "426070c1358664a673a519ad03b91e9381a4031fad86203e9b99fa5a7b226017",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.29-firefox.zip",
+      "expectedSha256": "400c9c6546ed2a83a3771b8ada4721d424281de2d9b655205c16c8c23dc2b50b",
+      "actualSha256": "400c9c6546ed2a83a3771b8ada4721d424281de2d9b655205c16c8c23dc2b50b",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.29.zip",
+      "expectedSha256": "4df0218b52d1f5806a5567b948698409bd7275055ada15b0c07af5a5e51c3551",
+      "actualSha256": "4df0218b52d1f5806a5567b948698409bd7275055ada15b0c07af5a5e51c3551",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.30-firefox.zip",
+      "expectedSha256": "65ab8ea87decfd62785e5ebaad79df7f444c47afe122ab6b4664aff297b46e2a",
+      "actualSha256": "65ab8ea87decfd62785e5ebaad79df7f444c47afe122ab6b4664aff297b46e2a",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.30.zip",
+      "expectedSha256": "e98317bef8037e3e9cba9d1df2732823fe19bb74ba52e224672194974fc5a7a3",
+      "actualSha256": "e98317bef8037e3e9cba9d1df2732823fe19bb74ba52e224672194974fc5a7a3",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.31-firefox.zip",
+      "expectedSha256": "ba5415a2d2d1e8c9b2316c60d0ec1e1669c6461bddb1fbaa6940ea588b7f41b8",
+      "actualSha256": "ba5415a2d2d1e8c9b2316c60d0ec1e1669c6461bddb1fbaa6940ea588b7f41b8",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.31.zip",
+      "expectedSha256": "7c65b015411c4fd274410c88e485603fc33c9f7ec550d236eb5a6959f0a8686a",
+      "actualSha256": "7c65b015411c4fd274410c88e485603fc33c9f7ec550d236eb5a6959f0a8686a",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.32-firefox.zip",
+      "expectedSha256": "2f398a6bdba669c80d0ae3e8c3ac47c76483ee54ba90275129652ff7fb462474",
+      "actualSha256": "2f398a6bdba669c80d0ae3e8c3ac47c76483ee54ba90275129652ff7fb462474",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.32.zip",
+      "expectedSha256": "d9319c292014b5a709ea972cd6b46f96cf3dfc2f3721446f5e48c6ac3cd25152",
+      "actualSha256": "d9319c292014b5a709ea972cd6b46f96cf3dfc2f3721446f5e48c6ac3cd25152",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.33-firefox.zip",
+      "expectedSha256": "d08249c8bf910166d1e14977fd336f7f7749c052636701ee538bdd87a7da3380",
+      "actualSha256": "d08249c8bf910166d1e14977fd336f7f7749c052636701ee538bdd87a7da3380",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.33.zip",
+      "expectedSha256": "9e72119691086828395a3f8baea1eb5b2527873dd127357b7e3d0b5f52478feb",
+      "actualSha256": "9e72119691086828395a3f8baea1eb5b2527873dd127357b7e3d0b5f52478feb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.34-firefox.zip",
+      "expectedSha256": "fa81f69f1843cdfe14e60006b938fbb6710132be084948cde7769963b8123846",
+      "actualSha256": "fa81f69f1843cdfe14e60006b938fbb6710132be084948cde7769963b8123846",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.34.zip",
+      "expectedSha256": "bfb0fe4a8d849da699b39f7b9b45611dc31b5cc97c80fe7d5e388047c62447a0",
+      "actualSha256": "bfb0fe4a8d849da699b39f7b9b45611dc31b5cc97c80fe7d5e388047c62447a0",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.35-firefox.zip",
+      "expectedSha256": "1e4b4addcb0a3dfcf7840adabddf318e061bb28c53954760f11bafb0b5f1accb",
+      "actualSha256": "1e4b4addcb0a3dfcf7840adabddf318e061bb28c53954760f11bafb0b5f1accb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.35.zip",
+      "expectedSha256": "2898f61778e45deced36a169ffefaff07a27f4c5ce3233f322a9d0d4429d0cfb",
+      "actualSha256": "2898f61778e45deced36a169ffefaff07a27f4c5ce3233f322a9d0d4429d0cfb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.36-firefox.zip",
+      "expectedSha256": "068494a7ae4b79b277aa99d4c1be8280c19351772b580a86899afaa9c9d6f92c",
+      "actualSha256": "068494a7ae4b79b277aa99d4c1be8280c19351772b580a86899afaa9c9d6f92c",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.36.zip",
+      "expectedSha256": "25c66c6a201ae2b9f2549e42007eb0f7878eba3985e7653856870904b8405693",
+      "actualSha256": "25c66c6a201ae2b9f2549e42007eb0f7878eba3985e7653856870904b8405693",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.37.zip",
+      "expectedSha256": "1eb84da9465a92bd0b160cfc218c8dee2cd22db0bf823b9f4247751d2aec56eb",
+      "actualSha256": "1eb84da9465a92bd0b160cfc218c8dee2cd22db0bf823b9f4247751d2aec56eb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.38.zip",
+      "expectedSha256": "2460eb3c298d21f87711909aa2c943e3e8c709c3cac4acb418720c5149c78042",
+      "actualSha256": "2460eb3c298d21f87711909aa2c943e3e8c709c3cac4acb418720c5149c78042",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.39.zip",
+      "expectedSha256": "5c18b8039172909779539e7a13cf6ee8358205abfcf958c5d5a2c3aa0e023ee9",
+      "actualSha256": "5c18b8039172909779539e7a13cf6ee8358205abfcf958c5d5a2c3aa0e023ee9",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.40.zip",
+      "expectedSha256": "7e57d29e902900ed0659d68635b3556a618fc4cd70d3bc6e8b4cda636f2b968c",
+      "actualSha256": "7e57d29e902900ed0659d68635b3556a618fc4cd70d3bc6e8b4cda636f2b968c",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.41-firefox.zip",
+      "expectedSha256": "99fa7f0d2aedcafd04a5e5d0d731c358aaaf59fb3433ecab51b4e1cc886f05eb",
+      "actualSha256": "99fa7f0d2aedcafd04a5e5d0d731c358aaaf59fb3433ecab51b4e1cc886f05eb",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.41.zip",
+      "expectedSha256": "85b9710b8ccf563a97bbe0cf563b62ea0e7fa28f5da970ad136a9ee022548f65",
+      "actualSha256": "85b9710b8ccf563a97bbe0cf563b62ea0e7fa28f5da970ad136a9ee022548f65",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.46.zip",
+      "expectedSha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+      "actualSha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.47.zip",
+      "expectedSha256": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+      "actualSha256": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.48.zip",
+      "expectedSha256": "21d2e74888444b1a60f0a1bbcb44a5f3b72d73a1017b1e0296ebe3393d20dfc8",
+      "actualSha256": "21d2e74888444b1a60f0a1bbcb44a5f3b72d73a1017b1e0296ebe3393d20dfc8",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-bot-v20.9.zip",
+      "expectedSha256": "edf0c2ed43ae01d31e3acb7ce8cabd87321cea6bfe1fe8e442b007544492c54c",
+      "actualSha256": "edf0c2ed43ae01d31e3acb7ce8cabd87321cea6bfe1fe8e442b007544492c54c",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-lite-v1.5.2-firefox.zip",
+      "expectedSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+      "actualSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+      "preserved": true
+    },
+    {
+      "path": "builds/l2wap-lite-v1.5.2.zip",
+      "expectedSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "actualSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "preserved": true
+    }
+  ],
+  "entries": [
+    {
+      "path": "README-CHROME.txt",
+      "bytes": 11420,
+      "crc32": "c5fadfea",
+      "zipSha256": "117d5fa72cbf6e279a4b31a69dee15ff338eb1bd10ae316c611a29c0d0b99f3c",
+      "sourceSha256": "117d5fa72cbf6e279a4b31a69dee15ff338eb1bd10ae316c611a29c0d0b99f3c",
+      "extractedSha256": "117d5fa72cbf6e279a4b31a69dee15ff338eb1bd10ae316c611a29c0d0b99f3c"
+    },
+    {
+      "path": "README-FIREFOX.txt",
+      "bytes": 6098,
+      "crc32": "1eaf938f",
+      "zipSha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
+      "sourceSha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
+      "extractedSha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a"
+    },
+    {
+      "path": "augment.js",
+      "bytes": 7591,
+      "crc32": "f80a9430",
+      "zipSha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+      "sourceSha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+      "extractedSha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0"
+    },
+    {
+      "path": "background.js",
+      "bytes": 135299,
+      "crc32": "f7a7842c",
+      "zipSha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b",
+      "sourceSha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b",
+      "extractedSha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b"
+    },
+    {
+      "path": "base-profile.json",
+      "bytes": 995313,
+      "crc32": "96832f42",
+      "zipSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "sourceSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "extractedSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+    },
+    {
+      "path": "battle-cooldown.js",
+      "bytes": 12503,
+      "crc32": "6d151ff8",
+      "zipSha256": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e",
+      "sourceSha256": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e",
+      "extractedSha256": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e"
+    },
+    {
+      "path": "buff-value.js",
+      "bytes": 16418,
+      "crc32": "84b2df68",
+      "zipSha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+      "sourceSha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+      "extractedSha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3"
+    },
+    {
+      "path": "content.js",
+      "bytes": 777331,
+      "crc32": "9503cfdb",
+      "zipSha256": "767de03d8bca2c97ee62dc1360dc34305a586028103d2c5ed54dab7bf1b2a131",
+      "sourceSha256": "767de03d8bca2c97ee62dc1360dc34305a586028103d2c5ed54dab7bf1b2a131",
+      "extractedSha256": "767de03d8bca2c97ee62dc1360dc34305a586028103d2c5ed54dab7bf1b2a131"
+    },
+    {
+      "path": "defaults.js",
+      "bytes": 10675,
+      "crc32": "79d2a8fc",
+      "zipSha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af",
+      "sourceSha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af",
+      "extractedSha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af"
+    },
+    {
+      "path": "enchant-ui.css",
+      "bytes": 3846,
+      "crc32": "7ef869db",
+      "zipSha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+      "sourceSha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+      "extractedSha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f"
+    },
+    {
+      "path": "enchant-ui.js",
+      "bytes": 24178,
+      "crc32": "2f5a826c",
+      "zipSha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+      "sourceSha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+      "extractedSha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d"
+    },
+    {
+      "path": "engine-core.js",
+      "bytes": 45154,
+      "crc32": "6b4f8f52",
+      "zipSha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50",
+      "sourceSha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50",
+      "extractedSha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50"
+    },
+    {
+      "path": "fa-full.js",
+      "bytes": 8427,
+      "crc32": "3defd41b",
+      "zipSha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+      "sourceSha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+      "extractedSha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418"
+    },
+    {
+      "path": "hook.js",
+      "bytes": 41294,
+      "crc32": "9b203144",
+      "zipSha256": "baf83dd5efd31ee14b833ec3486316ea01edaa8097a85d00d1fd42ef1ede405f",
+      "sourceSha256": "baf83dd5efd31ee14b833ec3486316ea01edaa8097a85d00d1fd42ef1ede405f",
+      "extractedSha256": "baf83dd5efd31ee14b833ec3486316ea01edaa8097a85d00d1fd42ef1ede405f"
+    },
+    {
+      "path": "icons/128.png",
+      "bytes": 1232,
+      "crc32": "e0dc4371",
+      "zipSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "sourceSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "extractedSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c"
+    },
+    {
+      "path": "icons/16.png",
+      "bytes": 200,
+      "crc32": "3dad9e4c",
+      "zipSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "sourceSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "extractedSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3"
+    },
+    {
+      "path": "icons/48.png",
+      "bytes": 515,
+      "crc32": "8722da6d",
+      "zipSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "sourceSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "extractedSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393"
+    },
+    {
+      "path": "items-il.json",
+      "bytes": 1531835,
+      "crc32": "bb49c956",
+      "zipSha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+      "sourceSha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+      "extractedSha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41"
+    },
+    {
+      "path": "mammon-gear.json",
+      "bytes": 17575,
+      "crc32": "89011a95",
+      "zipSha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+      "sourceSha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+      "extractedSha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 3305,
+      "crc32": "607f8ef7",
+      "zipSha256": "c92f4b95f72b25fbe2efd1679c00c4d394060482aae17c8e3a288932a3a557bc",
+      "sourceSha256": "c92f4b95f72b25fbe2efd1679c00c4d394060482aae17c8e3a288932a3a557bc",
+      "extractedSha256": "c92f4b95f72b25fbe2efd1679c00c4d394060482aae17c8e3a288932a3a557bc"
+    },
+    {
+      "path": "modules/actions.js",
+      "bytes": 17436,
+      "crc32": "f1ea8b14",
+      "zipSha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1",
+      "sourceSha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1",
+      "extractedSha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1"
+    },
+    {
+      "path": "modules/buffs.js",
+      "bytes": 91772,
+      "crc32": "7a2aa462",
+      "zipSha256": "36d48912129d5b17af72e10e83643680983fe1fe11cf96c823e1d5a932f096bd",
+      "sourceSha256": "36d48912129d5b17af72e10e83643680983fe1fe11cf96c823e1d5a932f096bd",
+      "extractedSha256": "36d48912129d5b17af72e10e83643680983fe1fe11cf96c823e1d5a932f096bd"
+    },
+    {
+      "path": "modules/champs.js",
+      "bytes": 24196,
+      "crc32": "c2de8379",
+      "zipSha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e",
+      "sourceSha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e",
+      "extractedSha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e"
+    },
+    {
+      "path": "modules/combat.js",
+      "bytes": 299718,
+      "crc32": "502d4ad0",
+      "zipSha256": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+      "sourceSha256": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+      "extractedSha256": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f"
+    },
+    {
+      "path": "modules/craft.js",
+      "bytes": 25591,
+      "crc32": "07ef478f",
+      "zipSha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3",
+      "sourceSha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3",
+      "extractedSha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3"
+    },
+    {
+      "path": "modules/crafterkit.js",
+      "bytes": 31365,
+      "crc32": "1bce231e",
+      "zipSha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e",
+      "sourceSha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e",
+      "extractedSha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e"
+    },
+    {
+      "path": "modules/dailies.js",
+      "bytes": 21972,
+      "crc32": "33eedd58",
+      "zipSha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+      "sourceSha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+      "extractedSha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf"
+    },
+    {
+      "path": "modules/dungeons.js",
+      "bytes": 57842,
+      "crc32": "4a5a8bd2",
+      "zipSha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+      "sourceSha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+      "extractedSha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867"
+    },
+    {
+      "path": "modules/economy.js",
+      "bytes": 43218,
+      "crc32": "529e2918",
+      "zipSha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3",
+      "sourceSha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3",
+      "extractedSha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3"
+    },
+    {
+      "path": "modules/enchant.js",
+      "bytes": 39630,
+      "crc32": "0aa8c26c",
+      "zipSha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+      "sourceSha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+      "extractedSha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6"
+    },
+    {
+      "path": "modules/enemies.js",
+      "bytes": 23357,
+      "crc32": "61fbdd4c",
+      "zipSha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b",
+      "sourceSha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b",
+      "extractedSha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b"
+    },
+    {
+      "path": "modules/epics.js",
+      "bytes": 101062,
+      "crc32": "7daa13ed",
+      "zipSha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+      "sourceSha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+      "extractedSha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356"
+    },
+    {
+      "path": "modules/equipment.js",
+      "bytes": 52701,
+      "crc32": "39c8a366",
+      "zipSha256": "3a65f4ce0f9d2476a4f815550d0f068bddc596ca20941bd98e481b25ae8d8ae0",
+      "sourceSha256": "3a65f4ce0f9d2476a4f815550d0f068bddc596ca20941bd98e481b25ae8d8ae0",
+      "extractedSha256": "3a65f4ce0f9d2476a4f815550d0f068bddc596ca20941bd98e481b25ae8d8ae0"
+    },
+    {
+      "path": "modules/fightlab.js",
+      "bytes": 64099,
+      "crc32": "ddbac694",
+      "zipSha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753",
+      "sourceSha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753",
+      "extractedSha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753"
+    },
+    {
+      "path": "modules/fishing.js",
+      "bytes": 141898,
+      "crc32": "2152604d",
+      "zipSha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26",
+      "sourceSha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26",
+      "extractedSha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26"
+    },
+    {
+      "path": "modules/lifestone.js",
+      "bytes": 48287,
+      "crc32": "d13885ef",
+      "zipSha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a",
+      "sourceSha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a",
+      "extractedSha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a"
+    },
+    {
+      "path": "modules/loot.js",
+      "bytes": 35065,
+      "crc32": "621f48c1",
+      "zipSha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+      "sourceSha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+      "extractedSha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61"
+    },
+    {
+      "path": "modules/mammon.js",
+      "bytes": 135498,
+      "crc32": "589d5126",
+      "zipSha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
+      "sourceSha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
+      "extractedSha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3"
+    },
+    {
+      "path": "modules/mobfarm.js",
+      "bytes": 108704,
+      "crc32": "71489347",
+      "zipSha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
+      "sourceSha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
+      "extractedSha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa"
+    },
+    {
+      "path": "modules/navigation.js",
+      "bytes": 91713,
+      "crc32": "83c4b7fc",
+      "zipSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "sourceSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "extractedSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938"
+    },
+    {
+      "path": "modules/payments.js",
+      "bytes": 12123,
+      "crc32": "7b095d25",
+      "zipSha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
+      "sourceSha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
+      "extractedSha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d"
+    },
+    {
+      "path": "modules/pvp.js",
+      "bytes": 19031,
+      "crc32": "4de83ca2",
+      "zipSha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
+      "sourceSha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
+      "extractedSha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607"
+    },
+    {
+      "path": "modules/quests.js",
+      "bytes": 53039,
+      "crc32": "b79c4144",
+      "zipSha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",
+      "sourceSha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",
+      "extractedSha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1"
+    },
+    {
+      "path": "modules/raid.js",
+      "bytes": 229480,
+      "crc32": "5a608a77",
+      "zipSha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2",
+      "sourceSha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2",
+      "extractedSha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2"
+    },
+    {
+      "path": "modules/rbrun.js",
+      "bytes": 7364,
+      "crc32": "70406025",
+      "zipSha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+      "sourceSha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+      "extractedSha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3"
+    },
+    {
+      "path": "modules/rbtimer.js",
+      "bytes": 27094,
+      "crc32": "7efd1a8a",
+      "zipSha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b",
+      "sourceSha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b",
+      "extractedSha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b"
+    },
+    {
+      "path": "modules/resources.js",
+      "bytes": 19245,
+      "crc32": "c924415f",
+      "zipSha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d",
+      "sourceSha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d",
+      "extractedSha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d"
+    },
+    {
+      "path": "modules/story.js",
+      "bytes": 35209,
+      "crc32": "5b2d15ee",
+      "zipSha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68",
+      "sourceSha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68",
+      "extractedSha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68"
+    },
+    {
+      "path": "modules/subclass.js",
+      "bytes": 14028,
+      "crc32": "a6526511",
+      "zipSha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+      "sourceSha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+      "extractedSha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65"
+    },
+    {
+      "path": "modules/subgo.js",
+      "bytes": 27375,
+      "crc32": "2112d16c",
+      "zipSha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe",
+      "sourceSha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe",
+      "extractedSha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe"
+    },
+    {
+      "path": "modules/survival.js",
+      "bytes": 18759,
+      "crc32": "54a86285",
+      "zipSha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+      "sourceSha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+      "extractedSha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7"
+    },
+    {
+      "path": "modules/tvt.js",
+      "bytes": 39854,
+      "crc32": "e2c7863a",
+      "zipSha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+      "sourceSha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+      "extractedSha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9"
+    },
+    {
+      "path": "modules/tvtshop.js",
+      "bytes": 18228,
+      "crc32": "2ab6db30",
+      "zipSha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+      "sourceSha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+      "extractedSha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99"
+    },
+    {
+      "path": "modules/warlock.js",
+      "bytes": 82930,
+      "crc32": "f5f14a42",
+      "zipSha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72",
+      "sourceSha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72",
+      "extractedSha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72"
+    },
+    {
+      "path": "notranslate.js",
+      "bytes": 699,
+      "crc32": "849fa76e",
+      "zipSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "sourceSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "extractedSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523"
+    },
+    {
+      "path": "popup.html",
+      "bytes": 168328,
+      "crc32": "9ba46b65",
+      "zipSha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd",
+      "sourceSha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd",
+      "extractedSha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd"
+    },
+    {
+      "path": "popup.js",
+      "bytes": 367961,
+      "crc32": "b535bdf7",
+      "zipSha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1",
+      "sourceSha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1",
+      "extractedSha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1"
+    },
+    {
+      "path": "pvp-ui.css",
+      "bytes": 582,
+      "crc32": "c285abce",
+      "zipSha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+      "sourceSha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+      "extractedSha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea"
+    },
+    {
+      "path": "pvp-ui.js",
+      "bytes": 5944,
+      "crc32": "66a986fc",
+      "zipSha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+      "sourceSha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+      "extractedSha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26"
+    },
+    {
+      "path": "skills-il.js",
+      "bytes": 348160,
+      "crc32": "34f83b89",
+      "zipSha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+      "sourceSha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+      "extractedSha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327"
+    },
+    {
+      "path": "ui-game.css",
+      "bytes": 30959,
+      "crc32": "73e1801d",
+      "zipSha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407",
+      "sourceSha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407",
+      "extractedSha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407"
+    },
+    {
+      "path": "ui-v7.css",
+      "bytes": 16049,
+      "crc32": "0054f793",
+      "zipSha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f",
+      "sourceSha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f",
+      "extractedSha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f"
+    },
+    {
+      "path": "ui-v7.js",
+      "bytes": 24962,
+      "crc32": "fdd8531c",
+      "zipSha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf",
+      "sourceSha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf",
+      "extractedSha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf"
+    },
+    {
+      "path": "warlock-ui.css",
+      "bytes": 1105,
+      "crc32": "2b2b99fd",
+      "zipSha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+      "sourceSha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+      "extractedSha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568"
+    },
+    {
+      "path": "warlock-ui.js",
+      "bytes": 11510,
+      "crc32": "742e2e4a",
+      "zipSha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6",
+      "sourceSha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6",
+      "extractedSha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6"
+    },
+    {
+      "path": "zone-db.js",
+      "bytes": 31727,
+      "crc32": "9aeed171",
+      "zipSha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+      "sourceSha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+      "extractedSha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3"
+    },
+    {
+      "path": "zone-kpd.js",
+      "bytes": 12817,
+      "crc32": "c4768c72",
+      "zipSha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515",
+      "sourceSha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515",
+      "extractedSha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515"
+    }
+  ],
+  "problems": [],
+  "executionBoundary": "Read-only ZIP/JSON/HTML inspection and hashing only; no archive scripts executed and no game requests."
+}

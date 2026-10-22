@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.48 — Warlord: родные роли, серверные откаты и Battle Roar =====
+// ===== L2wap Bot v20.49 — Warlord: родные роли, серверные откаты и Battle Roar =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);

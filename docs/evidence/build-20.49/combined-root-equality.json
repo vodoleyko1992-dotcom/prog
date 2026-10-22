@@ -1,0 +1,6 @@
+{
+  "result": "PASS",
+  "files": 1443,
+  "comparison": "final root against full-suite combined release tree; browser-only files tested separately",
+  "different": []
+}

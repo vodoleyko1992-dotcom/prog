@@ -1,0 +1,65 @@
+{
+  "result": "PASS",
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.49",
+  "runtimeSource": "/workspace/work/warlord-always-focus/combined-check",
+  "runtimeHashesMatchRoot": true,
+  "kind": "actual MV3/main/hook with local mock game routes",
+  "cases": 4,
+  "proof": [
+    {
+      "case": "fresh",
+      "pass": true,
+      "proof": {
+        "recorded": 299,
+        "live": 299,
+        "pending": null
+      },
+      "actions": [
+        "provoke",
+        "whirlwind"
+      ]
+    },
+    {
+      "case": "stale",
+      "pass": true,
+      "proof": {
+        "recorded": 299,
+        "live": null,
+        "pending": null
+      },
+      "actions": [
+        "whirlwind"
+      ]
+    },
+    {
+      "case": "reload-stale",
+      "pass": true,
+      "proof": {
+        "recorded": 299,
+        "live": null,
+        "pending": null
+      },
+      "actions": [
+        "whirlwind"
+      ]
+    },
+    {
+      "case": "stop",
+      "pass": true,
+      "proof": {
+        "recorded": 299,
+        "live": 299,
+        "pending": null
+      },
+      "actions": [
+        "provoke"
+      ]
+    }
+  ],
+  "liveGame": false,
+  "liveGamePosts": 0,
+  "localMockBattlePosts": 5,
+  "pageErrors": [],
+  "routeErrors": []
+}
