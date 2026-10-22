@@ -43,14 +43,16 @@ test('wrong-spawn action array cannot reset the active battle or its deadlines',
  f.cd.observe({action:'l2_1127',battleSpawnId:'a'},{schema:1,timing:{serverNowMs:6000000},cooldowns:[{key:'0',skillId:1127,readyAt:0}]},200,'b');assert.deepEqual(f.cd.snapshot(),before);
 });
 test('array IDs bind a named action only when server skillId or row action explicitly establishes the alias',()=>{
- const f=fixture(),req={action:'whirlwind',battleSpawnId:'a'};
- f.cd.observe(req,{serverNowMs:5000000,skillCooldowns:[{skillId:181,readyAt:5001000}]},200,'a');assert.equal(f.cd.skillKnown('whirlwind','a'),false);
- f.cd.observe(req,{serverNowMs:5000100,skillId:181,skillCooldowns:[{skillId:181,readyAt:5002000}]},200,'a');assert.equal(f.cd.skillWait('whirlwind','a'),1940);
- f.cd.observeSync({serverNowMs:5000200,skillCooldowns:[{skillId:181,action:'whirlwind',readyAt:5000300}]},'a');assert.equal(f.cd.skillWait('whirlwind','a'),140);
+ // 22.10: Whirlwind доказанно36; динамическое связывание проверяем на ещё неизвестном native, не на противоречивом Whirlwind181.
+ const f=fixture(),req={action:'custom_native',battleSpawnId:'a'};
+ f.cd.observe(req,{serverNowMs:5000000,skillCooldowns:[{skillId:181,readyAt:5001000}]},200,'a');assert.equal(f.cd.skillKnown('custom_native','a'),false);
+ f.cd.observe(req,{serverNowMs:5000100,skillId:181,skillCooldowns:[{skillId:181,readyAt:5002000}]},200,'a');assert.equal(f.cd.skillWait('custom_native','a'),1940);
+ f.cd.observeSync({serverNowMs:5000200,skillCooldowns:[{skillId:181,action:'custom_native',readyAt:5000300}]},'a');assert.equal(f.cd.skillWait('custom_native','a'),140);
 });
 test('malformed array rows never synthesize ready, names, or numeric index observations',()=>{
  const f=fixture();f.cd.observeSync({serverNowMs:5000000,skillCooldowns:[{skillId:1127,readyAt:5005000}]},'a');f.tick(100);
- const bad=[null,false,12,[],{}, {key:'0',readyAt:0},{skillId:0,readyAt:0},{skillId:Infinity,readyAt:0},{skillId:1127},{skillId:1127,readyAt:null},{skillId:1127,readyAt:false},{skillId:1127,readyAt:'bad',remainingSec:0},{skillId:1127,readyAt:-1},{skillId:1127,remainingSec:-1},{skillId:1127,remainingMs:Infinity},{skillId:1127,remainingSec:121}];
+ // 22.10: живой Battle Roar подтвердил178с; skill-дедлайн разрешён до15мин, GCD по-прежнему до2мин.
+ const bad=[null,false,12,[],{}, {key:'0',readyAt:0},{skillId:0,readyAt:0},{skillId:Infinity,readyAt:0},{skillId:1127},{skillId:1127,readyAt:null},{skillId:1127,readyAt:false},{skillId:1127,readyAt:'bad',remainingSec:0},{skillId:1127,readyAt:-1},{skillId:1127,remainingSec:-1},{skillId:1127,remainingMs:Infinity},{skillId:1127,remainingSec:901}];
  f.cd.observeSync({serverNowMs:5000100,skillCooldowns:bad},'a');assert.equal(f.cd.skillWait('l2_1127','a'),4940);assert.equal(f.cd.skillKnown('l2_1127','a',f.now()),false);
  assert.deepEqual(Object.keys(f.cd.snapshot().skillUntil).sort(),['1127','l2_1127']);
 });
