@@ -1,0 +1,117 @@
+{
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.48",
+  "kind": "actual MV3/content with main OFF; native DOM/roles/ready/model; saved raw response supplied through controlled observe call",
+  "liveGame": false,
+  "cases": 7,
+  "proof": [
+    {
+      "case": "actual native localized DOM resolves support IDs",
+      "pass": true,
+      "ids": {
+        "roar": 121,
+        "lion": 287,
+        "focus": 317
+      }
+    },
+    {
+      "case": "actual suggestRoles assigns heal/buff, excludes manual Focus from automatic roles",
+      "pass": true,
+      "roles": {
+        "nAttack": "",
+        "nShots": "",
+        "nMpPot": "",
+        "nHpPot": "",
+        "nStun": "Грозова буря",
+        "nCharge": "",
+        "nForce": "",
+        "nPower": "Вихор, Дикий розмах, Грозова буря",
+        "nBuffs": "Левине серце",
+        "nKeyBuffs": "",
+        "nUltra": "",
+        "nDrain": "",
+        "nSpoil": "",
+        "nSpoilMass": "",
+        "nSweep": "",
+        "nToggles": "",
+        "nPetBuffs": "",
+        "nHeal": "Бойовий рик",
+        "nWeaponMain": ""
+      }
+    },
+    {
+      "case": "actual server wild_sweep native/numeric deadline and DOM ready",
+      "pass": true,
+      "expectedMs": 4967,
+      "state": {
+        "wait": 4966,
+        "numeric": 4966,
+        "known": true,
+        "ready": false,
+        "snapshot": {
+          "spawn": "l2dop_rb_25431",
+          "globalWait": 0,
+          "skillUntil": {
+            "l2_48": 1792662676174,
+            "l2_245": 1792662676720
+          }
+        }
+      }
+    },
+    {
+      "case": "actual server battle_roar native/numeric deadline and DOM ready",
+      "pass": true,
+      "expectedMs": 178271,
+      "state": {
+        "wait": 178271,
+        "numeric": 178271,
+        "known": true,
+        "ready": false,
+        "snapshot": {
+          "spawn": "l2dop_rb_25431",
+          "globalWait": 0,
+          "skillUntil": {
+            "l2_48": 1792662676174,
+            "l2_245": 1792662676720,
+            "l2_286": 1792662674823,
+            "l2_121": 1792662850029
+          }
+        }
+      }
+    },
+    {
+      "case": "actual server lionheart native/numeric deadline and DOM ready",
+      "pass": true,
+      "expectedMs": 44528,
+      "state": {
+        "wait": 44528,
+        "numeric": 44528,
+        "known": true,
+        "ready": false,
+        "snapshot": {
+          "spawn": "l2dop_rb_25431",
+          "globalWait": 0,
+          "skillUntil": {
+            "l2_48": 1792662676174,
+            "l2_245": 1792662676720,
+            "l2_286": 1792662673625,
+            "l2_121": 1792662848831,
+            "l2_287": 1792662716292
+          }
+        }
+      }
+    },
+    {
+      "case": "replayed old raw response does not extend long Roar timer",
+      "pass": true,
+      "until": 1792662848831
+    },
+    {
+      "case": "foreign spawn response leaves current cooldowns intact",
+      "pass": true
+    }
+  ],
+  "postRequests": 0,
+  "pageErrors": [],
+  "routeErrors": []
+}

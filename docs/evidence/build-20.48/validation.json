@@ -1,0 +1,94 @@
+{
+  "at": "2026-10-22T09:54:07.691935+00:00",
+  "pr": 351,
+  "version": "20.48",
+  "flavor": "main Chrome",
+  "artifact": "builds/l2wap-bot-v20.48.zip",
+  "bytes": 1610790,
+  "files": 67,
+  "sha256": "21d2e74888444b1a60f0a1bbcb44a5f3b72d73a1017b1e0296ebe3393d20dfc8",
+  "contentSha256": "b70d78a3ff0f3facf2dc722e026e7ed744a53cc7232fd02d501193bd0bfc2549",
+  "nodeFiles": 603,
+  "nodeFail": 0,
+  "newNodeCases": {
+    "nativeRoles": 9,
+    "nativeServerCooldowns": 66,
+    "battleRoar": 46,
+    "combinedRuntime": 3
+  },
+  "nodeLogSha256": "c68f57c113d408264aa9a152b150212796c8ad0d608e54f861565d2083912df1",
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "syntaxFiles": 72,
+  "syntax": "PASS",
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "mv3ZipLoad": {
+    "result": "PASS",
+    "chrome": "156.0.8078.4",
+    "proof": "zipload.json",
+    "version": "20.48",
+    "cfgKeys": 208,
+    "deepEvery": 100,
+    "champEvery": 100,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "resourceErrors": 0,
+    "httpRequests": 0
+  },
+  "browserSupport": {
+    "pass": 7,
+    "fail": 0,
+    "proof": "warlord-support-browser.json",
+    "source": "release20.48 source matching ZIP hashes",
+    "boundary": "actualMV3, mainOFF, nativeDOM/roles/ready/model, controlled observe fixture;0POST"
+  },
+  "browserWeapon": {
+    "pass": 4,
+    "fail": 0,
+    "proof": "warlord-weapon-browser.log",
+    "source": "release20.48 source matching ZIP hashes",
+    "boundary": "actualMV3/main/hook;5 local mocked battle POST;0live requests"
+  },
+  "farmFishingFromZip": {
+    "pass": 5,
+    "fail": 0,
+    "proof": "farm-fishing-from-zip.json",
+    "boundary": "exact finalZIP content functions/nativefetch loopback, controlled actor/IPC/map;0POST;not fullMV3"
+  },
+  "independentZipAudit": "independent-audit.json",
+  "sourceZipExtractedHashes": "PASS",
+  "baseProfileUnchanged": true,
+  "previousZipHashesUnchanged": {
+    "l2wap-bot-v20.47.zip": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+    "l2wap-bot-v20.46.zip": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+    "l2wap-lite-v1.5.2.zip": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+    "l2wap-lite-v1.5.2-firefox.zip": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568"
+  },
+  "liteSourceCooldownMirror": true,
+  "liteBuilt": false,
+  "firefoxBuilt": false,
+  "liveAudit": {
+    "rbKilled": 1,
+    "ordinaryNeighborsKilled": 12,
+    "rb": "Flamestone Golem44",
+    "class": "human_warlord",
+    "levelBefore": 44,
+    "levelAfter": 45,
+    "drop": {
+      "itemId": 191,
+      "count": 1
+    },
+    "coinOfLuckSpent": 0,
+    "festivalAdenaSpent": 0,
+    "endInBattle": false,
+    "endFullHpMp": true,
+    "catalogSkills": 24,
+    "knowledge": "../../../kb/data/warlord-skills-live-20261022.json",
+    "boundary": "controlled live actions before installing new automation; automated20.48 live raid untested"
+  },
+  "fullHistoricalBrowserRunner": false,
+  "independentRuntimeReview": "combined-review.json",
+  "result": "PASS",
+  "nodeLog": "precommit-final-tests.log (execution workspace)"
+}

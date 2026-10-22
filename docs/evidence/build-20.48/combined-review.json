@@ -1,0 +1,14 @@
+{
+  "runtimeHead": "b6c5d6275be7201fddd6e35af6848d34c02aff82",
+  "review": "PASS: no blockers in combined native aliases, server CD and Roar runtime",
+  "independentReview": true,
+  "integrationCases": 3,
+  "integrationResult": "PASS",
+  "test": "tests/v2048-warlord-runtime-integration.test.js",
+  "boundaries": "real createBattleCooldown + core ilOf + combat battleRoarPlan/healPick in Node VM; no live calls",
+  "cases": [
+    "native178s timer still vetoes after35s evidence freshness and omitted sync key; expiry restores eligible plan",
+    "active HUD MaxHP effect suppresses false heal and prep even after CD expiry; other heal remains available",
+    "foreign skill does not inherit121 by object order; explicit121 deadline still applies"
+  ]
+}

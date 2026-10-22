@@ -1,0 +1,46 @@
+{
+  "commit": "2081e27abcd5e479bbaa38378b8a64285f6e041e",
+  "parentCommit": "b623a2fc68d787f052fb62990049705ae11f1f6c",
+  "nativeIdentities": 17,
+  "identitySource": "raw/raid-start.json battle.skills[].l2SkillId",
+  "regression": {
+    "pass": 66,
+    "fail": 0,
+    "baselineOnB623a2f": {
+      "pass": 49,
+      "fail": 17
+    }
+  },
+  "targeted": {
+    "pass": 118,
+    "fail": 0
+  },
+  "full": {
+    "pass": 600,
+    "fail": 0
+  },
+  "liteTurn": "8/8 PASS",
+  "syntax": "4 changed JS files PASS",
+  "envcheck": "34/34 PASS",
+  "diffCheck": "PASS",
+  "independentReview": "No blockers; all17 identities verified, Focus400317/missingCD/400notallowed/replay/numeric/contradiction protections hold",
+  "files": [
+    "battle-cooldown.js",
+    "lite/battle-cooldown.js",
+    "tests/fixtures/warlord-cooldowns-20261022.json",
+    "tests/v2047-warlord-server-cooldowns.test.js",
+    "tests/lite-turn.test.js"
+  ],
+  "boundaries": [
+    "No live requests by child agent",
+    "No DPS/weapon policy changes",
+    "No Battle Trance mapping without numeric identity",
+    "Lite source shared module mirror only; ZIP/manifest/version unchanged"
+  ],
+  "logs": [
+    "cooldown-expanded-baseline.log",
+    "cooldown-expanded-targeted.log",
+    "cooldown-expanded-all-tests-final.log",
+    "cooldown-expanded-envcheck.log"
+  ]
+}
