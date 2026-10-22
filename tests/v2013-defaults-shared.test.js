@@ -29,7 +29,8 @@ test('defaults.js грузится как обычный скрипт (content s
   assert.equal(N.CFG.dailyKillLimit, 8000); assert.equal(N.CFG.dailyFishLimit, 1511);
   assert.deepEqual(JSON.parse(JSON.stringify(N.CFG.limitRanges)), { dailyFishLimit: { min: 1511, max: 1564 } });
   // точечные прежние значения (движок и меню раньше совпадали в них же)
-  const want = { mmCrafter: 'Skye', champEvery: 30, tvtOn: true, warlordAggro: true, fishBait: 'auto', shopReserve: 200000, shopMaxSpend: 2000000,
+  // 20.46: по просьбе игрока прежний заводской интервал 30 заменён на 100; меню и движок по-прежнему берут общую таблицу.
+  const want = { mmCrafter: 'Skye', champEvery: 100, tvtOn: true, warlordAggro: true, fishBait: 'auto', shopReserve: 200000, shopMaxSpend: 2000000,
     rbHuntMode: false, rbOrder: 'up', fighterMpPct: 25, epicMaxDeaths: 5, fishBuyPacks: 100, dockMin: false, magisterSkip: 'Curse Weakness, Poisonous Cloud' };
   for (const [k, v] of Object.entries(want)) assert.equal(N.CFG[k], v, k);
 });

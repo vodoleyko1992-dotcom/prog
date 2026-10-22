@@ -6,7 +6,8 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), mobfarm = read('modules/mobfarm.js');
 // 10.0.5 (игрок 13.10 00:38: «добавь автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов снова ВКЛ по умолчанию (once champAuto1005)
-assert.match(content, /chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,/, 'core default: on (17.10: interval 30)');
+// 20.46: плановый поиск реже, прежние выключатели чемпионов не меняются.
+assert.match(content, /chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 100, deepEvery: 100,/, 'core default: on (22.10: interval 100)');
 assert.match(popup, /chain: true, searchQuest: true, searchChamp: true,/, 'menu default: on (10.0.5)');
 assert.equal(JSON.parse(read('base-profile.json')).cfg.searchChamp, true, 'base profile: on (10.0.5)');
 assert.match(content, /once\('champAuto1005', \(\) => \{ cf\.searchChamp = true; \}\);/, '10.0.5: existing installs switched on once');

@@ -10,8 +10,9 @@ const open = (lvl = 4, mp = 484) => { const b = JSON.parse(JSON.stringify(BOOK))
 function make(over = {}, box = { console }) {
   vm.runInNewContext(read('modules/craft.js'), box);
   const posts = [], recs = [], gets = [], env = { cfg: { craftAuto: true, craftMpKeep: 20 }, rt: { char: 'Warlock' }, on: true, tabOwner: true, role: () => 'crafter', isBattle: () => false,
-    setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), invRefresh: async () => ({}), book: open(), hero: { revision: 77 },
-    gameGet: async p => { gets.push(p); return { ok: true, status: 200, json: async () => p === '/character' ? { character: env.hero } : env.book }; },
+    // 20.46: setRt реального ядра подтверждает очередь через ok:true, а GET /character содержит имя, полную сумку и MP.
+    setRt: async p => { Object.assign(env.rt, p); return { ok: true }; }, rec: (...a) => recs.push(a.join(' ')), invRefresh: async () => ({}), book: open(), hero: { revision: 77 },
+    gameGet: async p => { gets.push(p); return { ok: true, status: 200, json: async () => p === '/character' ? { character: { name: env.rt.char, mp: 484, inventory: { stacks: [] }, ...env.hero } } : env.book }; },
     gamePost: async (p, b) => { posts.push([p, b]); return { ok: true, status: 200, json: async () => ({ character: {} }) }; }, ...over };
   return { env, posts, recs, gets, box, C: box.L2V7Factories.craft(env) };
 }
@@ -134,7 +135,8 @@ test('ревью 21.10: стойкий 5xx — не чаще раза в 10 ми
 test('ревью 21.10: отказ gamePost до отправки (Stop, смена поколения, PvP) — не «неизвестный результат», сверки нет', async () => {
   for (const msg of ['action_cancelled', 'bot_inactive', 'pvp_defeat_pending']) {
     const M = make({ gamePost: async () => { throw new Error(msg); } }); M.env.rt.craftQueue = [{ id: 'a', code: 'steel', nm: 'Steel', n: 5 }];
-    assert.equal(await M.C.step(), false); assert.equal(M.env.rt.craftPending, undefined, msg); assert.doesNotMatch(M.recs.join('\n'), /результат неизвестен/);
+    // 20.46: durable-намерение уже записано до вызова gamePost; доказанный NOT_SENT снимает его подтверждённой записью.
+    assert.equal(await M.C.step(), false); assert.equal(M.env.rt.craftPending, null, msg); assert.doesNotMatch(M.recs.join('\n'), /результат неизвестен/);
   }
 });
 test('ревью 21.10: список крафта меняется в фоне по одной строке — два быстрых ✕ / ✕ и «+» не возвращают удалённое', async () => {

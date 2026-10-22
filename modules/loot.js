@@ -15,9 +15,13 @@ function spoilPick(ctx) {
   // Crush — только с дубиной (игра отвечает «скилл зараз недоступний»): подтверждённая не-дубина — без Crush, неизвестное оружие —
   // Crush после обычного Spoil (как раньше), дубина — Crush первым. Оружие без типа в справочнике (wt «—»: weaponEquipNote,
   // equipment.stats) — тоже неизвестное, а не «не дубина»: иначе при Spoil на откате Crush не шёл бы и запасным
-  const w = env.weaponNow?.(), bl = blunt(), wtKnown = !!w && !!w.wt && w.wt !== '—', seen = new Set();
+  const w = env.weaponNow?.(), bl = blunt(), wtKnown = !!w && !!w.wt && w.wt !== '—', crafter = env.roleNow?.() === 'crafter', seen = new Set();
+  // 20.46 (лог22.10 10:41:16: Warsmith с пикой, Spoil l2_254 принят, MP−59): обычный Spoil не требует дубины.
+  // Не угадываем у крафтера совместимость Crush без подтверждённой дубины; мало MP — берём доступный обычный Spoil.
+  const mp = env.meMp?.(), canPay = b => { const n = env.skillMp?.(env.cleanTitle(b.title)) || 0; return !mp || !n || Number.isFinite(mp.cur) && mp.cur >= n; };
   const all = env.names(env.cfg.nSpoil).flatMap(bn => env.slotsBy(bn).map(b => ({ bn, b })))
-    .filter(x => !seen.has(x.b) && seen.add(x.b) && !isMassSpoil(x.b) && !(isCrush(x.b) && wtKnown && !bl) && env.ready(x.b) && (ctx.block[spoilKey(x.b)] || 0) < Date.now());
+    .filter(x => !seen.has(x.b) && seen.add(x.b) && !isMassSpoil(x.b) && !(isCrush(x.b) && (wtKnown || crafter) && !bl)
+      && env.ready(x.b) && canPay(x.b) && (ctx.block[spoilKey(x.b)] || 0) < Date.now());
   const rank = x => isCrush(x.b) ? (bl ? 0 : 2) : 1;
   return all.sort((a, b) => rank(a) - rank(b))[0] || null;
 }
@@ -139,17 +143,9 @@ const BLUNT = /^(?:двуруч\. )?дубина$|^(?:big)?blunt$/i;
 const blunt = () => BLUNT.test(String(env.weaponNow?.()?.wt || ''));
 const crushFirst = (ctx, mob) => !ctx.rb && !ctx.spoilTry && !ctx.spoiled && !ctx.massTried && mob?.max > 0 && mob.cur > 0
   && blunt() && isCrush(spoilPick(ctx)?.b);
-// 20.43 (John 21.10 12:48: «у крафта тоже есть СОЛО споил, юзаем если одета булава, с пикой нафиг»): у крафтера (Artisan/Warsmith/Maestro)
-// спойл — только с подтверждённой дубиной. С пикой Warsmith 42 кладёт мобов с одного удара (бой из облака 21.10: 20 тыс. по площади),
-// ход на Spoil — потерянный ход. Спойлер (Fortune Seeker) с пикой по-прежнему спойлит Festival'ом.
-let noSpoilKey = '';
-const crafterPike = () => env.roleNow?.() === 'crafter' && !blunt();      // чистая проверка: и для выбора точки фарма (content.canSpoil)
-function crafterNoSpoil() {
-  if (!crafterPike()) { noSpoilKey = ''; return false; }
-  const w = env.weaponNow?.(), key = (env.rt.char || '') + '|' + (w?.id || '?');
-  if (key !== noSpoilKey) { noSpoilKey = key; env.rec('B', 'спойл', `крафтер ${w ? 'с оружием «' + (w.wt || w.name || '?') + '»' : 'без подтверждённого оружия'} — спойл не жму (только с дубиной)`); }
-  return true;
-}
+// 20.46 (John22.10: «польза велика... даже... КРАФТЕРЕ») заменяет прежний запрет21.10 с пикой.
+// Вид экипировки — только информация, не запрет совместимого Spoil; кнопка, MP, КД и ответ игры проверяются отдельно.
+const crafterPike = () => env.roleNow?.() === 'crafter' && /^(?:древковое|pole)$/i.test(String(env.weaponNow?.()?.wt || ''));
 // 20.43 (лог 21.10 21:35–22:00, BH 75 с пикой, 329 боёв): Festival (откат ≈2,7 с) дольше боя цепочки (≈2,3–3 с), и каждый второй бой
 // начинался с обычного Spoil — до готовности Festival оставалось ≈0,1–0,6 с; следующий Whirlwind клал пачку, ≈360 мобов из ≈470 без спойла.
 // Соседей в начале боя игра не показывает (extras пуст до Festival/АОЕ), поэтому ждём по оружию: не дубина, не РБ, первый спойл боя,
@@ -186,7 +182,6 @@ async function spoilWait(ctx, mob) {
 // (раньше — от первого ожидания боя: после неудачного Spoil поздний Festival получал «ждал 2,1 с»)
 function waitedMs(ctx, b) { const w = ctx.spoilWait; ctx.spoilWait = null; return w && w.k === spoilKey(b) && Date.now() - w.lastT < 250 ? Math.max(0, Date.now() - w.t0) : -1; }
 async function spoilStep(ctx, act, mob) {
-  if (crafterNoSpoil()) return false;
   festRestore(ctx);
   if (blunt() && await spoilWait(ctx, mob)) return true;            // дубина: Crush вот-вот откатится — ждём его, а не Festival
   if (!crushFirst(ctx, mob) && await massSpoilStep(ctx, act, mob)) return true;
@@ -340,6 +335,6 @@ async function trackLoot(lines, mob, info) {
   if (campCh) Object.assign(patch, { campaign: { ...campaign, live: Date.now() }, campaignDue: campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
- return { BLUNT, crushFirst, isCrush, spoilWait, festRestore, crafterPike, crafterNoSpoil, faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
+ return { BLUNT, crushFirst, isCrush, spoilWait, festRestore, crafterPike, faKind, faNote, faRateNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
  };
 })(globalThis);

@@ -1,0 +1,104 @@
+{
+  "syntaxFiles": 85,
+  "syntaxFailed": [],
+  "profileSemanticBase": "6137831",
+  "profileOnlyExpectedTwoCfgChanges": true,
+  "profileChangedPaths": [
+    "cfg.champEvery",
+    "cfg.deepEvery"
+  ],
+  "baseProfileSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+  "liteLockedFiles": 14,
+  "liteChangedFiles": [],
+  "nodeFiles": 597,
+  "nodeFail": 0,
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "crafterSpoilBrowser": {
+    "pass": 2,
+    "fail": 0,
+    "boundary": "actual main/hook/MV3 on local HTTPS game fixtures"
+  },
+  "keepGolemBrowser": {
+    "pass": 1,
+    "fail": 0,
+    "boundary": "actual MV3 factory, local env/equipment server"
+  },
+  "priorChecksKept": [
+    "craft reload3/3",
+    "Warlord live4/4",
+    "legacy Provoke4/4",
+    "legacy weapon proof6/6",
+    "Lite recovery PASS",
+    "Lite A-G7/7"
+  ],
+  "liteCodeUnchanged": true,
+  "liteAggregateSha256": "3fc8dd76df87fbe6cbb582a18eddc715608ca3e141cb7f7fd68317ccb8219240",
+  "liveGame": false,
+  "mainPackage": {
+    "flavor": "Main Chrome",
+    "version": "20.46",
+    "artifact": "/workspace/work/fixes-2046/packages/l2wap-bot-v20.46.zip",
+    "bytes": 1620025,
+    "sha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+    "files": 67,
+    "sourceZipExtractedMatchLockedBeforeAndAfter": true,
+    "sourceAggregateSha256": "5fad1c6e85bc54b03d6d5b34886832128e4b65c661d14f029b5bb7b7e74a27a3",
+    "zipAudit": "/workspace/work/fixes-2046/packages/main-final-zip-audit.json",
+    "zipload": {
+      "installed": {
+        "cfgKeys": 208,
+        "champEvery": 100,
+        "deepEvery": 100
+      },
+      "flavor": "main",
+      "version": "20.46",
+      "chrome": "156.0.8078.4",
+      "extensionId": "hjdegkndlhibogddaifbanckjhnmknkp",
+      "pageErrors": [],
+      "failedExtensionResources": [],
+      "consoleErrors": [],
+      "blockedHttp": [],
+      "gamePagesOpened": 0,
+      "liveGame": false,
+      "result": "PASS"
+    },
+    "checksum": "/workspace/work/fixes-2046/packages/SHA256SUMS-20.46.txt",
+    "lite14SourceHashesStillLocked": true,
+    "firefoxBuilt": false,
+    "liveGame": false,
+    "result": "PASS"
+  },
+  "result": "PASS",
+  "litePackage": {
+    "flavor": "Lite Chrome",
+    "version": "1.5.2",
+    "artifact": "/workspace/work/fixes-2046/packages/l2wap-lite-v1.5.2.zip",
+    "bytes": 79114,
+    "sha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+    "files": 14,
+    "sourceZipExtractedMatchLockedBeforeAndAfter": true,
+    "sourceAggregateSha256": "3fc8dd76df87fbe6cbb582a18eddc715608ca3e141cb7f7fd68317ccb8219240",
+    "zipAudit": "/workspace/work/fixes-2046/packages/lite-final-zip-audit.json",
+    "zipload": {
+      "flavor": "lite",
+      "version": "1.5.2",
+      "chrome": "156.0.8078.4",
+      "extensionId": "lijcnlblnfknnochhabhnomgkpappnbl",
+      "pageErrors": [],
+      "failedExtensionResources": [],
+      "consoleErrors": [],
+      "blockedHttp": [],
+      "gamePagesOpened": 0,
+      "liveGame": false,
+      "result": "PASS"
+    },
+    "checksum": "/workspace/work/fixes-2046/packages/SHA256SUMS-lite-1.5.2.txt",
+    "firefoxBuilt": false,
+    "mainBuilt": false,
+    "liveGame": false,
+    "result": "PASS"
+  }
+}

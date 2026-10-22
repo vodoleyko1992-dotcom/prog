@@ -10,7 +10,8 @@ test('какой набор нужен: тур РБ/эпики — РБ, фар�
   M.mode = 'tasks'; M.loot = true; assert.equal(K.want(), 'farm', 'задачи с целью фарма — пика');
   M.mode = 'raid'; M.role = 'spoiler'; assert.equal(K.want(), null); assert.equal(K.holds(), false);
   M.role = 'crafter'; env.cfg.crafterKit = false; assert.equal(K.want(), null); assert.equal(K.holds(), false); assert.equal(K.noSummon(), false, 'выключенный набор не мешает бою');
-  env.cfg.crafterKit = true; M.mode = 'farm'; assert.equal(K.noSummon(), true, 'на фарме голема в бою не призываем');
+  // 20.46, решение John 22.10: голема сохраняем и на фарме; боевые настройки petAuto остаются у petStep.
+  env.cfg.crafterKit = true; M.mode = 'farm'; assert.equal(K.noSummon(), false, 'набор не запрещает голема на фарме');
   M.mode = 'raid'; assert.equal(K.noSummon(), false);
   // 20.44: бой с РБ ради ресурса (rt.farmRb) — голема можно, а прилетели к живому РБ — набор РБ
   M.mode = 'farm'; assert.equal(K.noSummon(true), false, 'бой с РБ на фарме — голем можно');
@@ -50,16 +51,17 @@ test('тур РБ с пикой: булава → щит → голем, по о
   const n = S.posts.length, g = S.gets; await drive(30); assert.equal(S.posts.length, n, 'готовый набор не трогаем'); assert.ok(S.gets - g <= 1, 'перепроверка не чаще раза в минуту');
 });
 
-test('фарм после РБ: отозвать голема → снять щит → пика; в бою и вне задач ничего не делает', async () => {
+test('фарм после РБ: снять щит → пика, голема сохраняем; в бою и вне задач ничего не делает', async () => {
   const h = hero(); h.inventory.eq = { l1: { itemId: YAKSA, enchant: 4, enchantPAtkBonus: 16, enchantMAtkBonus: 0 }, l2: { itemId: KNIGHT } };
   h.inventory.stacks = [{ itemId: POLE, qty: 1 }, { itemId: CRYSTAL, qty: 40 }]; h.activeSummon = { key: 'mechanic_golem', hp: 10, maxHp: 2400 };
   const { S, M, drive, K } = make({ mode: 'farm', hero: h });
   M.battle = true; assert.equal(await K.step(), false); assert.equal(S.gets, 0, 'в бою не читаем и не переодеваемся');
   M.battle = false; M.mode = 'fish'; assert.equal(await K.step(), false); assert.equal(S.gets, 0, 'рыбалка — не наше дело');
   M.mode = 'farm'; await drive(12);
-  assert.deepEqual(S.posts.map(([p, b]) => p.split('/').pop() + ':' + (b.action || b.slot || '')), ['dismiss:', 'equip:unequip', 'equip:equip']);
-  assert.equal(S.posts[1][1].slot, 'l2');
-  assert.deepEqual(eqOf(S), [POLE, 0, '']);
+  // 20.46, решение John 22.10: снятие щита и смена оружия прежние, отзыв голема больше не требуется.
+  assert.deepEqual(S.posts.map(([p, b]) => p.split('/').pop() + ':' + (b.action || b.slot || '')), ['equip:unequip', 'equip:equip']);
+  assert.equal(S.posts[0][1].slot, 'l2');
+  assert.deepEqual(eqOf(S), [POLE, 0, 'mechanic_golem']);
 });
 
 test('нет кристаллов — без голема (причина в журнал); мало MP — цикл не держим, призыв позже', async () => {
@@ -117,7 +119,9 @@ test('цепочка «Охотиться дальше»: уводит на ка
   assert.equal(A.K.chainWant(), false, 'второй раз подряд без проверки — не гоняем');
   await A.drive(6); assert.equal(A.K.chainWant(), false, 'проверено, пика надета');
   A.M.pet = 'mechanic_golem'; assert.equal(A.K.chainWant(), false, 'память вкладки — только через 10 мин');
-  A.clock.now += 11 * 60000; assert.equal(A.K.chainWant(), true, 'голем на фарме');
+  A.clock.now += 11 * 60000; assert.equal(A.K.chainWant(), false, '20.46: голем на фарме не прерывает цепочку');
+  A.M.weapon = { id: YAKSA, wt: 'дубина', g: 'C' }; A.env.rt.weapons = [{ id: POLE, wt: 'древковое', g: 'C', where: 'сумка' }];
+  assert.equal(A.K.chainWant(), true, 'неподходящее оружие — прежний повод сменить набор');
   A.M.mode = 'raid'; A.M.pet = null; assert.equal(A.K.chainWant(), false, 'только что уводили, шаг ещё не проверил');
   A.M.mode = 'farm'; await A.drive(2); A.M.mode = 'raid'; assert.equal(A.K.chainWant(), true, 'задача сменилась — нужен набор РБ');
 });

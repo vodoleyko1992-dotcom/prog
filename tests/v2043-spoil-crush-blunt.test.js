@@ -54,18 +54,20 @@ test('Crush «недоступен» игрой — дальше Festival, бе�
   await f.api.spoilStep(f.ctx, f.act, f.mob); await f.api.spoilStep(f.ctx, f.act, f.mob);
   assert.deepEqual(f.calls, ['Spoil Crush', 'Spoil Festival']);
 });
-test('крафтер (Warsmith): соло-Spoil только с дубиной, с пикой и без подтверждённого оружия — не жмёт (John 21.10 12:48)', async () => {
+// 20.46: новое решение John22.10 заменяет запрет21.10. Native Spoil с пикой подтверждён ручными200 в10:41:02/16.
+test('крафтер (Warsmith): обычный соло-Spoil доступен с пикой, другим и неизвестным оружием', async () => {
   for (const wt of ['древковое', 'меч', null]) { const f = fixture(wt, { role: 'crafter' }); f.crush.disabled = f.mass.disabled = true;
-    assert.equal(await f.api.spoilStep(f.ctx, f.act, f.mob), false, String(wt)); assert.deepEqual(f.calls, [], String(wt));
-    await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.recs.length, 1, 'причина в журнале один раз'); assert.match(f.recs[0], /только с дубиной/);
-    assert.equal(f.api.crafterPike(), true); }
+    assert.equal(await f.api.spoilStep(f.ctx, f.act, f.mob), true, String(wt)); assert.deepEqual(f.calls, ['Spoil'], String(wt));
+    await f.api.spoilStep(f.ctx, f.act, f.mob); assert.deepEqual(f.calls, ['Spoil'], 'помеченную цель повторно не спойлит'); assert.doesNotMatch(f.recs.join('\n'), /только с дубиной/);
+    assert.equal(f.api.crafterPike(), wt === 'древковое', 'маркер пики описывает экипировку, не запрет спойла'); }
   const f = fixture('дубина', { role: 'crafter' }); f.crush.disabled = f.mass.disabled = true;
   assert.equal(await f.api.spoilStep(f.ctx, f.act, f.mob), true); assert.deepEqual(f.calls, ['Spoil']); assert.equal(f.api.crafterPike(), false);
   const g = fixture('древковое'); assert.equal(g.api.crafterPike(), false, 'спойлер с пикой спойлит, как раньше');
 });
-test('крафтер с пикой: точка фарма не выбирается по спойлу (content.canSpoil)', () => {
+test('20.46: крафтер с пикой не исключён из точек фарма со спойлом (content.canSpoil)', () => {
   const src = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
-  assert.match(src, /const canSpoil = \(\) => !L2V7Modules\.loot\?\.crafterPike\?\.\(\) && \(/);
+  assert.doesNotMatch(src, /const canSpoil = [^\n]*crafterPike/);
+  assert.match(src, /const canSpoil = \(\) => \(L2V7Modules\.subclass\?\.role\?\.\(\) === 'spoiler' \|\| spoilRoleOwn\(\)\)/);
   assert.match(src, /L2V7Modules\.loot = L2V7Factories\.loot\(\{[^\n]*get roleNow\(\)\{return \(\)=>L2V7Modules\.subclass\?\.role\?\.\(\)\}/);
 });
 // 20.44 (итоговая проверка): спойл берёт «живое» оружие combatWeaponLive (устаревшая запись «надето» при другой руке в игре — неизвестно)

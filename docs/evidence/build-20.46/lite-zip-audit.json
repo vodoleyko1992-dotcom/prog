@@ -1,0 +1,122 @@
+{
+  "source": "/workspace/prog/lite",
+  "flavor": "lite",
+  "version": "1.5.2",
+  "allowlist": [
+    "README.txt",
+    "background.js",
+    "battle-cooldown.js",
+    "bot.js",
+    "hook.js",
+    "icons/128.png",
+    "icons/16.png",
+    "icons/48.png",
+    "logic.js",
+    "manifest.json",
+    "notranslate.js",
+    "popup.css",
+    "popup.html",
+    "popup.js"
+  ],
+  "expectedFiles": 14,
+  "zip": "/workspace/work/fixes-2046/packages/l2wap-lite-v1.5.2.zip",
+  "zipBytes": 79114,
+  "zipSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+  "files": [
+    {
+      "path": "README.txt",
+      "bytes": 14648,
+      "sourceSha256": "1183ba77ad2fbd4c79b14e2c3259031e57e76d36297fa1b7e63e70fb28383dcf",
+      "zipSha256": "1183ba77ad2fbd4c79b14e2c3259031e57e76d36297fa1b7e63e70fb28383dcf"
+    },
+    {
+      "path": "background.js",
+      "bytes": 5067,
+      "sourceSha256": "db8192b0857149a9670558ea52ab12ab01c7381f93428f214c03895711c11e6c",
+      "zipSha256": "db8192b0857149a9670558ea52ab12ab01c7381f93428f214c03895711c11e6c"
+    },
+    {
+      "path": "battle-cooldown.js",
+      "bytes": 10549,
+      "sourceSha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+      "zipSha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992"
+    },
+    {
+      "path": "bot.js",
+      "bytes": 107058,
+      "sourceSha256": "926b42f7af348543c71cc948ecc5f9653bb8036527dd4f2b6734a45572485af7",
+      "zipSha256": "926b42f7af348543c71cc948ecc5f9653bb8036527dd4f2b6734a45572485af7"
+    },
+    {
+      "path": "hook.js",
+      "bytes": 17677,
+      "sourceSha256": "1fed6ea942211a3050b266112d81e407e539a99e697dc6cccbb55634121d3125",
+      "zipSha256": "1fed6ea942211a3050b266112d81e407e539a99e697dc6cccbb55634121d3125"
+    },
+    {
+      "path": "icons/128.png",
+      "bytes": 1232,
+      "sourceSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "zipSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c"
+    },
+    {
+      "path": "icons/16.png",
+      "bytes": 200,
+      "sourceSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "zipSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3"
+    },
+    {
+      "path": "icons/48.png",
+      "bytes": 515,
+      "sourceSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "zipSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393"
+    },
+    {
+      "path": "logic.js",
+      "bytes": 40880,
+      "sourceSha256": "41ea26f509189cf84872e0863200f5aaa77f1c54cabb07657b476cccb0f6af72",
+      "zipSha256": "41ea26f509189cf84872e0863200f5aaa77f1c54cabb07657b476cccb0f6af72"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1673,
+      "sourceSha256": "86fc9c7ce286ade1d690db2e436f260a676679fa1656946c8c71871684655363",
+      "zipSha256": "86fc9c7ce286ade1d690db2e436f260a676679fa1656946c8c71871684655363"
+    },
+    {
+      "path": "notranslate.js",
+      "bytes": 699,
+      "sourceSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "zipSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523"
+    },
+    {
+      "path": "popup.css",
+      "bytes": 3472,
+      "sourceSha256": "4acca64bc0b80718fa55747759a6471b69733e17126944bf24e12fb1545d87b0",
+      "zipSha256": "4acca64bc0b80718fa55747759a6471b69733e17126944bf24e12fb1545d87b0"
+    },
+    {
+      "path": "popup.html",
+      "bytes": 3158,
+      "sourceSha256": "4f22e9728485c7975d7e17de5d40e7776fcbd89bc1bcdd535a4f81a345b1dc6f",
+      "zipSha256": "4f22e9728485c7975d7e17de5d40e7776fcbd89bc1bcdd535a4f81a345b1dc6f"
+    },
+    {
+      "path": "popup.js",
+      "bytes": 14586,
+      "sourceSha256": "d864f49cb4f02765579ae42540c9c92084c530b82ed66834eb09c7593464a120",
+      "zipSha256": "d864f49cb4f02765579ae42540c9c92084c530b82ed66834eb09c7593464a120"
+    }
+  ],
+  "checks": [
+    "CRC",
+    "safePaths",
+    "noDuplicates",
+    "noSymlinks",
+    "cleanAllowlist",
+    "manifestExact",
+    "allSourceBytesExact",
+    "noSecretFieldNames"
+  ],
+  "result": "PASS"
+}

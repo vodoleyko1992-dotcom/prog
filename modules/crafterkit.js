@@ -3,8 +3,9 @@
    РБ — тур РБ (вместе с его паузами на мобах, «одним РБ» и РБ-сессией), эпики и бой с РБ ради ресурса (фарм ресурса с РБ, rt.farmRb,
    когда этот РБ жив на карте): одноручная дубина + щит + голем (Summon Mechanic Golem l2_25: вне боя POST /character/skills/cast
    {battleId, expectedRevision}; кристаллы — по рангу из learnedBattleSkillsDetail: ранги 1–2 Crystal D, дальше Crystal C).
-   Фарм — автофарм, фарм на месте, катакомбы, кампания, «Только задачи» с целью фарма: пика (древковое), щит снят, голем отозван
-   (−15 % EXP; POST /character/companion/dismiss {expectedRevision, characterId} — как кнопка «Відкликати слугу» в окне слуги).
+   Фарм — автофарм, фарм на месте, катакомбы, кампания, «Только задачи» с целью фарма: пика (древковое), щит снят.
+   20.46 (John 22.10: «можно вообще в принципе держать голема на фарме катов и мобов, потеря ЭКСП не значительная»):
+   слугу на фарме сохраняем; призыв/перепризыв в бою — по petAuto/petResummon и прежним проверкам, закупка кристаллов только для РБ.
    Рыбалка, TvT, заточка, задачи без фарма — набор не трогаем. Выключатель — cfg.crafterKit (по умолчанию ВКЛ).
    Вещи — сильнейшие из сумки GET /character, которые разрешают уровень и грейд (тип — по каталогу игры, иначе по справочнику;
    магические дубины — не булава воина). Клановые, с Life Stone, перерождённые и неизвестные вещи бот сам не выбирает и надетые
@@ -21,7 +22,7 @@
 const GOLEM = 'l2_25', GOLEM_KEY = /mechanic_golem/i, CRYSTAL_D = 1458, CRYSTAL_C = 1459, CRYSTAL_MIN = 10, MP_NEED = 150;
 const RECHECK = 60000, BUSY = 800, FAIL_SKIP = 30 * 60000, PHASE_MS = 2 * 60000, PHASE_GAP = 10000, PHASE_SKIP = 10 * 60000, PEND_WAIT = 15000, NOTE_EVERY = 10 * 60000;
 const SHOP_BACKOFF = 60 * 60000, CRYSTAL_KEEP = [30, 100];
-const GR = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 }, KIND_RU = { rb: 'РБ (булава + щит + голем)', farm: 'фарм (пика, без голема)' };
+const GR = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 }, KIND_RU = { rb: 'РБ (булава + щит + голем)', farm: 'фарм (пика, слугу сохраняем)' };
 // Паузы, отказы и неизвестный призыв — в sessionStorage вкладки: фабрика создаётся заново на каждой странице игры
 const SS = 'l2bot-kit';
 let mem = (() => { try { return JSON.parse(root.sessionStorage?.getItem(SS) || 'null') || {}; } catch (e) { return {}; } })();
@@ -51,8 +52,8 @@ function want() {
   if (m === 'farm' || m === 'cat' || m === 'campaign' || m === 'tasks' && env.lootGoal?.()) return farmRbNow() ? 'rb' : 'farm';
   return null;
 }
-// голем — только на РБ: в бою с обычным мобом на фарме combat не призывает его; в бою с любым РБ (rb) — можно
-const noSummon = rb => holds() && !rb && want() !== 'rb';
+// 20.46 (John 22.10): набор больше не запрещает голема на фарме. petStep сам проверяет petAuto, MP, КД и перепризыв.
+const noSummon = () => false;
 
 // магическое оружие — правило economy.weaponIsMage: режим каталога игры, иначе M.Atk/P.Atk ≥ 0,7 у грейдовой одноручной
 function mage(it) {
@@ -129,7 +130,6 @@ const offWhy = (o, what) => `${what} «${nameOf(o.x)}» игра не дала �
 function plan(kind, c, skip = {}) {
   const P = pick(kind, c, skip), eq = c?.inventory?.eq || {}, ops = [], why = [], g = golemOf(c), { w1, w2 } = P;
   if (kind === 'farm') {
-    if (g) ops.push({ op: 'dismiss', key: 'dismiss' });
     if (fixed(w1) && !isPike(w1.it)) why.push(W('hold1', `надето ${fixedWhy(w1)} оружие «${nameOf(w1)}» — набор его не снимает (обратно надеть не сможет), пику наденьте вручную`));
     else if (!P.weapon) why.push(P.off.weapon ? W('offPike', offWhy(P.off.weapon, 'пику')) : W('noPike', 'пики в сумке нет (или не по уровню) — оружие не меняю'));
     else if (P.weapon.where === 'bag') {
@@ -276,7 +276,8 @@ async function step() {
 }
 // после победы в цепочке «Охотиться дальше»: нужен другой набор — уйти на карту (там шаг переоденет), без своего GET.
 // Повод: задача сменилась после последней проверки, проверка нашла несделанное, или (не чаще раза в 10 мин) по памяти вкладки
-// надето не то / на фарме висит голем. Последняя проверка нашла, что менять нечего, и сумка/надетое с тех пор не менялись — не уводим.
+// надето не то. Голем на фарме — не повод прерывать цепочку (решение John 22.10). Последняя проверка нашла, что менять нечего,
+// и сумка/надетое с тех пор не менялись — не уводим.
 // Ушли, а шаг так и не проверил (пауза, TvT, запрет) — 10 мин больше не уводим.
 function chainWant() {
   const kind = want(), s = S(), now = Date.now();
@@ -284,7 +285,6 @@ function chainWant() {
   if ((+s.chainT || 0) > (+s.checkT || 0) && now - s.chainT < 10 * 60000) return false;
   let go = s.kind !== kind || !!s.need;
   if (!go && now - (+s.checkT || 0) > 10 * 60000) {
-    if (kind === 'farm' && env.petHas?.(GOLEM_KEY) && !((s.skip.dismiss || 0) > now)) go = true;
     const w = env.weaponNow?.(), lvl = +env.heroLevel?.() || 0, I = s.idle;
     const same = !!I && I.kind === kind && I.wT === (+env.rt.weaponsT || 0) && I.w === (+w?.id || 0) && !(I.until && now >= I.until);
     const known = w?.wt && !same ? (env.rt.weapons || []).filter(x => x.where !== 'надето' && lvl >= (env.GRADE_LV?.[x.g || 'NG'] ?? 0)) : [];

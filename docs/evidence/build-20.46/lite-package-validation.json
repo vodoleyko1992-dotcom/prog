@@ -1,0 +1,29 @@
+{
+  "flavor": "Lite Chrome",
+  "version": "1.5.2",
+  "artifact": "/workspace/work/fixes-2046/packages/l2wap-lite-v1.5.2.zip",
+  "bytes": 79114,
+  "sha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+  "files": 14,
+  "sourceZipExtractedMatchLockedBeforeAndAfter": true,
+  "sourceAggregateSha256": "3fc8dd76df87fbe6cbb582a18eddc715608ca3e141cb7f7fd68317ccb8219240",
+  "zipAudit": "/workspace/work/fixes-2046/packages/lite-final-zip-audit.json",
+  "zipload": {
+    "flavor": "lite",
+    "version": "1.5.2",
+    "chrome": "156.0.8078.4",
+    "extensionId": "lijcnlblnfknnochhabhnomgkpappnbl",
+    "pageErrors": [],
+    "failedExtensionResources": [],
+    "consoleErrors": [],
+    "blockedHttp": [],
+    "gamePagesOpened": 0,
+    "liveGame": false,
+    "result": "PASS"
+  },
+  "checksum": "/workspace/work/fixes-2046/packages/SHA256SUMS-lite-1.5.2.txt",
+  "firefoxBuilt": false,
+  "mainBuilt": false,
+  "liveGame": false,
+  "result": "PASS"
+}

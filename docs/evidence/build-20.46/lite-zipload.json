@@ -1,0 +1,13 @@
+{
+  "flavor": "lite",
+  "version": "1.5.2",
+  "chrome": "156.0.8078.4",
+  "extensionId": "lijcnlblnfknnochhabhnomgkpappnbl",
+  "pageErrors": [],
+  "failedExtensionResources": [],
+  "consoleErrors": [],
+  "blockedHttp": [],
+  "gamePagesOpened": 0,
+  "liveGame": false,
+  "result": "PASS"
+}

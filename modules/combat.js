@@ -1198,13 +1198,15 @@ function warlordPullPlan(ctx, mp) {
   if (!info || age < 0 || age > 60000 || String(info.name || '').toLowerCase() !== mobName().toLowerCase() || !(info.max > 0) || +info.max !== mobHp()?.max || !/^(normal|passive|neutral|aggressive)$/.test(info.kind || '') || info.tier) return skip('нет свежего подтверждения обычной цели');
   // 17.10.2026, журнал00:52–00:57: weaponNow — имя последнего клика, equip/скан его не подтверждают.
   // Надетое берём из проверенного инвентаря; незавершённая смена и противоречивые ID запрещают сбор.
-  const weapon = combatWeapon();
+  // 20.46 (приём 22.10): свежая рука игры могла опровергнуть старую запись пики. Это запрещает и новое агро, и follow;
+  // повторный chooseAction в act перед кликом замечает смену оружия за время ожидания. Более старый native-снимок новое надевание не отменяет.
+  const weapon = combatWeaponLive();
   if (!weapon || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return skip('не подтверждена надетая пика');
   const me = env.meHp(), mob = mobHp(), target = warlordPullTarget();
   if (!me || !(me.cur > 0 && me.max > 0) || !mob?.cur || !mp || !Number.isFinite(mp.cur) || mp.cur < (+env.cfg.skillMpMin || 0)) return null;
   const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
   const powers = new Set(env.names(env.cfg.nPower).map(n => n.toLowerCase()));
-  const aoes = slots.filter(b => ['whirlwind','thunder_storm'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && ready(b) && free('power:' + b.title))
+  const aoes = slots.filter(b => ['whirlwind','thunder_storm'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && !weaponBarred(b) && ready(b) && free('power:' + b.title))
     .map(b => { const cost=warlordPullCost(b),name=env.cleanTitle(b.title),damage=env.expDmg(name),model=env.fightGroupOn?.(name,mob.max),each=Math.min(damage||0,model?.damage||0);
       const near=extraMobs().filter(x=>x.cur>0),useful=Math.min(mob.cur,damage||0)+near.reduce((s,x)=>s+Math.min(x.cur,each),0),kills=(damage>=mob.cur?1:0)+near.filter(x=>each*.85>=x.cur).length;
       return {b,cost,useful,kills}; }).filter(x => x.cost != null && mp.cur > x.cost).sort((a,b) => b.kills-a.kills || b.useful-a.useful || a.cost-b.cost);
@@ -2098,7 +2100,7 @@ async function battle() {
         if (P.has) { ctx.pet.alive = true; if (P.key && !ctx.pet.key) ctx.pet.key = P.key; }
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
-      // 20.43 (John 21.10 13:05 «голем только на РБ»): у крафтера с набором на фарме слугу в бою не призываем; 20.44: в бою с РБ (и ради ресурса) — можно
+      // 20.46 (John 22.10): голем разрешён и на фарме/в катах; остаются обычные условия petAuto/MP/готовности/перепризыва.
       if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000 && !env.crafterKit?.noSummon?.(!!ctx.rb)) {
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && servitorSummonSlot(b));   // 9.2: Feline Queen — бафф, не кот; 20.13 (C4): и не кубик
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»

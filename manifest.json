@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.45",
-  "description": "L2wap Bot 20.45 — бафф суммона для голема перед РБ и редкие материалы форума «Фарм ресурсов»",
+  "version": "20.46",
+  "description": "L2wap Bot 20.46 — спойл крафтера, голем на фарме, реже карта и крафт без повторов",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.45"
+  "version_name": "20.46"
 }
