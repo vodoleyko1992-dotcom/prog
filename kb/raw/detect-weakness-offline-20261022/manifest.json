@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "file": "state-026.json",
+      "sha256": "d9568c9c4d6e89f4243c2c74021c38aa8bf982aff4e51ae70e5e9aa09837ce3f",
+      "originalSavedResponseSha256": "c34964ae3c462a30af925220deb66ca1aaaba98313f74a0a7b086e8aeb5a920a",
+      "origin": "existing execution-workspace capture from22.10 Warlord audit; no fetch during this offline work"
+    },
+    {
+      "file": "state-027.json",
+      "sha256": "f5bb544cbf5800f1dd4eadad01d40df14586a0e0f3346187402009b19b288c9a",
+      "originalSavedResponseSha256": "6665c17f9ced706d5c4c05208b9b05c5759686ec06ef92a30fb5daf492c21010",
+      "origin": "existing execution-workspace capture from22.10 Warlord audit; no fetch during this offline work"
+    }
+  ],
+  "newGameRequests": 0
+}

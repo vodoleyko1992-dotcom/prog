@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-22",
+  "timezone": "Asia/Vladivostok",
+  "testedBase": "c46f138994abe79cbbb40e599095a16b6e7737d9",
+  "scope": "Отдельный режим крафта, явная очередь и имеющиеся MP-банки728",
+  "node": {
+    "command": "node tests/run-all.cjs",
+    "filesPass": 608,
+    "filesFail": 0,
+    "newBehavioralCases": {
+      "runtime": 43,
+      "dispatch": 17,
+      "ui": 12
+    }
+  },
+  "browser": {
+    "file": "browser.json",
+    "pass": 9,
+    "fail": 0,
+    "version": "156.0.8078.4",
+    "scope": "actual MV3/popup/main dispatcher plus isolated module/storage/reload; local model responses only",
+    "liveRequests": 0
+  },
+  "checks": {
+    "syntaxChangedJsCjs": 19,
+    "envFactories": 34,
+    "bashSyntax": "PASS",
+    "diff": "PASS",
+    "independentReview": "review.md: после исправлений блокеров нет"
+  },
+  "runtimeHashes": {
+    "background.js": "e66b1c01145c1a8b0fbde30696368ed3eaf20714b552de19563e460096822b62",
+    "content.js": "5533f4184584a0909c8876a9fcd901646a7fa10bf53d522604c5f2708d26235a",
+    "defaults.js": "d9208f62fd5a02d93283e7280ef41fd0a3df9f5d08072f17dd7c05655daadb3b",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "modules/craft.js": "252d3db7e9a1f6d8bb5c48d6e479d9b6c1e44092bf628d7e100584ce587aaeff",
+    "popup.js": "c9164e7ce56cc100bccc8ca1122e95e4f45f2e082863d7549a23bb8d939cbb06",
+    "popup.html": "9f36e5b0ce00bb81db9f31a72ec5280886e997ea8108368e2e5d1b86b46db828"
+  },
+  "unchanged": {
+    "manifest.json": "c92f4b95f72b25fbe2efd1679c00c4d394060482aae17c8e3a288932a3a557bc",
+    "base-profile.json": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+  },
+  "boundaries": [
+    "Живую игру не открывали, HTTP игры перехвачены локальными fixtures",
+    "ZIP не собирался, версия20.49 сохранена",
+    "Firefox и Lite не менялись",
+    "Регены MP не считаются доказательством расхода неизвестной банки"
+  ]
+}

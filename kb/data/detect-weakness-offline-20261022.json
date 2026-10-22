@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "status": "offline findings; live research paused because user says character is busy",
+  "reviewDate": "2026-10-22",
+  "newGameRequests": 0,
+  "newCharacterMutations": 0,
+  "runtimeChanged": false,
+  "versionAndArchivesChanged": false,
+  "sources": [
+    {
+      "path": "../raw/warlord-live-20261022/war-cry-outside.json",
+      "sha256": "3f6a2eedc058b0a34f7433ec59f42309238fb7c92492135cbc79e4b74240a301"
+    },
+    {
+      "path": "../raw/warlord-live-20261022/detect-animal-outside.json",
+      "sha256": "beb99af10aa33846affd48038aedc1aaabc6176dff328d33328b804eeb8c165a"
+    },
+    {
+      "path": "../raw/warlord-live-20261022/detect-insect-outside.json",
+      "sha256": "5caba7abf334d7aa6fb201372a87d3b4645bb0703aa3ba780f44f8f0164f964a"
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-detect-animal.json",
+      "sha256": "a446f896631828b13f1aaec18d8fe3fa48d6b9bd65792bb3f188c70aa87470b6"
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-detect-insect.json",
+      "sha256": "ac300bd9fcd118ac809ad7cca0ebb637dd8b3ffff365a9069c2ac2bba94c9710"
+    },
+    {
+      "path": "../raw/detect-weakness-offline-20261022/state-026.json",
+      "sha256": "d9568c9c4d6e89f4243c2c74021c38aa8bf982aff4e51ae70e5e9aa09837ce3f"
+    },
+    {
+      "path": "../raw/detect-weakness-offline-20261022/state-027.json",
+      "sha256": "f5bb544cbf5800f1dd4eadad01d40df14586a0e0f3346187402009b19b288c9a"
+    }
+  ],
+  "findings": [
+    {
+      "id": "outside-stat-sequence",
+      "facts": "Separate outside casts produced PAtk3180→3884→4798. After the second cast both87/75 were present in activeBuffs.",
+      "boundary": "These are character-stat observations, not damage comparisons by species or proof of a damage stacking coefficient."
+    },
+    {
+      "id": "kind-not-target-species",
+      "facts": "On the same Flamestone Golem44, native Animal then Insect changed battleMods.weaknessKind from animal to insect. weaknessDetects held both kinds at1.3; weaknessPatkMul stayed1.3.",
+      "boundary": "weaknessKind cannot classify the biological species of that target. It follows the selected Detect state in these responses."
+    },
+    {
+      "id": "separate-expiry-projections",
+      "facts": "Native casts09:28:03/05 UTC did not change PAtk4798 or the earlier outside expiresAt values09:29:49 UTC. At state026→027, PAtk4798→3180 while IDs87/75 stayed active and their visible expiry switched to09:38:03/05 UTC, matching the native casts. weaknessDetects still held both1.3.",
+      "boundary": "Outside character-stat effects and battle-native state have separate observed expiry projections. A single activeBuff ID or character PAtk is insufficient to establish the damage condition or refresh behavior."
+    },
+    {
+      "id": "no-proven-target-species",
+      "facts": "The saved mob catalogue and inspected spawn responses do not expose a proven Animal/Insect/Plant classification. kind describes passive/aggressive behavior.",
+      "boundary": "Do not infer species from weaknessKind, behavior, name, icon or drop AnimalBone/AnimalSkin."
+    },
+    {
+      "id": "runtime-unfinished",
+      "facts": "Current75/87/104 retain autoUse:false. They share Interlude st:detect_weakness; generic buffList would choose a single winner if enabled. No dedicated Detect policy exists.",
+      "boundary": "This generic grouping is bot behavior, not a server stacking rule. Simply enabling all3 does not implement the required mechanic."
+    },
+    {
+      "id": "plant-not-yet-tested",
+      "facts": "Plant104 is recognized by the native alias map but absent from the24 learned skills in the recorded44→45 audit.",
+      "boundary": "Current availability must be rechecked when the character is free; no new training or cast was performed."
+    }
+  ],
+  "deferredLiveProtocol": [
+    "Record fresh class/learned skills/gear/shots/stances/other buffs and available target metadata; establish reversible baseline.",
+    "For87/75 compare none,87only,75only,both on the same NPC/lvl/PDef/champion tier. Test both cast orders. A matching species conclusion needs an independent trustworthy species source; otherwise scope results to the named NPC.",
+    "Separate outside /character/skills/cast from native /game/battle/action. Compare resulting character stats, battleMods, icon expiry and accepted hits; do not conflate those channels.",
+    "Use uncapped main-target noncritical hits with positive target HP after the hit; record preHP/postHP and exclude splash, finishing blows and overkill. A small pilot sample is not an exact DPS estimate.",
+    "Confirm Plant104 availability before testing it; compare plant only, matching/nonmatching named targets and combinations if learned.",
+    "Check expiry and active recasts separately using server timestamps and accepted turns around600s; identical icons and success text do not prove refresh.",
+    "Choose conditional-species or general-stack automation only after damage evidence resolves the rule; then add narrow Warlord role/actor/MP/CD/fresh-state/pre-fire/reload guards and regressions without extra GETs."
+  ],
+  "nextStep": "Live Detect tests remain pending until the character is available. Do not access the game while the user says it is busy.",
+  "observedTimestampsTimeZone": "UTC"
+}

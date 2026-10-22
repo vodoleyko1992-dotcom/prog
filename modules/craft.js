@@ -8,7 +8,9 @@
    Warsmith/Maestro), вне боя, с запасом MP cfg.craftMpKeep %. Выключено по умолчанию (cfg.craftAuto). Класс бот не переключает.
    20.43 (ревью 21.10): план Маммона — только по свежей сумке, перечитанной после своего крафта; ответ на крафт не пришёл (обрыв, 5xx) —
    результат неизвестен, повтора нет, пока сверка по сумке (rt.craftPending) не скажет, прошёл ли он; не во время тура РБ/эпиков/походов
-   (mammon.modeFree); запас MP не ниже порога банок боя; паузы и отказы переживают переход страницы (sessionStorage). */
+   (mammon.modeFree); запас MP не ниже порога банок боя; паузы и отказы переживают переход страницы (sessionStorage).
+   22.10: отдельный режим craft — только явная очередь, без боевого резерва; при нехватке MP использует имеющиеся банки728.
+   Намерение банки хранится до POST и сверяется после обрыва/перезагрузки; неизвестный исход запрещает новый расход. */
 (function (root) {
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
@@ -23,18 +25,21 @@ let mem = (() => { try { return JSON.parse(root.sessionStorage?.getItem(SS) || '
 // 20.46 (обзор 22.10): catch fetch не вызывается при уничтожении документа. Намерение пишем с ACK ДО POST;
 // не подтверждённую запись результата держим отдельно от оптимистического rt до её повторного ACK.
 let writing = null, busy = false;
+// 22.10 (ручной крафт и банки 728 в журнале 12:23): отдельный режим не бережёт MP для боя.
+const mode = () => env.mode?.() ?? (env.cfg.craftMode === true ? 'craft' : 'background');
+const dedicated = () => mode() === 'craft', enabled = () => dedicated() || env.cfg.craftAuto === true;
 const stamp = () => ({ char: env.rt.char, epoch: env.leaseEpoch, gen: env.actionGeneration?.(), kick: env.rt.manualKickAt || 0,
-  cls: JSON.stringify([env.rt.classCur?.prof, env.rt.classCur?.slot]) });
+  cls: JSON.stringify([env.rt.classCur?.prof, env.rt.classCur?.slot]), mode: mode() });
 const owner = t => env.rt.char === t.char && env.tabOwner === true && env.leaseEpoch === t.epoch;
 const sameRun = t => owner(t) && env.actionGeneration?.() === t.gen && (env.rt.manualKickAt || 0) === t.kick
   && JSON.stringify([env.rt.classCur?.prof, env.rt.classCur?.slot]) === t.cls;
-const active = t => owner(t) && env.on === true && env.cfg.craftAuto === true && env.actionGeneration?.() === t.gen
+const active = t => owner(t) && env.on === true && enabled() && env.actionGeneration?.() === t.gen
   && (env.rt.manualKickAt || 0) === t.kick && JSON.stringify([env.rt.classCur?.prof, env.rt.classCur?.slot]) === t.cls
-  && env.role?.() === 'crafter' && !env.isBattle?.() && !env.busy?.() && env.canAct?.() !== false && env.free?.() !== false;
+  && mode() === t.mode && env.role?.() === 'crafter' && !env.isBattle?.() && !env.busy?.() && env.canAct?.() !== false && env.free?.() !== false;
 const same = p => !!env.rt.craftPending && (p.id ? env.rt.craftPending.id === p.id
   : env.rt.craftPending.code === p.code && env.rt.craftPending.t === p.t && env.rt.craftPending.rev === p.rev);
-const requested = p => !p.qid || (env.rt.craftQueue || []).some(q => q.id === p.qid && q.code === p.code
-  && (+q.n || 0) - (+env.rt.craftMade?.[q.id] || 0) >= (p.wantN ?? 1));
+const requested = p => p.qid ? (env.rt.craftQueue || []).some(q => q.id === p.qid && q.code === p.code
+  && (+q.n || 0) - (+env.rt.craftMade?.[q.id] || 0) >= (p.wantN ?? 1)) : !dedicated();
 const S = () => { const c = env.rt.char || ''; if (mem.char !== c) mem = { char: c, nextT: 0, fails: {}, noteKey: '', noteT: 0, bagAfter: 0 }; mem.fails ||= {}; return mem; };
 const save = () => { try { root.sessionStorage?.setItem(SS, JSON.stringify(mem)); } catch (e) {} };
 const later = (now, ms) => { S().nextT = now + ms; save(); };
@@ -63,29 +68,31 @@ function mammonWants() {
   return { list: (P.craft || []).filter(x => x.qty > 0).map(x => ({ id: +x.id, n: x.qty, src: `Маммон: ${P.name} Lv.${P.lvl} → ${P.to}` })) };
 }
 // что нужно скрафтить: [{id (предмет), code?, n (штук готового), src, qid?}] — сначала свой список, затем цель Маммона
-function wants() { return [...queueWants(), ...mammonWants().list]; }
+function wants() { return dedicated() ? queueWants() : [...queueWants(), ...mammonWants().list]; }
 // чистый выбор: первый рецепт из нужного, который можно сделать сейчас; иначе причина (нет навыка / сырья / маны)
 function pick(book, list, keepPct = 20, now = Date.now(), skip = {}, floorMp = 0) {
   if (!book || !Array.isArray(book.recipes)) return { why: 'книга рецептов не прочитана' };
   if (!book.canCraftProfession) return { why: 'активный класс не крафтер', off: 1 };
   const lvl = +book.createItemLevel || 0, floor = Math.max(+floorMp || 0, Math.ceil((+book.maxMp || 0) * Math.max(0, Math.min(90, +keepPct || 0)) / 100));
   const mpFree = Math.max(0, (+book.currentMp || 0) - floor), why = [];
-  let mpWait = false;
+  let mpWait = false, mpTarget = null;
   for (const w of list) {
     const r = book.recipes.find(x => w.code ? x.code === w.code : outId(x) === w.id);
     if (!r) { why.push(`${w.code || '#' + w.id}: рецепта нет в книге`); continue; }
     if (skip[r.code] > now) { why.push(`${nm(r)}: ошибка игры, повтор позже`); continue; }
     if ((+r.createItemLevel || 0) > lvl || (r.lockedReason && lvl < 1)) { why.push(`${nm(r)}: нужен Create Item ур. ${r.createItemLevel || 1} (сейчас ${lvl})`); continue; }
-    if (r.lockedReason && !(+r.maxCraftable > 0)) { why.push(`${nm(r)}: ${r.lockedReason}`); continue; }
+    if (r.lockedReason && !(+r.maxCraftable > 0) && !/\bmp\b|ман|мп/iu.test(r.lockedReason)) { why.push(`${nm(r)}: ${r.lockedReason}`); continue; }
     const runs = Math.ceil(w.n / outQ(r)), max = Math.max(0, Math.floor(+r.maxCraftable || 0)), mp = Math.max(1, +r.mpCost || 1);
-    if (max < 1) { const lack = (r.ingredients || []).filter(i => (+i.have || 0) < (+i.quantity || 0)).map(i => i.nameEn || i.nameUk || '#' + i.itemId);
-      why.push(`${nm(r)}: не хватает ${lack.join(', ') || 'сырья'}`); continue; }
+    const lack = (r.ingredients || []).filter(i => (+i.have || 0) < (+i.quantity || 0)).map(i => i.nameEn || i.nameUk || '#' + i.itemId);
+    // maxCraftable сервера уже включает текущие MP: 0 при полном сырье тоже может означать нехватку маны.
+    const inputsKnown = Array.isArray(r.ingredients) && r.ingredients.length > 0 && r.ingredients.every(i => Number.isFinite(+i.have) && +i.quantity > 0);
     const byMp = Math.floor(mpFree / mp);
-    if (byMp < 1) { mpWait = true; why.push(`${nm(r)}: жду ману (${mp} MP за штуку, запас ${floor} MP)`); continue; }
+    if (!lack.length && byMp < 1 && (max > 0 || inputsKnown)) { mpWait = true; mpTarget ||= { r, w, need: mp }; why.push(`${nm(r)}: жду ману (${mp} MP за штуку, запас ${floor} MP)`); continue; }
+    if (max < 1 || lack.length) { why.push(`${nm(r)}: не хватает ${lack.join(', ') || 'сырья'}`); continue; }
     const count = Math.min(runs, max, byMp, BATCH);
     return { r, count, w, out: count * outQ(r), mp: count * mp };
   }
-  return { why: why.join('; ') || 'крафтить нечего', mpWait };
+  return { why: why.join('; ') || 'крафтить нечего', mpWait, mpTarget };
 }
 const note = (key, txt) => { const s = S(), now = Date.now(); if (key === s.noteKey && now - s.noteT < NOTE_EVERY) return; s.noteKey = key; s.noteT = now; save(); env.rec('B', 'крафт', txt); };
 async function readJson(path) {
@@ -171,9 +178,99 @@ async function reconcile(t) {
   delete S().fails[p.code];
   await credit(Date.now(), p, 'скрафтил ', t); later(Date.now(), BUSY); return true;
 }
+// 22.10 (лог: четыре ручные банки 728 вне боя): каждый POST расходует одну уже имеющуюся банку.
+// Намерение живёт в rt до ACK результата. Рост MP может быть регеном; подтверждение неизвестного исхода — расход предмета.
+const MP_ITEM = 728;
+const validMp = c => Number.isFinite(c?.mp) && c.mp >= 0 && Number.isFinite(c?.maxMp) && c.maxMp > 0 && c.mp <= c.maxMp;
+const validHero = (c, t) => Number.isSafeInteger(c?.revision) && c.revision >= 0 && c.name === t.char && Array.isArray(c.inventory?.stacks) && validMp(c);
+const sameMp = p => !!env.rt.craftMpPending && env.rt.craftMpPending.id === p.id;
+const mpPermit = (t, p) => active(t) && dedicated() && env.cfg.craftMpPots !== false && requested(p);
+const mpInputs = (c, inputs) => Array.isArray(inputs) && inputs.length > 0
+  && inputs.every(x => Number.isSafeInteger(x[0]) && x[0] > 0 && Number.isFinite(x[1]) && x[1] > 0 && countOf(c, x[0]) >= x[1]);
+async function mpSay(now, why, ms = MP_WAIT) { later(now, ms); note('mp:' + why, why); await say(now, why); return false; }
+async function settleMp(t, p, used, why) {
+  if (!owner(t) || !sameMp(p)) return false;
+  const now = Date.now(), patch = { craftMpPending: null, craftSay: { t: now, why, ...(used ? { ok: 1 } : {}) } };
+  if (used) patch.craftMpUsed = Math.max(+env.rt.craftMpUsed || 0, (+p.used0 || 0) + 1);
+  if (!await persist(patch, t)) return false;
+  note('mp:done:' + p.id, why); later(now, BUSY); return true;
+}
+async function sendMp(t, p, retry = false) {
+  if (!mpPermit(t, p) || !sameMp(p)) return false;
+  const unknown = async why => {
+    if (!owner(t) || !sameMp(p)) return false;
+    const at = Date.now(), tries = (+p.tries || 0) + 1;
+    await persist({ craftMpPending: { ...p, t: at, tries }, craftSay: { t: at, why: `МП-банка: ${why}; исход неизвестен — сверю сумку, новый крафт и новую банку не шлю` } }, t);
+    later(at, tries >= 3 ? NOTE_EVERY : PEND_WAIT);
+    note('mp:unknown', 'МП-банка: исход неизвестен — сверю расход предмета до следующего крафта'); return true;
+  };
+  let res, j;
+  try { res = await env.gamePost('/character/consumable/use', { itemId: MP_ITEM, quantity: 1, expectedRevision: p.rev }); j = await res.json().catch(() => null); }
+  catch (e) {
+    if (NOT_SENT.test(e?.message || '')) {
+      if (!retry && owner(t) && sameMp(p)) await persist({ craftMpPending: null }, t);
+      later(Date.now(), BUSY); return false;
+    }
+    return unknown(e?.name === 'AbortError' ? 'ответ не пришёл' : 'обрыв связи');
+  }
+  if (!owner(t) || !sameMp(p)) return false;
+  if (res.status === 409) { await persist({ craftMpPending: { ...p, t: Date.now() - PEND_WAIT } }, t); later(Date.now(), BUSY); return true; }
+  if (res.status >= 500) return unknown(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const why = `МП-банка: игра отказала — ${j?.messageRu || j?.messageUk || j?.error || 'HTTP ' + res.status}`;
+    if (retry) { await mpSay(Date.now(), why + '; первый исход ещё сверяется'); return true; }
+    await settleMp(t, p, false, why); later(Date.now(), MP_WAIT); return true;
+  }
+  return settleMp(t, p, true, 'Использована МП-банка из сумки — продолжаю крафт');
+}
+async function restoreMp(t, target, now) {
+  if (!target || !active(t)) return false;
+  if (env.cfg.craftMpPots === false) return mpSay(now, 'Не хватает MP: МП-банки в режиме крафта выключены — жду восстановление маны');
+  const C = await readJson('/character'), c = C.j?.character || C.j;
+  if (!active(t) || !dedicated()) return false;
+  if (!validHero(c, t)) return mpSay(now, 'Для МП-банки не прочитан полный снимок персонажа — подожду');
+  const p = { id: `${Date.now()}:${Math.random().toString(36).slice(2)}`, t: Date.now(), char: t.char, rev: c.revision, qty0: countOf(c, MP_ITEM),
+    mp0: c.mp, need: target.need, code: target.r.code, qid: target.w.qid || null, wantN: target.w.n, tries: 0, used0: +env.rt.craftMpUsed || 0,
+    inputs: (target.r.ingredients || []).map(x => [+x.itemId, +x.quantity]) };
+  if (!requested(p)) return false;
+  if (!mpInputs(c, p.inputs)) return mpSay(now, 'Сырья для крафта в свежей сумке не хватает — МП-банку не использую');
+  if (c.mp >= p.need) return mpSay(now, 'MP уже хватает — перечитаю рецепты и продолжу крафт', BUSY);
+  if (c.maxMp < p.need) return mpSay(now, `Для ${nm(target.r)} нужно ${p.need} MP, максимум героя ${c.maxMp} — банка не поможет`);
+  if (!(p.qty0 >= 1)) return mpSay(now, 'Не хватает MP: МП-банок в сумке нет — жду восстановление маны');
+  if (!await persist({ craftMpPending: p }, t) || !mpPermit(t, p) || !sameMp(p)) {
+    // Этот вызов ещё не отправлял POST: снятая за время ACK строка не превращается в неизвестный расход.
+    if (owner(t) && sameMp(p) && !requested(p)) await persist({ craftMpPending: null }, t);
+    return false;
+  }
+  return sendMp(t, p);
+}
+async function reconcileMp(t) {
+  const p = env.rt.craftMpPending;
+  if (p.char !== t.char || !Number.isSafeInteger(p.rev) || !Number.isFinite(p.qty0) || !p.id) return mpSay(Date.now(), 'Неизвестная запись МП-банки — новый крафт не шлю');
+  if (Date.now() - (+p.t || 0) < PEND_WAIT) { later(+p.t || Date.now(), PEND_WAIT); return false; }
+  const C = await readJson('/character'), c = C.j?.character || C.j;
+  if (!active(t) || !sameMp(p)) return false;
+  if (!validHero(c, t) || c.revision < p.rev) return mpSay(Date.now(), 'Сверка МП-банки: нет свежего полного снимка героя — новый крафт не шлю');
+  const qty = countOf(c, MP_ITEM);
+  if (c.revision > p.rev) {
+    if (qty <= p.qty0 - 1) return settleMp(t, p, true, 'Сверка: МП-банка израсходована — продолжаю крафт');
+    // Старая revision уже закрыта: отложенный POST с ней не применится. При неизменном остатке новый круг решит по свежим MP.
+    if (qty === p.qty0) return settleMp(t, p, false, 'Сверка МП-банки: прежняя revision закрыта, остаток банок не уменьшился — перечитаю MP');
+    return mpSay(Date.now(), 'Сверка МП-банки: остаток предметов изменён, исход неизвестен — новый крафт не шлю');
+  }
+  if (qty !== p.qty0) return mpSay(Date.now(), 'Сверка МП-банки: остаток противоречит revision — новый крафт не шлю');
+  if (!mpPermit(t, p)) return mpSay(Date.now(), 'Сверка МП-банки: первый исход неизвестен; повтор выключен или заказ снят');
+  if (!mpInputs(c, p.inputs)) return mpSay(Date.now(), 'Сверка МП-банки: сырья для крафта не хватает — прежний запрос не повторяю');
+  if (c.mp >= p.need) return mpSay(Date.now(), 'Сверка МП-банки: мана восстановилась, но расход банки ещё не подтверждён — подожду');
+  if (!await persist({ craftMpPending: p }, t) || !mpPermit(t, p) || !sameMp(p)) return false;
+  return sendMp(t, p, true); // только прежняя revision: из двух запоздалых запросов сервер примет один
+}
+
 async function runStep(now = Date.now()) {
-  if (env.cfg.craftAuto !== true || !env.on || !env.tabOwner) return false;
-  if (env.role?.() !== 'crafter' || env.isBattle?.() || env.busy?.() || now < (+S().nextT || 0)) return false;   // не в бою, не на рыбалке, не перед TvT
+  if (!enabled() || !env.on || !env.tabOwner) return false;
+  const state = S(), context = JSON.stringify([mode(), env.rt.manualKickAt || 0, (env.rt.craftQueue || []).map(q => [q.id, q.code, q.n])]);
+  if (state.context !== context) { if (dedicated() || state.dedicated) state.nextT = 0; state.context = context; state.dedicated = dedicated(); save(); }
+  if (env.role?.() !== 'crafter' || env.isBattle?.() || env.busy?.() || now < (+state.nextT || 0)) return false;   // не в бою, не на рыбалке, не перед TvT
   if (env.canAct?.() === false) return false;
   const t = stamp();
   if (writing) {
@@ -185,11 +282,13 @@ async function runStep(now = Date.now()) {
   if (env.free && env.free() === false) return false;
   const char = env.rt.char;
   if (env.rt.craftPending?.code) return reconcile(t);
-  let mm = mammonWants();
+  if (env.rt.craftMpPending) return reconcileMp(t);
+  let mm = dedicated() ? { list: [] } : mammonWants();
   if (mm.bag) { let m = null; try { m = await env.invRefresh?.(); } catch (e) {} if (env.rt.char !== char || !env.on) return false; if (m) mm = mammonWants(); }
   const list = [...queueWants(), ...mm.list];
   // пустой список — книгу всё равно читаем раз в 30 мин: меню показывает рецепты для выбора «скрафтить N штук»
-  if (!list.length && now - (+env.rt.craftBook?.t || 0) < BOOK_EVERY) { if (mm.why) await say(now, mm.why); later(now, mm.bag ? MP_WAIT : IDLE); return false; }
+  const idleWhy = () => mm.why || ((env.rt.craftQueue || []).length ? 'Очередь крафта завершена — добавьте новые ресурсы' : 'Очередь крафта пуста — выберите рецепт и количество');
+  if (!list.length && now - (+env.rt.craftBook?.t || 0) < BOOK_EVERY) { if (dedicated() || mm.why) await say(now, idleWhy()); later(now, mm.bag ? MP_WAIT : IDLE); return false; }
   const B = await readJson('/game/craft/materials');
   if (!active(t)) return false;
   if (!B.j) { later(now, 2 * 60000); note('get', `книга рецептов не прочитана (${B.err}) — повторю через 2 мин`); return false; }
@@ -197,14 +296,20 @@ async function runStep(now = Date.now()) {
   await setInfo({ craftBook: { t: now, lvl: +book.createItemLevel || 0, mp: +book.currentMp || 0, maxMp: +book.maxMp || 0, can: !!book.canCraftProfession,
     list: (book.recipes || []).map(r => [r.code, nm(r), outId(r), outQ(r), +r.createItemLevel || 0, +r.mpCost || 0]) } });
   if (!active(t)) return false;
-  if (!list.length) { if (mm.why) await say(now, mm.why); later(now, IDLE); return false; }
+  if (!list.length) { if (dedicated() || mm.why) await say(now, idleWhy()); later(now, IDLE); return false; }
   // запас MP: не меньше craftMpKeep и не ниже порога банки MP в бою (fighterMpPct + 10 %, mpPotAt) — иначе следующий бой начинается с банки
-  const keep = Math.max(+(env.cfg.craftMpKeep ?? 20) || 0, (+(env.cfg.fighterMpPct ?? 25) || 0) + 10);
-  const p = pick(book, list, keep, now, S().fails, +env.cfg.mpPotAt || 0);
+  const keep = dedicated() ? 0 : Math.max(+(env.cfg.craftMpKeep ?? 20) || 0, (+(env.cfg.fighterMpPct ?? 25) || 0) + 10);
+  let p = pick(book, list, keep, now, S().fails, dedicated() ? 0 : +env.cfg.mpPotAt || 0);
+  if (!p.r && p.mpWait && dedicated()) return restoreMp(t, p.mpTarget, now);
   if (!p.r) { later(now, p.mpWait ? MP_WAIT : IDLE); const why = [p.why, mm.why].filter(Boolean).join('; '); note(why, why); await say(now, why); return false; }
   const C = await readJson('/character'), ch = C.j?.character || C.j, rev = ch?.revision;
   if (!active(t)) return false;
   if (!Number.isSafeInteger(rev) || ch?.name !== char || !Array.isArray(ch?.inventory?.stacks)) { later(now, 60000); return false; }
+  if (dedicated()) {
+    if (!validMp(ch)) { later(now, MP_WAIT); await say(now, 'Не прочитаны MP персонажа — крафт подождёт'); return false; }
+    p = pick({ ...book, currentMp: ch.mp, maxMp: ch.maxMp }, list, 0, now, S().fails, 0);
+    if (!p.r) { later(now, BUSY); await say(now, p.why); return false; }
+  }
   const job = { id: `${Date.now()}:${Math.random().toString(36).slice(2)}`, t: Date.now(), tries: 0, char, code: p.r.code, nm: nm(p.r), count: p.count,
     out: p.out, outId: outId(p.r), have0: countOf(ch, outId(p.r)), rev, qid: p.w.qid || null, wantN: p.w.n, src: p.w.src, mp: p.mp,
     inputs: (p.r.ingredients || []).map(x => [+x.itemId, countOf(ch, +x.itemId)]), mp0: ch.mp,
@@ -240,7 +345,8 @@ async function runStep(now = Date.now()) {
 async function step(now = Date.now()) { if (busy) return false; busy = true; try { return await runStep(now); } finally { busy = false; } }
 function text() {
   const b = env.rt.craftBook, s = env.rt.craftSay, out = [];
-  if (env.cfg.craftAuto !== true) out.push('Свой крафт выключен');
+  if (dedicated()) out.push('Режим крафта: очередь без боевого резерва MP' + (env.cfg.craftMpPots === false ? ' · МП-банки выключены' : ' · МП-банки из сумки'));
+  else if (!enabled()) out.push('Свой крафт выключен');
   if (b) out.push(`Create Item ур. ${b.lvl}${b.lvl ? '' : ' — навык не выучен, выучи у магистра'} · MP ${fmtA(b.mp)}/${fmtA(b.maxMp)} · рецептов ${b.list?.length || 0}`);
   if (s && Date.now() - s.t < 3600000) out.push(`${new Date(s.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${s.ok ? '✓' : '·'} ${s.why}`);
   return out.join('\n');

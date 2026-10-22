@@ -317,6 +317,11 @@
   }
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
   function taskJobAllowed(c, key, rt = {}) {
+    // 22.10: выделенный крафт не возобновляет старые автоматические походы, даже если их службы остались в списке.
+    // Разовые команды меню сохраняются; квитанции оплат хранятся отдельно от маршрутов.
+    const craftOnly = taskList(c) === null ? rawTaskConfig(c)?.craftMode === true : selectedTask(c,rt) === 'craft';
+    if (craftOnly) return key === 'sealEx' ? !!rt[key] && rt[key].auto !== true
+      : MANUAL_JOBS.includes(key) && !!rt[key] && (rt[key].urgent === true || rt[key].manual === true);
     if (taskList(c) === null) return true;
     if (['dailyFish','dailyRb'].includes(key)) return false; // Дейлики не владеют режимом строгого списка.
     // 20.12 (ревизия 17.10, core-a/M2): разовые кнопки меню («🛒 Закупить сейчас», «Пересчитать в сумке», «Обновить список баффов FA»,

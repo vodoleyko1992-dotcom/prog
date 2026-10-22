@@ -77,7 +77,8 @@ test('мёртвый код убран (L5), охрана главного ци�
  assert.doesNotMatch(content,/const clickText\b/);
  assert.doesNotMatch(content,/const clockAt\b/);
  assert.doesNotMatch(popup,/function expHour\b/);
+ // 22.10: крафт, как заточка, останавливает прежние обычные шаги.
  // M4 выполнен разрезом main() (шаг 7, core): одна охрана loopStale() вместо 21 копии условия
- assert.match(content,/const loopStale = \(\) => !on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant';/);
+ assert.match(content,/const loopStale = \(\) => !on \|\| !tabOwner \|\| \['enchant','craft'\]\.includes\(autonomyMode\(\)\);/);
  assert.doesNotMatch(content,/if \(!on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant'\) continue;/);
 });

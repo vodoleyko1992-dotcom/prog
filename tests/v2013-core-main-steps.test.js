@@ -12,11 +12,12 @@ vm.runInNewContext(slice(enchantCore,'function coreFixture(){',"test('выбра
 test('охранная строка цикла — один помощник, старого повтора нет',()=>{
  assert.equal((steps.match(/if \(!on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant'\) continue;/g)||[]).length,0);
  assert.equal((steps.match(/if \(loopStale\(\)\) return true;/g)||[]).length,29); // 20.43: +5 в loopStartPrep, +1 в сторож (призыв тура РБ), +1 после Маммона перед своим крафтом, +1 после набора крафтера
- assert.match(steps,/const loopStale = \(\) => !on \|\| !tabOwner \|\| autonomyMode\(\) === 'enchant';/);
+ assert.match(steps,/const loopStale = \(\) => !on \|\| !tabOwner \|\| \['enchant','craft'\]\.includes\(autonomyMode\(\)\);/);
  // в шагах нет continue/break — только return true / LOOP_BREAK (иначе шаг не выйдет из круга)
  const bodies=steps.slice(steps.indexOf('async function mainTick()'));
  assert.doesNotMatch(bodies,/\bcontinue;|\bbreak;/);
 });
+// 22.10: выделенный крафт добавлен после заточки, прочий порядок сохраняется.
 test('mainTick: шаги в прежнем порядке',()=>{
  const tick=steps.match(/async function mainTick\(\) \{\s*return ([^;]+);/)[1].replace(/\s+/g,' ');
  const order=[...tick.matchAll(/await (\w+)\(\)/g)].map(m=>m[1]);
@@ -25,7 +26,7 @@ test('mainTick: шаги в прежнем порядке',()=>{
  // 20.43 (ревью au/breather): loopSelfHold только завершает истёкшую передышку, а ждёт loopSelfHoldWait — после всех служб, перед туром и
  // основной работой (Маммон, квесты, дейлики, команды меню и сверка оплаты на передышке идут)
  // 20.43 (слияние au/travel + au/breather): loopSelfHold (круг не держит) → loopTravel (сверка перелёта идёт и на передышке) → список задач
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};

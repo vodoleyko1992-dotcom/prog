@@ -41,9 +41,10 @@ test('ожидание проверки передаёт круг срочном
  const src=read('content.js'),part=src.slice(src.indexOf('async function loopGate()'),src.indexOf('  if((Object.keys(cfg.limitRanges||{}).length'))+'}';
  // 19.10, аудит автономности: gate больше не завершает круг; настоящий mainTick доходит до срочных и обычных служб.
  for(const urgent of [true,false]){let calls=0,services=0;const ctx={on:true,tabOwner:true,L2V7Modules:{actions:{enterFrame(){}}},rt:{},serverDown:()=>false,loginPage:()=>false,antibotState:()=>null,dailyServerSync:async()=>false,loopUrgent:async()=>{calls++;return urgent}};vm.runInNewContext(part,ctx);assert.equal(await ctx.loopGate(),undefined);
-  // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
+  // 22.10: loopCraft без выбранного крафта пропускает круг, как прежний loopEnchant.
+ // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
   // 20.43 (автономность): новый шаг передышки loopSelfHold (после срочных) — здесь без передышки; 20.43 (ревью au/breather): + loopSelfHoldWait
-  for(const k of ['loopLease','loopMigrations','loopWatchdog','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])ctx[k]=async()=>false;
+  for(const k of ['loopLease','loopMigrations','loopWatchdog','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])ctx[k]=async()=>false;
   ctx.loopSideJobs=async()=>{services++;return true};vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),ctx);await ctx.mainTick();assert.equal(calls,1);assert.equal(services,urgent?0:1);
  }
 });
