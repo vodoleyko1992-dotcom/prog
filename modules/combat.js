@@ -274,8 +274,14 @@ const uiReady = b => !!b && !b.disabled && b.getAttribute('aria-disabled') !== '
 const potionSlot = b => !!b && env.slotKind(b) === 'предмет' &&
   /зілля|зелье|potion|elixir|еліксир|эликсир/i.test(b.title || '') &&
   (env.HP_POT_RE.test(b.title || '') || /ман[аиы]|mana|\bmp\b|elixir|еліксир|эликсир|^#(?:726|728|920045)\b/i.test(b.title || ''));
-const ready  = b => uiReady(b) && env.ilOf?.(b)?.autoUse !== false && (potionSlot(b) || localCdLeft(b) <= 0) &&
-  (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) <= 0);
+// 20.49: относительные Focus/Vicious не являются ударом/обычным баффом даже в старой ошибочной роли.
+const ready = (b, allowToggle = false) => {
+  allowToggle = allowToggle === true; // Array.find/filter передают сюда числовой index, это не разрешение тоггла.
+  const il = b && env.ilOf?.(b), toggle = [312,317].includes(il?.id), spawn = (env.cdSpawn || env.battleSpawn)();
+  return (!toggle || allowToggle) && (il?.autoUse !== false || allowToggle && il?.managedToggle === true) && uiReady(b)
+    && (potionSlot(b) || localCdLeft(b) <= 0) && (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), spawn) <= 0)
+    && (!toggle || env.combatCooldown.skillWait('l2_' + il.id, spawn) <= 0);
+};
 
 function cdLeft(b) {
   if (ready(b)) return 0;
@@ -1170,6 +1176,118 @@ function combatWeaponLive() {
   const w = combatWeapon(), live = env.rt.weaponAug;
   return w && live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0) ? null : w;
 }
+// 20.49 (просьба 22.10): выбранные Focus/Vicious у Warlord только включаем, никогда не экономим MP выключением.
+// OFF — явная строка свежего собственного GET /character. Пустой HUD и старая память OFF не доказывают.
+const TOGGLE_FRESH_MS = 30000, managedToggleIds = [317,312];
+let toggleSnapshot = null, togglePositive = null, toggleBattleRevision = null, toggleUnknown = null;
+const toggleActor = () => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,
+  env.rt.classSwT || env.rt.classCur?.t || 0,env.rt.manualKickAt || 0,env.evidenceOwner?.()]);
+const toggleKey = id => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,id]);
+function managedToggleClass() {
+  return /^(?:human )?(?:warlord|dreadnought)$/i.test(String(env.rt.classCur?.prof || env.rt.prof || '').replace(/[_-]/g,' '));
+}
+const toggleBuffOn = (rows,id) => Array.isArray(rows) && rows.some(x => +(x?.skillId ?? x?.id) === id &&
+  (!(+(x.expiresAtMs ?? x.expiresAt ?? x.exp) > 0) || +(x.expiresAtMs ?? x.expiresAt ?? x.exp) > Date.now()));
+function noteToggleSnapshot(ch) {
+  const now = Date.now(), actor = toggleActor(), at = ch?.requestStartedAt, generated = ch?.snapshotGeneratedAt;
+  if (!ch || !env.rt.char || ch.name !== env.rt.char || !env.rt.classCur?.prof || ch.l2Profession !== env.rt.classCur.prof
+      || !Number.isSafeInteger(ch.classSlots?.activeSlot) || ch.classSlots.activeSlot !== env.rt.classCur.slot
+      || !Number.isSafeInteger(ch.revision) || ch.revision < 0 || !Number.isFinite(at) || at > now || now-at > TOGGLE_FRESH_MS
+      || at < Math.max(+env.rt.classSwT || +env.rt.classCur?.t || 0,+env.rt.manualKickAt || 0) || !Number.isFinite(generated) || now-generated > TOGGLE_FRESH_MS || generated-now > 5000) return false;
+  const old = toggleSnapshot?.actor === actor ? toggleSnapshot : null;
+  if (old && ch.revision < old.revision) return false;
+  const on = managedToggleIds.filter(id => toggleBuffOn(ch.activeBuffs,id) || ch.toggleStances?.some(x => +x.skillId === id && x.active === true));
+  const off = Array.isArray(ch.activeBuffs) && Array.isArray(ch.toggleStances)
+    ? managedToggleIds.filter(id => !on.includes(id) && ch.toggleStances.some(x => +x.skillId === id && x.active === false)) : [];
+  // Повтор равной ревизии не освежает OFF; противоречивый положительный ON сильнее отрицательного.
+  toggleSnapshot = { actor, revision:ch.revision, at:old?.revision === ch.revision ? Math.min(old.at,at) : at,
+    generated:old?.revision === ch.revision ? Math.min(old.generated,generated) : generated,
+    on:old?.revision === ch.revision ? [...new Set([...old.on,...on])] : on, off,
+    hand:Number.isSafeInteger(ch.inventory?.eq?.l1?.itemId) && ch.inventory.eq.l1.itemId > 0 ? ch.inventory.eq.l1.itemId : null };
+  return true;
+}
+function noteToggleBattle(d, startedAt = Date.now()) {
+  const b = d?.be, revision = b?.revision, actor = toggleActor();
+  if (!env.rt.char || b?.prof && b.prof !== env.rt.classCur?.prof || b?.slot != null && b.slot !== env.rt.classCur?.slot) return;
+  if (!Number.isSafeInteger(revision) || revision < 0) {
+    // В полёте/без payload неизвестно даже направление ручного relative toggle. Ждём новый собственный OFF, удары не держим.
+    const base = Math.max(toggleSnapshot?.actor === actor ? toggleSnapshot.revision : -1,toggleBattleRevision?.actor === actor ? toggleBattleRevision.revision : -1,
+      Number.isSafeInteger(d?.req?.expectedRevision) ? d.req.expectedRevision : -1);
+    const at = Number.isFinite(startedAt) ? Math.min(startedAt,Date.now()) : Date.now();
+    toggleUnknown = { actor, at:Math.max(toggleUnknown?.actor === actor ? toggleUnknown.at : 0,at),baseRevision:base };
+    return;
+  }
+  if (toggleSnapshot?.actor === actor && revision < toggleSnapshot.revision) return;
+  // Более новый ход мог изменить относительную стойку даже при обрезанном payload: старое OFF больше не разрешает клик.
+  toggleBattleRevision = { actor, revision:Math.max(toggleBattleRevision?.actor === actor ? toggleBattleRevision.revision : -1,revision) };
+  const mods = d.res?.delta?.battleMods || d.res?.battle?.battleMods || {}, yes = v => v === true || v === 1 || v === '1';
+  const icons = d.res?.delta?.battleBuffIcons || d.res?.battle?.battleBuffIcons || [];
+  const on = managedToggleIds.filter(id => (id === 317 ? yes(mods.focusAttackActive) : yes(mods.stanceVicious))
+    || d.hero?.buffs?.includes(id) || toggleBuffOn(d.res?.character?.activeBuffs,id)
+    || Array.isArray(icons) && icons.some(x => +x.l2SkillId === id));
+  if (on.length) {
+    const revisions = togglePositive?.actor === actor ? { ...togglePositive.revisions } : {};
+    for (const id of on) revisions[id] = Math.max(revisions[id] ?? -1,revision);
+    togglePositive = { actor, revisions };
+  }
+}
+function managedToggleState(b,id) {
+  // Положительные живые HUD/слот/пакет перекрывают известный start-баг toggleStances.active:false.
+  if (toggleBuffOn(env.activeBuffs?.(),id) || b.getAttribute('aria-pressed') === 'true' || /--(active|on|toggled|toggle-on|enabled)\b/.test(b.className || '')) return true;
+  const actor = toggleActor(), s = toggleSnapshot?.actor === actor ? toggleSnapshot : null;
+  if (s?.on.includes(id) || togglePositive?.actor === actor && togglePositive.revisions[id] != null && (!s || togglePositive.revisions[id] >= s.revision)) return true;
+  if (!s || Date.now()-s.at > TOGGLE_FRESH_MS || Date.now()-s.generated > TOGGLE_FRESH_MS || !s.off.includes(id)
+      || toggleBattleRevision?.actor === actor && toggleBattleRevision.revision > s.revision
+      || toggleUnknown?.actor === actor && !(s.revision > toggleUnknown.baseRevision && s.at > toggleUnknown.at)) return null;
+  return false;
+}
+function managedTogglePlan(ctx, id, ownIntent = null) {
+  if (!managedToggleClass() || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.isBattle?.() !== true || env.pvpPending?.()) return null;
+  // Роль может быть английской, панель украинской; только точные известные имена, затем native ID слота.
+  const aliases = { 'жорстка стійка':312,'зосереджений удар':317,'фокусована атака':317 };
+  const selected = env.names(env.cfg.nToggles).some(n => (env.ilOf(n)?.id || aliases[n]) === id);
+  const b = selected && [...document.querySelectorAll(env.SLOT)].find(b => env.ilOf(b)?.id === id && env.slotKind(b) === 'скилл' && env.shown(b));
+  if (!b || managedToggleState(b,id) !== false || !ready(b,true) || env.noEffect?.(b) || env.combatCooldown.globalWait() > 0
+      || (ctx.block?.['managed:' + id] || 0) > Date.now()) return null;
+  const mp = env.meMp?.(), s = toggleSnapshot, il = env.ilOf(b), n = env.cleanTitle(b.title).toLowerCase();
+  const row = env.rt.skillDb?.[n] || env.rt.skillDb?.[String(il.n || '').toLowerCase()];
+  const cost = row && (row.mpKnown || row.mp > 0) && Number.isFinite(row.mp) && row.mp >= 0 ? row.mp : null;
+  // Не переносим цену старого ACTIVE Interlude. Неизвестная цена — одна защищённая попытка; серверный nomp важнее.
+  if (!mp || !Number.isFinite(mp.cur) || !(mp.cur > 0) || cost != null && mp.cur < cost) return null;
+  const w = id === 317 ? combatWeaponLive() : null;
+  if (id === 317 && (!w || !/^(?:древковое|polearm)$/i.test(w.wt || '') || s.hand !== +w.id)) return null;
+  const intent = env.rt.managedToggleIntent?.[toggleKey(id)];
+  const own = intent && ownIntent && ['char','prof','slot','id','baseRevision','at'].every(k => intent[k] === ownIntent[k]);
+  if (intent && !own && !(s.revision > intent.baseRevision && s.at > intent.at)) return null;
+  return { b, revision:s.revision, actor:toggleActor(), hand:s.hand };
+}
+async function managedToggleStep(ctx, me, act) {
+  for (const id of managedToggleIds) {
+    const plan = managedTogglePlan(ctx,id); if (!plan) continue;
+    const key = toggleKey(id), intent = { char:env.rt.char, prof:env.rt.classCur.prof, slot:env.rt.classCur.slot,id,baseRevision:plan.revision,at:Date.now() };
+    let saved;
+    try { saved = await env.setRt({ managedToggleIntent:{ ...(env.rt.managedToggleIntent || {}),[key]:intent } }); }
+    catch (_) { ctx.block['managed:' + id] = Date.now()+5000; return false; }
+    // Сбой записи не держит обычные атаки новым выбором несохранённого плана на каждом круге.
+    if (saved?.ok !== true) { ctx.block['managed:' + id] = Date.now()+5000; return false; }
+    let cancelled = false;
+    const needed = () => {
+      const p = managedTogglePlan(ctx,id,intent), ok = p?.b === plan.b && p.actor === plan.actor && p.hand === plan.hand && p.revision === plan.revision;
+      if (!ok) cancelled = true; return ok;
+    };
+    const start = env.actNet?.().start || 0;
+    if (!needed()) return false;
+    const result = await act(plan.b,`Включаю постоянно: ${env.cleanTitle(plan.b.title)}`,false,needed,true);
+    // Отказ до отправки не является неизвестным кастом. Отправленный/неясный исход ждёт новой OFF-ревизии, бой продолжается.
+    if (toggleActor() === plan.actor && (env.actNet?.().start || 0) === start && (cancelled || result === 'nomp' || result === 'cd')) {
+      const intents = { ...(env.rt.managedToggleIntent || {}) }; delete intents[key];
+      await env.setRt({ managedToggleIntent:intents });
+    }
+    if (result === 'unavail') ctx.block['managed:' + id] = Infinity;
+    return true;
+  }
+  return false;
+}
 // MaxHP в начале текущего боя РБ: только выбранный игроком навык, подтверждённая пика и живые MP/КД/HUD.
 // Первое применение на раненом герое ещё не измерено полностью: роль «Лечение» и модель Interlude не меняем.
 function battleRoarPlan(ctx, me, mp) {
@@ -1512,7 +1630,7 @@ async function battle() {
   const fastHit = (b, exact) => { if (exact === 'attack') return true; if (!/^l2_\d+$/.test(exact || '')) return false; const il = env.ilOf?.(b); return !!il && il.o !== 'TOGGLE' && FAST_T.has(il.t) && !healSlot(b); };
   const fastMark = (b, exact) => { try { const d = document.documentElement.dataset; if (env.cfg.fastTurn !== false && fastHit(b, exact)) d.l2botFast = exact + '|' + Date.now(); else delete d.l2botFast; } catch (_) {} };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
-  // 20.13 (ревизия 17.10, шаг 7, аудит combat/C3): mpFree — действие бесплатно (выключение тоггла), цену в MP не сверяем
+  // mpFree: выключение тоггла бесплатно либо цену включения уже перепроверяет отдельный ON-plan, без старой IL-цены.
   const act = async (b, status, hpGuard = false, stillNeeded = null, mpFree = false) => {
     const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.(),canSend=()=>valid()&&!victory()&&!defeat();
     if(pendingTurn&&!turnAnswered(pendingTurn)){
@@ -1535,6 +1653,9 @@ async function battle() {
     // Ответ во время gameFree мог назначить новый КД. Сначала новый выбор, затем клик.
     if(env.combatCooldown.globalWait()>0||exact&&env.combatCooldown.skillWait(exact,(env.cdSpawn||env.battleSpawn)())>0)return 'lock';
     if (stillNeeded && !stillNeeded()) return 'lock';
+    // 20.49: GET после Focus мог подтвердить OFF Vicious, пока обычный удар ждал gameFree. Сначала новый выбор подготовки.
+    // При unknown/pending плана нет — атаку не задерживаем, она даст следующую родную ревизию.
+    if (exact === 'attack' && managedToggleIds.some(id => managedTogglePlan(ctx,id))) return 'lock';
     // 20.12 (ревизия 17.10): MP не хватает — не 'lock' (тот значит «клик потерян в окне занятости», вызывающий повторяет сразу,
     // и цикл боя крутился без единой паузы — вкладка замирала), а 'nomp': слот «занят» 1,5 с, цикл идёт к банкам/другим действиям
     if (!mpFree && env.meMp && !affordable(b, env.meMp(), 0)) { if (env.skKey(b)) mpUntil.set(env.skKey(b), Date.now() + NOMP_MS); return 'nomp'; } // MP мог измениться за ожидание ответа игры
@@ -2846,6 +2967,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

@@ -648,16 +648,22 @@ async function sweepStep(...args) { return L2V7Modules.loot.sweepStep(...args); 
 function toggleState(bn, b) {
   const il = ilOf(b), act = activeBuffs();
   if (il && act.length) { if (act.some(x => x.id === il.id)) return true; if (rt.toggleSeen?.[bn]) return false; }
-  if (b.getAttribute('aria-pressed') === 'true' || /--(active|on|toggled|enabled)\b/.test(b.className)) return true;
+  if (b.getAttribute('aria-pressed') === 'true' || /--(active|on|toggled|toggle-on|enabled)\b/.test(b.className)) return true;
   if (b.getAttribute('aria-pressed') === 'false') return false;
   return rt.toggleOn?.[bn] ?? null;                 // null — не знаем
 }
 async function toggleStep(ctx, me, act) {   // act — нажатие из боя (battle)
+  const managed = typeof L2V7Modules === 'object' ? L2V7Modules.combat : null;
+  if (await managed?.managedToggleStep?.(ctx,me,act)) return true;
   const list = names(cfg.nToggles); if (!list.length) return false;
   const mp = meMp(), mpP = mp?.max ? mp.cur / mp.max * 100 : 100, off = cfg.toggleMpOff ?? 10, onP = cfg.toggleMpOn ?? 30;
+  const seen = new Set();
   for (const bn of list) {
-    const b = slotsBy(bn)[0]; if (!b || (ctx.block['tgl:' + bn] || 0) > Date.now()) continue;
-    const st = toggleState(bn, b), il = ilOf(b);
+    const b = slotsBy(bn)[0], il = b && ilOf(b), key = il?.id || bn;
+    if (!b || seen.has(key)) continue; seen.add(key);
+    // 20.49: этот класс держит выбранные312/317 только ON; unknown/ожидание не передаём старому выключению по MP.
+    if ([312,317].includes(il?.id) && managed?.managedToggleClass?.() || (ctx.block['tgl:' + bn] || 0) > Date.now()) continue;
+    const st = toggleState(bn, b);
     if (il?.autoUse === false) continue; // 20.3: ручной Focus Attack не переключаем даже из старого списка ролей.
     if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } })?.catch?.(() => {});   // 20.41: ход не ждёт записи
     let want = null;
@@ -934,7 +940,7 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   48: { L: 'L2WAP: Thunder Storm · главная цель и до 3 рядом · шок около 50% по подсказке сервера · только пика/алебарда' },
   116: { dur: 30, L: 'L2WAP: Howl · P.Atk врагов в радиусе −23% на 30 с · не прямой урон' },
   130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
-  317: { o: 'TOGGLE', autoUse: false, L: 'L2WAP: Focus Attack · переключатель · +2 точности и +10% силы крита в журнале · пока только вручную' },
+  317: { o: 'TOGGLE', autoUse: false, managedToggle: true, dur: 0, reuse: 12000, L: 'L2WAP: Focus Attack · переключатель · выбранный постоянный эффект Warlord с пикой держим включённым · +2 точности и +10% силы крита по подсказке · поддержание ≈0.4 MP/с, разовая цена отдельно не измерена' },
   286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · отдельная связка с массовым ударом' },
   75: { autoUse: false }, 87: { autoUse: false }, 104: { autoUse: false },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
@@ -5242,6 +5248,7 @@ function netContextStart(d) {
   // 20.43 (ревью au/travel): метка своего телепорта (nativeNonce) — только первые 30 с после клика бота (navigation.nativeNonce):
   // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
   NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now()});
+  if (d.path === '/game/battle/action' && d.method === 'POST') L2V7Modules.combat?.noteToggleBattle?.(d,Date.now());
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
@@ -5432,7 +5439,11 @@ addEventListener('message', e => {
   const meNow = !heroNick() || rt.char === heroNick();
   if (meNow) { L2V7Modules.quests?.campLocationNote(path, d); L2V7Modules.fishing?.paymentNote?.(path,d); L2V7Modules.buffs?.paymentNote?.(path,d); L2V7Modules.mammon?.paymentNote?.(path,d); L2V7Modules.tvtshop?.onNet?.(path,d); L2V7Modules.story?.onNet?.(path,d); }
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
-  if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
+  if (path === '/character' && d.status >= 200 && d.status < 300 && d.pet && d.pet.name === rt.char && heroNick() === rt.char) {
+    L2V7Modules.warlock.noteSnapshot(d.pet);
+    L2V7Modules.combat.noteToggleSnapshot(d.pet);
+  }
+  if (/^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path) && d.status >= 200 && d.status < 300 && meNow) L2V7Modules.combat.noteToggleBattle(d,netContext.at);
   // 20.43: собственный GET /character игры — тоже свежий источник слуги (поле есть только когда сервер его прислал)
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char && d.pet.activeSummon !== undefined) {
     const s = d.pet.activeSummon; petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || PET?.key || '', name: PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
