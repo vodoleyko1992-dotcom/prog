@@ -35,7 +35,8 @@
       "mammonDock": "PASS: OFF read, changed bag, server500 preserves prior success, ON same-owner read and Start/Stop; 0 POST, no navigation",
       "craftDock": "PASS 3 scenarios: actual tabless iframe OFF read via button -> exactly2GET -> 2-step chain/30MP preview; changed stock -> shortage3; book500 retains previous book/bag/plan;0POST/Start/navigation"
     },
-    "testRepair": "v806-firefox: load engine-core before background; async assertion failure produces nonzero exit; inspect manifest in actual fixture ZIP"
+    "testRepair": "v806-firefox: load engine-core before background; async assertion failure produces nonzero exit; inspect manifest in actual fixture ZIP",
+    "publicDownload": "PASS: exact commit b9cc1cc; byte and SHA256 equality"
   },
   "runtimeChangesDuringBuild": [],
   "preserved": [
@@ -51,5 +52,6 @@
     "No Chromium run for Firefox manifest; broad historical browser suite was not repeated.",
     "New Detect flow was not autonomously exercised in native Firefox; earlier Chrome evidence is separate."
   ],
-  "nextStep": "Install Firefox package, reload addon and game tab, export control log."
+  "nextStep": "Install Firefox package, reload addon and game tab, export control log.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/362"
 }

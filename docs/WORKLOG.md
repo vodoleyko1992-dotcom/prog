@@ -2,12 +2,12 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
-## 23.10.2026, 09:55 UTC+10 — Codex — сборка Firefox20.51 (PR в подготовке)
+## 23.10.2026, 09:55 UTC+10 — Codex — сборка Firefox20.51 ([PR #362](https://github.com/vodoleyko1992-dotcom/prog/pull/362))
 
 - По прямой просьбе «Сборка под фаерфокс» собран основной Firefox20.51 из234737b, включая крафт#358, выход из ошибки боя#359 и Detect#361 после ChromeZIP20.51. Версию не поднимали, runtime/manifest/профиль/62старыхZIP/Chrome/Lite сохранены. Упаковка из чистого staging по68файлам, не рекурсивно из checkout.
 - ZIP `builds/l2wap-bot-v20.51-firefox.zip`:68файлов/1655391байт, SHA256 `6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce`. Независимые CRC/allowlist/67sourceSHA/68extractedSHA/109resourceclosure/privacy/64baseline PASS. Обновлён README-FIREFOX; исправлен v806-тест: engine-core→background, ненулевой exit при async-ошибке, manifest реального fixtureZIP.
 - Финальные618Node PASS/0FAIL, syntax53runtime+test/env34/bash/diff PASS. Настоящий Firefox153.5.1esr: установка/hook/content/background/profile/popup/dockбезtabs PASS; отдельная симуляция отсутствующих AndroidAPI PASS. Маммон: OFF/новаясумка/500ссохранением/ONowner/StartStop PASS,0POST. Крафт в nativeFirefox3/3: OFF→2GET→цепочка2/30MP, нехватка3,500ссохранением;0POST/Start. Lint0errors/0notices/51warnings. Доказательства — `docs/evidence/build-20.51-firefox/validation.json`.
-- Живую игру/аккаунт/физическийAndroid/Chromium/полныйисторическийbrowser-suite не запускали. ZIP неподписан; следующий шаг — обновить временное дополнение в той же папке, ↻ и вкладку игры, получить контрольный журнал. Публикация PR и проверка скачивания остаются до завершения.
+- Живую игру/аккаунт/физическийAndroid/Chromium/полныйисторическийbrowser-suite не запускали. ZIP неподписан; следующий шаг — обновить временное дополнение в той же папке, ↻ и вкладку игры, получить контрольный журнал. PR #362 опубликован; публичное скачивание по точному commit b9cc1cc побайтно и SHA256 совпало. Доставка — `docs/evidence/build-20.51-firefox/download.json`.
 
 ## 23.10.2026, 00:38 UTC+10 — Codex — Detect Monster80 и owned preflight ([PR #361](https://github.com/vodoleyko1992-dotcom/prog/pull/361))
 
