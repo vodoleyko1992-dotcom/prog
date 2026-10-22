@@ -1294,12 +1294,12 @@ async function lifestoneDockCommand(m, sender) {
 // Фон пересылает команду только родительской вкладке этого меню (frame 0) и только из белого списка; отправитель и герой —
 // как у lifestoneDockCommand. Ответ — только поля, которые читает меню (роли «Предложить» — целиком: «Применить» пишет их в настройки).
 // Ожидание ответа: kick 6 с (меню повторяет до 12 с, как в Chrome), кот 20 с, проверки панели 8–15 с.
-const DOCK_GAME_WAIT = { kick: 6000, warlockCommand: 20000, slots: 8000, suggest: 15000, dom: 15000 };
+const DOCK_GAME_WAIT = { kick: 6000, craftRead: 20000, warlockCommand: 20000, slots: 8000, suggest: 15000, dom: 15000 };
 function dockGameAnswer(cmd, a) {
   if (!a || typeof a !== 'object') return null;
   const s = (x, n = 220) => typeof x === 'string' ? x.slice(0, n) : '', list = x => Array.isArray(x) ? x.slice(0, 400).map(y => s(y, 400)) : [];
   if (cmd === 'kick') return { ok: a.ok === true, v: s(a.v, 40), running: a.running === true, owner: a.owner === true, reason: s(a.reason) };
-  if (cmd === 'warlockCommand') return { ok: a.ok === true, reason: s(a.reason) };
+  if (cmd === 'warlockCommand' || cmd === 'craftRead') return { ok: a.ok === true, reason: s(a.reason) };
   if (cmd === 'slots') return { battle: a.battle === true, roles: list(a.roles), panel: list(a.panel) };
   if (cmd === 'suggest') return { battle: a.battle === true, roles: Object.fromEntries(Object.entries(a.roles && typeof a.roles === 'object' ? a.roles : {}).filter(([k]) => /^n[A-Z]\w{0,40}$/.test(k)).map(([k, v]) => [k, typeof v === 'string' ? v : ''])),
     buffsNote: s(a.buffsNote, 400), why: list(a.why) };
@@ -1314,6 +1314,10 @@ async function dockGameCommand(m, sender) {
     const q = m?.message, cmd = q?.cmd;
     if (!q || typeof q !== 'object' || !Object.hasOwn(DOCK_GAME_WAIT, cmd) || typeof m.char !== 'string' || m.char.length > 64) return fail('Команда не поддерживается встроенным меню');
     let command = { cmd };
+    if (cmd === 'craftRead') {
+      if (!m.char || q.char !== m.char) return fail('Персонаж изменился — обновите крафт');
+      command = { cmd, char: m.char };
+    }
     if (cmd === 'warlockCommand') {
       const num = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
       if (!['preview', 'resetBudget', 'archiveUnknown'].includes(q.action) || typeof q.id !== 'string' || !q.id || q.id.length > 80 || !m.char || q.char !== m.char

@@ -119,9 +119,10 @@ async function popup() {
     await h.reveal('#craftMpPots'); assert.equal(await h.popup.locator('#craftMpPots').isChecked(), true);
     await h.popup.locator('#craftMpPots').uncheck(); await waitFor(async () => (await h.get(['cfg'])).cfg.craftMpPots === false);
     await h.popup.locator('#craftMpPots').check(); await waitFor(async () => (await h.get(['cfg'])).cfg.craftMpPots === true);
-    await h.popup.locator('#craftPick').selectOption('steel'); await h.popup.locator('#craftN').fill('7'); await h.popup.locator('#craftAdd').click();
+    // 22.10: ресурс выбирается через доступный поиск/карточку в отдельном разделе.
+    await h.popup.locator('#craftSearch').fill('Steel'); await h.popup.locator('[data-craftpick="steel"]').click(); await h.popup.locator('#craftN').fill('7'); await h.popup.locator('#craftAdd').click();
     await waitFor(async () => (await h.get(['rt'])).rt.craftQueue?.length === 1);
-    await waitFor(async () => /Steel.*0\/7/.test(await h.popup.locator('#craftList').textContent()));
+    await waitFor(async () => /(?:Steel|Сталь).*Изготовлено\s*0\s*из\s*7/s.test(await h.popup.locator('#craftList').textContent()));
     await h.popup.locator('#craftStart').click();
     await waitFor(async () => (await h.get(['cfg', 'on'])).on && (await h.get(['cfg'])).cfg.autoTasks?.includes('craft'));
     await waitFor(() => h.g.core('autonomyMode()==="craft"'));

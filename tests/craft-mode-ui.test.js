@@ -54,7 +54,7 @@ test('доска крафта показывает пустую очередь, 
   assert.equal(row({craftQueue:[{id:'a',n:10}],craftMade:{a:3}}).percent,30);
   assert.equal(row({craftQueue:[{id:'a',n:10}],craftMade:{a:10}}).label,'Очередь выполнена');
   assert.equal(row({craftQueue:[{id:'a',n:10}],craftMade:{a:3},craftPending:{id:'p'}}).label,'Сверяю результат крафта');
-  assert.equal(row({}).tab,'hunt');
+  assert.equal(row({}).tab,'craft');
 });
 test('раздел рецептов видит отдельный режим без craftAuto и статус после завершения',()=>{
   const els={},c={$:id=>els[id]||(els[id]={}),Date,fmt:n=>String(n),esc:n=>String(n)};
@@ -75,7 +75,7 @@ test('быстрый запуск сохраняет фоновые задачи
   await c.quickStart('craft');
   assert.deepEqual(plain(stored.cfg.autoTasks),['tvt','mammon','craft']);
   assert.deepEqual(stored.rt.craftQueue,[{id:'a',n:10}]);
-  assert.deepEqual(calls.slice(1),[['tab','hunt'],['scroll'],['start']]);
+  assert.deepEqual(calls.slice(1),[['tab','craft'],['scroll'],['start']]);
   assert.equal(Object.hasOwn(calls[0][1],'craftPending'),false);
 });
 test('Stop во время записи быстрого запуска не запускает крафт и не меняет раздел',async()=>{

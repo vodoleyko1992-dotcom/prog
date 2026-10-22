@@ -1,0 +1,25 @@
+{
+  "pass": true,
+  "count": 19,
+  "files": [
+    "background.js",
+    "content.js",
+    "craft-plan.js",
+    "defaults.js",
+    "modules/craft.js",
+    "popup.js",
+    "tests/craft-chain-plan.test.js",
+    "tests/craft-goals-browser.cjs",
+    "tests/craft-goals-runtime.test.js",
+    "tests/craft-goals-ui.test.js",
+    "tests/craft-mode-browser.cjs",
+    "tests/craft-mode-ui.test.js",
+    "tests/craft-read-command.test.js",
+    "tests/run-all.cjs",
+    "tests/v2012-panel-layout.test.js",
+    "tests/v2026-autonomy-lease-stop.test.js",
+    "tests/v2043-firefox-dock-commands.test.js",
+    "tests/v71-ui.test.js",
+    "tests/v92-fightlab.test.js"
+  ]
+}

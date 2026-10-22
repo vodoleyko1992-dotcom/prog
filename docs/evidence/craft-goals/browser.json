@@ -1,0 +1,246 @@
+{
+  "pass": true,
+  "browser": "156.0.8078.4",
+  "boundary": "Actual Chrome MV3/storage/reload/popup/main; local response model only, no live game",
+  "sources": {
+    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+    "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3"
+  },
+  "full": {
+    "extensionVersion": "20.50",
+    "runtimeHashes": {
+      "content.js": "53e8e2a5aabc786f80599ac85a62fa745a04b391c9aa72a423b895c704c15255",
+      "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+      "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+      "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3",
+      "popup.js": "e6828e8ac9890a8801d1168bc6d4ebc7431dce2fc42aa96cc2d8d06b6c6a110c",
+      "popup.html": "3124d5adf141fa3a674653b58deea3ab59ee1f6da9d0cdf8807cb086bfb4cfcb",
+      "ui-game.css": "66710c107189850b9887fa2871b61ef4ee51d0fe50e48f2ec1812e7f75b10f3b"
+    },
+    "errors": []
+  },
+  "proof": [
+    {
+      "scenario": "MP0 → одна банка → Cokes4 → Synthetic2 → Oriharukon2",
+      "posts": [
+        {
+          "path": "/character/consumable/use",
+          "body": {
+            "itemId": 728,
+            "quantity": 1,
+            "expectedRevision": 77
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cokes",
+            "craftCount": 4,
+            "expectedRevision": 78
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "synthetic_cokes",
+            "craftCount": 2,
+            "expectedRevision": 79
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "oriharukon",
+            "craftCount": 2,
+            "expectedRevision": 80
+          }
+        }
+      ],
+      "savedGoal": 2
+    },
+    {
+      "scenario": "точная нехватка сырья → уведомление один раз через reload → пополнение → цель и снятие уведомления",
+      "missing": 3,
+      "made": 2,
+      "events": [
+        {
+          "action": "create",
+          "id": "craft-missing",
+          "sticky": false,
+          "text": "Oriharukon ×2. Oriharukon Ore: не хватает 3 (нужно 10, есть 7)",
+          "title": "Крафт: не хватает ресурсов"
+        },
+        {
+          "action": "clear",
+          "id": "craft-missing"
+        }
+      ]
+    },
+    {
+      "scenario": "имеющиеся полуфабрикаты уменьшают цепочку",
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "synthetic_cokes",
+            "craftCount": 1,
+            "expectedRevision": 77
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "oriharukon",
+            "craftCount": 2,
+            "expectedRevision": 78
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "настоящий reload после принятого полуфабриката без ответа: одна партия, финальная цель засчитана один раз",
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cokes",
+            "craftCount": 2,
+            "expectedRevision": 77
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "synthetic_cokes",
+            "craftCount": 1,
+            "expectedRevision": 78
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "oriharukon",
+            "craftCount": 1,
+            "expectedRevision": 79
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "500 без применения → повтор прежнего запроса → цепочка без дубля",
+      "retries": 1,
+      "made": 1
+    },
+    {
+      "scenario": "stop-prepare",
+      "posts": 0
+    },
+    {
+      "scenario": "mode-prepare",
+      "posts": 0
+    },
+    {
+      "scenario": "failed-prepare",
+      "posts": 0
+    },
+    {
+      "scenario": "оповещения отключены: ожидание без расхода и без уведомлений",
+      "posts": 0
+    },
+    {
+      "scenario": "выключение оповещений снимает уже активное уведомление",
+      "posts": 0,
+      "events": [
+        {
+          "action": "create",
+          "id": "craft-missing",
+          "sticky": false,
+          "text": "Oriharukon ×2. Oriharukon Ore: не хватает 10 (нужно 10, есть 0)",
+          "title": "Крафт: не хватает ресурсов"
+        },
+        {
+          "action": "clear",
+          "id": "craft-missing"
+        }
+      ]
+    },
+    {
+      "scenario": "actual popup Stop во время ручного OFF-чтения отклоняет поздний снимок",
+      "reply": {
+        "ok": false,
+        "reason": "Состояние изменилось — повторите чтение"
+      },
+      "posts": 0
+    },
+    {
+      "scenario": "actual full MV3 OFF-read → поиск RU/EN → preview/shortage → очередь → chain до цели",
+      "made": 2,
+      "posts": [
+        {
+          "path": "/character/consumable/use",
+          "body": {
+            "itemId": 728,
+            "quantity": 1,
+            "expectedRevision": 78
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cokes",
+            "craftCount": 4,
+            "expectedRevision": 79
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "synthetic_cokes",
+            "craftCount": 2,
+            "expectedRevision": 80
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "oriharukon",
+            "craftCount": 2,
+            "expectedRevision": 81
+          }
+        }
+      ],
+      "widths": [
+        {
+          "width": 320,
+          "scroll": 320,
+          "active": "craftFilter",
+          "sectionHeight": 279.359375,
+          "activityShown": false
+        },
+        {
+          "width": 420,
+          "scroll": 420,
+          "active": "craftFilter",
+          "sectionHeight": 279.359375,
+          "activityShown": false
+        }
+      ],
+      "alertMessages": [
+        {
+          "cmd": "alert",
+          "id": "craft-missing",
+          "title": "Крафт: не хватает ресурсов",
+          "text": "Oriharukon ×2. Oriharukon Ore: не хватает 3 (нужно 10, есть 7)"
+        },
+        {
+          "cmd": "alertClear",
+          "id": "craft-missing"
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "externalRequests": 0
+}
