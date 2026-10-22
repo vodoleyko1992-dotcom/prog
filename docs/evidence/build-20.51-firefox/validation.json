@@ -1,0 +1,57 @@
+{
+  "atUtc": "2026-10-22T23:55:23.563976+00:00",
+  "result": "PASS",
+  "version": "20.51",
+  "sourceCommit": "234737b6c3f47ecad4faae609018ce19619295a1",
+  "sourceIncludes": [
+    "PR #358 craft goals",
+    "PR #359 battle load error",
+    "PR #361 Detect startup and Monster Weakness"
+  ],
+  "versionPolicy": "Existing manifest 20.51 retained; Firefox-only build. Chrome ZIP20.51 predates PR361.",
+  "archive": "builds/l2wap-bot-v20.51-firefox.zip",
+  "bytes": 1655391,
+  "files": 68,
+  "sha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+  "packaging": "Clean staging with exact 68-file allowlist from Chrome20.51 archive, current source bytes, Firefox recipe; no checkout-wide recursive packaging.",
+  "checks": {
+    "nodeFilesPass": 618,
+    "nodeFilesFail": 0,
+    "runtimeSyntaxFiles": 53,
+    "changedTestSyntax": "PASS",
+    "envcheckModules": 34,
+    "shellSyntax": "PASS",
+    "profileCredentialKeys": "PASS",
+    "firefoxLint": {
+      "errors": 0,
+      "notices": 0,
+      "warnings": 51
+    },
+    "independentPackageAudit": "PASS: CRC, exact allowlist, 67 source hashes, 68 extracted hashes, 109 resource references, 64 preserved baseline files",
+    "nativeFirefox": {
+      "version": "153.5.1esr",
+      "desktop": "PASS: temporary install, MAIN hook, content dock, background messaging, profile, popup and tabless dock commands",
+      "androidApiSimulation": "PASS: native desktop Firefox with commands/notifications/badge APIs disabled; not a physical Android device",
+      "mammonDock": "PASS: OFF read, changed bag, server500 preserves prior success, ON same-owner read and Start/Stop; 0 POST, no navigation",
+      "craftDock": "PASS 3 scenarios: actual tabless iframe OFF read via button -> exactly2GET -> 2-step chain/30MP preview; changed stock -> shortage3; book500 retains previous book/bag/plan;0POST/Start/navigation"
+    },
+    "testRepair": "v806-firefox: load engine-core before background; async assertion failure produces nonzero exit; inspect manifest in actual fixture ZIP",
+    "publicDownload": "PASS: exact commit b9cc1cc; byte and SHA256 equality"
+  },
+  "runtimeChangesDuringBuild": [],
+  "preserved": [
+    "manifest.json",
+    "base-profile.json",
+    "all 62 existing ZIP archives",
+    "Chrome ZIP20.51",
+    "Lite1.5.2"
+  ],
+  "boundaries": [
+    "No live game or account access. All browser game URLs resolved to loopback TLS fixtures.",
+    "No physical Android run; unsigned ZIP requires temporary desktop installation.",
+    "No Chromium run for Firefox manifest; broad historical browser suite was not repeated.",
+    "New Detect flow was not autonomously exercised in native Firefox; earlier Chrome evidence is separate."
+  ],
+  "nextStep": "Install Firefox package, reload addon and game tab, export control log.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/362"
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "archive": "l2wap-bot-v20.51-firefox.zip",
+  "bytes": 1655391,
+  "sha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+  "file_count": 68,
+  "uncompressed_bytes": 6831023,
+  "source_files_compared": 67,
+  "extracted_files_compared": 68,
+  "baseline_files_compared": 64,
+  "closure_references_checked": 109,
+  "checks": {
+    "crc": true,
+    "no_duplicate_entries": true,
+    "safe_paths": true,
+    "no_symlinks": true,
+    "exact_allowlist": true,
+    "no_service_or_credential_files": true,
+    "all_nonmanifest_source_sha": true,
+    "all_extracted_sha": true,
+    "extracted_allowlist": true,
+    "exact_expected_firefox_manifest": true,
+    "manifest_html_css_static_js_closure": true,
+    "base_profile_no_credential_keys": true,
+    "baseline_archives_profile_manifest_unchanged": true
+  },
+  "errors": [],
+  "mismatched_source_files": [],
+  "missing_closure": [],
+  "limitations": [
+    "Статический аудит не подтверждает исполнение runtime в Firefox или совместимость настоящего Android.",
+    "Динамические URL проверяются отдельными browser-smoke; значения окружения и секретов не читались."
+  ]
+}

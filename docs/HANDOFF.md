@@ -1,5 +1,13 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 23.10.2026 — Firefox20.51 по прямой просьбе ([PR #362](https://github.com/vodoleyko1992-dotcom/prog/pull/362))
+
+**Готово:** основной FirefoxZIP из234737b с#358/#359/#361, включая последние Detect после ChromeZIP20.51. Версия20.51 сохранена по AGENTS; основной runtime, manifest, профиль, Chrome/Lite и62старыхZIP прежние. Пакет68файлов/1655391байт, SHA256 `6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce`; путь `builds/l2wap-bot-v20.51-firefox.zip`. Clean staging; независимые CRC/allowlist/67sourceSHA/68extractedSHA/109resourceclosure/privacy/64baseline PASS.
+
+**Проверки:** финальные618Node PASS/0FAIL; syntax53runtime+test, env34, bash/diff PASS. NativeFirefox153.5.1esr: установка/MAINhook/content/background/profile/popup/dockбезtabs и AndroidAPI-simulation PASS. Маммон в настоящем Firefox: OFF/изменённаясумка/ошибка500ссохранением/ON-владелец/StartStop PASS,0POST. Крафт в nativeFirefox3/3: OFF→2GET→цепочка2/30MP, нехватка3,500ссохранением;0POST/Start. Lint0errors/0notices/51warnings. Исправлен устаревший v806-тест engine-core→background и проглатывание async assertion; добавлена проверка manifest настоящего fixtureZIP. README-FIREFOX обновлён; отчёт — `docs/evidence/build-20.51-firefox/validation.json`.
+
+**Границы и следующий шаг:** живая игра не открывалась, физическийAndroid/Chromium/полныйисторическийbrowser-suite не запускались; Detect на nativeFirefox отдельно не автоматизировали. ZIP неподписан, установка временная через about:debugging. Остановить бота, экспортировать настройки/память, заменить файлы в той же папке, ↻дополнения и обновить игру; нужен контрольный лог. PR #362 опубликован, публичное скачивание по точному commit b9cc1cc побайтно и SHA256 совпало с проверенным ZIP (`docs/evidence/build-20.51-firefox/download.json`).
+
 ## 23.10.2026 — новый Detect Monster и запуск подготовки Detect ([PR #361](https://github.com/vodoleyko1992-dotcom/prog/pull/361))
 
 По TXT/learn/pages `2026-10-22-14-29` пользователь спросил о новом баффе и неприменении Detect Warlord. TXT: **20.50**, **23.10 00:21:33–00:29:37 UTC+10**. Monster Weakness **ID80**, native `detect_monster_weakness`, изучен00:28:32; два ручных боевых каста приняты00:29:23.683/26.819. Подсказка: +30% P.Atk против Monster/Beast,10мин,MP24/CD3с. Вид РБ, внебоевое усиление80 и совместный эффект четырёх по этим файлам не доказаны. Learn — появление полей, не факт применения. Разбор — `docs/evidence/warlord-detect-monster/log-analysis.json`.

@@ -1,0 +1,8 @@
+{
+  "atUtc": "2026-10-22T23:57:07.700158+00:00",
+  "result": "PASS",
+  "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/b9cc1cc0cdc2f4743dd8d02fefc51b2171b3cb47/builds/l2wap-bot-v20.51-firefox.zip",
+  "bytes": 1655391,
+  "sha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+  "byteEquality": true
+}
