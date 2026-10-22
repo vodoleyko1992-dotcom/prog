@@ -895,6 +895,8 @@ const LS_BY_NAME = Object.create(null);
 const NATIVE_SKILL_META = { battle_trance: { n: 'Battle Trance', c: 'Расход HP', t: 'HP_SELF_COST', o: 'ACTIVE', target: 'SELF', autoUse: false, L: 'L2WAP: снижает текущее HP до 25% максимума; вручную или отдельной подготовкой Frenzy/Zealot' } };
 const NATIVE_SKILL_NAMES = { 'battle trance': 'battle_trance' };
 const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312,
+  // 20.48 (живой GET /character 22.10): локализованная поддержка Warlord — лечение/бафф, не прямые удары.
+  battle_roar: 121, lionheart: 287,
   // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
   focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104,
   howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286 };
