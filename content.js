@@ -904,7 +904,7 @@ const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_
   // 20.48 (живой GET /character 22.10): локализованная поддержка Warlord — лечение/бафф, не прямые удары.
   battle_roar: 121, lionheart: 287,
   // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
-  focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104,
+  focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104, detect_monster_weakness: 80,
   howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286 };
 IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
@@ -942,7 +942,7 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
   317: { o: 'TOGGLE', autoUse: false, managedToggle: true, dur: 0, reuse: 12000, L: 'L2WAP: Focus Attack · переключатель · выбранный постоянный эффект Warlord с пикой держим включённым · +2 точности и +10% силы крита по подсказке · поддержание ≈0.4 MP/с, разовая цена отдельно не измерена' },
   286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · отдельная связка с массовым ударом' },
-  75: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
+  75: { autoUse: false, managedDetect: true }, 80: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
   // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
@@ -3776,7 +3776,7 @@ function detectOutsideGate() {
 }
 function detectOutsidePanel() {
   const slots=[...document.querySelectorAll(SLOT)].filter(b=>shown(b)&&slotKind(b)==='скилл').map(button=>{
-    const id=ilOf(button)?.id,action=slotAction(button);if(![75,87,104].includes(id))return null;
+    const id=ilOf(button)?.id,action=slotAction(button);if(![75,80,87,104].includes(id))return null;
     const ready=uiReady(button)&&memLeft(button)<=0&&combatCooldown.globalWait()<=0&&combatCooldown.skillWait(action,cdSpawn())<=0&&combatCooldown.skillWait('l2_'+id,cdSpawn())<=0;
     return {id,action,button,ready};
   }).filter(Boolean);
@@ -5212,6 +5212,8 @@ async function invRefresh(active = () => true, ms = 6000) {
     if(!current())return null;
     INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(c?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY = invContext();
+    // 23.10 (лог00:25, Detect20.50): свой preflight проходит после аренды, даже когда стартовый GET страницы был до неё.
+    if (canConfirm() && current()) L2V7Modules.buffs?.detectOutsideSnapshot?.(c,at,'inventory');
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
     return current() ? m : null;

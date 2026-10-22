@@ -1,0 +1,72 @@
+{
+  "version": "20.50",
+  "timeZone": "Asia/Vladivostok",
+  "window": {
+    "date": "2026-10-23",
+    "start": "00:21:33",
+    "end": "00:29:37"
+  },
+  "sources": [
+    {
+      "name": "l2bot-log-2026-10-22-14-29.txt",
+      "bytes": 798897,
+      "sha256": "b2416aa85afcf85fdbc1e0dacfc1574220c3ac04db0f9123af1941e97d179fe1"
+    },
+    {
+      "name": "l2wap-pages-2026-10-22-14-29.html",
+      "bytes": 671940,
+      "sha256": "0f0547d193acdd0add175aee9d8d0392c6829cccd7d1bea1215870cd75dbb9c8"
+    },
+    {
+      "name": "l2bot-learn-2026-10-22-14-29.html",
+      "bytes": 148326,
+      "sha256": "c439c22f892d7617e46d08ce2616e6e2d1734cd12286a10027224e9a73227dd6"
+    }
+  ],
+  "monster": {
+    "skillId": 80,
+    "nativeAction": "detect_monster_weakness",
+    "name": "Detect Monster Weakness",
+    "tooltip": {
+      "mp": 24,
+      "cooldownSec": 3,
+      "durationSec": 600,
+      "description": "+30% P.Atk versus Monster/Beast"
+    },
+    "learnConfirmed": "00:28:32.374",
+    "manualHotbarPick": "00:29:18.062",
+    "manualBattleAccepted": [
+      "00:29:23.683",
+      "00:29:26.819"
+    ],
+    "activeEffectInBattleSnapshot": "00:29:34",
+    "outsideEffectProven": false,
+    "targetSpeciesProven": false,
+    "stackingFourDetectProven": false
+  },
+  "priorSelected": {
+    "ids": [
+      75,
+      87,
+      104
+    ],
+    "autoRoles": true,
+    "nBuffs": "Бойовий клич, Азарт бою, Вразливість комах, Вразливість звірів, Вразливість рослин"
+  },
+  "missingEffects": {
+    "from": "00:26:24",
+    "through": "00:27:36",
+    "snapshots": 12
+  },
+  "ownSnapshotGap": {
+    "base": "3a011bb",
+    "observedInCode": "validated invRefresh forwards to VIP/servitor consumers but not Detect; owned page hook is the only normal initial feeder",
+    "offlineReproduced": true,
+    "inventoryReady": true,
+    "detectPlanBeforeOwnedHook": null,
+    "sameSnapshotAfterOwnedHookPlan": 75,
+    "exactLocalRamStateProvenByUploadedLog": false
+  },
+  "learnOnlySchemaDiscoveryIsNotCastProof": true,
+  "liveGameAccess": false
+}

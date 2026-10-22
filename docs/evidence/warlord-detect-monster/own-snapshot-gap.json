@@ -1,0 +1,10 @@
+{
+  "sourceHead": "3a011bb",
+  "inventoryReady": true,
+  "detectAfterOwnRead": null,
+  "detectAfterOwnedHookRead": {
+    "id": 75,
+    "cost": 20,
+    "revision": 101
+  }
+}

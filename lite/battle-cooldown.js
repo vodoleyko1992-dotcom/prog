@@ -5,10 +5,10 @@
     let spawn = '', globalUntil = 0, globalRejectAt = 0, globalServerMs = -1, newestServerMs = -1;
     let skills = Object.create(null);
     // 22.10, живой Warlord/Flamestone: запросы именованные, а сервер возвращает l2_ID без normalizedSkillId.
-    // Все пары явно подтверждены raid-start.skills[].l2SkillId; Battle Trance без ID не угадываем.
+    // Пары подтверждены raid-start.skills[].l2SkillId; новый Monster80 — панелью и принятым native кастом23.10. Battle Trance без ID не угадываем.
     // Чужой/неизвестный ID не связываем с последним нажатием по положению в списке откатов.
     const nativeIds = { war_cry: 'l2_78', battle_roar: 'l2_121', whirlwind: 'l2_36', detect_animal_weakness: 'l2_87',
-      detect_insect_weakness: 'l2_75', thunder_storm: 'l2_48', wild_sweep: 'l2_245', vicious_stance: 'l2_312', howl: 'l2_116',
+      detect_insect_weakness: 'l2_75', detect_monster_weakness: 'l2_80', thunder_storm: 'l2_48', wild_sweep: 'l2_245', vicious_stance: 'l2_312', howl: 'l2_116',
       focus_attack: 'l2_317', lionheart: 'l2_287', stun_attack: 'l2_100', provoke: 'l2_286', power_smash: 'l2_255',
       mortal_blow: 'l2_16', power_shot: 'l2_56', power_strike: 'l2_3' };
     const nativeNumbers = new Set(Object.values(nativeIds).map(id => id.slice(3)));

@@ -1,0 +1,62 @@
+{
+  "kind": "actual Chrome MV3; controlled page DOM/fetch client and locally fulfilled HTTPS",
+  "root": "/workspace/work/warlord-detect-monster/baseline-extension",
+  "sourceHashes": {
+    "content.js": "53e8e2a5aabc786f80599ac85a62fa745a04b391c9aa72a423b895c704c15255",
+    "hook.js": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+    "background.js": "efac9b54534322811f96d5d41d8094436693bf7cfb354f1360428164eb8c0681",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+    "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+    "modules/fightlab.js": "9ef2d3f30bf9771e9511beeaba8a149680d4c8371909c82117150535462a8868"
+  },
+  "fixtureBoundaries": {
+    "panel": "Controlled DOM/buttons and fetch client implementing battleId + expectedRevision. Native renderer/executor JS are not used.",
+    "startup": "Exactly one MAIN page GET before Start. No test calls to resync/snapshot/module functions to supply Detect evidence after Start; own isolated-world inventory preflight must initiate the panel trip.",
+    "owner": "Real background storage listener receives a foreign lock belonging to an about:blank tab; no second game account/tab.",
+    "replay": "Reposts a captured real hook response after its request context has been consumed; no new netStart is synthesized.",
+    "unknown": "Server applies a mutation but returns malformed JSON. Actual document reload plus positive plan for another ID checks the persisted fence without waiting 630 seconds."
+  },
+  "liveGame": false,
+  "liveGameRequests": 0,
+  "proof": [
+    {
+      "case": "owned-three",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680408623,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680409047,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680409156,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680408605
+        }
+      ],
+      "observedDefect": "own inventory ready but no Detect plan/panel/casts"
+    }
+  ],
+  "pass": 1,
+  "fail": 0,
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.50",
+  "cases": 1,
+  "localMockOutsidePosts": 0
+}
