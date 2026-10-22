@@ -8,7 +8,7 @@ function fixture(){
  const f=box.fixture(),c=f.c,d=data(),requests=[];
  vm.runInNewContext('this.dailyServerCurrent=dailyServerCurrent;this.dailyWorkWaiting=dailyWorkWaiting;',c);
  Object.assign(f.state.cfg,{autoKillLimit:0,catKillLimit:0,dailyKillLimit:8000,dailyFishLimit:1511,autoTasks:['auto']});f.refresh();
- Object.assign(c,{automationGeneration:1,isBattle:()=>false,isFishing:()=>false,fishState:()=>null,victory:()=>false,heroNick:()=>c.rt.char});
+ Object.assign(c,{automationGeneration:1,isBattle:()=>false,isFishing:()=>false,fishNow:()=>false,fishState:()=>null,victory:()=>false,heroNick:()=>c.rt.char});
  c.autonomyMode=()=>{const task=c.L2EngineCore.selectedTask(c.cfg,c.rt);return task==='auto'?'farm':task==='quests'?'campaign':task||'farm'};
  c.automationSnapshot=()=>JSON.stringify([c.automationGeneration,c.leaseEpoch,c.rt.char,c.rt.manualKickAt,c.cfg.autoTasks,c.location.search]);
  c.automationCurrent=stamp=>c.on&&c.tabOwner&&stamp===c.automationSnapshot();
@@ -53,9 +53,10 @@ test('сохранённый active без текущей рыбы сначал�
  assert.equal(await f.c.dailyWorkReady('mobs'),false);assert.deepEqual(f.requests,['/game/fishing/state','/game/time','/game/daily-quests']);
  assert.equal(f.c.rt.fishCastActive,false);assert.equal(f.state.rt.fishCastActive,false);assert.equal(f.c.L2EngineCore.dailyCount(f.c.rt,'auto'),8000);
 });
-test('неполный ответ/живая рыба не очищают active и не открывают дневную квоту',async()=>{
+test('неполный ответ/живая рыба выбранной рыбалки не очищают active и не открывают дневную квоту',async()=>{
  for(const state of [{},{target:{hp:5}},null]){
-  const f=fixture();f.c.rt.fishCastActive=true;f.c.gameGet=async p=>{f.requests.push(p);return {ok:true,json:async()=>state}};
+  // 22.10: сохранённая рыба вне рыбалки теперь разрешает только серверную сверку квоты охоты, сама выбранная рыбалка ждёт по-прежнему.
+  const f=fixture();f.c.rt.fishCastActive=true;f.c.fishNow=()=>true;f.c.gameGet=async p=>{f.requests.push(p);return {ok:true,json:async()=>state}};
   assert.equal(await f.c.dailyWorkReady('mobs'),false);assert.equal(await f.c.dailyWorkReady('mobs'),false);
   assert.equal(f.c.rt.fishCastActive,true);assert.deepEqual(f.requests,['/game/fishing/state']);
  }

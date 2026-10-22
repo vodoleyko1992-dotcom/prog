@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-22T08:22:39.146388+00:00",
+  "base": "b7db44ff40fedac71fec256369843310aa454e46",
+  "contentSha256": "8f4931c9b1ccb26b8da567d4fb1d37d8eefed45d7206aef4f3ef305c2d94504b",
+  "runtimeChanged": [
+    "content.js"
+  ],
+  "version": "20.47",
+  "newZipBuilt": false,
+  "settingsAndBaseProfileChanged": false,
+  "newNodeRegression": {
+    "pass": 31,
+    "fail": 0,
+    "baselinePass": 25,
+    "baselineFail": 6
+  },
+  "existingDailyDispatcher": {
+    "pass": 27,
+    "fail": 0
+  },
+  "nodeFiles": 599,
+  "nodeFail": 0,
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "syntax": "PASS",
+  "syntaxFiles": [
+    "content.js",
+    "tests/run-all.cjs",
+    "tests/v2026-autonomy-daily-dispatch.test.js",
+    "tests/v2047-farm-fishing-resume.test.js",
+    "tests/v2047-farm-fishing-resume-browser.cjs"
+  ],
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "nativeChromeBrowser": {
+    "pass": 5,
+    "fail": 0,
+    "proof": "browser.json",
+    "boundary": "exact content functions + pure background dailyServerChange; controlled actor/IPC/map; native fetch on local HTTP",
+    "fullMV3": false
+  },
+  "postRequests": 0,
+  "liveGame": false,
+  "fullHistoricalBrowserRunner": false,
+  "independentReview": "PASS, no blockers; missing dailyWorkReady guards added to regressions",
+  "result": "PASS"
+}

@@ -1,0 +1,67 @@
+{
+  "files": [
+    {
+      "name": "l2bot-log-2026-10-22-08-08.txt",
+      "sha256": "91687e0146f9d98c10d5ee56d1d3919ef168c37f81514de68dfa15f2b8a007b4",
+      "bytes": 6291059
+    },
+    {
+      "name": "l2bot-learn-2026-10-22-08-08.html",
+      "sha256": "45af215a27c2d90177f48474e205e1247af5a0eeaa2d7f7800716e4ea18f5c55",
+      "bytes": 120262
+    }
+  ],
+  "version": "20.47",
+  "timestampsTimezone": "Asia/Vladivostok (as recorded in user log)",
+  "evidence": [
+    {
+      "time": "16:44:02.450",
+      "event": "New cast; Old Box observed with 2000 HP, last visible HP813 at16:44:21.835"
+    },
+    {
+      "time": "16:44:27.743",
+      "event": "User paused during the unfinished catch"
+    },
+    {
+      "time": "16:44:46.670",
+      "event": "User navigated from fishing to city"
+    },
+    {
+      "time": "17:47:08.098",
+      "event": "Bot detected Maestro → Warlord40 after Start"
+    },
+    {
+      "time": "17:47:54.559",
+      "event": "Inventory route complete; clan task claimed"
+    },
+    {
+      "time": "17:47:55–18:01:13",
+      "event": "No hunting actions; only background activity"
+    },
+    {
+      "time": "18:01:13–18:01:33",
+      "event": "Mammon service ran, teleport rejected409 revision_conflict, route ended"
+    },
+    {
+      "time": "18:01:33–18:07:49",
+      "event": "No hunting actions; user stopped then started at18:07:50"
+    }
+  ],
+  "savedFishCastActive": true,
+  "codePath": [
+    "content.map",
+    "dailyWorkReady(mobs)",
+    "saved fishCastActive + non-null server target → wait",
+    "dailyServerSync default skips active catch"
+  ],
+  "limits": {
+    "dailyKillLimit": 36000,
+    "dailyFishLimit": 1539
+  },
+  "boundaries": [
+    "Live fishing.state.target after17:47 is not included in the supplied log: extension-owned GET is not observed by MAIN hook.",
+    "Actual current map spawn levels and authoritative daily counts are not available.",
+    "The gate defect is reproduced locally; live server response during the stall is inferred from prior unfinished catch and saved active flag.",
+    "No live game requests or actions."
+  ]
+}

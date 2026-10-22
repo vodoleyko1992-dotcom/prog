@@ -480,34 +480,45 @@ async function dailyWorkReady(kind) {
   if(kind==='mobs' && !['farm','cat','campaign','raid','epic'].includes(mode) && !(mode==='tasks' && L2EngineCore.taskAllowed(cfg,'resources') && lootGoal()))return false;
   if(!quotaTask || !L2EngineCore.dailyLimit(cfg,task))return true;
   if(!dailyServerCurrent()) {
+    let parkedFish=false;
     if(rt.fishCastActive && !rt.fishCastPending && rt.actionPayments?.pending?.kind!=='fishing' && !(isFishing()&&fishState())) {
       const key=JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt||0,rt.dailyStart||0,automationGeneration]);
       if(dailyFishProbe.key===key && Date.now()-dailyFishProbe.at<15000)return wait();
       dailyFishProbe={key,at:Date.now()};
       try {
         const r=await gameGet('/game/fishing/state'),s=r?.ok?await r.json():null;
-        if(!active() || !s || !Object.hasOwn(s,'target') || s.target!==null)return wait();
-        const saved=await setRt({fishCastActive:false});
-        if(saved?.ok!==true || !await rtCommit() || !active())return wait();
+        if(!active() || !s || !Object.hasOwn(s,'target'))return wait();
+        // 22.10 (лог 16:44 → 17:47): ушли с незавершённым Old Box на другой класс/фарм — улов хранится на сервере,
+        // но не движется. Сверяем настоящие квоты охоты, сохраняя рыбу; неизвестный заброс и текущую рыбалку не пропускаем.
+        if(s.target!==null){
+          if(kind!=='mobs' || !s.target || typeof s.target!=='object' || Array.isArray(s.target) || fishNow() || isFishing() || fishState())return wait();
+          parkedFish=true;
+        } else {
+          const saved=await setRt({fishCastActive:false});
+          if(saved?.ok!==true || !await rtCommit() || !active())return wait();
+        }
       }catch(_){return wait();}
     }
-    await dailyServerSync(true);
+    await dailyServerSync(true,parkedFish);
     if(!active())return false;
     if(!dailyServerCurrent()){setStatus('Лимиты дня: новая добыча ждёт проверки сервера; остальные задачи доступны');return wait();}
   }
   dailyWorkWait=null;
   return active() && (!quotaTask || !L2EngineCore.dailyBlocked(cfg,rt,task));
 }
-async function dailyServerSync(afterBattle=false) {
+async function dailyServerSync(afterBattle=false,parkedFish=false) {
   // Уже начатый бой/улов заканчиваем до сверки: их итог не должен посчитаться дважды.
-  if(isBattle()&&!afterBattle || rt.fishCastActive || rt.fishCastPending || rt.actionPayments?.pending?.kind==='fishing' || isFishing()&&fishState())return true;
+  // Сохранённый улов вне выбранной рыбалки неподвижен; исключение разрешает только dailyWorkReady после GET состояния рыбы.
+  const parked=()=>!fishNow()&&!isFishing()&&!fishState();
+  const fishBusy=()=>rt.fishCastPending || rt.actionPayments?.pending?.kind==='fishing' || isFishing()&&fishState() || rt.fishCastActive&&!(parkedFish&&parked());
+  if(isBattle()&&!afterBattle || fishBusy())return true;
   const day=L2EngineCore.dailyDay(Date.now(),rt),start=rt.dailyStart||0;
   if(rt.dailyServerCheck?.day===day && rt.dailyServerCheck.char===(rt.char||'') && rt.dailyServerCheck.start===start)return true;
   const retryKey=JSON.stringify([rt.char,start,day]);if(retryKey!==dailyStartRetryKey){dailyStartRetryKey=retryKey;dailyStartRetry=0;}
   const limited=L2EngineCore.dailyLimit(cfg,'fish')||L2EngineCore.dailyLimit(cfg,'auto');
   if(Date.now()<dailyStartRetry){if(limited)setStatus('Лимиты дня: жду повторной проверки сервера');return !limited;}
   const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0,generation=automationGeneration;
-  const active=()=>on&&tabOwner&&rt.char===char&&(!heroNick()||heroNick()===char)&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&(rt.dailyStart||0)===start&&automationGeneration===generation;
+  const active=()=>on&&tabOwner&&rt.char===char&&(!heroNick()||heroNick()===char)&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&(rt.dailyStart||0)===start&&automationGeneration===generation&&!fishBusy()&&(!parkedFish||parked());
   try {
     if(!await rtCommit()||!active())return false;
     setStatus('Проверяю серверное время и лимиты дня');
@@ -523,6 +534,7 @@ async function dailyServerSync(afterBattle=false) {
     rt={...rt,dailyQuota:saved.dailyQuota,daily:saved.daily,dailyServerCheck:saved.dailyServerCheck,dailyFishMark:saved.dailyFishMark,serverClock:saved.serverClock,fishTgt:saved.fishTgt??null};
     if(saved.fishTgt?.renewFrom!==undefined&&saved.fishTgt.t>=Date.now()-60000&&saved.fishTgt.got===0)rec('B','рыбалка',`🎯 новые игровые сутки ${saved.dailyServerCheck.day}: цель рыбалки обновлена — ${saved.fishTgt.type==='proof'?'собрать':'поймать'} ${saved.fishTgt.n} ${saved.fishTgt.type==='proof'?'Proof':'рыб'}`);
     dailyStartRetry=0;
+    if(parkedFish)rec('B','лимиты дня','Незавершённый улов сохранён; рыбалка сейчас не выбрана — лимиты охоты проверены по серверу');
     rec('B','лимиты дня',`Сервер: ${L2EngineCore.dailyCount(rt,'auto')} мобов, ${L2EngineCore.dailyCount(rt,'fish')} рыб за ${saved.dailyServerCheck.day}; лимиты проверены до начала новых действий`);
     return true;
   }catch(e){if(active()){dailyStartRetry=Date.now()+15000;setStatus('Лимиты дня: '+String(e?.message||e)+'; повтор через15с');}return !limited;}
