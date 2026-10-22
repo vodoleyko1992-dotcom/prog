@@ -212,7 +212,7 @@ function farmQuotaChange(state, E, now) {
   if (row.done) {
     next[keys[1]] = false;
     if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== E.task);
-    else if (!['enchantMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
+    else if (!['enchantMode','craftMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
   }
   return { ok:true,row,kills,...(mark?{farmKillMark:mark}:{}),dailyQuota,dailyDone:dailyLimit>0&&dailyMobs(dailyQuota)>=dailyLimit,cfg:next,rt:{...rt,kills,...(mark?{farmKillMark:mark}:{}),...(dailyLimit?{dailyQuota}:{}),farmQuota:{...(rt.farmQuota||{}),[E.task]:row},_src:'farm-quota'} };
 }
@@ -599,6 +599,7 @@ async function switchCharacter(m, sender) {
       nextCfg.combatProfile = 'auto';
       Object.assign(nextCfg,{"petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal"}); // Новый герой не наследует разрешение платной задачи.
       nextCfg.autoLs = { targets: [], maxAttempts: 10, buyMaterials: true, aaBudget: 2000000, adenaBudget: 2000000, aaReserve: 0 }; // Чужая цель ЛС не переносится новому герою.
+      nextCfg.craftMode = false; // 22.10: отдельный крафт новый герой выбирает сам.
       nextCfg.enchantMode = false; // 15.10: новый герой сам выбирает отдельный режим заточки.
       nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)

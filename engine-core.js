@@ -105,8 +105,9 @@
 
   // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
   // combat remain higher-priority interrupts in the content-script dispatcher.
-  function chooseMode({ enchant = false, epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
+  function chooseMode({ enchant = false, craft = false, epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
     if (enchant) return 'enchant'; // 15.10: отдельный режим сильнее старых флагов импортированного профиля.
+    if (craft) return 'craft'; // 22.10: отдельный режим использует очередь материалов и МП-банки.
     if (epic) return 'epic';
     if (raid) return 'raid';
     if (fish) return 'fish';
@@ -117,7 +118,7 @@
   }
 
   // 15.10: явный список задач ограничивает и старые флаги импортированных профилей.
-  const TASK_KEYS = ['tvt','quests','fish','cat','raid','epic','farm','auto','enchant','mammon','dailies','clan','pvp','petbuff','resources'];
+  const TASK_KEYS = ['tvt','quests','fish','cat','raid','epic','farm','auto','enchant','craft','mammon','dailies','clan','pvp','petbuff','resources'];
   const taskRaw = new WeakMap();
   const rawTaskConfig = c => taskRaw.get(c) || c;
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
@@ -250,7 +251,7 @@
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
     // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится. Доводка 21.10: передышек может быть несколько
     const held = base ? [] : selfHoldList(rt, now).map(h => h.task).filter(Boolean);
-    return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
+    return ['enchant','craft','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
       if (held.includes(k) && k !== 'enchant' && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
@@ -271,7 +272,7 @@
       const view = new Proxy(raw,{get(target,key){
         const rt=runtime(), tasks={fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
         if (Object.hasOwn(tasks,key) && dailyBlocked(target,rt,tasks[key]) && !(key==='fishMode' && rt.fishCastActive)) return false;
-        if (key==='taskOnly' && Object.entries(tasks).some(([flag,k])=>target[flag] && dailyBlocked(target,rt,k)) && !['enchantMode','epicMode','rbHuntMode','campaign'].some(k=>target[k]) && !Object.entries(tasks).some(([flag,k])=>target[flag] && !dailyBlocked(target,rt,k))) return true;
+        if (key==='taskOnly' && Object.entries(tasks).some(([flag,k])=>target[flag] && dailyBlocked(target,rt,k)) && !['enchantMode','craftMode','epicMode','rbHuntMode','campaign'].some(k=>target[k]) && !Object.entries(tasks).some(([flag,k])=>target[flag] && !dailyBlocked(target,rt,k))) return true;
         return Reflect.get(target,key);
       }}); taskRaw.set(view,raw); return view;
     }
@@ -283,7 +284,7 @@
     const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
     const view = new Proxy(raw, { get(target, key) {
       const active = selectedTask(target, runtime()), allowed = k => taskAllowed(target, k);
-      const primary = {enchantMode:'enchant',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
+      const primary = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
       if (Object.hasOwn(primary,key)) return primary[key] === active;
       if (key === 'tvtOn') return allowed('tvt');
       if (key === 'taskOnly') return active === 'tasks';
@@ -295,23 +296,23 @@
       if (key === 'mmGoalFarm' && !allowed('resources')) return false;
       for (const [group, keys] of Object.entries(groups)) if (keys.includes(key) && !allowed(group)) return false;
       if (key === 'campAuto') return false; // Кампания запускается только выбранной задачей.
-      if (support.includes(key) && ['tasks','fish','enchant'].includes(active)) return false;
+      if (support.includes(key) && ['tasks','fish','enchant','craft'].includes(active)) return false;
       return Reflect.get(target,key);
     }});
     taskRaw.set(view, raw); return view;
   }
   // 20.12 (ревизия 17.10): режимы и платные разрешения — в одном месте. Базовый профиль не включает режимы
   // (чистая установка = «стоять, где оставили»), новый герой (ещё нет cfg@Ник) не наследует платные режимы предыдущего.
-  const MODE_KEYS = ['enchantMode','epicMode','rbHuntMode','rbMode','rbBetween','fishMode','catMode','zoneAuto','campaign','autoTasks','taskOnly'];
+  const MODE_KEYS = ['craftMode','enchantMode','epicMode','rbHuntMode','rbMode','rbBetween','fishMode','catMode','zoneAuto','campaign','autoTasks','taskOnly'];
   const BASE_CFG_SKIP = [...MODE_KEYS, 'weaponManual', 'nWeaponMain'];  // ручной выбор оружия из профиля устаревает вместе со снаряжением
   const BASE_RT_SKIP = ['weapons','weaponRec','weaponEq','weaponNow','weaponsT','panel','panelSig','skills','rbK','rbDps','rbStats','hardMobs','zoneBad','lvl'];
   const NEW_HERO_PAID = {epicMode:false, epicCoinDailyMax:0, epicAdenaDailyMax:0, rbHuntMode:false, rbMode:false, rbFaFull:false, epicFaFull:false, fishTimeAuto:false, mmUpgrade:false};
   const baseProfileCfg = c => Object.fromEntries(Object.entries(c || {}).filter(([k]) => !BASE_CFG_SKIP.includes(k)));
   const baseProfileRt = r => Object.fromEntries(Object.entries(r || {}).filter(([k]) => !BASE_RT_SKIP.includes(k)));
   function newHeroCfg(prev) {
-    const next = { ...(prev || {}), ...NEW_HERO_PAID };
-    // Явный список задач тоже выбирает режим: тур РБ и эпики новый герой включает сам.
-    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== 'raid' && k !== 'epic');
+    const next = { ...(prev || {}), ...NEW_HERO_PAID, craftMode: false };
+    // Явный список задач тоже выбирает режим: тур РБ, эпики и отдельный крафт новый герой включает сам.
+    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== 'raid' && k !== 'epic' && k !== 'craft');
     return next;
   }
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
@@ -335,8 +336,8 @@
     // 20.43 (автономность, ревью 21.10): обратный перелёт службы (Маммон, сдача квеста — zoneGo.svc) — конец её похода, а не новая основная
     // работа. На передышке фарма выбор — «tasks», и перелёт снимался как несовместимый: герой оставался у NPC и после передышки фармил не на
     // своей точке. Решает выбор игрока без передышки (baseTask); в режиме «только задачи» / рыбалки / заточки — как прежде
-    if (key === 'zoneGo' && rt.zoneGo?.svc && taskAllowed(c,rt.zoneGo.svc)) return !['tasks','fish','enchant'].includes(baseTask(c,rt));
-    return !['tasks','fish','enchant'].includes(selectedTask(c,rt));
+    if (key === 'zoneGo' && rt.zoneGo?.svc && taskAllowed(c,rt.zoneGo.svc)) return !['tasks','fish','enchant','craft'].includes(baseTask(c,rt));
+    return !['tasks','fish','enchant','craft'].includes(selectedTask(c,rt));
   }
   // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке. В режиме задач передышка меняет выбор, и loopTaskList снимал маршруты
   // удерживаемой задачи как несовместимые: тур на stall-передышке (бой с РБ без изменения HP 9 мин ×3) терял rbHunt в шаге arrive/fight
