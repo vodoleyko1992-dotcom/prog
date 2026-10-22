@@ -9,6 +9,34 @@ const battleOf=vm.runInNewContext(hookSource.slice(secretStart,secretEnd)+'\n'+h
 const labBox={console,Date,Math,URLSearchParams};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../modules/fightlab.js'),'utf8'),labBox);
 const lab=labBox.L2V7Factories.fightlab({rt:{},cfg:{}}),spawn=actual.cases[0].request.battleSpawnId;
 function fixture(){let now=1000000;return{model:createBattleCooldown(()=>now),now:()=>now,tick:ms=>now+=ms};}
+for(const identity of actual.identities.filter(x=>x.skillId&&x.action!=='attack'))test('явная пара из raid-start.skills: '+identity.action+' → '+identity.skillId,()=>{
+ const f=fixture(),server=5000000,id='l2_'+identity.skillId;
+ f.model.observe({action:identity.action,battleSpawnId:spawn},{serverNowMs:server,delta:{skillCooldowns:{[id]:server+1234}}},200,spawn);
+ assert.equal(f.model.skillKnown(identity.action,spawn),true);assert.equal(f.model.skillWait(identity.action,spawn),1274);
+ assert.equal(f.model.skillWait(String(identity.skillId),spawn),1274);
+});
+test('battle_trance без явного l2SkillId не связывается с чужим сроком',()=>{
+ const f=fixture(),server=5000000;
+ assert.equal(actual.identities.find(x=>x.action==='battle_trance').skillId,null);
+ f.model.observe({action:'battle_trance',battleSpawnId:spawn},{serverNowMs:server,delta:{skillCooldowns:{l2_121:server+5000}}},200,spawn);
+ assert.equal(f.model.skillKnown('battle_trance',spawn),false);
+});
+for(const row of actual.extraCases)test('дополнительный живой '+row.source+': только явно присутствующий срок',()=>{
+ const f=fixture();f.model.observe(row.request,row.response,row.status,spawn);
+ assert.equal(f.model.skillKnown(row.request.action,spawn),row.remaining!==null);
+ assert.equal(f.model.skillKnown(row.canonical,spawn),row.remaining!==null);
+ assert.equal(f.model.skillWait(row.request.action,spawn),row.remaining===null?0:Math.max(0,row.remaining)+(row.remaining>0?40:0));
+ const be=battleOf({pathname:'/game/battle/action'},row.response,row.request),e=fixture();
+ e.model.observe(row.request,be,row.status,spawn);
+ assert.equal(e.model.skillWait(row.request.action,spawn),f.model.skillWait(row.request.action,spawn));
+});
+test('Focus400 с явным normalized317 учит именно Focus; противоречащий native не получает317',()=>{
+ const row=actual.extraCases.find(x=>x.source==='raid-focus-on.json'),f=fixture();
+ assert.equal(row.status,400);assert.equal(row.response.blockedBy,'skill');assert.equal(row.response.normalizedSkillId,'l2_317');
+ f.model.observe(row.request,row.response,row.status,spawn);assert.equal(f.model.skillWait('focus_attack',spawn),9283);
+ const wrong=fixture();wrong.model.observe({...row.request,action:'wild_sweep'},row.response,row.status,spawn);
+ assert.equal(wrong.model.skillKnown('wild_sweep',spawn),false);assert.equal(wrong.model.skillWait('focus_attack',spawn),9283);
+});
 for(const row of actual.cases){
  test('живой '+row.request.action+': native и l2_ID получают один явный серверный дедлайн',()=>{
   const f=fixture(),{model}=f;model.observe(row.request,row.response,row.status,spawn);

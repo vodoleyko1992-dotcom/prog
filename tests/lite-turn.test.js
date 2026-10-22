@@ -71,7 +71,9 @@ t('откат выстрела под номером игры (l2_56) держи
   const CDM = require('../lite/battle-cooldown.js'), L = require('../lite/logic.js');
   let now = 1000; const CD = CDM.createBattleCooldown(() => now);
   CD.observe({ action: 'power_shot' }, { delta: { serverNowMs: 5000, skillCooldowns: { l2_56: 12370 } } }, 200, '');
-  assert.equal(CD.skillWait('power_shot', ''), 0, 'сама модель имени выстрела не знает');
+  // 22.10: общий модуль знает доказанную raid-start.skills пару power_shot56; адаптер Lite остаётся совместимым.
+  assert.equal(CD.skillWait('power_shot', ''), CD.skillWait('l2_56', ''), 'native и номер дают один серверный срок');
+  assert.equal(CD.skillKnown('power_shot', '', 900), true);
   assert.ok(CD.skillWait('l2_56', '') > 7000 && CD.skillKnown('l2_56', '', 900));
   assert.equal(L.NATIVE.power_shot, 56); assert.equal(L.NATIVE.double_shot, 19); assert.equal(L.NATIVE.stun_shot, 101);
   assert.match(bot, /const cdIds = a => \{ const id = a && !\/\^l2_\\d\+\$\/\.test\(a\) && Object\.prototype\.hasOwnProperty\.call\(L\.NATIVE, a\) \? L\.NATIVE\[a\] : 0; return id \? \[a, 'l2_' \+ id\] : \[a\]; \};/);
