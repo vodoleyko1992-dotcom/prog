@@ -1,0 +1,1 @@
+{"at":"2026-10-22T11:04:56Z","method":"POST","path":"/game/battle/start","status":400,"elapsedMs":77,"request":{"spawnId":"dense_6878"},"response":{"error":"mob_on_respawn","messageUk":"Моб ще не відродився. Зачекай трохи.","messageRu":"Моб ще не відродився. Подожди трохи."}}

@@ -1,0 +1,5325 @@
+{
+  "schemaVersion": 1,
+  "status": "final",
+  "auditDate": "2026-10-22",
+  "displayTimeZone": "Asia/Vladivostok",
+  "scope": {
+    "profession": "human_warlord",
+    "levelAtStart": 45,
+    "skillId": 317,
+    "rank": 1,
+    "canonicalId": "l2_317",
+    "nativeBattleAction": "focus_attack",
+    "weaponItemId": 299,
+    "question": "Does Focus Attack suppress polearm splash/AoE, and what does ON/OFF measurably change?"
+  },
+  "initialSource": "../raw/focus-attack-ab-20261022/initial-character.json",
+  "evidenceManifest": "../raw/focus-attack-ab-20261022/manifest.json",
+  "evidenceReferenceBase": "All document paths resolve relative to this JSON; manifest entry paths resolve relative to the manifest directory.",
+  "definitions": {
+    "focusState": "Action battleMods/effect/icon plus current accuracy/crit display take priority over a stale false toggle in a start character envelope.",
+    "mainLoggedDamage": "The server may cap ordinary attack log damage at remaining target HP. A logged2196 killing a2196HP normal target is not uncapped attack power.",
+    "mainActualHpDelta": "Pre-action primaryHP minus post-action primaryHP; final victory uses0.",
+    "splashLoggedDamage": "Overkill log values may exceed availableHP; do not sum them as actual totalHP damage.",
+    "splashActualHpDeltaFromKnownBefore": "Only capped against concrete named pre-action whirlwindExtras with savedHP. Missing list remains unknown.",
+    "victoryLogDeduplication": "Use only the suffix after an exact before.battle.log prefix; do not count earlier ON lines as OFF during a later finishing action.",
+    "knownVsMissingExtras": "Missing field is not0. An empty post-action array does not establish an empty pre-action group."
+  },
+  "findings": {
+    "normalAttackTargets": "Both OFF and ON accepted ordinary attacks hit2ordinary neighbors in each successful sampled normal encounter.",
+    "areaSkillTargets": "ON Whirlwind and Thunder Storm each have examples hitting3ordinary neighbors; explicit AoE remained active.",
+    "weakness": "Actual totalDPS or a+10%DPS benefit was not measured; ordinary primary damage is usually HP-capped, neighbor logs include overkill and independent crit variation.",
+    "stats": "At fixed level45/PAtk2796/weapon299/soulshotC1.3, OFF accuracy94/critDisplay124%+166; ON accuracy96/critDisplay146%+166. Displayed crit change is not a proved totalDPS coefficient.",
+    "automation": "Version20.48 intentionally leaves317manual (autoUse:false). This knowledge-only task changes no automation and promises no build.",
+    "mpBoundary": "Sampled netMP in GET snapshots is not an isolated MP drain rate: regeneration, battle ticking and action effects are not independently controlled.",
+    "durationBoundary": "An accepted battle action proves ON effect processing at608s. The643s value is wall-clock to a pre-OFF GET projection with an older lastUpdate, not independent proof of an additional combat tick or unlimited lifetime."
+  },
+  "actions": [
+    {
+      "atUtc": "2026-10-22T11:03:31Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6866",
+      "target": "Enchanted Monstereye",
+      "targetLevel": 41,
+      "mainHpBefore": 30072,
+      "mainHpAfter": 25426,
+      "mainActualHpDelta": 4646,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": 12,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 11,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4646
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 54030,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 27721
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 26309
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "champ-on-start.json",
+      "mainMaxHp": 30072,
+      "experimentalWindow": "other",
+      "experimentalContext": "blue_champion",
+      "source": "../raw/focus-attack-ab-20261022/champ-on-attack-01.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/champ-on-attack-01-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/champ-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:03:33Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6866",
+      "target": "Enchanted Monstereye",
+      "targetLevel": 41,
+      "mainHpBefore": 25426,
+      "mainHpAfter": 3564,
+      "mainActualHpDelta": 21862,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 12,
+      "afterLogSeq": 25,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 13,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 21862
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 34375,
+      "splash": [
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 29205
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5170
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "champ-on-start.json",
+      "mainMaxHp": 30072,
+      "experimentalWindow": "other",
+      "experimentalContext": "blue_champion",
+      "source": "../raw/focus-attack-ab-20261022/champ-on-attack-02.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/champ-on-attack-02-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/champ-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:04:31Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6866",
+      "target": "Enchanted Monstereye",
+      "targetLevel": 41,
+      "mainHpBefore": 3564,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 3564,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 27,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 27,
+      "freshLineCount": 18,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3564
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 28133,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5711
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 22422
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "champ-on-start.json",
+      "mainMaxHp": 30072,
+      "experimentalWindow": "other",
+      "experimentalContext": "blue_champion",
+      "source": "../raw/focus-attack-ab-20261022/champ-off-finish.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/champ-off-finish-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/champ-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:04:57Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6892",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 17,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 29281,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 23588
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5693
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_off",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-2-attack.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-2-attack-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:04:59Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6879",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 16,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10590,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5210
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5380
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-3-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_off",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-3-attack.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-3-attack-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-3-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:05:42Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6908",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 2196,
+      "mainActualHpDelta": 0,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": 2,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 1,
+      "mainLoggedHits": [
+        {
+          "kind": "miss",
+          "loggedDamage": 0
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6926",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "dense_6892",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          }
+        ]
+      },
+      "miss": true,
+      "encounterKey": "normal-off-4-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_off",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-4-attack.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-4-attack-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-4-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:11Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6908",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 2,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 2,
+      "freshLineCount": 14,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 31726,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 26385
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5341
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": 4392,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6926",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "dense_6892",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          }
+        ]
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-4-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_off",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-4-finish.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-4-finish-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-4-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:12Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6876",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 18,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10370,
+      "splash": [
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5430
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 4940
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-on-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_on",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-on-1-attack.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-on-1-attack-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-on-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:38Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6925",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 2196,
+      "mainActualHpDelta": 0,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": 2,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 1,
+      "mainLoggedHits": [
+        {
+          "kind": "miss",
+          "loggedDamage": 0
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6924",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          },
+          {
+            "spawnId": "dense_6943",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          }
+        ]
+      },
+      "miss": true,
+      "encounterKey": "normal-on-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_on",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-on-2-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-on-2-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-on-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:40Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6925",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 2,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 2,
+      "freshLineCount": 15,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10767,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5193
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5574
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": 4200,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6924",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          },
+          {
+            "spawnId": "dense_6943",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          }
+        ]
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-on-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_on",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-on-2-turn-1.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-on-2-turn-1-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-on-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:41Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6944",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 18,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 11347,
+      "splash": [
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5887
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5460
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-on-3-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "initial_on",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-on-3-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-on-3-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-on-3-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:06:41Z",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6963",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 21,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 14170
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 42510,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 14170
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 14170
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 14170
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ww-on-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ww-on-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ww-on-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ww-on-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:07:28Z",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6967",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 18,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 12309
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 36927,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12309
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 12309
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12309
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ts-on-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ts-on-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ts-on-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ts-on-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:07:29Z",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6982",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 7,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 28937
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ws-on-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ws-on-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ws-on-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ws-on-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:07:29Z",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6986",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 21,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 12969
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 38907,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12969
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 12969
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12969
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ww-on-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ww-on-2-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ww-on-2-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ww-on-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:09:22Z",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6902",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 4,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 4,
+      "freshLineCount": 6,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 12728
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": 3,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "l2dop_rb_25431",
+            "name": "Flamestone Golem",
+            "hp": 273375,
+            "maxHp": 273375
+          },
+          {
+            "spawnId": "dense_6878",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "scatter_3342",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          }
+        ]
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "provoke-ws-on-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary_after_provoke",
+      "source": "../raw/focus-attack-ab-20261022/provoke-ws-on-hit.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/provoke-ws-on-hit-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/provoke-ws-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:10:25Z",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 92232,
+      "mainHpAfter": 80689,
+      "mainActualHpDelta": 11543,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": 15,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 14,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 11543
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 34629,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 11543
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 11543
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 11543
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-cast-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-cast-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:10:26Z",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 80689,
+      "mainHpAfter": 69430,
+      "mainActualHpDelta": 11259,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 15,
+      "afterLogSeq": 16,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 1,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 11259
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-cast-1.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-cast-1-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:10:28Z",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 69430,
+      "mainHpAfter": 59547,
+      "mainActualHpDelta": 9883,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 16,
+      "afterLogSeq": 17,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 1,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 9883
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-cast-2.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-cast-2-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:28Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 59547,
+      "mainHpAfter": 55039,
+      "mainActualHpDelta": 4508,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 17,
+      "afterLogSeq": 29,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 12,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4508
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 33994,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 29044
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 4950
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-00.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-00-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:29Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 55039,
+      "mainHpAfter": 50735,
+      "mainActualHpDelta": 4304,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 29,
+      "afterLogSeq": 42,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 13,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4304
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 11220,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5904
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5316
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-01.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-01-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:31Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 50735,
+      "mainHpAfter": 30818,
+      "mainActualHpDelta": 19917,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 42,
+      "afterLogSeq": 59,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 17,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 19917
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 32491,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 27284
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5207
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-02.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-02-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:32Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 30818,
+      "mainHpAfter": 30818,
+      "mainActualHpDelta": 0,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 59,
+      "afterLogSeq": 60,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 1,
+      "mainLoggedHits": [
+        {
+          "kind": "miss",
+          "loggedDamage": 0
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6963",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "dense_7004",
+            "name": "Enchanted Monstereye",
+            "hp": 2148,
+            "maxHp": 2148
+          }
+        ]
+      },
+      "miss": true,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-03.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-03-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:33Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 30818,
+      "mainHpAfter": 9396,
+      "mainActualHpDelta": 21422,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 60,
+      "afterLogSeq": 74,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 14,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 21422
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 54915,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 25520
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 29395
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": 4344,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": 2,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "dense_6963",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "dense_7004",
+            "name": "Enchanted Monstereye",
+            "hp": 2148,
+            "maxHp": 2148
+          }
+        ]
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-04.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-04-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:35Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 9396,
+      "mainHpAfter": 4905,
+      "mainActualHpDelta": 4491,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 74,
+      "afterLogSeq": 87,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 13,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4491
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 10789,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5078
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5711
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-05.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-05-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:36Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 4905,
+      "mainHpAfter": 545,
+      "mainActualHpDelta": 4360,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "beforeLogSeq": 87,
+      "afterLogSeq": 101,
+      "victory": false,
+      "logProof": "delta.logTail",
+      "excludedOldVictoryLines": 0,
+      "freshLineCount": 14,
+      "mainLoggedHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4360
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 2,
+      "splashLoggedDamage": 30458,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5856
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 24602
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": 0,
+        "known": true,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-06.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-06-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:11:37Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "champ_r_ivory_tower_2",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 545,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 545,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 101,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 36,
+      "freshLineCount": 19,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 545
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10633,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5632
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5001
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "red-on-start.json",
+      "mainMaxHp": 92232,
+      "experimentalWindow": "other",
+      "experimentalContext": "red_champion",
+      "source": "../raw/focus-attack-ab-20261022/red-on-attack-07.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/red-on-attack-07-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/red-on-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:16:19Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6968",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "ON",
+      "focusAfter": "ON",
+      "stateBefore": {
+        "modsFocus": true,
+        "toggleFocus": false,
+        "activeBuff317": true,
+        "battleIcon317": true,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": true,
+        "activeBuff317": true,
+        "battleIcon317": false,
+        "accuracy": 96,
+        "critDisplay": "146%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 19,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10410,
+      "splash": [
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 5073
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5337
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "durability-on-after-10min-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "durability_on",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/durability-on-after-10min-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:16:55Z",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6963",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 21,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 28683
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 86049,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 28683
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 28683
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 28683
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ww-off-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ww-off-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ww-off-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ww-off-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:16:56Z",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6967",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 24,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 12038
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 36114,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12038
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 12038
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12038
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ts-off-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ts-off-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ts-off-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ts-off-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:16:57Z",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6982",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 5,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 11111
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ws-off-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ws-off-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ws-off-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ws-off-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:16:58Z",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6986",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 22,
+      "mainLoggedHits": [
+        {
+          "kind": "skill",
+          "loggedDamage": 12622
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 3,
+      "splashLoggedDamage": 37866,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12622
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 12622
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 12622
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 3,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "ww-off-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/ww-off-2-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/ww-off-2-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/ww-off-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:17:30Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6876",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 16,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10139,
+      "splash": [
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 4967
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5172
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-repeat-1-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "off_repeat",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:17:31Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6925",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 14,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10764,
+      "splash": [
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 5885
+        },
+        {
+          "name": "Manashen Gargoyle",
+          "loggedDamage": 4879
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-repeat-2-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "off_repeat",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:17:32Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6944",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 15,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 10473,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5594
+        },
+        {
+          "name": "Enchanted Monstereye",
+          "loggedDamage": 4879
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "normal-off-repeat-3-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "off_repeat",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:17:34Z",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6902",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 4,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 4,
+      "freshLineCount": 6,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 28752
+        }
+      ],
+      "mainLogIsHpCapped": false,
+      "splashCount": 0,
+      "splashLoggedDamage": 0,
+      "splash": [],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 0,
+      "extrasBefore": {
+        "available": 3,
+        "known": true,
+        "targets": [
+          {
+            "spawnId": "l2dop_rb_25431",
+            "name": "Flamestone Golem",
+            "hp": 273375,
+            "maxHp": 273375
+          },
+          {
+            "spawnId": "dense_6878",
+            "name": "Enchanted Stone Golem",
+            "hp": 2196,
+            "maxHp": 2196
+          },
+          {
+            "spawnId": "scatter_3342",
+            "name": "Manashen Gargoyle",
+            "hp": 2100,
+            "maxHp": 2100
+          }
+        ]
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "provoke-ws-off-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "other",
+      "experimentalContext": "ordinary_after_provoke",
+      "source": "../raw/focus-attack-ab-20261022/provoke-ws-off-hit.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/provoke-ws-off-hit-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/provoke-ws-off-start.json"
+    },
+    {
+      "atUtc": "2026-10-22T11:19:44Z",
+      "action": "attack",
+      "httpStatus": 200,
+      "encounterSpawnId": "dense_6879",
+      "target": "Enchanted Stone Golem",
+      "targetLevel": 42,
+      "mainHpBefore": 2196,
+      "mainHpAfter": 0,
+      "mainActualHpDelta": 2196,
+      "focusBefore": "OFF",
+      "focusAfter": "OFF",
+      "stateBefore": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": 1464,
+        "soulshotPAtkMul": 1.3
+      },
+      "stateAfter": {
+        "modsFocus": null,
+        "toggleFocus": false,
+        "activeBuff317": false,
+        "battleIcon317": false,
+        "accuracy": 94,
+        "critDisplay": "124%+166",
+        "pAtk": 2796,
+        "level": 45,
+        "weaponItemId": 299,
+        "soulshotItemId": null,
+        "soulshotPAtkMul": null
+      },
+      "beforeLogSeq": 1,
+      "afterLogSeq": null,
+      "victory": true,
+      "logProof": "victory.fullLog minus exact before.log prefix",
+      "excludedOldVictoryLines": 1,
+      "freshLineCount": 18,
+      "mainLoggedHits": [
+        {
+          "kind": "crit",
+          "loggedDamage": 2196
+        }
+      ],
+      "mainLogIsHpCapped": true,
+      "splashCount": 2,
+      "splashLoggedDamage": 27695,
+      "splash": [
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 5700
+        },
+        {
+          "name": "Enchanted Stone Golem",
+          "loggedDamage": 21995
+        }
+      ],
+      "splashActualHpDeltaFromKnownBefore": null,
+      "sideKills": 2,
+      "extrasBefore": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "extrasAfter": {
+        "available": null,
+        "known": false,
+        "targets": []
+      },
+      "miss": false,
+      "encounterKey": "post-cycles-off-confirm-start.json",
+      "mainMaxHp": 2196,
+      "experimentalWindow": "post_cycles_off",
+      "experimentalContext": "ordinary",
+      "source": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0.json",
+      "beforeSource": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0-before.json",
+      "encounterStartSource": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-start.json"
+    }
+  ],
+  "normalAggregate": [
+    {
+      "focus": "OFF",
+      "encounters": 3,
+      "acceptedAttacks": 4,
+      "misses": 1,
+      "mainCrits": 1,
+      "victories": 3,
+      "mainActualHP": 6588,
+      "sideKills": 6,
+      "freshSplashEvents": 6,
+      "splashLoggedSum": 71597,
+      "boundary": "main damage capped at2196; splash logged includes overkill and unmarked side crits; no DPS/statistical conclusions"
+    },
+    {
+      "focus": "ON",
+      "encounters": 3,
+      "acceptedAttacks": 4,
+      "misses": 1,
+      "mainCrits": 1,
+      "victories": 3,
+      "mainActualHP": 6588,
+      "sideKills": 6,
+      "freshSplashEvents": 6,
+      "splashLoggedSum": 32484,
+      "boundary": "main damage capped at2196; splash logged includes overkill and unmarked side crits; no DPS/statistical conclusions"
+    }
+  ],
+  "ordinaryAttackWindows": [
+    {
+      "window": "initial_off",
+      "focus": "OFF",
+      "encounters": 3,
+      "acceptedAttacks": 4,
+      "misses": 1,
+      "mainCrits": 1,
+      "victories": 3,
+      "sideKills": 6,
+      "firstAtUtc": "2026-10-22T11:04:57Z",
+      "lastAtUtc": "2026-10-22T11:06:11Z"
+    },
+    {
+      "window": "initial_on",
+      "focus": "ON",
+      "encounters": 3,
+      "acceptedAttacks": 4,
+      "misses": 1,
+      "mainCrits": 1,
+      "victories": 3,
+      "sideKills": 6,
+      "firstAtUtc": "2026-10-22T11:06:12Z",
+      "lastAtUtc": "2026-10-22T11:06:41Z"
+    },
+    {
+      "window": "off_repeat",
+      "focus": "OFF",
+      "encounters": 3,
+      "acceptedAttacks": 3,
+      "misses": 0,
+      "mainCrits": 3,
+      "victories": 3,
+      "sideKills": 6,
+      "firstAtUtc": "2026-10-22T11:17:30Z",
+      "lastAtUtc": "2026-10-22T11:17:32Z"
+    },
+    {
+      "window": "durability_on",
+      "focus": "ON",
+      "encounters": 1,
+      "acceptedAttacks": 1,
+      "misses": 0,
+      "mainCrits": 1,
+      "victories": 1,
+      "sideKills": 2,
+      "firstAtUtc": "2026-10-22T11:16:19Z",
+      "lastAtUtc": "2026-10-22T11:16:19Z"
+    },
+    {
+      "window": "post_cycles_off",
+      "focus": "OFF",
+      "encounters": 1,
+      "acceptedAttacks": 1,
+      "misses": 0,
+      "mainCrits": 1,
+      "victories": 1,
+      "sideKills": 2,
+      "firstAtUtc": "2026-10-22T11:19:44Z",
+      "lastAtUtc": "2026-10-22T11:19:44Z"
+    }
+  ],
+  "mpSamples": [
+    {
+      "source": "../raw/focus-attack-ab-20261022/mp-on-t0.json",
+      "atUtc": "2026-10-22T11:10:28Z",
+      "mp": 672,
+      "maxMp": 794,
+      "regenMpField": 6,
+      "snapshotGeneratedAt": 1792667428137,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "toggleActive": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/mp-on-t10.json",
+      "atUtc": "2026-10-22T11:10:38Z",
+      "mp": 672,
+      "maxMp": 794,
+      "regenMpField": 6,
+      "snapshotGeneratedAt": 1792667438245,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "toggleActive": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/mp-on-t20.json",
+      "atUtc": "2026-10-22T11:10:48Z",
+      "mp": 672,
+      "maxMp": 794,
+      "regenMpField": 6,
+      "snapshotGeneratedAt": 1792667448328,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "toggleActive": true
+    }
+  ],
+  "statePoints": [
+    {
+      "source": "../raw/focus-attack-ab-20261022/initial-character.json",
+      "atUtc": "2026-10-22T11:00:19Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+0",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-outside-2.json",
+      "atUtc": "2026-10-22T11:02:49Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-get-1.json",
+      "atUtc": "2026-10-22T11:03:18Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/champ-focus-off-before.json",
+      "atUtc": "2026-10-22T11:04:28Z",
+      "httpStatus": 200,
+      "modsFocus": true,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/champ-focus-off.json",
+      "atUtc": "2026-10-22T11:04:29Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-before.json",
+      "atUtc": "2026-10-22T11:05:42Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed-before.json",
+      "atUtc": "2026-10-22T11:06:11Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed.json",
+      "atUtc": "2026-10-22T11:06:11Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-durability-midpoint.json",
+      "atUtc": "2026-10-22T11:13:16Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/durability-on-after-10min-start-before.json",
+      "atUtc": "2026-10-22T11:16:18Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/durability-on-after-10min-start.json",
+      "atUtc": "2026-10-22T11:16:18Z",
+      "httpStatus": 200,
+      "modsFocus": true,
+      "toggleFocus": false,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0-before.json",
+      "atUtc": "2026-10-22T11:16:18Z",
+      "httpStatus": 200,
+      "modsFocus": true,
+      "toggleFocus": false,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-durability-after-10min.json",
+      "atUtc": "2026-10-22T11:16:18Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0.json",
+      "atUtc": "2026-10-22T11:16:19Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-off-after-long-on-before.json",
+      "atUtc": "2026-10-22T11:16:54Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-off-after-long-on.json",
+      "atUtc": "2026-10-22T11:16:54Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-on-before.json",
+      "atUtc": "2026-10-22T11:18:40Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-on.json",
+      "atUtc": "2026-10-22T11:18:40Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 691,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-off-before.json",
+      "atUtc": "2026-10-22T11:18:53Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 754,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-off.json",
+      "atUtc": "2026-10-22T11:18:53Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 691,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-on-before.json",
+      "atUtc": "2026-10-22T11:19:05Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 759,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-on.json",
+      "atUtc": "2026-10-22T11:19:05Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 691,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-off-before.json",
+      "atUtc": "2026-10-22T11:19:18Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": true,
+      "effect317": true,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "pAtk": 2796,
+      "mp": 753,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-off.json",
+      "atUtc": "2026-10-22T11:19:19Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 691,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/final-character-preserved.json",
+      "atUtc": "2026-10-22T11:19:31Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 758,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-start-before.json",
+      "atUtc": "2026-10-22T11:19:44Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-start.json",
+      "atUtc": "2026-10-22T11:19:44Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0-before.json",
+      "atUtc": "2026-10-22T11:19:44Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": true
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0.json",
+      "atUtc": "2026-10-22T11:19:44Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/final-character-after-combat-confirm.json",
+      "atUtc": "2026-10-22T11:19:45Z",
+      "httpStatus": 200,
+      "modsFocus": null,
+      "toggleFocus": false,
+      "effect317": false,
+      "effectExpiresAt": null,
+      "effectRemainingSec": null,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "pAtk": 2796,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "../raw/focus-attack-ab-20261022/after-unknown-toggle.json",
+      "originalFileName": "after-unknown-toggle.json",
+      "originalBytes": 68697,
+      "originalSha256": "e7dec7e2f131e87dbbc0eb6da3bb9d84019363fdb8585bdfb1f3460a50a6f9bb",
+      "storedBytes": 1210,
+      "storedSha256": "c516ce9c3b8fafc6e8635748c6d129db9b13abf34f0742bd743c7ac39004286d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/before-toggle-retry.json",
+      "originalFileName": "before-toggle-retry.json",
+      "originalBytes": 68697,
+      "originalSha256": "6339ffce73a4def693b7031fbf07550fe52bd8a0877c9066d2c7419d20d4bd84",
+      "storedBytes": 1210,
+      "storedSha256": "d613bf971fa93e91b3ff65abe602e2a035a5b453d5340f880d27ef4d1839b0ef"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/blue-monstereye-info.json",
+      "originalFileName": "blue-monstereye-info.json",
+      "originalBytes": 8175,
+      "originalSha256": "aee47c4a5b661fdfec6020810cc18b9147fe2aada26573c30eb42d9d49cc1819",
+      "storedBytes": 394,
+      "storedSha256": "d468468814b425fbb155fe47b73bf7572d00a4ee21a5f95a219fe3074b7d21b6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-focus-off-before.json",
+      "originalFileName": "champ-focus-off-before.json",
+      "originalBytes": 83621,
+      "originalSha256": "9ed46432f42fb270851ca9837ad1b8abda89304fb0a8c3b0677164a3c0baf62c",
+      "storedBytes": 4098,
+      "storedSha256": "43057e11fc26825f4c119233e1185610bde4b9fdab71f887eee91f809240dc23"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-focus-off.json",
+      "originalFileName": "champ-focus-off.json",
+      "originalBytes": 78401,
+      "originalSha256": "502cad164990d319f83944039cee4b51aa37db6eb02e8e9f6841d9955b4992fe",
+      "storedBytes": 3415,
+      "storedSha256": "df2e0eb91ab211d5fc59f25514f37cf6eba46223df33473bd22e0304ade7638c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-off-finish-before.json",
+      "originalFileName": "champ-off-finish-before.json",
+      "originalBytes": 83253,
+      "originalSha256": "54649f8bd460a46093f98c1b2aff13da21eebb98047c1b332254667a30c760f9",
+      "storedBytes": 3912,
+      "storedSha256": "af8ed6f71d16326a0e1367b983646a1ef2a1d0db6c36ea8f84f731726b0831fb"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-off-finish.json",
+      "originalFileName": "champ-off-finish.json",
+      "originalBytes": 72575,
+      "originalSha256": "1af138953f56b2950a95797c7f1a5636c08bc27db0a591cf2a09bde11ce7aa27",
+      "storedBytes": 3912,
+      "storedSha256": "f8e89147d9f7021ba1dc6695939df608ec1dc0e330d8052efb446f7756754092"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-attack-01-before.json",
+      "originalFileName": "champ-on-attack-01-before.json",
+      "originalBytes": 82410,
+      "originalSha256": "d5ada445ffb7670a2ab4e118cd55697c71c88d063ee80bd4b711302486e8f78e",
+      "storedBytes": 3140,
+      "storedSha256": "ac896de21e6316541350e0d65ce3dc70caed13cb3ffe9a7e0e90832b1ffb311f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-attack-01.json",
+      "originalFileName": "champ-on-attack-01.json",
+      "originalBytes": 79437,
+      "originalSha256": "1914d36d13e49b0659bef33fc0cad83f0556d74ab4133139958ca4a712a20be2",
+      "storedBytes": 4117,
+      "storedSha256": "a4e3af3b534335c173d7dd96b5244eb17c8ab4e0b2656dd96aaab87b519698eb"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-attack-02-before.json",
+      "originalFileName": "champ-on-attack-02-before.json",
+      "originalBytes": 83067,
+      "originalSha256": "1d3efa6dee845fb867c5cee8ebe59a1850e87c6bb99bb64910a8e66ab32362e0",
+      "storedBytes": 3658,
+      "storedSha256": "78d8107342c0848b31be8065a4285c4895d41ff9e389bec1457562ce846d251c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-attack-02.json",
+      "originalFileName": "champ-on-attack-02.json",
+      "originalBytes": 79516,
+      "originalSha256": "c64a65f9a27bf446c82c7a4f5ca4d0bc6b10147e9a9bd09d398b4a6d3c110936",
+      "storedBytes": 4178,
+      "storedSha256": "4d63a274eceaa7d915cbd344461c9b37459701a0ffe1e53c13388bf3863b1f0c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-start-before.json",
+      "originalFileName": "champ-on-start-before.json",
+      "originalBytes": 69513,
+      "originalSha256": "c2de0cfa479326a77eebcee87a4e8a80cb4164809cbdc039b2b6493b5ddcca63",
+      "storedBytes": 1797,
+      "storedSha256": "457a822e5680e6c5fdcc302a471a9e9b478e0a10ad8cc749178aeb54fc24ee7a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/champ-on-start.json",
+      "originalFileName": "champ-on-start.json",
+      "originalBytes": 81778,
+      "originalSha256": "119a822724bf0b7bbd5242750da9d323c78202a04682bef2fdc7d25db1006fb0",
+      "storedBytes": 3105,
+      "storedSha256": "3e333a5082c631e55536bef7e41f7c1e6e53e16f4b154eace538ccef2fac477a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/durability-on-after-10min-start-before.json",
+      "originalFileName": "durability-on-after-10min-start-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "3da8a628e3c4a219f5695897140693821f29693479e0b4b25ab349d937d0374a",
+      "storedBytes": 2270,
+      "storedSha256": "e6e2b30bdff7015f272868be289a9b474ba0e68de7711b920551730c6798f71f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/durability-on-after-10min-start.json",
+      "originalFileName": "durability-on-after-10min-start.json",
+      "originalBytes": 81779,
+      "originalSha256": "ab4992d4d1049da555483478e0c074d9013259b6a7895fe2d7c8108e2b562ab5",
+      "storedBytes": 3103,
+      "storedSha256": "b53f3448d8246b3a7d01ec03df7104be3af1ac579a797036c21c971829c86b70"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0-before.json",
+      "originalFileName": "durability-on-after-10min-turn-0-before.json",
+      "originalBytes": 82411,
+      "originalSha256": "8b2397255c11965097ffa9c3d6dfe2ce55fe4bbe0c950f98ce68f16a8d43ca84",
+      "storedBytes": 3138,
+      "storedSha256": "042cfa519c5ae7af1e07a004d7e6a7fea5c2fb0bf699a394a44fcc767590194f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0.json",
+      "originalFileName": "durability-on-after-10min-turn-0.json",
+      "originalBytes": 71978,
+      "originalSha256": "ab7131461eb5d0ca46d0cda600f0d80dbd6e8af55b0b320be1c3f1e42ad1c0ac",
+      "storedBytes": 3338,
+      "storedSha256": "2bf74cfd302d4534e6c20612d8ca880224321bb6a79387be2c75a92dd8a6d91c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/final-character-after-combat-confirm.json",
+      "originalFileName": "final-character-after-combat-confirm.json",
+      "originalBytes": 69911,
+      "originalSha256": "962fc9a24995834135a0a603f0074bfcbd39ab7cf8d996c334ce2ed1541a8ea5",
+      "storedBytes": 3061,
+      "storedSha256": "7b1734215d94bfe89cc386024230499a27cb44f6e102f60609ceece0d38a7d9f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/final-character-preserved.json",
+      "originalFileName": "final-character-preserved.json",
+      "originalBytes": 69796,
+      "originalSha256": "5b417c44a82e028dec3e0041a122f44b9d42148b19fc484964bd6b282227d67c",
+      "storedBytes": 1987,
+      "storedSha256": "dc60209585c2999d6e98eda8ec523988f067ccf0ef7bfd01de823a2209e41c90"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-3-off-before.json",
+      "originalFileName": "focus-cycle-3-off-before.json",
+      "originalBytes": 70192,
+      "originalSha256": "8365058ae8e9b2a4a5aca00eede3ca71c38d3793fff13273f7a0432465185271",
+      "storedBytes": 2269,
+      "storedSha256": "50aa382744db81f32be34e58ecb32461e2d0bc995098c1daeaa388e39170f0d6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-3-off.json",
+      "originalFileName": "focus-cycle-3-off.json",
+      "originalBytes": 68990,
+      "originalSha256": "53c620709604f0c01775e7ec0ca5c0cfecf037895608bdc55dc963e4dfa60b89",
+      "storedBytes": 1957,
+      "storedSha256": "305ebee97b68ad1441b53f5aec56bb8deb90a57a301d2631d75ca380170a43ed"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-3-on-before.json",
+      "originalFileName": "focus-cycle-3-on-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "73f0501c275e5a4fc5371afbc6ef469666067f6007a8261fc974a9dcffbaee17",
+      "storedBytes": 1987,
+      "storedSha256": "8609503cb6ad3d210a0a593968d15eb9783aed68f952e6800eb8eb281fa32872"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-3-on.json",
+      "originalFileName": "focus-cycle-3-on.json",
+      "originalBytes": 69386,
+      "originalSha256": "90cd28e5f45b57f204166d9a07aff3f37f1de6d2afa9d54411adc6d46663bb4e",
+      "storedBytes": 2239,
+      "storedSha256": "56b44a0456e5ab9440379b0eb6bb59ce3c2e06a32ee54ebb4e6c26a901dc4431"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-4-off-before.json",
+      "originalFileName": "focus-cycle-4-off-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "90b87e8c55dc3733dae336048253acbd847a7348e4b845a15f40f189f46872e5",
+      "storedBytes": 2270,
+      "storedSha256": "aaa647d91939596f488611aa98706ec668d6ad77f4435932927750357c64beb6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-4-off.json",
+      "originalFileName": "focus-cycle-4-off.json",
+      "originalBytes": 68990,
+      "originalSha256": "1820ede6a5fffea54b4424daca7483c09042f8a557505b500f9f09951fb95aef",
+      "storedBytes": 1957,
+      "storedSha256": "a5687303fef030510e78d050cf0aa190d138135c112b89d0b93e6adf937a6bb5"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-4-on-before.json",
+      "originalFileName": "focus-cycle-4-on-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "8d4f23479d28a18e3898b0f609a32bc2a997ac6c44511c06b86e3df56abe6bc8",
+      "storedBytes": 1987,
+      "storedSha256": "07938ea74d268ef503b5beb6866f58ffb9d9d3ea3d5413e7408ebaf0341bc336"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-cycle-4-on.json",
+      "originalFileName": "focus-cycle-4-on.json",
+      "originalBytes": 69387,
+      "originalSha256": "62430a7cbc2b84783b11bffb58c3b32de1aa8509b08d338b6a92568453bebdd7",
+      "storedBytes": 2240,
+      "storedSha256": "989beb61481941e5f419e66bb3e33d528bcae544d4d9c6b80d6e04ccdb2a21e2"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-durability-after-10min.json",
+      "originalFileName": "focus-durability-after-10min.json",
+      "originalBytes": 70193,
+      "originalSha256": "8d0e4b5a1c4b4350990e7f16dceb16ffd16d11ad73a09d3e5a86375c6cd91193",
+      "storedBytes": 2270,
+      "storedSha256": "7b38e626527597d50260228e519752c63174e3fcbb2d0c1c5f60c645724557a8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-durability-midpoint.json",
+      "originalFileName": "focus-durability-midpoint.json",
+      "originalBytes": 70193,
+      "originalSha256": "036f7e1539843cce9b35c9a5b6d96e9b2850dd5209159426fee7e0f49575ce7f",
+      "storedBytes": 2270,
+      "storedSha256": "54985d041a1ffab08e72c06189a9db62fa626a8a7c0926345ce3c6121cafbd86"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-off-after-long-on-before.json",
+      "originalFileName": "focus-off-after-long-on-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "36e32711c84522a9cd88e67c1999b78d643ec2016e7d4ac31de1d8b264840726",
+      "storedBytes": 2270,
+      "storedSha256": "c54980853bf7517863551fea38a789c769cacfb800977551117720e84630ae77"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-off-after-long-on.json",
+      "originalFileName": "focus-off-after-long-on.json",
+      "originalBytes": 68990,
+      "originalSha256": "7d948ff76594bc9ed92cf72f42f85f472a5ac0d53a9d23f90b4dfba6029aaf49",
+      "storedBytes": 1957,
+      "storedSha256": "4ad96a03292652d941c6f362cfa1dd6b662403d978e720e525b394006c21ce14"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-before.json",
+      "originalFileName": "focus-on-cycle-2-before.json",
+      "originalBytes": 69918,
+      "originalSha256": "18f30de5dde151beccdb266166794a337e67b1a8194868be2a8fbdd02c3cc7ff",
+      "storedBytes": 2040,
+      "storedSha256": "d33892e8f3f08e6a52d16aed1fdf4c3ae82ba78f451b250c304f6434476046b3"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed-before.json",
+      "originalFileName": "focus-on-cycle-2-confirmed-before.json",
+      "originalBytes": 69910,
+      "originalSha256": "05825361f1bfebf86173f98bf887ba8348d164b52da81b474a4d9dc91ce5f1dc",
+      "storedBytes": 2040,
+      "storedSha256": "9744804c8d3bc13abb0188622f5d91aa2237da0ba35a26ccc7768584cdc29465"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed.json",
+      "originalFileName": "focus-on-cycle-2-confirmed.json",
+      "originalBytes": 69501,
+      "originalSha256": "e92532195c8a6136e5acccd98420360279e8582ea0cb315108c8fc4246a35c36",
+      "storedBytes": 2293,
+      "storedSha256": "db55c31d4dff6243b8341ba48599407361ac2e506e2843a6a27bf797caacfd78"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-get-1.json",
+      "originalFileName": "focus-on-get-1.json",
+      "originalBytes": 69513,
+      "originalSha256": "7dab000f751c13dde873ff980e1beeae39e789f9b78e797548085cc927eed5b4",
+      "storedBytes": 1797,
+      "storedSha256": "ec960b564e5636c33445489c9beca9fe666098409727eda897c5bf7b230b74f7"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-outside-1.json",
+      "originalFileName": "focus-on-outside-1.json",
+      "originalBytes": 1190,
+      "originalSha256": "917e993622444ba7932614a0305e9b8af35d381708b3376ec4c62bfc21e7319f",
+      "storedBytes": 236,
+      "storedSha256": "9c54a24b42a00d4611da13c20311ee114f2251f6894d0f1ede91808bde953ac0"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/focus-on-outside-2.json",
+      "originalFileName": "focus-on-outside-2.json",
+      "originalBytes": 68707,
+      "originalSha256": "123a42c452e4e4360bf25002e4f40981f0080f20165cca6b52e505b139f3d0f6",
+      "storedBytes": 1767,
+      "storedSha256": "0be8186b3c31c105c7dfda3b6f42d585b32636e967a4df6f5b25d7c88ae0dd43"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/initial-battle.json",
+      "originalFileName": "initial-battle.json",
+      "originalBytes": 68599,
+      "originalSha256": "b345806afa90458bca36d4dfafb3c08931cf4ef50e88366eb8b52664056403a6",
+      "storedBytes": 1226,
+      "storedSha256": "ebc7715e1fe7d3558093b83a6bbca8eb0b7e37478e3d6cd5f858a2768cf074ae"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/initial-character.json",
+      "originalFileName": "initial-character.json",
+      "originalBytes": 68697,
+      "originalSha256": "aa999f7b1e8266219763a3e09dd6e68f498d9845d1285cf73c39fa2d0c1c210c",
+      "storedBytes": 2360,
+      "storedSha256": "134e8e2f2a43be9a12b491e30c804fb7d93d35a3b5a1be53d91025d3199d88f1"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/map-spawns.json",
+      "originalFileName": "map-spawns.json",
+      "originalBytes": 111505,
+      "originalSha256": "ae3f0bd8a22d52941f471835db40af1bee801100b02cb2145b474577b84eada3",
+      "storedBytes": 259,
+      "storedSha256": "db8c8d873734555fcf8d3001492cb3e81fbdf67f9c2d506f3451d1658c8c9ef9"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/mp-on-t0.json",
+      "originalFileName": "mp-on-t0.json",
+      "originalBytes": 70438,
+      "originalSha256": "4c5fa2e81bbbd699029211c58065092d76dbf1580a40cea7f11d36747d606945",
+      "storedBytes": 2381,
+      "storedSha256": "6a4b084ad87a7d4ab5a61b1d31858bada0a2c512aa6b43a75db3d4a5bee14eb2"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/mp-on-t10.json",
+      "originalFileName": "mp-on-t10.json",
+      "originalBytes": 70210,
+      "originalSha256": "06fc3e982b3dcd083121eebcf781eba533d173ccbefd914b472c961b4dc05b7b",
+      "storedBytes": 2268,
+      "storedSha256": "8463fe642c247928a996a2e85afc812455f9b24ee9b841d778bb62c72a1336a9"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/mp-on-t20.json",
+      "originalFileName": "mp-on-t20.json",
+      "originalBytes": 70210,
+      "originalSha256": "03ba1084ab8a842354b8a2ce7f798abf0bf12bc29998a6b698d897cce24fcad3",
+      "storedBytes": 2268,
+      "storedSha256": "9f868e20576249b7f1d2e6d030b8e74bcec182e5af9d686722e4e19ccaaa423d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-1-start-before.json",
+      "originalFileName": "normal-off-1-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "39e67f5848a27569cc79763eacf88019f8e07dd4b21d123105611daf6136c358",
+      "storedBytes": 1987,
+      "storedSha256": "082cf555ceebec518bcff0d5333913aa3d55494ea3e8caaeeb88f932d74ce08f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-1-start.json",
+      "originalFileName": "normal-off-1-start.json",
+      "originalBytes": 485,
+      "originalSha256": "3b6baaa3d0d394deb37b57edcf5c05f88a074bcaaeaec8dccb8a6dcebf105753",
+      "storedBytes": 335,
+      "storedSha256": "9686e8987e91e50711e44cf31b73879dd1f6c0b970159e2ea2fda4393451e70a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-2-attack-before.json",
+      "originalFileName": "normal-off-2-attack-before.json",
+      "originalBytes": 81714,
+      "originalSha256": "96fb386ede0fe2414e49515797da6ecf5c9ac575a3f08470e890c8afd4bceb5b",
+      "storedBytes": 2727,
+      "storedSha256": "30761960e6e43e1dda68ffd353658b67699fa1bc624626c25b0f1224379bedf1"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-2-attack.json",
+      "originalFileName": "normal-off-2-attack.json",
+      "originalBytes": 71571,
+      "originalSha256": "e6baa628dae0362dfdf679b29a42b262a53636d96e2a22d083f235fa3027a943",
+      "storedBytes": 3061,
+      "storedSha256": "6c3083d94fefe7f3fc8eab2b6f05b10c8307d474d5097b81ad54cb3e0c2262cd"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-2-start-before.json",
+      "originalFileName": "normal-off-2-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "7ae417e5a1a3aac9226c0aaac83c64efb6227d8287fa73c738e3b818b688045c",
+      "storedBytes": 1987,
+      "storedSha256": "30328b15465df1879fc182d24ffec7c6a7f1f269f323e5cdd476da8fd415a09d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-2-start.json",
+      "originalFileName": "normal-off-2-start.json",
+      "originalBytes": 81083,
+      "originalSha256": "fcbd42c5f3e781132f6034f5a7633a149d17fd6743b5b245ab639a0474e902b4",
+      "storedBytes": 2693,
+      "storedSha256": "7f9d1c99987b3e33501e4af26cfc7ece013d4f1073b64bc7adc8d8741ccb69ac"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-3-attack-before.json",
+      "originalFileName": "normal-off-3-attack-before.json",
+      "originalBytes": 81714,
+      "originalSha256": "d9d82a28788912b6717d995536af3ae88fdd8150b998b53c58aad8fda8ccd803",
+      "storedBytes": 2727,
+      "storedSha256": "98a6c3dd4a5d6179a185ecf05ed4b5b657c156fb29cf0bbe7b057f86ffa52569"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-3-attack.json",
+      "originalFileName": "normal-off-3-attack.json",
+      "originalBytes": 71426,
+      "originalSha256": "7152616b35b90da9c1669b33f15fa16e3ca80451ff3ede25c7bf9bc84c2cf0f4",
+      "storedBytes": 2991,
+      "storedSha256": "c36fda31b536378da2be07bf16faaaf2413b00cabeb9b8ee30e862b9325c3b5e"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-3-start-before.json",
+      "originalFileName": "normal-off-3-start-before.json",
+      "originalBytes": 69795,
+      "originalSha256": "4bd7b3ab8bd4b4dcbd5f21f376f35be749aa4af3b23734c7005215c7c4b0848e",
+      "storedBytes": 1986,
+      "storedSha256": "d532cbad2a91d29f029494bed82219deb016d17003acac071c8a9a444b6bd2fe"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-3-start.json",
+      "originalFileName": "normal-off-3-start.json",
+      "originalBytes": 81082,
+      "originalSha256": "0e47305b45ea434865c821cb673860d5ff02b76ed23a588882e664a016a710c6",
+      "storedBytes": 2692,
+      "storedSha256": "3739a4c9902f111eeac4d03abc70bddbf9c2fdb2773b17018994a62fd687ed32"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-attack-before.json",
+      "originalFileName": "normal-off-4-attack-before.json",
+      "originalBytes": 81713,
+      "originalSha256": "bd166adc0ccfdab77c651a64cddee790609f40f6dd033898e72249e0d667a2c9",
+      "storedBytes": 2726,
+      "storedSha256": "b0b95793bf83907abfed37f0679304f07daa956b5f4d733bc62ee1f9b6f5e8ee"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-attack.json",
+      "originalFileName": "normal-off-4-attack.json",
+      "originalBytes": 78793,
+      "originalSha256": "d782d7c1aaaffd37a66821d3de3764f532f451d0b0a6aca94218eb8e2c41707b",
+      "storedBytes": 3590,
+      "storedSha256": "520debfaea845dd30933644fa343fa3eaa6e2306be09cfcfa7cfd0adb4c19145"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-finish-before.json",
+      "originalFileName": "normal-off-4-finish-before.json",
+      "originalBytes": 82354,
+      "originalSha256": "17af62c0e5a8df12a6f8ca7ca159b894a83534b8d8ac77acda56702d2c4bc45c",
+      "storedBytes": 3150,
+      "storedSha256": "fe2fcad5088027bf01f8fc851d2b9ef8f942ac08a4c712343a10a853825768a3"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-finish.json",
+      "originalFileName": "normal-off-4-finish.json",
+      "originalBytes": 71230,
+      "originalSha256": "f8fd69e6964197303a502e2a677c4fc7e44f4e5181597c7a49a3a838919881f5",
+      "storedBytes": 2881,
+      "storedSha256": "f614a7a39ad41e91ecef5c2967e1c0f34c3a343882be5abdafd833b67a4fc475"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-start-before.json",
+      "originalFileName": "normal-off-4-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "87a9b4860dac64963c0174aa5679e6b6eef0f678691654e87aec6a9d3a72027e",
+      "storedBytes": 1987,
+      "storedSha256": "15b15e3f923fa268d8ee059f7e9912c486a4a992b4d220c4aafea07bdd2b43da"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-4-start.json",
+      "originalFileName": "normal-off-4-start.json",
+      "originalBytes": 81081,
+      "originalSha256": "a8ef0a25768ddd20d56078adcb4574f8bcc7629a8cc743f15cb335895a39ec2f",
+      "storedBytes": 2691,
+      "storedSha256": "7c2889d153865ca8e6833c63f2b1bd00269ebcc4a282927df2d9b3bd4b3c7a27"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-start-before.json",
+      "originalFileName": "normal-off-repeat-1-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "72ace44cf3bac7c629b4ba6bfa09c7640c6e0fd66328015d3c96a0d4347f2fd8",
+      "storedBytes": 1987,
+      "storedSha256": "cb6c5a5ae184afd157d9a057cc4577ec220873597c5dc1bb8edc956b4491be7b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-start.json",
+      "originalFileName": "normal-off-repeat-1-start.json",
+      "originalBytes": 81081,
+      "originalSha256": "e72daa57dd9af9afa8bc140df0b9aeae6ac4c286c99f16c5bb2bde6dc2bce1af",
+      "storedBytes": 2691,
+      "storedSha256": "e6b18071e00ce83e4e382f7b22fbcbd9907e1cdd4dc576ee0960754cf9871ad6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-turn-0-before.json",
+      "originalFileName": "normal-off-repeat-1-turn-0-before.json",
+      "originalBytes": 81713,
+      "originalSha256": "3ffc8f005c0a31928bcef91d56a0afb85335e7e4aed65ef2f4d3e18a1c090afc",
+      "storedBytes": 2726,
+      "storedSha256": "465d4d49f0a0343949ccb98b34f5f269ba459a95f6735d880d9b86e735b2acfe"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-1-turn-0.json",
+      "originalFileName": "normal-off-repeat-1-turn-0.json",
+      "originalBytes": 71260,
+      "originalSha256": "32414e17700cab093e58f0112bb715df2ddf8eafce699c602e2489efbec312f1",
+      "storedBytes": 2899,
+      "storedSha256": "1d01c8aabb4c9f25e9b0a14690855e068ab20984fc36338f3ddffb4d4a04c408"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-start-before.json",
+      "originalFileName": "normal-off-repeat-2-start-before.json",
+      "originalBytes": 69910,
+      "originalSha256": "7e4d239b8ea4ef13eb88290c8ebdb9206d0fcee1e2b594b81be40b9279f9552f",
+      "storedBytes": 2040,
+      "storedSha256": "681918c91b60a20593630550f7315c91911f7d6eb586b41637d8558678c2d2d8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-start.json",
+      "originalFileName": "normal-off-repeat-2-start.json",
+      "originalBytes": 81267,
+      "originalSha256": "8737d4b0141d2a3527f32fd675184755bcab6536e15bf2b2a1515cce48930ad2",
+      "storedBytes": 2791,
+      "storedSha256": "504a25abd9782b8bc1007889a2965674e2bd9d3cb266383f67310c70222e27b9"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-turn-0-before.json",
+      "originalFileName": "normal-off-repeat-2-turn-0-before.json",
+      "originalBytes": 81899,
+      "originalSha256": "fff19eb4850eaed1994e0f1d153f344ebf8e2845c16b4b6df3cb141057231b74",
+      "storedBytes": 2826,
+      "storedSha256": "5e7ca42ceeda16fc6cb3957c36ad84eba4e3252e1c7dcb58658cad99512f40e5"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-2-turn-0.json",
+      "originalFileName": "normal-off-repeat-2-turn-0.json",
+      "originalBytes": 71330,
+      "originalSha256": "fe1212a23f52438e11c3614f6d35b67e9756881029c84867e3cff2833dbeb29e",
+      "storedBytes": 2916,
+      "storedSha256": "c0c6ff99d89eb78283380402a7d03ce7401686b875cac1beb22a8fd5bf25759c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-start-before.json",
+      "originalFileName": "normal-off-repeat-3-start-before.json",
+      "originalBytes": 69910,
+      "originalSha256": "704a2b7bf4e40ed0af2ed944ec1763bbd561cbc4c086a2e8fa676922d38171ba",
+      "storedBytes": 2041,
+      "storedSha256": "839219418357630d98636bc180be3befcdf0751e55ecfca258bd7321b9888d38"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-start.json",
+      "originalFileName": "normal-off-repeat-3-start.json",
+      "originalBytes": 81082,
+      "originalSha256": "6a3e1ac2c46f446e05001a0409f630b375cac7a40fe74f630cbaff589d2aa5cb",
+      "storedBytes": 2693,
+      "storedSha256": "72ae39290647dc5d6e48c3826bc36d4758119529d0d13ab4447eb4d8ed774dbb"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-turn-0-before.json",
+      "originalFileName": "normal-off-repeat-3-turn-0-before.json",
+      "originalBytes": 81714,
+      "originalSha256": "61d7eb50ee1498c30d07a1eb6da2ce6b3dd1cf7744c7f57ad967b4fd021286fa",
+      "storedBytes": 2728,
+      "storedSha256": "7a41dfe3fcaf727fff6cbb7b6d7d6e7788533c6da52b8c473780dae4fcaa6014"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-off-repeat-3-turn-0.json",
+      "originalFileName": "normal-off-repeat-3-turn-0.json",
+      "originalBytes": 71235,
+      "originalSha256": "189cee3f7fa330c17896e49d62b90e8ae0acce28c3f528451d92d595d9db5051",
+      "storedBytes": 2885,
+      "storedSha256": "85698f7587df98913556e89ca3a7b56c3cca12b458ebbd3de2580c96e36e92a9"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-1-attack-before.json",
+      "originalFileName": "normal-on-1-attack-before.json",
+      "originalBytes": 82409,
+      "originalSha256": "fffb13e8e0cdb99d9d7b8e345c87e346ec4ff4041062512777de228f4c582b58",
+      "storedBytes": 3136,
+      "storedSha256": "a10d54d73cd6af2b5d6fd9f070c2a7d0b83115f8d584a6cdf6c927be57d2c483"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-1-attack.json",
+      "originalFileName": "normal-on-1-attack.json",
+      "originalBytes": 71935,
+      "originalSha256": "3d0d1f2c68ca65581731cb2fd944ecdb0410ba2d48a22d0e54a1b1c5864680f4",
+      "storedBytes": 3303,
+      "storedSha256": "b37e6b8112cbdafafdb2f7dc4693d122c0fbf284d7dc7c0f62f0426c33e96ae1"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-1-start-before.json",
+      "originalFileName": "normal-on-1-start-before.json",
+      "originalBytes": 70308,
+      "originalSha256": "a6e8d3bb5d7e5d403c3356f9d404506118daf563b4013014bd77a215e256b980",
+      "storedBytes": 2324,
+      "storedSha256": "cb74155b7e28fc3ccb9d03330674de4098637bfa4fc4b0bc9bc1509429f4dd0d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-1-start.json",
+      "originalFileName": "normal-on-1-start.json",
+      "originalBytes": 81892,
+      "originalSha256": "9b1b53e97bf8a0b9a9103c411c4ad43cf58085875223bf2f027b7efc51f1bd84",
+      "storedBytes": 3155,
+      "storedSha256": "1d6bf81ba955bfd01450c10eccf5deb6ffb7d3acf729215dd1d7819276858313"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-start-before.json",
+      "originalFileName": "normal-on-2-start-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "5f16a80d739f90c1401cfa7e2faeec7b19256e072c60f923ec079da85e9f3a33",
+      "storedBytes": 2270,
+      "storedSha256": "bc7c5036f8a7d8024700f8f0e7777096e7f18c31a2def6e8e298309e4c2bf113"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-start.json",
+      "originalFileName": "normal-on-2-start.json",
+      "originalBytes": 81779,
+      "originalSha256": "e62aa5df64a60aa4d393eece51a6bc1a7b028aaa796168aa17da351eb035b0d2",
+      "storedBytes": 3103,
+      "storedSha256": "99ac6f530575ac29569bb2c2994abedb85ff7dfdca5bc3ee3afce16953c64034"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-turn-0-before.json",
+      "originalFileName": "normal-on-2-turn-0-before.json",
+      "originalBytes": 82410,
+      "originalSha256": "e0aca72d8d26326994100857da6f936508bc9daf74ae4e1a88f094a9c4aae527",
+      "storedBytes": 3137,
+      "storedSha256": "3e7e249e7d6ea437df5dd132cdefa35a94d92ab78c24d9283e65a952d77995b8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-turn-0.json",
+      "originalFileName": "normal-on-2-turn-0.json",
+      "originalBytes": 79384,
+      "originalSha256": "fb5bed7e48c872a26ab96f918c460bf7b160fd2d29f8e8befa3450a723bc99e6",
+      "storedBytes": 3991,
+      "storedSha256": "f0fa2963e0a59ccc949c0730d834bd044d8997344e7c657ee263d7f5a4fc064b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-turn-1-before.json",
+      "originalFileName": "normal-on-2-turn-1-before.json",
+      "originalBytes": 83043,
+      "originalSha256": "79b016fb8dfe95c9d2cfb52fcf3477061c28ad811d64527909e7306a32e9e4d8",
+      "storedBytes": 3553,
+      "storedSha256": "a9d52e61a7e49c3a5ae95becf312353eb73d8ee29a6f5f7ddeac3d35a122210b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-2-turn-1.json",
+      "originalFileName": "normal-on-2-turn-1.json",
+      "originalBytes": 71763,
+      "originalSha256": "017670cf2e8487da34c173b02c20d0ee74b733a3be6684212b5d105ff69663d3",
+      "storedBytes": 3219,
+      "storedSha256": "d9ea67dea760f522a45bd261a0003d5b22a83e7dc2cfe7bbfc3d8be0d8ae1308"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-3-start-before.json",
+      "originalFileName": "normal-on-3-start-before.json",
+      "originalBytes": 70307,
+      "originalSha256": "f38f38e969a5ad60ee20d1a66a8a3d2c08d2684cdeb414f371d62fc1cf1cb8d5",
+      "storedBytes": 2323,
+      "storedSha256": "7a506083d8c78b0eaa9a6453207b08bcac89a6276c18c5345b841054964fbd34"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-3-start.json",
+      "originalFileName": "normal-on-3-start.json",
+      "originalBytes": 81963,
+      "originalSha256": "1142555b6c154bdb4d5deb8ab483dc939c66c0ca3974a1a63507d9c5318b857e",
+      "storedBytes": 3201,
+      "storedSha256": "4b738d9460e8db9594078ee6f4efa3acfc66fd13a043fb417b62b8c19f8a4acc"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-3-turn-0-before.json",
+      "originalFileName": "normal-on-3-turn-0-before.json",
+      "originalBytes": 82594,
+      "originalSha256": "87fe1c30dd2b3a93e3b9ec26f0dfb1e1f302e871bf77d9fc2de4c851119679f4",
+      "storedBytes": 3235,
+      "storedSha256": "1287f08f988611b0021dc3cea0d38910373592a4b65d2e77ac959e11b108f8a0"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/normal-on-3-turn-0.json",
+      "originalFileName": "normal-on-3-turn-0.json",
+      "originalBytes": 72094,
+      "originalSha256": "b7ead2b93f24dd539f2b5dbd49ceff388a8e72ed9baf96877657c404437b0903",
+      "storedBytes": 3397,
+      "storedSha256": "24e363d55888872466939f2ff2d3873d9bc66b352ef48adaa8b11b9bba6b8db0"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-start-before.json",
+      "originalFileName": "post-cycles-off-confirm-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "9376c4747af412ddc53db80e3ecccb0d4a2d2f1129f8bd2a462dab29e10886c3",
+      "storedBytes": 1987,
+      "storedSha256": "c05a6af92e2acddc00b139109970f418e610ca82fe2f84c2d2350106264246ad"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-start.json",
+      "originalFileName": "post-cycles-off-confirm-start.json",
+      "originalBytes": 81083,
+      "originalSha256": "045d3b6c6af1b2227c5e2bad51c636d459ba9093e429be911f9a273cda0da233",
+      "storedBytes": 2693,
+      "storedSha256": "dd655dc755dedb3e2962391eb438b15490d376a4f61d9ad1d33cca12263cd666"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0-before.json",
+      "originalFileName": "post-cycles-off-confirm-turn-0-before.json",
+      "originalBytes": 81715,
+      "originalSha256": "2bc3a21f14bbc39dab91db4e593b0118b80c3ae37b47a3d771d6fe46da16e5df",
+      "storedBytes": 2728,
+      "storedSha256": "53761333872fde01ae87d26c2bbdbcfb98d3561da3d5e10ea9ad8e3eaa2b1bd5"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/post-cycles-off-confirm-turn-0.json",
+      "originalFileName": "post-cycles-off-confirm-turn-0.json",
+      "originalBytes": 71704,
+      "originalSha256": "b29aecdfad88c4ad6a53dccced7bf1f505d1219e18604a83e216e4354df27b3f",
+      "storedBytes": 3119,
+      "storedSha256": "27a98691be3568316e9d848db5c0a129c77ad0be58f8f39f2ef8f3cca3e0bec7"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-hit-before.json",
+      "originalFileName": "provoke-ws-off-hit-before.json",
+      "originalBytes": 82880,
+      "originalSha256": "9c64330903248f8fb880a6acdd92082b50f22b65b02cbf6a584c80bba7ac4b15",
+      "storedBytes": 3532,
+      "storedSha256": "b79b36f7cddfaa43b13fd1bd2fe98f09aa6dac958d5df6451ee52e2852a7510d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-hit.json",
+      "originalFileName": "provoke-ws-off-hit.json",
+      "originalBytes": 71466,
+      "originalSha256": "e575c160eb78013aee471aa17d4f015a1232a1e3eb810a66f9aa04a195efdf9f",
+      "storedBytes": 3039,
+      "storedSha256": "3e083d7f9e60458482a827ce9178207c0913156c66c6b2a72989ecd623fa945c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-pull-before.json",
+      "originalFileName": "provoke-ws-off-pull-before.json",
+      "originalBytes": 81898,
+      "originalSha256": "c3ed6fa28912ac8bfe4abb8aee19f58fbe1fec3480fe496041acd2a6c39bff1c",
+      "storedBytes": 2826,
+      "storedSha256": "e2dd0c5c8de1530ed674817098c0cd8a51b2de998cc60be3ae3f5fac94bd0c5a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-pull.json",
+      "originalFileName": "provoke-ws-off-pull.json",
+      "originalBytes": 78890,
+      "originalSha256": "d73922ec22020ea1f03c19f9782b52301b1786dc1c0c1d735030c835d5962c95",
+      "storedBytes": 3715,
+      "storedSha256": "a24806bcbc6ca5fb82cde280879197bd202ac8fc8c0b6f2eb6b2a7877a28aa9b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-start-before.json",
+      "originalFileName": "provoke-ws-off-start-before.json",
+      "originalBytes": 69909,
+      "originalSha256": "317d9a0b937c465ed0401cd4037a8ba547f996829eda1c0e0b0df88e2d872bfe",
+      "storedBytes": 2040,
+      "storedSha256": "60e477f29abb2e2e5c0b6fca636288cbadf6ecafe3f738899b2f0b2c86f01519"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-off-start.json",
+      "originalFileName": "provoke-ws-off-start.json",
+      "originalBytes": 81266,
+      "originalSha256": "540673a7e0f8e5f7c172b4f1c5defaf0f31bec36ac1a299e2be71e6630fb9897",
+      "storedBytes": 2791,
+      "storedSha256": "caa02191b5302f6c228bf78c18cc3a72dbdeae406818e072bf188107df52d514"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-hit-before.json",
+      "originalFileName": "provoke-ws-on-hit-before.json",
+      "originalBytes": 83386,
+      "originalSha256": "e3cc5bf8b3fdab234e03cc0bb80fdf2f99632bb29be0f3062ed6f962810236ae",
+      "storedBytes": 3837,
+      "storedSha256": "ebfcb93379991f5a10ef40434bb6d0ca347d8196d367d371d63d47dfcacfeede"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-hit.json",
+      "originalFileName": "provoke-ws-on-hit.json",
+      "originalBytes": 71628,
+      "originalSha256": "b393fb0d68b0b25691ac32165d16a164f786dc9883c64b68dd44d7ef01a5746a",
+      "storedBytes": 3214,
+      "storedSha256": "6317e4187f4ec562ef8a63fa701da80378ede4c7686eaa36f5b40ca705ecf56a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-pull-before.json",
+      "originalFileName": "provoke-ws-on-pull-before.json",
+      "originalBytes": 82411,
+      "originalSha256": "288cfc62cfec7e6601f09d0eb8485d11b743a3a1f7cde0ed45068e1d8f1f4061",
+      "storedBytes": 3138,
+      "storedSha256": "ff8a672d9ae2c331a72f6c2fdd938eb16757a09fe029cdaccd5c98662df16295"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-pull.json",
+      "originalFileName": "provoke-ws-on-pull.json",
+      "originalBytes": 79487,
+      "originalSha256": "7ecfa8a26505e7c0503fbb7527939320f439073803fcdaf6bf0071611d1a8175",
+      "storedBytes": 4121,
+      "storedSha256": "de288cebb34abbbc2c1d12037d1a51e4a9d2bfb020df5fabbb059f7de68ff9af"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-start-before.json",
+      "originalFileName": "provoke-ws-on-start-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "7aa37de4c7ee185ecfb1c918ccf12215f91be6d2fd842af2468ca30273eb1390",
+      "storedBytes": 2270,
+      "storedSha256": "f467758483146e5e76c8ca0c46aed2719c628a817d52310860108de891341729"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/provoke-ws-on-start.json",
+      "originalFileName": "provoke-ws-on-start.json",
+      "originalBytes": 81779,
+      "originalSha256": "b86193045b11da25c9c8dfb445f6d6b7b65bbdc91472fa96ed9f83a235afc2bd",
+      "storedBytes": 3103,
+      "storedSha256": "8ddc8d690c1d7a566370d9b7c215bf237a5452841a038a00995419e6704a3905"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-golem-info.json",
+      "originalFileName": "red-golem-info.json",
+      "originalBytes": 8450,
+      "originalSha256": "ee9fae84162ce3ef9edf8497fa75c6e8ba0f26004eb5e41e13e7e09ce4b23066",
+      "storedBytes": 420,
+      "storedSha256": "434a1d017e6f028417f48b38bd619f85c70df1ce9ec71fb1937234f2d3267944"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-00-before.json",
+      "originalFileName": "red-on-attack-00-before.json",
+      "originalBytes": 83423,
+      "originalSha256": "228e9724e83e4ae9bbb0152f20494892bbc67c61e7782ff3c806f76e1584876e",
+      "storedBytes": 3995,
+      "storedSha256": "7bf07f2eb3cab34d68c5923d2dc8aa6eb7c58903096903168a00c8f74f8cd100"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-00.json",
+      "originalFileName": "red-on-attack-00.json",
+      "originalBytes": 79541,
+      "originalSha256": "99346a346e7064ead390b3cc6ce1bcbd314dcf1ded51e8bfae0369d33d0ed210",
+      "storedBytes": 4201,
+      "storedSha256": "db745b0d104dfdac4e0833568d3f644d098dbf17178fd66747b9ce2392e98819"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-01-before.json",
+      "originalFileName": "red-on-attack-01-before.json",
+      "originalBytes": 84160,
+      "originalSha256": "f33573e90e66d78d5840f34a8819340b0847b6acf3961ed82fe4957b2158ab67",
+      "storedBytes": 4587,
+      "storedSha256": "7c82253c86776793c6743e45a74ee16d4cf50281d95b63195468ea377c5f36e6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-01.json",
+      "originalFileName": "red-on-attack-01.json",
+      "originalBytes": 79524,
+      "originalSha256": "74be80ec3131cc3e7bbc7a269abedf0216bc3cbccf1e83057b9e2b2c692d9d2b",
+      "storedBytes": 4175,
+      "storedSha256": "a88428c2d13635224e75f305b047c94aef360f6a418b1808402c87253c17953a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-02-before.json",
+      "originalFileName": "red-on-attack-02-before.json",
+      "originalBytes": 84237,
+      "originalSha256": "dc16852a16ae32d481e2abeff7d6a3c04ead610c792b7f07cf9055b2c1af3b18",
+      "storedBytes": 4604,
+      "storedSha256": "0238eb29aa9fdd96f3cee2636d03acb3830cd6ee1814904816b535d9d621059c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-02.json",
+      "originalFileName": "red-on-attack-02.json",
+      "originalBytes": 79695,
+      "originalSha256": "9e1bdf65d612b4d4bb022af7be9bf36802b643d9ccbeed5a4fe6e377b9936b44",
+      "storedBytes": 4310,
+      "storedSha256": "2e1dd4df5f20bc025945f191a15bdf2c4f88fb7bc7d058810785ed50c24ed6ff"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-03-before.json",
+      "originalFileName": "red-on-attack-03-before.json",
+      "originalBytes": 84028,
+      "originalSha256": "ff3a72f2db7d2e811c9ac3d2e5b300e60ef9d8c264bc608e3d969953649fdbfb",
+      "storedBytes": 4395,
+      "storedSha256": "5831d2a6fdff125f9c00ab73b03a846482363dfb0b917bca6af4a558b38172b1"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-03.json",
+      "originalFileName": "red-on-attack-03.json",
+      "originalBytes": 79416,
+      "originalSha256": "cff4721d2246aa1a36c47e81416011edc92bee7508debea9e210fc2d97ff3dc6",
+      "storedBytes": 4012,
+      "storedSha256": "45e2ca289f4d5485b867fa99aa260f6df2b941d34a1acc72b0bd10730b2c03a0"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-04-before.json",
+      "originalFileName": "red-on-attack-04-before.json",
+      "originalBytes": 84469,
+      "originalSha256": "cab4070940df18e3b76b8a4dc2a82044520ef289f1c5a7eb511b1d9c43ac89e8",
+      "storedBytes": 4668,
+      "storedSha256": "ceb8bc2ed75d67de8448c75f694e27b0e843ffcf9fa5cb282eace232242d0eb2"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-04.json",
+      "originalFileName": "red-on-attack-04.json",
+      "originalBytes": 79596,
+      "originalSha256": "63fa373b2e5e5f99346a740dcd83dbd021b94ec37fa18fe39c9d8134b7a82842",
+      "storedBytes": 4239,
+      "storedSha256": "8a4d7b9c76235fa7697edbf87d145d1e3036b5a36444dfa59c64f09f93a9ef0c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-05-before.json",
+      "originalFileName": "red-on-attack-05-before.json",
+      "originalBytes": 83995,
+      "originalSha256": "edb115a17171bd44ab0543f6e1089e3dc875476e89f2b825bae4318b81f58f35",
+      "storedBytes": 4366,
+      "storedSha256": "a83d9ec411ae2b62c98bdaf641b9bb0f56df0b6055a9432fe33011a5af1b463b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-05.json",
+      "originalFileName": "red-on-attack-05.json",
+      "originalBytes": 79549,
+      "originalSha256": "d2478d53c3ef351a3b5fe58072124b8d4fa57725e9bfc326bc2e6c0ecc6820a9",
+      "storedBytes": 4200,
+      "storedSha256": "c7a50b694cf7b5e95b77e3c4ffbe7d9c60e324d5e02ae3c750bf121dd32a3d41"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-06-before.json",
+      "originalFileName": "red-on-attack-06-before.json",
+      "originalBytes": 84018,
+      "originalSha256": "7f9d3e73cfd59b2d7b8af31955f3ad8276cfeb0562daf7575f41efa9e672d76d",
+      "storedBytes": 4388,
+      "storedSha256": "9e9dee2e19fb7318f3119ecd3ab73651808a9de08d5745cccd83c04bce8b62c6"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-06.json",
+      "originalFileName": "red-on-attack-06.json",
+      "originalBytes": 79553,
+      "originalSha256": "fb0bf84a19686f81f77e402d49d83c5cc21ca04894a2a517f7d610486cc04226",
+      "storedBytes": 4195,
+      "storedSha256": "ebac70c3c3bb7692f20f5af33a546661988b5597a7d741403b4bd3f4bc7c4bef"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-07-before.json",
+      "originalFileName": "red-on-attack-07-before.json",
+      "originalBytes": 83953,
+      "originalSha256": "2c34965273be40ce729ebbac4a2144efea4e63852772f41910a98880571bc987",
+      "storedBytes": 4320,
+      "storedSha256": "05b0d97b49c1222f11ebf12087c6e85cc7608a38504d9e8343177900196f615f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-attack-07.json",
+      "originalFileName": "red-on-attack-07.json",
+      "originalBytes": 73616,
+      "originalSha256": "12b357ac3d0b43d34acfb731cff82a1d849530d709a48c9537e33155bf66baf3",
+      "storedBytes": 4533,
+      "storedSha256": "89da7794b00a279477dfd9d42c0f6892efce73cb2f224412cf2aca20f405ac63"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-0-before.json",
+      "originalFileName": "red-on-cast-0-before.json",
+      "originalBytes": 82437,
+      "originalSha256": "af35f0e9cb8eb5a3620dd29bddbee9997bc40f14856db3866f1e51a72a801467",
+      "storedBytes": 3153,
+      "storedSha256": "5877d467fffb2d9e117c22057505ce28fe3b51b5c41bd96273c36d5790605250"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-0.json",
+      "originalFileName": "red-on-cast-0.json",
+      "originalBytes": 79280,
+      "originalSha256": "eb8224c05d9f5baa1c14da59c32d250c646da3086f5135db3bfe8d2402fd7144",
+      "storedBytes": 4055,
+      "storedSha256": "1c5ee54353b52aca0854c281bd146578f810db0aae77699e52053e101855b0f2"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-1-before.json",
+      "originalFileName": "red-on-cast-1-before.json",
+      "originalBytes": 83374,
+      "originalSha256": "6f84d45c6af898872c28d5727cdcbcd9abc99d56ea5269afcf3ca04430aef678",
+      "storedBytes": 3878,
+      "storedSha256": "d53371da339dbbb611ed6d3b12bd845d7575e2c8385907914d48d2985fc3d8d8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-1.json",
+      "originalFileName": "red-on-cast-1.json",
+      "originalBytes": 78866,
+      "originalSha256": "866bcb4b8b398fda91fc25bb448c0e19c580bc04c6e732583c09600bc9868872",
+      "storedBytes": 3684,
+      "storedSha256": "28804f3afb78cd9a7c51667c0b7bf00b4891cbbe15e81ca4322d77cd9d2c0d72"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-2-before.json",
+      "originalFileName": "red-on-cast-2-before.json",
+      "originalBytes": 83534,
+      "originalSha256": "c1d011abeec2fc500fe40f6f48ccc7dd02c8bbc20d4cc10b132b339268be8962",
+      "storedBytes": 4029,
+      "storedSha256": "f13fa88d4ebd45fcd073b16e9e209d20cdefbe0b7eb8fbaa46795f5c2d804ef8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-cast-2.json",
+      "originalFileName": "red-on-cast-2.json",
+      "originalBytes": 78781,
+      "originalSha256": "09cf832262eabdae43b571a0daa95f5b719c5fc1f8766072bd2499a63c403b3f",
+      "storedBytes": 3599,
+      "storedSha256": "6aa042b6e0bfe6733494533453128942e04e2f4ea10f173f7b953bc57f3711f8"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-start-before.json",
+      "originalFileName": "red-on-start-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "fbc76228159eecc2c609efa4b384406f5f7606876af9fa96cd8d21fa6b6dfb64",
+      "storedBytes": 2270,
+      "storedSha256": "50c96a5e925afd649fa879822ff248af44e7b978b6f443c7d0206256615b477d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/red-on-start.json",
+      "originalFileName": "red-on-start.json",
+      "originalBytes": 81816,
+      "originalSha256": "3d26bf140354fd369ef384b1835fbbb60cb69aae46eac1f654c397432399ea53",
+      "storedBytes": 3129,
+      "storedSha256": "d20d41c752e2c8eb306922cb5484ab5be25fbd6f52ff3e0b2d9dc3a9c6a4adfb"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-off-1-start-before.json",
+      "originalFileName": "ts-off-1-start-before.json",
+      "originalBytes": 69912,
+      "originalSha256": "147a35255b61d562a1feee5728acbef64f32a8401e6065352cf0963a46e7932d",
+      "storedBytes": 2042,
+      "storedSha256": "c7f9eb4325d4f5ce51a6ee8e6a5927f3162e9b46477e623571623401bdcf395f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-off-1-start.json",
+      "originalFileName": "ts-off-1-start.json",
+      "originalBytes": 81269,
+      "originalSha256": "753b5a77b2c7d7080ea94a247228e2624be7caeedc0e678c0219bc463ffc6309",
+      "storedBytes": 2793,
+      "storedSha256": "2db0ea4a53fd9055e3a2a7a74a918bc35c6d6608f66b5c9edf0e3914bfdca7bd"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-off-1-turn-0-before.json",
+      "originalFileName": "ts-off-1-turn-0-before.json",
+      "originalBytes": 81901,
+      "originalSha256": "aa7f7ccd9b8500a694115a438582e186f3fe4050ff7c85309517e8111aeb4024",
+      "storedBytes": 2828,
+      "storedSha256": "e91e36bb8cec05d20142b449e46043ab7a0ad0bd0c5da26628c01b8ff8745264"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-off-1-turn-0.json",
+      "originalFileName": "ts-off-1-turn-0.json",
+      "originalBytes": 71876,
+      "originalSha256": "a836829634ee2acd6a6eeb9a971dbde296b3b9e7b6c0fdf8da4b34726071f62a",
+      "storedBytes": 3314,
+      "storedSha256": "72e2fa75a1d606c80d765af03db93aca2a8a6bf37c3cfe3dc71c4f07be698bfc"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-on-1-start-before.json",
+      "originalFileName": "ts-on-1-start-before.json",
+      "originalBytes": 70193,
+      "originalSha256": "af0b392d6f1094b7fda599281da7d0c8f5e023e1af310259d9fbd0aa4808af9f",
+      "storedBytes": 2270,
+      "storedSha256": "c33c1700562086e44d37f33940220e313eec027a47e8005e882e3abe748f280d"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-on-1-start.json",
+      "originalFileName": "ts-on-1-start.json",
+      "originalBytes": 81779,
+      "originalSha256": "38fea6d9ea024af523a8b4996c737d4c3b8e612dadeeb418225662a997767585",
+      "storedBytes": 3103,
+      "storedSha256": "0c34525a36c4bdee7295629eafe28d343996af6bd7f955119a49759f2ed2c109"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-on-1-turn-0-before.json",
+      "originalFileName": "ts-on-1-turn-0-before.json",
+      "originalBytes": 82411,
+      "originalSha256": "10b63f3793f3060a9c05494e40b8b3e76f7cfef71a9f6cbc055e6e69ead5a9ba",
+      "storedBytes": 3138,
+      "storedSha256": "570c7ad627d5da3d03c880e9b0fc5d2faf00f1a7a4674347c950e6825bd95d98"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ts-on-1-turn-0.json",
+      "originalFileName": "ts-on-1-turn-0.json",
+      "originalBytes": 72033,
+      "originalSha256": "c6dea4b7d000d0539a0262ab54a17c09fe5638f32adf2ad764c1e838cbdb8f9a",
+      "storedBytes": 3466,
+      "storedSha256": "542018914c5cb43be7f4706d86d05b21b35bb759cb1848198fa2e06ec2b8fb6f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-off-1-start-before.json",
+      "originalFileName": "ws-off-1-start-before.json",
+      "originalBytes": 70022,
+      "originalSha256": "9de3de06fe7f33fac7065179020e6fdfa7d2ce2ceed30331e270180f829d260a",
+      "storedBytes": 2098,
+      "storedSha256": "dbb95b8b8c52eb604be2a63d5ddd54d9f169f22cbde1539c16cd14725d72c83c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-off-1-start.json",
+      "originalFileName": "ws-off-1-start.json",
+      "originalBytes": 81409,
+      "originalSha256": "dfe9b2535ff1e8193ecdc77d5d70b903848abaca2f9d783a1916043a45a20804",
+      "storedBytes": 2869,
+      "storedSha256": "76fa539fdfbfb86efac9d273e50bdb85379a26e9c04353eafa989d5a618e2cc1"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-off-1-turn-0-before.json",
+      "originalFileName": "ws-off-1-turn-0-before.json",
+      "originalBytes": 82041,
+      "originalSha256": "d28dfdfae0dbf9ff89d79a4a97be55a2f0b58260b79d906723a756363d6549a9",
+      "storedBytes": 2904,
+      "storedSha256": "669e0f9bbc0f8501e276dc8915e52fb1cf18e8d17039363c2501bfa1032df807"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-off-1-turn-0.json",
+      "originalFileName": "ws-off-1-turn-0.json",
+      "originalBytes": 71025,
+      "originalSha256": "3a83b98527b2f4dda0db6d64e11e7226c66c7e16e8d2bd06188029644b7b58d5",
+      "storedBytes": 2652,
+      "storedSha256": "dac21a1baae9c03d59fa871ae2c60544d07065878107d0450059c354a16203ca"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-on-1-start-before.json",
+      "originalFileName": "ws-on-1-start-before.json",
+      "originalBytes": 70308,
+      "originalSha256": "f648e761739af9b5547118606f3c2200e2500f0cb05487866210123f7a3a06c6",
+      "storedBytes": 2325,
+      "storedSha256": "4494f7a157728b2730406f8d63f283d1865b62b957d4fe2b1e38f7ef44e47c3b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-on-1-start.json",
+      "originalFileName": "ws-on-1-start.json",
+      "originalBytes": 81962,
+      "originalSha256": "41faba4af0036a9f414eb92b6ebfd942b3748f444cee6b39593ee46115883026",
+      "storedBytes": 3201,
+      "storedSha256": "dc23c53e72a16312998bc142bf3fec594ae3e9027cc4980649c0f348324dbab4"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-on-1-turn-0-before.json",
+      "originalFileName": "ws-on-1-turn-0-before.json",
+      "originalBytes": 82594,
+      "originalSha256": "6b8035ae149f1a1a5179e4794397e9d8cbd82d178c47155feec73b97fb3bd55f",
+      "storedBytes": 3236,
+      "storedSha256": "d408508e6aeb3b080db6295d0471c3c7591fe69d79d533632d833d431b700b22"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ws-on-1-turn-0.json",
+      "originalFileName": "ws-on-1-turn-0.json",
+      "originalBytes": 71454,
+      "originalSha256": "17ee921a37519b6d920736fa9d95e4e76060c6d523c64ac46e2b5fc0fb2dd8bb",
+      "storedBytes": 3003,
+      "storedSha256": "d87a5b65241dd8cc431035d8eeb97d57aa4a76667a7864b3eca726130278f947"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-1-start-before.json",
+      "originalFileName": "ww-off-1-start-before.json",
+      "originalBytes": 69796,
+      "originalSha256": "d4bef5d498778c8a0a6e3d1d8f26c734701b6c6e6116fdee572df4802bd732dc",
+      "storedBytes": 1987,
+      "storedSha256": "01a596b8c0d30da59c71e44b957515e5f8d1f2b3aa83897058036e030b2a824a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-1-start.json",
+      "originalFileName": "ww-off-1-start.json",
+      "originalBytes": 81083,
+      "originalSha256": "20bfda0d79022db733174d7ccc8de317f7c2c8b7dc6685562517a1d08315a413",
+      "storedBytes": 2693,
+      "storedSha256": "319b4bbd9856f79c30d1da1241d6e982bd57bc0985fcce16e77ef1abf576ac3f"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-1-turn-0-before.json",
+      "originalFileName": "ww-off-1-turn-0-before.json",
+      "originalBytes": 81715,
+      "originalSha256": "d89b0278cf4eb185a46b6628bb9ffdec2420b7a6e653beb3cd7fba60e7216824",
+      "storedBytes": 2728,
+      "storedSha256": "861882cb25139d4c2c8f3e9a17bfb53752908d6bc119c30a6788f47a41329258"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-1-turn-0.json",
+      "originalFileName": "ww-off-1-turn-0.json",
+      "originalBytes": 71545,
+      "originalSha256": "5be7a20f228e9a3bd8b979af5149a920e430d3a78b3a1ff6eb90593fe39617d3",
+      "storedBytes": 3137,
+      "storedSha256": "8ec5a4553abd8dc35152d3b76b9bed4673d6b0b359c1cec7c9e9a6e0b188bf26"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-2-start-before.json",
+      "originalFileName": "ww-off-2-start-before.json",
+      "originalBytes": 70023,
+      "originalSha256": "9fda53d09ea81bcf6d077a9a7c3d7eaf2659563df21547eaf82ce9a07866b792",
+      "storedBytes": 2099,
+      "storedSha256": "10c18d910bc5e4af43e3966e5bc7c6c964001e20f1f26c22f63a53f4d373c6ba"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-2-start.json",
+      "originalFileName": "ww-off-2-start.json",
+      "originalBytes": 81411,
+      "originalSha256": "7bbefcc8d6c5bbed173773e72a65f6347ac4d36b6353a55d29791f115175a0f4",
+      "storedBytes": 2871,
+      "storedSha256": "a0351247d31432c411f72bca889c7143761126adc3f3db0884852d3d3eea7258"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-2-turn-0-before.json",
+      "originalFileName": "ww-off-2-turn-0-before.json",
+      "originalBytes": 82043,
+      "originalSha256": "c42936a097d370fc28953a05e4be515922ee326919483f5530ca7cf43d403d2c",
+      "storedBytes": 2906,
+      "storedSha256": "9989ae07bdc375ceedc3ba67f4141329749640b0f0ee5a08c9f45cd0cda9d6a0"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-off-2-turn-0.json",
+      "originalFileName": "ww-off-2-turn-0.json",
+      "originalBytes": 71885,
+      "originalSha256": "5770ee1e5c0499d90517b5134a59a3b8eda21ebd92208faceadc4207868f1905",
+      "storedBytes": 3286,
+      "storedSha256": "a8de8dfb94a15a2a2ef253b7b0cb68a88853f7bd825dae1bf83843d7d847fa3e"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-1-start-before.json",
+      "originalFileName": "ww-on-1-start-before.json",
+      "originalBytes": 70308,
+      "originalSha256": "00ba3d2276566eca00f97fa10feb7baa5829e783d4584aa6134a11ea807e058b",
+      "storedBytes": 2324,
+      "storedSha256": "76391e63d04db6ed1795a2bb2811c5b3d7bd96a6d7f8ec1f3846d508e98b39fd"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-1-start.json",
+      "originalFileName": "ww-on-1-start.json",
+      "originalBytes": 81963,
+      "originalSha256": "58d05ed09e66af3894bd3ac05b75b9398afee1f762009a49cf5c3e123d36eef6",
+      "storedBytes": 3201,
+      "storedSha256": "6e0c44973b40e24bf7c46b741252cfff99036375924bde58a1958b67ce53df4c"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-1-turn-0-before.json",
+      "originalFileName": "ww-on-1-turn-0-before.json",
+      "originalBytes": 82595,
+      "originalSha256": "40388a4d4a5b945fffb1ff695b3ac9e8f6fdc024b6650387f9d0d0d2eaee7cf1",
+      "storedBytes": 3236,
+      "storedSha256": "ae8c03600a58345023eb804a5fbaa9b1df0eae87a5d6eb5511b01c7e4bb812aa"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-1-turn-0.json",
+      "originalFileName": "ww-on-1-turn-0.json",
+      "originalBytes": 72394,
+      "originalSha256": "c82e04796985f1461d5f4386769feedee6fe1040ea8f871e85fe05c0a106404a",
+      "storedBytes": 3613,
+      "storedSha256": "c3758d0248c3c03e199a8155b6fbc913a8368acef0eee1191df32151eff9d5aa"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-2-start-before.json",
+      "originalFileName": "ww-on-2-start-before.json",
+      "originalBytes": 70419,
+      "originalSha256": "e45d89924bef1c68f32d77a1dfb650982521111f505d1cc412ef5f3ff64df4c4",
+      "storedBytes": 2381,
+      "storedSha256": "e494d2bf40891c378ac2051110c1b20162b9bf5ce408ee9955d70aa79164dcc9"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-2-start.json",
+      "originalFileName": "ww-on-2-start.json",
+      "originalBytes": 82107,
+      "originalSha256": "5e2e0bd2c5333cff1e19084d481fa8c8c05dcd21ebaa9465b86a33b376879f18",
+      "storedBytes": 3281,
+      "storedSha256": "981e8dca7c82babecf330be644f3ac33a79abda87e78b1ab153355fed3166d7a"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-2-turn-0-before.json",
+      "originalFileName": "ww-on-2-turn-0-before.json",
+      "originalBytes": 82739,
+      "originalSha256": "b53aa1702ae7795a1141a54ca26625f204408ae35afe55e94b6b869e06d75923",
+      "storedBytes": 3316,
+      "storedSha256": "5393f1ce6f413c8c531e6f366c04cde36e8bc0b6b951c93707c70d0f8c83799b"
+    },
+    {
+      "path": "../raw/focus-attack-ab-20261022/ww-on-2-turn-0.json",
+      "originalFileName": "ww-on-2-turn-0.json",
+      "originalBytes": 72145,
+      "originalSha256": "163bdb05019ae6495c89f13a6e05cac4be0744870d88de65ddacb8462c4cbd69",
+      "storedBytes": 3514,
+      "storedSha256": "284835ddf0fe6d00d188f61a2d9b2fd1988636cc47cca0ddc69b3bf52616de94"
+    }
+  ],
+  "cleanStatPair": {
+    "beforeSource": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed-before.json",
+    "afterSource": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed.json",
+    "before": {
+      "level": 45,
+      "pAtk": 2796,
+      "accuracy": 94,
+      "addCritDisplay": "124%+166",
+      "critDmgMul": 2.2417499999999997
+    },
+    "after": {
+      "level": 45,
+      "pAtk": 2796,
+      "accuracy": 96,
+      "addCritDisplay": "146%+166",
+      "critDmgMul": 2.2417499999999997
+    },
+    "warning": "Initial124%+0 is a stale Vicious projection; +166 was already present before this clean Focus toggle and is not caused by Focus."
+  },
+  "toggleAttempts": [
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-outside-1.json",
+      "atUtc": "2026-10-22T11:01:38Z",
+      "httpStatus": 502,
+      "confirmedAcceptedToggle": false,
+      "afterToggleActive": null,
+      "accuracy": null,
+      "critDisplay": null,
+      "boundary": "Non200 responses are excluded from confirmed successful mutations; an unknown transport result requires a separate state check."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-outside-2.json",
+      "atUtc": "2026-10-22T11:02:49Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": true,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/champ-focus-off.json",
+      "atUtc": "2026-10-22T11:04:29Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": false,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed.json",
+      "atUtc": "2026-10-22T11:06:11Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": true,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-off-after-long-on.json",
+      "atUtc": "2026-10-22T11:16:54Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": false,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-on.json",
+      "atUtc": "2026-10-22T11:18:40Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": true,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-3-off.json",
+      "atUtc": "2026-10-22T11:18:53Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": false,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-on.json",
+      "atUtc": "2026-10-22T11:19:05Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": true,
+      "accuracy": 96,
+      "critDisplay": "146%+166",
+      "boundary": "Successful response with preserved after-state."
+    },
+    {
+      "source": "../raw/focus-attack-ab-20261022/focus-cycle-4-off.json",
+      "atUtc": "2026-10-22T11:19:19Z",
+      "httpStatus": 200,
+      "confirmedAcceptedToggle": true,
+      "afterToggleActive": false,
+      "accuracy": 94,
+      "critDisplay": "124%+166",
+      "boundary": "Successful response with preserved after-state."
+    }
+  ],
+  "durability": {
+    "onSource": "../raw/focus-attack-ab-20261022/focus-on-cycle-2-confirmed.json",
+    "onAtUtc": "2026-10-22T11:06:11Z",
+    "checkSource": "../raw/focus-attack-ab-20261022/focus-durability-after-10min.json",
+    "checkAtUtc": "2026-10-22T11:16:18Z",
+    "elapsedToFreshOnCheckSeconds": 607.0,
+    "actionSource": "../raw/focus-attack-ab-20261022/durability-on-after-10min-turn-0.json",
+    "actionAtUtc": "2026-10-22T11:16:19Z",
+    "elapsedToAcceptedOnActionSeconds": 608.0,
+    "actionSplashCount": 2,
+    "confirmedOffBetween": 0,
+    "boundary": "A fixed600s expiration did not occur in this observed interval; this is not a proof of unlimited lifetime, crash/relogin persistence or other classes.",
+    "lastOnBeforeOffSource": "../raw/focus-attack-ab-20261022/focus-off-after-long-on-before.json",
+    "lastOnBeforeOffAtUtc": "2026-10-22T11:16:54Z",
+    "elapsedToLastOnBeforeOffSeconds": 643.0,
+    "lastOnBeforeOffEvidenceKind": "Wall-clock to GET projection with older lastUpdate; not independent combat-tick proof. Accepted action proof remains608s."
+  },
+  "confirmedToggleCounts": {
+    "ON": 4,
+    "OFF": 4,
+    "unconfirmedNon200": 1,
+    "boundary": "The first502 attempt is not counted as a confirmed mutation; the initial later OFF occurs inside the blue-champion battle."
+  },
+  "matchedAreaPairs": [
+    {
+      "onSource": "../raw/focus-attack-ab-20261022/ww-on-1-turn-0.json",
+      "offSource": "../raw/focus-attack-ab-20261022/ww-off-1-turn-0.json",
+      "sameMainSpawnId": true,
+      "action": "whirlwind",
+      "onSplashCount": 3,
+      "offSplashCount": 3,
+      "boundary": "Target-count compatibility only; different crit outcomes/overkill prevent a causal totalDPS comparison."
+    },
+    {
+      "onSource": "../raw/focus-attack-ab-20261022/ww-on-2-turn-0.json",
+      "offSource": "../raw/focus-attack-ab-20261022/ww-off-2-turn-0.json",
+      "sameMainSpawnId": true,
+      "action": "whirlwind",
+      "onSplashCount": 3,
+      "offSplashCount": 3,
+      "boundary": "Target-count compatibility only; different crit outcomes/overkill prevent a causal totalDPS comparison."
+    },
+    {
+      "onSource": "../raw/focus-attack-ab-20261022/ts-on-1-turn-0.json",
+      "offSource": "../raw/focus-attack-ab-20261022/ts-off-1-turn-0.json",
+      "sameMainSpawnId": true,
+      "action": "thunder_storm",
+      "onSplashCount": 3,
+      "offSplashCount": 3,
+      "boundary": "Target-count compatibility only; different crit outcomes/overkill prevent a causal totalDPS comparison."
+    },
+    {
+      "onSource": "../raw/focus-attack-ab-20261022/ws-on-1-turn-0.json",
+      "offSource": "../raw/focus-attack-ab-20261022/ws-off-1-turn-0.json",
+      "sameMainSpawnId": true,
+      "action": "wild_sweep",
+      "onSplashCount": 0,
+      "offSplashCount": 0,
+      "boundary": "Target-count compatibility only; different crit outcomes/overkill prevent a causal totalDPS comparison."
+    },
+    {
+      "onSource": "../raw/focus-attack-ab-20261022/provoke-ws-on-hit.json",
+      "offSource": "../raw/focus-attack-ab-20261022/provoke-ws-off-hit.json",
+      "sameMainSpawnId": true,
+      "action": "wild_sweep",
+      "onSplashCount": 0,
+      "offSplashCount": 0,
+      "boundary": "Target-count compatibility only; different crit outcomes/overkill prevent a causal totalDPS comparison."
+    }
+  ],
+  "finalOutcome": {
+    "source": "../raw/focus-attack-ab-20261022/final-character-after-combat-confirm.json",
+    "atUtc": "2026-10-22T11:19:45Z",
+    "finalState": {
+      "level": 45,
+      "hp": 10106,
+      "maxHp": 10106,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false
+    },
+    "focusActive": false,
+    "viciousActive": true,
+    "equippedWeaponItemId": 299,
+    "equipmentMatchesInitial": true,
+    "hotbarMatchesInitial": true,
+    "stancesMatchInitial": true,
+    "sessionDeltas": {
+      "mobsKilled": 86,
+      "sp": 55430,
+      "adena": 274098,
+      "coinOfLuck": 0
+    },
+    "killComposition": "2champion primaries (one blue, one red) and84other ordinary mobs; no new raid-boss kill.",
+    "resourceCounts": [
+      {
+        "itemId": 1061,
+        "before": 981,
+        "after": 981,
+        "netDelta": 0
+      },
+      {
+        "itemId": 728,
+        "before": 494,
+        "after": 494,
+        "netDelta": 0
+      },
+      {
+        "itemId": 1464,
+        "before": 2723,
+        "after": 2676,
+        "netDelta": -47
+      },
+      {
+        "itemId": 920048,
+        "before": 440,
+        "after": 442,
+        "netDelta": 2
+      }
+    ],
+    "confirmedCosts": {
+      "coinOfLuckSpent": 0,
+      "fastAdenSpent": 0,
+      "fastAdenNetGain": 2,
+      "soulshotCConsumed": 47,
+      "hpPotionsConsumed": 0,
+      "mpPotionsConsumed": 0,
+      "newLearningRequests": 0
+    },
+    "boundary": "Net inventory deltas are distinguished from gross expenditure; no purchases/FA use occurred in the executed action series. The earlier final-character-preserved snapshot hasMP758 and is not the final endpoint."
+  }
+}
