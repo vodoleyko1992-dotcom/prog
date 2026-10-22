@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.45 — полный бафф суммона для голема Warsmith/Maestro перед РБ; редкие материалы и части экипировки из форума «Фарм ресурсов» =====
+// ===== L2wap Bot v20.46 — спойл крафтера, голем на фарме, карта через 100 побед; крафт и оружие без старых планов =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -1355,8 +1355,8 @@ const searchActive = rules => campActive() || campMobOpen().length > 0 || campCh
   || rules.some(x => !x.neg && ((x.quest && questHere()) || x.champ || (!!x.name && L2V7Modules.mobfarm.nameHere(x.name))));
 const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: решение «фармлю здесь» держится 3 мин — между проверками цепочка
 // проверка карты каждые N боёв; пока глава ждёт чемпионов — не реже чем раз в 5 боёв (чемпионы появляются и пропадают)
-// 17.10.2026: резервный интервал поиска чемпионов — 30 боёв по просьбе игрока.
-const CHAMP_EVERY = 30;
+// 22.10.2026 (просьба «на карту реже»): резервный плановый интервал поиска чемпионов — 100 боёв.
+const CHAMP_EVERY = 100;
 // Карта ради чемпионов — раз в cfg.champEvery боёв, в том числе при выключенной общей проверке карты.
 const champEvery = () => Math.max(5, +cfg.champEvery || CHAMP_EVERY);
 const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.neg);
@@ -2171,11 +2171,11 @@ function farmPick(goal) {
   return best ? { ...best, names: Object.keys(best.mobs) } : null;
 }
 // 7.2: персонаж умеет спойлить — спойл в роли «Спойл» или профессия гнома-спойлера
-// 20.43 (John 21.10 12:48): крафтер без дубины не спойлит — и точку фарма по спойлу не выбираем
+// 20.46 (John 22.10): обычный Spoil полезен и крафтеру с пикой; совместимость конкретной кнопки проверяет loot.
 // 20.43 (разбор логов 21.10 13:21/13:30): роли n* — одни на ник, не на класс: «Spoil» от Bounty Hunter/Fortune Seeker осталась и у
 // Arcana Lord — маг считался спойлером, и план фарма материалов Маммона брал источники спойла по чужому шансу. Класс известен —
-// роль «Спойл» в счёт, только если это крафтер (с дубиной) или Spoil есть в памяти умений этого класса (skillDb/skills — story.CLASS_KEYS)
-const canSpoil = () => !L2V7Modules.loot?.crafterPike?.() && (L2V7Modules.subclass?.role?.() === 'spoiler' || spoilRoleOwn());
+// роль «Спойл» в счёт, только если это крафтер со Spoil или Spoil есть в памяти умений этого класса (skillDb/skills — story.CLASS_KEYS)
+const canSpoil = () => (L2V7Modules.subclass?.role?.() === 'spoiler' || spoilRoleOwn());
 function spoilRoleOwn() {
   const sp = names(cfg.nSpoil || '');
   if (!sp.length) return false;
@@ -6559,6 +6559,7 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
 // 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
 L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+  get actionGeneration() { return () => automationGeneration; }, get leaseEpoch() { return leaseEpoch; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
   get free() { return () => L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
@@ -7513,6 +7514,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   });
   once('rbKill30_20261018', () => { if (+C('rbMaxKillMin') === 20) cf.rbMaxKillMin = 30; });
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
+  // 20.46 (лог 22.10 10:41:52): прежние заводские 30 боёв → 100; свои числа и 0 не меняем. После первого применения ручной выбор сохраняется.
+  once('farmMap100_2046', () => { if (+C('champEvery') === 30) cf.champEvery = 100; if (+C('deepEvery') === 30) cf.deepEvery = 100; });
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено, иначе нас замечают в статистике»):
   // два дневных лимита мобов → один dailyKillLimit (старые складываются; если оба были 0 — заводские DAILY_KILL_DEF), рыба без лимита → DAILY_FISH_DEF.
   // Диапазоны «От/До» старых ключей переезжают на новый (границы складываются), выбранные числа дня — заново.

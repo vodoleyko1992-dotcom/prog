@@ -442,6 +442,11 @@ async function nextFight(ctx) {
   }
   await chainNote(false, !env.cfg.chain ? 'цепочка выключена' : offQuest ? '' : due ? 'проверка приоритетных целей' : 'следующий бой не подтвердился');
   if (!sameIntent()) return;
+  // 20.46 (лог 22.10 10:41:52): обычный выход ради поиска чемпионов отличаем в журнале от обучения/закупки/смены задачи выше.
+  if (env.cfg.chain && due && !offQuest && !env.rbDue() && !env.campRbOpen().length) {
+    const hot = env.rt.deepHot && env.rt.sinceDeep < env.deepN();
+    env.rec('B', 'цепочка', `на карту: ${hot ? 'есть более приоритетные квестовые цели' : `плановая проверка целей — раз в ${env.deepN()} боёв`}`);
+  }
   await env.toMap();
 }
 

@@ -141,9 +141,11 @@ test('застывший откат Festival: ожидание ограниче�
   c.massWaitT0 = Date.now() - 2000;                                   // уже ждали дольше предела
   await f.api.spoilStep(c, f.act, f.mob); assert.deepEqual(f.calls, ['l2_254']);
 });
-test('крафтер с пикой не ждёт и не спойлит (правило John 21.10 12:48 не меняется)', async () => {
+// 20.46 (John22.10): старый запрет21.10 заменён; у Warsmith в журнале на панели Spoil, а Festival не подтверждён.
+test('крафтер с пикой без собственного Festival не ждёт чужой КД и сразу жмёт обычный Spoil', async () => {
   const f = fixture({ wt: 'древковое', role: 'crafter' }), c = f.ctx(); f.mass.cd = 0.2;
-  assert.equal(await f.api.spoilStep(c, f.act, f.mob), false); assert.deepEqual(f.calls, []); assert.deepEqual(f.sleeps, []);
+  f.slots.splice(f.slots.indexOf(f.mass), 1);
+  assert.equal(await f.api.spoilStep(c, f.act, f.mob), true); assert.deepEqual(f.calls, ['l2_254']); assert.deepEqual(f.sleeps, []);
 });
 
 // ---------- 3) Festival не повторяется после перерыва (капча) в том же бою ----------

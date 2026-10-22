@@ -220,14 +220,14 @@ test('Arcana Lord с ролью «Spoil» от спойлера — не спо�
   const FS = { classCur: { prof: 'dwarf_fortune_seeker', slot: 1 }, prof: 'Arcana lord' };
   assert.deepEqual([...run(FS, SP)], [true, true], 'Fortune Seeker (rt.prof от основного класса не мешает)');
   assert.deepEqual([...run(FS, { mmFarmSpoil: 'auto' })], [true, true], 'спойлер и без роли');
-  // крафтер: по роли «Спойл» и только с дубиной (crafterPike — loot.js)
+  // 20.46 (John22.10): крафтер со своей ролью «Спойл» учитывает источники и с пикой. Чужая роль мага выше по-прежнему запрещена.
   const WS = { classCur: { prof: 'dwarf_warsmith', slot: 2 }, prof: 'Warsmith' }, loot = vm.runInContext('L2V7Modules.loot', ctx), pike = loot.crafterPike;
   try {
     loot.crafterPike = () => false;
     assert.deepEqual([...run(WS, SP)], [true, true], 'Warsmith с дубиной');
     assert.deepEqual([...run(WS, { mmFarmSpoil: 'auto' })], [false, false], 'Warsmith без роли «Спойл»');
     loot.crafterPike = () => true;
-    assert.deepEqual([...run(WS, SP)], [false, false], 'Warsmith с пикой');
+    assert.deepEqual([...run(WS, SP)], [true, true], 'Warsmith с пикой: новый запрет по виду оружия не вводится');
   } finally { loot.crafterPike = pike; }
   // класс ещё неизвестен (старый профиль) — по роли, как раньше
   assert.deepEqual([...run({}, SP)], [true, true]);

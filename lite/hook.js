@@ -44,6 +44,8 @@
         .map(s => ({ slot: num(s.slot), prof: str(s.profession, 60) || '', lvl: num(s.level) })) : undefined,
       // Lite 1.5 (лучник): сколько стрел в сумке — по номерам стрел (тред «Изучение лука» 21.10: лук их требует, слота стрел нет).
       arrows: arrowsOf(c),
+      // 1.5.2: только номер надетого оружия; экземпляры, ЛС и прочие поля сумки не передаются.
+      weaponId: c.inventory?.eq && Object.prototype.hasOwnProperty.call(c.inventory.eq, 'l1') ? (c.inventory.eq.l1 == null ? null : num(c.inventory.eq.l1.itemId)) : undefined,
     };
   }
   const ARROWS = [17, 1341, 1342, 1343, 1344, 1345];

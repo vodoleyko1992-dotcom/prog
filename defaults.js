@@ -25,7 +25,8 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbScrollFirst: true, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbSpikeRhythm: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 30, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  // 20.46 (лог 22.10 10:41:52, просьба «на карту реже»): плановый поиск целей раз в 100 боёв; срочные дела и ресурсные 50 — отдельно.
+  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 100, deepEvery: 100,
   catNoFa: true,   // 20.16: в катакомбах баффы за FA не покупаются, висящие не мешают бою (buffs.catNoFa)
   cancelFreeOk: true,   // 20.16: обычный моб, снимающий баффы, — цель, пока нет платных баффов за FA (buffs.cancelRisk)
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,

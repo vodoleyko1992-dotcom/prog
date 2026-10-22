@@ -88,6 +88,7 @@
     if (!c || typeof c !== 'object' || !c.id || c.id === rt.cmdDone || !owner) return;
     const kind = L.rtKind(rt), pr = `${L.KIND_RU[kind]}: `;
     if (c.type === 'start') {
+      gen++;
       const by = Object.fromEntries(Object.entries(rt.by || {}).map(([k, v]) => [k, { ...(v || {}), zone: null, limitNoted: 0 }]));
       setRt({ cmdDone: c.id, k: { ...(rt.k || {}), lastK: null }, revive: null, goZone: '', tpTry: [], zoneBlockT: 0, deaths: [], limitNoted: 0, by, arrowOut: null, arrowNote: 0,
         zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null });
@@ -123,6 +124,7 @@
       const r = await chrome.runtime.sendMessage({ cmd: 'beat', on: !!cfg.on, page: location.pathname });
       const was = owner; owner = !!r?.owner;
       if (owner && !was) {
+        gen++;
         const s = await chrome.storage.local.get([K_RT, K_CMD]);
         rt = { ...DEF_RT, ...(s[K_RT] || {}), ...(lastStatus ? { status: lastStatus } : {}) };
         profSync();
@@ -149,7 +151,7 @@
   function netStart(d) {
     const t = Date.now();
     if (BUSY.test(d.path)) NET.inflight.set(d.rid, { path: d.path, method: d.method, t });
-    NET.starts.push({ rid: d.rid, path: d.path, method: d.method, t });
+    NET.starts.push({ rid: d.rid, path: d.path, method: d.method, t, epoch: gen });
     if (NET.starts.length > 40) NET.starts.shift();
   }
   function netEnd(d) {
@@ -160,7 +162,7 @@
     if (NET.ends.size > 60) NET.ends.delete(NET.ends.keys().next().value);
     if (d.path === '/character') NET.charEnd = t;
     if (/^\/game\/(?:battle|tvt)\/action$/.test(d.path)) NET.actEnd = t;
-    if (d.ch && ok) onSnap(d.ch);
+    if (d.ch && ok) onSnap(d.ch, { started: NET.starts.find(x => x.rid === d.rid)?.t || 0, epoch: NET.starts.find(x => x.rid === d.rid)?.epoch, rid: d.rid });
     if (d.bt) {
       if (d.path === '/game/battle/action' && d.req && d.req.action) CD.observe({ action: d.req.action }, d.bt, d.status, '');
       else CD.observeSync(d.bt, '');
@@ -214,11 +216,20 @@
   }
 
   async function heroNow() {
+    const epoch = gen, started = Date.now();
     try {
       const r = await gameGet('/character', 6000), c = r.ok ? (await r.json())?.character : null;
-      if (!c || typeof c !== 'object') return null;
+      if (!c || typeof c !== 'object' || epoch !== gen || (SNAP?.started && started < SNAP.started)) return null;
       if (typeof c.name === 'string') clsSet(c.name, c.l2Profession, c.classSlots?.activeSlot,
         Array.isArray(c.classSlots?.slots) ? c.classSlots.slots.filter(s => s && s.owned === true).slice(0, 4).map(s => ({ slot: s.slot, prof: String(s.profession || ''), lvl: s.level })) : undefined);
+      // 1.5.2: первый GET нового документа мог пройти до старта content-script. Свой свежий GET тоже даёт базу отказа стрел.
+      if (Array.isArray(c.inventory?.stacks)) {
+        const by = {};
+        for (const x of c.inventory.stacks.slice(0, 2000)) if (x && L.ARROWS[+x.itemId] && Number.isSafeInteger(+x.qty) && +x.qty > 0) by[+x.itemId] = (by[+x.itemId] || 0) + +x.qty;
+        const eq = c.inventory.eq;
+        arrowsSeen(by, { name: c.name, prof: c.l2Profession, slot: c.classSlots?.activeSlot, rev: c.revision,
+          weaponId: eq && Object.prototype.hasOwnProperty.call(eq, 'l1') ? (eq.l1 == null ? null : num(eq.l1.itemId)) : undefined }, { started });
+      }
       const h = { zone: String(c.currentZoneId || ''), zoneName: String(c.currentZoneNameUk || ''), inBattle: c.inBattle === true, city: c.locationType === 'city',
         locType: String(c.locationType || ''), dung: String(c.activeDungeonId || ''), adena: num(c.adena) };
       return h;
@@ -243,7 +254,14 @@
   }
 
   // ---------- герой: уровень, локация, счётчик мобов ----------
-  function onSnap(ch) {
+  function onSnap(ch, seen = {}) {
+    // 1.5.2: запоздавший герой не меняет CLS/профиль и не снимает отказ стрел после Stop/смены хозяина.
+    if (seen.epoch != null && seen.epoch !== gen) return;
+    const started = +seen.started || 0, rid = +seen.rid || 0;
+    const same = SNAP && SNAP.name === ch.name && SNAP.prof === ch.prof && (SNAP.slot ?? null) === (ch.slot ?? null);
+    if (SNAP && ((SNAP.started && (!started || started < SNAP.started || (started === SNAP.started && rid < SNAP.seenRid)))
+      || (same && Number.isSafeInteger(ch.rev) && Number.isSafeInteger(SNAP.rev) && ch.rev < SNAP.rev))) return;
+    ch = { ...ch, started, seenRid: rid };
     SNAP = { ...ch, t: Date.now() };
     clsSet(ch.name, ch.prof, ch.slot, ch.slots);
     if (!owner) return;
@@ -251,7 +269,7 @@
     if (r.st !== rt.k) setRt({ k: r.st });
     if (r.add > 0) { progress(); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
-    if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows);
+    if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows, ch, seen);
     const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null,
       ...(L.clsKind(ch.prof) === 'archer' && ARW ? { arrows: ARW.by } : {}) };
     if (JSON.stringify(c) !== JSON.stringify(rt.char)) setRt({ char: c });
@@ -302,22 +320,43 @@
   // ARW — последние увиденные стрелы {by: {id: шт.}, n, t}: не каждый ответ игры несёт сумку.
   let ARW = null;
   const ARROW_LOW = 50;
-  function arrowsSeen(by) {
-    const n = Object.values(by).reduce((a, b) => a + (+b || 0), 0);
-    ARW = { by: { ...by }, n, t: Date.now() };
-    if (!owner || cfg.kind !== 'archer') return;
-    // 1.5.1: и когда «нет стрел» было по пустой сумке (без отказа сервера) — иначе следующий раз журнал и окно «СТРЕЛ НЕТ» молчали бы
-    if (n > 0 && (rt.arrowOut || rt.arrowNote) && n > (rt.arrowOut?.n || 0)) { setRt({ arrowOut: null, arrowNote: 0 }); log(`стрелы есть (${n}) — продолжаю охоту`); }
+  // 1.5.2 (22.10, ревизия): после отказа ждём новый состав стрел ИЛИ другой лук, а не рост суммы всех грейдов.
+  // Герой/слот не смешиваются; ответ старого запроса или меньшая revision не доказывают исправление сумки.
+  const arrowRealm = ch => ch && typeof ch.name === 'string' && L.clsKind(ch.prof) === 'archer' ? JSON.stringify([ch.name, ch.prof, ch.slot ?? null]) : '';
+  const arrowSig = by => JSON.stringify(Object.keys(by).sort((a, b) => +a - +b).map(id => [+id, by[id]]));
+  function arrowsSeen(by, ch = SNAP, seen = {}) {
+    const realm = arrowRealm(ch);
+    if (!realm || realm !== arrowRealm(CLS) || !by || typeof by !== 'object' || Array.isArray(by)) return;
+    const t = Date.now(), started = +seen.started || 0, rev = Number.isSafeInteger(ch.rev) ? ch.rev : null;
+    const prev = ARW && ARW.realm === realm ? ARW : null;
+    if (prev && ((rev != null && prev.rev != null && rev < prev.rev) || (started && prev.started && started < prev.started))) return;
+    const clean = Object.fromEntries(Object.entries(by).filter(([id, q]) => L.ARROWS[+id] && Number.isSafeInteger(q) && q > 0));
+    const n = Object.values(clean).reduce((a, b) => a + b, 0), sig = arrowSig(clean);
+    const weaponKnown = ch.weaponId === null || (Number.isSafeInteger(ch.weaponId) && ch.weaponId > 0);
+    const weaponId = weaponKnown ? ch.weaponId : prev?.weaponId;
+    ARW = { by: clean, n, t, started, rev, realm, sig, weaponId, weaponKnown: weaponKnown || !!prev?.weaponKnown };
+    if (!owner || !cfg.on || cfg.kind !== 'archer') return;
+    const o = rt.arrowOut, mine = !o?.realm || o.realm === realm;
+    const fresh = !o || (started > o.t && (o.rev == null || rev == null || rev >= o.rev));
+    const changed = !o?.sig || sig !== o.sig || (o.weaponKnown && ARW.weaponKnown && o.weaponId !== ARW.weaponId);
+    if (n > 0 && (rt.arrowOut || rt.arrowNote) && mine && fresh && changed) { setRt({ arrowOut: null, arrowNote: 0 }); log(`стрелы есть (${n}) — продолжаю охоту (состав/лук обновлены)`); }
     // «мало стрел» — один раз, пока их снова не станет больше порога (rt.arrowLow переживает перезагрузку страницы)
     if (n > 0 && n < ARROW_LOW && !rt.arrowLow) { setRt({ arrowLow: 1 }); log(`стрел осталось ${n} — скоро кончатся`); notify('arrows', 'L2wap Lite: мало стрел', `Осталось ${n} стрел.`); }
     else if (n >= ARROW_LOW && rt.arrowLow) setRt({ arrowLow: 0 });
   }
-  // Нет стрел: в сумке 0 или сервер отказал в выстреле из-за стрел (rt.arrowOut — сколько их было тогда; прибавилось — снова охотимся).
+  // Квитанция относится к состоянию перед этим выстрелом. Следующий неизменный снимок не запускает повтор отказа.
+  function arrowRejected(shot, g) {
+    const realm = arrowRealm(CLS);
+    if (!alive(g) || cfg.kind !== 'archer' || !realm || (shot?.realm && shot.realm !== realm)) return;
+    const s = shot?.realm === realm ? shot : null;
+    setRt({ arrowOut: { t: Date.now(), n: s?.n || 0, realm, sig: s?.sig || '', weaponId: s?.weaponId, weaponKnown: !!s?.weaponKnown, rev: s?.rev ?? null } });
+  }
+  // Нет стрел: пустая свежая сумка либо подтверждённый отказ по неизменному составу/луку этого героя и слота.
   function arrowsOut() {
     if (cfg.kind !== 'archer') return false;
-    const o = rt.arrowOut;
-    if (o && !(ARW && ARW.t > o.t && ARW.n > (o.n || 0))) return true;
-    return !!ARW && ARW.n === 0 && Date.now() - ARW.t < 600000;
+    const realm = arrowRealm(CLS), o = rt.arrowOut;
+    if (o && (!o.realm || o.realm === realm)) return true;
+    return !!ARW && ARW.realm === realm && ARW.n === 0 && Date.now() - ARW.t < 600000;
   }
   function arrowWait() {
     status('Нет стрел: положите в сумку стрелы под грейд лука — бот продолжит сам' + (cfg.tvt ? ' · TvT жду' : ''));
@@ -330,6 +369,7 @@
   // ---------- класс героя (1.3): ведём только Дестра/Титана; 1.5 — и лучника, у каждого свой профиль ----------
   function clsSet(name, prof, slot, slots) {
     if (typeof name !== 'string' || !name) return;
+    if (CLS && (CLS.name !== name || CLS.prof !== prof || CLS.slot !== (Number.isInteger(slot) ? slot : null))) gen++;
     CLS = { name: name.slice(0, 60), prof: typeof prof === 'string' ? prof.slice(0, 60) : '', slot: Number.isInteger(slot) ? slot : null,
       slots: Array.isArray(slots) ? slots : null, t: Date.now() };
     profSync();
@@ -549,9 +589,14 @@
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
     if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
     if (!tvt && (CD.globalWait('') > 0 || (s.action && cdWait(s.action) > 0 && cdKnown(s.action, pressAt.get(s.action) || 0)))) { quick = true; return false; }
+    // 1.5.2: не стреляем без базы сумки этого документа: иначе каждый переход терял состав и повторял отказ стрел.
+    if (!tvt && cfg.kind === 'archer' && (!ARW || ARW.realm !== arrowRealm(CLS))) {
+      await heroNow();
+      if (!(await gameIdle(1500, g)) || !alive(g) || !ARW || ARW.realm !== arrowRealm(CLS) || arrowsOut()) return false;
+    }
     if (still && !still()) { quick = true; return false; }
     status(`${tvt ? 'TvT' : 'Бой'}: ${s.name} — ${plan.why}`);
-    const t0 = Date.now(), frozen = frozenSince.has(key);
+    const t0 = Date.now(), frozen = frozenSince.has(key), arrowShot = ARW;
     const slackA = NET.actEnd ? t0 - (NET.actEnd + lockA) : 1e9, slackB = NET.charEnd ? t0 - (NET.charEnd + lockB) : 1e9, bindB = slackB < slackA, gap = Math.min(slackA, slackB);
     if (s.action) pressAt.set(s.action, t0);
     pressAt.set(key, t0);
@@ -577,7 +622,8 @@
       const cdErr = end.by === 'global' || end.by === 'skill' || /cooldown|перезаряд/i.test(end.err);
       // 1.5: сервер не дал выстрелить из-за стрел (нет или не того грейда) — охоту ставим на паузу до новых стрел.
       if (!tvt && cfg.kind === 'archer' && /arrow|стріл|стрел/i.test(end.err || '')) {
-        if (!rt.arrowOut) { setRt({ arrowOut: { t: Date.now(), n: ARW ? ARW.n : 0 } }); log(`сервер не дал выстрелить: «${String(end.err).slice(0, 60)}» — стрел нет или они не под грейд лука`); }
+        if (!alive(g) || (arrowShot?.realm && arrowShot.realm !== arrowRealm(CLS))) return false;
+        arrowRejected(arrowShot, g); log(`сервер не дал выстрелить: «${String(end.err).slice(0, 60)}» — стрел нет или они не под грейд лука`);
         return false;
       }
       if (end.by === 'global') { if (CD.globalWait('') <= 0) block.set(key, Date.now() + 300); quick = true; return false; }

@@ -62,11 +62,11 @@ assert.equal(vm.runInContext(`L2V7Modules.combat.ready({
 assert.equal(vm.runInContext('typeof autonomyMode',ctx),'function');
 // 7.1.31 (игрок: «поставил 99999, а он всё равно проверяет карту»): 0 = карту по плану не проверять никогда (было «каждый бой»)
 const due = (c, r) => vm.runInContext(`cfg = mergeCfg(${JSON.stringify(c)}); rt = { ...DEF_RT, ...${JSON.stringify(r)} }; mapDue(parseRules())`, ctx);
-// 10.0.5 (игрок 13.10: «автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов — своя частота (17.10: champEvery 30) и при «0»; выключить — галкой
+// 20.46 (22.10: «на карту реже»): поиск чемпионов — своя частота 100 и при общем «0»; выключить — галкой.
 assert.equal(due({ deepEvery: 0, searchChamp: false }, { sinceDeep: 500, deepHot: true }), false, '0 = never: no planned/hot map (champions off)');
-assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 29 }), false, '0 + champions: not before 30 fights');
-assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 30 }), true, '0 + champions: map every 30 fights');
-assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 30 }), true, 'champions on: map at least every 30 fights');
+assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 99 }), false, '0 + champions: not before 100 fights');
+assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 100 }), true, '0 + champions: map every 100 fights');
+assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 100 }), true, 'champions on: map at least every 100 fights');
 assert.equal(due({ deepEvery: 99999, searchChamp: false }, { sinceDeep: 25 }), false, 'champions off: 99999 respected');
 // 8.0 (аудит фарма A3): «каждые 10 боёв» — только когда есть зачем: ★ цель квеста на этой локации (правило [квест] само по себе — не повод)
 assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10 }), false, 'no reason (no ★ target here, champions off): no planned map');

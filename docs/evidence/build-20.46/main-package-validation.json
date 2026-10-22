@@ -1,0 +1,34 @@
+{
+  "flavor": "Main Chrome",
+  "version": "20.46",
+  "artifact": "/workspace/work/fixes-2046/packages/l2wap-bot-v20.46.zip",
+  "bytes": 1620025,
+  "sha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+  "files": 67,
+  "sourceZipExtractedMatchLockedBeforeAndAfter": true,
+  "sourceAggregateSha256": "5fad1c6e85bc54b03d6d5b34886832128e4b65c661d14f029b5bb7b7e74a27a3",
+  "zipAudit": "/workspace/work/fixes-2046/packages/main-final-zip-audit.json",
+  "zipload": {
+    "installed": {
+      "cfgKeys": 208,
+      "champEvery": 100,
+      "deepEvery": 100
+    },
+    "flavor": "main",
+    "version": "20.46",
+    "chrome": "156.0.8078.4",
+    "extensionId": "hjdegkndlhibogddaifbanckjhnmknkp",
+    "pageErrors": [],
+    "failedExtensionResources": [],
+    "consoleErrors": [],
+    "blockedHttp": [],
+    "gamePagesOpened": 0,
+    "liveGame": false,
+    "result": "PASS"
+  },
+  "checksum": "/workspace/work/fixes-2046/packages/SHA256SUMS-20.46.txt",
+  "lite14SourceHashesStillLocked": true,
+  "firefoxBuilt": false,
+  "liveGame": false,
+  "result": "PASS"
+}

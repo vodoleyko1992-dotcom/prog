@@ -124,7 +124,7 @@ test('голем по рангу: ранги 1–2 — Crystal D, не выуч�
   assert.deepEqual(A.K.shopRows([]), []);
 });
 
-test('фарм ресурса с РБ: прилетели к живому РБ — булава + щит + голем до боя; РБ убит — снова пика без голема', async () => {
+test('фарм ресурса с РБ: прилетели к живому РБ — булава + щит + голем до боя; РБ убит — пика, голем остаётся', async () => {
   const A = make({ mode: 'farm' });
   let alive = [{ id: 'rb1' }];
   Object.assign(A.env, { farmRbOn: () => true, rbCandidates: () => alive }); Object.assign(A.env.rt, { farmRb: { id: 'rb1', t: 1 }, rbWant: 'rb1' });
@@ -132,5 +132,5 @@ test('фарм ресурса с РБ: прилетели к живому РБ �
   assert.deepEqual(eqOf(A.S), [YAKSA, KNIGHT, 'mechanic_golem']);
   alive = [];
   await A.drive(14);
-  assert.deepEqual(eqOf(A.S), [POLE, 0, '']);
+  assert.deepEqual(eqOf(A.S), [POLE, 0, 'mechanic_golem']);   // 20.46, решение John 22.10: потеря EXP приемлема, слугу не отзываем.
 });
