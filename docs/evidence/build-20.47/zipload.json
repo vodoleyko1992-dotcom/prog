@@ -1,0 +1,18 @@
+{
+  "installed": {
+    "cfgKeys": 208,
+    "champEvery": 100,
+    "deepEvery": 100
+  },
+  "flavor": "main",
+  "version": "20.47",
+  "chrome": "156.0.8078.4",
+  "extensionId": "llapoihjbeifkhhfgmjacalemkmmijgk",
+  "pageErrors": [],
+  "failedExtensionResources": [],
+  "consoleErrors": [],
+  "blockedHttp": [],
+  "gamePagesOpened": 0,
+  "liveGame": false,
+  "result": "PASS"
+}

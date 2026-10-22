@@ -1,0 +1,822 @@
+{
+  "result": "PASS",
+  "auditUtc": "2026-10-22T03:00:50.151346+00:00",
+  "boundary": "Independent static final ZIP/source/extracted audit; no packaging, browser or live game requests",
+  "artifact": "/workspace/work/slow-api-recovery/packages/l2wap-bot-v20.47.zip",
+  "artifactBytes": 1620266,
+  "artifactSha256": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+  "version": "20.47",
+  "fileCount": 67,
+  "sourceRoot": "/workspace/prog",
+  "extracted": "/workspace/work/slow-api-recovery/packages/main-20.47-zipload",
+  "allowlistOrigin": "Previous independently verified main20.46 ZIP, checked against frozen20.47 allowlist",
+  "preservedArtifacts": {
+    "base-profile.json": {
+      "sha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "expectedSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+    },
+    "builds/l2wap-bot-v20.46.zip": {
+      "sha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+      "expectedSha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2"
+    },
+    "builds/l2wap-lite-v1.5.2.zip": {
+      "sha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "expectedSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31"
+    },
+    "builds/l2wap-lite-v1.5.2-firefox.zip": {
+      "sha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+      "expectedSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568"
+    }
+  },
+  "sourceLock": "/workspace/work/slow-api-recovery/source-20.47-lock.json",
+  "checks": [
+    {
+      "name": "Preserved base-profile.json",
+      "pass": true,
+      "sha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "expectedSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+    },
+    {
+      "name": "Preserved builds/l2wap-bot-v20.46.zip",
+      "pass": true,
+      "sha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2",
+      "expectedSha256": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2"
+    },
+    {
+      "name": "Preserved builds/l2wap-lite-v1.5.2.zip",
+      "pass": true,
+      "sha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+      "expectedSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31"
+    },
+    {
+      "name": "Preserved builds/l2wap-lite-v1.5.2-firefox.zip",
+      "pass": true,
+      "sha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+      "expectedSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568"
+    },
+    {
+      "name": "Trusted previous main package establishes exact67-file allowlist",
+      "pass": true
+    },
+    {
+      "name": "Independent allowlist agrees with builder allowlist",
+      "pass": true
+    },
+    {
+      "name": "All67 source files agree with frozen source lock",
+      "pass": true
+    },
+    {
+      "name": "Extracted directory contains exactly67 allowed files",
+      "pass": true
+    },
+    {
+      "name": "ZIP exact67-file allowlist",
+      "pass": true,
+      "files": 67,
+      "entries": 67
+    },
+    {
+      "name": "ZIP no duplicate paths",
+      "pass": true
+    },
+    {
+      "name": "ZIP safe relative paths",
+      "pass": true,
+      "unsafe": []
+    },
+    {
+      "name": "ZIP only regular files without unexpected directory entries",
+      "pass": true,
+      "badTypes": []
+    },
+    {
+      "name": "ZIP no encryption",
+      "pass": true
+    },
+    {
+      "name": "ZIP CRC all entries",
+      "pass": true,
+      "firstBadEntry": null
+    },
+    {
+      "name": "Every source ZIP and extracted byte matches",
+      "pass": true,
+      "compared": 67
+    },
+    {
+      "name": "Independent CRC32 all67 files",
+      "pass": true
+    },
+    {
+      "name": "Chrome manifest20.47 equals frozen source",
+      "pass": true
+    },
+    {
+      "name": "Manifest only three expected release metadata changes",
+      "pass": true
+    },
+    {
+      "name": "All manifest file references packaged",
+      "pass": true,
+      "missing": [],
+      "references": [
+        "augment.js",
+        "background.js",
+        "battle-cooldown.js",
+        "buff-value.js",
+        "content.js",
+        "defaults.js",
+        "enchant-ui.css",
+        "enchant-ui.js",
+        "engine-core.js",
+        "fa-full.js",
+        "hook.js",
+        "icons/*",
+        "icons/128.png",
+        "icons/16.png",
+        "icons/48.png",
+        "items-il.json",
+        "mammon-gear.json",
+        "modules/actions.js",
+        "modules/buffs.js",
+        "modules/champs.js",
+        "modules/combat.js",
+        "modules/craft.js",
+        "modules/crafterkit.js",
+        "modules/dailies.js",
+        "modules/dungeons.js",
+        "modules/economy.js",
+        "modules/enchant.js",
+        "modules/enemies.js",
+        "modules/epics.js",
+        "modules/equipment.js",
+        "modules/fightlab.js",
+        "modules/fishing.js",
+        "modules/lifestone.js",
+        "modules/loot.js",
+        "modules/mammon.js",
+        "modules/mobfarm.js",
+        "modules/navigation.js",
+        "modules/payments.js",
+        "modules/pvp.js",
+        "modules/quests.js",
+        "modules/raid.js",
+        "modules/rbrun.js",
+        "modules/rbtimer.js",
+        "modules/resources.js",
+        "modules/story.js",
+        "modules/subclass.js",
+        "modules/subgo.js",
+        "modules/survival.js",
+        "modules/tvt.js",
+        "modules/tvtshop.js",
+        "modules/warlock.js",
+        "notranslate.js",
+        "popup.html",
+        "popup.js",
+        "pvp-ui.css",
+        "pvp-ui.js",
+        "skills-il.js",
+        "warlock-ui.css",
+        "warlock-ui.js",
+        "zone-db.js",
+        "zone-kpd.js"
+      ]
+    },
+    {
+      "name": "Previous package differs only in approved runtime and metadata files",
+      "pass": true,
+      "changedFiles": [
+        "README-CHROME.txt",
+        "README-FIREFOX.txt",
+        "content.js",
+        "manifest.json"
+      ]
+    },
+    {
+      "name": "Base profile equals frozen source and previous main ZIP",
+      "pass": true
+    },
+    {
+      "name": "No Lite tests docs source-control data included",
+      "pass": true
+    },
+    {
+      "name": "Inputs remain identical after independent audit",
+      "pass": true
+    },
+    {
+      "name": "Repository delivery ZIP equals audited scratch artifact",
+      "pass": true,
+      "path": "/workspace/prog/builds/l2wap-bot-v20.47.zip",
+      "sha256": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+      "bytes": 1620266
+    }
+  ],
+  "files": [
+    {
+      "path": "README-CHROME.txt",
+      "bytes": 9813,
+      "sha256": "d2d6882ee6d62a82197b2982493990386e9d05a9523d47688b84f0ffcb92472c",
+      "sourceSha256": "d2d6882ee6d62a82197b2982493990386e9d05a9523d47688b84f0ffcb92472c",
+      "extractedSha256": "d2d6882ee6d62a82197b2982493990386e9d05a9523d47688b84f0ffcb92472c",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "README-FIREFOX.txt",
+      "bytes": 6098,
+      "sha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
+      "sourceSha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
+      "extractedSha256": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "augment.js",
+      "bytes": 7591,
+      "sha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+      "sourceSha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+      "extractedSha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "background.js",
+      "bytes": 135299,
+      "sha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b",
+      "sourceSha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b",
+      "extractedSha256": "d30cd723fda823377ba14b6adf5b694fd8e83d96623b497a633a59d211e5eb7b",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "base-profile.json",
+      "bytes": 995313,
+      "sha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "sourceSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "extractedSha256": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "battle-cooldown.js",
+      "bytes": 10549,
+      "sha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+      "sourceSha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+      "extractedSha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "buff-value.js",
+      "bytes": 16418,
+      "sha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+      "sourceSha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+      "extractedSha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "content.js",
+      "bytes": 774796,
+      "sha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+      "sourceSha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+      "extractedSha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "defaults.js",
+      "bytes": 10675,
+      "sha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af",
+      "sourceSha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af",
+      "extractedSha256": "95f73dad6da221199af01e86a47ea27b81a6359564fa26a782e54b869b75c3af",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "enchant-ui.css",
+      "bytes": 3846,
+      "sha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+      "sourceSha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+      "extractedSha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "enchant-ui.js",
+      "bytes": 24178,
+      "sha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+      "sourceSha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+      "extractedSha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "engine-core.js",
+      "bytes": 45154,
+      "sha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50",
+      "sourceSha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50",
+      "extractedSha256": "47878672db9710214f01d155945744a423f8af56b2a273c1d009dcfdd7406d50",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "fa-full.js",
+      "bytes": 8427,
+      "sha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+      "sourceSha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+      "extractedSha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "hook.js",
+      "bytes": 41268,
+      "sha256": "26042e496b5e451ec8dbe7b00d6797f4a2681b641e68a4d90f7bec9f5c486d4a",
+      "sourceSha256": "26042e496b5e451ec8dbe7b00d6797f4a2681b641e68a4d90f7bec9f5c486d4a",
+      "extractedSha256": "26042e496b5e451ec8dbe7b00d6797f4a2681b641e68a4d90f7bec9f5c486d4a",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "icons/128.png",
+      "bytes": 1232,
+      "sha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "sourceSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "extractedSha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "icons/16.png",
+      "bytes": 200,
+      "sha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "sourceSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "extractedSha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "icons/48.png",
+      "bytes": 515,
+      "sha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "sourceSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "extractedSha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "items-il.json",
+      "bytes": 1531835,
+      "sha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+      "sourceSha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+      "extractedSha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "mammon-gear.json",
+      "bytes": 17575,
+      "sha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+      "sourceSha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+      "extractedSha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 3320,
+      "sha256": "1b5d5490f93db8055ddc9a8d8733524531adf6eef813d78822fac24e4e962924",
+      "sourceSha256": "1b5d5490f93db8055ddc9a8d8733524531adf6eef813d78822fac24e4e962924",
+      "extractedSha256": "1b5d5490f93db8055ddc9a8d8733524531adf6eef813d78822fac24e4e962924",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/actions.js",
+      "bytes": 17436,
+      "sha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1",
+      "sourceSha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1",
+      "extractedSha256": "66ee129ec7330a782bc1f72cfc54601f3767c20f02214b792f58c3fcd576f8e1",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/buffs.js",
+      "bytes": 91723,
+      "sha256": "51bba2e15359499e0213ccda26fd631b505cef94a67ea0cd7caa720157a58eea",
+      "sourceSha256": "51bba2e15359499e0213ccda26fd631b505cef94a67ea0cd7caa720157a58eea",
+      "extractedSha256": "51bba2e15359499e0213ccda26fd631b505cef94a67ea0cd7caa720157a58eea",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/champs.js",
+      "bytes": 24196,
+      "sha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e",
+      "sourceSha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e",
+      "extractedSha256": "9f7912383858143632941bb3045f46b06eb8717c18ee3c6a988c5641dd839e5e",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/combat.js",
+      "bytes": 284740,
+      "sha256": "30ab65eacd0f344dbcb515ecdb951da84acc8815040108f4099a43b643520b34",
+      "sourceSha256": "30ab65eacd0f344dbcb515ecdb951da84acc8815040108f4099a43b643520b34",
+      "extractedSha256": "30ab65eacd0f344dbcb515ecdb951da84acc8815040108f4099a43b643520b34",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/craft.js",
+      "bytes": 25591,
+      "sha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3",
+      "sourceSha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3",
+      "extractedSha256": "6334151d2c6b5c48b85cde6b4ad3490b916867d87d2084f6c2bb69d84efa1cc3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/crafterkit.js",
+      "bytes": 31365,
+      "sha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e",
+      "sourceSha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e",
+      "extractedSha256": "242838aa3c4f53dce2368c6b455bda684d8e7b5d231cbe56c311842ee228ec3e",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/dailies.js",
+      "bytes": 21972,
+      "sha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+      "sourceSha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+      "extractedSha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/dungeons.js",
+      "bytes": 57842,
+      "sha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+      "sourceSha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+      "extractedSha256": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/economy.js",
+      "bytes": 43218,
+      "sha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3",
+      "sourceSha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3",
+      "extractedSha256": "04013958bd27484ec5104a279cc5bab4d6ceb8ab94295e086b65ce6e7149f2d3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/enchant.js",
+      "bytes": 39630,
+      "sha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+      "sourceSha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+      "extractedSha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/enemies.js",
+      "bytes": 23357,
+      "sha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b",
+      "sourceSha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b",
+      "extractedSha256": "8dd2336876acf45c76c8156e6ca144fa5ffa8a82612283c930bb30570340d34b",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/epics.js",
+      "bytes": 101062,
+      "sha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+      "sourceSha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+      "extractedSha256": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/equipment.js",
+      "bytes": 48649,
+      "sha256": "68f79b876bdbd9cedf7aad65321855b8c0d3e3a124b454258d131f3ce7d687a3",
+      "sourceSha256": "68f79b876bdbd9cedf7aad65321855b8c0d3e3a124b454258d131f3ce7d687a3",
+      "extractedSha256": "68f79b876bdbd9cedf7aad65321855b8c0d3e3a124b454258d131f3ce7d687a3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/fightlab.js",
+      "bytes": 64099,
+      "sha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753",
+      "sourceSha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753",
+      "extractedSha256": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/fishing.js",
+      "bytes": 141898,
+      "sha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26",
+      "sourceSha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26",
+      "extractedSha256": "4ceac33e6234085d80ee4308b3e0d27569771d47f34b27a516015ce4eac1fb26",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/lifestone.js",
+      "bytes": 48287,
+      "sha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a",
+      "sourceSha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a",
+      "extractedSha256": "39bebdcfeb1d8f222d868712000ca1a17c2db4d2096979018abbc7d619a6829a",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/loot.js",
+      "bytes": 35065,
+      "sha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+      "sourceSha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+      "extractedSha256": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/mammon.js",
+      "bytes": 135498,
+      "sha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
+      "sourceSha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
+      "extractedSha256": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/mobfarm.js",
+      "bytes": 108704,
+      "sha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
+      "sourceSha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
+      "extractedSha256": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/navigation.js",
+      "bytes": 91713,
+      "sha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "sourceSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "extractedSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/payments.js",
+      "bytes": 12123,
+      "sha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
+      "sourceSha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
+      "extractedSha256": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/pvp.js",
+      "bytes": 19031,
+      "sha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
+      "sourceSha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
+      "extractedSha256": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/quests.js",
+      "bytes": 53039,
+      "sha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",
+      "sourceSha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",
+      "extractedSha256": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/raid.js",
+      "bytes": 229480,
+      "sha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2",
+      "sourceSha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2",
+      "extractedSha256": "c15a61c3775bc7320bcd6709ab01e7c32b929657fbbe3996cc8e253b76b18ee2",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/rbrun.js",
+      "bytes": 7364,
+      "sha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+      "sourceSha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+      "extractedSha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/rbtimer.js",
+      "bytes": 27094,
+      "sha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b",
+      "sourceSha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b",
+      "extractedSha256": "f9cca34e4ee94cb2ea478044f758ea63c780d93616c76be4e70fd8c16721b27b",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/resources.js",
+      "bytes": 19245,
+      "sha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d",
+      "sourceSha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d",
+      "extractedSha256": "c225064b0e1ca75b2d81153e6a8efaf14812450c2133ed05027610a1e5a1642d",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/story.js",
+      "bytes": 35209,
+      "sha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68",
+      "sourceSha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68",
+      "extractedSha256": "8a957c61679d388508c1c8402194efc73f4e60285329b6e38204e4cbd0217f68",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/subclass.js",
+      "bytes": 14028,
+      "sha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+      "sourceSha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+      "extractedSha256": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/subgo.js",
+      "bytes": 27375,
+      "sha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe",
+      "sourceSha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe",
+      "extractedSha256": "5de73743fdd7926d59f578d92beaad99bb8ddaa6e5590e89af0889a5483d2cfe",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/survival.js",
+      "bytes": 18759,
+      "sha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+      "sourceSha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+      "extractedSha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/tvt.js",
+      "bytes": 39854,
+      "sha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+      "sourceSha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+      "extractedSha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/tvtshop.js",
+      "bytes": 18228,
+      "sha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+      "sourceSha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+      "extractedSha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "modules/warlock.js",
+      "bytes": 82930,
+      "sha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72",
+      "sourceSha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72",
+      "extractedSha256": "dc1a5c4c82d35368e22193e7c2028423bd31b70fbe821d596f7a2e8605a2fb72",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "notranslate.js",
+      "bytes": 699,
+      "sha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "sourceSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "extractedSha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "popup.html",
+      "bytes": 168328,
+      "sha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd",
+      "sourceSha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd",
+      "extractedSha256": "d4017524d6eea2c61d7a868762914ef05cb32a61de9008de20f30432d4e9fafd",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "popup.js",
+      "bytes": 367961,
+      "sha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1",
+      "sourceSha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1",
+      "extractedSha256": "b77014b10a9a1ce1f663fe096196c461b924e1d2edb1894f81c924e1ff99faa1",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "pvp-ui.css",
+      "bytes": 582,
+      "sha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+      "sourceSha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+      "extractedSha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "pvp-ui.js",
+      "bytes": 5944,
+      "sha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+      "sourceSha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+      "extractedSha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "skills-il.js",
+      "bytes": 348160,
+      "sha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+      "sourceSha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+      "extractedSha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "ui-game.css",
+      "bytes": 30959,
+      "sha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407",
+      "sourceSha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407",
+      "extractedSha256": "f58d128685c369f725ee9501a42087bf1fef5095514fcfd700f0e4be9b82b407",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "ui-v7.css",
+      "bytes": 16049,
+      "sha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f",
+      "sourceSha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f",
+      "extractedSha256": "739afa78d62c477afc90637a33469403a7e49ccb716225f6605e4362dd18b45f",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "ui-v7.js",
+      "bytes": 24962,
+      "sha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf",
+      "sourceSha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf",
+      "extractedSha256": "731198d13f430c1327fc7195d51a4fe9c0e0001e12ca0ae5b574ee1e9b46cbaf",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "warlock-ui.css",
+      "bytes": 1105,
+      "sha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+      "sourceSha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+      "extractedSha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "warlock-ui.js",
+      "bytes": 11510,
+      "sha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6",
+      "sourceSha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6",
+      "extractedSha256": "cd9b446782a1896005ed60ca401cfc9bd9486c9241d1a245f573dfa8a1c289f6",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "zone-db.js",
+      "bytes": 31727,
+      "sha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+      "sourceSha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+      "extractedSha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    },
+    {
+      "path": "zone-kpd.js",
+      "bytes": 12817,
+      "sha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515",
+      "sourceSha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515",
+      "extractedSha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515",
+      "allBytesEqual": true,
+      "crc32Matches": true
+    }
+  ]
+}
