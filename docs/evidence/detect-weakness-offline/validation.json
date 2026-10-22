@@ -1,0 +1,32 @@
+{
+  "result": "PASS",
+  "sourceHashes": 7,
+  "newCompactResponses": 2,
+  "sourceProjectionFacts": "PASS",
+  "outsidePatkSequence": [
+    3180,
+    3884,
+    4798
+  ],
+  "sameTargetKindChanges": [
+    "animal",
+    "insect"
+  ],
+  "expiryPatkPair": [
+    4798,
+    3180
+  ],
+  "forbiddenPrivateKeys": 0,
+  "newGameRequests": 0,
+  "runtimeChanged": false,
+  "unresolved": "live damage/species/stacking/refresh/Plant tests; character busy",
+  "nodeFiles": 605,
+  "nodeFail": 0,
+  "nodeLogSha256": "43159cec3072414a550da9899d3b8f9b9d236b456a2618ba33274aea62ae147e",
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "diffCheck": "PASS",
+  "changedJavaScriptFiles": 0,
+  "runtimeBaseCommit": "3d79464a62a31c51715908daf5c5442938e2d839",
+  "validationBoundary": "offline evidence integrity and unchanged runtime regression suite; no live mechanics retest"
+}

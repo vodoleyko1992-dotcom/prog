@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-22T09:29:49Z",
+  "method": "GET",
+  "path": "/game/battle",
+  "status": 200,
+  "selection": "Offline projection of the existing22.10 raid capture; no new game request",
+  "response": {
+    "revision": 437972,
+    "character": {
+      "level": 44,
+      "l2Profession": "human_warlord",
+      "hp": 6958,
+      "maxHp": 11035,
+      "pAtk": 3180,
+      "revision": 437972,
+      "activeBuffs": [
+        {
+          "skillId": 87,
+          "expiresAt": 1792661883388,
+          "remainingSec": 494
+        },
+        {
+          "skillId": 75,
+          "expiresAt": 1792661884969,
+          "remainingSec": 496
+        }
+      ]
+    },
+    "battle": {
+      "mobName": "Flamestone Golem",
+      "mobLevel": 44,
+      "mobHp": 89686,
+      "mobMaxHp": 273375,
+      "battleMode": "pve",
+      "battleVersion": 36,
+      "battleMods": {
+        "weaknessKind": "insect",
+        "weaknessPatkMul": 1.3,
+        "weaknessDetects": {
+          "animal": 1.3,
+          "insect": 1.3
+        }
+      }
+    }
+  }
+}
