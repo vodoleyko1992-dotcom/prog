@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-22T23:54:38.560Z",
+  "version": "20.51",
+  "result": "PASS",
+  "browser": "firefox",
+  "browserVersion": "153.5.1",
+  "capabilities": {
+    "docked": true,
+    "runtime": "function",
+    "tabs": "undefined"
+  },
+  "scenarios": [
+    "OFF button reads book and inventory through native tabless dock: 2 GET, 2-step chain preview saved",
+    "Changed stock changes goal to missing with exact shortage 3",
+    "Failed book read preserves saved book, inventory and plan"
+  ],
+  "preview": "До цели: Plate ×1\nГотово к изготовлению\nSteel×2\nполуфабрикат\nPlate×1\nцель\nНа цепочку: 30 MP. МП-банки — по необходимости.",
+  "firstReads": [
+    {
+      "method": "GET",
+      "path": "/game/craft/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    }
+  ],
+  "posts": 0,
+  "start": false,
+  "on": false,
+  "lock": null,
+  "navigation": false,
+  "boundary": "Native Firefox final ZIP; chrome.tabs absent without mocking. Local TLS loopback fixture; no live game, credentials, account or mutations.",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/favicon.ico"
+    },
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/game/craft/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/game/craft/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/game/craft/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    }
+  ],
+  "errors": []
+}

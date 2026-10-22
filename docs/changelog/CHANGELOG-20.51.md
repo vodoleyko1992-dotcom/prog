@@ -30,3 +30,10 @@
 Распакуйте ZIP поверх прежней папки расширения, нажмите↻ в `chrome://extensions/` и обновите вкладку игры. Следующий шаг — контрольный журнал крафта с цепочкой и нехваткой сырья.
 
 `builds/l2wap-bot-v20.51.zip`:68 файлов,1 643 927 байт, SHA256 `7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b`.
+
+
+## Firefox20.51 — отдельная сборка23.10
+
+По прямой просьбе «Сборка под фаерфокс» собран основной Firefox из актуальных исходников234737b, включая исправления Detect из PR#361 после исходного ChromeZIP20.51. Версия сохранена; ChromeZIP и Lite не пересобирались. Используется фоновая страница с engine-core перед background, gecko ID прежний, минимум Firefox128.
+
+618 Node-файлов PASS/0FAIL; nativeFirefox153.5.1esr: установка, MAINhook, фон, профиль, меню без tabs, AndroidAPI-simulation и анализ Маммона PASS. Крафт в nativeFirefox3/3: OFF→2GET→цепочка2/30MP, нехватка3,500ссохранением;0POST/Start. Lint0errors/0notices/51warnings; CRC/allowlist/SHA/closure PASS. Пакет неподписан, физическийAndroid/живая игра/полныйисторическийbrowser-suite не проверялись. Отчёт — [Firefox validation.json](../evidence/build-20.51-firefox/validation.json). Инструкция установки — README-FIREFOX.txt.
