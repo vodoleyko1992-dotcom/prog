@@ -38,7 +38,8 @@ function actNameCore(){
  assert.ok(a>0&&b>a&&c>0&&d>c);
  let slots=[{title:'Flame Strike',getAttribute:k=>k==='data-slot-cd'?'l2_1181':null,querySelector:()=>null},{title:'Blaze — 22 MP',getAttribute:k=>k==='data-slot-cd'?'l2_1220':null,querySelector:()=>null}];
  const document={querySelectorAll:()=>slots,querySelector:sel=>{const m=sel.match(/data-slot-cd="([^"]+)"/);return m?slots.find(x=>x.getAttribute('data-slot-cd')===m[1])||null:null}};
- const box={document};vm.runInNewContext(ct+'\n'+s.slice(a,b)+'\n'+s.slice(c,d)+';globalThis.api={actName,actNameSnap};',box);
+ // 20.49: кэш имён ограничен владельцем; fixture использует одну неизменную аренду.
+ const box={document,observeOwner:()=> 'fixture-owner'};vm.runInNewContext(ct+'\n'+s.slice(a,b)+'\n'+s.slice(c,d)+';globalThis.api={actName,actNameSnap};',box);
  return {api:box.api,gone:()=>{slots=[]}};
 }
 test('actName: панель убрана после победы — имя из снимка при отправке хода',()=>{
