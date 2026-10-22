@@ -1,7 +1,7 @@
 {
-  "at": "2026-10-22T14:49:42.826001+00:00",
-  "base": "6bcd21b",
-  "version": "20.50",
+  "at": "2026-10-22T14:57:12.143995+00:00",
+  "base": "88d8efcb9eb92fd1fdda8624cc19db88d8d5aa59",
+  "version": "20.51",
   "zipBuilt": false,
   "logAnalysis": "log-analysis.json",
   "ownedSnapshotRegression": {
@@ -21,7 +21,7 @@
   "nodeFail": 0,
   "envcheckFactories": 34,
   "envcheck": "PASS",
-  "syntaxFiles": 9,
+  "syntaxFiles": 14,
   "syntax": "PASS",
   "bashSmokesSyntax": "PASS",
   "diffCheck": "PASS",
@@ -42,5 +42,7 @@
   "liteSharedCdMirror": true,
   "liveGameRequests": 0,
   "fullHistoricalBrowserRunner": false,
-  "result": "PASS"
+  "result": "PASS",
+  "integratedRelease": "PR #360 Chrome 20.51; existing ZIP unchanged and does not contain these Detect changes",
+  "newBuildPending": "Chrome 20.52, only after user command"
 }
