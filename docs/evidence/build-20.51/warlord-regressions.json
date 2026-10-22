@@ -1,0 +1,93 @@
+{
+  "pass": true,
+  "extensionVersion": "20.51",
+  "archive": "builds/l2wap-bot-v20.51.zip",
+  "archiveSha256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+  "archiveBytes": 1643927,
+  "archiveEntries": 68,
+  "mv3ScenariosPass": 21,
+  "mv3ScenariosFail": 0,
+  "actualMv3Contexts": 15,
+  "tests": [
+    {
+      "test": "v2049-warlord-always-toggles-browser.cjs",
+      "pass": 10,
+      "fail": 0,
+      "browser": "156.0.8078.4",
+      "contexts": 10,
+      "pageErrors": 0,
+      "routeErrors": 0,
+      "externalRequests": 0,
+      "report": "warlord-toggles-runner.json",
+      "log": "warlord-toggles.log",
+      "errors": "warlord-toggles.errors.txt"
+    },
+    {
+      "test": "v2048-warlord-support-browser.cjs",
+      "pass": 7,
+      "fail": 0,
+      "browser": "156.0.8078.4",
+      "contexts": 1,
+      "pageErrors": 0,
+      "routeErrors": 0,
+      "externalRequests": 0,
+      "report": "warlord-support-runner.json",
+      "log": "warlord-support.log",
+      "errors": "warlord-support.errors.txt"
+    },
+    {
+      "test": "v2046-warlord-live-weapon-browser.cjs",
+      "pass": 4,
+      "fail": 0,
+      "browser": "156.0.8078.4",
+      "contexts": 4,
+      "pageErrors": 0,
+      "routeErrors": 0,
+      "externalRequests": 0,
+      "report": "warlord-weapon-runner.json",
+      "log": "warlord-weapon.log",
+      "errors": "warlord-weapon.errors.txt"
+    }
+  ],
+  "sourceZipExtractedActualSwHashes": {
+    "manifest.json": "2cce486c7780cbffbf9a03b5b494005317d3d8cbc204d765f8a051b1122305a1",
+    "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+    "hook.js": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+    "background.js": "efac9b54534322811f96d5d41d8094436693bf7cfb354f1360428164eb8c0681",
+    "popup.js": "e6828e8ac9890a8801d1168bc6d4ebc7431dce2fc42aa96cc2d8d06b6c6a110c",
+    "popup.html": "3124d5adf141fa3a674653b58deea3ab59ee1f6da9d0cdf8807cb086bfb4cfcb",
+    "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "battle-cooldown.js": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e",
+    "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+    "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+    "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
+  },
+  "battleLoadError": {
+    "pass": 17,
+    "fail": 0,
+    "browser": "156.0.8078.4",
+    "scope": "Actual Chromium using exact navigation/shown/byText/fire sliced from final extracted ZIP; reconstructed local DOM and controlled route/waitFor/actor; NOT full MV3",
+    "fullMv3": false,
+    "report": "battle-load-error-package.json",
+    "runnerReport": "battle-load-error-package-runner.json",
+    "log": "battle-load-error-package.log",
+    "baseline": "navigation-before-pr359.js",
+    "sourceHashes": {
+      "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+      "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
+    }
+  },
+  "liveGameRequests": 0,
+  "boundaries": [
+    "Unchanged repository tests and fixtures",
+    "One in-memory harness root path replacement per MV3 test process",
+    "Actual Chrome156 MV3 extension loaded from extracted final ZIP; 21 Warlord cases",
+    "Battle load recovery17 cases separately use exact selected functions and controlled environment; NOT MV3",
+    "All game HTTPS responses were local Playwright route fixtures; no real game access",
+    "Native Detect test requiring absent cache was not run or downloaded"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "pass": true,
+  "scope": "Actual Chromium using exact navigation/shown/byText/fire sliced from final extracted ZIP; reconstructed local DOM and controlled route/waitFor/actor; NOT full MV3",
+  "testSourceSha256": "b8959243667e2ec6a9dc2fd7f40d748ef9d168a509f4702f9235d20ba1d64f70",
+  "sourceRootPathReplacements": 1,
+  "extracted": "/workspace/prog/work/build-20.51/extracted",
+  "sourceHashes": {
+    "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
+  },
+  "baselineSourceSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+  "cases": 17,
+  "liveGameRequests": [],
+  "pageErrors": [],
+  "report": "battle-load-error-package.json"
+}

@@ -1,0 +1,94 @@
+{
+  "pass": true,
+  "browser": "156.0.8078.4",
+  "boundary": "actual Chromium/MV3/storage/reload; popup reported separately; game is local model, no live game",
+  "sources": {
+    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3"
+  },
+  "menu": {
+    "extensionVersion": "20.51",
+    "runtimeHashes": {
+      "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+      "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+      "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3",
+      "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3"
+    },
+    "errors": []
+  },
+  "proof": [
+    {
+      "scenario": "MP0 → one normal potion → exact queue",
+      "potionPosts": 1,
+      "craftPosts": 1,
+      "made": 5,
+      "remainingPots": 1,
+      "text": "Режим крафта: очередь без боевого резерва MP · МП-банки из сумки\nCreate Item ур. 4 · MP 500/1 000 · рецептов 1\n14:43 · Очередь крафта завершена — добавьте новые ресурсы"
+    },
+    {
+      "scenario": "no-potions",
+      "posts": 0,
+      "text": "Режим крафта: очередь без боевого резерва MP · МП-банки из сумки\nCreate Item ур. 4 · MP 0/1 000 · рецептов 1\n14:42 · Не хватает MP: МП-банок в сумке нет — жду восстановление маны"
+    },
+    {
+      "scenario": "no-ingredients",
+      "posts": 0,
+      "text": "Режим крафта: очередь без боевого резерва MP · МП-банки из сумки\nCreate Item ур. 4 · MP 0/1 000 · рецептов 1\n14:42 · Steel: не хватает Coal"
+    },
+    {
+      "scenario": "actual reload after accepted potion before response",
+      "potionPosts": 1,
+      "made": 5,
+      "durableUsed": 1
+    },
+    {
+      "scenario": "stop-prepare",
+      "posts": 0,
+      "durablePending": true
+    },
+    {
+      "scenario": "mode-prepare",
+      "posts": 0,
+      "durablePending": true
+    },
+    {
+      "scenario": "failed-prepare",
+      "posts": 0,
+      "durablePending": false
+    },
+    {
+      "scenario": "actual full extension popup queue/potions/start/stop",
+      "queue": 7,
+      "mode": "craft",
+      "backgroundCraftAuto": false,
+      "gamePosts": 0
+    },
+    {
+      "scenario": "actual full MV3 content dispatcher MP0 → potion → craft",
+      "posts": [
+        {
+          "path": "/character/consumable/use",
+          "body": {
+            "itemId": 728,
+            "quantity": 1,
+            "expectedRevision": 300
+          }
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "steel",
+            "craftCount": 5,
+            "expectedRevision": 301
+          }
+        }
+      ],
+      "made": 5,
+      "remainingPots": 1,
+      "savedMade": 5
+    }
+  ],
+  "errors": [],
+  "externalRequests": 0
+}

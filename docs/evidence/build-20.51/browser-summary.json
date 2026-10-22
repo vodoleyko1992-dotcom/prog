@@ -1,0 +1,30 @@
+{
+  "pass": true,
+  "version": "20.51",
+  "browser": "156.0.8078.4",
+  "zipSHA256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+  "zipBytes": 1643927,
+  "entries": 68,
+  "sourceZipExtractedAndActualHashesEqual": true,
+  "actualFetchedAssetHashes": 68,
+  "chainScenarios": 12,
+  "previousScenarios": 9,
+  "jsErrors": 0,
+  "externalRequests": 0,
+  "zipload": {
+    "version": "20.51",
+    "cfgKeys": 208,
+    "errors": 0,
+    "networkRequests": 0
+  },
+  "navigationRuntimeSHA256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+  "reports": [
+    "browser-goals-package.json",
+    "browser-mode-package.json",
+    "browser-byte-audit.json",
+    "browser-assets-package.json",
+    "zipload.txt",
+    "zipload-network.json"
+  ],
+  "boundary": "Распакованный финальный ZIP с PR359 загружен напрямую. Только корень тестового harness подменён в памяти Node; runtime/UI/manifest неизменны. Ответы игры — локальные fixtures, живых игровых запросов0."
+}
