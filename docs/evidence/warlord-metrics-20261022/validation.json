@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-22",
+  "base": "f104195a718b9b4ecdc2232f38f9ab36576c5190",
+  "extensionVersion": "20.49",
+  "fullNodeFiles": 609,
+  "fullNodeFailures": 0,
+  "newNodeCases": 18,
+  "syntaxFiles": 9,
+  "envcheckFactories": 34,
+  "shellSyntax": "PASS",
+  "diffCheck": "PASS",
+  "independentReview": "PASS; older GET baseline, no-anchor and fixture owner cases verified independently",
+  "baselineBrowser": "FAIL: localized turn lookup missing, while native turn contains16137",
+  "browser": {
+    "runtime": "Chrome for Testing151.0.7922.34, actual MV3/main/hook",
+    "files": [
+      "tests/v2049-warlord-metrics-browser.cjs",
+      "tests/v2034-pack-efficiency-browser.cjs",
+      "tests/v2049-warlord-always-toggles-browser.cjs"
+    ],
+    "managedToggleCases": 10,
+    "localRoutesOnly": true,
+    "pageErrors": 0,
+    "liveGameRequests": 0,
+    "newRegression": [
+      "localized native skill after removed panel",
+      "GET same final revision before POST",
+      "raw64548 vs useful10512",
+      "duplicate recent victory",
+      "alternating observed cycles separate from strict rotation advice"
+    ]
+  },
+  "performance": {
+    "artifact": "performance.json",
+    "script": "tests/tools/warlord-metrics-perf.cjs",
+    "newAwaitTimersNetworkCalls": 0,
+    "baselineAndPatchedStorageCallsEqual": true,
+    "cpuExtraMsPerAction": 0.01875,
+    "unresolvedStorageDoesNotBlock240Actions": true,
+    "limitation": "CPU of real functions/DOM and local storage stubs; no claim of measured live-game throughput"
+  },
+  "unchangedFiles": [
+    "modules/combat.js",
+    "battle-cooldown.js",
+    "hook.js",
+    "manifest.json",
+    "base-profile.json"
+  ],
+  "buildCreated": false,
+  "versionChanged": false,
+  "settingsChanged": false,
+  "preexistingLimits": [
+    "A replay older than the rolling64 samples after reload has no persistent revision watermark and may duplicate cumulative totals; this patch does not change that old boundary and partial replays do not train rotation."
+  ],
+  "sourceSha256": {
+    "content.js": "7429bac54ab365bb58a97733c5c2e31c9568962334068af716779bffdc9c86de",
+    "modules/fightlab.js": "9ef2d3f30bf9771e9511beeaba8a149680d4c8371909c82117150535462a8868",
+    "tests/run-all.cjs": "07b80214615f21e413e0b07e17c432c1d8dcd9e38037b3dc0a35b248894e4a2a",
+    "tests/tools/warlord-metrics-perf.cjs": "4cf3ad0d62b683d8f3f35e99e29ddc97f002f899b6fdc8ff50741414ef021953",
+    "tests/v1027-polearm-damage.test.js": "a402271ef99ae9d93500fdab914353b1ac3f62b6a49219b46d3d3a4748662146",
+    "tests/v2034-pack-efficiency.test.cjs": "af6abdbd7d4eca86744cbd76b5ec0ae1bbe3b01d65ce4681a1efc05c7960b788",
+    "tests/v2043-group-learn.test.js": "38d58bb99c0690bcaa5db7111693eaa66f19fe331b648ec5644f3c7025bf4943",
+    "tests/v2049-warlord-metrics.test.cjs": "5916f0731a1584183022ef281533806aa79e2605b32f7fcda600293dee8184fa",
+    "tests/v2049-warlord-metrics-browser.cjs": "7e4a70fb82f9c7bf8e3a719911c034c04b53780ecdcb31dd7cafebc9821f8611"
+  }
+}

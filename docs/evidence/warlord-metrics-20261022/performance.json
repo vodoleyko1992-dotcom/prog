@@ -1,0 +1,306 @@
+{
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "slots": 30,
+  "actionsPerRound": 240,
+  "battlesPerRound": 120,
+  "nameSnapshotMs": {
+    "baseline": {
+      "median": 0.019349999999976716,
+      "p90": 0.02004999999998836,
+      "min": 0.019150000000023284,
+      "max": 0.020075000000011643,
+      "samples": [
+        0.020075000000011643,
+        0.019625,
+        0.019550000000046565,
+        0.019349999999976716,
+        0.0195,
+        0.019375,
+        0.019674999999988358,
+        0.019325000000011642,
+        0.019174999999988358,
+        0.019175000000046565,
+        0.019224999999976716,
+        0.019150000000023284,
+        0.019224999999976716,
+        0.019224999999976716,
+        0.02004999999998836
+      ]
+    },
+    "patched": {
+      "median": 0.02182500000001164,
+      "p90": 0.022149999999965076,
+      "min": 0.021425000000046567,
+      "max": 0.022274999999965076,
+      "samples": [
+        0.022149999999965076,
+        0.02192499999998836,
+        0.022274999999965076,
+        0.02195000000001164,
+        0.021800000000046567,
+        0.022024999999965076,
+        0.021775000000023283,
+        0.02207500000001164,
+        0.0215,
+        0.021625,
+        0.02145000000001164,
+        0.021525000000023282,
+        0.02182500000001164,
+        0.022125,
+        0.021425000000046567
+      ]
+    }
+  },
+  "metrics": {
+    "normal": {
+      "baseline": {
+        "timing": {
+          "median": 14,
+          "p90": 18.0999999998603,
+          "min": 12.599999999860302,
+          "max": 20.100000000093132,
+          "samples": [
+            20.100000000093132,
+            14.400000000139698,
+            14.099999999860302,
+            13.599999999860302,
+            13.5,
+            16.600000000093132,
+            12.599999999860302,
+            12.699999999953434,
+            14,
+            13.100000000093132,
+            14.199999999953434,
+            12.800000000046566,
+            18.0999999998603
+          ]
+        },
+        "instrumentation": {
+          "ms": 40,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 11542290,
+          "lastPackPayloadBytes": 42965,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        },
+        "stalledStorage": {
+          "ms": 16,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 0,
+          "lastPackPayloadBytes": 0,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        }
+      },
+      "patched": {
+        "timing": {
+          "median": 18.5,
+          "p90": 22.199999999953434,
+          "min": 16.699999999953434,
+          "max": 25.100000000093132,
+          "samples": [
+            25.100000000093132,
+            22.199999999953434,
+            18.800000000046566,
+            19.100000000093132,
+            17.600000000093132,
+            17.699999999953434,
+            19.9000000001397,
+            18.199999999953434,
+            16.699999999953434,
+            18.399999999906868,
+            17,
+            18.5,
+            22.100000000093132
+          ]
+        },
+        "instrumentation": {
+          "ms": 59.800000000046566,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 13616900,
+          "lastPackPayloadBytes": 50837,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        },
+        "stalledStorage": {
+          "ms": 17.5,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 0,
+          "lastPackPayloadBytes": 0,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        }
+      }
+    },
+    "sameRevisionGet": {
+      "baseline": {
+        "timing": {
+          "median": 14.099999999860302,
+          "p90": 14.200000000186265,
+          "min": 13.799999999813735,
+          "max": 20.600000000093132,
+          "samples": [
+            20.600000000093132,
+            14.099999999860302,
+            14.100000000093132,
+            13.899999999906868,
+            14.100000000093132,
+            14.099999999860302,
+            13.800000000046566,
+            14,
+            14.100000000093132,
+            13.800000000046566,
+            13.899999999906868,
+            14.200000000186265,
+            13.799999999813735
+          ]
+        },
+        "instrumentation": {
+          "ms": 36.5,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 11542293,
+          "lastPackPayloadBytes": 42965,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        },
+        "stalledStorage": {
+          "ms": 14.899999999906868,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 0,
+          "lastPackPayloadBytes": 0,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        }
+      },
+      "patched": {
+        "timing": {
+          "median": 17.399999999906868,
+          "p90": 19.899999999906868,
+          "min": 16.800000000046566,
+          "max": 20.399999999906868,
+          "samples": [
+            17.399999999906868,
+            17.100000000093132,
+            19.800000000046566,
+            16.899999999906868,
+            19.800000000046566,
+            16.800000000046566,
+            19.899999999906868,
+            16.9000000001397,
+            20.399999999906868,
+            16.800000000046566,
+            19.199999999953434,
+            17.199999999953434,
+            19.4000000001397
+          ]
+        },
+        "instrumentation": {
+          "ms": 57.800000000046566,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 13616903,
+          "lastPackPayloadBytes": 50837,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        },
+        "stalledStorage": {
+          "ms": 18.5999999998603,
+          "setRtCalls": 371,
+          "setRtSoonCalls": 120,
+          "serializedAllCallBytes": 0,
+          "lastPackPayloadBytes": 0,
+          "keys": {
+            "packLab": 360,
+            "fightMem": 11,
+            "fightLast": 11
+          },
+          "thenables": 0,
+          "accepted": 240,
+          "logicalElapsedMs": 360000,
+          "rows": 64,
+          "totals": 120
+        }
+      }
+    }
+  },
+  "externalRequests": 0,
+  "sources": {
+    "baseline": {
+      "content": "5533f4184584a0909c8876a9fcd901646a7fa10bf53d522604c5f2708d26235a",
+      "fightlab": "bb8305cf3f1d6acb33d18fbbe5cf3592235cf7c619acb8c6751a6580567ad753"
+    },
+    "patched": {
+      "content": "7429bac54ab365bb58a97733c5c2e31c9568962334068af716779bffdc9c86de",
+      "fightlab": "9ef2d3f30bf9771e9511beeaba8a149680d4c8371909c82117150535462a8868"
+    }
+  },
+  "baselineCommit": "f104195a718b9b4ecdc2232f38f9ab36576c5190",
+  "limitations": [
+    "Exact functions and real DOM in Chrome151, not full MV3 scheduler.",
+    "Local setRt/setRtSoon stubs update memory and count calls; they do not measure actual extension background storage latency.",
+    "All browser network blocked; payloads use real hook projection of a saved33-line victory.",
+    "Microbenchmark measures synchronous CPU with240 accepted actions/120battles per sample; no live-game throughput claim."
+  ]
+}

@@ -5290,8 +5290,11 @@ function catPaymentNote(path,d,c){
 
 // 20.43 (лог 21.10 15:47–15:51): снимок имён слотов панели боя на момент отправки хода — для actName после победы
 const ACT_NAMES = new Map();
+let ACT_NAMES_OWNER = '';
 function actNameSnap() {
-  try { for (const b of document.querySelectorAll('.l2-battle-hotbar-slot')) { const id = b.getAttribute('data-slot-cd') || b.querySelector('[data-slot-cd]')?.getAttribute('data-slot-cd') || '', t = cleanTitle(b.title || '').toLowerCase(); if (/^(?:l2_\d+|ls_[a-z_]+)$/.test(id) && t) ACT_NAMES.set(id, t); } } catch (e) {}
+  // 20.49 (лог22.10 22:44): native whirlwind/provoke/howl тоже теряют панель после победы; имя хода должно совпадать с ключом замера.
+  const owner = observeOwner(); if (ACT_NAMES_OWNER !== owner) { ACT_NAMES.clear(); ACT_NAMES_OWNER = owner; }
+  try { for (const b of document.querySelectorAll('.l2-battle-hotbar-slot')) { const id = b.getAttribute('data-slot-cd') || b.querySelector('[data-slot-cd]')?.getAttribute('data-slot-cd') || '', t = cleanTitle(b.title || '').toLowerCase(); if (/^[a-z][a-z0-9_]{0,79}$/i.test(id) && !['constructor','prototype'].includes(id) && t) ACT_NAMES.set(id, t); } } catch (e) {}
 }
 const gameBusy = () => { const now = Date.now(); for (const [rid, t] of GAME_REQ) { if (now - t > 3000) GAME_REQ.delete(rid); else return { busy: true, end: GAME_END }; } return { busy: false, end: GAME_END }; };
 addEventListener('message', e => {
@@ -6641,7 +6644,7 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // 20.43 (лог 21.10 15:47–15:51): ответ на убивающий ход приходит, когда игра уже убрала панель боя (экран победы) — имя бралось
   // как «l2_1181», модель группы Flame Strike писалась под чужим ключом и не находилась: проба АОЕ (+950 мс) в каждом бою.
   // Имя — из снимка панели на момент отправки хода (actNameSnap в netStart)
-  return b ? cleanTitle(b.title || '').toLowerCase() : ACT_NAMES.get(a) || a; };
+  return b ? cleanTitle(b.title || '').toLowerCase() : ACT_NAMES_OWNER === observeOwner() && ACT_NAMES.get(a) || a; };
 L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get routeLocation(){return actionLocation},
   get cfg() { return cfg; },
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
