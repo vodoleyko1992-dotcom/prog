@@ -66,6 +66,7 @@
         "augment.js",
         "battle-cooldown.js",
         "engine-core.js",
+        "craft-plan.js",
         "modules/fishing.js",
         "modules/epics.js",
         "modules/raid.js",

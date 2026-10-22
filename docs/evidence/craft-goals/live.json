@@ -1,0 +1,611 @@
+{
+  "live": true,
+  "boundary": "actual modules/craft.js and planner VM; authenticated live game API via local bridge; injected response loss is local after real server acceptance",
+  "proof": [
+    {
+      "scenario": "missing",
+      "code": "maestro_holder",
+      "n": 1,
+      "posts": [],
+      "alerts": [
+        {
+          "kind": "show",
+          "args": [
+            "craft-missing",
+            "Крафт: не хватает ресурсов",
+            "Maestro Holder ×1. Mold Hardener: не хватает 10 (нужно 10, есть 0)",
+            false
+          ]
+        }
+      ],
+      "made": {},
+      "planMissing": [
+        {
+          "item": 4041,
+          "name": "Mold Hardener",
+          "required": 10,
+          "have": 0,
+          "missing": 10,
+          "qids": [
+            "g0"
+          ]
+        }
+      ],
+      "mpBefore": 1560,
+      "mpAfter": 1560,
+      "changes": []
+    },
+    {
+      "scenario": "cancel",
+      "code": "silver_mold",
+      "n": 1,
+      "posts": [],
+      "alerts": [],
+      "made": {},
+      "planMissing": [],
+      "mpBefore": 1560,
+      "mpAfter": 1560,
+      "changes": []
+    },
+    {
+      "scenario": "normal",
+      "code": "oriharukon",
+      "n": 10,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cokes",
+            "craftCount": 6,
+            "expectedRevision": 439348
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "synthetic_cokes",
+            "craftCount": 2,
+            "expectedRevision": 439349
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "oriharukon",
+            "craftCount": 10,
+            "expectedRevision": 439350
+          },
+          "status": 200
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g2": 10
+      },
+      "planMissing": [],
+      "mpBefore": 1560,
+      "mpAfter": 1060,
+      "changes": [
+        {
+          "itemId": 1870,
+          "delta": -18
+        },
+        {
+          "itemId": 1871,
+          "delta": -18
+        },
+        {
+          "itemId": 1873,
+          "delta": -120
+        },
+        {
+          "itemId": 1874,
+          "delta": -42
+        },
+        {
+          "itemId": 1893,
+          "delta": 10
+        },
+        {
+          "itemId": 1888,
+          "delta": -8
+        }
+      ]
+    },
+    {
+      "scenario": "normal",
+      "code": "crafted_leather",
+      "n": 2,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cord",
+            "craftCount": 1,
+            "expectedRevision": 439351
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "leather",
+            "craftCount": 8,
+            "expectedRevision": 439352
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "crafted_leather",
+            "craftCount": 2,
+            "expectedRevision": 439353
+          },
+          "status": 200
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g3": 2
+      },
+      "planMissing": [],
+      "mpBefore": 1060,
+      "mpAfter": 880,
+      "changes": [
+        {
+          "itemId": 1870,
+          "delta": -8
+        },
+        {
+          "itemId": 1868,
+          "delta": -25
+        },
+        {
+          "itemId": 1867,
+          "delta": -48
+        },
+        {
+          "itemId": 1880,
+          "delta": -2
+        },
+        {
+          "itemId": 1894,
+          "delta": 2
+        },
+        {
+          "itemId": 1884,
+          "delta": 12
+        }
+      ]
+    },
+    {
+      "scenario": "normal",
+      "code": "metallic_fiber",
+      "n": 21,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cord",
+            "craftCount": 2,
+            "expectedRevision": 439354
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "metallic_fiber",
+            "craftCount": 2,
+            "expectedRevision": 439355
+          },
+          "status": 200
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g4": 40
+      },
+      "planMissing": [],
+      "mpBefore": 880,
+      "mpAfter": 760,
+      "changes": [
+        {
+          "itemId": 1868,
+          "delta": -50
+        },
+        {
+          "itemId": 1873,
+          "delta": -30
+        },
+        {
+          "itemId": 1880,
+          "delta": -4
+        },
+        {
+          "itemId": 1895,
+          "delta": 40
+        }
+      ]
+    },
+    {
+      "scenario": "lost",
+      "code": "silver_mold",
+      "n": 1,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "braided_hemp",
+            "craftCount": 5,
+            "expectedRevision": 439356
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "cokes",
+            "craftCount": 5,
+            "expectedRevision": 439357
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "silver_mold",
+            "craftCount": 1,
+            "expectedRevision": 439358
+          },
+          "status": 200
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g5": 1
+      },
+      "planMissing": [],
+      "mpBefore": 760,
+      "mpAfter": 640,
+      "changes": [
+        {
+          "itemId": 1870,
+          "delta": -15
+        },
+        {
+          "itemId": 1871,
+          "delta": -15
+        },
+        {
+          "itemId": 1864,
+          "delta": -25
+        },
+        {
+          "itemId": 1873,
+          "delta": -10
+        },
+        {
+          "itemId": 1886,
+          "delta": 1
+        }
+      ]
+    },
+    {
+      "scenario": "duplicate",
+      "code": "braided_hemp",
+      "n": 1,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "braided_hemp",
+            "craftCount": 1,
+            "expectedRevision": 439359
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "braided_hemp",
+            "craftCount": 1,
+            "expectedRevision": 439359
+          },
+          "status": 409
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g6": 1
+      },
+      "planMissing": [],
+      "mpBefore": 640,
+      "mpAfter": 630,
+      "changes": [
+        {
+          "itemId": 1864,
+          "delta": -5
+        },
+        {
+          "itemId": 1878,
+          "delta": 1
+        }
+      ]
+    },
+    {
+      "scenario": "normal",
+      "code": "metal_hardener",
+      "n": 40,
+      "posts": [
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "metal_hardener",
+            "craftCount": 15,
+            "expectedRevision": 439360
+          },
+          "status": 200
+        },
+        {
+          "path": "/character/consumable/use",
+          "body": {
+            "itemId": 728,
+            "quantity": 1,
+            "expectedRevision": 439361
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "metal_hardener",
+            "craftCount": 13,
+            "expectedRevision": 439362
+          },
+          "status": 200
+        },
+        {
+          "path": "/character/consumable/use",
+          "body": {
+            "itemId": 728,
+            "quantity": 1,
+            "expectedRevision": 439363
+          },
+          "status": 200
+        },
+        {
+          "path": "/game/craft/materials",
+          "body": {
+            "recipeCode": "metal_hardener",
+            "craftCount": 12,
+            "expectedRevision": 439364
+          },
+          "status": 200
+        }
+      ],
+      "alerts": [],
+      "made": {
+        "g7": 40
+      },
+      "planMissing": [],
+      "mpBefore": 630,
+      "mpAfter": 30,
+      "changes": [
+        {
+          "itemId": 1869,
+          "delta": -400
+        },
+        {
+          "itemId": 1865,
+          "delta": -400
+        },
+        {
+          "itemId": 1864,
+          "delta": -400
+        },
+        {
+          "itemId": 728,
+          "delta": -2
+        },
+        {
+          "itemId": 5220,
+          "delta": 40
+        }
+      ]
+    }
+  ],
+  "posts": [
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "cokes",
+        "craftCount": 6,
+        "expectedRevision": 439348
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "synthetic_cokes",
+        "craftCount": 2,
+        "expectedRevision": 439349
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "oriharukon",
+        "craftCount": 10,
+        "expectedRevision": 439350
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "cord",
+        "craftCount": 1,
+        "expectedRevision": 439351
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "leather",
+        "craftCount": 8,
+        "expectedRevision": 439352
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "crafted_leather",
+        "craftCount": 2,
+        "expectedRevision": 439353
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "cord",
+        "craftCount": 2,
+        "expectedRevision": 439354
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "metallic_fiber",
+        "craftCount": 2,
+        "expectedRevision": 439355
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "braided_hemp",
+        "craftCount": 5,
+        "expectedRevision": 439356
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "cokes",
+        "craftCount": 5,
+        "expectedRevision": 439357
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "silver_mold",
+        "craftCount": 1,
+        "expectedRevision": 439358
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "braided_hemp",
+        "craftCount": 1,
+        "expectedRevision": 439359
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "braided_hemp",
+        "craftCount": 1,
+        "expectedRevision": 439359
+      },
+      "status": 409
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "metal_hardener",
+        "craftCount": 15,
+        "expectedRevision": 439360
+      },
+      "status": 200
+    },
+    {
+      "path": "/character/consumable/use",
+      "body": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 439361
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "metal_hardener",
+        "craftCount": 13,
+        "expectedRevision": 439362
+      },
+      "status": 200
+    },
+    {
+      "path": "/character/consumable/use",
+      "body": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 439363
+      },
+      "status": 200
+    },
+    {
+      "path": "/game/craft/materials",
+      "body": {
+        "recipeCode": "metal_hardener",
+        "craftCount": 12,
+        "expectedRevision": 439364
+      },
+      "status": 200
+    }
+  ],
+  "notes": [
+    "B крафт Не хватает сырья до цели: Mold Hardener 10",
+    "B крафт скрафтил Cokes ×6 за 60 MP (промежуточный для Oriharukon)",
+    "B крафт скрафтил Synthetic Cokes ×2 за 40 MP (промежуточный для Oriharukon)",
+    "B крафт скрафтил Oriharukon ×10 за 400 MP (цель Oriharukon)",
+    "B крафт скрафтил Cord ×20 за 20 MP (промежуточный для Crafted Leather)",
+    "B крафт скрафтил Leather ×8 за 80 MP (промежуточный для Crafted Leather)",
+    "B крафт скрафтил Crafted Leather ×2 за 80 MP (цель Crafted Leather)",
+    "B крафт скрафтил Cord ×40 за 40 MP (промежуточный для Metallic Fiber)",
+    "B крафт скрафтил Metallic Fiber ×40 за 80 MP (цель Metallic Fiber)",
+    "B крафт Braided Hemp ×5: обрыв (audit_simulated_response_loss) — результат неизвестен, сверю по сумке перед повтором",
+    "B крафт сверка: скрафчено Braided Hemp ×5 за 50 MP (промежуточный для Silver Mold)",
+    "B крафт скрафтил Cokes ×5 за 50 MP (промежуточный для Silver Mold)",
+    "B крафт скрафтил Silver Mold ×1 за 20 MP (цель Silver Mold)",
+    "B крафт сверка: скрафчено Braided Hemp ×1 за 10 MP (цель Braided Hemp)",
+    "B крафт скрафтил Metal Hardener ×15 за 600 MP (цель Metal Hardener)",
+    "B крафт Использована МП-банка из сумки — продолжаю крафт",
+    "B крафт скрафтил Metal Hardener ×13 за 520 MP (цель Metal Hardener)",
+    "B крафт Использована МП-банка из сумки — продолжаю крафт",
+    "B крафт скрафтил Metal Hardener ×12 за 480 MP (цель Metal Hardener)"
+  ],
+  "requests": 60,
+  "sourceHashes": {
+    "craft-plan.js": "262fe50bf30fa431fdf8f8cff3cd66fb389a15d68d66e4c1e5654f8410e5b118",
+    "modules/craft.js": "6655810ac74e412da34ce60c17996460037219281f13c230e4502c878b912ba4"
+  }
+}

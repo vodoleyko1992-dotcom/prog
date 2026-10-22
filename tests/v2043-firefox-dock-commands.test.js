@@ -228,11 +228,23 @@ test('с chrome.tabs — прежние тексты и вкладка игры'
   await g.click('recDom'); assert.deepEqual(g.toasts, ['⚠ Откройте вкладку l2wap.com']);
 });
 
+// 22.10: read-only команда крафта проходит тот же проверенный relay.
+test('craftRead пересылает только текущего героя и очищает лишние поля ответа', async () => {
+  const f=relay();f.answer({ok:true,private:'drop'});
+  const r=await f.run({cmd:'dockGameCommand',char:'AuditHero',message:{cmd:'craftRead',char:'AuditHero',extra:'drop'}});
+  assert.deepEqual(plain(r),{relayed:true,answer:{ok:true,reason:''}});
+  assert.deepEqual(f.forwarded,[[7,{cmd:'craftRead',char:'AuditHero'},{frameId:0}]]);assert.equal(f.state.on,false);
+});
+test('craftRead с чужим героем не пересылается', async () => {
+  const f=relay();const r=await f.run({cmd:'dockGameCommand',char:'AuditHero',message:{cmd:'craftRead',char:'Other'}});
+  assert.equal(r.relayed,false);assert.equal(f.forwarded.length,0);
+});
+
 // ---------- согласованность ----------
 test('белый список фона ⊂ команды content; в меню нет прямых chrome.tabs у этих кнопок', () => {
-  const cmds = [...relaySource.matchAll(/(\w+): \d+/g)].map(x => x[1]); assert.deepEqual(cmds.slice(0, 5), ['kick', 'warlockCommand', 'slots', 'suggest', 'dom']);
+  const cmds = [...relaySource.matchAll(/(\w+): \d+/g)].map(x => x[1]); assert.deepEqual(cmds.slice(0, 6), ['kick', 'craftRead', 'warlockCommand', 'slots', 'suggest', 'dom']);
   const listener = content.slice(content.lastIndexOf('chrome.runtime.onMessage.addListener'));
-  for (const c of cmds.slice(0, 5)) assert.match(listener, new RegExp(`m\\.cmd === '${c}'`));
+  for (const c of cmds.slice(0, 6)) assert.match(listener, new RegExp(`m\\.cmd === '${c}'`));
   for (const src of [panelSource, domSource, warlockSource]) assert.doesNotMatch(src, /chrome\.tabs\.(?:sendMessage|query)\(/);
   assert.match(slice(popup, 'async function wakeGame()', 'let tabs = [];'), /if \(!chrome\.tabs\?\.sendMessage\) return wakeDockGame/);
 });

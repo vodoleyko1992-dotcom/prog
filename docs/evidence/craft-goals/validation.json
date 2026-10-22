@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Asia/Vladivostok (UTC+10)",
+  "baseCommit": "15c0380009e058b043475b184d15aeac41c154ad",
+  "scope": "Расширенный крафт: цепочки, отдельный каталог, нехватка/уведомления, OFF-read и recovery. Исходники после Chrome20.50; новый ZIP не собран.",
+  "node": {
+    "command": "node tests/run-all.cjs",
+    "pass": 615,
+    "fail": 0,
+    "newCases": {
+      "planner": 25,
+      "runtime": 35,
+      "ui": 15,
+      "craftRead": 11
+    },
+    "logSha256": "477e40e45bf25b5372791aec73236e1871fdc9df5451dd6d3997b0229f2fc142"
+  },
+  "browser": {
+    "file": "browser.json",
+    "pass": 12,
+    "fail": 0,
+    "browser": "156.0.8078.4",
+    "actualMV3": true,
+    "boundary": "Actual Chrome MV3/storage/reload/popup/main; local response model only, no live game",
+    "jsErrors": 0,
+    "externalRequests": 0,
+    "sourceHashes": {
+      "content.js": "53e8e2a5aabc786f80599ac85a62fa745a04b391c9aa72a423b895c704c15255",
+      "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+      "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+      "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3",
+      "popup.js": "e6828e8ac9890a8801d1168bc6d4ebc7431dce2fc42aa96cc2d8d06b6c6a110c",
+      "popup.html": "3124d5adf141fa3a674653b58deea3ab59ee1f6da9d0cdf8807cb086bfb4cfcb",
+      "ui-game.css": "66710c107189850b9887fa2871b61ef4ee51d0fe50e48f2ec1812e7f75b10f3b"
+    }
+  },
+  "priorBrowser": {
+    "file": "browser-previous.json",
+    "pass": 9,
+    "fail": 0,
+    "boundary": "Прежние сценарии режима на базе20.49 перед объединением с20.50; craft runtime/engine/defaults совпадают с финалом, content отличается. Финальная интеграция отдельно проверена12 новыми сценариями."
+  },
+  "syntax": {
+    "file": "syntax.json",
+    "pass": 19
+  },
+  "envcheck": {
+    "command": "node tests/tools/envcheck.cjs .",
+    "pass": 34
+  },
+  "shell": {
+    "command": "bash -n tests/tools/smokes.sh",
+    "pass": true
+  },
+  "diffCheck": {
+    "pass": true
+  },
+  "independentReview": {
+    "file": "review.md",
+    "openReproducedBlockers": 0,
+    "finalReadOnlyReview": "content OFF-read/Stop/temporary lease/finally release, unconditional noticeSync, env getters, manifest/popup load order, dock relay checked again on root; no material blockers."
+  },
+  "properties": {
+    "planner": {
+      "cases": 10000,
+      "readyStepChecks": 16421,
+      "replenishmentChecks": 10000,
+      "multiGoalStateChange": 152,
+      "failures": []
+    },
+    "runtime": {
+      "cases": 200,
+      "ticks": 1541,
+      "craftPosts": 1120,
+      "potions": 221,
+      "failures": []
+    },
+    "boundary": "Deterministic local generated queues and DAGs; not live game."
+  },
+  "live": {
+    "file": "live.json",
+    "recipeSnapshot": "live-recipes.json",
+    "finalCharacter": "live-final.json",
+    "scenarios": 8,
+    "craftAndPotionPosts": 18,
+    "postStatuses": {
+      "200": 17,
+      "409": 1
+    },
+    "mpPotions728": 2,
+    "moduleApiRequests": 60,
+    "sessionRequestsIncludingSetupAndRestore": 98,
+    "sourceHashes": {
+      "craft-plan.js": "262fe50bf30fa431fdf8f8cff3cd66fb389a15d68d66e4c1e5654f8410e5b118",
+      "modules/craft.js": "6655810ac74e412da34ce60c17996460037219281f13c230e4502c878b912ba4"
+    },
+    "boundary": "actual modules/craft.js and planner VM; authenticated live game API via local bridge; injected response loss is local after real server acceptance",
+    "finalDifferences": "Живой кандидат предшествует последним изменениям распознавания MP-сообщений и retry очистки уведомлений после ACK/generation. Эти изменения проверены Node/property/browser, без повторного живого запроса. Это не живой прогон финальных байтов.",
+    "inventoryDelta": {
+      "1864 Stem": -430,
+      "1865 Varnish": -400,
+      "1867 Animal Skin": -48,
+      "1868 Thread": -75,
+      "1869 Iron Ore": -400,
+      "1870 Coal": -41,
+      "1871 Charcoal": -33,
+      "1873 Silver Nugget": -160,
+      "1874 Oriharukon Ore": -42,
+      "1880 Steel": -6,
+      "1888 Synthetic Cokes": -8,
+      "728 MP potion": -2,
+      "1893 Oriharukon": 10,
+      "1894 Crafted Leather": 2,
+      "1895 Metallic Fiber": 40,
+      "1886 Silver Mold": 1,
+      "1878 Braided Hemp": 1,
+      "5220 Metal Hardener": 40,
+      "1884 Cord": 12
+    },
+    "CoLSpent": 0,
+    "FASpent": 0,
+    "purchases": 0,
+    "battles": 0,
+    "paidTeleports": 0,
+    "restoredProfession": "human_warlord",
+    "restoredLevel": 51,
+    "restoredSlot": 3,
+    "location": "Town of Oren",
+    "inBattle": false,
+    "hp": "6599/6599",
+    "mp": "753/753",
+    "effects": "Смена саба сняла исходные баффы; заново не покупались. Equip-запросов не было; точное совпадение экипировки не заявляется.",
+    "authorizationClosed": true,
+    "moreLiveRequests": false
+  },
+  "preserved": {
+    "manifestVersion": "20.50",
+    "manifestChange": "Загрузка craft-plan.js перед модулями. Версия не повышалась.",
+    "baseProfileUnchangedAgainstBase": true,
+    "existing2050ZipUnchangedAgainstBase": true,
+    "existing2050ZipSha256": "1fc01618439f32b527e58e2eaba58be0c98f0a42c84a97b239b555147e72ac67",
+    "newZipBuilt": false,
+    "FirefoxAndLiteChanged": false
+  },
+  "limitations": [
+    "Desktop-доставка зависит от разрешений ОС/браузера; протестированы реальные extension message/storage и создание/снятие через локальный callback.",
+    "Цепочки выполняются в выделенном режиме craft; фоновый крафт и Маммон сохраняют прежнее поведение.",
+    "Существующий ZIP20.50 не содержит новых цепочек.",
+    "Неподтверждённый исход расхода остаётся на сверке; его безопасность важнее автоматического повторения."
+  ]
+}

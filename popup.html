@@ -200,14 +200,15 @@
 <nav id="moduleNav" aria-label="Разделы управления">
   <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
-  <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
-  <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
-  <button data-disabled-auto-enchant hidden data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+5)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
-  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+6)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
-  <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+7)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
-  <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+8)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
-  <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+9)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
-  <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика (Alt+0)"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
+  <button data-tab="craft" data-short="Крафт" title="Выбрать ресурс, количество и увидеть всю цепочку изготовления (Alt+3)"><span class="ic">⚒</span><span class="lb">Крафт</span></button>
+  <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+4)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
+  <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+5)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
+  <button data-disabled-auto-enchant hidden data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+6)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
+  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+7)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
+  <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+8)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
+  <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+9)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
+  <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+0)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
+  <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
   <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
   <button data-tab="supply" data-short="Снабжение" title="Закупка банок, сосок и руды, резерв адены"><span class="ic">🛒</span><span class="lb">Снабжение</span></button>
   <button data-tab="sub" data-short="Сабкласс" title="Сменить класс у Maestro Reorin и одеть лучшее из сумки"><span class="ic">🧬</span><span class="lb">Сабкласс</span></button>
@@ -382,22 +383,47 @@
   <label title="На персонаже-помощнике: когда своей цели фарма нет, добывать сырьё, которого не хватает основному (точка по всем материалам сразу)">Помощник: добывать сырьё для основного <input id="subHelpMain" type="checkbox"></label>
   <div class="row"><button id="subHandNow" title="Передать основному сейчас всё его недостающее сырьё, что есть в сумке (одна партия, через «Передача предмета»; не в бою и не в туре)">📤 Передать основному сейчас</button></div>
   <div class="hint">Заготовка: роль класса и слоты бот узнаёт из ответа игры, сабкласс не берёт и не переключает (только ты, у Maestro Reorin / Magister Ladd). Квест на сабкласс — 75 ур. основного и 4 РБ; первый саб по плану Warsmith (свой крафт), второй — Bounty Hunter (спойл Mithril Ore / Stone of Purity / Oriharukon / Adamantite в 6–9 раз чаще дропа).</div>
-  <h4 id="craftSection">⚒ Крафт материалов</h4>
-  <div class="row"><button id="craftStart" type="button">⚒ Запустить режим крафта</button></div>
-  <div class="hint">Добавьте рецепт и количество в очередь ниже. Режим крафта занимается материалами, тратит MP без боевого резерва и ждёт, если нет сырья или маны. Нужен активный класс Artisan/Warsmith/Maestro; класс бот не переключает. После очереди ждёт новых рецептов или другого режима.</div>
-  <label title="Только в отдельном режиме крафта: при нехватке MP использовать МП-банки из сумки. Если банок нет, бот ждёт восстановления маны; сам их не покупает">Использовать МП-банки в режиме крафта <input id="craftMpPots" type="checkbox"></label>
-  <label title="Только пока активен класс крафтера (Artisan/Warsmith/Maestro) и не в бою. Бот читает книгу рецептов игры (вкладка «Матеріали») и крафтит сам: недостающее для улучшения у кузнеца Маммона и свой список ниже. Тратит только сырьё и MP, шанс 100 %. Класс бот не переключает">Фоновый крафт между другими задачами <input id="craftAuto" type="checkbox"></label>
-  <label title="Крафтить полуфабрикаты и материалы, которых не хватает вещи-цели из раздела «Маммон» — только по свежей сумке, при видимом уровне вещи и цене от кузнеца (не по оценке). Снятая галка «Саб крафтера: крафтить самому» тоже выключает крафт для Маммона">Крафтить для цели Маммона <input id="craftMammon" type="checkbox"></label>
-  <label title="Сколько процентов MP оставлять (на бой). Бот всё равно не опускает MP ниже порога банки MP в бою («MP у воина» + 10 %), чтобы следующий бой не начинался с банки. Во время тура РБ, эпиков и служебных походов крафт ждёт">Запас MP для фонового крафта, % <input id="craftMpKeep" type="number" min="0" max="90" step="5"></label>
-  <div class="row add"><select id="craftPick" style="flex:1"><option value="">— рецепт (появится после первого чтения книги) —</option></select><input id="craftN" type="number" min="1" placeholder="Штук" style="width:72px;flex:0 0 72px"><button id="craftAdd" title="Добавить в список крафта" style="flex:0 0 34px">+</button></div>
-  <div id="craftList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
-  <div id="craftBox" class="hint" style="white-space:pre-line"></div>
   <h4>🔨 Набор крафтера: оружие и голем</h4>
   <label title="Только пока активен класс крафтера (Artisan/Warsmith/Maestro), вне боя. Тур РБ (и мобы между РБ), «один РБ», эпики — одноручная дубина + щит + голем (Summon Mechanic Golem, нужен Crystal C). Автофарм, фарм на месте, катакомбы, ресурсы — пика, щит снят, голем отозван (на фарме он режет EXP на 15 %). Вещи — сильнейшие из сумки по уровню; клановые и с Life Stone бот сам не выбирает. Рыбалку, TvT и прочее не трогает">Менять набор по задаче (булава+щит+голем ↔ пика) <input id="crafterKit" type="checkbox"></label>
   <div class="hint">Пока галка стоит, подбор «Оружие в класс» у крафтера оружие не надевает и выбор в меню не переписывает — оружием крафтера ведает набор. Голем на фарме и в катакомбах в бою не призывается.</div>
 
 
 
+</section>
+
+<section id="tab-craft">
+  <div class="craft-workspace no-card">
+    <div class="craft-heading"><div><h3 id="craftSection">⚒ Крафт ресурсов</h3><p class="hint">Выберите конечный ресурс. Промежуточные материалы бот сделает сам.</p></div><button id="craftRefresh" type="button" title="Перечитать рецепты и сумку без расхода ресурсов">↻ Обновить</button></div>
+    <div class="craft-controls"><button id="craftStart" type="button" class="main">▶ Запустить режим крафта</button><span id="craftModeState" class="hint" role="status"></span></div>
+    <div class="craft-picker">
+      <label class="craft-search-label" for="craftSearch">1. Найдите ресурс</label>
+      <div class="craft-search-row"><input id="craftSearch" type="search" placeholder="Название: сталь, кокс, Steel…" autocomplete="off" aria-controls="craftCatalog" spellcheck="false"><select id="craftFilter" aria-label="Фильтр рецептов"><option value="all">Все рецепты</option><option value="learned">По моему навыку</option><option value="stock">Есть в сумке</option></select></div>
+      <div id="craftCatalogCount" class="hint" role="status"></div>
+      <div id="craftCatalog" class="craft-catalog" role="group" aria-label="Ресурсы для крафта"></div>
+      <div class="craft-target">
+        <label for="craftPick">2. Выбранный ресурс</label>
+        <select id="craftPick" aria-label="Выбранный рецепт"><option value="">— прочитайте книгу рецептов —</option></select>
+        <div id="craftRecipeDetails" class="hint"></div>
+        <label for="craftN">3. Сколько новых штук изготовить?</label>
+        <div class="craft-quantity"><input id="craftN" type="number" min="1" max="1000000" step="1" value="1" inputmode="numeric" aria-label="Количество новых готовых ресурсов"><button type="button" data-craftqty="10">10</button><button type="button" data-craftqty="100">100</button><button type="button" data-craftqty="1000">1000</button><button id="craftAdd" type="button" class="main">＋ В очередь</button></div>
+        <div id="craftPreview" class="craft-preview" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+    <h4>Очередь целей</h4>
+    <div class="hint">Количество — новые готовые ресурсы. Уже лежащие в сумке полуфабрикаты используются в цепочке.</div>
+    <div id="craftList" class="craft-goals"></div>
+    <div id="craftShortage" class="craft-shortage" role="status" aria-live="polite" hidden></div>
+    <div id="craftBox" class="hint" style="white-space:pre-line"></div>
+    <label title="Автоматически изготовить недостающие полуфабрикаты из сырья для выбранной цели">Создавать промежуточные ресурсы <input id="craftChain" type="checkbox"></label>
+    <label title="Сообщить, какого базового сырья не хватает до поставленной цели">Уведомлять о нехватке сырья <input id="craftNotify" type="checkbox"></label>
+    <label title="Только в режиме крафта: при нехватке MP использовать имеющиеся МП-банки. сам их не покупает">Использовать МП-банки из сумки <input id="craftMpPots" type="checkbox"></label>
+    <details class="craft-background"><summary>Фоновый крафт между другими задачами</summary>
+      <div class="hint">Нужен активный класс Artisan/Warsmith/Maestro. Класс бот не переключает. Фоновый крафт бережёт ману для боя и не использует МП-банки.</div>
+      <label>Крафтить между другими задачами <input id="craftAuto" type="checkbox"></label>
+      <label title="Материалы для выбранной вещи Маммона; нужны свежая сумка и подтверждённая цена кузнеца">Крафтить для цели Маммона <input id="craftMammon" type="checkbox"></label>
+      <label title="Боевой резерв действует только на фоновый крафт">Оставлять MP для боя, % <input id="craftMpKeep" type="number" min="0" max="90" step="5"></label>
+    </details>
+  </div>
 </section>
 
 <section id="tab-rb">
@@ -966,6 +992,7 @@
 <script src="modules/warlock.js"></script>
 <script src="warlock-ui.js"></script>
 <script src="pvp-ui.js"></script>
+<script src="craft-plan.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>

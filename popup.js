@@ -273,7 +273,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champM
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'vipResists', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'craftAuto', 'craftMpPots', 'craftMammon', 'crafterKit', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'vipResists', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'craftAuto', 'craftMpPots', 'craftNotify', 'craftChain', 'craftMammon', 'crafterKit', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -1727,27 +1727,86 @@ async function subGoSend(gearOnly) {
 $('subGoStart')?.addEventListener('click', () => subGoSend(false));
 $('subGoGear')?.addEventListener('click', () => subGoSend(true));
 // 20.43 (John 21.10): свой крафт материалов (modules/craft.js) — книга рецептов rt.craftBook, список rt.craftQueue, прогресс rt.craftMade
-let craftSig = '', craftListSig = null, craftRt = {};
+let craftSig = '', craftListSig = null, craftRt = {}, craftCfg = {}, craftCatalogSig = '', craftSelectedCode = '', craftChar = '', craftAdding = false;
+// 22.10: поиск и черновик количества остаются на месте при частых обновлениях памяти бота.
+const CRAFT_NAMES = { cokes:'Кокс', steel:'Сталь', leather:'Кожа', braided_hemp:'Плетёная верёвка', coarse_bone_powder:'Костяная мука', cord:'Шнур', metallic_fiber:'Металлическое волокно', metallic_thread:'Металлическая нить', crafted_leather:'Выделанная кожа', high_grade_suede:'Качественная замша', compound_braid:'Прочная тесьма', durable_metal_plate:'Прочная металлическая пластина', metal_hardener:'Отвердитель металла', oriharukon:'Орихарукан', mithril_alloy:'Мифриловый сплав', synthetic_cokes:'Синтетический кокс', varnish_of_purity:'Очищенный лак', artisan_frame:'Каркас ремесленника', artisans_frame:'Каркас ремесленника', blacksmith_frame:'Каркас кузнеца', blacksmiths_frame:'Каркас кузнеца', crafter_frame:'Каркас мастера', crafters_frame:'Каркас мастера', maestro_holder:'Крепление маэстро', maestro_anvil_lock:'Замок наковальни маэстро', maestro_mold:'Форма маэстро', warsmith_holder:'Держатель оружейника', warsmiths_holder:'Держатель оружейника', warsmith_mold:'Форма оружейника', warsmiths_mold:'Форма оружейника', craftsman_mold:'Литейная форма' };
+const craftNorm = v => String(v || '').toLocaleLowerCase('ru').normalize('NFKC').replace(/ё/g, 'е').trim();
+function craftCatalogRows(book) {
+  const rows = Array.isArray(book?.recipes) && book.recipes.length ? book.recipes : (book?.list || []).map(x => ({ code:x[0], output:{nameEn:x[1],itemId:x[2],quantity:x[3]}, createItemLevel:x[4],mpCost:x[5] }));
+  return rows.filter(r => r && typeof r.code === 'string').map(r => {
+    const o = r.output || {}, translated = CRAFT_NAMES[r.code] || '', name = o.nameRu || translated || o.nameUk || o.nameEn || r.code;
+    return { code:r.code, item:+o.itemId || 0, name, en:o.nameEn || '', uk:o.nameUk || '', qty:Math.max(1,+o.quantity || 1), lvl:+r.createItemLevel || 0, mp:+r.mpCost || 0,
+      ingredients:Array.isArray(r.ingredients) ? r.ingredients : [], search:craftNorm([name,o.nameRu,o.nameUk,o.nameEn,r.code].filter(Boolean).join(' ')) };
+  });
+}
+function craftBagStacks(rt = craftRt) { return rt.craftBag && (!rt.craftBag.char || !rt.char || rt.craftBag.char === rt.char) && Array.isArray(rt.craftBag.stacks) ? rt.craftBag.stacks : null; }
+function craftHave(id, rt = craftRt) { const bag = craftBagStacks(rt); return bag ? bag.reduce((n,x) => n + (+x.itemId === +id ? +x.qty || 0 : 0),0) : null; }
+function craftFiltered(rows, query, filter, rt = craftRt) {
+  const words = craftNorm(query).split(/\s+/).filter(Boolean), lvl = +rt.craftBook?.lvl || 0;
+  return rows.filter(r => words.every(w => r.search.includes(w)) && (filter !== 'learned' || r.lvl <= lvl) && (filter !== 'stock' || craftHave(r.item,rt) > 0));
+}
+function craftCalculate(queue, made = {}, rt = craftRt) {
+  const b = rt.craftBook, stacks = craftBagStacks(rt);
+  if (!globalThis.L2CraftPlan?.plan || !Array.isArray(b?.recipes) || !stacks) return null;
+  try { return L2CraftPlan.plan({ ...b,createItemLevel:b.lvl,canCraftProfession:b.can,currentMp:b.mp,maxMp:b.maxMp },queue,made,stacks,{chain:craftCfg.craftChain !== false}); } catch (_) { return null; }
+}
+const craftGoalLabel = g => ({ready:'Готово к изготовлению',missing:'Нужно сырьё',blocked:'Недоступно',done:'Выполнено'}[g?.status] || 'Жду расчёт');
+function craftMissingHtml(rows) {
+  return (rows || []).filter(x => +x.missing > 0).map(x => `<li><strong>${esc(x.name || '#' + x.item)}</strong><span>не хватает ${fmt(+x.missing)} · есть ${fmt(+x.have || 0)} / нужно ${fmt(+x.required || 0)}</span></li>`).join('');
+}
+function craftPlanHtml(plan, goal) {
+  if (!plan || !goal) return '<div class="hint">Нажмите «Обновить», чтобы прочитать рецепты и сумку и увидеть точный план.</div>';
+  const missing = goal.missing || [], blocked = goal.blocked || [], steps = goal.steps || [];
+  const chain = steps.length ? `<ol class="craft-chain">${steps.map(x => `<li><span>${esc(x.name || x.code)}</span><strong>×${fmt(+x.n || 0)}</strong>${x.intermediate ? '<small>полуфабрикат</small>' : '<small>цель</small>'}</li>`).join('')}</ol>` : '';
+  return `<div class="craft-plan-status ${goal.status === 'missing' || goal.status === 'blocked' ? 'warn' : ''}">${esc(craftGoalLabel(goal))}</div>${chain}${missing.length ? '<ul class="craft-missing">'+craftMissingHtml(missing)+'</ul>' : ''}${blocked.length ? `<div class="craft-blocked">${blocked.map(x=>esc(x.reason || String(x))).join('<br>')}</div>` : ''}${goal.status === 'ready' ? `<div class="hint">На цепочку: ${fmt(steps.reduce((n,x)=>n+(+x.mp || 0),0))} MP. МП-банки — по необходимости.</div>` : ''}`;
+}
+function renderCraftPicker() {
+  const b = craftRt.craftBook, rows = craftCatalogRows(b), pick = $('craftPick');
+  if (!pick) return;
+  const previous = craftSelectedCode || pick.value || '', opts = '<option value="">— выберите ресурс —</option>' + rows.map(r=>`<option value="${esc(r.code)}">${esc(r.name)}${r.en && r.en !== r.name ? ' · '+esc(r.en) : ''}</option>`).join('');
+  if (craftSig !== opts) { craftSig = opts; pick.innerHTML = opts; }
+  craftSelectedCode = rows.some(r=>r.code === previous) ? previous : '';
+  if (pick.value !== craftSelectedCode) pick.value = craftSelectedCode;
+  const filtered = craftFiltered(rows,$('craftSearch')?.value || '',$('craftFilter')?.value || 'all');
+  const cards = filtered.map(r => { const have = craftHave(r.item), locked = r.lvl > (+b?.lvl || 0), selected = r.code === craftSelectedCode;
+    return `<button type="button" class="craft-resource${selected ? ' selected' : ''}" data-craftpick="${esc(r.code)}" aria-pressed="${selected}"><strong>${esc(r.name)}</strong>${r.en && r.en !== r.name ? `<span class="craft-english">${esc(r.en)}</span>` : ''}<span class="craft-resource-meta"><span>${have == null ? 'Сумка ещё не прочитана' : 'В сумке '+fmt(have)}</span><span${locked ? ' class="warn"' : ''}>Create Item ${r.lvl}${locked ? ' · нужен навык' : ''} · ${fmt(r.mp)} MP</span></span></button>`;
+  }).join('') || `<div class="hint craft-empty">${rows.length ? 'Не найдено. Попробуйте часть названия на русском, украинском или английском.' : 'Книга ещё не прочитана. Нажмите «Обновить» — ресурсы тратиться не будут.'}</div>`;
+  if (craftCatalogSig !== cards) { craftCatalogSig = cards; if ($('craftCatalog')) $('craftCatalog').innerHTML = cards; }
+  if ($('craftCatalogCount')) $('craftCatalogCount').textContent = rows.length ? `Показано ${filtered.length} из ${rows.length} рецептов` : 'Рецепты появятся после чтения книги';
+  const selected = rows.find(r=>r.code === craftSelectedCode), n = Math.floor(+$('craftN')?.value || 0);
+  if ($('craftAdd')) $('craftAdd').disabled = craftAdding || !selected || !Number.isSafeInteger(+$('craftN')?.value) || n < 1 || n > 1000000;
+  if ($('craftRecipeDetails')) $('craftRecipeDetails').textContent = selected ? [`Выход за изготовление: ${selected.qty} шт.`, `Create Item ${selected.lvl}`, `${selected.mp} MP`, selected.ingredients.length ? 'Рецепт: '+selected.ingredients.map(x=>`${x.nameRu || x.nameUk || x.nameEn || '#'+x.itemId} ×${x.quantity}`).join(', ') : 'Состав появится после чтения книги'].join(' · ') : 'Нажмите на ресурс в списке выше или выберите его здесь.';
+  const plan = selected && n > 0 && n <= 1000000 ? craftCalculate([{id:'preview',code:selected.code,item:selected.item,n}],{}) : null;
+  if ($('craftPreview')) $('craftPreview').innerHTML = selected ? `<strong>До цели: ${esc(selected.name)} ×${fmt(n)}</strong>` + craftPlanHtml(plan,plan?.goals?.[0]) : '<div class="hint">Здесь будет цепочка и недостающее сырьё для выбранной цели.</div>';
+}
+function craftChoose(code, focusQty = true) {
+  if (!craftCatalogRows(craftRt.craftBook).some(r=>r.code === code)) return;
+  craftSelectedCode = code; if ($('craftPick')) $('craftPick').value = code; renderCraftPicker();
+  if (focusQty) { $('craftN')?.focus?.(); $('craftN')?.select?.(); }
+}
 function renderCraft(rt, d) {
   if (!$('craftBox')) return;
-  craftRt = rt;
-  const b = rt.craftBook, q = rt.craftQueue || [], made = rt.craftMade || {}, s = rt.craftSay, out = [];
-  const opts = (b?.list || []).map(([code, nm, , oq, lvl, mp]) => `<option value="${esc(code)}">${esc(nm)}${oq > 1 ? ` (×${oq})` : ''} · ур. ${lvl} · ${mp} MP${b.lvl < lvl ? ' · закрыт' : ''}</option>`).join('');
-  // пустая книга (другой герой) — снова заглушка, а не рецепты прошлого героя; в списке нет полей ввода — перерисовываем всегда
-  const html = opts || '<option value="">— рецепт (появится после первого чтения книги) —</option>';
-  if (craftSig !== html) { craftSig = html; $('craftPick').innerHTML = html; }
-  // перерисовка только при изменении: иначе запись бота (до 3 раз/с) пересоздаёт кнопку ✕ между нажатием и отпусканием — клик терялся
-  const listHtml = q.map(x => { const m = +made[x.id] || 0;
-    return `<div class="rule"><span class="t">${m >= x.n ? '✅' : '⚒'} ${esc(x.nm || x.code)} — ${fmt(m)}/${fmt(x.n)}</span><button data-craftdel="${esc(x.id)}" title="Убрать">✕</button></div>`; }).join('');
+  const changedChar = !!craftChar && craftChar !== (rt.char || '');
+  if (changedChar) { craftSelectedCode = ''; if ($('craftSearch')) $('craftSearch').value = ''; if ($('craftN')) $('craftN').value = '1'; }
+  craftChar = rt.char || ''; craftRt = rt; craftCfg = d;
+  const b = rt.craftBook, q = rt.craftQueue || [], made = rt.craftMade || {}, s = rt.craftSay, out = [], plan = craftCalculate(q,made) || rt.craftPlan;
+  renderCraftPicker();
+  const listHtml = q.map(x => { const m = +made[x.id] || 0, g = plan?.goals?.find(z=>z.qid === x.id), done = m >= x.n;
+    return `<div class="craft-goal"><div class="craft-goal-head"><strong>${done ? '✓ ' : ''}${esc(x.nm || x.code)}</strong><button type="button" data-craftdel="${esc(x.id)}" title="Удалить цель ${esc(x.nm || x.code)}" aria-label="Удалить цель ${esc(x.nm || x.code)}">✕</button></div><div class="craft-goal-progress"><span>Изготовлено ${fmt(m)} из ${fmt(+x.n || 0)}</span><span class="${g?.status === 'missing' || g?.status === 'blocked' ? 'warn' : ''}">${done ? 'Выполнено' : esc(craftGoalLabel(g))}</span></div>${g && !done ? `<details class="craft-goal-details"><summary>Цепочка и материалы</summary>${craftPlanHtml(plan,g)}</details>` : ''}</div>`;
+  }).join('') || '<div class="craft-empty hint">Очередь пуста — выберите ресурс, количество и нажмите «В очередь».</div>';
   if (craftListSig !== listHtml) { craftListSig = listHtml; $('craftList').innerHTML = listHtml; }
+  const missing = plan?.missing || [], shortage = $('craftShortage');
+  if (shortage) { shortage.hidden = !missing.length; shortage.innerHTML = missing.length ? '<strong>Не хватает сырья до целей</strong><ul class="craft-missing">'+craftMissingHtml(missing)+'</ul><div class="hint">Эти цели ждут. Бот может продолжать другие полностью обеспеченные цели.</div>' : ''; }
   const dedicated = taskSel(d, 'craft');
+  if ($('craftModeState')) $('craftModeState').textContent = dedicated ? 'Выбран режим крафта' : 'Сначала составьте очередь';
   if (dedicated) {
     out.push('Режим крафта: MP без боевого резерва' + (d.craftMpPots !== false ? ' · МП-банки из сумки разрешены' : ' · МП-банки выключены'));
     if (!q.length) out.push('Очередь пуста — добавьте рецепт и количество');
     else if (q.every(x => (+made[x.id] || 0) >= +x.n)) out.push('Очередь выполнена — можно добавить новые рецепты или выбрать другой режим');
   } else if (d.craftAuto !== true) out.push('Фоновый крафт выключен; отдельный режим запускается кнопкой выше');
   if (b) out.push(`Книга ${new Date(b.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}: Create Item ур. ${b.lvl}${b.lvl ? '' : ' — навык не выучен (магистр)'} · MP ${fmt(b.mp)}/${fmt(b.maxMp)}`);
-  else out.push('Книга появится, когда активен крафтер и запущен режим крафта либо включён фоновый крафт');
+  else out.push('Книга появится после «Обновить» или запуска крафта');
+  if (rt.craftBag?.t) out.push(`Сумка: ${new Date(rt.craftBag.t).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}. План пересчитывается перед изготовлением.`);
   if (s && Date.now() - s.t < 3600000) out.push(`${new Date(s.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${s.ok ? '✓' : '·'} ${s.why}`);
   $('craftBox').textContent = out.join('\n');
 }
@@ -1757,11 +1816,40 @@ const craftEdit = async (edit, okText) => {
   try { await menuPatch({}, { craftQueueEdit: edit, expectedChar: craftRt.char }); if (okText) toast(okText); return true; }
   catch (e) { toast('⚠ ' + (e?.message || e), 'var(--bad)'); return false; }
 };
+$('craftRefresh')?.addEventListener('click', async () => {
+  const char = formChar, button = $('craftRefresh'); if (!char || button.disabled) return;
+  button.disabled = true; button.textContent = 'Читаю…';
+  try {
+    const r = await gameSend({cmd:'craftRead',char},{char});
+    if (!r?.ok) throw new Error(r?.reason || 'Не удалось прочитать книгу и сумку');
+    if (formChar === char) { await load(); toast('⚒ Рецепты и сумка обновлены'); }
+  } catch (e) { if (formChar === char) toast('⚠ '+(e?.message || e),'var(--bad)'); }
+  finally { button.disabled = false; button.textContent = '↻ Обновить'; }
+});
+$('craftSearch')?.addEventListener('input', renderCraftPicker);
+$('craftFilter')?.addEventListener('change', renderCraftPicker);
+$('craftPick')?.addEventListener('change', () => craftChoose($('craftPick').value));
+$('craftCatalog')?.addEventListener('click', e => { const b = e.target.closest('[data-craftpick]'); if (b) craftChoose(b.dataset.craftpick); });
+$('craftSearch')?.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); $('craftSearch').value = ''; renderCraftPicker(); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); $('craftCatalog')?.querySelector?.('[data-craftpick]')?.focus(); }
+  if (e.key === 'Enter') { const first = $('craftCatalog')?.querySelector?.('[data-craftpick]'); if (first) { e.preventDefault(); craftChoose(first.dataset.craftpick); } }
+});
+$('craftN')?.addEventListener('input', renderCraftPicker);
+$('craftN')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !$('craftAdd')?.disabled) { e.preventDefault(); $('craftAdd').click(); } });
+document.querySelectorAll('[data-craftqty]').forEach(b => b.addEventListener('click', () => { $('craftN').value = b.dataset.craftqty; renderCraftPicker(); }));
+for (const key of ['craftChain','craftNotify']) $(key)?.addEventListener('change', () => { craftCfg = { ...craftCfg, [key]:$(key).checked }; renderCraft(craftRt,craftCfg); });
 $('craftAdd')?.addEventListener('click', async () => {
-  const code = $('craftPick').value, n = Math.floor(+$('craftN').value || 0); if (!code) return $('craftPick').focus(); if (n < 1) return $('craftN').focus();
-  const row = (craftRt.craftBook?.list || []).find(x => x[0] === code);
-  const ok = await craftEdit({ action: 'add', row: { id: 'c' + Date.now().toString(36), code, nm: row?.[1] || code, item: row?.[2] || 0, n } }, `⚒ В список крафта: ${row?.[1] || code} ×${n}`);
-  if (ok) $('craftN').value = '';
+  if (craftAdding) return;
+  const code = $('craftPick').value, n = +$('craftN').value, char = craftRt.char;
+  if (!code) return $('craftSearch')?.focus();
+  if (!Number.isSafeInteger(n) || n < 1 || n > 1000000) { toast('Количество — целое число от1 до1000000'); return $('craftN').focus(); }
+  const row = craftCatalogRows(craftRt.craftBook).find(x => x.code === code); if (!row) return;
+  craftAdding = true; renderCraftPicker();
+  try {
+    const ok = await craftEdit({ action:'add',row:{id:'c'+Date.now().toString(36),code,nm:row.name,item:row.item,n} },`⚒ Цель: ${row.name} ×${n}`);
+    if (ok && craftRt.char === char && $('craftPick').value === code && +$('craftN').value === n) $('craftN').value = '1';
+  } finally { craftAdding = false; renderCraftPicker(); }
 });
 $('craftList')?.addEventListener('click', async e => {
   const id = e.target.closest('[data-craftdel]')?.dataset.craftdel; if (!id) return;
@@ -2126,7 +2214,7 @@ function taskHint(el, text) {
   label.classList.add('task-owned-row'); if (h.textContent !== text) h.textContent = text;
 }
 // 17.10: UI показывает подтверждённые причины ожидания и очередь отдельно от последнего действия.
-const TASK_TABS = { tvt:'pvp', enchant:'enchant', craft:'hunt', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
+const TASK_TABS = { tvt:'pvp', enchant:'enchant', craft:'craft', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
 // 20.12 (ревизия 17.10, аудит PAY-1): что именно ждёт сверки — вид, сумма, давность; кнопка ручного выхода только для неё.
 const PAY_KIND_LABELS = { shop:'закупка в магазине', fishing:'покупка на рыбалке', 'cat-teleport':'телепорт в катакомбы', 'raid-teleport':'телепорт к РБ', mammon:'Маммон', 'fa-buff':'бафф за FA', 'town-buff':'городской бафф', 'tvt-shop':'магазин TvT', 'story-teleport':'телепорт квеста' };
 function paymentPendingView(rt, now = Date.now()) {
@@ -2201,8 +2289,9 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
       const need = queue.reduce((n, x) => n + (+x.n || 0), 0), got = queue.reduce((n, x) => n + Math.min(+x.n || 0, +made[x.id] || 0), 0);
       progress.push(`Очередь: ${got} / ${need}`); percent = need ? Math.min(100, Math.round(got / need * 100)) : null;
       if (!queue.length) { label = 'Добавьте рецепты в очередь'; state = 'waiting'; }
-      else if (got >= need && !rt.craftPending) { label = 'Очередь выполнена'; state = 'done'; }
-      else if (rt.craftPending) { label = 'Сверяю результат крафта'; state = 'waiting'; }
+      else if (got >= need && !rt.craftPending && !rt.craftMpPending) { label = 'Очередь выполнена'; state = 'done'; }
+      else if (rt.craftPending || rt.craftMpPending) { label = rt.craftMpPending ? 'Сверяю МП-банку' : 'Сверяю результат крафта'; state = 'waiting'; }
+      else if (rt.craftPlan?.goals?.some(g=>g.status === 'missing')) { label = 'Нужно сырьё для цепочки'; state = 'waiting'; }
       if (rt.craftSay?.why) progress.push(rt.craftSay.why);
     }
     if (key === 'enchant') {
@@ -2616,7 +2705,7 @@ async function quickStart(key) {
     const was = selectedAutoTasks({ ...DEF, ...cfg });
     const cfgPatch = { autoTasks: [...was.filter(k => !AUTO_MAIN_TASKS.includes(k)), key], ...(was.includes('quests') ? { campaign: false, storyTurnIn: false } : {}) };
     await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch, expectedChar }); if (generation !== controlGeneration || formChar !== expectedChar) return;
-    if (key === 'craft') { showTab('hunt'); $('craftSection')?.scrollIntoView({ block: 'start' }); }
+    if (key === 'craft') { showTab('craft'); $('craftSection')?.scrollIntoView({ block: 'start' }); }
     await $('start').onclick();
   } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 }

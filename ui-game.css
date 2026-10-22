@@ -365,3 +365,29 @@ input:not([type=checkbox]),select{min-height:30px;padding:4px 8px}
 /* короткое окно: несколько постоянных предупреждений — раздел остаётся доступным общей прокруткой */
 @media(max-height:620px){.activity-panel{max-height:92px}.activity-panel:has(.payment-pending:not([hidden])){max-height:none}}
 @media(max-height:740px){.workarea{overflow-y:auto;overflow-x:hidden}section.act{flex:1 0 170px;min-height:170px}}
+
+/* 22.10: мастерская крафта — поиск, выбранная цель и её цепочка. */
+#tab-craft .craft-workspace{padding:2px 0 12px;min-width:0}
+.craft-heading,.craft-controls,.craft-search-row,.craft-quantity,.craft-goal-head,.craft-goal-progress{display:flex;align-items:center;gap:8px}
+.craft-heading{justify-content:space-between;align-items:flex-start}.craft-heading h3{margin:0 0 4px}.craft-heading p{margin:0}
+.craft-heading>div{min-width:0}.craft-heading button{flex:0 0 auto}.craft-controls{flex-wrap:wrap;margin:12px 0}
+.craft-picker{border:1px solid var(--edge,#5b4932);border-radius:9px;padding:12px;background:rgba(0,0,0,.14)}
+.craft-search-label{display:block;font-weight:700;margin:0 0 7px}.craft-search-row{align-items:stretch;flex-wrap:wrap}.craft-search-row input{flex:1 1 190px;width:100%;min-width:0}.craft-search-row select{flex:0 1 160px;min-width:0}
+.craft-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:290px;overflow-y:auto;margin:8px 0 14px;padding:2px;scrollbar-gutter:stable}
+button.craft-resource{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:3px;min-width:0;min-height:76px;white-space:normal;padding:9px 10px;border-radius:7px}
+button.craft-resource strong,.craft-english{overflow-wrap:anywhere}.craft-english{font-size:11px;color:var(--muted,#c8b693)}
+button.craft-resource.selected{border-color:var(--gold,#d7af60);box-shadow:inset 0 0 0 1px var(--gold,#d7af60);background:rgba(180,130,50,.17)}
+.craft-resource-meta{display:flex;flex-wrap:wrap;gap:3px 10px;font-size:10.5px;line-height:1.4;color:var(--muted,#c8b693)}
+.craft-resource:focus-visible,.craft-quantity button:focus-visible{outline:2px solid var(--gold,#d7af60);outline-offset:2px}
+.craft-target{border-top:1px solid rgba(200,170,100,.22);padding-top:12px}.craft-target>label{display:block;font-weight:700;margin:0 0 6px}.craft-target>select{width:100%;min-width:0;margin-bottom:6px}
+#craftRecipeDetails{margin-bottom:14px;line-height:1.5}.craft-quantity{flex-wrap:wrap}.craft-quantity input{flex:0 1 108px;width:108px;min-width:70px}.craft-quantity button{flex:0 0 auto;padding:6px 9px;min-height:32px}.craft-quantity #craftAdd{margin-left:auto}
+.craft-preview{margin-top:12px;line-height:1.5}.craft-preview>strong{display:block;margin-bottom:7px}.craft-plan-status{font-weight:700;color:var(--good,#aacd86)}.craft-plan-status.warn,.craft-shortage>strong,.craft-blocked{color:var(--warn,#edbf76)}
+.craft-chain{padding-left:23px;margin:8px 0}.craft-chain li{padding:2px 0}.craft-chain li>strong{margin-left:8px}.craft-chain small{margin-left:8px;opacity:.7}
+.craft-missing{list-style:none;margin:7px 0;padding:0}.craft-missing li{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;padding:4px 0}.craft-missing li>span{font-size:11px;opacity:.86}
+.craft-goals{display:flex;flex-direction:column;gap:8px;margin:9px 0}.craft-goal{border:1px solid var(--edge,#5b4932);border-radius:8px;padding:9px 11px;background:rgba(0,0,0,.13)}
+.craft-goal-head{justify-content:space-between}.craft-goal-head>strong{overflow-wrap:anywhere;min-width:0}.craft-goal-head>button{flex:0 0 30px;padding:3px;min-height:28px}.craft-goal-progress{justify-content:space-between;flex-wrap:wrap;font-size:11px;color:var(--muted,#c8b693)}
+.craft-goal-details{margin-top:7px}.craft-goal-details summary,.craft-background summary{cursor:pointer;padding:5px 0;font-weight:600}.craft-shortage{border:1px solid #9b713f;background:rgba(150,90,30,.12);padding:10px 12px;margin:10px 0;border-radius:8px}
+.craft-shortage[hidden]{display:none}.craft-empty{grid-column:1/-1;padding:10px 0}.craft-background{border-top:1px solid var(--edge,#5b4932);margin-top:12px;padding-top:5px}
+@media(max-width:420px){.craft-picker{padding:9px}.craft-heading{flex-wrap:wrap}.craft-heading button{margin-left:auto}.craft-catalog{grid-template-columns:minmax(0,1fr);max-height:230px}.craft-search-row select{flex:1 1 100%}.craft-quantity input{flex:1 1 80px}.craft-quantity #craftAdd{flex:1 1 100%;margin-left:0}.craft-chain small{display:block;margin-left:0}.craft-goal-progress{align-items:flex-start}}
+/* В мастерской очередь и выбор ресурса важнее дублирующих обзорных карточек в шапке, особенно в узком меню. */
+body:has(#tab-craft.act) #activityPanel,body:has(#tab-craft.act) #quickStart{display:none!important}

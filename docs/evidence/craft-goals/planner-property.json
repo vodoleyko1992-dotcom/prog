@@ -1,0 +1,7 @@
+{
+  "cases": 10000,
+  "readyStepChecks": 16421,
+  "replenishmentChecks": 10000,
+  "multiGoalStateChange": 152,
+  "failures": []
+}

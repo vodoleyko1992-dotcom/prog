@@ -3201,13 +3201,13 @@ setInterval(async () => {
       }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy && !mammonBagCommandBusy) {
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy && !mammonBagCommandBusy && !craftReadCommandBusy) {
       // 19.10.2026 (аудит автономности): Stop не стирает финальную запись при backoff/сбое storage.
       // Следующий тик повторит flush; замок при OFF не продлевается и остаётся ограничен своим TTL.
       const epoch = leaseEpoch, char = rt.char || '', generation = automationGeneration, kick = +rt.manualKickAt || 0;
       const saved = await rtWriter.recover();
       if (!saved?.ok || on || !tabOwner || leaseEpoch !== epoch || (rt.char || '') !== char || automationGeneration !== generation
-          || enchantCommandBusy || warlockCommandBusy || lifestoneCommandBusy || mammonBagCommandBusy) return;
+          || enchantCommandBusy || warlockCommandBusy || lifestoneCommandBusy || mammonBagCommandBusy || craftReadCommandBusy) return;
       // Квитанция flush могла запустить следующий setRt раньше этого продолжения: его очередь тоже должна сохраниться.
       if (Object.keys(rtWriter.peek()).length) return;
       tabOwner = false; tabIdle = false; rtWriter.clear(); leaseEpoch = null;
@@ -3353,6 +3353,7 @@ async function loopGate() {
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
+  await L2V7Modules.craft?.noticeSync?.();
   // 20.43 (разбор 21.10): удержание ЛС уступает и открытой записи на TvT — раньше только уже записанному герою (tvtSoon), а записаться
   // было нельзя: кнопка и POST /game/tvt/register под запретом ЛС, до tvtStep круг не доходил. Статус TvT, пока ЛС держит, перечитываем
   // не чаще раза в 30 с и без ожидания ответа (ход ЛС не задерживается). Неизвестная попытка/покупка (pending) держит, как прежде.
@@ -6636,6 +6637,7 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
 // 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
 L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get actionGeneration() { return () => automationGeneration; }, get leaseEpoch() { return leaseEpoch; }, get mode() { return autonomyMode; },
+  get plan() { return globalThis.L2CraftPlan?.plan; }, get notify() { return sendAlert; }, get clearAlert() { return clearAlert; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
   get free() { return () => autonomyMode() === 'craft'
     ? !antibotState() && !L2V7Modules.payments?.blocked?.() && !L2V7Modules.pvp?.pending?.() && !L2V7Modules.navigation?.travelPending?.()
@@ -7216,6 +7218,53 @@ async function warlockCommand(m) {
   }
 }
 
+// 22.10: книгу и сумку крафта можно обновить до запуска, без расхода и без перехвата чужого управления.
+let craftReadCommandBusy = false, craftReadControl = 0;
+async function craftReadCommand(m) {
+  if (craftReadCommandBusy) return { ok: false, reason: 'Рецепты уже обновляются' };
+  craftReadCommandBusy = true;
+  let manualEpoch = null, readEpoch = null;
+  const generation = automationGeneration, readControl = craftReadControl, start = { char: rt.char, cls: JSON.stringify(rt.classCur || {}), kick: rt.manualKickAt || 0 };
+  const current = () => readControl === craftReadControl && generation === automationGeneration && rt.char === start.char && heroNick() === start.char
+    && JSON.stringify(rt.classCur || {}) === start.cls && (rt.manualKickAt || 0) === start.kick && tabOwner && !!readEpoch && leaseEpoch === readEpoch;
+  try {
+    const state = await chrome.storage.local.get(['rt', 'on']);
+    if (!m.char || m.char !== state.rt?.char || m.char !== rt.char || heroNick() !== m.char) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+    if (!!state.on !== !!on || generation !== automationGeneration) return { ok: false, reason: 'Состояние запуска изменилось' };
+    if (state.on && (!tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки' };
+    if (!state.on) {
+      const lock = await ipc({ cmd: 'lockAcquire', epoch: leaseEpoch || documentLease, page: location.pathname, vis: tabVis(), focus: false });
+      if (!lock?.ok) return { ok: false, reason: 'Другая вкладка проверяет состояние' };
+      tabOwner = true; tabIdle = false; leaseEpoch = lock.epoch; documentLease = lock.epoch; lockMine = Date.now(); manualEpoch = lock.epoch;
+    }
+    readEpoch = leaseEpoch;
+    if (!current()) return { ok: false, reason: 'Состояние изменилось — повторите чтение' };
+    const response = await gameGet('/game/craft/materials'), book = response.ok ? await response.json() : null;
+    if (!current()) return { ok: false, reason: 'Состояние изменилось — повторите чтение' };
+    const characterResponse = await gameGet('/character'), body = characterResponse.ok ? await characterResponse.json() : null, ch = body?.character || body;
+    if (!current() || ch?.name !== start.char || !Number.isSafeInteger(ch?.revision) || !Array.isArray(ch.inventory?.stacks) || !Array.isArray(book?.recipes))
+      return { ok: false, reason: 'Не удалось прочитать свежие рецепты и сумку' };
+    if (rt.craftBag?.char === start.char && rt.craftBag.revision > ch.revision) return { ok: false, reason: 'Пришёл устаревший снимок — повторите чтение' };
+    const t = Date.now(), stacks = ch.inventory.stacks.map(x => ({ itemId: x.itemId, qty: x.qty }));
+    const plan = globalThis.L2CraftPlan?.plan?.(book, rt.craftQueue || [], rt.craftMade || {}, stacks, { chain: cfg.craftChain !== false });
+    const patch = { craftBook: { t, lvl: +book.createItemLevel || 0, mp: +ch.mp || 0, maxMp: +ch.maxMp || 0, can: !!book.canCraftProfession,
+      recipes: book.recipes, list: book.recipes.map(r => [r.code, r.output?.nameEn || r.output?.nameUk || r.code, +r.output?.itemId || 0, +r.output?.quantity || 1, +r.createItemLevel || 0, +r.mpCost || 0]) },
+      craftBag: { t, revision: ch.revision, char: start.char, stacks, mp: ch.mp, maxMp: ch.maxMp },
+      ...(plan ? { craftPlan: { ...plan, t, revision: ch.revision, char: start.char, queueSig: JSON.stringify(rt.craftQueue || []) } } : {}) };
+    if (!current()) return { ok: false, reason: 'Состояние изменилось — повторите чтение' };
+    const saved = await setRt(patch);
+    if (saved?.ok === true && current()) L2V7Modules.craft?.wake?.();
+    return { ok: saved?.ok === true && current(), ...(saved?.ok !== true ? { reason: 'Не удалось сохранить рецепты — повторите чтение' } : {}) };
+  } catch (e) { return { ok: false, reason: 'Не удалось обновить рецепты — повторите после восстановления связи' }; }
+  finally {
+    if (manualEpoch && !on && leaseEpoch === manualEpoch) {
+      await rtWriter.recover().catch(e => quietErr('запись памяти', e));
+      await ipc({ cmd: 'lockRelease', epoch: manualEpoch }).catch(e => quietErr('замок', e));
+      if (!on && leaseEpoch === manualEpoch) { tabOwner = false; tabIdle = false; leaseEpoch = null; }
+    }
+    craftReadCommandBusy = false;
+  }
+}
 // 19.10: чтение рюкзака по кнопке доступно при OFF; временная аренда не отбирает управление у другой вкладки.
 let mammonBagCommandBusy = false;
 async function mammonBagCommand(m) {
@@ -7251,6 +7300,7 @@ async function mammonBagCommand(m) {
   }
 }
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m.cmd === 'craftRead') { craftReadCommand(m).then(reply).catch(() => reply({ ok: false, reason: 'Не удалось обновить рецепты' })); return true; }
   if (m.cmd === 'mammonBagAnalyze') { mammonBagCommand(m).then(reply).catch(e => reply({ ok: false, reason: String(e) })); return true; }
   if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'lifestoneTarget') { lifestoneTarget(m).then(reply).catch(() => reply({ok:false})); return true; }
@@ -7301,6 +7351,8 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
 // любая необработанная ошибка расширения — в журнал (чтобы «полный сбой» был виден в выгрузке, а не только в консоли)
 // v5.6: обработчики ошибок — один набор (выше, у записи журнала); второй дублировал каждую ошибку в журнале
 chrome.storage.onChanged.addListener(ch => {
+  // Повторный Stop при уже OFF не меняет on, но отменяет ожидающее ручное чтение крафта.
+  if (ch.stopMeta?.newValue) craftReadControl++;
   const cfgControlChange = !!ch.cfg && !ownCfgChange(ch.cfg) && !viewOnlyCfgChange(ch.cfg);
   if (ch.on || cfgControlChange || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
   // 19.10.2026 (аудит автономности): очередь принадлежит прежнему герою, в том числе при OFF.
