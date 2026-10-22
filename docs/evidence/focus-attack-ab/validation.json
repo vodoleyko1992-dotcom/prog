@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-22T11:21:35.596344+00:00",
+  "task": "Live Focus Attack ON/OFF mechanics and persistence",
+  "result": "PASS",
+  "liveGame": true,
+  "runtimeChanged": false,
+  "version": "20.48",
+  "zipRebuilt": false,
+  "nodeFiles": 603,
+  "nodeFail": 0,
+  "nodeLogSha256": "54862d6cfab2ce4c85462885d970222d1e6c5b5d77cabfd1a23dfdbe4b82fbe7",
+  "syntaxFiles": 4,
+  "syntax": "PASS",
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "diffCheck": "PASS",
+  "knowledge": "../../../kb/data/focus-attack-ab-20261022.json",
+  "independentReview": "independent-review.json",
+  "boundaries": [
+    "Controlled initial3OFF/3ON normal encounters; repeatedOFF/durabilityON/postcyclesOFF/redON kept separate",
+    "Target counts and reversible stats confirmed; totalDPS multiplier and isolated MP drain unmeasured",
+    "ON accepted action after608s; no proof of infinite duration",
+    "Four ON/OFFcycles returned same stats; no persistent benefit observed",
+    "Existing automation remains manual; no new browser/automatedlive claim"
+  ],
+  "outcome": {
+    "level": 45,
+    "hp": [
+      10106,
+      10106
+    ],
+    "mp": [
+      794,
+      794
+    ],
+    "inBattle": false,
+    "focus": false,
+    "vicious": true,
+    "weaponItemId": 299,
+    "equipmentHotbarRanksRestored": true,
+    "mobKills": 86,
+    "champions": 2,
+    "ordinaryMobs": 84,
+    "raids": 0,
+    "adenaDelta": 274098,
+    "spDelta": 55430,
+    "festivalAdenaDelta": 2,
+    "coinOfLuckSpent": 0,
+    "festivalAdenaSpent": 0,
+    "soulshotsConsumed": 47,
+    "potionsConsumed": 0,
+    "liveSessionClosed": true
+  },
+  "unchangedZipSha256": "21d2e74888444b1a60f0a1bbcb44a5f3b72d73a1017b1e0296ebe3393d20dfc8",
+  "pr": 352,
+  "runtimeChecksReused": "No JS/runtime changes in this task or since the603PASS run; fresh evidence schema/ref/hash/privacy checked after finalization."
+}

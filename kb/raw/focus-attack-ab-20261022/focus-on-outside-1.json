@@ -1,0 +1,1 @@
+{"at":"2026-10-22T11:01:38Z","method":"POST","path":"/character/skills/toggle","status":502,"elapsedMs":188,"request":{"battleId":"l2_317"},"response":{"outcome":"unknown_transport_or_server_failure; failure body and headers omitted"}}
