@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "reviewedAtUtc": "2026-10-22T11:24:44.240298+00:00",
+  "scope": "Independent offline review of final Focus Attack rank1 evidence and KB; no game requests or runtime edits.",
+  "sourceDirectory": "/workspace/work/focus-attack-ab/raw",
+  "knowledgeWorktree": "/workspace/work/focus-knowledge",
+  "reviewedFilesSha256": {
+    "data/focus-attack-ab-20261022.json": "9a2e2e7e84dcd86debce6b93de80603db2676ca39d428f13f308835852c53e93",
+    "raw/focus-attack-ab-20261022/manifest.json": "09de9a86643b9ebe2833e394f17a4a27bea06245053b02c714c9d6a0c03b6cc3",
+    "warlord.md": "023048c126deeffc3f9b172c78df96ff6e2bf8ed9e9f24b0ecdb0306fca805c4",
+    "README.md": "3bb525e8d8baa9a7792304a6794c4684a0ea54c4c0ce3c64a9fbb6df3a6f67cb"
+  },
+  "integrity": {
+    "originalFiles": 158,
+    "storedEvidenceFiles": 158,
+    "originalAndStoredSha256AndBytes": "PASS",
+    "sourceCoverage": "158/158",
+    "relativeReferences": "PASS, no missing targets",
+    "privacy": "PASS: no known actor identity, UUID, email or private/account/credential fields in committed projections"
+  },
+  "behavior": {
+    "acceptedDamageActions": 37,
+    "victoryLogsExactBeforePrefix": 23,
+    "deltaActions": 14,
+    "primaryVictories": 23,
+    "sideKills": 63,
+    "sessionKills": 86,
+    "initialOrdinaryCohorts": "OFF3 vs ON3; each4 requests/1miss/1marked maincrit",
+    "separateLaterWindows": "OFF repeat3; endurance ON1; postcycles OFF1",
+    "confirmedToggleMutations": {
+      "ON": 4,
+      "OFF": 4
+    },
+    "unconfirmed502Excluded": true,
+    "matchedAreaPairsSamePrimarySpawn": 5,
+    "cleanStatPair": "94→96 Accuracy;124%+166→146%+166; level45/PAtk2796/item299 fixed; +166 already present",
+    "victoryDedupHpCapsOverkillUnknownNeighbors": "PASS"
+  },
+  "finalState": {
+    "atUtc": "2026-10-22T11:19:45Z",
+    "level": 45,
+    "hp": "10106/10106",
+    "mp": "794/794",
+    "inBattle": false,
+    "focus": "OFF",
+    "vicious": "ON",
+    "equipmentHotbarStancesMatchInitial": true,
+    "coinOfLuckSpent": 0,
+    "fastAdenSpent": 0,
+    "fastAdenNetGain": 2,
+    "soulshotCConsumed": 47,
+    "hpPotionsConsumed": 0,
+    "mpPotionsConsumed": 0,
+    "newRaidBossKills": 0
+  },
+  "boundaries": [
+    "Accepted action confirms ON through608s;643s is a later GET projection with the earlier lastUpdate, not an independent additional action.",
+    "Identical-MP GET snapshots share the battle revision and do not isolate MP consumption or regeneration.",
+    "Primary HP caps, splash overkill and small samples do not establish totalDPS, crit or miss rates.",
+    "No matched uncapped OFF red-champion sample; no Focus damage coefficient inferred.",
+    "Observed repeatable return to OFF does not establish universal absence of all possible accumulation."
+  ],
+  "claimsReview": "PASS: no +10%totalDPS, zeroMPcost, unlimitedduration or permanentafterOFF claim; automation20.48 remains manual and no build is promised.",
+  "blockers": []
+}
