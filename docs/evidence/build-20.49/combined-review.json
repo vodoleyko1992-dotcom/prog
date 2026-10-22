@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "scope": "combined runtime, one-shot ID role migration, final persistence-error backoff",
+  "independentReview": true,
+  "fixedAdversarialCases": [
+    "newer ON icon vetoes old OFF",
+    "newer state-free battle revision invalidates old OFF",
+    "relative action without revision invalidates old OFF",
+    "actual --toggle-on DOM class blocks duplicate click",
+    "Array.find/filter numeric index cannot grant toggle-ready opt-in",
+    "fresh OFF during attack gameFree triggers replan",
+    "storage throw and negative ACK back off5000ms without blocking normal attack"
+  ],
+  "checks": {
+    "managedRuntimeAtReview": 65,
+    "finalStorageSubset": 5,
+    "combinedRolesAndRuntime": "PASS",
+    "finalRuntimeCases": 70
+  },
+  "newLiveGameRequests": 0,
+  "blockers": []
+}

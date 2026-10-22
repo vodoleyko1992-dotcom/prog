@@ -77,6 +77,11 @@ async function equip(w) {
 
 
 const POT_MP = /мани|маны|mana|\bmp\b/i, POT_HP = /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i;
+const warlordToggleClass = () => /^(?:human[ _-])?(?:warlord|dreadnought)$/i.test(String(env.rt.classCur?.prof || env.rt.prof || '').trim());
+// Точные labelUk/nameEn каталога: старая роль может быть украинской, а новая панель — английской.
+// «Фокусована атака» — прежний alias локальных стендов; реальный label317 — «Зосереджений удар».
+const warlordToggleAliases = { 'vicious stance': 312, 'жорстка стійка': 312, 'focus attack': 317, 'зосереджений удар': 317, 'фокусована атака': 317 };
+const warlordToggleId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? id === 312 || id === 317 ? id : 0 : Object.hasOwn(warlordToggleAliases, name) ? warlordToggleAliases[name] : 0; };
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
@@ -99,6 +104,8 @@ function suggestRoles() {
   const isUltra = s => { const v = il(s); const p = Array.isArray(v?.pow) ? v.pow[v.pow.length - 1] : v?.pow || 0; return !!v && /атака/.test(v.c) && ((v.reuse || 0) >= 25000 && (p >= 3000 || /vortex/i.test(v.n)) || /of doom/i.test(v.n)); };   // пассив/тоггл/проц — не «силовой»
   // 7.1.31: «в бою эффекта нет» (L2WAP: Servitor Wind Walk, Body To Mind) — ни в одну роль; труп-цель (Corpse Life Drain) — не удар
   const live = s => il(s)?.autoUse !== false && !env.noEffect?.(s.name);
+  // 20.49: Focus остаётся запрещён в обычных ролях; только выделенный ON-only контроллер получает его из тогглов Warlord.
+  const managedToggle = s => warlordToggleClass() && il(s)?.id === 317 && il(s)?.managedToggle === true && !env.noEffect?.(s.name);
   const buffsAll = skills.filter(isBuff).filter(live);
   const buffsMine = buffsAll.filter(s => pr(s.name).usesU > 0);
   const items = inv.filter(s => s.kind === 'предмет');
@@ -124,7 +131,7 @@ function suggestRoles() {
     nSpoil: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && !(il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
     nSpoilMass: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && (il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
     nSweep: '',   // 7.2: свип в игре автоматический — роль не назначаем
-    nToggles: skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
+    nToggles: skills.filter(s => live(s) || managedToggle(s)).filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
     // v4.42: лечащие скиллы (маг/клерик: Heal, Battle Heal; Дестроер: Battle Roar) — раньше банок, они бесплатны
     // 7.1.31: баффы на кота (Servitor Haste/Magic Shield/Physical Shield…, когда появятся) — роль «Баффы кота»
     // 7.2.1 (лог 10.10 21:17:42): Servitor Ultimate Defense — «слуга нерухомий ~30 с», откат 30 мин: аварийная защита, не бафф на каждый бой
@@ -134,8 +141,9 @@ function suggestRoles() {
   };
   for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
     out[k] = [...new Set((out[k] || '').split(',').map(x => x.trim()).filter(Boolean))].join(', ');
+  if (warlordToggleClass()) { const seen = new Set(); out.nToggles = out.nToggles.split(',').map(n => n.trim()).filter(n => { const id = warlordToggleId(n); if (!n || id && seen.has(id)) return false; if (id) seen.add(id); return true; }).join(', '); }
   const why = skills.map(s => { const p = pr(s.name);
-    return `• ${s.name} (слот ${s.idx}): ${il(s)?.autoUse === false ? 'снижает HP до 25%, вручную или отдельной подготовкой Frenzy/Zealot' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
+    return `• ${s.name} (слот ${s.idx}): ${managedToggle(s) ? 'постоянный — поддерживаю включённым' : il(s)?.autoUse === false ? 'снижает HP до 25%, вручную или отдельной подготовкой Frenzy/Zealot' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
       + (il(s) ? ` · [${il(s).id != null ? 'IL #' + il(s).id : 'L2WAP'} ${il(s).n}: ${il(s).c}${il(s).reuse ? ', откат ' + il(s).reuse / 1000 + ' с' : ''}${il(s).dur ? ', ' + il(s).dur + ' с' : ''}${il(s).w ? ', ' + il(s).w : ''}]` : '')
       + (p.uses ? ` · исп. ${p.uses} (ваших ${p.usesU || 0})` : ' · ещё не применялся')
       + (p.dmgN && il(s)?.autoUse !== false ? ` · урон ≈${Math.round(avg(p))}` : '') + (p.mpN ? ` · MP ≈${Math.round(p.mp / p.mpN)}` : '')
@@ -157,7 +165,19 @@ function weaponMainSuggest(inv) {
 async function autoRoles() {
   if (!env.cfg.autoRoles || !env.isBattle()) return;
   await env.itemsDb(); // рейтинг оружия по виду из справочника; не загружаем базу на каждой карте
+  if (!env.cfg.autoRoles || !env.isBattle()) return;
   const sug = suggestRoles().roles, fix = {};
+  // 20.49: старый warriorRoles1027 помнит имена, а не ID. Два критовых тоггла ремонтируем отдельно, по одному при появлении
+  // на панели; общий подбор и «новые имена» не возвращают их после последующего ручного удаления из nToggles.
+  const toggleActor = JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null]);
+  const toggleCurrent = () => env.cfg.autoRoles && env.isBattle() && env.on !== false && env.tabOwner !== false && warlordToggleClass()
+    && toggleActor === JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null]);
+  const toggles = new Map();
+  if (warlordToggleClass()) {
+    for (const x of env.panelInventory()) { const id = warlordToggleId(x), il = env.ilOf(x); if (x.kind === 'скилл' && id && il?.o === 'TOGGLE' && (id !== 317 || il.managedToggle === true) && !env.noEffect?.(x.name) && !toggles.has(id)) toggles.set(id, x); }
+    sug.nToggles = env.names(sug.nToggles).filter(n => !warlordToggleId(n)).join(', ');
+  }
+  const toggleRepair = [...toggles].filter(([id]) => !env.rt.warlordToggleRoles2049?.[id]);
   const mage = env.combatProfileKind() === 'mage_summoner';
   if (mage && env.names(env.cfg.nAttack || '').some(n => /^(?:атака|attack)$/.test(n) || env.slotsBy(n).some(b => env.slotKind(b) === 'атака'))) fix.nAttack = '';
   // Only obsolete, positively identified fighter skills are migrated; preserve custom roles.
@@ -236,12 +256,20 @@ async function autoRoles() {
     if (nf !== (env.cfg.nForce || '')) fix.nForce = nf;
     await env.setRt({ forceFix416: [...new Set([...(env.rt.forceFix416 || []), ...freeHits])] });
   }
+  if (toggleRepair.length) {
+    const values = String(fix.nToggles ?? env.cfg.nToggles ?? '').split(',').map(n => n.trim()).filter(Boolean), seen = new Set();
+    const selected = values.filter(n => { const id = warlordToggleId(n); if (id && seen.has(id)) return false; if (id) seen.add(id); return true; });
+    for (const [id, x] of toggleRepair) if (!seen.has(id)) { selected.push(x.name); seen.add(id); }
+    fix.nToggles = selected.join(', '); // даже уже выбранный alias подтверждаем записью до отметки ремонта
+  }
   if (Object.keys(fix).length) {
     const { cfg: c = {} } = await chrome.storage.local.get('cfg');
-    await env.setCfg(fix);
+    if (toggleRepair.length && !toggleCurrent()) return;
+    const saved = await env.setCfg(fix); if (saved?.ok === false) return;
     env.rec('B', 'автороли', Object.entries(fix).map(([k, v]) => `${k}=${v}`).join(' · '));
     console.log(env.TAG, 'автоназначение ролей:', fix);
   }
+  if (toggleRepair.length && toggleCurrent()) await env.setRt({ warlordToggleRoles2049: { ...(env.rt.warlordToggleRoles2049 || {}), ...Object.fromEntries(toggleRepair.map(([id]) => [id, true])) } });
   if (warrior.length) await env.setRt({ warriorRoles1027: [...new Set([...(env.rt.warriorRoles1027 || []), ...warrior.map(x => x.name.toLowerCase())])] });
   if (repaired.length) await env.setRt({ damageRoles1023: [...new Set([...(env.rt.damageRoles1023 || []), ...repaired])] });
 }

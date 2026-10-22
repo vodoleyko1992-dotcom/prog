@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.49 Chrome — автоматическое поддержание Focus Attack и Vicious Stance Warlord](docs/changelog/CHANGELOG-20.49.md)
 - [20.48 Chrome — Warlord: родные роли, серверные откаты, Battle Roar; восстановление фарма после рыбалки](docs/changelog/CHANGELOG-20.48.md)
 - [20.47 Chrome — восстановительное чтение до 25 с, общий дедлайн GET до конца JSON](docs/changelog/CHANGELOG-20.47.md)
 - [20.46 Chrome — крафт без повторной партии после перезагрузки, свежее оружие Warlord; отдельно Lite 1.5.2 Chrome и Firefox с восстановлением после замены стрел](docs/changelog/CHANGELOG-20.46.md)

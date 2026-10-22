@@ -32,11 +32,13 @@ const html='<!doctype html><meta charset="utf-8"><title>Warlord local support</t
   const roles=await h.g.core('L2V7Modules.equipment.suggestRoles().roles');
   const names=s=>String(s||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean);
   assert.deepEqual(names(roles.nHeal),['бойовий рик']);assert.deepEqual(names(roles.nBuffs),['левине серце']);
-  for(const k of ['nPower','nStun','nBuffs','nHeal','nToggles'])assert.ok(!names(roles[k]).includes('фокусована атака'),'Focus остаётся ручным: '+k);
+  // 20.49: Focus — отдельный тоггл ON-only; обычные баффы/удары его не переключают.
+  for(const k of ['nPower','nStun','nBuffs','nHeal'])assert.ok(!names(roles[k]).includes('фокусована атака'),'Focus только в роли тогглов: '+k);
+  assert.ok(names(roles.nToggles).includes('фокусована атака'));
   assert.ok(names(roles.nPower).includes('вихор'));assert.ok(names(roles.nPower).includes('дикий розмах'));
   assert.ok(!names(roles.nPower).includes('бойовий рик'));assert.ok(!names(roles.nPower).includes('левине серце'));
-  proof.push({case:'actual suggestRoles assigns heal/buff, excludes manual Focus from automatic roles',pass:true,roles});
-  console.log('PASS MV3 actual suggestRoles: Roar heal, Lionheart buff, damage skills retained, Focus manual');
+  proof.push({case:'actual suggestRoles assigns heal/buff and managed Focus toggle role',pass:true,roles});
+  console.log('PASS MV3 actual suggestRoles: Roar heal, Lionheart buff, damage skills retained, Focus managed toggle');
   // Fetch действительно выполняется Chromium; route возвращает только сохранённую безопасную fixture, реальной сети нет.
   const rows=await h.g.p.evaluate(async()=>{const r=await fetch('/local-warlord-fixture.json');return(await r.json()).cases});
   async function observe(action,id){

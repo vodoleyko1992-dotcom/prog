@@ -1,0 +1,40 @@
+{
+  "result": "PASS",
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.49",
+  "runtimeHashes": {
+    "content.js": "767de03d8bca2c97ee62dc1360dc34305a586028103d2c5ed54dab7bf1b2a131",
+    "hook.js": "baf83dd5efd31ee14b833ec3486316ea01edaa8097a85d00d1fd42ef1ede405f",
+    "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+    "modules/buffs.js": "36d48912129d5b17af72e10e83643680983fe1fe11cf96c823e1d5a932f096bd",
+    "modules/equipment.js": "3a65f4ce0f9d2476a4f815550d0f068bddc596ca20941bd98e481b25ae8d8ae0",
+    "battle-cooldown.js": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e"
+  },
+  "runtimeHashesMatchFinalRoot": {
+    "content.js": true,
+    "hook.js": true,
+    "modules/combat.js": true,
+    "modules/buffs.js": true,
+    "modules/equipment.js": true,
+    "battle-cooldown.js": true
+  },
+  "managedToggles": {
+    "cases": 10,
+    "automaticOFF": 0,
+    "proof": "combined-toggle-browser10.json"
+  },
+  "supportAndCooldowns": {
+    "cases": 7,
+    "proof": "combined-support-browser7.json",
+    "boundary": "actual MV3/content with main OFF; native DOM/roles/ready/model; saved raw response supplied through controlled observe call"
+  },
+  "weaponMainHook": {
+    "cases": 4,
+    "proof": "combined-live-weapon-browser4.json"
+  },
+  "liveGame": false,
+  "liveGamePosts": 0,
+  "localMockBattlePosts": 33,
+  "pageErrors": [],
+  "routeErrors": []
+}

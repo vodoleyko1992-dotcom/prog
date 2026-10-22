@@ -109,7 +109,7 @@ function buffList(ctx = env.BUFF_CTX) {
   // 9.0: свой Noblesse Blessing (статус Noblesse) — бафф, если он на панели боя (уходит со смертью, держит остальные баффы)
   const nob = env.rt.story?.nobleOwn && env.slotsBy('noblesse blessing')[0] ? ['noblesse blessing'] : [];
   const arr = [...new Set([...env.names(env.cfg.nBuffs), ...keys, ...nob])].map(bn => ({ bn, b: env.slotsBy(bn)[0] }))
-    .filter(x => !x.b || env.ilOf(x.b)?.autoUse !== false); // 20.3: ручные эффекты не исполняем из старой ошибочной роли.
+    .filter(x => !x.b || env.ilOf(x.b)?.autoUse !== false && ![312,317].includes(env.ilOf(x.b)?.id)); // 20.49: относительные стойки — только через контроллер тогглов.
   const tot = arr.filter(x => x.b && env.isTotem(x.b));
   const pick = tot.length ? totemPick() : null;   // тотемы: висит только один — какой ставить сейчас, решает замер
   const best = {};
