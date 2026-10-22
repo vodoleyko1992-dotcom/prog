@@ -1,15 +1,15 @@
 {
-  "atUtc": "2026-10-22T14:34:09.580053+00:00",
+  "atUtc": "2026-10-22T14:42:36.907291+00:00",
   "result": "PASS",
   "version": "20.51",
   "zip": "/workspace/prog/builds/l2wap-bot-v20.51.zip",
-  "bytes": 1643556,
+  "bytes": 1643927,
   "files": 68,
-  "sha256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
-  "extracted": "/workspace/prog/work/build-20.51/audit-extracted-xp_xwrj3",
+  "sha256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+  "extracted": "/workspace/prog/work/build-20.51/audit-extracted-zka3_nbp",
   "baseline": "audit-baseline.json",
   "baselineHead": "d480e0ac5f7a0348a2594b1f819cd4937a405152",
-  "currentHead": "3a011bb218dcc27ff67fcc575a3e897c6976f60d",
+  "currentHead": "8baca864c73f26d4372a79d2200191024a17e551",
   "crc": "PASS",
   "duplicates": [],
   "unsafeMembers": [],
@@ -655,12 +655,12 @@
   "entries": [
     {
       "path": "README-CHROME.txt",
-      "bytes": 14627,
-      "crc32": "e3914e17",
-      "zipSha256": "9b1011a6c2ea651e54752bcc2a696ff41ba128599ab2476b3cc35091b8a462ad",
-      "sourceSha256": "9b1011a6c2ea651e54752bcc2a696ff41ba128599ab2476b3cc35091b8a462ad",
-      "extractedSha256": "9b1011a6c2ea651e54752bcc2a696ff41ba128599ab2476b3cc35091b8a462ad",
-      "providedExtractedSha256": "9b1011a6c2ea651e54752bcc2a696ff41ba128599ab2476b3cc35091b8a462ad",
+      "bytes": 15005,
+      "crc32": "e8ebc165",
+      "zipSha256": "9c09f32298108f043cb48acdc95e3a0c512afb9d5ac7980055f0953fe528d181",
+      "sourceSha256": "9c09f32298108f043cb48acdc95e3a0c512afb9d5ac7980055f0953fe528d181",
+      "extractedSha256": "9c09f32298108f043cb48acdc95e3a0c512afb9d5ac7980055f0953fe528d181",
+      "providedExtractedSha256": "9c09f32298108f043cb48acdc95e3a0c512afb9d5ac7980055f0953fe528d181",
       "match": true
     },
     {
@@ -1055,12 +1055,12 @@
     },
     {
       "path": "modules/navigation.js",
-      "bytes": 91713,
-      "crc32": "83c4b7fc",
-      "zipSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
-      "sourceSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
-      "extractedSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
-      "providedExtractedSha256": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+      "bytes": 92550,
+      "crc32": "1ebdda08",
+      "zipSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+      "sourceSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+      "extractedSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+      "providedExtractedSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
       "match": true
     },
     {
@@ -1963,5 +1963,24 @@
   "unexpectedNewBuilds": [],
   "releaseChecksumMatches": null,
   "problems": [],
-  "executionBoundary": "Read-only ZIP/JSON/HTML/CSS/static JS inspection, CRC and hashing; writes only isolated extraction/evidence in work. No archive scripts executed, browser started, or game requests made."
+  "executionBoundary": "Read-only ZIP/JSON/HTML/CSS/static JS inspection, CRC and hashing; writes only isolated extraction/evidence in work. No archive scripts executed, browser started, or game requests made.",
+  "upstreamNavigationComparison": {
+    "commit": "6bcd21b",
+    "path": "modules/navigation.js",
+    "upstreamSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+    "zipSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+    "sourceSha256": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+    "matches": true
+  },
+  "previousCandidateComparison": {
+    "previousCandidateCommit": "8baca86",
+    "previousCandidateSha256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
+    "changedMembers": [
+      "README-CHROME.txt",
+      "modules/navigation.js"
+    ],
+    "added": [],
+    "removed": [],
+    "matchesExpectedOnlyNavigationAndReadme": true
+  }
 }

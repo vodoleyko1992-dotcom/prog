@@ -2,10 +2,11 @@
   "pass": true,
   "extensionVersion": "20.51",
   "archive": "builds/l2wap-bot-v20.51.zip",
-  "archiveSha256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
+  "archiveSha256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+  "archiveBytes": 1643927,
   "archiveEntries": 68,
-  "scenariosPass": 21,
-  "scenariosFail": 0,
+  "mv3ScenariosPass": 21,
+  "mv3ScenariosFail": 0,
   "actualMv3Contexts": 15,
   "tests": [
     {
@@ -62,13 +63,30 @@
     "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
     "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
     "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
-    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e"
+    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
+  },
+  "battleLoadError": {
+    "pass": 17,
+    "fail": 0,
+    "browser": "156.0.8078.4",
+    "scope": "Actual Chromium using exact navigation/shown/byText/fire sliced from final extracted ZIP; reconstructed local DOM and controlled route/waitFor/actor; NOT full MV3",
+    "fullMv3": false,
+    "report": "battle-load-error-package.json",
+    "runnerReport": "battle-load-error-package-runner.json",
+    "log": "battle-load-error-package.log",
+    "baseline": "navigation-before-pr359.js",
+    "sourceHashes": {
+      "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+      "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
+    }
   },
   "liveGameRequests": 0,
   "boundaries": [
-    "Unchanged repository test and fixture files",
-    "One in-memory harness root path replacement per test process",
-    "Actual Chrome156 MV3 extension loaded from extracted final ZIP",
+    "Unchanged repository tests and fixtures",
+    "One in-memory harness root path replacement per MV3 test process",
+    "Actual Chrome156 MV3 extension loaded from extracted final ZIP; 21 Warlord cases",
+    "Battle load recovery17 cases separately use exact selected functions and controlled environment; NOT MV3",
     "All game HTTPS responses were local Playwright route fixtures; no real game access",
     "Native Detect test requiring absent cache was not run or downloaded"
   ]

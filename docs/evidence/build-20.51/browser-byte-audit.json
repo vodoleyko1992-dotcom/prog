@@ -1,11 +1,12 @@
 {
   "pass": true,
   "zip": "/workspace/prog/builds/l2wap-bot-v20.51.zip",
-  "zipSHA256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
+  "zipSHA256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+  "zipBytes": 1643927,
   "entries": 68,
   "allSourceZipExtractedEqual": true,
   "hashes": {
-    "README-CHROME.txt": "9b1011a6c2ea651e54752bcc2a696ff41ba128599ab2476b3cc35091b8a462ad",
+    "README-CHROME.txt": "9c09f32298108f043cb48acdc95e3a0c512afb9d5ac7980055f0953fe528d181",
     "README-FIREFOX.txt": "33943011b6b02fce660babd841957200c259b6efb605dab8c492c8d6a08f575a",
     "augment.js": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
     "background.js": "efac9b54534322811f96d5d41d8094436693bf7cfb354f1360428164eb8c0681",
@@ -45,7 +46,7 @@
     "modules/loot.js": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
     "modules/mammon.js": "2d47dcba38b8507e04c4de3a0a9e38024db647658ed9d9f0d0b524f7056870b3",
     "modules/mobfarm.js": "621e1e1a77b0515d2cb265fd66addbdfc47ea48eafcb7512db8df5fdb2d345fa",
-    "modules/navigation.js": "2dae2ea3b1ac8d32b9f17eab138d1ffaa171ff4c628f02416d0a6fdd07e04938",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
     "modules/payments.js": "28cb6ab5bd072800322369f8e0cb00d2ed3d6ba0c87e872b1e1d0bd8dd4bd93d",
     "modules/pvp.js": "33a2429b34baf7fc142fb56f6c4cf3d551602488be5fbe9fe53d161be6722607",
     "modules/quests.js": "1d22fd96b782ee8440f36d46a96626898fb76386fd8a69a61426f4636cb9eff1",

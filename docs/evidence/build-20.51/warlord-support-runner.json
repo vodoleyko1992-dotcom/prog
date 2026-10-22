@@ -23,7 +23,8 @@
     "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
     "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
     "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
-    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e"
+    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
   },
   "contexts": [
     {
@@ -43,7 +44,8 @@
         "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
         "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
         "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
-        "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e"
+        "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+        "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
       },
       "pageErrors": [],
       "closed": true
@@ -52,7 +54,7 @@
   "passLines": [
     "PASS MV3 localized native support DOM→121/287, Focus→317",
     "PASS MV3 actual suggestRoles: Roar heal, Lionheart buff, damage skills retained, Focus managed toggle",
-    "PASS MV3 actual server deadline/ready wild_sweep {\"expected\":4967,\"wait\":4967,\"numeric\":4967,\"ready\":false}",
+    "PASS MV3 actual server deadline/ready wild_sweep {\"expected\":4967,\"wait\":4966,\"numeric\":4966,\"ready\":false}",
     "PASS MV3 actual server deadline/ready battle_roar {\"expected\":178271,\"wait\":178271,\"numeric\":178271,\"ready\":false}",
     "PASS MV3 actual server deadline/ready lionheart {\"expected\":44528,\"wait\":44528,\"numeric\":44528,\"ready\":false}",
     "PASS MV3 replay does not extend178s Roar",

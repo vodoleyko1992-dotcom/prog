@@ -22,7 +22,8 @@
     "popup.js": "e6828e8ac9890a8801d1168bc6d4ebc7431dce2fc42aa96cc2d8d06b6c6a110c",
     "popup.html": "3124d5adf141fa3a674653b58deea3ab59ee1f6da9d0cdf8807cb086bfb4cfcb",
     "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
-    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638"
+    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
   },
   "pageErrors": [],
   "consoleErrors": [],

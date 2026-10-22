@@ -4,24 +4,24 @@
   "version": "20.51",
   "flavor": "main Chrome",
   "authorization": "Явная команда игрока «Сборка» после завершённого PR#358. Только Chrome; Firefox/Lite не запрошены. Игроку разрешён запуск героя, новых игровых запросов нет.",
-  "pr": null,
-  "baseCommit": "3a011bb218dcc27ff67fcc575a3e897c6976f60d",
+  "pr": 360,
+  "baseCommit": "6bcd21b828f0ad394e3bdb8eef3dc7e46ba4ee5c",
   "includedFeaturePr": 358,
   "result": "PASS",
   "artifact": "builds/l2wap-bot-v20.51.zip",
-  "bytes": 1643556,
+  "bytes": 1643927,
   "files": 68,
-  "sha256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
+  "sha256": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
   "node": {
     "command": "node tests/run-all.cjs",
     "result": "PASS",
-    "pass": 615,
+    "pass": 616,
     "fail": 0,
-    "logSha256": "64d43098b0521c2303908b0b3e538c2419ec94f63dbcae17d946ece0d3c639ba"
+    "logSha256": "09ecb3a87a50b14af909c46d87bd9bd81d372edb4073c943badbe62faba2e885"
   },
   "syntax": {
     "pass": true,
-    "files": 58,
+    "files": 60,
     "proof": "syntax.json"
   },
   "envcheck": {
@@ -70,9 +70,11 @@
       "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638",
       "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
       "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
-      "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e"
+      "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+      "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205"
     },
-    "boundary": "Actual Chrome MV3 extension loaded from unchanged extracted final ZIP. Controlled local game responses. Test harness root redirected to extracted in memory; repository test files and packaged runtime unchanged."
+    "boundary": "Actual Chrome MV3 extension loaded from unchanged extracted final ZIP. Controlled local game responses. Test harness root redirected to extracted in memory; repository test files and packaged runtime unchanged.",
+    "fetchedPackageAssetHashes": 68
   },
   "zipLoad": {
     "pass": true,
@@ -98,14 +100,15 @@
     "preservedArchives": 61,
     "baseProfilePreserved": true,
     "newArchives": 1,
-    "forbiddenCredentialFields": 0
+    "forbiddenCredentialFields": 0,
+    "upstreamNavigationMatches": "6bcd21b828f0ad394e3bdb8eef3dc7e46ba4ee5c"
   },
   "versions": {
     "Chrome": "20.51",
     "Firefox": "20.43",
     "Lite": "1.5.2"
   },
-  "runtimeChangesInBuild": "Only version/header/README metadata after merged PR#358; feature runtime unchanged. Five existing version assertions advanced to20.51.",
+  "runtimeChangesInBuild": "Version/header/README metadata after merged PR#358/#359. ZIP includes upstream navigation fix unchanged (6bcd21b); five existing version assertions advanced to20.51.",
   "fullHistoricalBrowserSuiteRun": false,
   "historicalDomSnapshotsAvailable": false,
   "detectNativeCacheAvailable": false,
@@ -117,5 +120,14 @@
     "This release has no new live game requests or installed-ZIP autonomous live run.",
     "Prior8live craft scenarios tested an implementation candidate; final recovery changes were verified locally, as separated in craft-goals validation.",
     "System notification delivery depends on OS/browser permissions."
-  ]
+  ],
+  "includedFixPr": 359,
+  "battleLoadErrorBrowser": {
+    "pass": 17,
+    "fail": 0,
+    "pageErrors": 0,
+    "liveGameRequests": 0,
+    "proof": "battle-load-error-package.json",
+    "boundary": "Real Chromium with exact extracted navigation/shown/byText/fire, controlled actor/waitFor/route and reconstructed local DOM; separate from the42 full MV3 cases. Includes a baseline regression check."
+  }
 }

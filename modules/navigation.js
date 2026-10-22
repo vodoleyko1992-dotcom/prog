@@ -789,11 +789,14 @@ async function zoneGoStep() {                     // полёт: Телепор�
 // Выходим через обработчик игры и ждём его маршрут: подземелье после отхода/победы, город после поражения.
 const dungeonOfBattle = () => { const m = (location.search || '').match(/spawnId=sdms_(.+?)_\d+(?:&|$)/i); return m ? decodeURIComponent(m[1]) : (env.heroAt?.()?.dung || ''); };
 async function toMap() {
+  // 20.50 (лог 23.10 00:20:43): ошибку загрузки игра дополняет ссылкой без #battle-back-map;
+  // «Повернутися на карту» не совпадает с BACK. Нажимаем её через fire, как игрок, не подменяя игровой выход.
+  const errorBack = () => { const a = env.$q('#battle-load-err a.l2-battle-back-map[href="/map.html"]'); return a && (!env.shown || env.shown(a)) ? a : null; };
   const dg = env.cfg.catMode && /spawnId=sdms_/i.test(location.search) ? dungeonOfBattle() : '';
   if (dg) {
     if (!env.on) return;
     env.setStatus('Возврат в подземелье');
-    const back = await env.waitFor(() => ['#battle-defeat-tocity', '#battle-back-map', '#battle-victory-continue']
+    const back = await env.waitFor(() => errorBack() || ['#battle-defeat-tocity', '#battle-back-map', '#battle-victory-continue']
       .map(s => env.$q(s)).find(b => b && (!env.shown || env.shown(b))) || env.byText(env.BACK)
       || env.$q('#wap-bottom a[href="/city.html"], #l2-nav-bottom a[href="/city.html"]'), 3000);
     if (!env.on) return;
@@ -805,8 +808,13 @@ async function toMap() {
     if (env.on) env.setStatus('Выход из боя не завершён');
     return;
   }
+  if (!env.on) return;
   env.setStatus('Возврат на карту');
-  const back = env.$q('#battle-back-map') || await env.waitFor(() => env.byText(env.BACK), 3000);
+  let errorLink = null;
+  const back = await env.waitFor(() => (errorLink = errorBack()) || env.$q('#battle-back-map') || env.byText(env.BACK), 3000);
+  if (!env.on) return;
+  // Для найденной ссылки ошибки отказ fire (капча/Stop/владелец) не заменяем прямым переходом.
+  if (errorLink) { env.fire(back); await env.waitFor(isMap, 8000); return; }
   if (back) env.fire(back); else location.href = '/map.html';
   if (!(await env.waitFor(isMap, 8000)) && env.on) { location.href = '/map.html'; await env.sleep(3000); }
 }

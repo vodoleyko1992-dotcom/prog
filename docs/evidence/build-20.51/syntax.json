@@ -1,6 +1,6 @@
 {
   "pass": true,
-  "count": 58,
+  "count": 60,
   "files": [
     "augment.js",
     "background.js",
@@ -51,9 +51,11 @@
     "popup.js",
     "pvp-ui.js",
     "skills-il.js",
+    "tests/battle-load-error-browser.cjs",
     "tests/ios-fishing.test.js",
     "tests/stage1.test.js",
     "tests/stage3.test.js",
+    "tests/v2050-battle-load-error.test.js",
     "tests/v6-core.test.js",
     "tests/v71-ui.test.js",
     "ui-v7.js",
