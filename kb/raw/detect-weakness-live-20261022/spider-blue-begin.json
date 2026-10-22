@@ -1,0 +1,135 @@
+{
+  "at": "2026-10-22T13:29:45Z",
+  "method": "POST",
+  "path": "/game/battle/start",
+  "status": 200,
+  "elapsedMs": 164,
+  "originalResponseSha256": "7eedad59aadae25b6bbf5fd58e63ea614752876af2968d8cf15c467a3627bef0",
+  "request": {
+    "spawnId": "dense_31641"
+  },
+  "response": {
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "pAtk": 5368,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": true,
+      "cityId": "l2dop_schuttgart",
+      "currentZoneId": "pavel_ruins",
+      "worldX": 91300,
+      "worldY": -117189,
+      "revision": 439341,
+      "sp": 7648870,
+      "adena": "1057388519",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": 1792676348549,
+          "remainingSec": 564
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792676348801,
+          "remainingSec": 564
+        },
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": 1792676349020,
+          "remainingSec": 564
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": false
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": false
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    },
+    "battle": {
+      "mobName": "Spelunking Spider",
+      "mobLevel": 47,
+      "mobHp": 34104,
+      "mobMaxHp": 34104,
+      "kind": "champion",
+      "battleMode": "pve",
+      "battleVersion": 1,
+      "log": [
+        "Бій розпочато: [Spelunking Spider] (ур. 47)."
+      ],
+      "battleMods": {
+        "stanceVicious": true,
+        "focusAttackActive": true,
+        "viciousStanceSkillRank": 9,
+        "weaknessDetects": {
+          "plant": 1.3,
+          "animal": 1.3,
+          "insect": 1.3
+        }
+      },
+      "battleBuffIcons": [
+        {
+          "key": "stance_vicious",
+          "l2SkillId": 312,
+          "labelUk": "Жорстка стійка",
+          "isToggle": true
+        },
+        {
+          "key": "focus_attack",
+          "l2SkillId": 317,
+          "labelUk": "Зосереджений удар",
+          "isToggle": true
+        },
+        {
+          "key": "weakness_plant",
+          "l2SkillId": 104,
+          "labelUk": "Детект: рослини",
+          "buffExpiresAtMs": 1792676349020,
+          "buffDurationTotalMs": 600000
+        },
+        {
+          "key": "weakness_animal",
+          "l2SkillId": 87,
+          "labelUk": "Детект: звірі",
+          "buffExpiresAtMs": 1792676348801,
+          "buffDurationTotalMs": 600000
+        },
+        {
+          "key": "weakness_insect",
+          "l2SkillId": 75,
+          "labelUk": "Детект: комахи",
+          "buffExpiresAtMs": 1792676348549,
+          "buffDurationTotalMs": 600000
+        }
+      ]
+    }
+  }
+}

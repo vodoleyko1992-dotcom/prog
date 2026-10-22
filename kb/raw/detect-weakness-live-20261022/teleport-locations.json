@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-22T13:04:10Z",
+  "method": "GET",
+  "path": "/game/teleport/locations",
+  "status": 200,
+  "elapsedMs": 85,
+  "originalResponseSha256": "22a5e20131f3991af15b8f2e9f7afa9cad87283a7b5dc53a13e3385ea3bc81c6",
+  "request": {},
+  "response": {
+    "locations": [
+      {
+        "teleportId": "giran",
+        "labelUk": "Місто Гіран",
+        "labelEn": "Town of Giran",
+        "adenaCost": 0,
+        "baseAdenaCost": 10000,
+        "vipFreeApplied": true,
+        "mobLevelMin": 31,
+        "mobLevelMax": 50
+      },
+      {
+        "teleportId": "giran_harbor",
+        "labelUk": "Гавань Гірана",
+        "labelEn": "Giran Harbor",
+        "adenaCost": 0,
+        "baseAdenaCost": 2500,
+        "vipFreeApplied": true,
+        "mobLevelMin": 25,
+        "mobLevelMax": 51
+      },
+      {
+        "teleportId": "enchanted_valley_north",
+        "labelUk": "Зачарована долина (північ)",
+        "labelEn": "Enchanted Valley - Northern Region",
+        "adenaCost": 0,
+        "baseAdenaCost": 7000,
+        "vipFreeApplied": true,
+        "mobLevelMin": 48,
+        "mobLevelMax": 62
+      },
+      {
+        "teleportId": "pavel_ruins",
+        "labelUk": "Руїни Павла",
+        "labelEn": "Pavel Ruins",
+        "adenaCost": 0,
+        "baseAdenaCost": 9500,
+        "vipFreeApplied": true,
+        "mobLevelMin": 46,
+        "mobLevelMax": 80
+      }
+    ]
+  }
+}

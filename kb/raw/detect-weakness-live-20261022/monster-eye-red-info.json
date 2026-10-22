@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-22T12:52:56Z",
+  "method": "GET",
+  "path": "/game/spawn/champ_r_giran_harbor_1/info",
+  "status": 200,
+  "elapsedMs": 227,
+  "originalResponseSha256": "1cedb22d6640002f8e01bdf6a65aa488fe2003612ac43cd3e8f2ddf51fcd5893",
+  "request": {},
+  "response": {
+    "kind": "champion",
+    "spawnId": "champ_r_giran_harbor_1",
+    "name": "Monster Eye Destroyer",
+    "level": 26,
+    "npcId": 20068,
+    "templateId": "l2dop_dense_543",
+    "stats": {
+      "maxHp": 59976,
+      "pAtk": 1006,
+      "pDef": 624,
+      "mAtk": 816,
+      "mDef": 543
+    },
+    "championTier": "red"
+  }
+}

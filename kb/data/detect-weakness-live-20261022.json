@@ -1,0 +1,1931 @@
+{
+  "schemaVersion": 1,
+  "status": "final",
+  "date": "2026-10-22",
+  "titleRu": "Detect Weakness: контролируемый ручной живой аудит Warlord51",
+  "timeZone": "UTC; отображение клиенту Asia/Vladivostok UTC+10",
+  "rawManifest": "../raw/detect-weakness-live-20261022/manifest.json",
+  "scope": {
+    "evidenceKind": "manual controlled live research",
+    "runtimeBaseCommit": "650e76f8e25b29196b0d51431f9b3512193be69a",
+    "profession": "human_warlord",
+    "level": 51,
+    "weaponItemId": 299,
+    "weaponEnchant": 2,
+    "pDef": 3186,
+    "unchangedEquipmentSlots": 14,
+    "learnedSkillCount": 26,
+    "focusAttackRank": 2,
+    "viciousStanceRank": 9,
+    "focusAndViciousOn": true,
+    "controlledBaselinePAtk": 2915,
+    "initialEnvelopePAtk": 3325,
+    "initialEnvelopeBoundary": "Начальная проекция и два кратких исходных баффа78/130 отделены от устойчивой контрольной базы2915; не использовать3325 как базу Detect.",
+    "primaryNormalDamageOnlyForSpeciesConfirmation": true,
+    "automationBoundary": "Сеанс проведён вручную через API. Он проверяет механику Detect и различие маршрутов. Он не является живым запуском нового автоматического контроллера бота; его маршрутизацию/очередь/миграцию отдельно проверяют fixture и browser mocks."
+  },
+  "skills": [
+    {
+      "l2SkillId": 104,
+      "battleId": "l2_104",
+      "level": 1,
+      "nameUk": "Detect Plant Weakness",
+      "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти Plant. MP 21, відкат 10 с.",
+      "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти Plant. MP 21, откат 10 с.",
+      "speciesKey": "plant",
+      "canonicalOutsideRoute": "POST /character/skills/cast",
+      "nativeBattleAlias": "detect_plant_weakness",
+      "source": "../raw/detect-weakness-live-20261022/baseline-before-tests.json"
+    },
+    {
+      "l2SkillId": 75,
+      "battleId": "l2_75",
+      "level": 1,
+      "nameUk": "Detect Insect Weakness",
+      "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти комах (Insect). MP 14, відкат 10 с.",
+      "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти комах (Insect). MP 14, откат 10 с.",
+      "speciesKey": "insect",
+      "canonicalOutsideRoute": "POST /character/skills/cast",
+      "nativeBattleAlias": "detect_insect_weakness",
+      "source": "../raw/detect-weakness-live-20261022/baseline-before-tests.json"
+    },
+    {
+      "l2SkillId": 87,
+      "battleId": "l2_87",
+      "level": 1,
+      "nameUk": "Detect Animal Weakness",
+      "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти Animal. MP 18, відкат 10 с.",
+      "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти Animal. MP 18, откат 10 с.",
+      "speciesKey": "animal",
+      "canonicalOutsideRoute": "POST /character/skills/cast",
+      "nativeBattleAlias": "detect_animal_weakness",
+      "source": "../raw/detect-weakness-live-20261022/baseline-before-tests.json"
+    }
+  ],
+  "outsideGlobalEffect": {
+    "forward": [
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-plant-only-before.json",
+        "atUtc": "2026-10-22T13:00:30Z",
+        "pAtk": 2915,
+        "mp": 1016,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792674490044,
+            "remainingSec": 460
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674389535,
+            "remainingSec": 359
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674488570,
+            "remainingSec": 458
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-plant-only.json",
+        "atUtc": "2026-10-22T13:00:31Z",
+        "pAtk": 3531,
+        "mp": 995,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792674630857,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674389535,
+            "remainingSec": 359
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674488570,
+            "remainingSec": 458
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-plant-plus-animal.json",
+        "atUtc": "2026-10-22T13:04:09Z",
+        "pAtk": 4329,
+        "mp": 998,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792674630857,
+            "remainingSec": 382
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674849043,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674488570,
+            "remainingSec": 240
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-all-three.json",
+        "atUtc": "2026-10-22T13:04:09Z",
+        "pAtk": 5368,
+        "mp": 984,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792674630857,
+            "remainingSec": 381
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674849043,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674849853,
+            "remainingSec": 600
+          }
+        ]
+      }
+    ],
+    "forwardOrder": [
+      "plant",
+      "animal",
+      "insect"
+    ],
+    "reversed": [
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-insect-alone-reverse-before.json",
+        "atUtc": "2026-10-22T13:16:48Z",
+        "pAtk": 2915,
+        "mp": 1016,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-insect-alone-reverse.json",
+        "atUtc": "2026-10-22T13:16:48Z",
+        "pAtk": 3531,
+        "mp": 1002,
+        "detectBuffs": [
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792675608442,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-insect-plus-animal.json",
+        "atUtc": "2026-10-22T13:18:46Z",
+        "pAtk": 4329,
+        "mp": 970,
+        "detectBuffs": [
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792675725286,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792675725931,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/outside-all-three-reversed.json",
+        "atUtc": "2026-10-22T13:18:46Z",
+        "pAtk": 5368,
+        "mp": 949,
+        "detectBuffs": [
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792675725286,
+            "remainingSec": 599
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792675725931,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792675726314,
+            "remainingSec": 600
+          }
+        ]
+      }
+    ],
+    "reverseOrder": [
+      "insect",
+      "animal",
+      "plant"
+    ],
+    "displayedPAtkSequence": [
+      2915,
+      3531,
+      4329,
+      5368
+    ],
+    "allThreeCompatible": true,
+    "displayedPAtkIncreasePercent": 84.150943,
+    "damageOrDpsIncreaseMeasured": false,
+    "activeRefresh": {
+      "skillId": 75,
+      "before": {
+        "source": "../raw/detect-weakness-live-20261022/outside-insect-active-refresh-before.json",
+        "atUtc": "2026-10-22T13:18:45Z",
+        "pAtk": 3531,
+        "mp": 1002,
+        "detectBuffs": [
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792675608442,
+            "remainingSec": 484
+          },
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          }
+        ]
+      },
+      "after": {
+        "source": "../raw/detect-weakness-live-20261022/outside-insect-active-refresh.json",
+        "atUtc": "2026-10-22T13:18:45Z",
+        "pAtk": 3531,
+        "mp": 988,
+        "detectBuffs": [
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792675725286,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": null,
+            "remainingSec": null
+          }
+        ]
+      },
+      "effect": "PAtk3531 unchanged; expiresAt renewed; no extra stacking from refresh"
+    },
+    "boundaries": [
+      "Наличие skillId и будущего expiresAt само по себе не подтверждает внебоевой глобальный PAtk-эффект: до первого canonical cast уже видны три native ID с будущими сроками при2915.",
+      "600с — срок нового эффекта в ответе; бесконечное сохранение и повторный вход не проверены.",
+      "+84.15% относится только к показанному PAtk5368 против2915 при данном наборе статов; общий DPS и точный коэффициент урона не измерены."
+    ]
+  },
+  "nativeBattlePath": {
+    "casts": [
+      {
+        "source": "../raw/detect-weakness-live-20261022/native-animal-cast.json",
+        "atUtc": "2026-10-22T12:56:29Z",
+        "pAtk": 2915,
+        "mp": 997,
+        "detectBuffs": [
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674389535,
+            "remainingSec": 600
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/native-insect-add.json",
+        "atUtc": "2026-10-22T12:58:08Z",
+        "pAtk": 2915,
+        "mp": 1002,
+        "detectBuffs": [
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674389535,
+            "remainingSec": 501
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674488570,
+            "remainingSec": 600
+          }
+        ]
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/native-plant-add.json",
+        "atUtc": "2026-10-22T12:58:10Z",
+        "pAtk": 2915,
+        "mp": 995,
+        "detectBuffs": [
+          {
+            "skillId": 104,
+            "level": 1,
+            "expiresAt": 1792674490044,
+            "remainingSec": 600
+          },
+          {
+            "skillId": 87,
+            "level": 1,
+            "expiresAt": 1792674389535,
+            "remainingSec": 500
+          },
+          {
+            "skillId": 75,
+            "level": 1,
+            "expiresAt": 1792674488570,
+            "remainingSec": 599
+          }
+        ]
+      }
+    ],
+    "sources": [
+      "../raw/detect-weakness-live-20261022/native-animal-cast.json",
+      "../raw/detect-weakness-live-20261022/native-insect-add.json",
+      "../raw/detect-weakness-live-20261022/native-plant-add.json",
+      "../raw/detect-weakness-live-20261022/native-all-before-leave.json",
+      "../raw/detect-weakness-live-20261022/native-reenter-same-target.json"
+    ],
+    "mapAfterThree": {
+      "animal": 1.3,
+      "insect": 1.3,
+      "plant": 1.3
+    },
+    "globalPAtkAfterEach": 2915,
+    "interpretation": "Native battle actions добавляют условные species-map эффекты и иконки. В этих наблюдениях они не материализуют глобальный PAtk как canonical outside cast. Сохранившаяся map и иконки после истечения outside не означают active outside."
+  },
+  "speciesEvidence": [
+    {
+      "species": "plant",
+      "confirmedBy": "explicit server annotation on uncapped normal main hits",
+      "npcName": "Valley Treant Elder",
+      "level": 53,
+      "spawnId": "champ_r_enchanted_valley_north_0",
+      "normalMainDamage": [
+        8906,
+        9813
+      ],
+      "pAtk": 5368,
+      "sources": [
+        "../raw/detect-weakness-live-20261022/treant-red-info.json",
+        "../raw/detect-weakness-live-20261022/tree-all-three-attack-00-before.json",
+        "../raw/detect-weakness-live-20261022/tree-all-three-attack-00.json",
+        "../raw/detect-weakness-live-20261022/tree-all-three-attack-01-before.json",
+        "../raw/detect-weakness-live-20261022/tree-all-three-attack-01.json"
+      ]
+    },
+    {
+      "species": "animal",
+      "confirmedBy": "explicit server annotation on uncapped normal main hits",
+      "npcName": "Unicorn",
+      "level": 49,
+      "spawnId": "champ_r_enchanted_valley_north_1",
+      "normalMainDamageAllThree": 10111,
+      "pAtkAllThree": 5368,
+      "normalMainDamageAfterPlantExpiry": 7428,
+      "pAtkAfterPlantExpiry": 4329,
+      "sources": [
+        "../raw/detect-weakness-live-20261022/unicorn-red-info.json",
+        "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01-before.json",
+        "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01.json",
+        "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01-before.json",
+        "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01.json"
+      ],
+      "boundary": "Тот же Unicorn после Plant expiry подтверждает изменение PAtk и сохранённую Animal подпись; это не чистая A/B оценка species множителя."
+    },
+    {
+      "species": "insect",
+      "confirmedBy": "explicit server annotation on uncapped normal main hit",
+      "npcName": "Spelunking Spider",
+      "npcId": 22051,
+      "level": 47,
+      "spawnId": "dense_31641",
+      "championTier": "blue",
+      "normalMainDamage": 9563,
+      "primaryHpBefore": 34104,
+      "primaryHpAfter": 24541,
+      "pAtk": 5368,
+      "sources": [
+        "../raw/detect-weakness-live-20261022/spider-info.json",
+        "../raw/detect-weakness-live-20261022/spider-blue-hit-before.json",
+        "../raw/detect-weakness-live-20261022/spider-blue-hit.json"
+      ]
+    }
+  ],
+  "negativeAndAmbiguousControls": [
+    {
+      "npcName": "Liele Elder",
+      "level": 52,
+      "species": "unknown",
+      "outsideNoneButNativeThreeMap": {
+        "pAtk": 2915,
+        "normalMainDamage": 3177,
+        "sources": [
+          "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01-before.json",
+          "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01.json"
+        ]
+      },
+      "outsideInsectAlone": {
+        "pAtk": 3531,
+        "normalMainDamage": 3863,
+        "sources": [
+          "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01-before.json",
+          "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01.json"
+        ]
+      },
+      "speciesAnnotationObserved": false,
+      "boundary": "Имя liele-two-outside не соответствует фактическому состоянию: outside истекли. Отсутствие подписи не классифицирует вид и не доказывает отсутствие/нулевой эффект. Разница двух ударов не оценивает точный species коэффициент."
+    },
+    {
+      "npcName": "Spelunking Ant",
+      "level": 50,
+      "species": "unknown",
+      "sources": [
+        "../raw/detect-weakness-live-20261022/ant-info.json",
+        "../raw/detect-weakness-live-20261022/ant-all-three-hit-before.json",
+        "../raw/detect-weakness-live-20261022/ant-all-three-hit.json",
+        "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry-before.json",
+        "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry.json",
+        "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit-before.json",
+        "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit.json"
+      ],
+      "boundary": "Синий Ant: крит ограничен36120HP без подписи. Обычные Ant: capped криты; отдельный normal2580 ограниченHP и уже при expired outside/PAtk2915. Имя NPC и отсутствие подписи не дают независимого подтверждения Insect и не измеряют множитель."
+    },
+    {
+      "npcName": "Monster Eye Destroyer",
+      "level": 26,
+      "sources": [
+        "../raw/detect-weakness-live-20261022/native-control-monstereye-start.json",
+        "../raw/detect-weakness-live-20261022/native-none-attack-01.json",
+        "../raw/detect-weakness-live-20261022/native-none-attack-02.json",
+        "../raw/detect-weakness-live-20261022/native-animal-attack-01.json",
+        "../raw/detect-weakness-live-20261022/native-all-three-attack-01.json"
+      ],
+      "boundary": "Большая разница уровней, криты и HPcap мешают измерению прибавки урона; вид не установлен по названию."
+    }
+  ],
+  "attackLogMethod": {
+    "acceptedAttackCount": 25,
+    "victoryCount": 7,
+    "deltaMethod": "Use only current response delta.logTail.",
+    "victoryMethod": "Require exact equality of before.battle.log and fullLog prefix, then remove prefix.",
+    "victoryPrefixProofs": [
+      {
+        "source": "../raw/detect-weakness-live-20261022/native-control-finish-02.json",
+        "before": "../raw/detect-weakness-live-20261022/native-control-finish-02-before.json",
+        "prefixLines": 36,
+        "fullLogLines": 54,
+        "freshLines": 18
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/tree-all-three-attack-03.json",
+        "before": "../raw/detect-weakness-live-20261022/tree-all-three-attack-03-before.json",
+        "prefixLines": 31,
+        "fullLogLines": 44,
+        "freshLines": 13
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/ant-all-three-hit.json",
+        "before": "../raw/detect-weakness-live-20261022/ant-all-three-hit-before.json",
+        "prefixLines": 1,
+        "fullLogLines": 15,
+        "freshLines": 14
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry.json",
+        "before": "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry-before.json",
+        "prefixLines": 2,
+        "fullLogLines": 6,
+        "freshLines": 4
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit.json",
+        "before": "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit-before.json",
+        "prefixLines": 1,
+        "fullLogLines": 17,
+        "freshLines": 16
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit.json",
+        "before": "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit-before.json",
+        "prefixLines": 1,
+        "fullLogLines": 20,
+        "freshLines": 19
+      },
+      {
+        "source": "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit.json",
+        "before": "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit-before.json",
+        "prefixLines": 1,
+        "fullLogLines": 16,
+        "freshLines": 15
+      }
+    ],
+    "hpCapBoundary": "Главный loggedDamage>=primaryHpBefore помечен capped; splash log damage может превышать реальный HP соседа. Ни сырые суммы, ни криты/промахи коротких серий не являются DPS сравнением."
+  },
+  "attacks": [
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-none-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/native-none-attack-01-before.json",
+      "atUtc": "2026-10-22T12:55:44Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 59976,
+      "primaryHpAfter": 55936,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {},
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 4040,
+          "hpCapped": false,
+          "line": "[Hero] −4040 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Delu Lizardman Scout −26857.",
+        "[Hero] −4040 HP.",
+        "Vamp clan armor: +363 HP.",
+        "Додаткова ціль повалена: Delu Lizardman Scout.",
+        "Weapon Piece D ×1",
+        "EXP + 1231",
+        "SP + 132"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-none-attack-02.json",
+      "before": "../raw/detect-weakness-live-20261022/native-none-attack-02-before.json",
+      "atUtc": "2026-10-22T12:56:28Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 55936,
+      "primaryHpAfter": 33525,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {},
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 22411,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −22411 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Monster Eye Destroyer −4400, Delu Lizardman Scout −4589.",
+        "[Hero] Критичний удар! −22411 HP.",
+        "Vamp clan armor: +55 HP.",
+        "Додаткова ціль повалена: Monster Eye Destroyer.",
+        "Animal Bone ×4",
+        "Suede ×4",
+        "EXP + 1078",
+        "SP + 108",
+        "+1411 аден",
+        "Додаткова ціль повалена: Delu Lizardman Scout.",
+        "Charcoal ×3",
+        "Silver Nugget ×4",
+        "Varnish ×3",
+        "EXP + 1231",
+        "SP + 132",
+        "+1211 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-animal-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/native-animal-attack-01-before.json",
+      "atUtc": "2026-10-22T12:56:31Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 33525,
+      "primaryHpAfter": 13664,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "animal": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 19861,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −19861 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Delu Lizardman −25608, Kadif Werewolf −5900.",
+        "[Hero] Критичний удар! −19861 HP.",
+        "Додаткова ціль повалена: Delu Lizardman.",
+        "Coal ×3",
+        "EXP + 1166",
+        "SP + 122",
+        "+1208 аден",
+        "Додаткова ціль повалена: Kadif Werewolf.",
+        "Weapon Piece D ×1",
+        "EXP + 982",
+        "SP + 98",
+        "+1658 аден",
+        "[Monster Eye Destroyer] ударив тебе — −1 HP."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-all-three-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/native-all-three-attack-01-before.json",
+      "atUtc": "2026-10-22T12:59:20Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 13664,
+      "primaryHpAfter": 9994,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3670,
+          "hpCapped": false,
+          "line": "[Hero] −3670 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Monster Eye Destroyer −5075, Delu Lizardman Scout −4866.",
+        "[Hero] −3670 HP.",
+        "Vamp clan armor: +1 HP.",
+        "Додаткова ціль повалена: Monster Eye Destroyer.",
+        "Animal Skin ×3",
+        "Iron Ore ×3",
+        "EXP + 1078",
+        "SP + 108",
+        "Додаткова ціль повалена: Delu Lizardman Scout.",
+        "Animal Bone ×3",
+        "Silver Nugget ×3",
+        "Stem ×4",
+        "Weapon Piece D ×1",
+        "EXP + 1231",
+        "SP + 132",
+        "[Monster Eye Destroyer] ударив тебе — −1 HP."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-control-finish-00.json",
+      "before": "../raw/detect-weakness-live-20261022/native-control-finish-00-before.json",
+      "atUtc": "2026-10-22T12:59:56Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 9994,
+      "primaryHpAfter": 6219,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3775,
+          "hpCapped": false,
+          "line": "[Hero] −3775 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Delu Lizardman Scout −4473, Delu Lizardman −25855.",
+        "[Hero] −3775 HP.",
+        "Vamp clan armor: +1 HP.",
+        "Додаткова ціль повалена: Delu Lizardman Scout.",
+        "Stem ×4",
+        "Suede ×3",
+        "Thread ×3",
+        "EXP + 1231",
+        "SP + 132",
+        "+2008 аден",
+        "Додаткова ціль повалена: Delu Lizardman.",
+        "Animal Bone ×4",
+        "Charcoal ×5",
+        "EXP + 1166",
+        "SP + 122",
+        "+1646 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-control-finish-01.json",
+      "before": "../raw/detect-weakness-live-20261022/native-control-finish-01-before.json",
+      "atUtc": "2026-10-22T12:59:58Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 6219,
+      "primaryHpAfter": 2522,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3697,
+          "hpCapped": false,
+          "line": "[Hero] −3697 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Kadif Werewolf −6293, Delu Lizardman −4485.",
+        "[Hero] −3697 HP.",
+        "Додаткова ціль повалена: Kadif Werewolf.",
+        "EXP + 982",
+        "SP + 98",
+        "Додаткова ціль повалена: Delu Lizardman.",
+        "Stem ×5",
+        "EXP + 1166",
+        "SP + 122"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/native-control-finish-02.json",
+      "before": "../raw/detect-weakness-live-20261022/native-control-finish-02-before.json",
+      "atUtc": "2026-10-22T13:00:00Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 2522,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2522,
+          "hpCapped": true,
+          "line": "[Hero] −2522 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Delu Lizardman Warrior −4866, Delu Lizardman Scout −5078.",
+        "[Hero] −2522 HP.",
+        "Додаткова ціль повалена: Delu Lizardman Warrior.",
+        "Animal Skin ×5",
+        "Stem ×5",
+        "Thread ×3",
+        "EXP + 1321",
+        "SP + 144",
+        "+1675 аден",
+        "Додаткова ціль повалена: Delu Lizardman Scout.",
+        "Silver Nugget ×5",
+        "EXP + 1231",
+        "SP + 132",
+        "Перемога!",
+        "Suede ×10",
+        "EXP + 32340",
+        "SP + 3240",
+        "+40386 аден"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/outside-plant-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/outside-plant-attack-01-before.json",
+      "atUtc": "2026-10-22T13:02:32Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 59976,
+      "primaryHpAfter": 33427,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 3531,
+      "pAtkAfter": 3531,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 26549,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −26549 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Kadif Werewolf −6796.",
+        "[Hero] Критичний удар! −26549 HP.",
+        "Додаткова ціль повалена: Kadif Werewolf.",
+        "Animal Skin ×5",
+        "Coal ×4",
+        "EXP + 982",
+        "SP + 98",
+        "[Monster Eye Destroyer] ударив тебе (крит!) — −2 HP."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/outside-plant-attack-02.json",
+      "before": "../raw/detect-weakness-live-20261022/outside-plant-attack-02-before.json",
+      "atUtc": "2026-10-22T13:02:34Z",
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "primaryHpBefore": 33427,
+      "primaryHpAfter": 7924,
+      "primaryMaxHp": 59976,
+      "pAtkBefore": 3531,
+      "pAtkAfter": 3531,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 25503,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −25503 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "[Hero] Критичний удар! −25503 HP.",
+        "Vamp clan armor: +2 HP.",
+        "[Monster Eye Destroyer] промахнувся по тобі."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/tree-all-three-attack-00.json",
+      "before": "../raw/detect-weakness-live-20261022/tree-all-three-attack-00-before.json",
+      "atUtc": "2026-10-22T13:07:08Z",
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "primaryHpBefore": 114408,
+      "primaryHpAfter": 105502,
+      "primaryMaxHp": 114408,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 8906,
+          "hpCapped": false,
+          "line": "[Hero] −8906 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість рослин: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Valley Treant Elder −59148.",
+        "(Вразливість рослин: +30% урону!)",
+        "[Hero] −8906 HP.",
+        "Додаткова ціль повалена: Valley Treant Elder.",
+        "Stone of Purity ×5",
+        "EXP + 5199",
+        "SP + 816",
+        "+5840 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/tree-all-three-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/tree-all-three-attack-01-before.json",
+      "atUtc": "2026-10-22T13:07:10Z",
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "primaryHpBefore": 105502,
+      "primaryHpAfter": 95689,
+      "primaryMaxHp": 114408,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 9813,
+          "hpCapped": false,
+          "line": "[Hero] −9813 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість рослин: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Valley Treant Elder −58136, Liele Elder −45461.",
+        "(Вразливість рослин: +30% урону!)",
+        "[Hero] −9813 HP.",
+        "Додаткова ціль повалена: Valley Treant Elder.",
+        "Silver Nugget ×4",
+        "EXP + 5199",
+        "SP + 816",
+        "+6611 аден",
+        "Додаткова ціль повалена: Liele Elder.",
+        "Stem ×3",
+        "EXP + 3730",
+        "SP + 576"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/tree-all-three-attack-02.json",
+      "before": "../raw/detect-weakness-live-20261022/tree-all-three-attack-02-before.json",
+      "atUtc": "2026-10-22T13:07:11Z",
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "primaryHpBefore": 95689,
+      "primaryHpAfter": 43652,
+      "primaryMaxHp": 114408,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 52037,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −52037 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість рослин: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Forest Runner −7862.",
+        "(Вразливість рослин: +30% урону!)",
+        "[Hero] Критичний удар! −52037 HP.",
+        "Додаткова ціль повалена: Forest Runner.",
+        "Varnish ×4",
+        "Armor Piece C ×1",
+        "EXP + 3381",
+        "SP + 508",
+        "+4923 аден",
+        "[Valley Treant Elder] ударив тебе — −1 HP."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/tree-all-three-attack-03.json",
+      "before": "../raw/detect-weakness-live-20261022/tree-all-three-attack-03-before.json",
+      "atUtc": "2026-10-22T13:07:13Z",
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "primaryHpBefore": 43652,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 114408,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 43652,
+          "hpCapped": true,
+          "line": "[Hero] Критичний удар! −43652 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість рослин: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Unicorn −11179.",
+        "(Вразливість рослин: +30% урону!)",
+        "[Hero] Критичний удар! −43652 HP.",
+        "Vamp clan armor: +1 HP.",
+        "Додаткова ціль повалена: Unicorn.",
+        "EXP + 3299",
+        "SP + 488",
+        "Перемога!",
+        "Weapon Piece B ×1",
+        "Fast Aden ×1",
+        "EXP + 155970",
+        "SP + 24480",
+        "+189387 аден"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01-before.json",
+      "atUtc": "2026-10-22T13:08:41Z",
+      "mobName": "Unicorn",
+      "mobLevel": 49,
+      "primaryHpBefore": 106344,
+      "primaryHpAfter": 96233,
+      "primaryMaxHp": 106344,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 10111,
+          "hpCapped": false,
+          "line": "[Hero] −10111 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість звірів: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Unicorn −11409, Unicorn −10836.",
+        "(Вразливість звірів: +30% урону!)",
+        "[Hero] −10111 HP.",
+        "Додаткова ціль повалена: Unicorn.",
+        "Weapon Piece C ×1",
+        "EXP + 3299",
+        "SP + 488",
+        "+5327 аден",
+        "Додаткова ціль повалена: Unicorn.",
+        "Silver Nugget ×5",
+        "Stone of Purity ×4",
+        "EXP + 3299",
+        "SP + 488",
+        "[Unicorn] промахнувся по тобі."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-02.json",
+      "before": "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-02-before.json",
+      "atUtc": "2026-10-22T13:09:37Z",
+      "mobName": "Unicorn",
+      "mobLevel": 49,
+      "primaryHpBefore": 96233,
+      "primaryHpAfter": 43077,
+      "primaryMaxHp": 106344,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 53156,
+          "hpCapped": false,
+          "line": "[Hero] Критичний удар! −53156 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість звірів: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Valley Treant Elder −11534, Satyr −9519.",
+        "(Вразливість звірів: +30% урону!)",
+        "[Hero] Критичний удар! −53156 HP.",
+        "Додаткова ціль повалена: Valley Treant Elder.",
+        "EXP + 5199",
+        "SP + 816",
+        "Додаткова ціль повалена: Satyr.",
+        "EXP + 3076",
+        "SP + 448",
+        "+3682 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01-before.json",
+      "atUtc": "2026-10-22T13:11:03Z",
+      "mobName": "Unicorn",
+      "mobLevel": 49,
+      "primaryHpBefore": 43077,
+      "primaryHpAfter": 35649,
+      "primaryMaxHp": 106344,
+      "pAtkBefore": 4329,
+      "pAtkAfter": 4329,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 7428,
+          "hpCapped": false,
+          "line": "[Hero] −7428 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість звірів: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Fline Elder −6935.",
+        "(Вразливість звірів: +30% урону!)",
+        "[Hero] −7428 HP.",
+        "Додаткова ціль повалена: Fline Elder.",
+        "Charcoal ×5",
+        "Coal ×4",
+        "Stone of Purity ×5",
+        "EXP + 3518",
+        "SP + 536",
+        "+5269 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01-before.json",
+      "atUtc": "2026-10-22T13:14:16Z",
+      "mobName": "Liele Elder",
+      "mobLevel": 52,
+      "primaryHpBefore": 112392,
+      "primaryHpAfter": 109215,
+      "primaryMaxHp": 112392,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3177,
+          "hpCapped": false,
+          "line": "[Hero] −3177 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Liele Elder −22981, Liele Elder −4642.",
+        "[Hero] −3177 HP.",
+        "Додаткова ціль повалена: Liele Elder.",
+        "EXP + 3730",
+        "SP + 576",
+        "+4761 аден",
+        "Додаткова ціль повалена: Liele Elder.",
+        "Mithril Ore ×5",
+        "EXP + 3730",
+        "SP + 576",
+        "+6363 аден"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01.json",
+      "before": "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01-before.json",
+      "atUtc": "2026-10-22T13:16:50Z",
+      "mobName": "Liele Elder",
+      "mobLevel": 52,
+      "primaryHpBefore": 109215,
+      "primaryHpAfter": 105352,
+      "primaryMaxHp": 112392,
+      "pAtkBefore": 3531,
+      "pAtkAfter": 3531,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 3863,
+          "hpCapped": false,
+          "line": "[Hero] −3863 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Liele Elder −5934.",
+        "[Hero] −3863 HP.",
+        "Додаткова ціль повалена: Liele Elder.",
+        "Asofe ×2",
+        "EXP + 3730",
+        "SP + 576"
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-all-three-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-all-three-hit-before.json",
+      "atUtc": "2026-10-22T13:27:19Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 36120,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 36120,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 36120,
+          "hpCapped": true,
+          "line": "[Hero] Критичний удар! −36120 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Probe Golem Prodigy IV −8470, Spelunking Spider −12268.",
+        "[Hero] Критичний удар! −36120 HP.",
+        "Додаткова ціль повалена: Probe Golem Prodigy IV.",
+        "Stem ×4",
+        "EXP + 3274",
+        "SP + 464",
+        "Додаткова ціль повалена: Spelunking Spider.",
+        "EXP + 3311",
+        "SP + 474",
+        "Перемога!",
+        "Accessory Gemstone C ×1",
+        "EXP + 54435",
+        "SP + 8190",
+        "+71230 аден"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-ordinary-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-ordinary-hit-before.json",
+      "atUtc": "2026-10-22T13:28:29Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 2580,
+      "primaryHpAfter": 2580,
+      "primaryMaxHp": 2580,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "miss",
+          "loggedDamage": 0,
+          "hpCapped": false,
+          "line": "[Hero] промахнувся."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "[Hero] промахнувся."
+      ],
+      "victory": false
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry-before.json",
+      "atUtc": "2026-10-22T13:28:41Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 2580,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 2580,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 2580,
+          "hpCapped": true,
+          "line": "[Hero] Критичний удар! −2580 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "[Hero] Критичний удар! −2580 HP.",
+        "Перемога!",
+        "EXP + 3629",
+        "SP + 546"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit-before.json",
+      "atUtc": "2026-10-22T13:28:54Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 2580,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 2580,
+      "pAtkBefore": 2915,
+      "pAtkAfter": 2915,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 2580,
+          "hpCapped": true,
+          "line": "[Hero] −2580 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Deadly Ginzu Golem V −4406, Horrifying Ginzu Golem VIII −24262.",
+        "[Hero] −2580 HP.",
+        "Додаткова ціль повалена: Deadly Ginzu Golem V.",
+        "EXP + 4398",
+        "SP + 692",
+        "+6407 аден",
+        "Додаткова ціль повалена: Horrifying Ginzu Golem VIII.",
+        "EXP + 4370",
+        "SP + 696",
+        "+6694 аден",
+        "Перемога!",
+        "Coal ×4",
+        "Silver Nugget ×4",
+        "EXP + 3629",
+        "SP + 546",
+        "+19434 аден"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit-before.json",
+      "atUtc": "2026-10-22T13:29:09Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 2580,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 2580,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 2580,
+          "hpCapped": true,
+          "line": "[Hero] Критичний удар! −2580 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Bloodthirsty Ginzu Golem VII −45152, Horrifying Excavator Golem III −8360.",
+        "[Hero] Критичний удар! −2580 HP.",
+        "Додаткова ціль повалена: Bloodthirsty Ginzu Golem VII.",
+        "Animal Skin ×5",
+        "Iron Ore ×5",
+        "EXP + 3841",
+        "SP + 586",
+        "+5831 аден",
+        "Додаткова ціль повалена: Horrifying Excavator Golem III.",
+        "Animal Bone ×5",
+        "EXP + 3841",
+        "SP + 586",
+        "+5945 аден",
+        "Перемога!",
+        "Stem ×3",
+        "EXP + 3629",
+        "SP + 546",
+        "+17381 аден",
+        "Олимпиада: Кубок +1"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit-before.json",
+      "atUtc": "2026-10-22T13:29:36Z",
+      "mobName": "Spelunking Ant",
+      "mobLevel": 50,
+      "primaryHpBefore": 2580,
+      "primaryHpAfter": 0,
+      "primaryMaxHp": 2580,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "victory.fullLog minus exact before.battle.log prefix",
+      "mainHits": [
+        {
+          "kind": "critical",
+          "loggedDamage": 2580,
+          "hpCapped": true,
+          "line": "[Hero] Критичний удар! −2580 HP."
+        }
+      ],
+      "speciesAnnotations": [],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Spelunking Spider −11902, Horrifying Jackhammer Golem −9084.",
+        "[Hero] Критичний удар! −2580 HP.",
+        "Додаткова ціль повалена: Spelunking Spider.",
+        "Iron Ore ×5",
+        "EXP + 3311",
+        "SP + 474",
+        "Додаткова ціль повалена: Horrifying Jackhammer Golem.",
+        "Mithril Ore ×5",
+        "EXP + 2198",
+        "SP + 340",
+        "+6350 аден",
+        "Перемога!",
+        "Thread ×5",
+        "EXP + 3629",
+        "SP + 546"
+      ],
+      "victory": true
+    },
+    {
+      "source": "../raw/detect-weakness-live-20261022/spider-blue-hit.json",
+      "before": "../raw/detect-weakness-live-20261022/spider-blue-hit-before.json",
+      "atUtc": "2026-10-22T13:29:46Z",
+      "mobName": "Spelunking Spider",
+      "mobLevel": 47,
+      "primaryHpBefore": 34104,
+      "primaryHpAfter": 24541,
+      "primaryMaxHp": 34104,
+      "pAtkBefore": 5368,
+      "pAtkAfter": 5368,
+      "nativeWeaknessDetects": {
+        "plant": 1.3,
+        "animal": 1.3,
+        "insect": 1.3
+      },
+      "soulshotItemId": null,
+      "soulshotPatkMul": null,
+      "logMethod": "delta.logTail",
+      "mainHits": [
+        {
+          "kind": "normal",
+          "loggedDamage": 9563,
+          "hpCapped": false,
+          "line": "[Hero] −9563 HP."
+        }
+      ],
+      "speciesAnnotations": [
+        "(Вразливість комах: +30% урону!)"
+      ],
+      "freshLog": [
+        "Древко розсікло ворогів поруч: Spelunking Ant −43000, Probe Golem Prodigy IV −9531.",
+        "(Вразливість комах: +30% урону!)",
+        "[Hero] −9563 HP.",
+        "Додаткова ціль повалена: Spelunking Ant.",
+        "EXP + 3629",
+        "SP + 546",
+        "+4934 аден",
+        "Додаткова ціль повалена: Probe Golem Prodigy IV.",
+        "EXP + 3274",
+        "SP + 464",
+        "+3307 аден"
+      ],
+      "victory": false
+    }
+  ],
+  "preservation": {
+    "sources": [
+      "../raw/detect-weakness-live-20261022/initial-character.json",
+      "../raw/detect-weakness-live-20261022/baseline-before-tests.json",
+      "../raw/detect-weakness-live-20261022/restore-shots-on.json",
+      "../raw/detect-weakness-live-20261022/final-leave.json",
+      "../raw/detect-weakness-live-20261022/final-harbor-character.json",
+      "../raw/detect-weakness-live-20261022/closure.json"
+    ],
+    "characterSnapshotsCompared": 132,
+    "equipmentSameAllSnapshots": true,
+    "hotbarSameAllSnapshots": true,
+    "learnedSameAllSnapshots": true,
+    "longBuffIdsRanksAndDeadlinesSameAllSnapshots": true,
+    "stancesSameInitialAndFinal": true,
+    "stanceToggleMutationsDuringSession": 0,
+    "staleCharacterStanceProjectionCount": 26,
+    "stanceProjectionBoundary": "Некоторые start/before character.toggleStances показывают false при battleMods ON; accepted attack delta подтверждает ON. Не трактовать stale false как ручное выключение.",
+    "final": {
+      "atUtc": "2026-10-22T13:31:56Z",
+      "level": 51,
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "inBattle": false,
+      "focusOn": true,
+      "viciousOn": true,
+      "soulshotItem1464RestoredOn": true,
+      "cityId": "l2dop_giran",
+      "currentZoneId": "giran_harbor",
+      "worldX": 47805,
+      "worldY": 186628
+    },
+    "initialPosition": {
+      "worldX": 43200,
+      "worldY": 170688,
+      "cityId": "l2dop_giran",
+      "currentZoneId": null
+    },
+    "exactInitialPositionRestored": false,
+    "outsideDetectsRemainActiveAtClosure": true,
+    "sourceClosure": "../raw/detect-weakness-live-20261022/closure.json"
+  },
+  "sessionAccounting": {
+    "initialAtUtc": "2026-10-22T12:49:51Z",
+    "finalAtUtc": "2026-10-22T13:31:56Z",
+    "apiRequests": 146,
+    "successfulRaidBossStarts": 0,
+    "refusedRaidBossStartSource": "../raw/detect-weakness-live-20261022/native-control-rb50-start.json",
+    "adenaDelta": 410339,
+    "spDelta": 52804,
+    "itemCounts": {
+      "1464": {
+        "before": 1703,
+        "after": 1703
+      },
+      "728": {
+        "before": 473,
+        "after": 473
+      },
+      "1061": {
+        "before": 981,
+        "after": 981
+      },
+      "4037": {
+        "before": 99,
+        "after": 99
+      },
+      "920048": {
+        "before": 446,
+        "after": 447
+      }
+    },
+    "teleports": {
+      "count": 4,
+      "adenaCost": 0,
+      "vipFreeApplied": true,
+      "sources": [
+        "../raw/detect-weakness-live-20261022/free-north-teleport.json",
+        "../raw/detect-weakness-live-20261022/pavel-teleport.json",
+        "../raw/detect-weakness-live-20261022/return-giran.json",
+        "../raw/detect-weakness-live-20261022/return-harbor.json",
+        "../raw/detect-weakness-live-20261022/teleport-locations.json"
+      ]
+    },
+    "noCaptchaReported": true,
+    "sessionClosedReported": true,
+    "closureBoundary": "Расходы и закрытие сессии дополнительно подтверждены обезличенной operator closure; повторного live доступа для KB не было. Адена/SP — итоги всего сеанса с соседними целями, не награда одной цели."
+  },
+  "sourceIndex": [
+    "../raw/detect-weakness-live-20261022/ant-all-three-hit-before.json",
+    "../raw/detect-weakness-live-20261022/ant-all-three-hit.json",
+    "../raw/detect-weakness-live-20261022/ant-animal-refresh-before.json",
+    "../raw/detect-weakness-live-20261022/ant-animal-refresh.json",
+    "../raw/detect-weakness-live-20261022/ant-begin-before.json",
+    "../raw/detect-weakness-live-20261022/ant-begin.json",
+    "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-begin-before.json",
+    "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-begin.json",
+    "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit-before.json",
+    "../raw/detect-weakness-live-20261022/ant-fourth-ordinary-hit.json",
+    "../raw/detect-weakness-live-20261022/ant-info.json",
+    "../raw/detect-weakness-live-20261022/ant-insect-refresh-before.json",
+    "../raw/detect-weakness-live-20261022/ant-insect-refresh.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-begin-before.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-begin.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-hit-before.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-hit.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry-before.json",
+    "../raw/detect-weakness-live-20261022/ant-ordinary-normal-retry.json",
+    "../raw/detect-weakness-live-20261022/ant-plant-refresh-before.json",
+    "../raw/detect-weakness-live-20261022/ant-plant-refresh.json",
+    "../raw/detect-weakness-live-20261022/ant-second-ordinary-begin-before.json",
+    "../raw/detect-weakness-live-20261022/ant-second-ordinary-begin.json",
+    "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit-before.json",
+    "../raw/detect-weakness-live-20261022/ant-second-ordinary-hit.json",
+    "../raw/detect-weakness-live-20261022/ant-third-ordinary-begin-before.json",
+    "../raw/detect-weakness-live-20261022/ant-third-ordinary-begin.json",
+    "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit-before.json",
+    "../raw/detect-weakness-live-20261022/ant-third-ordinary-hit.json",
+    "../raw/detect-weakness-live-20261022/baseline-before-tests.json",
+    "../raw/detect-weakness-live-20261022/before-free-north-teleport.json",
+    "../raw/detect-weakness-live-20261022/final-character.json",
+    "../raw/detect-weakness-live-20261022/final-harbor-character.json",
+    "../raw/detect-weakness-live-20261022/final-leave-before.json",
+    "../raw/detect-weakness-live-20261022/final-leave.json",
+    "../raw/detect-weakness-live-20261022/free-north-teleport.json",
+    "../raw/detect-weakness-live-20261022/initial-character.json",
+    "../raw/detect-weakness-live-20261022/initial-map.json",
+    "../raw/detect-weakness-live-20261022/liele-before-leave-none.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-before-leave.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-leave.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-only-attack-01.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-only-start-before.json",
+    "../raw/detect-weakness-live-20261022/liele-insect-only-start.json",
+    "../raw/detect-weakness-live-20261022/liele-none-leave.json",
+    "../raw/detect-weakness-live-20261022/liele-red-info.json",
+    "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/liele-two-outside-attack-01.json",
+    "../raw/detect-weakness-live-20261022/liele-two-outside-start-before.json",
+    "../raw/detect-weakness-live-20261022/liele-two-outside-start.json",
+    "../raw/detect-weakness-live-20261022/marilion50-info.json",
+    "../raw/detect-weakness-live-20261022/monster-eye-red-info.json",
+    "../raw/detect-weakness-live-20261022/monstereye-red0-info.json",
+    "../raw/detect-weakness-live-20261022/native-all-before-leave.json",
+    "../raw/detect-weakness-live-20261022/native-all-leave.json",
+    "../raw/detect-weakness-live-20261022/native-all-three-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/native-all-three-attack-01.json",
+    "../raw/detect-weakness-live-20261022/native-animal-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/native-animal-attack-01.json",
+    "../raw/detect-weakness-live-20261022/native-animal-cast-before.json",
+    "../raw/detect-weakness-live-20261022/native-animal-cast.json",
+    "../raw/detect-weakness-live-20261022/native-control-before-shots-off.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-00-before.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-00.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-01-before.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-01.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-02-before.json",
+    "../raw/detect-weakness-live-20261022/native-control-finish-02.json",
+    "../raw/detect-weakness-live-20261022/native-control-monstereye-start-before.json",
+    "../raw/detect-weakness-live-20261022/native-control-monstereye-start.json",
+    "../raw/detect-weakness-live-20261022/native-control-rb50-start-before.json",
+    "../raw/detect-weakness-live-20261022/native-control-rb50-start.json",
+    "../raw/detect-weakness-live-20261022/native-control-shots-off.json",
+    "../raw/detect-weakness-live-20261022/native-insect-add-before.json",
+    "../raw/detect-weakness-live-20261022/native-insect-add.json",
+    "../raw/detect-weakness-live-20261022/native-none-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/native-none-attack-01.json",
+    "../raw/detect-weakness-live-20261022/native-none-attack-02-before.json",
+    "../raw/detect-weakness-live-20261022/native-none-attack-02.json",
+    "../raw/detect-weakness-live-20261022/native-plant-add-before.json",
+    "../raw/detect-weakness-live-20261022/native-plant-add.json",
+    "../raw/detect-weakness-live-20261022/native-reenter-same-target-before.json",
+    "../raw/detect-weakness-live-20261022/native-reenter-same-target.json",
+    "../raw/detect-weakness-live-20261022/north-map.json",
+    "../raw/detect-weakness-live-20261022/outside-all-three-before.json",
+    "../raw/detect-weakness-live-20261022/outside-all-three-reversed-before.json",
+    "../raw/detect-weakness-live-20261022/outside-all-three-reversed.json",
+    "../raw/detect-weakness-live-20261022/outside-all-three.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-active-refresh-before.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-active-refresh.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-alone-reverse-before.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-alone-reverse.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-plus-animal-before.json",
+    "../raw/detect-weakness-live-20261022/outside-insect-plus-animal.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-attack-01.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-attack-02-before.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-attack-02.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-before-leave.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-control-start-before.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-control-start.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-leave.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-only-before.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-only.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-plus-animal-before.json",
+    "../raw/detect-weakness-live-20261022/outside-plant-plus-animal.json",
+    "../raw/detect-weakness-live-20261022/pavel-map-spawns.json",
+    "../raw/detect-weakness-live-20261022/pavel-map.json",
+    "../raw/detect-weakness-live-20261022/pavel-teleport-before.json",
+    "../raw/detect-weakness-live-20261022/pavel-teleport.json",
+    "../raw/detect-weakness-live-20261022/pretest-stability.json",
+    "../raw/detect-weakness-live-20261022/restore-shots-before.json",
+    "../raw/detect-weakness-live-20261022/restore-shots-on.json",
+    "../raw/detect-weakness-live-20261022/return-giran-before.json",
+    "../raw/detect-weakness-live-20261022/return-giran.json",
+    "../raw/detect-weakness-live-20261022/return-harbor-before.json",
+    "../raw/detect-weakness-live-20261022/return-harbor.json",
+    "../raw/detect-weakness-live-20261022/spider-blue-begin-before.json",
+    "../raw/detect-weakness-live-20261022/spider-blue-begin.json",
+    "../raw/detect-weakness-live-20261022/spider-blue-hit-before.json",
+    "../raw/detect-weakness-live-20261022/spider-blue-hit.json",
+    "../raw/detect-weakness-live-20261022/spider-info.json",
+    "../raw/detect-weakness-live-20261022/teleport-locations.json",
+    "../raw/detect-weakness-live-20261022/treant-red-info.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-00-before.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-00.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-01.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-02-before.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-02.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-03-before.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-attack-03.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-start-before.json",
+    "../raw/detect-weakness-live-20261022/tree-all-three-start.json",
+    "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/unicorn-after-plant-expiry-attack-01.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01-before.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-01.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-02-before.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-attack-02.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-start-before.json",
+    "../raw/detect-weakness-live-20261022/unicorn-all-three-start.json",
+    "../raw/detect-weakness-live-20261022/unicorn-before-control-leave.json",
+    "../raw/detect-weakness-live-20261022/unicorn-control-leave.json",
+    "../raw/detect-weakness-live-20261022/unicorn-red-info.json"
+  ]
+}

@@ -5,6 +5,180 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.buffs = function create_buffs(env) {
 const location = env.routeLocation || root.location;
+// 20.50 (живые проверки22.10): native Detect-ID и outside усиление имеют разные сроки/результат. Подтверждаем именно outside ACK.
+const DETECT_IDS = [75,87,104], DETECT_ACTION = {75:'detect_insect_weakness',87:'detect_animal_weakness',104:'detect_plant_weakness'};
+const DETECT_NAMES = {'detect insect weakness':75,'вразливість комах':75,'detect animal weakness':87,'вразливість звірів':87,'detect plant weakness':104,'вразливість рослин':104};
+const DETECT_MS = 600000, DETECT_FRESH = 30000, DETECT_JOB_MS = 60000, DETECT_RETRY_MS = 630000, detectBoot = Date.now();
+let detectSnapshot = null, detectNet = Promise.resolve(), detectSerial = 0, detectStorageWait = 0, detectAbandoned = null;
+const detectSkillId = x => { const id = +(String(x?.battleId || x?.l2SkillId || '').replace(/^l2_/,'')); return DETECT_IDS.includes(id) ? id : null; };
+const detectActor = () => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,env.leaseEpoch,env.rt.manualKickAt || 0,env.rt.classSwT || 0]);
+const detectKey = id => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,id]);
+const detectSelected = () => [...new Set(env.names(env.cfg.nBuffs).map(n => env.ilOf?.(n)?.id || (Object.hasOwn(DETECT_NAMES,n) ? DETECT_NAMES[n] : +n.replace(/^l2_/,''))).filter(id => DETECT_IDS.includes(id)))];
+const detectSettings = () => detectSelected().join(',');
+const detectProf = () => /^(?:human )?(?:warlord|dreadnought)$/i.test(String(env.rt.classCur?.prof || '').replace(/[_-]/g,' '));
+const detectExpiry = x => x?.expiresAtMs ?? x?.expiresAt;
+const detectCarryCh = ch => Object.fromEntries(['name','l2Profession','classSlots','revision','snapshotGeneratedAt','inBattle','skillMpCostMul','skillCooldowns'].map(k=>[k,ch[k]]).concat([['activeBuffs',ch.activeBuffs?.filter(x=>DETECT_IDS.includes(+x.skillId))],['learnedBattleSkillsDetail',ch.learnedBattleSkillsDetail?.filter(x=>detectSkillId(x))],['castableSelfBuffs',ch.castableSelfBuffs?.filter(x=>detectSkillId(x))],['battleHotbarSlots',ch.battleHotbarSlots?.filter(x=>DETECT_IDS.includes(+x?.id)||Object.values(DETECT_ACTION).includes(x?.a))]]));
+const detectPage = () => location.pathname + (location.search || '');
+const detectBack = p => typeof p === 'string' && /^\/(?:map|city|char|character|rb-bosses|dungeon|skill-panel)\.html(?:\?[^#]*)?$/.test(p) ? p : '/map.html';
+function detectSafe() { return env.on !== false && env.tabOwner !== false && detectProf() && env.heroNick?.() === env.rt.char && env.detectGate?.() === true; }
+function detectFresh() {
+  const J=env.rt.detectOutside,c=J?.carry;
+  // Обычный GET при загрузке до Start не становится owned. Это только короткая передача снимка своего navigation job.
+  if((!detectSnapshot||detectSnapshot.actor!==detectActor())&&location.pathname==='/skill-panel.html'&&J?.navigated&&detectJobSame(J)&&c?.sourceTab===env.detectTab?.()
+    &&c.sourceLease&&c.sourceLease===env.detectLineage?.())detectOwnSnapshot(c.ch,c.at,'carry');
+  const s=detectSnapshot,now=Date.now();return s && s.actor===detectActor() && s.ch.inBattle===false && now-s.at<=DETECT_FRESH && now-s.generated<=DETECT_FRESH ? s : null;
+}
+function detectOwnSnapshot(ch, at, source) {
+  const now=Date.now(),generated=Number.isFinite(ch?.snapshotGeneratedAt)?ch.snapshotGeneratedAt:source==='cast'?at:null;
+  if(!ch || ch.name!==env.rt.char || ch.l2Profession!==env.rt.classCur?.prof || ch.classSlots?.activeSlot!==env.rt.classCur?.slot
+    || !Number.isSafeInteger(ch.revision) || !Number.isFinite(at) || at>now || now-at>DETECT_FRESH || at<Math.max(+env.rt.classSwT||0,+env.rt.manualKickAt||0)
+    || !Number.isFinite(generated) || now-generated>DETECT_FRESH || generated-now>5000 || source==='cast'&&at<detectBoot) return false;
+  const actor=detectActor(),old=detectSnapshot?.actor===actor?detectSnapshot:null;if(old&&ch.revision<old.ch.revision)return false;
+  detectSnapshot={actor,ch,at:old?.ch.revision===ch.revision?Math.min(old.at,at):at,generated:old?.ch.revision===ch.revision?Math.min(old.generated,generated):generated};return true;
+}
+function detectHasProof(id,s=detectFresh()) {
+  const p=env.rt.detectOutsideProof?.[detectKey(id)],a=s?.ch.activeBuffs;
+  return !!p && p.char===env.rt.char && p.prof===env.rt.classCur?.prof && p.slot===env.rt.classCur?.slot && p.skillId===id
+    && Number.isFinite(p.until) && p.until>Date.now()+3000 && s?.ch.revision>=p.revision && Array.isArray(a)
+    && a.some(x=>+x.skillId===id && detectExpiry(x)===p.expiresAt);
+}
+function detectCost(id,s) {
+  const c=s.ch.castableSelfBuffs?.find(x=>detectSkillId(x)===id),l=s.ch.learnedBattleSkillsDetail?.find(x=>detectSkillId(x)===id);
+  for(const row of [c,l])if(Number.isFinite(row?.mpCost)&&row.mpCost>=0)return row.mpCost;
+  const db=Object.entries(env.rt.skillDb||{}).find(([n])=>(env.ilOf?.(n)?.id||DETECT_NAMES[n])===id)?.[1];
+  if(db&&(db.mpKnown||db.mp>0)&&Number.isFinite(db.mp)&&db.mp>=0)return db.mp;
+  const m=String(l?.hintUk||l?.hintRu||'').match(/\bMP\s*(\d+(?:[.,]\d+)?)/i);return m&&s.ch.skillMpCostMul===1?+m[1].replace(',','.'):null;
+}
+function detectCooling(id,s) {
+  const row=s.ch.castableSelfBuffs?.find(x=>detectSkillId(x)===id),left=row?.readyRemainingSec;
+  if(Number.isFinite(left)&&left>0&&s.generated+left*1000>Date.now())return true;
+  return ['l2_'+id,DETECT_ACTION[id]].some(key=>Number.isFinite(s.ch.skillCooldowns?.[key])&&s.ch.skillCooldowns[key]>Date.now());
+}
+function detectIntentBlocks(i,s) {
+  if(!i||['confirmed','rejected','notSent'].includes(i.phase))return false;
+  // Простой бафф: после полного срока плюс запаса допускается новая попытка, только по более позднему собственному снимку.
+  const end=Math.max(+i.at||0,+i.requestAt||0)+DETECT_RETRY_MS;
+  return !Number.isFinite(i.at)||Date.now()<end||s.at<end||s.generated<end||s.ch.revision<=i.baseRevision;
+}
+function detectOutsidePlan() {
+  const s=detectFresh(),mp=env.meMp?.();
+  if(Date.now()<detectStorageWait||!detectSafe()||!s||!Array.isArray(s.ch.activeBuffs)||!Array.isArray(s.ch.learnedBattleSkillsDetail)||!Array.isArray(s.ch.battleHotbarSlots)
+    ||!mp||!Number.isFinite(mp.cur)||mp.cur<=0)return null;
+  for(const id of detectSelected()){
+    if(detectHasProof(id,s))continue;
+    const intent=env.rt.detectOutsideIntent?.[detectKey(id)];if(detectIntentBlocks(intent,s)||detectCooling(id,s))continue;
+    const learned=s.ch.learnedBattleSkillsDetail.some(x=>detectSkillId(x)===id&&x.level>0);
+    const onPanel=s.ch.battleHotbarSlots.some(x=>x&&(x.k==='s'&&+x.id===id||x.k==='a'&&x.a===DETECT_ACTION[id]));
+    const cost=detectCost(id,s);if(!learned||!onPanel||cost==null||mp.cur<cost)continue;
+    return {id,cost,revision:s.ch.revision};
+  }
+  return null;
+}
+const detectJobSame = J => J && J.char===env.rt.char && J.prof===env.rt.classCur?.prof && J.slot===env.rt.classCur?.slot
+  && J.kick===(+env.rt.manualKickAt||0) && J.start===(+env.rt.dailyStart||0) && J.task===env.detectTask?.() && J.settings===detectSettings();
+const detectCallGuard = () => { const actor=detectActor(),generation=env.actionGeneration?.();return ()=>detectSafe()&&actor===detectActor()&&generation===env.actionGeneration?.(); };
+function detectStorageFail(J,same) {
+  detectStorageWait=Date.now()+120000;
+  if(!same())return;
+  // setRt меняет RAM до ACK. Не оставляем незафиксированный job в приоритетном диспетчере.
+  detectAbandoned=env.rt.actionOwner?.key==='detectOutside'?(J||detectAbandoned):null;env.rt.detectOutside=null;
+  try { env.setRt({detectOutside:null,detectOutsideWait:detectStorageWait})?.catch?.(()=>{}); } catch(_) {}
+}
+async function detectSave(p,valid=()=>true) {
+  const actor=detectActor(),J=p.detectOutside||env.rt.detectOutside,same=()=>actor===detectActor()&&(!env.rt.detectOutside||env.rt.detectOutside.id===J?.id);
+  try { const r=await env.setRt(p);if(r?.ok!==true||!await env.rtCommit()){detectStorageFail(J,same);return false;}return valid(); }
+  catch(_){detectStorageFail(J,same);return false;}
+}
+function detectOutsideRequest(d,at=Date.now()) {
+  const run=async()=>{
+    if(d.path!=='/character/skills/cast'||d.method!=='POST'||!Number.isSafeInteger(d.rid))return;
+    const id=detectSkillId(d.req),key=detectKey(id),i=env.rt.detectOutsideIntent?.[key];
+    if(!id||!i||i.phase!=='prepared'||d.req.expectedRevision!==i.baseRevision||at<i.at||at-i.at>15000)return;
+    await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'sent',rid:d.rid,requestAt:at}}});
+  };detectNet=detectNet.then(run,run);return detectNet;
+}
+function detectOutsideNote(path,d,at=Date.now()) {
+  const run=async()=>{
+    if(path==='/character'&&d.status>=200&&d.status<300){detectOwnSnapshot(d.pet,at,'character');return;}
+    if(path!=='/character/skills/cast')return;
+    const id=detectSkillId(d.req),key=detectKey(id),i=env.rt.detectOutsideIntent?.[key],ch=d.pet;
+    if(!id||!i||!['prepared','sent','unknown'].includes(i.phase)||d.req.expectedRevision!==i.baseRevision||at<i.at||at-i.at>15000
+      ||i.rid!=null&&i.rid!==d.rid||!Number.isSafeInteger(d.rid))return;
+    if(d.status>=400&&d.status<500&&d.status!==408&&d.status!==429){
+      await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'rejected',rid:d.rid}}});return;
+    }
+    if(!(d.status>=200&&d.status<300)||d.error||d.res?.error||d.res?.ok===false||d.res?.accepted===false||d.res?.blockedBy||!ch||ch.name!==i.char||ch.l2Profession!==i.prof||ch.classSlots?.activeSlot!==i.slot
+      ||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||ch.revision<=i.baseRevision||!Array.isArray(ch.activeBuffs))return;
+    const expiry=detectExpiry(ch.activeBuffs.find(x=>+x.skillId===id));if(!Number.isFinite(expiry)||expiry<=Date.now())return;
+    if(env.rt.detectOutsideIntent?.[key]?.id!==i.id)return;
+    const p={char:i.char,prof:i.prof,slot:i.slot,skillId:id,revision:ch.revision,at:Date.now(),requestAt:at,expiresAt:expiry,until:Math.min(expiry,at+DETECT_MS)};
+    const old=env.rt.detectOutsideProof?.[key];if(old?.revision>p.revision)return;
+    detectOwnSnapshot(ch,at,'cast');
+    await env.setRt({detectOutsideProof:{...(env.rt.detectOutsideProof||{}),[key]:p},detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'confirmed',rid:d.rid}}});
+  };detectNet=detectNet.then(run,run);return detectNet;
+}
+async function detectOutsideQueue() {
+  if(env.rt.detectOutside||!detectSafe()||(env.rt.detectOutsideWait||0)>Date.now()||!detectOutsidePlan())return false;
+  const now=Date.now(),snapshot=detectFresh(),J={id:JSON.stringify([now,env.leaseEpoch,++detectSerial]),t:now,phase:'panel',phaseAt:now,char:env.rt.char,prof:env.rt.classCur.prof,slot:env.rt.classCur.slot,
+    kick:+env.rt.manualKickAt||0,start:+env.rt.dailyStart||0,task:env.detectTask?.(),settings:detectSettings(),back:detectBack(detectPage()),carry:{sourceTab:env.detectTab?.(),sourceLease:env.leaseEpoch,at:snapshot.at,ch:detectCarryCh(snapshot.ch)}};
+  return detectSave({detectOutside:J},detectCallGuard());
+}
+async function detectOutsideMaintain() {
+  const J=env.rt.detectOutside||detectAbandoned;
+  if(!J||!env.on||!env.tabOwner||J.char!==env.rt.char||J.prof!==env.rt.classCur?.prof||J.slot!==env.rt.classCur?.slot)return false;
+  if(!detectAbandoned&&detectJobSame(J)&&Date.now()-J.t<=DETECT_JOB_MS)return false;
+  const valid=detectCallGuard();
+  if(!env.releaseDetectJob?.(J.id)||!valid())return false;
+  detectAbandoned=null;detectStorageWait=Date.now()+120000;env.rt.detectOutside=null;
+  try { await env.setRt({detectOutside:null,detectOutsideWait:detectStorageWait,actionOwner:env.rt.actionOwner||null}); } catch(_) {}
+  return false;
+}
+async function detectOutsideStep() {
+  let J=env.rt.detectOutside;if(!J)return false;
+  if(!detectJobSame(J)){await detectSave({detectOutside:null});return false;}
+  if(!detectSafe())return false;
+  const valid=detectCallGuard(),now=Date.now(),save=async next=>{const ok=await detectSave({detectOutside:next},valid);if(ok)J=next;return ok;};
+  const finish=async why=>{
+    if(!await save({...J,phase:'return',phaseAt:Date.now(),reason:why}))return false;
+    if(why)await env.setRt({detectOutsideWait:Date.now()+120000});
+    if(valid()&&detectJobSame(J)&&detectPage()!==J.back)location.href=J.back;
+    return true;
+  };
+  if(J.phase==='return'){
+    if(detectPage()===J.back||now-J.phaseAt>12000){await save(null);return false;}
+    // Навигация уже отправлена; повторных переходов в каждый тик нет.
+    return true;
+  }
+  if(now-J.t>DETECT_JOB_MS)return finish('подготовка Detect не уложилась в минуту');
+  if(J.phase==='wait'){
+    const i=env.rt.detectOutsideIntent?.[detectKey(J.pendingId)];
+    if(i?.phase==='confirmed'&&detectHasProof(J.pendingId)){if(!await save({...J,phase:'cast',phaseAt:now,pendingId:null}))return false;}
+    else if(i?.phase==='rejected'||i?.phase==='notSent')return finish('применение Detect отклонено');
+    else if(now-J.phaseAt>20000){
+      if(i&&i.phase!=='confirmed')await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[detectKey(J.pendingId)]:{...i,phase:'unknown'}}});
+      return valid()?finish('исход Detect не подтверждён; повтор отложен до полного срока'):false;
+    }else return true;
+  }
+  if(location.pathname!=='/skill-panel.html'){
+    if(now-J.phaseAt>12000)return finish('не открылась панель Detect');
+    if(!J.navigated){if(!await save({...J,navigated:true}))return false;if(valid())location.href='/skill-panel.html';}return true;
+  }
+  await env.detectPanelOpen?.();if(!valid()||!detectJobSame(J))return false;
+  const plan=detectOutsidePlan(),panel=env.detectPanel?.();
+  if(!plan)return finish(null);
+  const b=panel?.slots?.find(x=>x.id===plan.id&&[DETECT_ACTION[plan.id],'l2_'+plan.id].includes(x.action));
+  if(!panel?.hotbar||!b||!b.ready){if(Date.now()-J.phaseAt>12000)return finish('Detect нет на доступной панели');return true;}
+  const key=detectKey(plan.id),i={id:J.id+':'+plan.id+':'+(++detectSerial),char:J.char,prof:J.prof,slot:J.slot,skillId:plan.id,baseRevision:plan.revision,at:Date.now(),lease:env.leaseEpoch,generation:env.actionGeneration?.(),phase:'prepared'};
+  if(!await detectSave({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:i},detectOutside:{...J,phase:'wait',phaseAt:Date.now(),pendingId:plan.id}},valid)){
+    return false;
+  }
+  const current=detectFresh(),mp=env.meMp?.(),again=env.detectPanel?.()?.slots?.find(x=>x.id===plan.id);
+  if(!valid()||!detectJobSame(J)||!current||current.ch.revision!==plan.revision||!mp||!Number.isFinite(mp.cur)||mp.cur<plan.cost||detectCooling(plan.id,current)||again?.button!==b.button||!again.ready){
+    if(env.rt.char===i.char&&env.rt.detectOutsideIntent?.[key]?.id===i.id)await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'notSent'}}});return false;
+  }
+  if(env.fire(b.button)===false)await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'notSent'}}});
+  return true;
+}
 function contextGuard() {
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt;
   const same=()=>env.tabOwner!==false&&env.rt.char===char&&env.leaseEpoch===lease&&env.rt.manualKickAt===kick;
@@ -910,6 +1084,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { detectOutsideMaintain, detectOutsideQueue, detectOutsideStep, detectOutsideNote, detectOutsideRequest, detectOutsidePlan, vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

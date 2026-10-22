@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-22T12:52:56Z",
+  "method": "GET",
+  "path": "/game/spawn/l2dop_rb_25277/info",
+  "status": 200,
+  "elapsedMs": 93,
+  "originalResponseSha256": "5a4d51696cf4dde1a8c745b7746a8ccf99a345a8ac6dd15df2b97ba998fca039",
+  "request": {},
+  "response": {
+    "kind": "raid",
+    "spawnId": "l2dop_rb_25277",
+    "name": "Lilith's Witch Marilion",
+    "level": 50,
+    "npcId": 25277,
+    "templateId": "l2dop_rb_25277",
+    "stats": {
+      "maxHp": 507285,
+      "pAtk": 2894,
+      "pDef": 708,
+      "mAtk": 2217,
+      "mDef": 904
+    },
+    "canAttackRaidBoss": true,
+    "minRaidBossLevelForAttack": 42
+  }
+}

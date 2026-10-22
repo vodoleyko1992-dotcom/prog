@@ -1,0 +1,90 @@
+{
+  "extensionVersion": "20.50",
+  "browser": "156.0.8078.4",
+  "root": "/workspace/prog",
+  "createdAt": "2026-10-22T13:41:53.916Z",
+  "detectActualSWSourceMatches": [
+    {
+      "file": "content.js",
+      "actualSwSHA256": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+      "sourceSHA256": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+      "match": true
+    },
+    {
+      "file": "hook.js",
+      "actualSwSHA256": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+      "sourceSHA256": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+      "match": true
+    },
+    {
+      "file": "background.js",
+      "actualSwSHA256": "e66b1c01145c1a8b0fbde30696368ed3eaf20714b552de19563e460096822b62",
+      "sourceSHA256": "e66b1c01145c1a8b0fbde30696368ed3eaf20714b552de19563e460096822b62",
+      "match": true
+    },
+    {
+      "file": "engine-core.js",
+      "actualSwSHA256": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+      "sourceSHA256": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+      "match": true
+    },
+    {
+      "file": "modules/actions.js",
+      "actualSwSHA256": "9aabcb5a83633e6aa92e631d44384cae4024e304704ba8f12886c354f92fdada",
+      "sourceSHA256": "9aabcb5a83633e6aa92e631d44384cae4024e304704ba8f12886c354f92fdada",
+      "match": true
+    },
+    {
+      "file": "modules/buffs.js",
+      "actualSwSHA256": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+      "sourceSHA256": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+      "match": true
+    },
+    {
+      "file": "modules/equipment.js",
+      "actualSwSHA256": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+      "sourceSHA256": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+      "match": true
+    }
+  ],
+  "toggleActualSWSourceMatches": [
+    {
+      "file": "content.js",
+      "actualSwSHA256": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+      "sourceSHA256": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+      "match": true
+    },
+    {
+      "file": "hook.js",
+      "actualSwSHA256": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+      "sourceSHA256": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+      "match": true
+    },
+    {
+      "file": "modules/combat.js",
+      "actualSwSHA256": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+      "sourceSHA256": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+      "match": true
+    },
+    {
+      "file": "modules/buffs.js",
+      "actualSwSHA256": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+      "sourceSHA256": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+      "match": true
+    },
+    {
+      "file": "modules/equipment.js",
+      "actualSwSHA256": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+      "sourceSHA256": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+      "match": true
+    },
+    {
+      "file": "battle-cooldown.js",
+      "actualSwSHA256": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e",
+      "sourceSHA256": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e",
+      "match": true
+    }
+  ],
+  "newBrowserTestSHA256": "f3a000ff9029ddcdd5e88bbbdbbd5bf86626604f432daa93ba33530bce8df920",
+  "allMatch": true
+}

@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-22T12:51:37Z",
+  "method": "GET",
+  "path": "/game/map/spawns",
+  "status": 200,
+  "elapsedMs": 287,
+  "originalResponseSha256": "10da34b4d2bfb486cc00ec2299fd9980e809996a3e150135203be04810a538f6",
+  "request": {},
+  "response": {
+    "spawns": [
+      {
+        "id": "l2dop_rb_25277",
+        "name": "Lilith's Witch Marilion",
+        "level": 50,
+        "kind": "raid",
+        "worldX": 54651,
+        "worldY": 180269
+      }
+    ],
+    "nearbySpawns": [
+      {
+        "id": "champ_r_giran_harbor_1",
+        "name": "Monster Eye Destroyer",
+        "level": 26,
+        "kind": "champion",
+        "championTier": "red",
+        "maxHp": 59976,
+        "rewardExp": 32340,
+        "inBattleRange": true,
+        "distance": 14321
+      },
+      {
+        "id": "champ_r_giran_harbor_0",
+        "name": "Monster Eye Destroyer",
+        "level": 26,
+        "kind": "champion",
+        "championTier": "red",
+        "maxHp": 59976,
+        "rewardExp": 32340,
+        "inBattleRange": true,
+        "distance": 14850
+      },
+      {
+        "id": "l2dop_rb_25277",
+        "name": "Lilith's Witch Marilion",
+        "level": 50,
+        "kind": "raid",
+        "maxHp": 507285,
+        "rewardExp": "1 336 187",
+        "inBattleRange": true,
+        "distance": 14931
+      }
+    ]
+  }
+}

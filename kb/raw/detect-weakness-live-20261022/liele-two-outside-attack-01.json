@@ -1,0 +1,155 @@
+{
+  "at": "2026-10-22T13:14:16Z",
+  "method": "POST",
+  "path": "/game/battle/action",
+  "status": 200,
+  "elapsedMs": 424,
+  "originalResponseSha256": "420e93bb2127c4fd82b84d1b3a354dd3be44fee95605dec480564ba776ea1512",
+  "request": {
+    "action": "attack",
+    "battleSpawnId": "champ_r_enchanted_valley_north_2"
+  },
+  "response": {
+    "kind": "delta",
+    "revision": 439317,
+    "serverNowMs": 1792674856895,
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "pAtk": 2915,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": true,
+      "cityId": "hunters_village",
+      "currentZoneId": "enchanted_valley_north",
+      "worldX": 105675,
+      "worldY": 36558,
+      "revision": 439317,
+      "snapshotGeneratedAt": 1792674856939,
+      "sp": 7633608,
+      "adena": "1057274124",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": null,
+          "remainingSec": null
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": null,
+          "remainingSec": null
+        },
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": null,
+          "remainingSec": null
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    },
+    "delta": {
+      "mobHp": 109215,
+      "mobMaxHp": 112392,
+      "battleVersion": 2,
+      "battleEnded": false,
+      "logTail": [
+        "Древко розсікло ворогів поруч: Liele Elder −22981, Liele Elder −4642.",
+        "[Hero] −3177 HP.",
+        "Додаткова ціль повалена: Liele Elder.",
+        "EXP + 3730",
+        "SP + 576",
+        "+4761 аден",
+        "Додаткова ціль повалена: Liele Elder.",
+        "Mithril Ore ×5",
+        "EXP + 3730",
+        "SP + 576",
+        "+6363 аден"
+      ],
+      "mysticSkillCdUntil": {
+        "attack": 1792674857338,
+        "l2_1": 1792674857338
+      },
+      "skillCooldowns": {
+        "attack": 1792674857338,
+        "l2_1": 1792674857338
+      },
+      "globalCooldownUntilMs": 1792674857338,
+      "serverNowMs": 1792674856895,
+      "nextPhysicalAttackAt": 1792674857375,
+      "attackCooldownMs": 744,
+      "attackIntervalMs": 744,
+      "mobDebuffIcons": [],
+      "battleMods": {
+        "stanceVicious": true,
+        "focusAttackActive": true,
+        "viciousStanceSkillRank": 9,
+        "weaknessDetects": {
+          "plant": 1.3,
+          "animal": 1.3,
+          "insect": 1.3
+        }
+      },
+      "battleBuffIcons": [
+        {
+          "key": "stance_vicious",
+          "l2SkillId": 312,
+          "labelUk": "Жорстка стійка",
+          "isToggle": true
+        },
+        {
+          "key": "focus_attack",
+          "l2SkillId": 317,
+          "labelUk": "Зосереджений удар",
+          "isToggle": true
+        },
+        {
+          "key": "weakness_plant",
+          "l2SkillId": 104,
+          "labelUk": "Детект: рослини"
+        },
+        {
+          "key": "weakness_animal",
+          "l2SkillId": 87,
+          "labelUk": "Детект: звірі"
+        },
+        {
+          "key": "weakness_insect",
+          "l2SkillId": 75,
+          "labelUk": "Детект: комахи"
+        }
+      ]
+    }
+  }
+}

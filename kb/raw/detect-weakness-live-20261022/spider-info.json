@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-22T13:29:45Z",
+  "method": "GET",
+  "path": "/game/spawn/dense_31641/info",
+  "status": 200,
+  "elapsedMs": 103,
+  "originalResponseSha256": "ed204087ef1aca0ed96b2e8802b56a810eb116b9cbce0f90fd0efc23c3ca2ece",
+  "request": {},
+  "response": {
+    "kind": "champion",
+    "spawnId": "dense_31641",
+    "name": "Spelunking Spider",
+    "level": 47,
+    "npcId": 22051,
+    "templateId": "l2dop_dense_31641",
+    "stats": {
+      "maxHp": 34104,
+      "pAtk": 1054,
+      "pDef": 782,
+      "mAtk": 858,
+      "mDef": 682
+    },
+    "championTier": "blue"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-22T13:26:58Z",
+  "method": "GET",
+  "path": "/game/map/spawns",
+  "status": 200,
+  "elapsedMs": 87,
+  "originalResponseSha256": "f657613ef3376d6954c31bcf57e0894439dc3543623e9ecad61058f6d9424a8b",
+  "request": {},
+  "response": {
+    "spawns": [],
+    "nearbySpawns": [
+      {
+        "id": "dense_31548",
+        "name": "Spelunking Ant",
+        "level": 50,
+        "kind": "neutral",
+        "maxHp": 2580,
+        "rewardExp": 3629,
+        "inBattleRange": true,
+        "distance": 1631
+      },
+      {
+        "id": "dense_31609",
+        "name": "Spelunking Ant",
+        "level": 50,
+        "kind": "passive",
+        "maxHp": 2580,
+        "rewardExp": 3629,
+        "inBattleRange": true,
+        "distance": 2582
+      },
+      {
+        "id": "dense_31677",
+        "name": "Spelunking Ant",
+        "level": 50,
+        "kind": "passive",
+        "maxHp": 2580,
+        "rewardExp": 3629,
+        "inBattleRange": true,
+        "distance": 2875
+      },
+      {
+        "id": "dense_31533",
+        "name": "Spelunking Ant",
+        "level": 50,
+        "kind": "aggressive",
+        "maxHp": 2580,
+        "rewardExp": 3629,
+        "inBattleRange": true,
+        "distance": 3291
+      },
+      {
+        "id": "dense_31641",
+        "name": "Spelunking Spider",
+        "level": 47,
+        "kind": "champion",
+        "championTier": "blue",
+        "maxHp": 34104,
+        "rewardExp": 49665,
+        "inBattleRange": true,
+        "distance": 4929
+      },
+      {
+        "id": "dense_31437",
+        "name": "Spelunking Ant",
+        "level": 50,
+        "kind": "champion",
+        "championTier": "blue",
+        "maxHp": 36120,
+        "rewardExp": 54435,
+        "inBattleRange": true,
+        "distance": 5051
+      }
+    ]
+  }
+}

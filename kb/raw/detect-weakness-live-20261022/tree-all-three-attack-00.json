@@ -1,0 +1,160 @@
+{
+  "at": "2026-10-22T13:07:08Z",
+  "method": "POST",
+  "path": "/game/battle/action",
+  "status": 200,
+  "elapsedMs": 241,
+  "originalResponseSha256": "fe086445074dc7139bbc5e94b801a254b9d81572d5afb9cf0ba45900a35ada60",
+  "request": {
+    "action": "attack",
+    "battleSpawnId": "champ_r_enchanted_valley_north_0"
+  },
+  "response": {
+    "kind": "delta",
+    "revision": 439307,
+    "serverNowMs": 1792674428668,
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "pAtk": 5368,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": true,
+      "cityId": "hunters_village",
+      "currentZoneId": "enchanted_valley_north",
+      "worldX": 105675,
+      "worldY": 36558,
+      "revision": 439307,
+      "snapshotGeneratedAt": 1792674428691,
+      "sp": 7602812,
+      "adena": "1057044110",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": 1792674630857,
+          "remainingSec": 203
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792674849043,
+          "remainingSec": 421
+        },
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": 1792674849853,
+          "remainingSec": 422
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    },
+    "delta": {
+      "mobHp": 105502,
+      "mobMaxHp": 114408,
+      "battleVersion": 2,
+      "battleEnded": false,
+      "logTail": [
+        "Древко розсікло ворогів поруч: Valley Treant Elder −59148.",
+        "(Вразливість рослин: +30% урону!)",
+        "[Hero] −8906 HP.",
+        "Додаткова ціль повалена: Valley Treant Elder.",
+        "Stone of Purity ×5",
+        "EXP + 5199",
+        "SP + 816",
+        "+5840 аден"
+      ],
+      "mysticSkillCdUntil": {
+        "attack": 1792674429289,
+        "l2_1": 1792674429289
+      },
+      "skillCooldowns": {
+        "attack": 1792674429289,
+        "l2_1": 1792674429289
+      },
+      "globalCooldownUntilMs": 1792674429289,
+      "serverNowMs": 1792674428668,
+      "nextPhysicalAttackAt": 1792674429330,
+      "attackCooldownMs": 744,
+      "attackIntervalMs": 744,
+      "mobDebuffIcons": [],
+      "battleMods": {
+        "stanceVicious": true,
+        "focusAttackActive": true,
+        "viciousStanceSkillRank": 9,
+        "weaknessKind": "plant",
+        "weaknessPatkMul": 1.3,
+        "weaknessDetects": {
+          "plant": 1.3,
+          "animal": 1.3,
+          "insect": 1.3
+        }
+      },
+      "battleBuffIcons": [
+        {
+          "key": "stance_vicious",
+          "l2SkillId": 312,
+          "labelUk": "Жорстка стійка",
+          "isToggle": true
+        },
+        {
+          "key": "focus_attack",
+          "l2SkillId": 317,
+          "labelUk": "Зосереджений удар",
+          "isToggle": true
+        },
+        {
+          "key": "weakness_plant",
+          "l2SkillId": 104,
+          "labelUk": "Детект: рослини",
+          "buffExpiresAtMs": 1792674630857,
+          "buffDurationTotalMs": 600000
+        },
+        {
+          "key": "weakness_animal",
+          "l2SkillId": 87,
+          "labelUk": "Детект: звірі",
+          "buffExpiresAtMs": 1792674849043,
+          "buffDurationTotalMs": 600000
+        },
+        {
+          "key": "weakness_insect",
+          "l2SkillId": 75,
+          "labelUk": "Детект: комахи",
+          "buffExpiresAtMs": 1792674849853,
+          "buffDurationTotalMs": 600000
+        }
+      ]
+    }
+  }
+}

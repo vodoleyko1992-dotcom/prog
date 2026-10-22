@@ -44,24 +44,26 @@
       cat: s ? { key: String(s.key || '').slice(0, 40), patk: n(s.pAtk), crit: n(s.critRate), ck: n(s.critDmgMul), acc: n(s.accuracy), buffs: (s.activeBuffs || []).slice(0, 10).map(b => +b?.skillId || 0).filter(Boolean) } : null }; } catch (e) { return undefined; } };
   // Warlock: полный безопасный контекст кота из собственного /character; общий redact режет массивы до8.
   const petOf = (u, o) => { try {
-    if (u.pathname !== '/character') return undefined;
+    if (u.pathname !== '/character' && u.pathname !== '/character/skills/cast') return undefined;
     const c = o?.character; if (!c || typeof c.name !== 'string' || !Number.isSafeInteger(c.revision)) return undefined;
     const p = c.activeSummon, n = v => Number.isFinite(v) ? v : null;
     return { name: c.name.slice(0,120), level: n(c.level), l2Profession: String(c.l2Profession || '').slice(0,60), revision: c.revision, classSlots: { activeSlot: n(c.classSlots?.activeSlot) },
-      ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'].map(k => [k,n(c[k])])),
+      ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed','mp','maxMp','skillMpCostMul'].map(k => [k,n(c[k])])),
       ...Object.fromEntries(['evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'].map(k=>[k,n(c[k])])),
       toggleStances: Array.isArray(c.toggleStances) ? c.toggleStances.slice(0,80).map(x=>({battleId:String(x.battleId||'').slice(0,80),skillId:n(x.skillId),level:n(x.level),active:typeof x.active==='boolean'?x.active:null})) : null,
       // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
       activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
       // Публичный состав модели урона: UID/имена владельцев и динамические HP/MP сюда не попадают.
       snapshotGeneratedAt: n(c.snapshotGeneratedAt), inBattle:typeof c.inBattle==='boolean'?c.inBattle:null,
-      battleHotbarSlots:Array.isArray(c.battleHotbarSlots)?c.battleHotbarSlots.slice(0,80).map(x=>x?{k:String(x.k||'').slice(0,8),id:n(x.id)}:null):null,
+      battleHotbarSlots:Array.isArray(c.battleHotbarSlots)?c.battleHotbarSlots.slice(0,80).map(x=>x?{k:String(x.k||'').slice(0,8),id:n(x.id),...(['detect_insect_weakness','detect_animal_weakness','detect_plant_weakness'].includes(x.a)?{a:x.a}:{})}:null):null,
+      skillCooldowns:c.skillCooldowns&&typeof c.skillCooldowns==='object'?Object.fromEntries(Object.entries(c.skillCooldowns).filter(([key,value])=>['l2_75','l2_87','l2_104','detect_insect_weakness','detect_animal_weakness','detect_plant_weakness'].includes(key)&&Number.isFinite(value)&&value>=0)):null,
+      castableSelfBuffs:Array.isArray(c.castableSelfBuffs)?c.castableSelfBuffs.filter(x=>[75,87,104].includes(+x.l2SkillId||+String(x.battleId||'').replace(/^l2_/,''))).map(x=>({battleId:String(x.battleId||'').slice(0,80),l2SkillId:n(x.l2SkillId),mpCost:n(x.mpCost),readyRemainingSec:n(x.readyRemainingSec)})):null,
       inventory: c.inventory?.eq && typeof c.inventory.eq === 'object' ? { eq: Object.fromEntries(Object.entries(c.inventory.eq).slice(0,40).map(([slot,v]) => {
         const x = v && typeof v === 'object' ? v : {itemId:v}, attrs = a => Array.isArray(a) ? a.slice(0,20).map(y=>({attributeId:String(y.attributeId||'').slice(0,80),level:n(y.level)})) : [];
         return [slot,{...Object.fromEntries(['itemId','enchant','specialGearLevel','enchantPAtkBonus','enchantMAtkBonus'].map(k=>[k,n(x[k])])),
           augmentation:{outcomeId:String(x.augmentation?.outcomeId||'').slice(0,80)},clanWeaponAttrs:attrs(x.clanWeaponAttrs),clanArmorAttrs:attrs(x.clanArmorAttrs)}];
       })), stacks:Array.isArray(c.inventory.stacks)?c.inventory.stacks.slice(0,2000).map(x=>({itemId:n(x.itemId),qty:n(x.qty)})):null } : null,
-      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level)})) : null,
+      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level),...([75,87,104].includes(+x.l2SkillId||+String(x.battleId||'').replace(/^l2_/,''))?{mpCost:n(x.mpCost),hintUk:String(x.hintUk||'').slice(0,500),hintRu:String(x.hintRu||'').slice(0,500)}:{})})) : null,
       activeSummon: p && typeof p === 'object' ? { kind: String(p.kind || '').slice(0,30), key: String(p.key || '').slice(0,60),
         ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','mAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
         activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : p===null?null:undefined };
@@ -271,9 +273,10 @@
     const rid=++ridN, story=method==='POST'&&STORY_TP.test(u.pathname), r=storyRetry;
     const detail=story&&typeof req?.targetId==='string'&&Number.isSafeInteger(req.expectedRevision)?{targetId:req.targetId.slice(0,120),expectedRevision:req.expectedRevision}:null;
     const fa=method==='POST'&&u.pathname==='/character/town/fast-aden-buffer/apply'&&typeof req?.set==='string'&&Number.isSafeInteger(req.skillId)&&Number.isSafeInteger(req.expectedCostFastAden)&&Number.isSafeInteger(req.expectedRevision)?{set:req.set.slice(0,40),skillId:req.skillId,expectedCostFastAden:req.expectedCostFastAden,expectedRevision:req.expectedRevision}:null;
+    const detect=method==='POST'&&u.pathname==='/character/skills/cast'&&/^l2_(?:75|87|104)$/.test(req?.battleId||'')&&Number.isSafeInteger(req.expectedRevision)?{battleId:req.battleId,expectedRevision:req.expectedRevision}:null;
     const retryOf=story&&detail&&r&&r.path===u.pathname&&r.targetId===detail.targetId&&detail.expectedRevision>=r.revision&&Date.now()-r.at<=10000?r.rid:0;
     if(method==='POST'){mutationN++;storyRetry=null;}
-    try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:fa?{req:fa}:method==='POST'&&u.pathname==='/game/fishing/action'&&req?.action==='cast'&&Number.isSafeInteger(req.expectedRevision)?{req:{action:'cast',expectedRevision:req.expectedRevision}}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}
+    try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:fa?{req:fa}:detect?{req:detect}:method==='POST'&&u.pathname==='/game/fishing/action'&&req?.action==='cast'&&Number.isSafeInteger(req.expectedRevision)?{req:{action:'cast',expectedRevision:req.expectedRevision}}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}
     return {rid,retryOf,mutation:mutationN,detail};
   }
   // 20.42 (быстрый удар, решение John 20.10 22:12, выключатель cfg.fastTurn в «Бой»): после ответа хода с delta.hotbarStale игра под замком

@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "scope": "Offline JSON/ref/hash/privacy/fact validation of manual live Detect KB; runtime unchanged by this evidence work.",
+  "checks": {
+    "sourceAndProjectionHashesAndBytes": {
+      "status": "PASS",
+      "records": 147,
+      "apiOriginalResponseHashes": 146,
+      "hashMeaningSeparated": true
+    },
+    "jsonStructureAndReferences": {
+      "status": "PASS",
+      "referenceOccurrences": 274,
+      "uniqueEvidenceRefs": 148,
+      "manifestClosure": true,
+      "schemaVersion": 1,
+      "finalStatus": true
+    },
+    "privacy": {
+      "status": "PASS",
+      "heroLogLabel": "[Hero]",
+      "uuidCount": 0,
+      "forbiddenFieldCount": 0,
+      "absoluteLocalReferenceCount": 0,
+      "fullInventoryOrOtherClassSlotsStored": false
+    },
+    "outsideVersusNativeAndRefresh": {
+      "status": "PASS",
+      "bothOrderPAtk": [
+        2915,
+        3531,
+        4329,
+        5368
+      ],
+      "activeRefreshPAtk": [
+        3531,
+        3531
+      ],
+      "expiryRenewed": true,
+      "nativeThreeMapPAtk": 2915
+    },
+    "freshLogsAndSpeciesBoundaries": {
+      "status": "PASS",
+      "acceptedAttacks": 25,
+      "exactPrefixVictories": 7,
+      "uncappedNormalPositiveSpeciesExamples": 5,
+      "positiveSpeciesCount": 3,
+      "lieleExpiredOutsideCorrectlySeparated": true,
+      "antNoSpeciesClaim": true
+    },
+    "preservationAndClosure": {
+      "status": "PASS",
+      "characterSnapshots": 132,
+      "equipmentSlots": 14,
+      "stableEquipmentHotbarLearnedLongBuffsAllSnapshots": true,
+      "staleCharacterStanceProjections": 26,
+      "initialAndFinalStancesSame": true,
+      "finalFullHpMp": true,
+      "exactInitialPositionRestored": false,
+      "soulshotOnRestored": true,
+      "teleportCount": 4,
+      "reportedClosedSession": true
+    }
+  },
+  "counts": {
+    "apiRecords": 146,
+    "operatorClosureRecords": 1,
+    "storedRawBytes": 454091,
+    "sourceCompactBytes": 5019253,
+    "acceptedAttacks": 25,
+    "victoriesExactPrefix": 7
+  },
+  "runtimeValidation": {
+    "owner": "parent release integration",
+    "fullNodeSuite": {
+      "status": "PASS",
+      "passed": 611,
+      "failed": 0,
+      "command": "node tests/run-all.cjs",
+      "logSha256": "4424a7a3c1e0783ced07e194896da0b20eeee1ea5bfab02f334057a2e36726a0",
+      "boundary": "Общий финальный root full после импорта KB и исправления version_name:611 PASS/0FAIL. Исследование в игре вручную; автоматический controller проверяется отдельно локально."
+    },
+    "rootReportedChecks": {
+      "syntaxJsFiles": 61,
+      "moduleEnvironmentChecks": 34,
+      "bashSyntax": "PASS",
+      "diffCheck": "PASS",
+      "detectRuntimeAssertions": 74,
+      "detectRoleAssertions": 63
+    },
+    "ownModuleEnvironmentCheck": "PASS",
+    "ownDiffCheck": "PASS",
+    "changedRuntimeFiles": 0,
+    "newLiveGameRequestsByEvidenceMaterializer": 0,
+    "researchLiveRequests": 146
+  },
+  "independentReview": {
+    "status": "PASS",
+    "reviewer": "independent knowledge review agent",
+    "readOnly": true,
+    "recordCount": 147,
+    "apiRecords": 146,
+    "sourceAndStoredShaAndBytesRecomputed": true,
+    "originalResponseShaBoundary": "Полные оригиналы серверных ответов не публикуются; проверено совпадение originalResponseSha256 с записанной source-меткой, а не повторный расчёт хэша отсутствующего оригинала.",
+    "referenceOccurrencesChecked": 274,
+    "privacy": "PASS",
+    "acceptedAttacksChecked": 25,
+    "exactVictoryPrefixesChecked": 7,
+    "speciesAndExpiryBoundaries": "PASS",
+    "preservationAndStaleStanceBoundary": "PASS",
+    "blockers": []
+  }
+}

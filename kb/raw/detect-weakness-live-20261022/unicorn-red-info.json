@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-22T13:08:41Z",
+  "method": "GET",
+  "path": "/game/spawn/champ_r_enchanted_valley_north_1/info",
+  "status": 200,
+  "elapsedMs": 166,
+  "originalResponseSha256": "93cb54f4ebb0cfcd285de4ccac579cfc1a0d2295d202f44a3f7a5ad44d9de7af",
+  "request": {},
+  "response": {
+    "kind": "champion",
+    "spawnId": "champ_r_enchanted_valley_north_1",
+    "name": "Unicorn",
+    "level": 49,
+    "npcId": 20593,
+    "templateId": "l2dop_dense_9266",
+    "stats": {
+      "maxHp": 106344,
+      "pAtk": 1866,
+      "pDef": 1139,
+      "mAtk": 1519,
+      "mDef": 993
+    },
+    "championTier": "red"
+  }
+}

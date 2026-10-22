@@ -1,0 +1,123 @@
+{
+  "at": "2026-10-22T12:56:29Z",
+  "method": "POST",
+  "path": "/game/battle/action",
+  "status": 200,
+  "elapsedMs": 358,
+  "originalResponseSha256": "4c3a4fad693f67079f5ea9bb29d1adbc25fb041264d9cc343f28b4ecc89ab3b4",
+  "request": {
+    "action": "detect_animal_weakness",
+    "battleSpawnId": "champ_r_giran_harbor_1"
+  },
+  "response": {
+    "kind": "delta",
+    "revision": 439288,
+    "serverNowMs": 1792673789649,
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 997,
+      "maxMp": 1016,
+      "pAtk": 2915,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": true,
+      "cityId": "l2dop_giran",
+      "currentZoneId": null,
+      "worldX": 43200,
+      "worldY": 170688,
+      "revision": 439288,
+      "snapshotGeneratedAt": 1792673789696,
+      "sp": 7597448,
+      "adena": "1056990129",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792674389535,
+          "remainingSec": 600
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    },
+    "delta": {
+      "mobHp": 33525,
+      "mobMaxHp": 59976,
+      "battleVersion": 5,
+      "battleEnded": false,
+      "logTail": [
+        "87​Вразливість звірів: +30% P.Atk проти тварин (10 хв).",
+        "[Monster Eye Destroyer] промахнувся по тобі."
+      ],
+      "mysticSkillCdUntil": {
+        "l2_87": 1792673790135
+      },
+      "skillCooldowns": {
+        "l2_87": 1792673790135
+      },
+      "serverNowMs": 1792673789649,
+      "nextPhysicalAttackAt": 1792673788608,
+      "attackCooldownMs": 744,
+      "attackIntervalMs": 744,
+      "mobDebuffIcons": [],
+      "battleMods": {
+        "stanceVicious": true,
+        "focusAttackActive": true,
+        "viciousStanceSkillRank": 9,
+        "weaknessKind": "animal",
+        "weaknessPatkMul": 1.3,
+        "weaknessDetects": {
+          "animal": 1.3
+        }
+      },
+      "battleBuffIcons": [
+        {
+          "key": "stance_vicious",
+          "l2SkillId": 312,
+          "labelUk": "Жорстка стійка",
+          "isToggle": true
+        },
+        {
+          "key": "focus_attack",
+          "l2SkillId": 317,
+          "labelUk": "Зосереджений удар",
+          "isToggle": true
+        },
+        {
+          "key": "weakness_animal",
+          "l2SkillId": 87,
+          "labelUk": "Детект: звірі",
+          "buffExpiresAtMs": 1792674389535,
+          "buffDurationTotalMs": 600000
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.50",
+  "runtimeHashes": {
+    "content.js": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+    "hook.js": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+    "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+    "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e",
+    "battle-cooldown.js": "be72b91c172f2d6021b08be9faeda7f80c8ec43c746787d31221309d0b04cf4e"
+  },
+  "kind": "actual MV3/main/hook with local mocked game routes and MAIN /character fetch; no live game",
+  "cases": 10,
+  "proof": [
+    {
+      "case": "off",
+      "pass": true,
+      "actions": [
+        {
+          "action": "focus_attack",
+          "wasOn": false
+        },
+        {
+          "action": "vicious_stance",
+          "wasOn": false
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "on-conflict",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "lowmp-on",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "mp0-off",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "unknown",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "cd",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "server-nomp",
+      "pass": true,
+      "actions": [
+        {
+          "action": "focus_attack",
+          "wasOn": false
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "vicious_stance",
+          "wasOn": false
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "reload-sent",
+      "pass": true,
+      "actions": [
+        {
+          "action": "focus_attack",
+          "wasOn": false
+        },
+        {
+          "action": "vicious_stance",
+          "wasOn": false
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "lowmp-off",
+      "pass": true,
+      "actions": [
+        {
+          "action": "focus_attack",
+          "wasOn": false
+        },
+        {
+          "action": "vicious_stance",
+          "wasOn": false
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    },
+    {
+      "case": "known-price",
+      "pass": true,
+      "actions": [
+        {
+          "action": "attack",
+          "wasOn": null
+        },
+        {
+          "action": "attack",
+          "wasOn": null
+        }
+      ],
+      "liveGamePosts": 0
+    }
+  ],
+  "liveGame": false,
+  "liveGamePosts": 0,
+  "localMockBattlePosts": 28,
+  "pageErrors": [],
+  "routeErrors": []
+}

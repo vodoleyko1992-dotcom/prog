@@ -1,0 +1,520 @@
+{
+  "at": "2026-10-22T13:31:56Z",
+  "method": "GET",
+  "path": "/character",
+  "status": 200,
+  "elapsedMs": 141,
+  "originalResponseSha256": "beeae85c7e73c7a2f346df0c68eb09a59a6d8901997ac40159a1f45a5d922915",
+  "request": {},
+  "response": {
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "pAtk": 5368,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": false,
+      "cityId": "l2dop_giran",
+      "currentZoneId": "giran_harbor",
+      "worldX": 47805,
+      "worldY": 186628,
+      "revision": 439346,
+      "snapshotGeneratedAt": 1792675916914,
+      "sp": 7649880,
+      "adena": "1057397584",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": 1792676348549,
+          "remainingSec": 432
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792676348801,
+          "remainingSec": 432
+        },
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": 1792676349020,
+          "remainingSec": 433
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      },
+      "equippedItems": {
+        "l1": {
+          "itemId": 299,
+          "enchant": 2,
+          "enchantPAtkBonus": 8,
+          "enchantMAtkBonus": 0
+        },
+        "l3": {
+          "itemId": 941301,
+          "enchant": 6
+        },
+        "l4": 941303,
+        "lf": 2431,
+        "lg": 2455,
+        "lh": 941302,
+        "le1": 855,
+        "le2": 854,
+        "lr1": 884,
+        "lr2": 884,
+        "belt": {
+          "itemId": 910629,
+          "specialGearLevel": 5
+        },
+        "neck": 916,
+        "cloak": {
+          "itemId": 920019,
+          "specialGearLevel": 5
+        },
+        "tattoo": {
+          "itemId": 910624,
+          "specialGearLevel": 5
+        }
+      },
+      "battleHotbarSlots": [
+        {
+          "k": "u",
+          "id": 1464
+        },
+        {
+          "k": "u",
+          "id": 1061
+        },
+        {
+          "k": "u",
+          "id": 728
+        },
+        {
+          "k": "a",
+          "a": "detect_insect_weakness"
+        },
+        {
+          "k": "a",
+          "a": "detect_animal_weakness"
+        },
+        null,
+        {
+          "k": "a",
+          "a": "war_cry"
+        },
+        {
+          "k": "a",
+          "a": "howl"
+        },
+        {
+          "k": "a",
+          "a": "thunder_storm"
+        },
+        {
+          "k": "a",
+          "a": "attack"
+        },
+        null,
+        {
+          "k": "u",
+          "id": 920044
+        },
+        null,
+        {
+          "k": "a",
+          "a": "detect_plant_weakness"
+        },
+        null,
+        null,
+        {
+          "k": "a",
+          "a": "battle_roar"
+        },
+        {
+          "k": "a",
+          "a": "provoke"
+        },
+        null,
+        {
+          "k": "a",
+          "a": "whirlwind"
+        },
+        null,
+        null,
+        null,
+        {
+          "k": "a",
+          "a": "vicious_stance"
+        },
+        {
+          "k": "a",
+          "a": "focus_attack"
+        },
+        null,
+        {
+          "k": "a",
+          "a": "thrill_fight"
+        },
+        null,
+        null,
+        {
+          "k": "a",
+          "a": "wild_sweep"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "longBuffs": [
+        {
+          "skillId": 1068,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1040,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1036,
+          "level": 2,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1045,
+          "level": 6,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1048,
+          "level": 6,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1062,
+          "level": 2,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1086,
+          "level": 2,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1240,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1204,
+          "level": 2,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1388,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1389,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 272,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 264,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 269,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 267,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 268,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 4703,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 4699,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1323,
+          "level": 1,
+          "expiresAt": 1792758984307
+        },
+        {
+          "skillId": 1033,
+          "level": 3,
+          "expiresAt": 1792759527052
+        },
+        {
+          "skillId": 1182,
+          "level": 3,
+          "expiresAt": 1792759527052
+        },
+        {
+          "skillId": 1191,
+          "level": 3,
+          "expiresAt": 1792759527052
+        },
+        {
+          "skillId": 271,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 304,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1077,
+          "level": 3,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 275,
+          "level": 1,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1352,
+          "level": 1,
+          "expiresAt": 1792759527052
+        },
+        {
+          "skillId": 1268,
+          "level": 4,
+          "expiresAt": 1792759476884
+        },
+        {
+          "skillId": 1414,
+          "level": 1,
+          "expiresAt": 1792759480036
+        },
+        {
+          "skillId": 1189,
+          "level": 3,
+          "expiresAt": 1792759527052
+        }
+      ],
+      "learnedSkillIdsAndRanks": [
+        {
+          "battleId": "l2_100",
+          "l2SkillId": 100,
+          "level": 15
+        },
+        {
+          "battleId": "l2_104",
+          "l2SkillId": 104,
+          "level": 1
+        },
+        {
+          "battleId": "l2_116",
+          "l2SkillId": 116,
+          "level": 3
+        },
+        {
+          "battleId": "l2_121",
+          "l2SkillId": 121,
+          "level": 3
+        },
+        {
+          "battleId": "l2_130",
+          "l2SkillId": 130,
+          "level": 1
+        },
+        {
+          "battleId": "l2_141",
+          "l2SkillId": 141,
+          "level": 5
+        },
+        {
+          "battleId": "l2_142",
+          "l2SkillId": 142,
+          "level": 3
+        },
+        {
+          "battleId": "l2_148",
+          "l2SkillId": 148,
+          "level": 4
+        },
+        {
+          "battleId": "l2_16",
+          "l2SkillId": 16,
+          "level": 9
+        },
+        {
+          "battleId": "l2_216",
+          "l2SkillId": 216,
+          "level": 20
+        },
+        {
+          "battleId": "l2_227",
+          "l2SkillId": 227,
+          "level": 25
+        },
+        {
+          "battleId": "l2_231",
+          "l2SkillId": 231,
+          "level": 25
+        },
+        {
+          "battleId": "l2_245",
+          "l2SkillId": 245,
+          "level": 15
+        },
+        {
+          "battleId": "l2_255",
+          "l2SkillId": 255,
+          "level": 15
+        },
+        {
+          "battleId": "l2_286",
+          "l2SkillId": 286,
+          "level": 1
+        },
+        {
+          "battleId": "l2_287",
+          "l2SkillId": 287,
+          "level": 1
+        },
+        {
+          "battleId": "l2_290",
+          "l2SkillId": 290,
+          "level": 3
+        },
+        {
+          "battleId": "l2_3",
+          "l2SkillId": 3,
+          "level": 9
+        },
+        {
+          "battleId": "l2_312",
+          "l2SkillId": 312,
+          "level": 9
+        },
+        {
+          "battleId": "l2_317",
+          "l2SkillId": 317,
+          "level": 2
+        },
+        {
+          "battleId": "l2_36",
+          "l2SkillId": 36,
+          "level": 12
+        },
+        {
+          "battleId": "l2_48",
+          "l2SkillId": 48,
+          "level": 12
+        },
+        {
+          "battleId": "l2_56",
+          "l2SkillId": 56,
+          "level": 9
+        },
+        {
+          "battleId": "l2_75",
+          "l2SkillId": 75,
+          "level": 1
+        },
+        {
+          "battleId": "l2_78",
+          "l2SkillId": 78,
+          "level": 1
+        },
+        {
+          "battleId": "l2_87",
+          "l2SkillId": 87,
+          "level": 1
+        }
+      ],
+      "learnedDetectSkills": [
+        {
+          "battleId": "l2_104",
+          "l2SkillId": 104,
+          "level": 1,
+          "nameUk": "Detect Plant Weakness",
+          "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти Plant. MP 21, відкат 10 с.",
+          "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти Plant. MP 21, откат 10 с.",
+          "kind": "battle"
+        },
+        {
+          "battleId": "l2_75",
+          "l2SkillId": 75,
+          "level": 1,
+          "nameUk": "Detect Insect Weakness",
+          "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти комах (Insect). MP 14, відкат 10 с.",
+          "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти комах (Insect). MP 14, откат 10 с.",
+          "kind": "battle"
+        },
+        {
+          "battleId": "l2_87",
+          "l2SkillId": 87,
+          "level": 1,
+          "nameUk": "Detect Animal Weakness",
+          "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти Animal. MP 18, відкат 10 с.",
+          "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти Animal. MP 18, откат 10 с.",
+          "kind": "battle"
+        }
+      ]
+    }
+  }
+}

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.49",
-  "description": "L2wap Bot 20.49 — постоянные Focus Attack и Vicious Stance у Warlord",
+  "version": "20.50",
+  "description": "L2wap Bot 20.50 — три Detect Weakness Warlord перед боем, крафт и точные замеры пики",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.49"
+  "version_name": "20.50"
 }
