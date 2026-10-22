@@ -1,0 +1,644 @@
+{
+  "sources": [
+    {
+      "name": "l2bot-log-2026-10-22-12-23.txt",
+      "sha256": "e94895f06928a54719f3903e639f00d9e638b623d130d8a13d5e09caca863aa5"
+    },
+    {
+      "name": "l2wap-pages-2026-10-22-12-23.html",
+      "sha256": "20d588c44100aefb967f2fa9337478ae620f280a395b356ccbeb163bdc7c00bd"
+    },
+    {
+      "name": "l2bot-learn-2026-10-22-12-23.html",
+      "sha256": "fdafceff43e5f6f40374c5efbd7d6078753a6e7776ed94ee96093d28c82d2b63"
+    }
+  ],
+  "timezone": "Asia/Vladivostok, UTC+10 (timestamps shown by export)",
+  "events": [
+    {
+      "localTime": "22:15:13.309",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 3085,
+      "observedMaxMp": 3085,
+      "line": 9407,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:15:51.308",
+      "method": "POST",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 1585,
+      "observedMaxMp": 3085,
+      "line": 9436,
+      "request": {
+        "recipeCode": "cokes",
+        "craftCount": 150,
+        "expectedRevision": 438627
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:15:51.757",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 1585,
+      "observedMaxMp": 3085,
+      "line": 9438,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:15:58.276",
+      "method": "POST",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 781,
+      "observedMaxMp": 3085,
+      "line": 9451,
+      "request": {
+        "recipeCode": "synthetic_cokes",
+        "craftCount": 42,
+        "expectedRevision": 438628
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:15:58.753",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 781,
+      "observedMaxMp": 3085,
+      "line": 9455,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:16:23.885",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 925,
+      "observedMaxMp": 3085,
+      "line": 9470,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:16:36.214",
+      "method": "POST",
+      "path": "/character/consumable/use",
+      "status": 200,
+      "observedMp": 1497,
+      "observedMaxMp": 3085,
+      "line": 9493,
+      "request": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 438629
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:16:36.515",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 1497,
+      "observedMaxMp": 3085,
+      "line": 9494,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:16:37.552",
+      "method": "POST",
+      "path": "/character/consumable/use",
+      "status": 200,
+      "observedMp": 1997,
+      "observedMaxMp": 3085,
+      "line": 9502,
+      "request": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 438630
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:16:39.335",
+      "method": "POST",
+      "path": "/character/consumable/use",
+      "status": 200,
+      "observedMp": 2497,
+      "observedMaxMp": 3085,
+      "line": 9506,
+      "request": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 438631
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:16:39.653",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 2497,
+      "observedMaxMp": 3085,
+      "line": 9508,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:16:40.188",
+      "method": "POST",
+      "path": "/character/consumable/use",
+      "status": 200,
+      "observedMp": 2997,
+      "observedMaxMp": 3085,
+      "line": 9514,
+      "request": {
+        "itemId": 728,
+        "quantity": 1,
+        "expectedRevision": 438632
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:16:49.959",
+      "method": "POST",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 2885,
+      "observedMaxMp": 3085,
+      "line": 9525,
+      "request": {
+        "recipeCode": "synthetic_cokes",
+        "craftCount": 8,
+        "expectedRevision": 438633
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:16:50.195",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 2885,
+      "observedMaxMp": 3085,
+      "line": 9527,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    },
+    {
+      "localTime": "22:17:01.150",
+      "method": "POST",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 1265,
+      "observedMaxMp": 3085,
+      "line": 9543,
+      "request": {
+        "recipeCode": "oriharukon",
+        "craftCount": 42,
+        "expectedRevision": 438634
+      },
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "character",
+        "maxMp"
+      ]
+    },
+    {
+      "localTime": "22:17:01.554",
+      "method": "GET",
+      "path": "/game/craft/materials",
+      "status": 200,
+      "observedMp": 1265,
+      "observedMaxMp": 3085,
+      "line": 9547,
+      "responseTruncated": true,
+      "responsePrefixFields": [
+        "createItemLevel",
+        "currentMp",
+        "maxMp",
+        "canCraftProfession",
+        "recipes"
+      ]
+    }
+  ],
+  "craftSnapshots": [
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:14 · 1n8wnot",
+      "meta": "Create Item: 9 · MP: 3085 / 3085",
+      "message": "",
+      "openRecipes": [],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:23 · wpo2t2",
+      "meta": "Create Item: 9 · MP: 3085 / 3085",
+      "message": "",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-oriharukon",
+          "text": "D · 100% · Create Item 4 · MP 40Synthetic Cokes (×1)0 / 1Oriharukon Ore (×4)33127 / 4Silver Nugget (×12)64415 / 12MAXСоздатьНедостатньо: Synthetic Cokes."
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:36 · vwxb99",
+      "meta": "Create Item: 9 · MP: 3085 / 3085",
+      "message": "",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-synthetic_cokes",
+          "text": "D · 100% · Create Item 2 · MP 20Oriharukon Ore (×1)33127 / 1Cokes (×3)0 / 3MAXСоздатьНедостатньо: Cokes."
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:42 · 1tvcv85",
+      "meta": "Create Item: 9 · MP: 3085 / 3085",
+      "message": "",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-cokes",
+          "text": "D · 100% · Create Item 1 · MP 10Charcoal (×3)74674 / 3Coal (×3)72944 / 3MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:52 · 1vgp2oz",
+      "meta": "Create Item: 9 · MP: 1585 / 3085",
+      "message": "Создано. Кокс! 150",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-cokes",
+          "text": "D · 100% · Create Item 1 · MP 10Charcoal (×3)74224 / 450Coal (×3)72494 / 450MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": true
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": true
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:15:59 · mkwm0t",
+      "meta": "Create Item: 9 · MP: 781 / 3085",
+      "message": "Создано. Синтетичний кокс! 42",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-synthetic_cokes",
+          "text": "D · 100% · Create Item 2 · MP 20Oriharukon Ore (×1)33085 / 42Cokes (×3)24 / 126MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": true
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": true
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:25 · 195pl2f",
+      "meta": "Create Item: 9 · MP: 925 / 3085",
+      "message": "",
+      "openRecipes": [],
+      "mpChoices": [
+        "Мале MP · +200 MP×0",
+        "MP · +500 MP×493",
+        "Велике MP · +2500 MP×0",
+        "Очистити слот"
+      ],
+      "mpSlots": [
+        {
+          "label": "Призначити банку MP, слот 1",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:30 · 1eobb7q",
+      "meta": "Create Item: 9 · MP: 925 / 3085",
+      "message": "",
+      "openRecipes": [],
+      "mpChoices": [
+        "Мале MP · +200 MP×0",
+        "MP · +500 MP×493",
+        "Велике MP · +2500 MP×0",
+        "Очистити слот"
+      ],
+      "mpSlots": [
+        {
+          "label": "MP: 493 шт., змінити",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 2",
+          "disabled": false
+        },
+        {
+          "label": "Призначити банку MP, слот 3",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:37 · 18z425y",
+      "meta": "Create Item: 9 · MP: 1497 / 3085",
+      "message": "",
+      "openRecipes": [],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "MP: 492 шт., використати",
+          "disabled": false
+        },
+        {
+          "label": "MP: 492 шт., використати",
+          "disabled": false
+        },
+        {
+          "label": "MP: 492 шт., використати",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:44 · rmkxqu",
+      "meta": "Create Item: 9 · MP: 2997 / 3085",
+      "message": "",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-synthetic_cokes",
+          "text": "D · 100% · Create Item 2 · MP 20Oriharukon Ore (×1)33085 / 1Cokes (×3)24 / 3MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": false
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": false
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:51 · 1k9j49q",
+      "meta": "Create Item: 9 · MP: 2885 / 3085",
+      "message": "Создано. Синтетичний кокс! 8",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-synthetic_cokes",
+          "text": "D · 100% · Create Item 2 · MP 20Oriharukon Ore (×1)33077 / 8Cokes (×3)0 / 24MAXСоздатьНедостатньо: Cokes."
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:16:56 · 1pifxvh",
+      "meta": "Create Item: 9 · MP: 2885 / 3085",
+      "message": "Создано. Синтетичний кокс! 8",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-oriharukon",
+          "text": "D · 100% · Create Item 4 · MP 40Synthetic Cokes (×1)50 / 1Oriharukon Ore (×4)33077 / 4Silver Nugget (×12)64415 / 12MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "title": "/craft.html [Материалы] · 22.10.2026, 22:17:02 · 1jshxgn",
+      "meta": "Create Item: 9 · MP: 1265 / 3085",
+      "message": "Создано. Оріхарукон! 42",
+      "openRecipes": [
+        {
+          "id": "craft-panel-materials-oriharukon",
+          "text": "D · 100% · Create Item 4 · MP 40Synthetic Cokes (×1)8 / 42Oriharukon Ore (×4)32909 / 168Silver Nugget (×12)63911 / 504MAXСоздать"
+        }
+      ],
+      "mpChoices": [],
+      "mpSlots": [
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        },
+        {
+          "label": "MP: 489 шт., використати",
+          "disabled": true
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    "All logged craft/materials and consumable/use responses are truncated; no full response schema validation claimed.",
+    "Observed batch 150 is accepted; no server maximum craftCount established.",
+    "Potion IDs for small/large are not established by this log; 728 is directly confirmed.",
+    "All four crafts and four MP potions are manual user clicks; no new automation live test.",
+    "MP changes across crafts include passive regeneration; mpCost per run comes from recipe tooltip."
+  ]
+}

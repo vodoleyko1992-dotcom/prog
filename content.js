@@ -31,10 +31,10 @@ const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] =
 // хранилище) и герою этого rt.
 const petCohortsFat = pc => !!pc && typeof pc === 'object' && Object.entries(pc).some(([k, v]) => k.length > 64 || !!v?.hero || !!v?.snapshotKey);
 // Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
-const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
+const rbEff = c => c.enchantMode !== true && c.craftMode !== true && !!c.rbHuntMode;
 const withRb = c => L2EngineCore.taskConfig({ ...L2EngineCore.rawTaskConfig(c), rbMode: rbEff(c) }, () => rt);
 const mergeCfg = c => withRb((globalThis.L2Defaults?.withoutAutoEnchant || (x => x))({ ...DEF_CFG, ...L2EngineCore.rawTaskConfig(c || {}) }));
-const modeSig = c => Array.isArray(c.autoTasks) ? 'выбрано: ' + L2EngineCore.taskList(c).join(', ') : c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
+const modeSig = c => Array.isArray(c.autoTasks) ? 'выбрано: ' + L2EngineCore.taskList(c).join(', ') : c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : c.craftMode === true ? 'крафт' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
   c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
 
 // ---------- утилиты ----------
@@ -1790,7 +1790,7 @@ async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
 async function toOutskirts(...args) { return L2V7Modules.navigation.toOutskirts(...args); }
 
 // 20.43 (автономность): на передышке начатый бой доводим, но следующий не начинаем — на карту, там loopSelfHold ждёт
-async function nextFight(...args) { await dailyServerSync(true); if(!on||!tabOwner)return; if (rt.selfHold && selfHoldApplies()) return toMap(); return L2V7Modules.mobfarm.nextFight(...args); }
+async function nextFight(...args) { if (autonomyMode() === 'craft') return toMap(); await dailyServerSync(true); if(!on||!tabOwner)return; if (autonomyMode() === 'craft') return toMap(); if (rt.selfHold && selfHoldApplies()) return toMap(); return L2V7Modules.mobfarm.nextFight(...args); }
 
 // ---------- карта ----------
 const tags = r => (r.quest ? ' [квест]' : '') + (r.champ ? ' [чемп]' : '');
@@ -1906,7 +1906,7 @@ async function rbGoStep(...args) { return L2V7Modules.raid.rbGoStep(...args); }
 // не пробовали 30 мин; сначала проверенные ✅, потом ближе к уровню) → полное HP/MP у баффера → «Телепорт» из списка
 // → РБ на карте (строка списка или метка) → бой (оценка «хватит ли сил» — та же, что в «Фарм РБ») → следующий.
 // Подходящих нет — ждём 3 мин и перечитываем список. Состояние: rt.rbHunt = { step, id, name, lvl, page, price, at }
-const huntOn = (...args) => cfg.enchantMode !== true && L2V7Modules.raid.huntOn(...args);
+const huntOn = (...args) => cfg.enchantMode !== true && cfg.craftMode !== true && L2V7Modules.raid.huntOn(...args);
 async function huntSet(...args) { return L2V7Modules.raid.huntSet(...args); }
 async function huntDone(...args) { return L2V7Modules.raid.huntDone(...args); }
 async function rbHuntStep(...args) { return L2V7Modules.raid.rbHuntStep(...args); }
@@ -2445,7 +2445,7 @@ function questLinesInLog(...args) { return L2V7Modules.quests.questLinesInLog(..
 const campActive = (...args) => L2V7Modules.quests.campActive(...args);
 const campOpen = (...args) => L2V7Modules.quests.campOpen(...args);
 const campMobOpen = (...args) => L2V7Modules.quests.campMobOpen(...args);
-const campEnabled = (...args) => cfg.enchantMode !== true && L2V7Modules.quests.campEnabled(...args);   // 10.0.10: кампания из меню или авто по сюжетному квесту новичка
+const campEnabled = (...args) => cfg.enchantMode !== true && cfg.craftMode !== true && L2V7Modules.quests.campEnabled(...args);   // 10.0.10: кампания из меню или авто по сюжетному квесту новичка
 const campRbOpen = (...args) => L2V7Modules.quests.campRbOpen(...args);
 const nameLike = (a, b) => { a = (a || '').toLowerCase().trim(); b = (b || '').toLowerCase().trim(); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
 const campChampOpen = (...args) => L2V7Modules.quests.campChampOpen(...args);
@@ -2897,7 +2897,7 @@ const EPICS = [
 ];
 const EPIC_URL = '/epic-bosses.html';
 const isEpicPage = (...args) => L2V7Modules.epics.isEpicPage(...args);
-const epicOn = (...args) => cfg.enchantMode !== true && L2V7Modules.epics.epicOn(...args);
+const epicOn = (...args) => cfg.enchantMode !== true && cfg.craftMode !== true && L2V7Modules.epics.epicOn(...args);
 // 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
 async function tasksIdle() {
   const fishWait=L2EngineCore.fishTaskWait(cfg,rt);
@@ -2927,7 +2927,7 @@ function tasksGoalNote(g) {
   rec('S', 'режим', `только задачи: цель ${g.kind === 'farm' ? 'фарма' : 'охоты на рецепт'} «${g.name}» — бью мобов-источники на её точке (снимите ✓ у «${g.name}» в «${g.kind === 'farm' ? 'Фарм ресурсов' : 'Охота на рецепты'}», чтобы бот не бил мобов)`);
 }
 const autonomyMode = () => L2EngineCore.selectedTask(cfg, rt) === 'quests' ? 'campaign' : L2EngineCore.selectedTask(cfg, rt) === 'auto' ? 'farm' : L2EngineCore.selectedTask(cfg, rt) || L2EngineCore.chooseMode({
-  enchant: cfg.enchantMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
+  enchant: cfg.enchantMode === true, craft: cfg.craftMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
   cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
 // 20.43 (автономность, ревью 21.10): «режим маршрута» — выбор игрока без автоматических пропусков (передышка rt.selfHold, ожидание тура
@@ -2942,7 +2942,7 @@ const routeBanned = key => !!L2V7Modules.actions?.banned?.(key);
 // 15.10: диагностика меняется вместе с выбором/задачей, а не на каждом тике.
 function taskPolicyNote(active = autonomyMode()) {
   if (!Array.isArray(cfg.autoTasks) || !tabOwner) return;
-  const labels = {tvt:'TvT',quests:'квесты',campaign:'квесты',fish:'рыбалка',cat:'катакомбы',raid:'тур РБ',epic:'эпики',farm:'фарм',auto:'автофарм',enchant:'заточка',mammon:'Маммон',dailies:'дейлики',clan:'клан',pvp:'враги',petbuff:'автобаф суммона',resources:'ресурсы',tasks:'ожидание'};
+  const labels = {tvt:'TvT',quests:'квесты',campaign:'квесты',fish:'рыбалка',cat:'катакомбы',raid:'тур РБ',epic:'эпики',farm:'фарм',auto:'автофарм',enchant:'заточка',craft:'крафт',mammon:'Маммон',dailies:'дейлики',clan:'клан',pvp:'враги',petbuff:'автобаф суммона',resources:'ресурсы',tasks:'ожидание'};
   const selected = L2EngineCore.taskList(cfg), key = JSON.stringify([selected,active]), now = Date.now();
   const previous = window.__taskPolicyNote;
   if (previous?.key === key || previous && now - previous.at < 5000) return;
@@ -2950,7 +2950,7 @@ function taskPolicyNote(active = autonomyMode()) {
   rec('S','авторежим', `разрешены: ${selected.map(k=>labels[k]).join(', ') || 'нет'}; сейчас: ${labels[active] || active}; другие задачи запрещены`);
 }
 // эпики + рыбалка: эпиков подходящих нет (выбор цели) — бот рыбачит; места «куда вернуться» и «мягкая ошибка» считают это рыбалкой
-const fishNow = (...args) => L2V7Modules.fishing.fishNow(...args);
+const fishNow = (...args) => cfg.craftMode !== true && L2V7Modules.fishing.fishNow(...args);
 const epicNum = (...args) => L2V7Modules.epics.epicNum(...args);
 const epicById = (...args) => L2V7Modules.epics.epicById(...args);
 const epicByName = (...args) => L2V7Modules.epics.epicByName(...args);
@@ -3260,13 +3260,13 @@ async function main() {
 }
 const LOOP_BREAK = 'break';
 const LOOP = { servicesStarted: false, castObservedAt: 0, holdWaitT: 0 };   // бывшие локальные переменные main() (сбрасываются при каждом запуске main)
-const loopStale = () => !on || !tabOwner || autonomyMode() === 'enchant';
+const loopStale = () => !on || !tabOwner || ['enchant','craft'].includes(autonomyMode());
 // Один круг главного цикла: первый шаг, вернувший true/LOOP_BREAK, заканчивает круг.
 // 20.43 (автономность, слияние au/travel + au/breather): loopSelfHold только снимает истёкшую передышку и круг не держит; сверка квитанции
 // перелёта loopTravel — сразу за ним, раньше списка задач и диспетчера (идёт и на передышке: бесплатный GET); ожидание передышки — loopSelfHoldWait
 async function mainTick() {
   return await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent() || await loopSelfHold()
-    || await loopTravel() || await loopTaskList() || await loopEnchant() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
+    || await loopTravel() || await loopTaskList() || await loopEnchant() || await loopCraft() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
     || await loopSideJobs() || await loopSelfHoldWait() || await loopRaid() || await loopActivity();
 }
 // Замок вкладки: «один бот на все вкладки»; новая выдача замка перечитывает хранилище.
@@ -3352,8 +3352,8 @@ async function loopGate() {
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
   // 20.43 (разбор 21.10): ожидание подготовки кота перед РБ не держит круг, когда подошла запись на TvT или сам TvT: tvtStep стоит
   // после loopGate, и на /skill-panel.html статус TvT иначе не освежался (idleTvtBreak сам перечитывает /game/tvt по своему расписанию)
-  if (rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
-  if (rt.petPrep && !idleTvtBreak() && await L2V7Modules.warlock.startPrepare()) { await sleep(300); return true; }   // 20.43: начатая подготовка кота после Старта
+  if (autonomyMode() !== 'craft' && rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
+  if (autonomyMode() !== 'craft' && rt.petPrep && !idleTvtBreak() && await L2V7Modules.warlock.startPrepare()) { await sleep(300); return true; }   // 20.43: начатая подготовка кота после Старта
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
@@ -3383,7 +3383,7 @@ async function loopWatchdog() {
   // попытка N/3» каждые 9 мин передышки, stallRecoveries копились, и следующая настоящая stall-передышка эпика наступала на 9–18 мин раньше.
   // Без списка задач передышка эпиков режим не меняет — её ожидание учтено ниже (selfHoldMain), как прежде
   const epicJob = !!rt.epic && !['pick', 'prep'].includes(rt.epic.step) && autonomyMode() === 'epic';
-  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && !L2V7Modules.navigation?.travelPending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || job('shop') || job('rbGo') || job('zoneGo') || job('mmJob') ||
+  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && !L2V7Modules.navigation?.travelPending?.() && (!['enchant','craft'].includes(autonomyMode()) || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || job('shop') || job('rbGo') || job('zoneGo') || job('mmJob') ||
     job('tbuff') || epicJob ||
     job('invScan') || fishNow());
   // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -3494,7 +3494,7 @@ async function loopSelfHoldWait() {
 // Режим «Задачи бота»: несовместимые маршруты снимаются; без задач-сервисов — только бой/вываживание/ожидание.
 async function loopTaskList() {
   // 15.10: сохранённые маршруты не обходят новый список задач; квитанции оплат не удаляем.
-  if (Array.isArray(cfg.autoTasks)) {
+  if (Array.isArray(cfg.autoTasks) || autonomyMode() === 'craft') {
     taskPolicyNote();
     const blocked = {};
     // 20.23 (журнал19.10 17:26): галка «Тур РБ» уже снята, rbSessTick больше не
@@ -3507,7 +3507,7 @@ async function loopTaskList() {
     // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала. Ревью: после передышки тур сначала бесплатно
     // открывает карту (rt.rbResume, raidResumeMap) — иначе прилёт/бой вне карты всё равно уходили к платному выбору
     const held = [];
-    for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
+    for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb','enchantJob','subTrip'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) { if (L2EngineCore.taskJobHeld?.(cfg,key,rt)) held.push(key); else blocked[key] = null; }
     if (rt.actionOwner?.key && held.includes(rt.actionOwner.key) && !Object.hasOwn(blocked, rt.actionOwner.key)) blocked.actionOwner = null;
     if (Object.keys(blocked).length) {
@@ -3518,7 +3518,7 @@ async function loopTaskList() {
       if (Object.hasOwn(blocked, 'actionOwner')) rec('S','авторежим', `маршрут ${owner} задачи на передышке сохранён и ждёт её конца; ${held.length > 1 ? 'остальные сохранены тоже: ' + held.filter(k => k !== owner).join(', ') : 'продолжу после передышки'}`);
       return true;
     }
-    await sealQueue();
+    if (autonomyMode() !== 'craft') await sealQueue();
     if (!on || !tabOwner) return true;
     if (autonomyMode() === 'tasks' && !L2EngineCore.taskList(cfg).some(k => ['mammon','quests','dailies','clan','pvp','petbuff','resources'].includes(k))) {
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); return true; }
@@ -3543,6 +3543,25 @@ async function loopEnchant() {
     else await enchantDispatch();
     await sleep(200); return true;
   }
+}
+// 22.10 (журнал 22:15–22:17): отдельный крафт держит круг и при ожидании сырья/маны, без новой охоты и городских баффов.
+async function loopCraft() {
+  if (autonomyMode() !== 'craft') return false;
+  if (await antibotGuard()) return true;
+  if (!on || !tabOwner || autonomyMode() !== 'craft') return true;
+  if (isBattle()) await battle();
+  else if (isFishing() && fishState()) await fishFight();
+  else if (cfg.tvtOn && L2V7Modules.tvt.tvtHold()) await L2V7Modules.tvt.tvtWait();
+  else if (L2V7Modules.actions && (rt.actionOwner || L2V7Modules.actions.hasPending()
+    || ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan','sealEx'].some(k => rt[k]))) { await L2V7Modules.actions.dispatch(); await sleep(200); return true; }
+  else if (rt.shop?.urgent && Date.now() - (rt.shop.t || 0) < 300000) await shopStep();
+  else if (rt.subGo) { await L2V7Modules.subgo.step(); await sleep(200); return true; } // явная команда меню, в том числе выбор крафтера
+  else if (L2V7Modules.subclass.role() !== 'crafter') setStatus('Крафт: выберите класс крафтера — класс сам не переключаю');
+  else {
+    await L2V7Modules.craft.step();
+    if (on && tabOwner && autonomyMode() === 'craft') setStatus('Крафт: ' + (L2V7Modules.craft.text() || 'добавьте рецепт и количество в очередь').replace(/\n/g, ' · '));
+  }
+  await sleep(1000); return true;
 }
 // PvP, «один РБ», враги, окно TvT, рыбалка без PvE, сумка, старый заброс, сохранённый маршрут, закупка, магистр, городские баффы.
 async function loopPriority() {
@@ -6584,9 +6603,12 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
 // 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
 L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
-  get actionGeneration() { return () => automationGeneration; }, get leaseEpoch() { return leaseEpoch; },
+  get actionGeneration() { return () => automationGeneration; }, get leaseEpoch() { return leaseEpoch; }, get mode() { return autonomyMode; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
-  get free() { return () => L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
+  get free() { return () => autonomyMode() === 'craft'
+    ? !antibotState() && !L2V7Modules.payments?.blocked?.() && !L2V7Modules.pvp?.pending?.() && !L2V7Modules.navigation?.travelPending?.()
+      && !['shop','rbGo','zoneGo','revive','tbuff','magister','invScan','fishSvc','petBufferTrip','enchantJob','subTrip','mmJob','storyJob','subGo','actionOwner'].some(k => rt[k])
+    : L2V7Modules.mammon?.modeFree?.(); }, get invSnapshot() { return () => INV_READY === invContext() && invQty(0) !== null ? INV_NET : null; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get invRefresh() { return invRefresh; } });
 // 20.43 (John 21.10): набор крафтера — оружие/щит/голем по задаче; надевание своим POST, поэтому учёт оружия и слуги — вручную
 function kitPetNote(c) {

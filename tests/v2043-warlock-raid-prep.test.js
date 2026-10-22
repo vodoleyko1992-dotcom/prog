@@ -138,7 +138,8 @@ test('ожидание подтверждения уступает TvT: без G
 
 test('ядро: loopGate уступает записи на TvT и самому TvT (idleTvtBreak перечитывает /game/tvt)',()=>{
  const content=fs.readFileSync(path.join(__dirname,'../content.js'),'utf8');
- assert.match(content,/if \(rt\.petRaidPrep && !idleTvtBreak\(\) && await L2V7Modules\.warlock\.raidPrepare\(\)\) \{ await sleep\(300\); return true; \}/);
+ // 22.10: отдельный крафт не возобновляет подготовку кота; уступка TvT и прежние проверки сохраняются.
+ assert.match(content,/if \(autonomyMode\(\) !== 'craft' && rt\.petRaidPrep && !idleTvtBreak\(\) && await L2V7Modules\.warlock\.raidPrepare\(\)\) \{ await sleep\(300\); return true; \}/);
  assert.match(content,/const idleTvtBreak = \(\) => \{[^\n]*tvtRefresh[^\n]*tvtRegistrationDue[^\n]*tvtSoon/);
 });
 

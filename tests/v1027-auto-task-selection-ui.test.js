@@ -28,6 +28,7 @@ assert.deepStrictEqual(plain(selectedAutoTasks({ tvtOn: true, fishMode: true, ta
   await editAutoTask('tvt', false); await editAutoTask('fish', false); await editAutoTask('raid', false);
   assert.deepStrictEqual(plain(cfg.autoTasks), []);
   const html = fs.readFileSync(require('path').join(__dirname, '../popup.html'), 'utf8');
-  assert.strictEqual((html.match(/data-auto-task=/g) || []).length, 15);
+  // 22.10: добавлена шестнадцатая задача — отдельный крафт материалов.
+  assert.strictEqual((html.match(/data-auto-task=/g) || []).length, 16);
   console.log('PASS auto-task selection UI: strict allowlist, migration, priorities, serial edits, no implicit start');
 })().catch(e => { console.error(e); process.exitCode = 1; });

@@ -8,7 +8,8 @@ const html = R('popup.html'), js = R('popup.js'), css = R('ui-game.css');
 const box = html.match(/<div id="quickStart"[^]*?<\/div>/)?.[0] || '';
 assert.ok(box, 'блок #quickStart есть');
 assert.ok(html.indexOf('id="quickStart"') > html.indexOf('id="activityPanel"') && html.indexOf('id="quickStart"') < html.indexOf('</header>'), 'кнопки в шапке, на первом экране');
-assert.deepEqual([...box.matchAll(/data-quick-task="(\w+)"/g)].map(m => m[1]), ['farm', 'auto', 'fish', 'cat']);
+// 22.10: к прежним четырём режимам добавлен быстрый запуск крафта.
+assert.deepEqual([...box.matchAll(/data-quick-task="(\w+)"/g)].map(m => m[1]), ['farm', 'auto', 'fish', 'cat', 'craft']);
 assert.match(box, /\shidden>/, 'по умолчанию скрыт до первой отрисовки');
 // только основные дела, фоновые задачи сохраняются, кампания выключается вместе с квестами, затем обычный «Старт»
 const fn = js.match(/async function quickStart\(key\) \{[^]*?\n\}/)?.[0] || '';

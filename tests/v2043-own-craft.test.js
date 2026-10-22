@@ -193,7 +193,9 @@ test('подключение: manifest, геттеры фабрики, умол�
   const fac = read('content.js').match(/L2V7Modules\.craft = L2V7Factories\.craft\(\{([\s\S]*?)\}\);/)[1];
   for (const k of used) assert.match(fac, new RegExp(`get ${k}\\(\\)`), `нет геттера ${k}`);
   assert.match(read('defaults.js'), /craftAuto: false, craftMammon: true, craftMpKeep: 20/);
-  assert.match(fac, /get free\(\) \{ return \(\) => L2V7Modules\.mammon\?\.modeFree\?\.\(\); \}/);
+  // 22.10: отдельный режим имеет свой guard; фоновый по-прежнему подчинён modeFree Маммона.
+  assert.match(fac, /get free\(\) \{ return \(\) => autonomyMode\(\) === 'craft'/);
+  assert.match(fac, /: L2V7Modules\.mammon\?\.modeFree\?\.\(\); \}/);
   assert.match(read('content.js'), /else if \(!\(await L2V7Modules\.craft\?\.step\?\.\(\)\)\) await tasksIdle\(\);/, 'ожидание без служебных задач — тоже крафт');
   // рецепты книги в справочнике Маммона совпадают с настоящей книгой 21.10
   const mb = { console }; vm.runInNewContext(read('modules/mammon.js'), mb); const R = mb.L2V7Factories.mammon({ cfg: {}, rt: {} }).MM_RECIPES;
