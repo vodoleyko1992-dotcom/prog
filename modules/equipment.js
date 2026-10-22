@@ -212,16 +212,17 @@ async function autoRoles() {
   const missing = repaired.filter(n => !env.names(fix.nPower ?? env.cfg.nPower).includes(n));
   if (missing.length) fix.nPower = [fix.nPower ?? env.cfg.nPower, ...missing.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');
   // 20.3: и уже виденные навыки Warlord с именованным actionId. Ремонт только один раз, после записи cfg.
-  const warrior = env.panelInventory().filter(x => [36, 48, 75, 78, 87, 100, 104, 116, 130, 245, 255, 286, 290, 312, 317].includes(env.ilOf(x)?.id)
+  // 20.48: Battle Roar/Lionheart уже были видны с украинскими именами, но без native ID попадали в силовые.
+  const warrior = env.panelInventory().filter(x => [36, 48, 75, 78, 87, 100, 104, 116, 121, 130, 245, 255, 286, 287, 290, 312, 317].includes(env.ilOf(x)?.id)
     && !(env.rt.warriorRoles1027 || []).includes(x.name.toLowerCase()));
   for (const x of warrior) {
     const n = x.name.toLowerCase();
-    for (const k of ['nPower', 'nStun', 'nBuffs', 'nToggles']) {
+    for (const k of ['nPower', 'nStun', 'nBuffs', 'nToggles', 'nHeal']) {
       const recommended = env.names(sug[k] || '').includes(n), current = fix[k] ?? env.cfg[k] ?? '';
       const values = current.split(',').map(v => v.trim()).filter(Boolean);
       if (recommended && !env.names(current).includes(n)) fix[k] = [...values, x.name].join(', ');
       // Лишь заведомо ошибочная боевая роль баффа/тоггла; свои прочие назначения сохраняем.
-      if (k === 'nPower' && [75, 78, 87, 104, 116, 130, 286, 290, 312, 317].includes(env.ilOf(x)?.id) && env.names(current).includes(n))
+      if (k === 'nPower' && [75, 78, 87, 104, 116, 121, 130, 286, 287, 290, 312, 317].includes(env.ilOf(x)?.id) && env.names(current).includes(n))
         fix[k] = values.filter(v => v.toLowerCase() !== n).join(', ');
     }
   }

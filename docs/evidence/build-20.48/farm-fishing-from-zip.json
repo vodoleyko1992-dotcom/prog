@@ -1,0 +1,150 @@
+{
+  "browser": "156.0.8078.4",
+  "kind": "exact content functions + pure background dailyServerChange; controlled actor/IPC/map; native fetch on local HTTP",
+  "contentSha256": "b70d78a3ff0f3facf2dc722e026e7ed744a53cc7232fd02d501193bd0bfc2549",
+  "liveGame": false,
+  "proof": [
+    {
+      "case": "native GET→dailyServerChange→map; stored fish retained",
+      "pass": true,
+      "state": {
+        "maps": 1,
+        "active": true,
+        "storedActive": true,
+        "current": true,
+        "count": 1000,
+        "fish": 153,
+        "check": {
+          "day": "2026-10-22",
+          "char": "AuditHero",
+          "start": 1,
+          "t": 1792662751212
+        },
+        "storedCheck": {
+          "day": "2026-10-22",
+          "char": "AuditHero",
+          "start": 1,
+          "t": 1792662751212
+        },
+        "calls": 1,
+        "statuses": [
+          "Проверяю серверное время и лимиты дня"
+        ],
+        "logs": [
+          [
+            "B",
+            "лимиты дня",
+            "Незавершённый улов сохранён; рыбалка сейчас не выбрана — лимиты охоты проверены по серверу"
+          ],
+          [
+            "B",
+            "лимиты дня",
+            "Сервер: 1000 мобов, 153 рыб за 2026-10-22; лимиты проверены до начала новых действий"
+          ]
+        ]
+      }
+    },
+    {
+      "case": "server cap blocks map",
+      "pass": true,
+      "state": {
+        "maps": 0,
+        "active": true,
+        "storedActive": true,
+        "current": true,
+        "count": 36000,
+        "fish": 153,
+        "check": {
+          "day": "2026-10-22",
+          "char": "AuditHero",
+          "start": 1,
+          "t": 1792662751236
+        },
+        "storedCheck": {
+          "day": "2026-10-22",
+          "char": "AuditHero",
+          "start": 1,
+          "t": 1792662751236
+        },
+        "calls": 1,
+        "statuses": [
+          "Проверяю серверное время и лимиты дня"
+        ],
+        "logs": [
+          [
+            "B",
+            "лимиты дня",
+            "Незавершённый улов сохранён; рыбалка сейчас не выбрана — лимиты охоты проверены по серверу"
+          ],
+          [
+            "B",
+            "лимиты дня",
+            "Сервер: 36000 мобов, 153 рыб за 2026-10-22; лимиты проверены до начала новых действий"
+          ]
+        ]
+      }
+    },
+    {
+      "case": "pending cast blocks sync",
+      "pass": true,
+      "state": {
+        "maps": 0,
+        "active": true,
+        "storedActive": true,
+        "current": false,
+        "count": 0,
+        "fish": 0,
+        "check": null,
+        "storedCheck": null,
+        "calls": 0,
+        "statuses": [
+          "Лимиты дня: новая добыча ждёт проверки сервера; остальные задачи доступны"
+        ],
+        "logs": []
+      }
+    },
+    {
+      "case": "Stop rejects delayed native response",
+      "pass": true,
+      "state": {
+        "maps": 0,
+        "active": true,
+        "storedActive": true,
+        "current": false,
+        "count": 0,
+        "fish": 0,
+        "check": null,
+        "storedCheck": null,
+        "calls": 0,
+        "statuses": [
+          "Проверяю серверное время и лимиты дня"
+        ],
+        "logs": []
+      }
+    },
+    {
+      "case": "daily503 keeps farm closed",
+      "pass": true,
+      "state": {
+        "maps": 0,
+        "active": true,
+        "storedActive": true,
+        "current": false,
+        "count": 0,
+        "fish": 0,
+        "check": null,
+        "storedCheck": null,
+        "calls": 1,
+        "statuses": [
+          "Проверяю серверное время и лимиты дня",
+          "Лимиты дня: daily_start_snapshot; повтор через15с",
+          "Лимиты дня: новая добыча ждёт проверки сервера; остальные задачи доступны"
+        ],
+        "logs": []
+      }
+    }
+  ],
+  "postRequests": 0,
+  "pageErrors": [],
+  "routeErrors": []
+}

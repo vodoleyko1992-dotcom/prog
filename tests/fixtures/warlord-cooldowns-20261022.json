@@ -1,0 +1,682 @@
+{
+  "note": "Разрешённый живой аудит22.10: один Flamestone Golem44. Только action/spawn, явные сроки сервера и строки боя; данные героя и учётной записи не включены.",
+  "actor": "Warlock",
+  "mob": "Flamestone Golem",
+  "cases": [
+    {
+      "source": "raid-attack-02.json",
+      "sourceSha256": "9c8e352964ae5531a996f93b280150ee5dd18a1ff4502f39915153f5834d25d3",
+      "status": 200,
+      "request": {
+        "action": "attack",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792660957304,
+        "delta": {
+          "serverNowMs": 1792660957304,
+          "skillCooldowns": {
+            "attack": 1792660957840,
+            "l2_1": 1792660957840
+          },
+          "mysticSkillCdUntil": {
+            "attack": 1792660957840,
+            "l2_1": 1792660957840
+          },
+          "globalCooldownUntilMs": 1792660957840,
+          "logTail": [
+            "Древко розсікло ворогів поруч: Enchanted Stone Golem −10308, Manashen Gargoyle −9777.",
+            "[Warlock] −8778 HP.",
+            "Vamp clan armor: +790 HP.",
+            "Додаткова ціль повалена: Enchanted Stone Golem.",
+            "EXP + 10881",
+            "SP + 1452",
+            "Додаткова ціль повалена: Manashen Gargoyle.",
+            "Animal Bone ×10",
+            "Coal ×8",
+            "EXP + 8307",
+            "SP + 1074",
+            "+8190 аден"
+          ]
+        }
+      },
+      "canonical": "l2_1",
+      "ownDamage": 8778
+    },
+    {
+      "source": "raid-whirlwind-01.json",
+      "sourceSha256": "c729b328feb048d5e2e292391c4c5bcd9bcd48fbe04d8114dd2c88e5f9c5eaef",
+      "status": 200,
+      "request": {
+        "action": "whirlwind",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792660958908,
+        "delta": {
+          "serverNowMs": 1792660958908,
+          "skillCooldowns": {
+            "l2_36": 1792660960519
+          },
+          "mysticSkillCdUntil": {
+            "l2_36": 1792660960519
+          },
+          "logTail": [
+            "⁠36​Вихор: power 620; до 4 цілей (головна + 3 поруч) — 19710 урона",
+            "Вихор вразив ворогів поруч: Enchanted Stone Golem −19710.",
+            "Додаткова ціль повалена: Enchanted Stone Golem.",
+            "Silver Nugget ×10",
+            "EXP + 10881",
+            "SP + 1452",
+            "+10770 аден"
+          ]
+        }
+      },
+      "canonical": "l2_36",
+      "ownDamage": 19710
+    },
+    {
+      "source": "raid-thunder-01.json",
+      "sourceSha256": "3cf192a931403694a7d038b741e2b6460639d45d892759a2a360bb3bb14fea19",
+      "status": 200,
+      "request": {
+        "action": "thunder_storm",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792660960197,
+        "delta": {
+          "serverNowMs": 1792660960197,
+          "skillCooldowns": {
+            "l2_36": 1792660960519,
+            "l2_48": 1792660966054
+          },
+          "mysticSkillCdUntil": {
+            "l2_36": 1792660960519,
+            "l2_48": 1792660966054
+          },
+          "logTail": [
+            "⁠48​Грозова буря: power 471; до 4 цілей (головна + 3 поруч); ціль шоковано (~41%) — 20770 урона"
+          ]
+        }
+      },
+      "canonical": "l2_48",
+      "ownDamage": 20770
+    },
+    {
+      "source": "raid-sweep-01.json",
+      "sourceSha256": "e2beaeb5e1efe106c4425eac8491e43be9b5f6a9f21d34789d5f485d3c7baff5",
+      "status": 200,
+      "request": {
+        "action": "wild_sweep",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792660961673,
+        "delta": {
+          "serverNowMs": 1792660961673,
+          "skillCooldowns": {
+            "l2_48": 1792660966054,
+            "l2_245": 1792660966600
+          },
+          "mysticSkillCdUntil": {
+            "l2_48": 1792660966054,
+            "l2_245": 1792660966600
+          },
+          "logTail": [
+            "⁠245​Дикий розмах: power 326 — 22327 урона"
+          ]
+        }
+      },
+      "canonical": "l2_245",
+      "ownDamage": 22327
+    },
+    {
+      "source": "raid-howl.json",
+      "sourceSha256": "6a53942b7eef548667911d83d25415892eac37e932b1bb92c5d12b060eb279f3",
+      "status": 200,
+      "request": {
+        "action": "howl",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661011760,
+        "delta": {
+          "serverNowMs": 1792661011760,
+          "skillCooldowns": {
+            "l2_116": 1792661013972
+          },
+          "mysticSkillCdUntil": {
+            "l2_116": 1792661013972
+          },
+          "logTail": [
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе (крит!) — −56 HP.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −24 HP.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] ударив тебе — −27 HP.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] ударив тебе — −27 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −51 HP.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "Звіриний рев ослабив P.Atk (−23%, 30 с): Flamestone Golem, Enchanted Stone Golem, Manashen Gargoyle, Enchanted Stone Golem.",
+            "116​Звіриний рев: −23% P. Raid Boss має імунітет до негативних ефектів."
+          ]
+        }
+      },
+      "canonical": "l2_116",
+      "ownDamage": 0
+    },
+    {
+      "source": "raid-provoke.json",
+      "sourceSha256": "cd5428d90f711d5058886c64ef500457414d73e8d7a1a467b51cbbde3cd00d23",
+      "status": 200,
+      "request": {
+        "action": "provoke",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661013092,
+        "delta": {
+          "serverNowMs": 1792661013092,
+          "skillCooldowns": {
+            "l2_116": 1792661013972,
+            "l2_286": 1792661017477
+          },
+          "mysticSkillCdUntil": {
+            "l2_116": 1792661013972,
+            "l2_286": 1792661017477
+          },
+          "logTail": [
+            "Провокація (Provoke): агро Flamestone Golem; −10% опору до списів, 10 с.",
+            "286​Провокація: агро мобів і РБ у радіусі; епіки не зачіпає. Raid Boss має імунітет до негативних ефектів."
+          ]
+        }
+      },
+      "canonical": "l2_286",
+      "ownDamage": 0
+    },
+    {
+      "source": "raid-battle-roar.json",
+      "sourceSha256": "620b3a5dd04e6f93bfd82f85033635ba1eaa40231e6b8e79d6cf0947ce2bf113",
+      "status": 200,
+      "request": {
+        "action": "battle_roar",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661014452,
+        "delta": {
+          "serverNowMs": 1792661014452,
+          "skillCooldowns": {
+            "l2_286": 1792661017477,
+            "l2_121": 1792661192683
+          },
+          "mysticSkillCdUntil": {
+            "l2_286": 1792661017477,
+            "l2_121": 1792661192683
+          },
+          "logTail": [
+            "121​Бойовий рик: +15% HP і Max HP на 10 хв."
+          ]
+        }
+      },
+      "canonical": "l2_121",
+      "ownDamage": 0
+    },
+    {
+      "source": "raid-lionheart.json",
+      "sourceSha256": "65daa3207732f81bb935fa07c670f11c6f26f0d789d7cdc2f1651507ddcf6422",
+      "status": 200,
+      "request": {
+        "action": "lionheart",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661015656,
+        "delta": {
+          "serverNowMs": 1792661015656,
+          "skillCooldowns": {
+            "l2_121": 1792661192683,
+            "l2_286": 1792661017477,
+            "l2_287": 1792661060144
+          },
+          "mysticSkillCdUntil": {
+            "l2_121": 1792661192683,
+            "l2_286": 1792661017477,
+            "l2_287": 1792661060144
+          },
+          "logTail": [
+            "287​Левине серце: +40% стійкості до шоку, сну, утримання та паралічу (60 с)."
+          ]
+        }
+      },
+      "canonical": "l2_287",
+      "ownDamage": 0
+    }
+  ],
+  "identitySource": {
+    "source": "raid-start.json",
+    "sourceSha256": "474c44e852b84fcff8b03c768e9b88442340069e41e3a843a9c7d40844bf87a5"
+  },
+  "identities": [
+    {
+      "action": "attack",
+      "skillId": 1
+    },
+    {
+      "action": "war_cry",
+      "skillId": 78
+    },
+    {
+      "action": "battle_roar",
+      "skillId": 121
+    },
+    {
+      "action": "whirlwind",
+      "skillId": 36
+    },
+    {
+      "action": "detect_animal_weakness",
+      "skillId": 87
+    },
+    {
+      "action": "detect_insect_weakness",
+      "skillId": 75
+    },
+    {
+      "action": "thunder_storm",
+      "skillId": 48
+    },
+    {
+      "action": "wild_sweep",
+      "skillId": 245
+    },
+    {
+      "action": "vicious_stance",
+      "skillId": 312
+    },
+    {
+      "action": "howl",
+      "skillId": 116
+    },
+    {
+      "action": "focus_attack",
+      "skillId": 317
+    },
+    {
+      "action": "lionheart",
+      "skillId": 287
+    },
+    {
+      "action": "stun_attack",
+      "skillId": 100
+    },
+    {
+      "action": "provoke",
+      "skillId": 286
+    },
+    {
+      "action": "power_smash",
+      "skillId": 255
+    },
+    {
+      "action": "mortal_blow",
+      "skillId": 16
+    },
+    {
+      "action": "power_shot",
+      "skillId": 56
+    },
+    {
+      "action": "power_strike",
+      "skillId": 3
+    },
+    {
+      "action": "battle_trance",
+      "skillId": null
+    }
+  ],
+  "extraCases": [
+    {
+      "source": "raid-war-cry.json",
+      "sourceSha256": "90713c4d2f5e62acc673add93703cbdee4d8a297fcf05c20c746598e0b1735bf",
+      "status": 200,
+      "request": {
+        "action": "war_cry",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661282165,
+        "delta": {
+          "serverNowMs": 1792661282165,
+          "skillCooldowns": {
+            "l2_317": 1792661292847,
+            "l2_78": 1792661295452
+          },
+          "mysticSkillCdUntil": {
+            "l2_317": 1792661292847,
+            "l2_78": 1792661295452
+          },
+          "logTail": [
+            "78​Бойовий клич: +20% до фіз. атаки на 5 хв."
+          ]
+        }
+      },
+      "canonical": "l2_78",
+      "remaining": 13287
+    },
+    {
+      "source": "raid-focus-off.json",
+      "sourceSha256": "02f18576e3db9836da937c0be7d1653aa0466b6af96c21e692fe39ad5d2c52a0",
+      "status": 200,
+      "request": {
+        "action": "focus_attack",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661241248,
+        "delta": {
+          "serverNowMs": 1792661241248,
+          "skillCooldowns": {
+            "l2_16": 1792661243325,
+            "l2_317": 1792661253195
+          },
+          "mysticSkillCdUntil": {
+            "l2_16": 1792661243325,
+            "l2_317": 1792661253195
+          },
+          "logTail": [
+            "317​Зосереджений удар вимкнено."
+          ]
+        }
+      },
+      "canonical": "l2_317",
+      "remaining": 11947
+    },
+    {
+      "source": "raid-focus-on-confirmed.json",
+      "sourceSha256": "c30fdb2647050e89ea55418866f371b8a7c03a32406f7d386f0acb3a1006978e",
+      "status": 200,
+      "request": {
+        "action": "focus_attack",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661280893,
+        "delta": {
+          "serverNowMs": 1792661280893,
+          "skillCooldowns": {
+            "l2_317": 1792661292847
+          },
+          "mysticSkillCdUntil": {
+            "l2_317": 1792661292847
+          },
+          "logTail": [
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −26 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −27 HP.",
+            "[Flamestone Golem] ударив тебе — −26 HP.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "317​Зосереджений удар: +2 точності, +10% сила криту (1 ціль, спис/алебарда)."
+          ]
+        }
+      },
+      "canonical": "l2_317",
+      "remaining": 11954
+    },
+    {
+      "source": "raid-focus-on.json",
+      "sourceSha256": "4f0131ebf43831db2c345bc7e8b88b884acd3aaf02d24b689e9c50c146f5b842",
+      "status": 400,
+      "request": {
+        "action": "focus_attack",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661243952,
+        "nowMs": 1792661243952,
+        "skillId": "l2_317",
+        "normalizedSkillId": "l2_317",
+        "blockedBy": "skill",
+        "error": "skill_cooldown",
+        "code": "skill_cooldown",
+        "cooldownUntilMs": 1792661253195,
+        "readyAtMs": 1792661253195,
+        "skillRemainingMs": 9243,
+        "globalRemainingMs": 0,
+        "remainingMs": 9243
+      },
+      "canonical": "l2_317",
+      "remaining": 9243
+    },
+    {
+      "source": "raid-detect-animal.json",
+      "sourceSha256": "f9def4783f775c8c094aad2f2d771963bafc7d5a3a69c6bf14e6bde98bb98321",
+      "status": 200,
+      "request": {
+        "action": "detect_animal_weakness",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661283722,
+        "delta": {
+          "serverNowMs": 1792661283722,
+          "skillCooldowns": {
+            "l2_78": 1792661295452,
+            "l2_317": 1792661292847,
+            "l2_87": 1792661283988
+          },
+          "mysticSkillCdUntil": {
+            "l2_78": 1792661295452,
+            "l2_317": 1792661292847,
+            "l2_87": 1792661283988
+          },
+          "logTail": [
+            "87​Вразливість звірів: +30% P.Atk проти тварин (10 хв)."
+          ]
+        }
+      },
+      "canonical": "l2_87",
+      "remaining": 266
+    },
+    {
+      "source": "raid-detect-insect.json",
+      "sourceSha256": "666d33cf2f84d4aaf03f62bf6c74685112697e22ea565e7077f22e2d12071432",
+      "status": 200,
+      "request": {
+        "action": "detect_insect_weakness",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661285058,
+        "delta": {
+          "serverNowMs": 1792661285058,
+          "skillCooldowns": {
+            "l2_78": 1792661295452,
+            "l2_317": 1792661292847
+          },
+          "mysticSkillCdUntil": {
+            "l2_78": 1792661295452,
+            "l2_317": 1792661292847
+          },
+          "logTail": [
+            "75​Вразливість комах: +30% P.Atk проти комах (10 хв)."
+          ]
+        }
+      },
+      "canonical": "l2_75",
+      "remaining": null
+    },
+    {
+      "source": "raid-mortal-02.json",
+      "sourceSha256": "3445cd76cbd3ccf7306a50287ea4925bcb5950352cb3d23f8ed1c222f0c21bd9",
+      "status": 200,
+      "request": {
+        "action": "mortal_blow",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661240025,
+        "delta": {
+          "serverNowMs": 1792661240025,
+          "skillCooldowns": {
+            "l2_16": 1792661243325
+          },
+          "mysticSkillCdUntil": {
+            "l2_16": 1792661243325
+          },
+          "logTail": [
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] ударив тебе — −26 HP.",
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] ударив тебе — −28 HP.",
+            "[Flamestone Golem] ударив тебе — −26 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −50 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] ударив тебе (крит!) — −48 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −47 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −48 HP.",
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] ударив тебе — −27 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "⁠16​Смертельний удар — 15269 урона"
+          ]
+        }
+      },
+      "canonical": "l2_16",
+      "remaining": 3300
+    },
+    {
+      "source": "raid-power-strike-with-polearm.json",
+      "sourceSha256": "5c452af0d3e799f8aa4e67209fa6989a089c55d84574f1c36f1ae55836b5ec4f",
+      "status": 200,
+      "request": {
+        "action": "power_strike",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661638423,
+        "delta": {
+          "serverNowMs": 1792661638423,
+          "skillCooldowns": {
+            "l2_3": 1792661639282
+          },
+          "mysticSkillCdUntil": {
+            "l2_3": 1792661639282
+          },
+          "logTail": [
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] ударив тебе — −24 HP.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −23 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −49 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −55 HP.",
+            "[Flamestone Golem] ударив тебе — −28 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "[Flamestone Golem] промахнувся по тобі.",
+            "[Flamestone Golem] ударив тебе — −26 HP.",
+            "[Flamestone Golem] ударив тебе — −25 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −47 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −49 HP.",
+            "[Flamestone Golem] ударив тебе (крит!) — −47 HP.",
+            "⁠1239​Flamestone Golem · Ураган — 126 урона.",
+            "⁠3​Силовий удар — 10028 урона"
+          ]
+        }
+      },
+      "canonical": "l2_3",
+      "remaining": 859
+    },
+    {
+      "source": "raid-vicious-on.json",
+      "sourceSha256": "3a6f5867681913d6a7d7e466163596d2b4ce339b1436cdea1a536e01dc8e907b",
+      "status": 200,
+      "request": {
+        "action": "vicious_stance",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "serverNowMs": 1792661385755,
+        "delta": {
+          "serverNowMs": 1792661385755,
+          "skillCooldowns": {
+            "l2_121": 1792661561469
+          },
+          "mysticSkillCdUntil": {
+            "l2_121": 1792661561469
+          },
+          "logTail": [
+            "312​Жорстка стійка: крит і сила криту за даними text-rpg."
+          ]
+        }
+      },
+      "canonical": "l2_312",
+      "remaining": null
+    },
+    {
+      "source": "raid-stun-with-polearm.json",
+      "sourceSha256": "26439cb6a426e0da8de481f5cabd9d8c86eb1f86f3142f583caffc5ba9f5323f",
+      "status": 400,
+      "request": {
+        "action": "stun_attack",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "error": "battle_skill_not_allowed",
+        "code": "battle_skill_not_allowed"
+      },
+      "canonical": "l2_100",
+      "remaining": null
+    },
+    {
+      "source": "raid-smash-with-polearm.json",
+      "sourceSha256": "4c8ef6d5277fd032a99c66da1ba3228778a62e765d91a4ac8d907853f40b40f2",
+      "status": 400,
+      "request": {
+        "action": "power_smash",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "error": "battle_skill_not_allowed",
+        "code": "battle_skill_not_allowed"
+      },
+      "canonical": "l2_255",
+      "remaining": null
+    },
+    {
+      "source": "raid-shot-with-polearm.json",
+      "sourceSha256": "b004d67953de085e9122f88e853a1e62c735c4e05b2fe4596a5a483a5245ced7",
+      "status": 400,
+      "request": {
+        "action": "power_shot",
+        "battleSpawnId": "l2dop_rb_25431"
+      },
+      "response": {
+        "error": "battle_skill_not_allowed",
+        "code": "battle_skill_not_allowed"
+      },
+      "canonical": "l2_56",
+      "remaining": null
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+PASS MV3/main/hook live weapon fresh {"proof":{"recorded":299,"live":299,"pending":null},"actions":["provoke","whirlwind"]}
+PASS MV3/main/hook live weapon stale {"proof":{"recorded":299,"live":null,"pending":null},"actions":["whirlwind"]}
+PASS MV3/main/hook live weapon reload-stale {"proof":{"recorded":299,"live":null,"pending":null},"actions":["whirlwind"]}
+PASS MV3/main/hook live weapon stop {"proof":{"recorded":299,"live":299,"pending":null},"actions":["provoke"]}

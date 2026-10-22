@@ -1,0 +1,452 @@
+{
+  "schemaVersion": 1,
+  "status": "final",
+  "auditDate": "2026-10-22",
+  "purpose": "Compact redacted evidence for Warlord skill audit; original source hashes distinguish raw originals from stored projections.",
+  "referenceBase": ".",
+  "summary": "../../data/warlord-skills-live-20261022.json",
+  "redaction": "Strict field allowlists. No account name/UUID, credentials, full inventory, warehouse or other class slots. In battle text the hero name is replaced with герой. Only equipped weapon item299, selected resource quantities, skills/stats/effects/CD/logs/drop and outcome are retained.",
+  "files": [
+    {
+      "path": "after-raid-boss-list.json",
+      "originalFileName": "after-raid-boss-list.json",
+      "originalBytes": 5704,
+      "originalSha256": "d3d05178c06e2c19a79f3442275abfaa9f5bcf48dbf709ed32bcf3be83b139de",
+      "storedBytes": 396,
+      "storedSha256": "9b30a206474ba0220bde04710a459ee9b7596ce4064da08e4f19b860f5cd18fc",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "battle-initial.json",
+      "originalFileName": "battle-initial.json",
+      "originalBytes": 68469,
+      "originalSha256": "36998d319db0f96a1213a4d7bd55b6624622dbdae5fd2a99191fc1c7c14555f9",
+      "storedBytes": 1839,
+      "storedSha256": "4575abd16cb18b30ef0267115e0fb85452e3c40fa1034847da1b7d749930066e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "battle-roar-outside.json",
+      "originalFileName": "battle-roar-outside.json",
+      "originalBytes": 68756,
+      "originalSha256": "5390215d61774e312eb12104ca4ee5e8975e46f2a860a7affba518db363c77ee",
+      "storedBytes": 2627,
+      "storedSha256": "8417e71f0f6641e6cd08e71f5ab476f87437e5a7cae51660672d069f7978dd1e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "before-final-frenzy.json",
+      "originalFileName": "before-final-frenzy.json",
+      "originalBytes": 86109,
+      "originalSha256": "475cb17dc853427ecb48ea23e116dea9776dc6a0cd4dbdecbac663627ac31569",
+      "storedBytes": 9665,
+      "storedSha256": "7fc1ce7aa4981c89f2deeedd2bc17523213eea8df1f1aaef95cdf183a8749f22",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "detect-animal-outside.json",
+      "originalFileName": "detect-animal-outside.json",
+      "originalBytes": 70005,
+      "originalSha256": "52349f4a4cea54ea595b7c076b6510ed7fc7413b944b9d3b799c1f5a41f58c2d",
+      "storedBytes": 3504,
+      "storedSha256": "beb99af10aa33846affd48038aedc1aaabc6176dff328d33328b804eeb8c165a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "detect-insect-outside.json",
+      "originalFileName": "detect-insect-outside.json",
+      "originalBytes": 70354,
+      "originalSha256": "5acf38518334a373b81e29b8f813df8eb3be0e26d1c3b1a33a52e4bb40186c14",
+      "storedBytes": 3751,
+      "storedSha256": "5caba7abf334d7aa6fb201372a87d3b4645bb0703aa3ba780f44f8f0164f964a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "final-character-preserved.json",
+      "originalFileName": "final-character-preserved.json",
+      "originalBytes": 69514,
+      "originalSha256": "293332edb47ea885e3159141283c81deb59c4a9231355b4d2665d293fd310dac",
+      "storedBytes": 3847,
+      "storedSha256": "8cf40f584fcab7ebf8d4be428c8f90e6d03449cafdd9f216b6b580ff003b9160",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "final-frenzy-low-character.json",
+      "originalFileName": "final-frenzy-low-character.json",
+      "originalBytes": 70827,
+      "originalSha256": "713aeeee470d5aaa686066f3ba56da7f84d4f18685d10ecc6229352eae5168c4",
+      "storedBytes": 3510,
+      "storedSha256": "ffe9738f13c9ddd9c1079f79846ebd78f80ce3d7444301ee4e50ce0347072b31",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "final-frenzy-restored-character.json",
+      "originalFileName": "final-frenzy-restored-character.json",
+      "originalBytes": 70826,
+      "originalSha256": "0b9cfd6ce6d3887ef31c1192346d77c9153769e2bcbe3ad2c1b10ba1f316f7b7",
+      "storedBytes": 3509,
+      "storedSha256": "f5c3c8d490614c56864ebb05f0f7b63d7337e56d93ce86c0f75ad9c69925657e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "focus-on-outside.json",
+      "originalFileName": "focus-on-outside.json",
+      "originalBytes": 69459,
+      "originalSha256": "a70a15b1c5070e9044d941f882c76d7000a365f2aeaffa9edc3552aa9f4c1fe6",
+      "storedBytes": 3072,
+      "storedSha256": "624aee3ab0682f3b93adc0cde39c70ab4a190a79495d6b1896d3f23a45032584",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "initial-character.json",
+      "originalFileName": "initial-character.json",
+      "originalBytes": 68568,
+      "originalSha256": "c1dc81731ed3bca9cca50de9195789b7ccdc12c35758755eddc9bd414e3d5242",
+      "storedBytes": 23648,
+      "storedSha256": "05575f4bc6be80609938eb946c6de12c4f0bc41b32f929d32ee9f6c8eb8b6ef9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "lionheart-outside.json",
+      "originalFileName": "lionheart-outside.json",
+      "originalBytes": 69762,
+      "originalSha256": "682e313b974d1bed3c58f759e00642e1647c2a3fa8ee3603c20fa07d850e8b1e",
+      "storedBytes": 3321,
+      "storedSha256": "590f6969f50c7babc860e60671db7aead909dcfdf1938aebe6413b953c1559bb",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-battle-roar-wounded.json",
+      "originalFileName": "raid-battle-roar-wounded.json",
+      "originalBytes": 80224,
+      "originalSha256": "cc5994508218df84c8289cb26eac1b377b44349dacfa259a35c37f6552bcaf8c",
+      "storedBytes": 5332,
+      "storedSha256": "0c4ea53af52a2dfbf88ed79bc0fbcdcda606f81e091ada809cdfad4292ff27fd",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-battle-roar.json",
+      "originalFileName": "raid-battle-roar.json",
+      "originalBytes": 79741,
+      "originalSha256": "620b3a5dd04e6f93bfd82f85033635ba1eaa40231e6b8e79d6cf0947ce2bf113",
+      "storedBytes": 4987,
+      "storedSha256": "a6a266ae8cab38aa4c908033e5fc75739cdafb7a6f1d903657cfb7bb6283c208",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-battle-trance-final-frenzy.json",
+      "originalFileName": "raid-battle-trance-final-frenzy.json",
+      "originalBytes": 79952,
+      "originalSha256": "7c18757a415b3d3f0df5e912ff94cfb01a35be35c5aac1b9461c8673779c8647",
+      "storedBytes": 5173,
+      "storedSha256": "d1eb2931c2e76336137ff641454b9939efc8b64b7f300e10d397ea150da2c7ed",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-detect-animal.json",
+      "originalFileName": "raid-detect-animal.json",
+      "originalBytes": 80612,
+      "originalSha256": "f9def4783f775c8c094aad2f2d771963bafc7d5a3a69c6bf14e6bde98bb98321",
+      "storedBytes": 5574,
+      "storedSha256": "a446f896631828b13f1aaec18d8fe3fa48d6b9bd65792bb3f188c70aa87470b6",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-detect-insect.json",
+      "originalFileName": "raid-detect-insect.json",
+      "originalBytes": 80433,
+      "originalSha256": "666d33cf2f84d4aaf03f62bf6c74685112697e22ea565e7077f22e2d12071432",
+      "storedBytes": 5469,
+      "storedSha256": "ac300bd9fcd118ac809ad7cca0ebb637dd8b3ffff365a9069c2ac2bba94c9710",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-finish-00.json",
+      "originalFileName": "raid-finish-00.json",
+      "originalBytes": 80677,
+      "originalSha256": "460f7b2a8f2359a6bb73fee90e2496c3aa0d82dbbf9113157af62f64830f2ac8",
+      "storedBytes": 5841,
+      "storedSha256": "cb4b2761465acdfe84b571a246f6d1023d8775e6a768bb20bb2d3f5f217966c5",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-finish-02.json",
+      "originalFileName": "raid-finish-02.json",
+      "originalBytes": 74199,
+      "originalSha256": "8cb735b14d94de518493571393956a4e9aa2e028f33996d01ed0ab475ca8bcb1",
+      "storedBytes": 5889,
+      "storedSha256": "061e9f6462620fcf92f1a64b2a8d6f75516cec93215ea19fd19bf63f370137a9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-focus-off.json",
+      "originalFileName": "raid-focus-off.json",
+      "originalBytes": 79134,
+      "originalSha256": "02f18576e3db9836da937c0be7d1653aa0466b6af96c21e692fe39ad5d2c52a0",
+      "storedBytes": 4572,
+      "storedSha256": "d5a6d7b077536a181c4d35c3bfc9241054b8449585b13ab85ad0272bb69be552",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-focus-on-confirmed.json",
+      "originalFileName": "raid-focus-on-confirmed.json",
+      "originalBytes": 80714,
+      "originalSha256": "c30fdb2647050e89ea55418866f371b8a7c03a32406f7d386f0acb3a1006978e",
+      "storedBytes": 5892,
+      "storedSha256": "78befcb9e1e7ddac5baed56839d4083233ae980a0fdfb8cc57d9f999c5c3adc9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-focus-on.json",
+      "originalFileName": "raid-focus-on.json",
+      "originalBytes": 1097,
+      "originalSha256": "4f0131ebf43831db2c345bc7e8b88b884acd3aaf02d24b689e9c50c146f5b842",
+      "storedBytes": 900,
+      "storedSha256": "35c03deb83df2216138c98ffb5cdb111c2632a52857a404dbcc996c88bcc3a52",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-howl.json",
+      "originalFileName": "raid-howl.json",
+      "originalBytes": 80944,
+      "originalSha256": "6a53942b7eef548667911d83d25415892eac37e932b1bb92c5d12b060eb279f3",
+      "storedBytes": 6104,
+      "storedSha256": "201e795f370e7f57c2585e74600fd012f24951fe57e15e4205f2ad6aaf2cf57b",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-lionheart.json",
+      "originalFileName": "raid-lionheart.json",
+      "originalBytes": 80630,
+      "originalSha256": "65daa3207732f81bb935fa07c670f11c6f26f0d789d7cdc2f1651507ddcf6422",
+      "storedBytes": 5622,
+      "storedSha256": "a88be0b4a625935b9fdd1427abdd379efaffb90653164c44c46c6639e05e8255",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-mortal-02.json",
+      "originalFileName": "raid-mortal-02.json",
+      "originalBytes": 80487,
+      "originalSha256": "3445cd76cbd3ccf7306a50287ea4925bcb5950352cb3d23f8ed1c222f0c21bd9",
+      "storedBytes": 5692,
+      "storedSha256": "273e71bcf47ff712b2400e65c821b150285c750361e22683e4877f999a5b84f3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-mortal-with-polearm.json",
+      "originalFileName": "raid-mortal-with-polearm.json",
+      "originalBytes": 79736,
+      "originalSha256": "66e7236df0782f7e988e40eebf71516003136e9b4b5323e005205ca6b52a5442",
+      "storedBytes": 4983,
+      "storedSha256": "4b39c34d88a5089ba80c43a48f89610768520dbc95ccfeb9b42db7907c7dbd33",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-power-strike-with-polearm.json",
+      "originalFileName": "raid-power-strike-with-polearm.json",
+      "originalBytes": 80726,
+      "originalSha256": "5c452af0d3e799f8aa4e67209fa6989a089c55d84574f1c36f1ae55836b5ec4f",
+      "storedBytes": 5881,
+      "storedSha256": "300865f9c7faeae46923ff4625cedfe59fccd435805bb712f341454366d71bd4",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-provoke.json",
+      "originalFileName": "raid-provoke.json",
+      "originalBytes": 79968,
+      "originalSha256": "cd5428d90f711d5058886c64ef500457414d73e8d7a1a467b51cbbde3cd00d23",
+      "storedBytes": 5207,
+      "storedSha256": "fe4672d91c423dc6de92e07083b3b0a8898e508697725a5dcc31b80cff06166c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-shot-with-polearm.json",
+      "originalFileName": "raid-shot-with-polearm.json",
+      "originalBytes": 651,
+      "originalSha256": "b004d67953de085e9122f88e853a1e62c735c4e05b2fe4596a5a483a5245ced7",
+      "storedBytes": 562,
+      "storedSha256": "6201e1d33608c77eed4861a955510bb1dec3d9f0b4ff2d3de325fd948a9ee183",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-smash-with-polearm.json",
+      "originalFileName": "raid-smash-with-polearm.json",
+      "originalBytes": 652,
+      "originalSha256": "4c8ef6d5277fd032a99c66da1ba3228778a62e765d91a4ac8d907853f40b40f2",
+      "storedBytes": 563,
+      "storedSha256": "8208a6d54f0c570250d541c706fdaaf85a652f7412555159ae535cc67b3f4db1",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-start.json",
+      "originalFileName": "raid-start.json",
+      "originalBytes": 83089,
+      "originalSha256": "474c44e852b84fcff8b03c768e9b88442340069e41e3a843a9c7d40844bf87a5",
+      "storedBytes": 11753,
+      "storedSha256": "e0a2d25c8049fed5418386b4d169e21844696e7c1a911c4d22a627a1a130afd3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-stun-with-polearm.json",
+      "originalFileName": "raid-stun-with-polearm.json",
+      "originalBytes": 653,
+      "originalSha256": "26439cb6a426e0da8de481f5cabd9d8c86eb1f86f3142f583caffc5ba9f5323f",
+      "storedBytes": 564,
+      "storedSha256": "6fe693635dc47cd7e6de0b29801bc06b6233332e3ff3f0900d015d32071a518a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-sweep-01.json",
+      "originalFileName": "raid-sweep-01.json",
+      "originalBytes": 80298,
+      "originalSha256": "e2beaeb5e1efe106c4425eac8491e43be9b5f6a9f21d34789d5f485d3c7baff5",
+      "storedBytes": 5366,
+      "storedSha256": "097a8174a51c1bd1e7e3607647075840323c1a06f379dc281f48e10016283c2e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-sweep-02.json",
+      "originalFileName": "raid-sweep-02.json",
+      "originalBytes": 80655,
+      "originalSha256": "99daeb7ff3f58136ba6375b239bab272b77a298035a03352494112e9ceefc70d",
+      "storedBytes": 5606,
+      "storedSha256": "5beac9d9e86fcde2771dbbe662b26cdbc8c8516a2716d8e7d20c0a13365fed78",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-thunder-01.json",
+      "originalFileName": "raid-thunder-01.json",
+      "originalBytes": 80382,
+      "originalSha256": "3cf192a931403694a7d038b741e2b6460639d45d892759a2a360bb3bb14fea19",
+      "storedBytes": 5450,
+      "storedSha256": "9d5311f68136feeeb7b05bdb25443d434c56dd44f5a5e7b5695386359ac91938",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-thunder-02.json",
+      "originalFileName": "raid-thunder-02.json",
+      "originalBytes": 80666,
+      "originalSha256": "7f4508e87f1269270cb959db6864131f8c8f0a00806adbcef8d9c36fe9151712",
+      "storedBytes": 5626,
+      "storedSha256": "95098e8e57fa247eeb72837b27eebe6fe540fa4ec16f4c75573afab1e90c1388",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-thunder-03.json",
+      "originalFileName": "raid-thunder-03.json",
+      "originalBytes": 80667,
+      "originalSha256": "1b02d26b34a8c81ac4785b9600b93e9dee8dbdb64e6d151c58e54867ff9aec7b",
+      "storedBytes": 5628,
+      "storedSha256": "b1e70c219b069ea1aed5acdb592c23b8f7d3e3b3d1be85188e29d38eb1cf148a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-vicious-off.json",
+      "originalFileName": "raid-vicious-off.json",
+      "originalBytes": 79569,
+      "originalSha256": "7f572ac2ebdf3d06affbd3f7814c2079929e941c6766f4cc5bc95b970ef91f3c",
+      "storedBytes": 4877,
+      "storedSha256": "b751c92b2e7de142ac7b82e1a1674b6a0f37a81571baff4a546bce594269e5e5",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-vicious-on.json",
+      "originalFileName": "raid-vicious-on.json",
+      "originalBytes": 80261,
+      "originalSha256": "3a6f5867681913d6a7d7e466163596d2b4ce339b1436cdea1a536e01dc8e907b",
+      "storedBytes": 5369,
+      "storedSha256": "a19e3af3ee73a82e0e7772e18a653e1eaebbd0eabfb415b82f9834cc17392e2c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-war-cry.json",
+      "originalFileName": "raid-war-cry.json",
+      "originalBytes": 80305,
+      "originalSha256": "90713c4d2f5e62acc673add93703cbdee4d8a297fcf05c20c746598e0b1735bf",
+      "storedBytes": 5373,
+      "storedSha256": "3a3a370a104c2c15690774729abbb1d7b09fd6935644a15c8854a3836fe95f8b",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-whirlwind-01.json",
+      "originalFileName": "raid-whirlwind-01.json",
+      "originalBytes": 80432,
+      "originalSha256": "c729b328feb048d5e2e292391c4c5bcd9bcd48fbe04d8114dd2c88e5f9c5eaef",
+      "storedBytes": 5520,
+      "storedSha256": "2fe4a90b508c46e461d54e64b357d1fcf71d4a5f4a95dc70f4f7467d194ed4b2",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-whirlwind-02.json",
+      "originalFileName": "raid-whirlwind-02.json",
+      "originalBytes": 80437,
+      "originalSha256": "27dbb3bea8cd34bb4797f3c5a2bd403762a96acde96a0f373cde0bdfb45fc05e",
+      "storedBytes": 5471,
+      "storedSha256": "c47a4826c3c1ba22288bf566b58b00362cd644ae0474fe3f54057d9020c9c60c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-whirlwind-03.json",
+      "originalFileName": "raid-whirlwind-03.json",
+      "originalBytes": 81417,
+      "originalSha256": "eeb06e9272ec5189cce8c871b643fbb2fd9bb13b20f50af65bd8d7c72b9744a3",
+      "storedBytes": 6326,
+      "storedSha256": "3f2b8f18844b0614e5d566a2ba0659a4b21fce4ef3eed6484f024efaff7d59cd",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "restore-focus-original-off.json",
+      "originalFileName": "restore-focus-original-off.json",
+      "originalBytes": 69348,
+      "originalSha256": "42f12663336782b465ce93305cf8244778a53c4895d42317eefcb0c47eb9445c",
+      "storedBytes": 3475,
+      "storedSha256": "e1660fb1632c7f3af2cf99c022000f03ca3590b6d17f945d4b5a9ae24b8f7baf",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "vicious-off-outside.json",
+      "originalFileName": "vicious-off-outside.json",
+      "originalBytes": 69623,
+      "originalSha256": "afa5dc35eac7f2e4a19158dbe0384babeee27d2b7ac3da4b6b8c4b8841efe133",
+      "storedBytes": 3200,
+      "storedSha256": "c277d06c778cbca86d34b91fe1654e273e3e15d078bfa4562ddae330dea88ced",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "vicious-on-outside.json",
+      "originalFileName": "vicious-on-outside.json",
+      "originalBytes": 70041,
+      "originalSha256": "d9484cfd6fa10a78d35dda5c28d28ec602650e3ccf3f919fed30e161776a3df0",
+      "storedBytes": 3504,
+      "storedSha256": "d54de70da162df9c1f128f4556a22ee57cdd2d9389c780770ed1bca83012aec3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "war-cry-outside.json",
+      "originalFileName": "war-cry-outside.json",
+      "originalBytes": 69215,
+      "originalSha256": "9b305da73f498ebbf67a42ccd6113b726df2125d2cfae01ada7b595600052865",
+      "storedBytes": 2930,
+      "storedSha256": "3f6a2eedc058b0a34f7433ec59f42309238fb7c92492135cbc79e4b74240a301",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "battle-hotbar-aliases.json",
+      "originalFileName": "battle-hotbar.js",
+      "originalBytes": 95097,
+      "originalSha256": "3a0b6875fb17e23401cb34f2ed1b17182ba5d37416b7290758ab5747e590a4d7",
+      "storedBytes": 598,
+      "storedSha256": "ba39558825272e271de8250242873ac572cba9683585e190284f5deabe2bdc52",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "raid-final-state.json",
+      "originalFileName": "raid-final-state.json",
+      "originalBytes": 70508,
+      "originalSha256": "9a6e5051b8dc15ecf2103796766097dd65a079fc3714ef41b85c9767a3a076b0",
+      "storedBytes": 3729,
+      "storedSha256": "aeab78856143de2d67938ef89d575bbcbb05f7cdd7a1a4e9f1967b7be412aa33",
+      "selection": "Allowlisted compact evidence; not the original response."
+    }
+  ]
+}

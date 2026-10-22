@@ -1,0 +1,2270 @@
+{
+  "schemaVersion": 1,
+  "status": "final",
+  "auditDate": "2026-10-22",
+  "displayTimeZone": "Asia/Vladivostok",
+  "snapshotAtUtc": "2026-10-22T09:13:52Z",
+  "snapshotAtClient": "2026-10-22T19:13:52+10:00",
+  "characterScope": {
+    "profession": "human_warlord",
+    "level": 44,
+    "activeSlotZeroBased": 3,
+    "slotDescription": "Сабкласс №3 в нумерации игры; четвёртый слот при счёте основного класса."
+  },
+  "dataBoundary": "Только 24 изученных навыка, начальная боевая панель и разрешённые поля контролируемых проб. Полный инвентарь, имя/ID героя, другие слоты, cookie, токены, секреты и почта не копируются.",
+  "evidencePriority": [
+    "Результат успешного действия и состояние/серверные deadline текущего сеанса",
+    "Актуальные каталоги /character и alias map публичного battle-hotbar.js",
+    "Текущие hintUk/hintRu",
+    "Исторические логи 16–17.10 с отдельной областью применимости"
+  ],
+  "initialHotbar": {
+    "source": "../raw/warlord-live-20261022/initial-character.json",
+    "atUtc": "2026-10-22T09:13:52Z",
+    "slotsOneBased": [
+      {
+        "slot": 1,
+        "kind": "u",
+        "itemId": 1464
+      },
+      {
+        "slot": 2,
+        "kind": "u",
+        "itemId": 1061
+      },
+      {
+        "slot": 3,
+        "kind": "u",
+        "itemId": 728
+      },
+      {
+        "slot": 4,
+        "kind": "a",
+        "action": "detect_insect_weakness"
+      },
+      {
+        "slot": 5,
+        "kind": "a",
+        "action": "detect_animal_weakness"
+      },
+      {
+        "slot": 7,
+        "kind": "a",
+        "action": "war_cry"
+      },
+      {
+        "slot": 8,
+        "kind": "a",
+        "action": "howl"
+      },
+      {
+        "slot": 9,
+        "kind": "a",
+        "action": "thunder_storm"
+      },
+      {
+        "slot": 10,
+        "kind": "a",
+        "action": "attack"
+      },
+      {
+        "slot": 12,
+        "kind": "u",
+        "itemId": 920044
+      },
+      {
+        "slot": 13,
+        "kind": "u",
+        "itemId": 920045
+      },
+      {
+        "slot": 17,
+        "kind": "a",
+        "action": "battle_roar"
+      },
+      {
+        "slot": 18,
+        "kind": "a",
+        "action": "provoke"
+      },
+      {
+        "slot": 20,
+        "kind": "a",
+        "action": "whirlwind"
+      },
+      {
+        "slot": 24,
+        "kind": "a",
+        "action": "vicious_stance"
+      },
+      {
+        "slot": 25,
+        "kind": "a",
+        "action": "focus_attack"
+      }
+    ],
+    "note": "Это начальная панель сеанса, не обещание текущей панели после последующих действий root."
+  },
+  "cooldownInterpretation": {
+    "authoritative": "Ключ canonical l2_N в delta.skillCooldowns/mysticSkillCdUntil и serverNowMs; при отказе — normalizedSkillId, readyAtMs, remainingMs, blockedBy.",
+    "panelCooldownSec": "Эффективная величина initial panelHotbarSkills, не базовая подсказка.",
+    "remainingAtResponseMs": "readyAtMs − serverNowMs на момент ответа, поэтому чуть меньше полного назначенного КД. Это не точная исходная продолжительность и не повод заменять deadline таймером17с.",
+    "missingCooldown": "Отсутствующий cooldownSec/ключ не означает нулевой КД. catalog self-cast cooldownSec и battle panel cooldownSec могут отличаться по режиму."
+  },
+  "raidScope": {
+    "boss": "Flamestone Golem",
+    "npcId": 25431,
+    "level": 44,
+    "maxHp": 273375,
+    "completion": "confirmed_victory",
+    "comparabilityLimits": [
+      "Один РБ, один набор экипировки; эффекты и PAtk менялись во время проб.",
+      "Паузы, ручные действия и тест Battle Trance исключают трактовку wall-clock как DPS обычного автобоя.",
+      "Не усреднять текущий основной урон и урон соседей и не сравнивать пары ударов как A/B при PAtk4798→3180."
+    ]
+  },
+  "raidOutcome": {
+    "victorySource": "../raw/warlord-live-20261022/raid-finish-02.json",
+    "atUtc": "2026-10-22T09:35:06Z",
+    "victoryItem": {
+      "itemId": 191,
+      "label": "Heavy Doom Hammer",
+      "quantity": 1
+    },
+    "independentBossList": {
+      "source": "../raw/warlord-live-20261022/after-raid-boss-list.json",
+      "atUtc": "2026-10-22T09:36:47Z",
+      "isAlive": false
+    },
+    "mobsKilled": {
+      "before": 115366,
+      "after": 115379,
+      "delta": 13,
+      "composition": "1 РБ + 12 обычных мобов пики за весь аудит."
+    },
+    "sessionDeltas": {
+      "spBefore": 2306410,
+      "spAfter": 3084046,
+      "spDelta": 777636,
+      "adenaBefore": 1048604960,
+      "adenaAfter": 1049275287,
+      "adenaDelta": 670327
+    },
+    "victoryEnvelope": {
+      "adenaGain": "607028",
+      "expGain": "1794447",
+      "spGain": 765390,
+      "levelUp": 45
+    },
+    "bossRewardFromFullLog": {
+      "adena": 607028,
+      "exp": 1690638,
+      "sp": 762960
+    },
+    "rewardBoundary": "Общие дельты сеанса включают обычных соседей. victory.expGain=1794447 — агрегат, не чистый EXP РБ; fullLog отдельно называет EXP1690638/SP762960 РБ. Не складывать envelope и fullLog повторно.",
+    "costs": {
+      "coinOfLuckBefore": 98,
+      "coinOfLuckAfter": 98,
+      "coinOfLuckSpent": 0,
+      "inventoryResources": [
+        {
+          "itemId": 1061,
+          "before": 988,
+          "after": 981,
+          "spent": 7
+        },
+        {
+          "itemId": 728,
+          "before": 495,
+          "after": 494,
+          "spent": 1
+        },
+        {
+          "itemId": 1464,
+          "before": 2752,
+          "after": 2723,
+          "spent": 29
+        },
+        {
+          "itemId": 920048,
+          "before": 440,
+          "after": 440,
+          "spent": 0
+        }
+      ],
+      "teleportAdena": 0,
+      "purchases": 0,
+      "sales": 0
+    },
+    "finalState": {
+      "source": "../raw/warlord-live-20261022/final-character-preserved.json",
+      "atUtc": "2026-10-22T09:38:26Z",
+      "level": 45,
+      "hp": 11341,
+      "maxHp": 11341,
+      "mp": 794,
+      "maxMp": 794,
+      "inBattle": false,
+      "equippedWeaponItemId": 299,
+      "equipmentMatchesInitial": true,
+      "focusAttackActive": false,
+      "viciousStanceActive": true,
+      "restorationSource": "../raw/warlord-live-20261022/restore-focus-original-off.json",
+      "hotbarMatchesInitial": true,
+      "independentFinalStateSource": "../raw/warlord-live-20261022/raid-final-state.json"
+    },
+    "managementBoundary": "Ничего не покупалось, не продавалось и не переодевалось; новый Hammer оставлен в сумке. Расходы относятся к контролируемому аудиту и не разрешают менять автономные бюджеты бота."
+  },
+  "skills": [
+    {
+      "battleId": "l2_100",
+      "l2SkillId": 100,
+      "nameUk": "Stun Attack",
+      "hintUk": "Актив: MP 37, power 109 на р. 15 скіла. Відкат: 13 с. Лише булава; оглушення не стакається. Можливий Over-hit.",
+      "hintRu": "Актив: MP 37, power 109 на р. 15 скила. Откат: 13 с. Только булава; оглушение не стакается. Возможен Over-hit.",
+      "kind": "battle",
+      "maxSkillLevel": 15,
+      "learnedRank": 15,
+      "nativeBattleAction": "stun_attack",
+      "aliases": [
+        "l2_100",
+        "stun_attack"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_100",
+        "labelUk": "Приголомшувальний удар (Stun Attack)",
+        "cooldownSec": 0.89
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-stun-with-polearm.json",
+          "atUtc": "2026-10-22T09:25:48Z",
+          "httpStatus": 400,
+          "requestAlias": "stun_attack",
+          "error": {
+            "error": "battle_skill_not_allowed",
+            "code": "battle_skill_not_allowed",
+            "reason": "invalid_state",
+            "messageUk": "Цей скіл зараз недоступний для твого персонажа.",
+            "messageRu": "Цей скилл зараз недоступний для твого персонажа."
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Native stun_attack с пикой получил 400 battle_skill_not_allowed."
+        ],
+        "hintOnly": [
+          "Подсказка: только булава."
+        ],
+        "automationBoundary": "Не повторять отвергнутый навык в текущем бою, не снимать ограничения оружия."
+      }
+    },
+    {
+      "battleId": "l2_116",
+      "l2SkillId": 116,
+      "nameUk": "Howl",
+      "hintUk": "Дебаф −23% P.Atk: основна ціль + до 3 мобів у радіусі бою на 30 с. Warlord.",
+      "hintRu": "Дебаф −23% P.Atk: основна ціль + до 3 мобів у радіусі бою на 30 с. Warlord.",
+      "kind": "battle",
+      "maxSkillLevel": 14,
+      "learnedRank": 1,
+      "nativeBattleAction": "howl",
+      "aliases": [
+        "l2_116",
+        "howl"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "howl",
+        "labelUk": "Звіриний рев (Howl)",
+        "cooldownSec": 2.38
+      },
+      "initialSelfCastCatalog": {
+        "battleId": "l2_116",
+        "skillLevel": 1,
+        "mpCost": 29,
+        "durationSec": 30,
+        "cooldownSec": 8,
+        "readyRemainingSec": 0,
+        "active": false,
+        "activeRemainingSec": null
+      },
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        8
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-howl.json",
+          "atUtc": "2026-10-22T09:23:31Z",
+          "httpStatus": 200,
+          "requestAlias": "howl",
+          "characterAfter": {
+            "hp": 9974,
+            "maxHp": 11035,
+            "mp": 730,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_116",
+            "serverNowMs": 1792661011760,
+            "readyAtMs": 1792661013972,
+            "remainingAtResponseMs": 2212,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "На Flamestone Golem44 сервер написал об иммунитете Raid Boss к негативным эффектам; mobDebuffIcons пуст."
+        ],
+        "hintOnly": [
+          "−23% PAtk, 30с и число соседей — описание навыка. Иммунитет основной цели не исключает отдельное воздействие на обычных соседей, но оно здесь не изолировано."
+        ],
+        "automationBoundary": "Не назначать Howl обычным дебаффом или уроном против РБ. Ранее подтверждённый сбор обычных мобов сохраняет свою область применимости."
+      }
+    },
+    {
+      "battleId": "l2_121",
+      "l2SkillId": 121,
+      "nameUk": "Battle Roar",
+      "hintUk": "Миттєво відновлює 15% HP і Max HP +15% на 10 хв (р. 2 скіла, MP 18).",
+      "hintRu": "Мгновенно восстанавливает 15% HP и Max HP +15% на 10 мин (р. 2 скила, MP 18).",
+      "kind": "battle",
+      "maxSkillLevel": 6,
+      "learnedRank": 2,
+      "nativeBattleAction": "battle_roar",
+      "aliases": [
+        "l2_121",
+        "battle_roar"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "battle_roar",
+        "labelUk": "Бойовий рик (Battle Roar)",
+        "cooldownSec": 178.35
+      },
+      "initialSelfCastCatalog": {
+        "battleId": "l2_121",
+        "skillLevel": 2,
+        "mpCost": 18,
+        "durationSec": 600,
+        "cooldownSec": 600,
+        "readyRemainingSec": 0,
+        "active": false,
+        "activeRemainingSec": null
+      },
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        17
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/battle-roar-outside.json",
+          "atUtc": "2026-10-22T09:17:57Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_121",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 741,
+            "maxMp": 759,
+            "pAtk": 2789,
+            "accuracy": 93,
+            "addCritDisplay": "124%+166"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-battle-roar-wounded.json",
+          "atUtc": "2026-10-22T09:29:43Z",
+          "httpStatus": 200,
+          "requestAlias": "battle_roar",
+          "characterAfter": {
+            "hp": 6958,
+            "maxHp": 11035,
+            "mp": 741,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_121",
+            "serverNowMs": 1792661383309,
+            "readyAtMs": 1792661561469,
+            "remainingAtResponseMs": 178160,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-battle-roar.json",
+          "atUtc": "2026-10-22T09:23:34Z",
+          "httpStatus": 200,
+          "requestAlias": "battle_roar",
+          "characterAfter": {
+            "hp": 9974,
+            "maxHp": 11035,
+            "mp": 665,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_121",
+            "serverNowMs": 1792661014452,
+            "readyAtMs": 1792661192683,
+            "remainingAtResponseMs": 178231,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Первое применение: MaxHP 9841→11035, HP остаётся 9841.",
+          "Два повторных применения активного Battle Roar не дали независимого исцеления; на раненом HP осталось 6958."
+        ],
+        "hintOnly": [
+          "Подсказка ранга 2 обещает восстановление 15% HP, MaxHP +15% на 600 с. Прямой множитель к итоговому MaxHP не подтверждён."
+        ],
+        "automationBoundary": "Не считать продление активного Battle Roar надёжным лечением. Первое применение и обновление эффекта различать."
+      }
+    },
+    {
+      "battleId": "l2_141",
+      "l2SkillId": 141,
+      "nameUk": "Armor Mastery",
+      "hintUk": "Пасив: +9 P.Def за рівень. 1=9, 2=18, 3=27, 4=36, 5=45. На р. 5: +45 P.Def.",
+      "hintRu": "Пассив: +9 P.Def за уровень. 1=9, 2=18, 3=27, 4=36, 5=45. На р. 5: +45 P.Def.",
+      "kind": "passive",
+      "maxSkillLevel": 5,
+      "learnedRank": 5,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_141"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_142",
+      "l2SkillId": 142,
+      "nameUk": "Weapon Mastery",
+      "hintUk": "Пасив: +4.5 P. Atk (flat) на рівні 3 скіла. MP у бою не витрачається.",
+      "hintRu": "Пассив: +4.5 P. Atk (flat) на уровне 3 скила. MP в бою не тратится.",
+      "kind": "passive",
+      "maxSkillLevel": 3,
+      "learnedRank": 3,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_142"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_148",
+      "l2SkillId": 148,
+      "nameUk": "Vital Force",
+      "hintUk": "+HP 2.9/тік, +MP 2.9/тік під час сидіння (р. 3 скіла).",
+      "hintRu": "+HP 2.9/тик, +MP 2.9/тик во время сидения (р. 3 скила).",
+      "kind": "passive",
+      "maxSkillLevel": 8,
+      "learnedRank": 3,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_148"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_16",
+      "l2SkillId": 16,
+      "nameUk": "Mortal Blow",
+      "hintUk": "Фізичний удар. Сила за рівнем: 1=73, 2=80, 3=88, 4=115, 5=126, 6=137, 7=178, 8=193, 9=210, 10=268, 11=291, 12=314, 13=367, 14=396, 15=427, 16=494, 17=531, 18=571, 19=656, 20=703, 21=752, 22=859, 23=916, 24=977. На р. 9: сила 210, MP 17. Лише кинжал.",
+      "hintRu": "Физический удар. Сила по уровню: 1=73, 2=80, 3=88, 4=115, 5=126, 6=137, 7=178, 8=193, 9=210, 10=268, 11=291, 12=314, 13=367, 14=396, 15=427, 16=494, 17=531, 18=571, 19=656, 20=703, 21=752, 22=859, 23=916, 24=977. На р. 9: сила 210, MP 17. только кинжал.",
+      "kind": "battle",
+      "maxSkillLevel": 9,
+      "learnedRank": 9,
+      "nativeBattleAction": "mortal_blow",
+      "aliases": [
+        "l2_16",
+        "mortal_blow"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_16",
+        "labelUk": "Mortal Blow",
+        "cooldownSec": 3.27
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-mortal-02.json",
+          "atUtc": "2026-10-22T09:27:20Z",
+          "httpStatus": 200,
+          "requestAlias": "mortal_blow",
+          "characterAfter": {
+            "hp": 9246,
+            "maxHp": 11035,
+            "mp": 742,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_16",
+            "serverNowMs": 1792661240025,
+            "readyAtMs": 1792661243325,
+            "remainingAtResponseMs": 3300,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-mortal-with-polearm.json",
+          "atUtc": "2026-10-22T09:25:49Z",
+          "httpStatus": 200,
+          "requestAlias": "mortal_blow",
+          "characterAfter": {
+            "hp": 9974,
+            "maxHp": 11035,
+            "mp": 742,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_16",
+            "serverNowMs": 1792661149247,
+            "readyAtMs": 1792661152225,
+            "remainingAtResponseMs": 2978,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Два native mortal_blow с надетой пикой приняты: 15552 и15269 урона по Flamestone Golem44."
+        ],
+        "hintOnly": [
+          "Текущая подсказка говорит «только кинжал»."
+        ],
+        "automationBoundary": "Зафиксировано расхождение подсказки и двух проб. Не расширять автоматически допустимое оружие; другие оружия, режимы и классы не проверены."
+      }
+    },
+    {
+      "battleId": "l2_216",
+      "l2SkillId": 216,
+      "nameUk": "Polearm Mastery",
+      "hintUk": "Пасив: +32.9 P.Atk, +10 точність на р. 14 (лише спис/алебарда). MP у бою не витрачається.",
+      "hintRu": "Пассив: +32.9 P.Atk, +10 точность на р. 14 (Только копьё/нобарда). MP в бою не тратится.",
+      "kind": "passive",
+      "maxSkillLevel": 43,
+      "learnedRank": 14,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_216"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_227",
+      "l2SkillId": 227,
+      "nameUk": "Light Armor Mastery",
+      "hintUk": "Пасив: +27.9 P.Def, +6 ухилення на рівні 19 скіла (лише легка броня). MP у бою не витрачається.",
+      "hintRu": "Пассив: +27.9 P.Def, +6 уклонение на уровне 19 скила (Только лёгкая броня). MP в бою не тратится.",
+      "kind": "passive",
+      "maxSkillLevel": 50,
+      "learnedRank": 19,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_227"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_231",
+      "l2SkillId": 231,
+      "nameUk": "Heavy Armor Mastery",
+      "hintUk": "Пасив: +26.7% P.Def на р. 19 скіла (лише важка броня). MP у бою не витрачається.",
+      "hintRu": "Пассив: +26.7% P.Def на р. 19 скила (Только тяжёлая броня). MP в бою не тратится.",
+      "kind": "passive",
+      "maxSkillLevel": 50,
+      "learnedRank": 19,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_231"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "Изученный ранг подтверждён в /character.learnedBattleSkillsDetail."
+        ],
+        "hintOnly": [
+          "Эффект описан актуальной подсказкой; отдельная причинная проверка этого эффекта не выполнена."
+        ],
+        "automationBoundary": "Не считать наличие изученного навыка подтверждением успеха каждого применения или пригодности под текущее оружие."
+      }
+    },
+    {
+      "battleId": "l2_245",
+      "l2SkillId": 245,
+      "nameUk": "Wild Sweep",
+      "hintUk": "Актив: MP 37, power 326 на р. 15 скіла. Відкат: 17 с. Лише спис/алебарда; можливий Over-hit.",
+      "hintRu": "Актив: MP 37, power 326 на р. 15 скила. Откат: 17 с. Только копьё/нобарда; Возможен Over-hit.",
+      "kind": "battle",
+      "maxSkillLevel": 15,
+      "learnedRank": 15,
+      "nativeBattleAction": "wild_sweep",
+      "aliases": [
+        "l2_245",
+        "wild_sweep"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "wild_sweep",
+        "labelUk": "Дикий розмах (Wild Sweep)",
+        "cooldownSec": 5.05
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-sweep-01.json",
+          "atUtc": "2026-10-22T09:22:41Z",
+          "httpStatus": 200,
+          "requestAlias": "wild_sweep",
+          "characterAfter": {
+            "hp": 10631,
+            "maxHp": 11035,
+            "mp": 625,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_245",
+            "serverNowMs": 1792660961673,
+            "readyAtMs": 1792660966600,
+            "remainingAtResponseMs": 4927,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-sweep-02.json",
+          "atUtc": "2026-10-22T09:29:50Z",
+          "httpStatus": 200,
+          "requestAlias": "wild_sweep",
+          "characterAfter": {
+            "hp": 6832,
+            "maxHp": 11035,
+            "mp": 625,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_245",
+            "serverNowMs": 1792661390087,
+            "readyAtMs": 1792661395186,
+            "remainingAtResponseMs": 5099,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Есть успешные удары 22327 и 12094 по Flamestone Golem44 при разных характеристиках героя."
+        ],
+        "hintOnly": [
+          "КД17с в подсказке — не измеренный эффективный КД."
+        ],
+        "automationBoundary": "Не объявлять навык сильнее/слабее двух AoE по этим несопоставимым результатам."
+      }
+    },
+    {
+      "battleId": "l2_255",
+      "l2SkillId": 255,
+      "nameUk": "Power Smash",
+      "hintUk": "Актив: MP 37, power 326 на р. 15 скіла. Відкат: 13 с. Лише меч/булавою; можливий Over-hit.",
+      "hintRu": "Актив: MP 37, power 326 на р. 15 скила. Откат: 13 с. только меч/булавой; Возможен Over-hit.",
+      "kind": "battle",
+      "maxSkillLevel": 15,
+      "learnedRank": 15,
+      "nativeBattleAction": "power_smash",
+      "aliases": [
+        "l2_255",
+        "power_smash"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "power_smash",
+        "labelUk": "Розгром (Power Smash)",
+        "cooldownSec": 0.89
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-smash-with-polearm.json",
+          "atUtc": "2026-10-22T09:25:48Z",
+          "httpStatus": 400,
+          "requestAlias": "power_smash",
+          "error": {
+            "error": "battle_skill_not_allowed",
+            "code": "battle_skill_not_allowed",
+            "reason": "invalid_state",
+            "messageUk": "Цей скіл зараз недоступний для твого персонажа.",
+            "messageRu": "Цей скилл зараз недоступний для твого персонажа."
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Native power_smash с пикой получил 400 battle_skill_not_allowed."
+        ],
+        "hintOnly": [
+          "Подсказка: меч/булава."
+        ],
+        "automationBoundary": "Не повторять отвергнутый навык в текущем бою, не снимать ограничения оружия."
+      }
+    },
+    {
+      "battleId": "l2_286",
+      "l2SkillId": 286,
+      "nameUk": "Provoke",
+      "hintUk": "Провокація: агро мобів і РБ у радіусі ~500 (≈11111 на карті), 10 с; −10% опору до списів. До 3 додаткових цілей. Епіки — ні. MP 57.",
+      "hintRu": "Провокація: агро мобів і РБ у радіусі ~500 (≈11111 на карті), 10 с; −10% опору до списів. До 3 додаткових цілей. Епіки — ні. MP 57.",
+      "kind": "battle",
+      "maxSkillLevel": 3,
+      "learnedRank": 1,
+      "nativeBattleAction": "provoke",
+      "aliases": [
+        "l2_286",
+        "provoke"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_286",
+        "labelUk": "Провокація масова (Provoke)",
+        "cooldownSec": 4.46
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        18
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-provoke.json",
+          "atUtc": "2026-10-22T09:23:33Z",
+          "httpStatus": 200,
+          "requestAlias": "provoke",
+          "characterAfter": {
+            "hp": 9974,
+            "maxHp": 11035,
+            "mp": 684,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_286",
+            "serverNowMs": 1792661013092,
+            "readyAtMs": 1792661017477,
+            "remainingAtResponseMs": 4385,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "На Flamestone Golem44 сервер написал об иммунитете Raid Boss к негативным эффектам; mobDebuffIcons пуст."
+        ],
+        "hintOnly": [
+          "−10% сопротивления пике на10с и агро РБ в тексте не доказывают применение отрицательного эффекта к этому РБ."
+        ],
+        "automationBoundary": "Не включать в ротацию дебаффов РБ. Сбор обычных мобов — отдельная тактика."
+      }
+    },
+    {
+      "battleId": "l2_287",
+      "l2SkillId": 287,
+      "nameUk": "Lionheart",
+      "hintUk": "+40% стійкості до шоку, сну, утримання (Root) та паралічу на 60 с.",
+      "hintRu": "+40% стойкости до шоку, сну, утримання (Root) и параличу на 60 с.",
+      "kind": "battle",
+      "maxSkillLevel": 1,
+      "learnedRank": 1,
+      "nativeBattleAction": "lionheart",
+      "aliases": [
+        "l2_287",
+        "lionheart"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "lionheart",
+        "labelUk": "Левине серце (Lionheart)",
+        "cooldownSec": 44.58
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/lionheart-outside.json",
+          "atUtc": "2026-10-22T09:18:17Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_287",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 733,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 93,
+            "addCritDisplay": "124%+166"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-lionheart.json",
+          "atUtc": "2026-10-22T09:23:35Z",
+          "httpStatus": 200,
+          "requestAlias": "lionheart",
+          "characterAfter": {
+            "hp": 9974,
+            "maxHp": 11035,
+            "mp": 661,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_287",
+            "serverNowMs": 1792661015656,
+            "readyAtMs": 1792661060144,
+            "remainingAtResponseMs": 44488,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Канонический self-cast и native действие в бою приняты; эффект присутствует в состоянии."
+        ],
+        "hintOnly": [
+          "+40% стойкости к контролю на60с — подсказка, фактическая частота сопротивления не измерена."
+        ],
+        "automationBoundary": "Не заявлять доказанную защиту от конкретного удара/стана этого РБ."
+      }
+    },
+    {
+      "battleId": "l2_290",
+      "l2SkillId": 290,
+      "nameUk": "Final Frenzy",
+      "hintUk": "Пасив (HP ≤30%): +32.9 P.Atk (flat) на р. 1 скіла. MP у бою не витрачається.",
+      "hintRu": "Пассивный (HP ≤30%): +32.9 P.Atk (flat) на р. 1 скила. MP в бою не тратится.",
+      "kind": "passive",
+      "maxSkillLevel": 14,
+      "learnedRank": 1,
+      "nativeBattleAction": null,
+      "aliases": [
+        "l2_290"
+      ],
+      "aliasEvidence": "Пассив: отдельный native battle action не заявляется.",
+      "initialPanelCatalog": null,
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [],
+      "assessment": {
+        "liveConfirmed": [
+          "При HP2758/11035 (~25%) PAtk4798→4868; после восстановления HP6958/11035 PAtk вернулся 4798."
+        ],
+        "hintOnly": [
+          "Порог HP≤30% и +32.9 базового flat PAtk взяты из подсказки; точная граница активации отдельно не искалась."
+        ],
+        "automationBoundary": "Пассив. Не добавлять кнопку и не снижать HP автоматически ради пассивки. Battle Trance был только контролируемой ручной пробой аудита."
+      }
+    },
+    {
+      "battleId": "l2_3",
+      "l2SkillId": 3,
+      "nameUk": "Power Strike",
+      "hintUk": "Фізичний удар. Сила за рівнем: 1=25, 2=27, 3=30, 4=39, 5=42, 6=46, 7=60, 8=65, 9=70. На р. 9: сила 70, MP 19. Лише меч або булава.",
+      "hintRu": "Физический удар. Сила по уровню: 1=25, 2=27, 3=30, 4=39, 5=42, 6=46, 7=60, 8=65, 9=70. На р. 9: сила 70, MP 19. только меч или булава.",
+      "kind": "battle",
+      "maxSkillLevel": 9,
+      "learnedRank": 9,
+      "nativeBattleAction": "power_strike",
+      "aliases": [
+        "l2_3",
+        "power_strike"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_3",
+        "labelUk": "Power Strike",
+        "cooldownSec": 0.89
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-power-strike-with-polearm.json",
+          "atUtc": "2026-10-22T09:33:58Z",
+          "httpStatus": 200,
+          "requestAlias": "power_strike",
+          "characterAfter": {
+            "hp": 5526,
+            "maxHp": 11035,
+            "mp": 740,
+            "maxMp": 759,
+            "pAtk": 2789,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_3",
+            "serverNowMs": 1792661638423,
+            "readyAtMs": 1792661639282,
+            "remainingAtResponseMs": 859,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Native power_strike с надетой пикой принят: 10028 урона по Flamestone Golem44."
+        ],
+        "hintOnly": [
+          "Текущая подсказка говорит «только меч или булава»."
+        ],
+        "automationBoundary": "Одна успешная проба расходится с подсказкой. Не расширять автоматически допустимое оружие; другие оружия, режимы и классы не проверены."
+      }
+    },
+    {
+      "battleId": "l2_312",
+      "l2SkillId": 312,
+      "nameUk": "Vicious Stance",
+      "hintUk": "Toggle: +166 сила криту на р. 7. MP ~0.4/с, поки увімкнено. Перемикач у бою та поза боєм.",
+      "hintRu": "Toggle: +166 сила крита на р. 7. MP ~0.4/с, пока включено. Перемикач в бою и поза боем.",
+      "kind": "toggle",
+      "maxSkillLevel": 20,
+      "learnedRank": 7,
+      "nativeBattleAction": "vicious_stance",
+      "aliases": [
+        "l2_312",
+        "vicious_stance"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_312",
+        "labelUk": "Жорстка стійка (Vicious Stance)"
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": true,
+      "initialHotbarSlotsOneBased": [
+        24
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-vicious-off.json",
+          "atUtc": "2026-10-22T09:29:44Z",
+          "httpStatus": 200,
+          "requestAlias": "vicious_stance",
+          "characterAfter": {
+            "hp": 6958,
+            "maxHp": 11035,
+            "mp": 740,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+0"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-vicious-on.json",
+          "atUtc": "2026-10-22T09:29:45Z",
+          "httpStatus": 200,
+          "requestAlias": "vicious_stance",
+          "characterAfter": {
+            "hp": 6958,
+            "maxHp": 11035,
+            "mp": 752,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/vicious-off-outside.json",
+          "atUtc": "2026-10-22T09:20:13Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_312",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 727,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+0"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/vicious-on-outside.json",
+          "atUtc": "2026-10-22T09:20:14Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_312",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 727,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "OFF: addCritDisplay заканчивается +0; ON: +166 на ранге 7, вне боя и в бою."
+        ],
+        "hintOnly": [
+          "MP ~0.4/с — подсказка, отдельный контроль скорости расхода не выполнен."
+        ],
+        "automationBoundary": "Различать включение и выключение по текущему эффекту, а не по HTTP200."
+      }
+    },
+    {
+      "battleId": "l2_317",
+      "l2SkillId": 317,
+      "nameUk": "Focus Attack",
+      "hintUk": "Toggle (спис/алебарда): лише 1 ціль; +2 Accuracy і +10% Crit Damage на р. 1 скіла. MP ~0.4/с.",
+      "hintRu": "Toggle (копьё/нобарда): только 1 цель; +2 Accuracy и +10% Crit Damage на р. 1 скила. MP ~0.4/с.",
+      "kind": "toggle",
+      "maxSkillLevel": 5,
+      "learnedRank": 1,
+      "nativeBattleAction": "focus_attack",
+      "aliases": [
+        "l2_317",
+        "focus_attack"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "focus_attack",
+        "labelUk": "Зосереджений удар (Focus Attack)",
+        "cooldownSec": 12
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": false,
+      "initialHotbarSlotsOneBased": [
+        25
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/focus-on-outside.json",
+          "atUtc": "2026-10-22T09:19:22Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_317",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 733,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-focus-off.json",
+          "atUtc": "2026-10-22T09:27:21Z",
+          "httpStatus": 200,
+          "requestAlias": "focus_attack",
+          "characterAfter": {
+            "hp": 9246,
+            "maxHp": 11035,
+            "mp": 753,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 93,
+            "addCritDisplay": "124%+166"
+          },
+          "cooldown": {
+            "key": "l2_317",
+            "serverNowMs": 1792661241248,
+            "readyAtMs": 1792661253195,
+            "remainingAtResponseMs": 11947,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-focus-on-confirmed.json",
+          "atUtc": "2026-10-22T09:28:00Z",
+          "httpStatus": 200,
+          "requestAlias": "focus_attack",
+          "characterAfter": {
+            "hp": 9907,
+            "maxHp": 11035,
+            "mp": 759,
+            "maxMp": 759,
+            "pAtk": 4138,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_317",
+            "serverNowMs": 1792661280893,
+            "readyAtMs": 1792661292847,
+            "remainingAtResponseMs": 11954,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-focus-on.json",
+          "atUtc": "2026-10-22T09:27:24Z",
+          "httpStatus": 400,
+          "requestAlias": "focus_attack",
+          "cooldown": {
+            "skillId": "l2_317",
+            "normalizedSkillId": "l2_317",
+            "serverNowMs": 1792661243952,
+            "skillCooldownUntilMs": 1792661253195,
+            "readyAtMs": 1792661253195,
+            "skillRemainingMs": 9243,
+            "globalRemainingMs": 0,
+            "remainingMs": 9243,
+            "blockedBy": "skill"
+          },
+          "error": {
+            "error": "skill_cooldown",
+            "code": "skill_cooldown",
+            "reason": "cooldown",
+            "messageUk": "Скіл ще на перезарядці.",
+            "messageRu": "Скилл ще на перезарядці."
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Вне боя Accuracy 93→95, addCritDisplay 124%+166→146%+166.",
+          "Выключение/включение подтверждено; повторное включение слишком рано получило 400 skill_cooldown для canonical l2_317.",
+          "Эффективный КД панели 12 с; после успешного включения боевой deadline имеет остаток ~12 с.",
+          "Рассекающие удары по обычным соседям продолжались при Focus Attack ON."
+        ],
+        "hintOnly": [
+          "«Только 1 цель» в подсказке не подтверждено как фактическое отключение AoE пики."
+        ],
+        "automationBoundary": "Это переключатель. Не повторять как обычный бафф и не обнулять AoE по подсказке. Сравнительный выигрыш урона не измерен."
+      }
+    },
+    {
+      "battleId": "l2_36",
+      "l2SkillId": 36,
+      "nameUk": "Whirlwind",
+      "hintUk": "Масова атака: головна ціль + до 3 поруч (разом до 4). Лише спис/алебарда. MP 45, сила 620. Ігнорує щит, можливий Over-hit. Перезарядка 17 с.",
+      "hintRu": "Массовая атака: главная цель + до 3 рядом (разом до 4). Только копьё/нобарда. MP 45, сила 620. Игнорирует щит, Возможен Over-hit. Перезарядка 17 с.",
+      "kind": "battle",
+      "maxSkillLevel": 37,
+      "learnedRank": 6,
+      "nativeBattleAction": "whirlwind",
+      "aliases": [
+        "l2_36",
+        "whirlwind"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_36",
+        "labelUk": "Вихор (Whirlwind)",
+        "cooldownSec": 1.79
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        20
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-finish-00.json",
+          "atUtc": "2026-10-22T09:35:04Z",
+          "httpStatus": 200,
+          "requestAlias": "whirlwind",
+          "characterAfter": {
+            "hp": 5127,
+            "maxHp": 11035,
+            "mp": 714,
+            "maxMp": 759,
+            "pAtk": 2789,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_36",
+            "serverNowMs": 1792661703966,
+            "readyAtMs": 1792661705697,
+            "remainingAtResponseMs": 1731,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-whirlwind-01.json",
+          "atUtc": "2026-10-22T09:22:38Z",
+          "httpStatus": 200,
+          "requestAlias": "whirlwind",
+          "characterAfter": {
+            "hp": 10631,
+            "maxHp": 11035,
+            "mp": 714,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_36",
+            "serverNowMs": 1792660958908,
+            "readyAtMs": 1792660960519,
+            "remainingAtResponseMs": 1611,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-whirlwind-02.json",
+          "atUtc": "2026-10-22T09:29:47Z",
+          "httpStatus": 200,
+          "requestAlias": "whirlwind",
+          "characterAfter": {
+            "hp": 6958,
+            "maxHp": 11035,
+            "mp": 714,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_36",
+            "serverNowMs": 1792661386990,
+            "readyAtMs": 1792661388690,
+            "remainingAtResponseMs": 1700,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-whirlwind-03.json",
+          "atUtc": "2026-10-22T09:31:23Z",
+          "httpStatus": 200,
+          "requestAlias": "whirlwind",
+          "characterAfter": {
+            "hp": 6277,
+            "maxHp": 11035,
+            "mp": 714,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_36",
+            "serverNowMs": 1792661483453,
+            "readyAtMs": 1792661485076,
+            "remainingAtResponseMs": 1623,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Есть успешные удары 19710 и 19737 по Flamestone Golem44 и отдельный урон обычному соседу."
+        ],
+        "hintOnly": [
+          "КД17с в подсказке не равен эффективной серверной готовности текущей экипировки."
+        ],
+        "automationBoundary": "Использовать canonical deadline. Выбор между Whirlwind/Thunder Storm/Wild Sweep не выводить из двух ударов при разном PAtk."
+      }
+    },
+    {
+      "battleId": "l2_48",
+      "l2SkillId": 48,
+      "nameUk": "Thunder Storm",
+      "hintUk": "Burst AoE навколо: головна + до 3 поруч (до 4); шок ~50%. Лише спис/алебарда. Р. 6 скіла.",
+      "hintRu": "Burst AoE вокруг: главная + до 3 рядом (до 4); шок ~50%. Только копьё/нобарда. Р. 6 скила.",
+      "kind": "battle",
+      "maxSkillLevel": 37,
+      "learnedRank": 6,
+      "nativeBattleAction": "thunder_storm",
+      "aliases": [
+        "l2_48",
+        "thunder_storm"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_48",
+        "labelUk": "Грозова буря (Thunder Storm)",
+        "cooldownSec": 5.94
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        9
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-thunder-01.json",
+          "atUtc": "2026-10-22T09:22:40Z",
+          "httpStatus": 200,
+          "requestAlias": "thunder_storm",
+          "characterAfter": {
+            "hp": 10631,
+            "maxHp": 11035,
+            "mp": 651,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_48",
+            "serverNowMs": 1792660960197,
+            "readyAtMs": 1792660966054,
+            "remainingAtResponseMs": 5857,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-thunder-02.json",
+          "atUtc": "2026-10-22T09:29:48Z",
+          "httpStatus": 200,
+          "requestAlias": "thunder_storm",
+          "characterAfter": {
+            "hp": 6958,
+            "maxHp": 11035,
+            "mp": 651,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_48",
+            "serverNowMs": 1792661388576,
+            "readyAtMs": 1792661394408,
+            "remainingAtResponseMs": 5832,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-thunder-03.json",
+          "atUtc": "2026-10-22T09:31:24Z",
+          "httpStatus": 200,
+          "requestAlias": "thunder_storm",
+          "characterAfter": {
+            "hp": 6277,
+            "maxHp": 11035,
+            "mp": 663,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_48",
+            "serverNowMs": 1792661484753,
+            "readyAtMs": 1792661490631,
+            "remainingAtResponseMs": 5878,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Есть успешные удары 20770 и 21057 по Flamestone Golem44.",
+          "Текст «ціль шоковано (~41%)» присутствует; в соответствующем ответе mobDebuffIcons=[] ."
+        ],
+        "hintOnly": [
+          "Частота, длительность и фактическое прекращение действий РБ от шока не подтверждены независимым наблюдением."
+        ],
+        "automationBoundary": "Считать наблюдённым уроном; не обещать реальный контроль РБ по одной строке лога."
+      }
+    },
+    {
+      "battleId": "l2_56",
+      "l2SkillId": 56,
+      "nameUk": "Power Shot",
+      "hintUk": "Фізичний удар. Сила за рівнем: 1=65, 2=71, 3=78, 4=102, 5=112, 6=122, 7=158, 8=172, 9=187, 10=239, 11=258, 12=279, 13=326, 14=352, 15=379, 16=440, 17=472, 18=507, 19=584, 20=625, 21=669, 22=763, 23=814, 24=865. На р. 9: сила 187, MP 37. Лише лук.",
+      "hintRu": "Физический удар. Сила по уровню: 1=65, 2=71, 3=78, 4=102, 5=112, 6=122, 7=158, 8=172, 9=187, 10=239, 11=258, 12=279, 13=326, 14=352, 15=379, 16=440, 17=472, 18=507, 19=584, 20=625, 21=669, 22=763, 23=814, 24=865. На р. 9: сила 187, MP 37. только лук.",
+      "kind": "battle",
+      "maxSkillLevel": 9,
+      "learnedRank": 9,
+      "nativeBattleAction": "power_shot",
+      "aliases": [
+        "l2_56",
+        "power_shot"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_56",
+        "labelUk": "Power Shot",
+        "cooldownSec": 7.43
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-shot-with-polearm.json",
+          "atUtc": "2026-10-22T09:25:50Z",
+          "httpStatus": 400,
+          "requestAlias": "power_shot",
+          "error": {
+            "error": "battle_skill_not_allowed",
+            "code": "battle_skill_not_allowed",
+            "reason": "invalid_state",
+            "messageUk": "Цей скіл зараз недоступний для твого персонажа.",
+            "messageRu": "Цей скилл зараз недоступний для твого персонажа."
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Native power_shot с пикой получил 400 battle_skill_not_allowed."
+        ],
+        "hintOnly": [
+          "Подсказка: только лук."
+        ],
+        "automationBoundary": "Не повторять отвергнутый навык в текущем бою, не снимать ограничения оружия."
+      }
+    },
+    {
+      "battleId": "l2_75",
+      "l2SkillId": 75,
+      "nameUk": "Detect Insect Weakness",
+      "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти комах (Insect). MP 14, відкат 10 с.",
+      "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти комах (Insect). MP 14, откат 10 с.",
+      "kind": "battle",
+      "maxSkillLevel": 1,
+      "learnedRank": 1,
+      "nativeBattleAction": "detect_insect_weakness",
+      "aliases": [
+        "l2_75",
+        "detect_insect_weakness"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "detect_insect_weakness",
+        "labelUk": "Вразливість комах (Detect Insect Weakness)"
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        4
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/detect-insect-outside.json",
+          "atUtc": "2026-10-22T09:19:49Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_75",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 727,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-detect-insect.json",
+          "atUtc": "2026-10-22T09:28:05Z",
+          "httpStatus": 200,
+          "requestAlias": "detect_insect_weakness",
+          "characterAfter": {
+            "hp": 9907,
+            "maxHp": 11035,
+            "mp": 738,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Канонический self-cast и native действие в бою приняты. После уже активного Animal вне боя PAtk3884→4798."
+        ],
+        "hintOnly": [
+          "+30% против Insect на600с — подсказка."
+        ],
+        "automationBoundary": "Это не контролируемая проверка вида цели или стакинга урона. Не превращать оба Detect в безусловные баффы всех целей."
+      }
+    },
+    {
+      "battleId": "l2_78",
+      "l2SkillId": 78,
+      "nameUk": "War Cry",
+      "hintUk": "Селф-баф на 5 хв.: +20% до P.Atk (MP 10) на р. 1 скіла. Відкат: 180 с.",
+      "hintRu": "Селф-баф на 5 мин.: +20% до P.Atk (MP 10) на р. 1 скила. Откат: 180 с.",
+      "kind": "battle",
+      "maxSkillLevel": 2,
+      "learnedRank": 1,
+      "nativeBattleAction": "war_cry",
+      "aliases": [
+        "l2_78",
+        "war_cry"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "l2_78",
+        "labelUk": "Бойовий клич (War Cry)",
+        "cooldownSec": 13.38
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        7
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/raid-war-cry.json",
+          "atUtc": "2026-10-22T09:28:02Z",
+          "httpStatus": 200,
+          "requestAlias": "war_cry",
+          "characterAfter": {
+            "hp": 9907,
+            "maxHp": 11035,
+            "mp": 748,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_78",
+            "serverNowMs": 1792661282165,
+            "readyAtMs": 1792661295452,
+            "remainingAtResponseMs": 13287,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        },
+        {
+          "source": "../raw/warlord-live-20261022/war-cry-outside.json",
+          "atUtc": "2026-10-22T09:18:17Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_78",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 749,
+            "maxMp": 759,
+            "pAtk": 3180,
+            "accuracy": 93,
+            "addCritDisplay": "124%+166"
+          }
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "При первом отдельном применении PAtk 2789→3180. Бафф появился, сообщение игры +20% PAtk на 5 мин."
+        ],
+        "hintOnly": [
+          "+20% — формулировка эффекта, а не измеренный коэффициент к конечному PAtk (конечное изменение ~14%)."
+        ],
+        "automationBoundary": "Срок активного баффа и серверную готовность читать раздельно."
+      }
+    },
+    {
+      "battleId": "l2_87",
+      "l2SkillId": 87,
+      "nameUk": "Detect Animal Weakness",
+      "hintUk": "Селф-баф на 10 хв: +30% P.Atk проти Animal. MP 18, відкат 10 с.",
+      "hintRu": "Селф-баф на 10 мин: +30% P.Atk проти Animal. MP 18, откат 10 с.",
+      "kind": "battle",
+      "maxSkillLevel": 1,
+      "learnedRank": 1,
+      "nativeBattleAction": "detect_animal_weakness",
+      "aliases": [
+        "l2_87",
+        "detect_animal_weakness"
+      ],
+      "aliasEvidence": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "initialPanelCatalog": {
+        "id": "detect_animal_weakness",
+        "labelUk": "Вразливість звірів (Detect Animal Weakness)",
+        "cooldownSec": 0.6
+      },
+      "initialSelfCastCatalog": null,
+      "initialToggleMetadataActive": null,
+      "initialHotbarSlotsOneBased": [
+        5
+      ],
+      "liveSamples": [
+        {
+          "source": "../raw/warlord-live-20261022/detect-animal-outside.json",
+          "atUtc": "2026-10-22T09:19:49Z",
+          "httpStatus": 200,
+          "requestAlias": "l2_87",
+          "characterAfter": {
+            "hp": 9841,
+            "maxHp": 11035,
+            "mp": 741,
+            "maxMp": 759,
+            "pAtk": 3884,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          }
+        },
+        {
+          "source": "../raw/warlord-live-20261022/raid-detect-animal.json",
+          "atUtc": "2026-10-22T09:28:03Z",
+          "httpStatus": 200,
+          "requestAlias": "detect_animal_weakness",
+          "characterAfter": {
+            "hp": 9907,
+            "maxHp": 11035,
+            "mp": 741,
+            "maxMp": 759,
+            "pAtk": 4798,
+            "accuracy": 95,
+            "addCritDisplay": "146%+166"
+          },
+          "cooldown": {
+            "key": "l2_87",
+            "serverNowMs": 1792661283722,
+            "readyAtMs": 1792661283988,
+            "remainingAtResponseMs": 266,
+            "sourceField": "delta.skillCooldowns"
+          },
+          "mobDebuffIconCount": 0
+        }
+      ],
+      "assessment": {
+        "liveConfirmed": [
+          "Канонический self-cast и native действие в бою приняты. При внебоевом применении PAtk3180→3884."
+        ],
+        "hintOnly": [
+          "+30% против Animal на600с — подсказка."
+        ],
+        "automationBoundary": "Эта проба не подтверждает вид цели и переносимый бонус урона по Animal. Не чередовать видовые баффы без определения типа цели."
+      }
+    }
+  ],
+  "additionalEvidence": {
+    "battleTrance": {
+      "learnedSkill": false,
+      "panelCatalogEntry": {
+        "id": "battle_trance",
+        "labelUk": "Battle Trance",
+        "iconUrl": "/skills/Skill10270.jpg"
+      },
+      "controlledProbeSource": "../raw/warlord-live-20261022/raid-battle-trance-final-frenzy.json",
+      "automationBoundary": "Контролируемая ручная проба снижения HP только для проверки Final Frenzy. Автоматический бот не должен её повторять."
+    },
+    "finalFrenzyCharacterSamples": [
+      {
+        "source": "../raw/warlord-live-20261022/before-final-frenzy.json",
+        "atUtc": "2026-10-22T09:28:59Z",
+        "character": {
+          "hp": 9907,
+          "maxHp": 11035,
+          "pAtk": 4798,
+          "accuracy": 95,
+          "addCritDisplay": "146%+166"
+        }
+      },
+      {
+        "source": "../raw/warlord-live-20261022/final-frenzy-low-character.json",
+        "atUtc": "2026-10-22T09:29:00Z",
+        "character": {
+          "hp": 2758,
+          "maxHp": 11035,
+          "pAtk": 4868,
+          "accuracy": 95,
+          "addCritDisplay": "146%+166"
+        }
+      },
+      {
+        "source": "../raw/warlord-live-20261022/final-frenzy-restored-character.json",
+        "atUtc": "2026-10-22T09:29:10Z",
+        "character": {
+          "hp": 6958,
+          "maxHp": 11035,
+          "pAtk": 4798,
+          "accuracy": 95,
+          "addCritDisplay": "146%+166"
+        }
+      }
+    ]
+  },
+  "sourceFiles": [
+    {
+      "path": "../raw/warlord-live-20261022/after-raid-boss-list.json",
+      "originalFileName": "after-raid-boss-list.json",
+      "originalBytes": 5704,
+      "originalSha256": "d3d05178c06e2c19a79f3442275abfaa9f5bcf48dbf709ed32bcf3be83b139de",
+      "storedBytes": 396,
+      "storedSha256": "9b30a206474ba0220bde04710a459ee9b7596ce4064da08e4f19b860f5cd18fc",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/battle-initial.json",
+      "originalFileName": "battle-initial.json",
+      "originalBytes": 68469,
+      "originalSha256": "36998d319db0f96a1213a4d7bd55b6624622dbdae5fd2a99191fc1c7c14555f9",
+      "storedBytes": 1839,
+      "storedSha256": "4575abd16cb18b30ef0267115e0fb85452e3c40fa1034847da1b7d749930066e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/battle-roar-outside.json",
+      "originalFileName": "battle-roar-outside.json",
+      "originalBytes": 68756,
+      "originalSha256": "5390215d61774e312eb12104ca4ee5e8975e46f2a860a7affba518db363c77ee",
+      "storedBytes": 2627,
+      "storedSha256": "8417e71f0f6641e6cd08e71f5ab476f87437e5a7cae51660672d069f7978dd1e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/before-final-frenzy.json",
+      "originalFileName": "before-final-frenzy.json",
+      "originalBytes": 86109,
+      "originalSha256": "475cb17dc853427ecb48ea23e116dea9776dc6a0cd4dbdecbac663627ac31569",
+      "storedBytes": 9665,
+      "storedSha256": "7fc1ce7aa4981c89f2deeedd2bc17523213eea8df1f1aaef95cdf183a8749f22",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/detect-animal-outside.json",
+      "originalFileName": "detect-animal-outside.json",
+      "originalBytes": 70005,
+      "originalSha256": "52349f4a4cea54ea595b7c076b6510ed7fc7413b944b9d3b799c1f5a41f58c2d",
+      "storedBytes": 3504,
+      "storedSha256": "beb99af10aa33846affd48038aedc1aaabc6176dff328d33328b804eeb8c165a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/detect-insect-outside.json",
+      "originalFileName": "detect-insect-outside.json",
+      "originalBytes": 70354,
+      "originalSha256": "5acf38518334a373b81e29b8f813df8eb3be0e26d1c3b1a33a52e4bb40186c14",
+      "storedBytes": 3751,
+      "storedSha256": "5caba7abf334d7aa6fb201372a87d3b4645bb0703aa3ba780f44f8f0164f964a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/final-character-preserved.json",
+      "originalFileName": "final-character-preserved.json",
+      "originalBytes": 69514,
+      "originalSha256": "293332edb47ea885e3159141283c81deb59c4a9231355b4d2665d293fd310dac",
+      "storedBytes": 3847,
+      "storedSha256": "8cf40f584fcab7ebf8d4be428c8f90e6d03449cafdd9f216b6b580ff003b9160",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/final-frenzy-low-character.json",
+      "originalFileName": "final-frenzy-low-character.json",
+      "originalBytes": 70827,
+      "originalSha256": "713aeeee470d5aaa686066f3ba56da7f84d4f18685d10ecc6229352eae5168c4",
+      "storedBytes": 3510,
+      "storedSha256": "ffe9738f13c9ddd9c1079f79846ebd78f80ce3d7444301ee4e50ce0347072b31",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/final-frenzy-restored-character.json",
+      "originalFileName": "final-frenzy-restored-character.json",
+      "originalBytes": 70826,
+      "originalSha256": "0b9cfd6ce6d3887ef31c1192346d77c9153769e2bcbe3ad2c1b10ba1f316f7b7",
+      "storedBytes": 3509,
+      "storedSha256": "f5c3c8d490614c56864ebb05f0f7b63d7337e56d93ce86c0f75ad9c69925657e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/focus-on-outside.json",
+      "originalFileName": "focus-on-outside.json",
+      "originalBytes": 69459,
+      "originalSha256": "a70a15b1c5070e9044d941f882c76d7000a365f2aeaffa9edc3552aa9f4c1fe6",
+      "storedBytes": 3072,
+      "storedSha256": "624aee3ab0682f3b93adc0cde39c70ab4a190a79495d6b1896d3f23a45032584",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/initial-character.json",
+      "originalFileName": "initial-character.json",
+      "originalBytes": 68568,
+      "originalSha256": "c1dc81731ed3bca9cca50de9195789b7ccdc12c35758755eddc9bd414e3d5242",
+      "storedBytes": 23648,
+      "storedSha256": "05575f4bc6be80609938eb946c6de12c4f0bc41b32f929d32ee9f6c8eb8b6ef9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/lionheart-outside.json",
+      "originalFileName": "lionheart-outside.json",
+      "originalBytes": 69762,
+      "originalSha256": "682e313b974d1bed3c58f759e00642e1647c2a3fa8ee3603c20fa07d850e8b1e",
+      "storedBytes": 3321,
+      "storedSha256": "590f6969f50c7babc860e60671db7aead909dcfdf1938aebe6413b953c1559bb",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-battle-roar-wounded.json",
+      "originalFileName": "raid-battle-roar-wounded.json",
+      "originalBytes": 80224,
+      "originalSha256": "cc5994508218df84c8289cb26eac1b377b44349dacfa259a35c37f6552bcaf8c",
+      "storedBytes": 5332,
+      "storedSha256": "0c4ea53af52a2dfbf88ed79bc0fbcdcda606f81e091ada809cdfad4292ff27fd",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-battle-roar.json",
+      "originalFileName": "raid-battle-roar.json",
+      "originalBytes": 79741,
+      "originalSha256": "620b3a5dd04e6f93bfd82f85033635ba1eaa40231e6b8e79d6cf0947ce2bf113",
+      "storedBytes": 4987,
+      "storedSha256": "a6a266ae8cab38aa4c908033e5fc75739cdafb7a6f1d903657cfb7bb6283c208",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-battle-trance-final-frenzy.json",
+      "originalFileName": "raid-battle-trance-final-frenzy.json",
+      "originalBytes": 79952,
+      "originalSha256": "7c18757a415b3d3f0df5e912ff94cfb01a35be35c5aac1b9461c8673779c8647",
+      "storedBytes": 5173,
+      "storedSha256": "d1eb2931c2e76336137ff641454b9939efc8b64b7f300e10d397ea150da2c7ed",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-detect-animal.json",
+      "originalFileName": "raid-detect-animal.json",
+      "originalBytes": 80612,
+      "originalSha256": "f9def4783f775c8c094aad2f2d771963bafc7d5a3a69c6bf14e6bde98bb98321",
+      "storedBytes": 5574,
+      "storedSha256": "a446f896631828b13f1aaec18d8fe3fa48d6b9bd65792bb3f188c70aa87470b6",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-detect-insect.json",
+      "originalFileName": "raid-detect-insect.json",
+      "originalBytes": 80433,
+      "originalSha256": "666d33cf2f84d4aaf03f62bf6c74685112697e22ea565e7077f22e2d12071432",
+      "storedBytes": 5469,
+      "storedSha256": "ac300bd9fcd118ac809ad7cca0ebb637dd8b3ffff365a9069c2ac2bba94c9710",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-finish-00.json",
+      "originalFileName": "raid-finish-00.json",
+      "originalBytes": 80677,
+      "originalSha256": "460f7b2a8f2359a6bb73fee90e2496c3aa0d82dbbf9113157af62f64830f2ac8",
+      "storedBytes": 5841,
+      "storedSha256": "cb4b2761465acdfe84b571a246f6d1023d8775e6a768bb20bb2d3f5f217966c5",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-finish-02.json",
+      "originalFileName": "raid-finish-02.json",
+      "originalBytes": 74199,
+      "originalSha256": "8cb735b14d94de518493571393956a4e9aa2e028f33996d01ed0ab475ca8bcb1",
+      "storedBytes": 5889,
+      "storedSha256": "061e9f6462620fcf92f1a64b2a8d6f75516cec93215ea19fd19bf63f370137a9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-focus-off.json",
+      "originalFileName": "raid-focus-off.json",
+      "originalBytes": 79134,
+      "originalSha256": "02f18576e3db9836da937c0be7d1653aa0466b6af96c21e692fe39ad5d2c52a0",
+      "storedBytes": 4572,
+      "storedSha256": "d5a6d7b077536a181c4d35c3bfc9241054b8449585b13ab85ad0272bb69be552",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-focus-on-confirmed.json",
+      "originalFileName": "raid-focus-on-confirmed.json",
+      "originalBytes": 80714,
+      "originalSha256": "c30fdb2647050e89ea55418866f371b8a7c03a32406f7d386f0acb3a1006978e",
+      "storedBytes": 5892,
+      "storedSha256": "78befcb9e1e7ddac5baed56839d4083233ae980a0fdfb8cc57d9f999c5c3adc9",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-focus-on.json",
+      "originalFileName": "raid-focus-on.json",
+      "originalBytes": 1097,
+      "originalSha256": "4f0131ebf43831db2c345bc7e8b88b884acd3aaf02d24b689e9c50c146f5b842",
+      "storedBytes": 900,
+      "storedSha256": "35c03deb83df2216138c98ffb5cdb111c2632a52857a404dbcc996c88bcc3a52",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-howl.json",
+      "originalFileName": "raid-howl.json",
+      "originalBytes": 80944,
+      "originalSha256": "6a53942b7eef548667911d83d25415892eac37e932b1bb92c5d12b060eb279f3",
+      "storedBytes": 6104,
+      "storedSha256": "201e795f370e7f57c2585e74600fd012f24951fe57e15e4205f2ad6aaf2cf57b",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-lionheart.json",
+      "originalFileName": "raid-lionheart.json",
+      "originalBytes": 80630,
+      "originalSha256": "65daa3207732f81bb935fa07c670f11c6f26f0d789d7cdc2f1651507ddcf6422",
+      "storedBytes": 5622,
+      "storedSha256": "a88be0b4a625935b9fdd1427abdd379efaffb90653164c44c46c6639e05e8255",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-mortal-02.json",
+      "originalFileName": "raid-mortal-02.json",
+      "originalBytes": 80487,
+      "originalSha256": "3445cd76cbd3ccf7306a50287ea4925bcb5950352cb3d23f8ed1c222f0c21bd9",
+      "storedBytes": 5692,
+      "storedSha256": "273e71bcf47ff712b2400e65c821b150285c750361e22683e4877f999a5b84f3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-mortal-with-polearm.json",
+      "originalFileName": "raid-mortal-with-polearm.json",
+      "originalBytes": 79736,
+      "originalSha256": "66e7236df0782f7e988e40eebf71516003136e9b4b5323e005205ca6b52a5442",
+      "storedBytes": 4983,
+      "storedSha256": "4b39c34d88a5089ba80c43a48f89610768520dbc95ccfeb9b42db7907c7dbd33",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-power-strike-with-polearm.json",
+      "originalFileName": "raid-power-strike-with-polearm.json",
+      "originalBytes": 80726,
+      "originalSha256": "5c452af0d3e799f8aa4e67209fa6989a089c55d84574f1c36f1ae55836b5ec4f",
+      "storedBytes": 5881,
+      "storedSha256": "300865f9c7faeae46923ff4625cedfe59fccd435805bb712f341454366d71bd4",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-provoke.json",
+      "originalFileName": "raid-provoke.json",
+      "originalBytes": 79968,
+      "originalSha256": "cd5428d90f711d5058886c64ef500457414d73e8d7a1a467b51cbbde3cd00d23",
+      "storedBytes": 5207,
+      "storedSha256": "fe4672d91c423dc6de92e07083b3b0a8898e508697725a5dcc31b80cff06166c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-shot-with-polearm.json",
+      "originalFileName": "raid-shot-with-polearm.json",
+      "originalBytes": 651,
+      "originalSha256": "b004d67953de085e9122f88e853a1e62c735c4e05b2fe4596a5a483a5245ced7",
+      "storedBytes": 562,
+      "storedSha256": "6201e1d33608c77eed4861a955510bb1dec3d9f0b4ff2d3de325fd948a9ee183",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-smash-with-polearm.json",
+      "originalFileName": "raid-smash-with-polearm.json",
+      "originalBytes": 652,
+      "originalSha256": "4c8ef6d5277fd032a99c66da1ba3228778a62e765d91a4ac8d907853f40b40f2",
+      "storedBytes": 563,
+      "storedSha256": "8208a6d54f0c570250d541c706fdaaf85a652f7412555159ae535cc67b3f4db1",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-start.json",
+      "originalFileName": "raid-start.json",
+      "originalBytes": 83089,
+      "originalSha256": "474c44e852b84fcff8b03c768e9b88442340069e41e3a843a9c7d40844bf87a5",
+      "storedBytes": 11753,
+      "storedSha256": "e0a2d25c8049fed5418386b4d169e21844696e7c1a911c4d22a627a1a130afd3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-stun-with-polearm.json",
+      "originalFileName": "raid-stun-with-polearm.json",
+      "originalBytes": 653,
+      "originalSha256": "26439cb6a426e0da8de481f5cabd9d8c86eb1f86f3142f583caffc5ba9f5323f",
+      "storedBytes": 564,
+      "storedSha256": "6fe693635dc47cd7e6de0b29801bc06b6233332e3ff3f0900d015d32071a518a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-sweep-01.json",
+      "originalFileName": "raid-sweep-01.json",
+      "originalBytes": 80298,
+      "originalSha256": "e2beaeb5e1efe106c4425eac8491e43be9b5f6a9f21d34789d5f485d3c7baff5",
+      "storedBytes": 5366,
+      "storedSha256": "097a8174a51c1bd1e7e3607647075840323c1a06f379dc281f48e10016283c2e",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-sweep-02.json",
+      "originalFileName": "raid-sweep-02.json",
+      "originalBytes": 80655,
+      "originalSha256": "99daeb7ff3f58136ba6375b239bab272b77a298035a03352494112e9ceefc70d",
+      "storedBytes": 5606,
+      "storedSha256": "5beac9d9e86fcde2771dbbe662b26cdbc8c8516a2716d8e7d20c0a13365fed78",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-thunder-01.json",
+      "originalFileName": "raid-thunder-01.json",
+      "originalBytes": 80382,
+      "originalSha256": "3cf192a931403694a7d038b741e2b6460639d45d892759a2a360bb3bb14fea19",
+      "storedBytes": 5450,
+      "storedSha256": "9d5311f68136feeeb7b05bdb25443d434c56dd44f5a5e7b5695386359ac91938",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-thunder-02.json",
+      "originalFileName": "raid-thunder-02.json",
+      "originalBytes": 80666,
+      "originalSha256": "7f4508e87f1269270cb959db6864131f8c8f0a00806adbcef8d9c36fe9151712",
+      "storedBytes": 5626,
+      "storedSha256": "95098e8e57fa247eeb72837b27eebe6fe540fa4ec16f4c75573afab1e90c1388",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-thunder-03.json",
+      "originalFileName": "raid-thunder-03.json",
+      "originalBytes": 80667,
+      "originalSha256": "1b02d26b34a8c81ac4785b9600b93e9dee8dbdb64e6d151c58e54867ff9aec7b",
+      "storedBytes": 5628,
+      "storedSha256": "b1e70c219b069ea1aed5acdb592c23b8f7d3e3b3d1be85188e29d38eb1cf148a",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-vicious-off.json",
+      "originalFileName": "raid-vicious-off.json",
+      "originalBytes": 79569,
+      "originalSha256": "7f572ac2ebdf3d06affbd3f7814c2079929e941c6766f4cc5bc95b970ef91f3c",
+      "storedBytes": 4877,
+      "storedSha256": "b751c92b2e7de142ac7b82e1a1674b6a0f37a81571baff4a546bce594269e5e5",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-vicious-on.json",
+      "originalFileName": "raid-vicious-on.json",
+      "originalBytes": 80261,
+      "originalSha256": "3a6f5867681913d6a7d7e466163596d2b4ce339b1436cdea1a536e01dc8e907b",
+      "storedBytes": 5369,
+      "storedSha256": "a19e3af3ee73a82e0e7772e18a653e1eaebbd0eabfb415b82f9834cc17392e2c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-war-cry.json",
+      "originalFileName": "raid-war-cry.json",
+      "originalBytes": 80305,
+      "originalSha256": "90713c4d2f5e62acc673add93703cbdee4d8a297fcf05c20c746598e0b1735bf",
+      "storedBytes": 5373,
+      "storedSha256": "3a3a370a104c2c15690774729abbb1d7b09fd6935644a15c8854a3836fe95f8b",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-whirlwind-01.json",
+      "originalFileName": "raid-whirlwind-01.json",
+      "originalBytes": 80432,
+      "originalSha256": "c729b328feb048d5e2e292391c4c5bcd9bcd48fbe04d8114dd2c88e5f9c5eaef",
+      "storedBytes": 5520,
+      "storedSha256": "2fe4a90b508c46e461d54e64b357d1fcf71d4a5f4a95dc70f4f7467d194ed4b2",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-whirlwind-02.json",
+      "originalFileName": "raid-whirlwind-02.json",
+      "originalBytes": 80437,
+      "originalSha256": "27dbb3bea8cd34bb4797f3c5a2bd403762a96acde96a0f373cde0bdfb45fc05e",
+      "storedBytes": 5471,
+      "storedSha256": "c47a4826c3c1ba22288bf566b58b00362cd644ae0474fe3f54057d9020c9c60c",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-whirlwind-03.json",
+      "originalFileName": "raid-whirlwind-03.json",
+      "originalBytes": 81417,
+      "originalSha256": "eeb06e9272ec5189cce8c871b643fbb2fd9bb13b20f50af65bd8d7c72b9744a3",
+      "storedBytes": 6326,
+      "storedSha256": "3f2b8f18844b0614e5d566a2ba0659a4b21fce4ef3eed6484f024efaff7d59cd",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/restore-focus-original-off.json",
+      "originalFileName": "restore-focus-original-off.json",
+      "originalBytes": 69348,
+      "originalSha256": "42f12663336782b465ce93305cf8244778a53c4895d42317eefcb0c47eb9445c",
+      "storedBytes": 3475,
+      "storedSha256": "e1660fb1632c7f3af2cf99c022000f03ca3590b6d17f945d4b5a9ae24b8f7baf",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/vicious-off-outside.json",
+      "originalFileName": "vicious-off-outside.json",
+      "originalBytes": 69623,
+      "originalSha256": "afa5dc35eac7f2e4a19158dbe0384babeee27d2b7ac3da4b6b8c4b8841efe133",
+      "storedBytes": 3200,
+      "storedSha256": "c277d06c778cbca86d34b91fe1654e273e3e15d078bfa4562ddae330dea88ced",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/vicious-on-outside.json",
+      "originalFileName": "vicious-on-outside.json",
+      "originalBytes": 70041,
+      "originalSha256": "d9484cfd6fa10a78d35dda5c28d28ec602650e3ccf3f919fed30e161776a3df0",
+      "storedBytes": 3504,
+      "storedSha256": "d54de70da162df9c1f128f4556a22ee57cdd2d9389c780770ed1bca83012aec3",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/war-cry-outside.json",
+      "originalFileName": "war-cry-outside.json",
+      "originalBytes": 69215,
+      "originalSha256": "9b305da73f498ebbf67a42ccd6113b726df2125d2cfae01ada7b595600052865",
+      "storedBytes": 2930,
+      "storedSha256": "3f6a2eedc058b0a34f7433ec59f42309238fb7c92492135cbc79e4b74240a301",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/battle-hotbar-aliases.json",
+      "originalFileName": "battle-hotbar.js",
+      "originalBytes": 95097,
+      "originalSha256": "3a0b6875fb17e23401cb34f2ed1b17182ba5d37416b7290758ab5747e590a4d7",
+      "storedBytes": 598,
+      "storedSha256": "ba39558825272e271de8250242873ac572cba9683585e190284f5deabe2bdc52",
+      "selection": "Allowlisted compact evidence; not the original response."
+    },
+    {
+      "path": "../raw/warlord-live-20261022/raid-final-state.json",
+      "originalFileName": "raid-final-state.json",
+      "originalBytes": 70508,
+      "originalSha256": "9a6e5051b8dc15ecf2103796766097dd65a079fc3714ef41b85c9767a3a076b0",
+      "storedBytes": 3729,
+      "storedSha256": "aeab78856143de2d67938ef89d575bbcbb05f7cdd7a1a4e9f1967b7be412aa33",
+      "selection": "Allowlisted compact evidence; not the original response."
+    }
+  ],
+  "training": {
+    "newLearningRequests": 0,
+    "ranksUnchanged": true,
+    "boundary": "No training was performed during this audit; the catalogue records already learned ranks."
+  },
+  "evidenceManifest": "../raw/warlord-live-20261022/manifest.json",
+  "evidenceReferenceBase": "Paths in this document resolve relative to kb/data/warlord-skills-live-20261022.json. Manifest file paths resolve relative to the manifest directory."
+}

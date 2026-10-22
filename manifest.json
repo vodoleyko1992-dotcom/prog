@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.47",
-  "description": "L2wap Bot 20.47 — восстановление после медленных ответов API",
+  "version": "20.48",
+  "description": "L2wap Bot 20.48 — Warlord: роли, Battle Roar и серверные откаты",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.47"
+  "version_name": "20.48"
 }
