@@ -1,0 +1,32 @@
+{
+  "pass": true,
+  "browser": "156.0.8078.4",
+  "version": "20.51",
+  "cfgKeys": 208,
+  "settings": {
+    "chain": true,
+    "notify": true,
+    "chainChecked": true,
+    "notifyChecked": true,
+    "tab": true,
+    "search": true,
+    "refresh": true,
+    "planner": "function"
+  },
+  "packageHashes": {
+    "manifest.json": "2cce486c7780cbffbf9a03b5b494005317d3d8cbc204d765f8a051b1122305a1",
+    "background.js": "efac9b54534322811f96d5d41d8094436693bf7cfb354f1360428164eb8c0681",
+    "content.js": "c0b58349cb9f3bd234129feb3df80853a1fcecca3b5c875c93283b0765fdd1aa",
+    "hook.js": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+    "defaults.js": "966b325b2a2985fd4ce277874e41dd70dba5f13e3140f43dcb54fd0f7d97aee3",
+    "popup.js": "e6828e8ac9890a8801d1168bc6d4ebc7431dce2fc42aa96cc2d8d06b6c6a110c",
+    "popup.html": "3124d5adf141fa3a674653b58deea3ab59ee1f6da9d0cdf8807cb086bfb4cfcb",
+    "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+    "modules/craft.js": "bec043ec9175cf92aba102eb3fac21eb2b7240547b7767047225a4a6aba30638"
+  },
+  "pageErrors": [],
+  "consoleErrors": [],
+  "resourceErrors": [],
+  "externalRequests": 0,
+  "boundary": "Actual Chrome156 loading the unchanged extracted ZIP. Popup/storage/defaults and internal resource hashes; no game page or live requests."
+}

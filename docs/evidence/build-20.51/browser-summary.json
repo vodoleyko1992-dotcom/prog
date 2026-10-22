@@ -1,0 +1,26 @@
+{
+  "pass": true,
+  "version": "20.51",
+  "browser": "156.0.8078.4",
+  "zipSHA256": "9ec0bc16a3b904f3d22046f3409add087061db2f01c34af15efe5a9837695142",
+  "entries": 68,
+  "sourceZipExtractedAndActualHashesEqual": true,
+  "chainScenarios": 12,
+  "previousScenarios": 9,
+  "jsErrors": 0,
+  "externalRequests": 0,
+  "zipload": {
+    "version": "20.51",
+    "cfgKeys": 208,
+    "errors": 0,
+    "networkRequests": 0
+  },
+  "reports": [
+    "browser-goals-package.json",
+    "browser-mode-package.json",
+    "browser-byte-audit.json",
+    "zipload.txt",
+    "zipload-network.json"
+  ],
+  "boundary": "Распакованный финальныйZIP загружен напрямую; тестовыйharness корень изменён только в памятиNode. Chrome runtime/UI/manifest не изменены. Ответы игры — локальныеfixtures, живых игровых запросов0."
+}
