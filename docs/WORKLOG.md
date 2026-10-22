@@ -2,6 +2,12 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
+## 22.10.2026, 11:42 UTC+10 — Codex — Lite 1.5.2 Firefox с тестом ([PR #348](https://github.com/vodoleyko1992-dotcom/prog/pull/348))
+
+- Пользователь явно запросил Firefox Lite с тестом. Штатный сборщик запущен в отдельном scratch, в публикацию идёт только Firefox ZIP; прежний Chrome ZIP сохраняется побайтно. Runtime/настройки/версия 1.5.2 не меняются, README указывает новый Firefox-пакет.
+- Настоящий Firefox153.5.1esr: desktop и AndroidUA/узкий500px viewport PASS (последнее — эмуляция, не устройство). Проверены установка финального ZIP, MAIN hook/фон/кнопка/меню, разные профили, стрелы, Start/CAPTCHA/Stop0POST. Отдельный recovery4/4: unchanged hold0повторов,1000неправильных→100правильных, смена только лука, Stop0выстрелов. Старый smoke адаптирован к geckodriver0.37.1, новый регрессионный Firefox-тест зарегистрирован опционально в smokes.sh.
+- Финальные597 Node-файлов PASS/0FAIL, envcheck34/34, syntax/bash/diff PASS. web-ext lint0errors/0notices/2metadata warnings оdata_collection_permissions/min128. Независимый ZIP audit14файлов/CRC/manifest/source PASS,79127байт/SHA a460da9d…42568; публичное скачивание совпало. Доказательства — `evidence/build-lite-1.5.2-firefox/validation.json` и отдельные browser/lint/audit/download JSON; ссылка в HANDOFF. Живую игру, реальный Android,Firefox128 и полный исторический browser-run не запускали. Пакет неподписан; следующий шаг — установитьFirefoxZIP и получитьконтрольныйжурнал.
+
 ## 22.10.2026, 10:56 UTC+10 — Codex — исправления, Chrome 20.46 и отдельный Lite 1.5.2 ([PR #347](https://github.com/vodoleyko1992-dotcom/prog/pull/347))
 
 - По просьбе исправить найденные ошибки и собрать закрыты повтор крафта после reload, Provoke по старой пике и ожидание стрел Lite. Независимое ревью добавило защиты ACK/передачи владельца/отмены заказа/запоздалых ответов и снимков. Новые поведенческие и Chrome MV3 тесты воспроизводят исходные дефекты и проверяют исправления. Исходные три группы: 594 Node-файла PASS, browser reload 3/3, Warlord 4/4 и прежние 10/10, Lite recovery и A–G 7/7 PASS.

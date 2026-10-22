@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-22T01:48:09.977191+00:00",
+  "version": "1.5.2",
+  "artifact": "l2wap-lite-v1.5.2-firefox.zip",
+  "bytes": 79127,
+  "sha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+  "files": 14,
+  "chromeZipUnchanged": true,
+  "chromeSha256": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+  "runtimeChanges": [],
+  "nodeFiles": 597,
+  "nodeFail": 0,
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "syntaxFiles": [
+    "tests/tools/lite-firefox-smoke.cjs",
+    "tests/lite-arrows-recovery-firefox.cjs"
+  ],
+  "syntax": "PASS",
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "firefox": "Firefox153.5.1esr",
+  "desktop": "PASS",
+  "androidUaNarrow": {
+    "result": "PASS",
+    "viewportWidth": 500,
+    "physicalDevice": false
+  },
+  "arrowsRecovery": {
+    "pass": 4,
+    "fail": 0,
+    "proof": "arrows-recovery.json"
+  },
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 2
+  },
+  "lintWarningExplanation": "data_collection_permissions was introduced after the declared minimum Firefox128; tested current ESR only",
+  "zipAudit": "zip-audit.json",
+  "downloadProof": "download.json",
+  "independentReview": "PASS, no blockers",
+  "liveGame": false,
+  "firefox128Tested": false,
+  "fullHistoricalBrowserRunner": false,
+  "signed": false,
+  "result": "PASS"
+}

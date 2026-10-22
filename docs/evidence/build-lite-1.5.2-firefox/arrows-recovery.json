@@ -1,0 +1,30 @@
+{
+  "pass": true,
+  "browser": "firefox",
+  "version": "153.5.1",
+  "extension": "1.5.2",
+  "zipSha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+  "boundary": "actual Firefox temporary addon ZIP, real MAIN hook/storage; game API modeled entirely by loopback TLS",
+  "proof": [
+    {
+      "scenario": "unchanged rejected arrows",
+      "attempts": 1,
+      "unchangedRetries": 0
+    },
+    {
+      "scenario": "1000 wrong→100 correct",
+      "kills": 1
+    },
+    {
+      "scenario": "weapon-only replacement",
+      "kills": 1
+    },
+    {
+      "scenario": "Stop before correct snapshot",
+      "shotsAfterStop": 0,
+      "retainedHold": true
+    }
+  ],
+  "pageErrors": [],
+  "requestErrors": []
+}
