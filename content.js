@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.46 — спойл крафтера, голем на фарме, карта через 100 побед; крафт и оружие без старых планов =====
+// ===== L2wap Bot v20.47 — восстановительное чтение при медленном API, таймаут GET до конца ответа =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -4186,8 +4186,8 @@ async function gamePost(path, body, ms = 8000, lsPermit) {
   try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
 }
 async function gameGet(path, ms = 6000) {
-  const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
-  try { return await fetch(path, { credentials: 'include', cache: 'no-store', headers: gameAuth(), signal: c.signal }); } finally { clearTimeout(tm); }
+  // 20.46 (лог 22.10 12:19): дедлайн охватывает и тело ответа, а не только получение заголовков.
+  return fetch(path, { credentials: 'include', cache: 'no-store', headers: gameAuth(), signal: AbortSignal.timeout(ms) });
 }
 // 7.2.5 (игрок 10.10, скрин 502 Bad gateway: «сервер уходит в перезагрузку — бот должен восстанавливаться и продолжать задачу»):
 // лёгкая проверка, отвечает ли сервер игры (Cloudflare 5xx или нет ответа — «нет»). Запрос из скрипта расширения hook.js не видит
@@ -5104,14 +5104,14 @@ function invClassIdentity(c) {
 const invClassDisplay = p => String(p).replace(/^(?:dark_elf|human|elf|orc|dwarf)_/,'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
-async function invRefresh(active = () => true) {
+async function invRefresh(active = () => true, ms = 6000) {
   const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now(),kick=+rt.manualKickAt||0;
   const running=typeof on==='boolean'?on:null,owner=typeof tabOwner==='boolean'?tabOwner:null,generation=typeof automationGeneration==='number'?automationGeneration:null;
   const same=()=>active()&&!!char&&rt.char===char&&leaseEpoch===lease&&(+rt.manualKickAt||0)===kick&&(heroNick()?heroNick()===char:true)
     &&(running===null||on===running)&&(owner===null||tabOwner===owner)&&(generation===null||automationGeneration===generation);
   const current=()=>same()&&JSON.stringify(rt.classCur||null)===classKey;
   try {
-    const r = await gameGet('/character'); if (!r.ok) return null;
+    const r = await gameGet('/character', ms); if (!r.ok) return null;
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
     if(!current()||c?.name!==char)return null;
     const I=invClassIdentity(c),P=rt.invClassProof?.char===char?rt.invClassProof:null,W=INV_CLASS_WAIT?.char===char?INV_CLASS_WAIT:null;
@@ -5163,7 +5163,7 @@ async function inventoryReady() {
   if (classReady()&&INV_READY===key && invQty(0)!==null) return true;
   if (INV_RETRY.key===key && Date.now()<INV_RETRY.at) return false;
   if (INV_READ) { await INV_READ; return current()&&classReady()&&INV_READY===key&&invQty(0)!==null; }
-  const read=invRefresh(); INV_READ=read;
+  const read=invRefresh(undefined, INV_RETRY.key===key&&INV_RETRY.n>0?25000:6000); INV_READ=read;
   try {
     const m=await read;
     if (!current()) return false;

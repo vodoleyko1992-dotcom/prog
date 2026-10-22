@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-22T02:53:30.030679+00:00",
+  "base": "d72e9f2437d4613f6e114517014528dbdb6bdd6b",
+  "contentSha256": "9183c3a73b462a8224cd09d4cd737f6549d3c33a364cc281ad6faac703ff980f",
+  "runtimeChanged": [
+    "content.js"
+  ],
+  "version": "20.46",
+  "newZipBuilt": false,
+  "liteChanged": false,
+  "newNodeRegression": {
+    "pass": 24,
+    "fail": 0,
+    "baselinePass": 17,
+    "baselineFail": 7
+  },
+  "nodeFiles": 598,
+  "nodeFail": 0,
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "syntaxFiles": [
+    "content.js",
+    "tests/v2046-slow-api-recovery.test.js",
+    "tests/v2046-slow-api-recovery-browser.cjs",
+    "tests/v925-mammon-crafter.test.js"
+  ],
+  "syntax": "PASS",
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "nativeChromeBrowser": {
+    "pass": 4,
+    "fail": 0,
+    "proof": "browser.json",
+    "boundary": "real browser/native fetch+Response body and exact content.js functions; controlled actor/env; loopback HTTP only"
+  },
+  "independentReview": "PASS, no blockers; additional Stop/Start, lease ABA, storage ACK and rtCommit rejection checks",
+  "postUnchanged": true,
+  "manifestAndBaseProfileUnchanged": true,
+  "liveGame": false,
+  "fullHistoricalBrowserRunner": false,
+  "userLogProvesHeadersBodyScenario": false,
+  "result": "PASS"
+}

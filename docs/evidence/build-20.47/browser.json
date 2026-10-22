@@ -1,0 +1,46 @@
+{
+  "result": "PASS",
+  "browser": "156.0.8078.4",
+  "sourceSha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+  "gameGetSha256": "6bc5394d2a042fd3e13c29234ec69657e7634d41d23e9c43c8f024a2b6052e08",
+  "inventorySha256": "f611eb9d9acd8927dc0658dc3015348b016c1a5d2d215f2838af471ea20f6865",
+  "boundary": "real browser/native fetch+Response body and exact content.js functions; controlled actor/env; loopback HTTP only",
+  "proof": [
+    {
+      "scenario": "200 headers then hung body",
+      "elapsedMs": 6001,
+      "nativeAbort": "TimeoutError",
+      "invReadReleased": true,
+      "published": 0
+    },
+    {
+      "scenario": "slow14s,6s fail→25s retry→6s after success",
+      "configuredDeadlines": [
+        6000,
+        25000,
+        6000
+      ],
+      "recoveryMs": 22023,
+      "firstDeadlineMs": 5998,
+      "retryBodyMs": 14005,
+      "resetDeadlineMs": 6000,
+      "withoutNewStart": true,
+      "freshQty": 1000
+    },
+    {
+      "scenario": "stop during native body read",
+      "responseCompleted": true,
+      "published": 0,
+      "invReadReleased": true
+    },
+    {
+      "scenario": "owner during native body read",
+      "responseCompleted": true,
+      "published": 0,
+      "invReadReleased": true
+    }
+  ],
+  "posts": 0,
+  "pageErrors": [],
+  "liveGame": false
+}

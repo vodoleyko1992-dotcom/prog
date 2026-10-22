@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.46",
-  "description": "L2wap Bot 20.46 — спойл крафтера, голем на фарме, реже карта и крафт без повторов",
+  "version": "20.47",
+  "description": "L2wap Bot 20.47 — восстановление после медленных ответов API",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -141,5 +141,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.46"
+  "version_name": "20.47"
 }

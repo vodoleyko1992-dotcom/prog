@@ -1,0 +1,50 @@
+{
+  "version": "20.47",
+  "flavor": "Main Chrome only",
+  "artifact": "/workspace/work/slow-api-recovery/packages/l2wap-bot-v20.47.zip",
+  "bytes": 1620266,
+  "sha256": "6cbfb1a6d0f9f5cfef793e9e8cd4609fb24bb6c182d955935bcd423ac35af320",
+  "files": 67,
+  "everySourceZipExtractedShaLockedBeforeAndAfter": true,
+  "sourceAggregateSha256": "f92e58bcdc0e1e90b17857f0b50fd6d95d3ac989fb75e4ca06d4673d244c0021",
+  "contentSha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+  "checksum": "/workspace/work/slow-api-recovery/packages/SHA256SUMS-20.47.txt",
+  "selfAudit": "/workspace/work/slow-api-recovery/logs/release-zip-audit-self.json",
+  "actualMv3Zipload": {
+    "installed": {
+      "cfgKeys": 208,
+      "champEvery": 100,
+      "deepEvery": 100
+    },
+    "flavor": "main",
+    "version": "20.47",
+    "chrome": "156.0.8078.4",
+    "extensionId": "llapoihjbeifkhhfgmjacalemkmmijgk",
+    "pageErrors": [],
+    "failedExtensionResources": [],
+    "consoleErrors": [],
+    "blockedHttp": [],
+    "gamePagesOpened": 0,
+    "liveGame": false,
+    "result": "PASS"
+  },
+  "nativeApiFromZip": {
+    "proof": "/workspace/work/slow-api-recovery/release-browser.json",
+    "cases": 4,
+    "result": "PASS",
+    "sourceSha256": "2aa1a7a48cc8be5dec923fc3b3cb1261181c59abf72fb994bafb4d3cf7636cdb",
+    "posts": 0,
+    "pageErrors": [],
+    "boundary": "real browser/native fetch+Response body and exact content.js functions; controlled actor/env; loopback HTTP only"
+  },
+  "unchangedExistingArtifacts": {
+    "base-profile.json": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee",
+    "builds/l2wap-lite-v1.5.2.zip": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+    "builds/l2wap-lite-v1.5.2-firefox.zip": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+    "builds/l2wap-bot-v20.46.zip": "08a9cc236f74e17110cdeeb0b3b7955b893809a839799b92caea8d444c5870d2"
+  },
+  "liteBuilt": false,
+  "firefoxBuilt": false,
+  "liveGame": false,
+  "result": "PASS"
+}

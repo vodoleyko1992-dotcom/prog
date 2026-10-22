@@ -146,7 +146,8 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   // 20.23: анализ передаёт invRefresh guard; успешное письмо дополнительно обновляет рюкзак.
   // 20.32: проверки контекста перед GET стали длиннее; контракт сумки проверяем в границах функции, без лимита400символов.
   const invStart=c.indexOf('async function invRefresh('),invBody=c.slice(invStart,c.indexOf('async function inventoryReady(',invStart));
-  assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.ok(invStart>0);assert.match(invBody,/await gameGet\('\/character'\)/);assert.match(invBody,/inventory\?\.stacks/);
+  // 20.46: invRefresh передаёт общий дедлайн чтения; контракт GET персонажа и разбора сумки прежний.
+  assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.ok(invStart>0);assert.match(invBody,/await gameGet\('\/character', ms\)/);assert.match(invBody,/inventory\?\.stacks/);
   assert.match(c, /item-transfer\/claim' && d\.status === 200[^\n]*\) \{\s*L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\);\s*L2V7Modules\.mammon\.bagAfterClaim\(d\.req\?\.attachmentId \|\| d\.res\.attachmentId\)/);
   console.log('PASS: 9.2.5 crafter — raw for crafting sent to Skye by «Передача предмета» (full set, one batch, recipient/qty checked in the confirm window, no double send), returns from mail written off by recipe, mail items claimed, bag checked by GET /character');
 })().catch(e => { console.error(e); process.exit(1); });

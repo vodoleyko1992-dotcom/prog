@@ -1,0 +1,108 @@
+{
+  "source": "l2bot-log-2026-10-22-02-20.txt",
+  "version": "20.46",
+  "sourceCut": {
+    "oldestEventsOmitted": 7527,
+    "retainedFrom": "11:27:18.516"
+  },
+  "lastSuccessfulHuntContinue": "12:13:02.814",
+  "lastConfirmedVictory": "12:13:02.237",
+  "firstHungTurnWarning": "12:13:11.313",
+  "battleReadTimeout": {
+    "time": "12:19:07.488",
+    "durationMs": 5001
+  },
+  "before": {
+    "window": "12:10:00–12:13:03",
+    "completedPageRequests": 327,
+    "medianMs": 402
+  },
+  "after": {
+    "completedPageRequests": 11,
+    "medianMs": 14169,
+    "maxMs": 22587,
+    "requests": [
+      {
+        "time": "12:19:24.559",
+        "method": "GET",
+        "path": "/game/chat/replies/unread-count",
+        "status": 200,
+        "durationMs": 22530
+      },
+      {
+        "time": "12:19:24.567",
+        "method": "GET",
+        "path": "/game/mail/unread-count",
+        "status": 200,
+        "durationMs": 22587
+      },
+      {
+        "time": "12:19:47.053",
+        "method": "GET",
+        "path": "/character/profession-quest/light-elf-mystic-second/status",
+        "status": 200,
+        "durationMs": 14200
+      },
+      {
+        "time": "12:19:47.060",
+        "method": "GET",
+        "path": "/game/chat/replies/unread-count",
+        "status": 200,
+        "durationMs": 14169
+      },
+      {
+        "time": "12:19:48.878",
+        "method": "GET",
+        "path": "/character/profession-quest/dwarf-fighter-second/status",
+        "status": 200,
+        "durationMs": 14212
+      },
+      {
+        "time": "12:19:48.889",
+        "method": "GET",
+        "path": "/game/mail/unread-count",
+        "status": 200,
+        "durationMs": 14945
+      },
+      {
+        "time": "12:19:49.630",
+        "method": "GET",
+        "path": "/character/profession-quest/light-elf-fighter-second/status",
+        "status": 200,
+        "durationMs": 10972
+      },
+      {
+        "time": "12:19:49.638",
+        "method": "GET",
+        "path": "/character/profession-quest/human-mystic-second/status",
+        "status": 200,
+        "durationMs": 10968
+      },
+      {
+        "time": "12:19:59.056",
+        "method": "GET",
+        "path": "/game/story-quests/starter-saga",
+        "status": 400,
+        "durationMs": 10175
+      },
+      {
+        "time": "12:19:59.060",
+        "method": "GET",
+        "path": "/character/profession-quest/human-fighter-second/status",
+        "status": 200,
+        "durationMs": 12007
+      },
+      {
+        "time": "12:20:01.339",
+        "method": "GET",
+        "path": "/game/story-quests/giran-campaign",
+        "status": 200,
+        "durationMs": 11685
+      }
+    ]
+  },
+  "observed": "API responses lost or severely delayed; client log cannot identify which network/server component failed",
+  "bodyHeadersScenarioProvenInUserLog": false,
+  "separateCodeFinding": "gameGet cleared abort timer after response headers, before callers consumed JSON; incomplete body could leave INV_READ pending indefinitely",
+  "liveGameAccess": false
+}
