@@ -22,11 +22,14 @@
   "unresolved": "live damage/species/stacking/refresh/Plant tests; character busy",
   "nodeFiles": 605,
   "nodeFail": 0,
-  "nodeLogSha256": "43159cec3072414a550da9899d3b8f9b9d236b456a2618ba33274aea62ae147e",
+  "nodeLogSha256": "7c1856802e0f558082826d4f1affaffefcc0c1dc28529422026d7393410075fb",
   "envcheckFactories": 34,
   "envcheck": "PASS",
   "diffCheck": "PASS",
   "changedJavaScriptFiles": 0,
   "runtimeBaseCommit": "3d79464a62a31c51715908daf5c5442938e2d839",
-  "validationBoundary": "offline evidence integrity and unchanged runtime regression suite; no live mechanics retest"
+  "validationBoundary": "offline evidence integrity and unchanged runtime regression suite; no live mechanics retest",
+  "pr": 354,
+  "independentReview": "PASS; sources/projections/expiry/privacy/runtime boundary checked; duplicate derived revision removed; observed timestamps labeledUTC",
+  "nodeLog": "final-full.log (execution workspace)"
 }

@@ -29,11 +29,11 @@
     },
     {
       "path": "../raw/detect-weakness-offline-20261022/state-026.json",
-      "sha256": "63ee29fce5cac17dc0642bb7a1bab5f410f79941d00f552818f11fc86a94b4f2"
+      "sha256": "d9568c9c4d6e89f4243c2c74021c38aa8bf982aff4e51ae70e5e9aa09837ce3f"
     },
     {
       "path": "../raw/detect-weakness-offline-20261022/state-027.json",
-      "sha256": "ea6d533260dfd9017e6f9a2b1d36851559f6097aa706c9b78b818651cc5aff19"
+      "sha256": "f5bb544cbf5800f1dd4eadad01d40df14586a0e0f3346187402009b19b288c9a"
     }
   ],
   "findings": [
@@ -49,7 +49,7 @@
     },
     {
       "id": "separate-expiry-projections",
-      "facts": "Native casts09:28:03/05 did not change PAtk4798 or the earlier outside expiresAt values09:29:49. At state026→027, PAtk4798→3180 while IDs87/75 stayed active and their visible expiry switched to09:38:03/05, matching the native casts. weaknessDetects still held both1.3.",
+      "facts": "Native casts09:28:03/05 UTC did not change PAtk4798 or the earlier outside expiresAt values09:29:49 UTC. At state026→027, PAtk4798→3180 while IDs87/75 stayed active and their visible expiry switched to09:38:03/05 UTC, matching the native casts. weaknessDetects still held both1.3.",
       "boundary": "Outside character-stat effects and battle-native state have separate observed expiry projections. A single activeBuff ID or character PAtk is insufficient to establish the damage condition or refresh behavior."
     },
     {
@@ -77,5 +77,6 @@
     "Check expiry and active recasts separately using server timestamps and accepted turns around600s; identical icons and success text do not prove refresh.",
     "Choose conditional-species or general-stack automation only after damage evidence resolves the rule; then add narrow Warlord role/actor/MP/CD/fresh-state/pre-fire/reload guards and regressions without extra GETs."
   ],
-  "nextStep": "Live Detect tests remain pending until the character is available. Do not access the game while the user says it is busy."
+  "nextStep": "Live Detect tests remain pending until the character is available. Do not access the game while the user says it is busy.",
+  "observedTimestampsTimeZone": "UTC"
 }
