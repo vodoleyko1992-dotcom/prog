@@ -1,0 +1,255 @@
+{
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.50",
+  "runtimeHashes": {
+    "content.js": "3d90bdf1805a1495c4ec807c3b632d7088e350dc1a2b25410973e2fd84acf7bc",
+    "hook.js": "3d4846e0f4445a545dfc38fabc2152048525d10402b11ef85f4c2b72df7d002e",
+    "background.js": "e66b1c01145c1a8b0fbde30696368ed3eaf20714b552de19563e460096822b62",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "modules/actions.js": "9aabcb5a83633e6aa92e631d44384cae4024e304704ba8f12886c354f92fdada",
+    "modules/buffs.js": "a8bf45b5b863d71b9046a0f1c96cf459a9ce6d367b2f102ac9d9b4122099ff4a",
+    "modules/equipment.js": "5cf545b601a1a8fd211437d0c9981805a3f13081c78dbb431841b47e9e0ee15e"
+  },
+  "nativeAssetHashes": {
+    "skill-panel.html": "cb90a50eb283b332fc46d189f17b709616e7f4aebd7a72bb645c0c663095c437",
+    "battle-hotbar.js": "3a0b6875fb17e23401cb34f2ed1b17182ba5d37416b7290758ab5747e590a4d7",
+    "battle-api-transport.js": "24b4325326d89bb326a1a205b14d9cc2a13331b57fd32a7c337057f887824980",
+    "l2-skill-cast-client.js": "4a6c4b17a9ea068d33bd7c190dc60c51f7da52ac2bbec8d6386ad5ecdc51208d",
+    "l2-skill-panel-executor.js": "6dbd749a4b993ef45b349eba64aadd5dfa3ad5f3e91651207d1c180456bbbd90",
+    "skill-panel.js": "f1477a6e2c2994a9bb17cd8839d1eabbca7c48c0ec9dd2522f7183db32f325b6"
+  },
+  "kind": "actual MV3 plus cached native hotbar renderer/skill-panel/executor/cast-client; controlled L2/world adapter and local routes",
+  "fixtureBoundaries": {
+    "framework": "Controlled L2 snapshot API and world-panel adapter; cached native renderer creates DOM and cached native executor/client creates POST.",
+    "map": "Controlled native fetch GET/character supplies the page snapshot; no cached map implementation.",
+    "owner": "Background storage receives a valid foreign lock owned by a local about:blank tab; actual content storage listener invalidates the lease. No second real game tab.",
+    "unknownReply": "Local server applies the cast and returns HTTP200 malformed JSON; fresh native GET plus actual positive plan of another ID proves the persisted fence; the full timeout is not waited."
+  },
+  "cases": 10,
+  "proof": [
+    {
+      "case": "native-ui",
+      "pass": true,
+      "dom": [
+        {
+          "title": "Вразливість звірів (Detect Animal Weakness)",
+          "action": "detect_animal_weakness",
+          "idx": "0"
+        },
+        {
+          "title": "Вразливість комах (Detect Insect Weakness)",
+          "action": "detect_insect_weakness",
+          "idx": "1"
+        },
+        {
+          "title": "Вразливість рослин (Detect Plant Weakness)",
+          "action": "detect_plant_weakness",
+          "idx": "2"
+        }
+      ],
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792676421682
+        }
+      ],
+      "battlePosts": []
+    },
+    {
+      "case": "all-three",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792676423465
+        },
+        {
+          "body": {
+            "battleId": "l2_75",
+            "expectedRevision": 101
+          },
+          "at": 1792676423681
+        },
+        {
+          "body": {
+            "battleId": "l2_104",
+            "expectedRevision": 102
+          },
+          "at": 1792676423900
+        }
+      ],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html",
+        "/map.html"
+      ],
+      "outsideProof": {
+        "[\"AuditHero\",\"human_warlord\",3,104]": {
+          "at": 1792676423903,
+          "char": "AuditHero",
+          "expiresAt": 1792677023900,
+          "prof": "human_warlord",
+          "requestAt": 1792676423896,
+          "revision": 103,
+          "skillId": 104,
+          "slot": 3,
+          "until": 1792677023896
+        },
+        "[\"AuditHero\",\"human_warlord\",3,75]": {
+          "at": 1792676423686,
+          "char": "AuditHero",
+          "expiresAt": 1792677023681,
+          "prof": "human_warlord",
+          "requestAt": 1792676423679,
+          "revision": 102,
+          "skillId": 75,
+          "slot": 3,
+          "until": 1792677023679
+        },
+        "[\"AuditHero\",\"human_warlord\",3,87]": {
+          "at": 1792676423469,
+          "char": "AuditHero",
+          "expiresAt": 1792677023465,
+          "prof": "human_warlord",
+          "requestAt": 1792676423462,
+          "revision": 101,
+          "skillId": 87,
+          "slot": 3,
+          "until": 1792677023462
+        }
+      }
+    },
+    {
+      "case": "unknown-reload",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792676427267
+        }
+      ],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html",
+        "/skill-panel.html"
+      ],
+      "reloadPlan": {
+        "id": 75,
+        "cost": 14,
+        "revision": 101
+      },
+      "outsideProof": {}
+    },
+    {
+      "case": "stop",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html"
+      ],
+      "outsideProof": {}
+    },
+    {
+      "case": "owner",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html"
+      ],
+      "foreignOwner": 563467589,
+      "outsideProof": {}
+    },
+    {
+      "case": "class",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html",
+        "/map.html"
+      ],
+      "outsideProof": {}
+    },
+    {
+      "case": "mp-zero",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html"
+      ],
+      "outsideProof": {}
+    },
+    {
+      "case": "mp-change",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html",
+        "/map.html"
+      ],
+      "outsideProof": {}
+    },
+    {
+      "case": "cooldown",
+      "pass": true,
+      "casts": [],
+      "battlePosts": [],
+      "visits": [
+        "/map.html"
+      ],
+      "outsideProof": {}
+    },
+    {
+      "case": "fallback",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792676456947
+        }
+      ],
+      "battlePosts": [
+        {
+          "action": "detect_animal_weakness",
+          "expectedRevision": 100,
+          "characterId": "native-local-actor",
+          "battleSpawnId": "native-detect-fallback"
+        }
+      ],
+      "visits": [
+        "/map.html",
+        "/skill-panel.html",
+        "/map.html"
+      ],
+      "outsideProof": {}
+    }
+  ],
+  "liveGame": false,
+  "liveGamePosts": 0,
+  "localMockOutsidePosts": 6,
+  "localMockBattlePosts": 1,
+  "pageErrors": [],
+  "routeErrors": []
+}

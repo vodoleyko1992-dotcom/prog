@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-22T13:26:51Z",
+  "method": "GET",
+  "path": "/game/map",
+  "status": 404,
+  "elapsedMs": 166,
+  "originalResponseSha256": "03e130f27faa7a9b588b8ca4e7d8623916b74a61b217d0d7562373ad68c0ce78",
+  "request": {},
+  "response": {
+    "error": "Not Found"
+  }
+}

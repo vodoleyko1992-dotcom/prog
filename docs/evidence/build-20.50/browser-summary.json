@@ -1,0 +1,50 @@
+{
+  "extensionVersion": "20.50",
+  "browser": "156.0.8078.4",
+  "root": "/workspace/prog",
+  "cases": 32,
+  "results": [
+    {
+      "file": "detect-browser.json",
+      "cases": 10,
+      "pass": true,
+      "pageErrors": 0,
+      "routeErrors": 0
+    },
+    {
+      "file": "toggles-browser.json",
+      "cases": 10,
+      "pass": true,
+      "pageErrors": 0,
+      "routeErrors": 0
+    },
+    {
+      "file": "support-browser.json",
+      "cases": 7,
+      "pass": true,
+      "pageErrors": 0,
+      "routeErrors": 0
+    },
+    {
+      "file": "weapon-browser.log",
+      "cases": 4,
+      "pass": true,
+      "pageErrors": 0,
+      "routeErrors": 0
+    },
+    {
+      "file": "metrics-browser.log",
+      "cases": 1,
+      "pass": true,
+      "pageErrors": 0,
+      "boundary": "Actual MV3/hook/core/observeSlot with controlled fixture POSTs and manual observe; main loop OFF."
+    }
+  ],
+  "liveGameRequests": 0,
+  "liveGamePosts": 0,
+  "allPass": true,
+  "sourceBytesUnchangedAfterAllRuns": true,
+  "sourceHashReport": "actual-sw-source-hashes.json",
+  "detectMockOutsidePosts": 6,
+  "detectMockBattlePosts": 1
+}

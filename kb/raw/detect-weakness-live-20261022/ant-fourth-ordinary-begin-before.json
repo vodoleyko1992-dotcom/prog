@@ -1,0 +1,77 @@
+{
+  "at": "2026-10-22T13:29:36Z",
+  "method": "GET",
+  "path": "/character",
+  "status": 200,
+  "elapsedMs": 244,
+  "originalResponseSha256": "3d61683404a445be47f408dd3db18602d4fad2a53757d2333896d0a6b8c7054b",
+  "request": {},
+  "response": {
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1016,
+      "maxMp": 1016,
+      "pAtk": 5368,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": false,
+      "cityId": "l2dop_schuttgart",
+      "currentZoneId": "pavel_ruins",
+      "worldX": 91300,
+      "worldY": -117189,
+      "revision": 439338,
+      "snapshotGeneratedAt": 1792675776191,
+      "sp": 7647510,
+      "adena": "1057382169",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": 1792676348549,
+          "remainingSec": 573
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792676348801,
+          "remainingSec": 573
+        },
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": 1792676349020,
+          "remainingSec": 573
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    }
+  }
+}

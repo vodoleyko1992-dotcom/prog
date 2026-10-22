@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-22T12:54:29Z",
+  "method": "POST",
+  "path": "/game/battle/start",
+  "status": 400,
+  "elapsedMs": 384,
+  "originalResponseSha256": "7002b714c1f1426edfcc317e7331e83535f3f2e9d91a9d1f860470060049ac72",
+  "request": {
+    "spawnId": "l2dop_rb_25277"
+  },
+  "response": {
+    "error": "mob_on_respawn",
+    "messageUk": "Моб ще не відродився. Зачекай трохи.",
+    "messageRu": "Моб ще не відродився. Подожди трохи."
+  }
+}

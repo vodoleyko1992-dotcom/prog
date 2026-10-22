@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-22T12:56:31Z",
+  "method": "POST",
+  "path": "/game/battle/action",
+  "status": 200,
+  "elapsedMs": 546,
+  "originalResponseSha256": "f44b4c1de55e544b60743c31ef15e4359cb5107fc6ed1bda556f4e1f7bf73392",
+  "request": {
+    "action": "attack",
+    "battleSpawnId": "champ_r_giran_harbor_1"
+  },
+  "response": {
+    "kind": "delta",
+    "revision": 439289,
+    "serverNowMs": 1792673791239,
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11813,
+      "maxHp": 11814,
+      "mp": 1012,
+      "maxMp": 1016,
+      "pAtk": 2915,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": true,
+      "cityId": "l2dop_giran",
+      "currentZoneId": null,
+      "worldX": 43200,
+      "worldY": 170688,
+      "revision": 439289,
+      "snapshotGeneratedAt": 1792673791316,
+      "sp": 7597668,
+      "adena": "1056993281",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": 1792674389535,
+          "remainingSec": 599
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    },
+    "delta": {
+      "mobHp": 13664,
+      "mobMaxHp": 59976,
+      "battleVersion": 6,
+      "battleEnded": false,
+      "logTail": [
+        "Древко розсікло ворогів поруч: Delu Lizardman −25608, Kadif Werewolf −5900.",
+        "[Hero] Критичний удар! −19861 HP.",
+        "Додаткова ціль повалена: Delu Lizardman.",
+        "Coal ×3",
+        "EXP + 1166",
+        "SP + 122",
+        "+1208 аден",
+        "Додаткова ціль повалена: Kadif Werewolf.",
+        "Weapon Piece D ×1",
+        "EXP + 982",
+        "SP + 98",
+        "+1658 аден",
+        "[Monster Eye Destroyer] ударив тебе — −1 HP."
+      ],
+      "mysticSkillCdUntil": {
+        "attack": 1792673791668,
+        "l2_1": 1792673791668
+      },
+      "skillCooldowns": {
+        "attack": 1792673791668,
+        "l2_1": 1792673791668
+      },
+      "globalCooldownUntilMs": 1792673791668,
+      "serverNowMs": 1792673791239,
+      "nextPhysicalAttackAt": 1792673791760,
+      "attackCooldownMs": 744,
+      "attackIntervalMs": 744,
+      "mobDebuffIcons": [],
+      "battleMods": {
+        "stanceVicious": true,
+        "focusAttackActive": true,
+        "viciousStanceSkillRank": 9,
+        "weaknessKind": "animal",
+        "weaknessPatkMul": 1.3,
+        "weaknessDetects": {
+          "animal": 1.3
+        }
+      },
+      "battleBuffIcons": [
+        {
+          "key": "stance_vicious",
+          "l2SkillId": 312,
+          "labelUk": "Жорстка стійка",
+          "isToggle": true
+        },
+        {
+          "key": "focus_attack",
+          "l2SkillId": 317,
+          "labelUk": "Зосереджений удар",
+          "isToggle": true
+        },
+        {
+          "key": "weakness_animal",
+          "l2SkillId": 87,
+          "labelUk": "Детект: звірі",
+          "buffExpiresAtMs": 1792674389535,
+          "buffDurationTotalMs": 600000
+        }
+      ]
+    }
+  }
+}

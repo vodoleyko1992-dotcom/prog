@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-22T13:16:48Z",
+  "method": "POST",
+  "path": "/character/skills/cast",
+  "status": 200,
+  "elapsedMs": 475,
+  "originalResponseSha256": "299b805f09bc327b16417be1548c44f5c3e155fe54c30a41a3dd12d599e174c0",
+  "request": {
+    "battleId": "l2_75"
+  },
+  "response": {
+    "messageUk": "Вразливість комах (Detect Insect Weakness) застосовано.",
+    "messageRu": "Вразливість комах (Detect Insect Weakness) застосовано.",
+    "character": {
+      "level": 51,
+      "l2Profession": "human_warlord",
+      "hp": 11814,
+      "maxHp": 11814,
+      "mp": 1002,
+      "maxMp": 1016,
+      "pAtk": 3531,
+      "pDef": 3186,
+      "mDef": 1418,
+      "pAtkSpd": 1413,
+      "accuracy": 103,
+      "critRate": 364,
+      "critDmgMul": 2.2417499999999997,
+      "addCritDisplay": "157%+229",
+      "inBattle": false,
+      "cityId": "hunters_village",
+      "currentZoneId": "enchanted_valley_north",
+      "worldX": 105675,
+      "worldY": 36558,
+      "revision": 439319,
+      "sp": 7633608,
+      "adena": "1057274124",
+      "skillMpCostMul": 1,
+      "detectBuffs": [
+        {
+          "skillId": 75,
+          "level": 1,
+          "expiresAt": 1792675608442,
+          "remainingSec": 600
+        },
+        {
+          "skillId": 104,
+          "level": 1,
+          "expiresAt": null,
+          "remainingSec": null
+        },
+        {
+          "skillId": 87,
+          "level": 1,
+          "expiresAt": null,
+          "remainingSec": null
+        }
+      ],
+      "toggleStances": [
+        {
+          "battleId": "l2_312",
+          "skillId": 312,
+          "level": 9,
+          "active": true
+        },
+        {
+          "battleId": "l2_317",
+          "skillId": 317,
+          "level": 2,
+          "active": true
+        }
+      ],
+      "contextSha256": {
+        "equipment": "c7e4f61ebc0837c1d7147bc261857c013ac65b49416aa660ee5c7f6f73e2eab7",
+        "hotbar": "0f316a968b2c57de1bba6af914ea82aee5608a3bd87de9da9dd4eeda2f48260d",
+        "learned": "96904ee55102dc9e9b3a5ce631f6216cd11c3a9f2a16616e3cf4c9f999e1f036",
+        "longBuffs": "1ec3abbfffc6e5501bf65533c1ecf86013728d3c307f0d0034515c2e6e5b5583"
+      }
+    }
+  }
+}

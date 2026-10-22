@@ -82,6 +82,9 @@ const warlordToggleClass = () => /^(?:human[ _-])?(?:warlord|dreadnought)$/i.tes
 // «Фокусована атака» — прежний alias локальных стендов; реальный label317 — «Зосереджений удар».
 const warlordToggleAliases = { 'vicious stance': 312, 'жорстка стійка': 312, 'focus attack': 317, 'зосереджений удар': 317, 'фокусована атака': 317 };
 const warlordToggleId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? id === 312 || id === 317 ? id : 0 : Object.hasOwn(warlordToggleAliases, name) ? warlordToggleAliases[name] : 0; };
+// 20.50: лишь точные английские/украинские имена Detect; объект панели подтверждает ID через native action, не по этому списку.
+const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104 };
+const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
@@ -106,8 +109,11 @@ function suggestRoles() {
   const live = s => il(s)?.autoUse !== false && !env.noEffect?.(s.name);
   // 20.49: Focus остаётся запрещён в обычных ролях; только выделенный ON-only контроллер получает его из тогглов Warlord.
   const managedToggle = s => warlordToggleClass() && il(s)?.id === 317 && il(s)?.managedToggle === true && !env.noEffect?.(s.name);
+  const managedDetect = s => warlordToggleClass() && warlordDetectId(s) && il(s)?.managedDetect === true && !env.noEffect?.(s.name);
   const buffsAll = skills.filter(isBuff).filter(live);
   const buffsMine = buffsAll.filter(s => pr(s.name).usesU > 0);
+  // Detect не теряются при прежнем выборе «только уже использованные баффы»; прочие рекомендации не расширяем.
+  const buffsSuggested = skills.filter(s => (buffsMine.length ? buffsMine : buffsAll).includes(s) || managedDetect(s));
   const items = inv.filter(s => s.kind === 'предмет');
   const out = {
     nAttack: mage ? '' : inv.find(s => s.kind === 'атака')?.name || '',
@@ -123,7 +129,7 @@ function suggestRoles() {
     nCharge: skills.filter(isCharge).map(s => s.name).join(', '),
     nForce:  skills.filter(isForce).map(s => `${s.name}=${(il(s) && env.ilNum(il(s).charges)) || env.skillCost(s.name)}`).join(', '),
     nPower:  skills.filter(live).filter(s => il(s)?.target !== 'CORPSE_MOB').filter(s => mage ? (il(s)?.c === 'Маг. атака' || il(s)?.t === 'MDAM' || (!il(s)?.c && pr(s.name).dmgN >= 2 && !isPetOnly(s) && !isSummon(s))) : (!isPetOnly(s) && !isSummon(s) && !isUltra(s) && !isBuff(s) && (!isStun(s) || strongStun(s)) && !isCharge(s) && !isForce(s) && !isIdle(s) && !env.rt.skillDb?.[s.name.toLowerCase()]?.passive && (!il(s) || /атака/.test(il(s).c) || strongStun(s)))).sort((a,b)=> avg(pr(b.name))-avg(pr(a.name))).map(s=>s.name).join(', '),
-    nBuffs:  (buffsMine.length ? buffsMine : buffsAll).filter(s => !il(s)?.pc?.hp).map(s => s.name).join(', '),
+    nBuffs:  buffsSuggested.filter(s => !il(s)?.pc?.hp).map(s => s.name).join(', '),
     // v5.3: важные (аварийные HP ≤ 30 %: Frenzy, Guts, Zealot…) и постоянные (тогглы) — отдельными ролями
     nKeyBuffs: buffsAll.filter(s => !isPetOnly(s) && il(s)?.pc?.hp).map(s => s.name).join(', '),
     nUltra: skills.filter(s => !isPetOnly(s) && !isSummon(s) && isUltra(s)).map(s => s.name).join(', '),
@@ -142,8 +148,9 @@ function suggestRoles() {
   for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
     out[k] = [...new Set((out[k] || '').split(',').map(x => x.trim()).filter(Boolean))].join(', ');
   if (warlordToggleClass()) { const seen = new Set(); out.nToggles = out.nToggles.split(',').map(n => n.trim()).filter(n => { const id = warlordToggleId(n); if (!n || id && seen.has(id)) return false; if (id) seen.add(id); return true; }).join(', '); }
+  if (warlordToggleClass()) { const seen = new Set(); out.nBuffs = out.nBuffs.split(',').map(n => n.trim()).filter(n => { const id = warlordDetectId(n); if (!n || id && seen.has(id)) return false; if (id) seen.add(id); return true; }).join(', '); }
   const why = skills.map(s => { const p = pr(s.name);
-    return `• ${s.name} (слот ${s.idx}): ${managedToggle(s) ? 'постоянный — поддерживаю включённым' : il(s)?.autoUse === false ? 'снижает HP до 25%, вручную или отдельной подготовкой Frenzy/Zealot' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
+    return `• ${s.name} (слот ${s.idx}): ${managedToggle(s) ? 'постоянный — поддерживаю включённым' : warlordDetectId(s) ? 'бафф Detect Weakness' : il(s)?.autoUse === false ? 'снижает HP до 25%, вручную или отдельной подготовкой Frenzy/Zealot' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
       + (il(s) ? ` · [${il(s).id != null ? 'IL #' + il(s).id : 'L2WAP'} ${il(s).n}: ${il(s).c}${il(s).reuse ? ', откат ' + il(s).reuse / 1000 + ' с' : ''}${il(s).dur ? ', ' + il(s).dur + ' с' : ''}${il(s).w ? ', ' + il(s).w : ''}]` : '')
       + (p.uses ? ` · исп. ${p.uses} (ваших ${p.usesU || 0})` : ' · ещё не применялся')
       + (p.dmgN && il(s)?.autoUse !== false ? ` · урон ≈${Math.round(avg(p))}` : '') + (p.mpN ? ` · MP ≈${Math.round(p.mp / p.mpN)}` : '')
@@ -164,6 +171,9 @@ function weaponMainSuggest(inv) {
 
 async function autoRoles() {
   if (!env.cfg.autoRoles || !env.isBattle()) return;
+  const detectActor = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null, env.rt.classSwT || env.rt.classCur?.t || 0, env.rt.manualKickAt || 0]);
+  const detectOwner = detectActor(), detectGeneration = env.actionGeneration?.();
+  const detectCurrent = () => env.cfg.autoRoles && env.isBattle() && env.on !== false && env.tabOwner !== false && warlordToggleClass() && detectOwner === detectActor() && detectGeneration === env.actionGeneration?.();
   await env.itemsDb(); // рейтинг оружия по виду из справочника; не загружаем базу на каждой карте
   if (!env.cfg.autoRoles || !env.isBattle()) return;
   const sug = suggestRoles().roles, fix = {};
@@ -178,6 +188,15 @@ async function autoRoles() {
     sug.nToggles = env.names(sug.nToggles).filter(n => !warlordToggleId(n)).join(', ');
   }
   const toggleRepair = [...toggles].filter(([id]) => !env.rt.warlordToggleRoles2049?.[id]);
+  // 20.50: старые именные миграции уже видели Detect. Каждый доступный ID добавляем отдельно, с ACK cfg перед отметкой.
+  const detects = new Map();
+  if (warlordToggleClass()) {
+    for (const x of env.panelInventory()) { const id = warlordDetectId(x); if (x.kind === 'скилл' && id && env.ilOf(x)?.managedDetect === true && !env.noEffect?.(x.name) && !detects.has(id)) detects.set(id, x); }
+    // Не возвращаем вручную удалённые Detect через общий подбор, новые имена панели или warriorRoles1027.
+    sug.nBuffs = env.names(sug.nBuffs).filter(n => !warlordDetectId(n)).join(', ');
+  }
+  const detectRepair = [...detects].filter(([id]) => !env.rt.warlordDetectRoles2050?.[id]);
+  if (detectRepair.length && !detectCurrent()) return;
   const mage = env.combatProfileKind() === 'mage_summoner';
   if (mage && env.names(env.cfg.nAttack || '').some(n => /^(?:атака|attack)$/.test(n) || env.slotsBy(n).some(b => env.slotKind(b) === 'атака'))) fix.nAttack = '';
   // Only obsolete, positively identified fighter skills are migrated; preserve custom roles.
@@ -262,14 +281,21 @@ async function autoRoles() {
     for (const [id, x] of toggleRepair) if (!seen.has(id)) { selected.push(x.name); seen.add(id); }
     fix.nToggles = selected.join(', '); // даже уже выбранный alias подтверждаем записью до отметки ремонта
   }
+  if (detectRepair.length) {
+    const values = String(fix.nBuffs ?? env.cfg.nBuffs ?? '').split(',').map(n => n.trim()).filter(Boolean), seen = new Set();
+    const selected = values.filter(n => { const id = warlordDetectId(n); if (id && seen.has(id)) return false; if (id) seen.add(id); return true; });
+    for (const [id, x] of detectRepair) if (!seen.has(id)) { selected.push(x.name); seen.add(id); }
+    fix.nBuffs = selected.join(', ');
+  }
   if (Object.keys(fix).length) {
     const { cfg: c = {} } = await chrome.storage.local.get('cfg');
-    if (toggleRepair.length && !toggleCurrent()) return;
+    if (toggleRepair.length && !toggleCurrent() || detectRepair.length && (!detectCurrent() || c.autoRoles === false || Object.hasOwn(c, 'nBuffs') && c.nBuffs !== env.cfg.nBuffs)) return;
     const saved = await env.setCfg(fix); if (saved?.ok === false) return;
     env.rec('B', 'автороли', Object.entries(fix).map(([k, v]) => `${k}=${v}`).join(' · '));
     console.log(env.TAG, 'автоназначение ролей:', fix);
   }
   if (toggleRepair.length && toggleCurrent()) await env.setRt({ warlordToggleRoles2049: { ...(env.rt.warlordToggleRoles2049 || {}), ...Object.fromEntries(toggleRepair.map(([id]) => [id, true])) } });
+  if (detectRepair.length && detectCurrent()) await env.setRt({ warlordDetectRoles2050: { ...(env.rt.warlordDetectRoles2050 || {}), ...Object.fromEntries(detectRepair.map(([id]) => [id, true])) } });
   if (warrior.length) await env.setRt({ warriorRoles1027: [...new Set([...(env.rt.warriorRoles1027 || []), ...warrior.map(x => x.name.toLowerCase())])] });
   if (repaired.length) await env.setRt({ damageRoles1023: [...new Set([...(env.rt.damageRoles1023 || []), ...repaired])] });
 }

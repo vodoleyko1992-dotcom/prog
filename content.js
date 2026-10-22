@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.49 — Warlord: родные роли, серверные откаты и Battle Roar =====
+// ===== L2wap Bot v20.50 — Warlord: три Detect Weakness перед боем, крафт и замеры пики =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -942,7 +942,7 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
   317: { o: 'TOGGLE', autoUse: false, managedToggle: true, dur: 0, reuse: 12000, L: 'L2WAP: Focus Attack · переключатель · выбранный постоянный эффект Warlord с пикой держим включённым · +2 точности и +10% силы крита по подсказке · поддержание ≈0.4 MP/с, разовая цена отдельно не измерена' },
   286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · отдельная связка с массовым ударом' },
-  75: { autoUse: false }, 87: { autoUse: false }, 104: { autoUse: false },
+  75: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
   // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
@@ -3145,13 +3145,21 @@ document.addEventListener('visibilitychange', () => {
   if (!on || !tabOwner || !/\/fishing\.html/i.test(location.pathname)) return;
   rec('S', 'вкладка', document.hidden ? 'рыбалка ушла в фон — кнопки игры оживают раз в 1 с, темп ниже (держите окно рыбалки видимым)' : 'рыбалка снова на экране');
 });
-let lockMine = 0, documentLease = null;
+let lockMine = 0, documentLease = null, detectIncomingLease = null, detectIncomingOwner = null, detectCarryChecked = false;
 async function tabLock() {
   await TAB_KEY_READY;
+  // 20.50: переносим только уже-owned снимок Detect с этой же вкладки, пока прежний lease ещё не сменил владельца.
+  if (!detectCarryChecked) {
+    detectCarryChecked=true;
+    const carry=typeof rt==='undefined'?null:rt.detectOutside?.carry;
+    if(carry&&carry.sourceTab===TAB_KEY && carry.sourceLease && Date.now()-carry.at<=30000) {
+      try { const prior=await chrome.storage.local.get(['lock']);if(prior.lock?.k===TAB_KEY&&prior.lock.epoch===carry.sourceLease)detectIncomingLease=carry.sourceLease; } catch(_) {}
+    }
+  }
   const r = await ipc({ cmd: 'lockAcquire', epoch: leaseEpoch || documentLease, page: location.pathname,
     vis: tabVis(), focus: !!document.hasFocus?.() });
-  tabOwner = r?.ok === true; tabIdle = !tabOwner; leaseEpoch = tabOwner ? r.epoch : null;
-  if (tabOwner) { lockMine = Date.now(); documentLease = leaseEpoch; }
+  tabOwner = r?.ok === true; tabIdle = !tabOwner; leaseEpoch = tabOwner ? r.epoch : null;if(!tabOwner)detectIncomingLease=null;
+  if (tabOwner) { lockMine = Date.now(); documentLease = leaseEpoch;if(detectIncomingOwner==null)detectIncomingOwner=leaseEpoch; }
   return tabOwner;
 }
 // 20.13 (шаг 5, core-b/F6): вернуть свой замок тем же epoch; true — замок наш, очередь записей сохранена и досылается
@@ -3331,6 +3339,7 @@ async function loopGate() {
   // automationCurrent() (canAct сверяет кадр с поколением); при устаревшем кадре они возвращались без await, а цикл крутился
   // на микрозадачах (Stop/события хранилища не доходили). Плюс после ранних веток всегда настоящая пауза
   L2V7Modules.actions?.enterFrame();
+  await L2V7Modules.buffs?.detectOutsideMaintain?.(); // 20.50: owned кадр уже актуален; снимаем протухший Detect до любого dispatcher.
   if (serverDown()) { await serverWait(); await sleep(200); return true; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
   if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
   if (loginPage()) { await autoLogin(); await sleep(200); return true; }       // выбило из игры — входим снова (логин/пароль из меню)
@@ -3507,7 +3516,7 @@ async function loopTaskList() {
     // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала. Ревью: после передышки тур сначала бесплатно
     // открывает карту (rt.rbResume, raidResumeMap) — иначе прилёт/бой вне карты всё равно уходили к платному выбору
     const held = [];
-    for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb','enchantJob','subTrip'])
+    for (const key of ['sealEx','tbuff','detectOutside','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb','enchantJob','subTrip'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) { if (L2EngineCore.taskJobHeld?.(cfg,key,rt)) held.push(key); else blocked[key] = null; }
     if (rt.actionOwner?.key && held.includes(rt.actionOwner.key) && !Object.hasOwn(blocked, rt.actionOwner.key)) blocked.actionOwner = null;
     if (Object.keys(blocked).length) {
@@ -3753,6 +3762,24 @@ async function loopTownJobs() {
     await sleep(200); return true;
   }
   if (await sealQueue()) { await L2V7Modules.actions.dispatch(); await sleep(200); return true; }
+  if (await L2V7Modules.buffs?.detectOutsideQueue?.()) { await L2V7Modules.actions.dispatch(); await sleep(200); return true; }
+}
+// 20.50: внебоевой Detect — только выбранная поддержка Warlord, после городских служб и до новой охоты.
+function detectOutsideGate() {
+  const mode=autonomyMode(),owner=rt.actionOwner?.key;
+  return on&&tabOwner&&L2V7Modules.actions?.canAct?.()!==false&&!isBattle()&&!isFishing()&&!fishNow()&&!tvtSoon()&&!/tvt/i.test(location.pathname)
+    &&!antibotState()&&!L2V7Modules.pvp?.pending()&&!selfHoldMain()&&!['fish','craft','enchant','tasks'].includes(mode)
+    &&L2EngineCore.taskJobAllowed(cfg,'detectOutside',rt)&&!L2V7Modules.actions?.banned?.('detectOutside')
+    &&!L2V7Modules.payments?.blocked?.()&&!rt.petFull?.pending&&!rt.enchant?.pending&&rt.enchant?.status!=='running'&&!rt.autoLs?.hold&&!rt.autoLs?.pending
+    &&(!owner||owner==='detectOutside')&&!['revive','tbuff','shop','magister','invScan','petBufferTrip','petRaidPrep','petPrep','mmJob','tsJob','storyJob','rbGo','zoneGo','travelCheck','fishSvc','fishService','dailyFish','dailyRb','sealEx','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','subTrip'].some(k=>rt[k]);
+}
+function detectOutsidePanel() {
+  const slots=[...document.querySelectorAll(SLOT)].filter(b=>shown(b)&&slotKind(b)==='скилл').map(button=>{
+    const id=ilOf(button)?.id,action=slotAction(button);if(![75,87,104].includes(id))return null;
+    const ready=uiReady(button)&&memLeft(button)<=0&&combatCooldown.globalWait()<=0&&combatCooldown.skillWait(action,cdSpawn())<=0&&combatCooldown.skillWait('l2_'+id,cdSpawn())<=0;
+    return {id,action,button,ready};
+  }).filter(Boolean);
+  return {hotbar:!!document.querySelector('.l2-battle-hotbar'),slots};
 }
 // Фоновые опросы и сервисы: Маммон, квесты сабкласса/Noblesse, магазин TvT, дейлики/клан, Warlock (баффер кота), эпики.
 async function loopSideJobs() {
@@ -5268,6 +5295,7 @@ function netContextStart(d) {
   // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
   NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now()});
   if (d.path === '/game/battle/action' && d.method === 'POST') L2V7Modules.combat?.noteToggleBattle?.(d,Date.now());
+  if (d.path === '/character/skills/cast' && d.method === 'POST') L2V7Modules.buffs?.detectOutsideRequest?.(d,Date.now())?.catch?.(e=>quietErr('Detect request',e));
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
@@ -5406,6 +5434,7 @@ addEventListener('message', e => {
   d.paymentId=netContext.paymentId||'';
   d.retryOf=netContext.retryOf||0;
   if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
+  if (path === '/character/skills/cast' || path === '/character' && on && tabOwner && netContext.lease && netContext.lease===leaseEpoch) L2V7Modules.buffs?.detectOutsideNote?.(path,d,netContext.at)?.catch?.(e=>quietErr('Detect ACK',e));
   // 20.12 (ревизия 17.10): счётчик убийств для лимита мобов — из ответов самой игры; конец боя без нового снимка — снимок устарел
   if (d.kc && d.status >= 200 && d.status < 300) killSnapNote(d.kc); else if (d.bt?.end) killSnapStale();
   // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
@@ -5912,7 +5941,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке хранится, но до её конца не исполняется (L2EngineCore.taskJobHeld)
  get jobs(){return ()=>[
   ...(sealAvailable()?[{key:'sealEx',run:sealStep}]:[]),
-  {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
+  {key:'tbuff',run:townBuffStep},{key:'detectOutside',run:()=>L2V7Modules.buffs.detectOutsideStep()},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
   {key:'magister',run:async()=>{await magisterDisable();if(rt.magister)await magisterStep();}},{key:'invScan',run:invScanStep},{key:'mmJob',run:()=>L2V7Modules.mammon.mmStep()},
   {key:'storyJob',run:()=>L2V7Modules.story.storyStep()},{key:'tsJob',run:()=>L2V7Modules.tvtshop.shopStep()},
   ...(rt.rbHunt?.step==='exit'?[{key:'rbHunt',run:()=>L2V7Modules.raid.rbHuntStep()}]:[]),
@@ -6380,7 +6409,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtComm
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get gamePost(){return gamePost},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get releaseDetectJob(){return id=>L2V7Modules.actions.releaseExpired('detectOutside',id)},get detectTab(){return ()=>TAB_KEY},get detectLineage(){return ()=>detectIncomingOwner===leaseEpoch?detectIncomingLease:null},get detectGate(){return detectOutsideGate},get detectTask(){return startPrepTask},get actionGeneration(){return ()=>automationGeneration},get heroNick(){return heroNick},get meMp(){return meMp},get detectPanel(){return detectOutsidePanel},get detectPanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()},get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get gamePost(){return gamePost},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
@@ -7228,7 +7257,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'lifestoneCommand') { lifestoneCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
-  if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }
+  if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } detectIncomingLease=null; reply?.({ ok: true }); return; }
   if (m.cmd === 'kick') {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.

@@ -2,7 +2,7 @@
 (function(root){'use strict';
  root.L2V7Factories=root.L2V7Factories||Object.create(null);
  root.L2V7Factories.actions=function(env){
- let frame=null, executing=null, busy=false, reconciliation=null, ownerNeedsCommit=false;
+ let frame=null, executing=null, busy=false, reconciliation=null, ownerNeedsCommit=false, ownerCommitKey=null;
  // 20.43 (автономность, ревью 21.10): режим в контексте — routeMode (выбор игрока без передышки и ожидания тура на рыбалке). Передышку бот
  // берёт и снимает сам; раньше её конец (и начало) менял autonomyMode и отменял начатый маршрут как «пользователь сменил режим или цель»
  const context=()=>JSON.stringify([env.rt.char||'',(env.routeMode||env.mode)(),+env.rt.manualKickAt||0,env.cfg.catDungeon||'',env.cfg.farmRes||'',env.cfg.recipeRes||'',env.cfg.autoTasks||null]);
@@ -15,8 +15,8 @@
  function owns(key){return executing?.key===key&&canAct();}
  // 17.10, реворк: setRt меняет память до подтверждения записи. Следующий тик не должен принять её за durable-владельца.
  async function save(p){
-  if(Object.hasOwn(p,'actionOwner'))ownerNeedsCommit=true;
-  try{const r=await env.setRt(p);if(r?.ok===false||!await env.rtCommit()||!live()){env.setStatus?.('Служебный маршрут: жду сохранения состояния');return false;}if(Object.hasOwn(p,'actionOwner'))ownerNeedsCommit=false;return true;}
+  if(Object.hasOwn(p,'actionOwner')){ownerNeedsCommit=true;ownerCommitKey=p.actionOwner?.key||env.rt.actionOwner?.key||ownerCommitKey;}
+  try{const r=await env.setRt(p);if(r?.ok===false||!await env.rtCommit()||!live()){env.setStatus?.('Служебный маршрут: жду сохранения состояния');return false;}if(Object.hasOwn(p,'actionOwner')){ownerNeedsCommit=false;ownerCommitKey=null;}return true;}
   catch(_){env.setStatus?.('Служебный маршрут: жду сохранения состояния');return false;}
  }
  async function clear(O,why){
@@ -154,6 +154,15 @@
    return true;
   }finally{busy=false;}
  }
+ // 20.50: ограниченный выход подготовки Detect при отказе записи. Не касается платежей и выполняющегося шага.
+ function releaseExpired(key,id){
+  if(key!=='detectOutside'||busy||executing||!live()||!canAct())return false;
+  const J=env.rt[key],O=env.rt.actionOwner;
+  if(J&&stamp(J)!==String(id)||O&&(O.key!==key||O.stamp!==String(id))||!J&&!O&&ownerCommitKey!==key)return false;
+  env.rt[key]=null;if(O)env.rt.actionOwner=null;
+  if(!ownerCommitKey||ownerCommitKey===key){ownerNeedsCommit=false;ownerCommitKey=null;}
+  return true;
+ }
  function locationProxy(native,manualAllowed=()=>false){
   const view={},navigate=()=>!env.challengeHold?.()&&(canAct()||(!env.on&&manualAllowed()));
   for(const key of ['href','pathname','search','hash','origin','host','hostname','port','protocol'])Object.defineProperty(view,key,{get:()=>native[key],set:v=>{if(navigate())native[key]=v;}});
@@ -161,6 +170,6 @@
   view.toString=()=>String(native);return view;
  }
 
- return{dispatch,enterFrame,canAct,owns,context,locationProxy,banned:key=>!!banned(key),hasPending:()=>!!env.paymentPending()};
+ return{dispatch,enterFrame,canAct,owns,context,locationProxy,releaseExpired,banned:key=>!!banned(key),hasPending:()=>!!env.paymentPending()};
  };
 })(typeof globalThis!=='undefined'?globalThis:this);

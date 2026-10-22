@@ -59,3 +59,9 @@
 
 - Историческое правило11.10 запрещало FA/CoL. Для явно разрешённого живого аудита16.10 пользователь разрешил платные баффы, включая FA; Coin of Luck по-прежнему запрещены. Это разрешение сеанса не меняет настройки автономного бота.
 - Логин и пароль — только из переменных окружения, в файлы и журнал не попадают.
+
+
+
+## Detect Weakness: проверка22.10
+
+[Ручной живой аудит Warlord51](warlord.md#detect-weakness-живая-ручная-проверка-warlord51-22102026), [данные](data/detect-weakness-live-20261022.json) и [manifest](raw/detect-weakness-live-20261022/manifest.json): canonical outside три Detect совместимы; PAtk2915→5368, refresh без накопления. Server annotations подтвердили Plant/Treant, Animal/Unicorn, Insect/Spelunking Spider. Native-map, глобальныйPAtk и видовая подпись различаются; +84.15%PAtk не означает измеренныйDPS. Ручной live не заменяет fixture-проверку новой автоматики.
