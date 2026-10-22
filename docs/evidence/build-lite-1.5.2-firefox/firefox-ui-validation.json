@@ -1,0 +1,43 @@
+{
+  "version": "1.5.2",
+  "package": "/workspace/work/lite-firefox-152/packages/l2wap-lite-v1.5.2-firefox.zip",
+  "bytes": 79127,
+  "sha256": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+  "zipUnchangedFromInputAudit": true,
+  "browser": "Firefox153.5.1esr",
+  "geckodriver": "0.37.1",
+  "selenium": "4.51.0",
+  "desktop": {
+    "result": "PASS",
+    "proof": "/workspace/work/lite-firefox-152/logs/firefox-desktop-smoke.json"
+  },
+  "androidUaNarrow": {
+    "result": "PASS",
+    "viewportWidth": 500,
+    "physicalAndroidDevice": false,
+    "proof": "/workspace/work/lite-firefox-152/logs/firefox-android-ua-smoke.json"
+  },
+  "checks": [
+    "temporary addon install",
+    "MAIN hook",
+    "background ownership",
+    "toolbar button",
+    "dock/menu/minimize/reopen/menu tab",
+    "archer and destroyer profiles with separate limits",
+    "arrow UI",
+    "Start on local captcha pauses with0POST",
+    "Stop reaches game owner"
+  ],
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 2
+  },
+  "lintWarningCodes": [
+    "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION",
+    "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION"
+  ],
+  "gameTraffic": "loopback HTTPS fixture only",
+  "liveGame": false,
+  "result": "PASS"
+}

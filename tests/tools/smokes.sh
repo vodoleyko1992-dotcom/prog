@@ -40,4 +40,12 @@ if [ -n "$FIREFOX" ] && [ -n "$GECKODRIVER" ]; then
   ff=$(node tests/tools/firefox-build.cjs "${TMPDIR:-/tmp}" | head -1)
   for a in "" --android; do echo "== firefox-smoke $a"; timeout 300 node tests/tools/firefox-smoke.cjs "$ff" $a 2>&1 | tail -2; done
 else echo "== firefox-smoke: пропущен (нет FIREFOX/GECKODRIVER)"; fi
+# Lite1.5.2: проверка уже собранного отдельного Firefox ZIP, без пересборки опубликованного Chrome.
+if [ -n "$LITE_FIREFOX_ZIP" ]; then
+  if [ -n "$FIREFOX" ] && [ -n "$GECKODRIVER" ]; then
+    run_smoke lite-firefox-desktop timeout 300 node tests/tools/lite-firefox-smoke.cjs "$LITE_FIREFOX_ZIP"
+    run_smoke lite-firefox-android-ua timeout 300 node tests/tools/lite-firefox-smoke.cjs "$LITE_FIREFOX_ZIP" --android
+    run_smoke lite-firefox-arrows timeout 300 node tests/lite-arrows-recovery-firefox.cjs "$LITE_FIREFOX_ZIP"
+  else echo "== lite-firefox: пропущен (нет FIREFOX/GECKODRIVER)"; SKIP=$((SKIP + 1)); fi
+fi
 echo "== итог: упало $FAIL, пропущено $SKIP"; [ "$FAIL" = 0 ]

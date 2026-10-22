@@ -1,0 +1,118 @@
+{
+  "mode": "desktop Firefox",
+  "id": "l2wap-lite@local",
+  "toolbar": {
+    "active": true,
+    "area": "nav-bar"
+  },
+  "title": "ok Dstr",
+  "hook": true,
+  "viewport": {
+    "height": 714,
+    "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:153.0) Gecko/20100101 Firefox/153.0",
+    "width": 1280
+  },
+  "initialDock": {
+    "fab": false,
+    "win": true
+  },
+  "dock": {
+    "fab": false,
+    "fail": false,
+    "frame": "moz-extension://7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5f/popup.html#dock",
+    "win": true
+  },
+  "dockMenu": {
+    "cls": "dock",
+    "haveRt": true,
+    "hero": "Dstr, 70 ур. · Dark Elf Phantom Ranger",
+    "run": true
+  },
+  "failLater": false,
+  "fab": {
+    "fab": true,
+    "frame": false,
+    "mem": "{\"open\":false}",
+    "text": "Lite",
+    "win": false
+  },
+  "reopen": {
+    "frame": true,
+    "win": true
+  },
+  "menuUrl": "moz-extension://7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5f/popup.html#tab",
+  "arw": "Стрелы: Fine Steel (C) 221",
+  "bar": [
+    "attack",
+    "double_shot",
+    "power_shot"
+  ],
+  "barCls": "dark_elf_phantom_ranger",
+  "char": {
+    "arrows": {
+      "1342": 221
+    },
+    "lvl": 70,
+    "name": "Dstr",
+    "prof": "dark_elf_phantom_ranger",
+    "slot": 3,
+    "slots": [
+      {
+        "lvl": 78,
+        "prof": "dark_elf_storm_screamer",
+        "slot": 0
+      },
+      {
+        "lvl": 76,
+        "prof": "dark_elf_spectral_master",
+        "slot": 1
+      },
+      {
+        "lvl": 77,
+        "prof": "orc_titan",
+        "slot": 2
+      },
+      {
+        "lvl": 70,
+        "prof": "dark_elf_phantom_ranger",
+        "slot": 3
+      }
+    ]
+  },
+  "kind": "archer",
+  "profs": [
+    "destr",
+    "archer* · в игре"
+  ],
+  "run": true,
+  "skills": [
+    [
+      "double_shot",
+      true
+    ],
+    [
+      "power_shot",
+      true
+    ]
+  ],
+  "status": "Выключен",
+  "tabClass": "tab",
+  "ver": "1.5.2",
+  "warn": "",
+  "profileEdit": {
+    "archer": 3,
+    "destr": 4
+  },
+  "started": {
+    "log": true,
+    "on": true,
+    "owner": true,
+    "status": "⚠ КАПЧА: решите проверку в окне игры — бот ждёт и ничего не нажимает"
+  },
+  "stopped": {
+    "log": true,
+    "on": false,
+    "status": "Выключен"
+  },
+  "posts": []
+}
