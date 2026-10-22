@@ -4,6 +4,12 @@
   function createBattleCooldown(clock = () => Date.now()) {
     let spawn = '', globalUntil = 0, globalRejectAt = 0, globalServerMs = -1, newestServerMs = -1;
     let skills = Object.create(null);
+    // 22.10, живой Warlord/Flamestone: запросы именованные, а сервер возвращает l2_ID без normalizedSkillId.
+    // Только доказанные пары: чужой/неизвестный ID не связываем с последним нажатием по положению в списке откатов.
+    const nativeIds = { whirlwind: 'l2_36', thunder_storm: 'l2_48', wild_sweep: 'l2_245', howl: 'l2_116',
+      provoke: 'l2_286', battle_roar: 'l2_121', lionheart: 'l2_287' };
+    const nativeNumbers = new Set(Object.values(nativeIds).map(id => id.slice(3)));
+    const skillKey = id => Object.hasOwn(nativeIds, String(id)) ? nativeIds[String(id)] : nativeNumbers.has(String(id)) ? 'l2_' + id : String(id);
     const num = x => x === null || x === undefined || x === '' ? null : Number.isFinite(+x) ? +x : null;
     const has = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
     function chooseSpawn(id) {
@@ -15,11 +21,11 @@
       }
     }
     const left = t => Math.max(0, t - clock());
-    function deadline(until, server, received) {
+    function deadline(until, server, received, max = 120000) {
       const t = num(until), s = num(server);
       if (t === null || s === null || s <= 0) return null;
       const gap = t - s;
-      if (gap > 120000) return null;
+      if (gap > max) return null;
       return received + Math.max(0, gap) + (gap > 0 ? 40 : 0);
     }
     function updateGlobal(until, server, received) {
@@ -29,11 +35,13 @@
     }
     function updateSkill(id, until, server, received) {
       if (!id) return;
-      const t = deadline(until, server, received);
+      // Battle Roar дал178с; у self-buff бывают10–15мин. Длинный явный КД остаётся конечным; GCD — прежние2мин.
+      const t = deadline(until, server, received, 15 * 60000);
       if (t === null) return;
-      const key = String(id), prev = skills[key];
-      if (prev && server < prev.server) return;
-      skills[key] = { until: t, server, observed: received };
+      const key = skillKey(id), prev = skills[key];
+      // Один и тот же raw/be или старый sync не продлевают срок от нового времени получения и не освежают evidence.
+      if (prev && (server < prev.server || server === prev.server && num(until) === prev.serverUntil)) return;
+      skills[key] = { until: t, server, serverUntil: num(until), observed: received };
     }
     // 20.36: игра отдаёт и словарь, и [{skillId,readyAt,remainingSec}]. Числовой ID
     // соответствует l2_ID; индекс строки массива никогда не является ID навыка.
@@ -45,6 +53,11 @@
       if (!/^(?:[a-z][a-z0-9_]*|[1-9]\d*)$/i.test(id)) return [];
       const n = id.match(/^(?:l2_)?([1-9]\d*)$/);
       return n ? Number.isSafeInteger(+n[1]) ? [n[1], 'l2_' + n[1]] : [] : [id];
+    }
+    function compatibleAliases(aliases) {
+      const numbered = new Set([...aliases].flatMap(ids).filter(id => /^l2_\d+$/.test(id)));
+      for (const id of aliases) if (Object.hasOwn(nativeIds, id) && numbered.size && !numbered.has(nativeIds[id])) aliases.delete(id);
+      return aliases;
     }
     function rowDeadline(row, server) {
       for (const field of ['readyAt', 'readyAtMs', 'untilMs', 'until']) if (has(row, field)) {
@@ -70,9 +83,9 @@
         if (!aliases.size) continue;
         const until = row ? rowDeadline(row, server) : rowNum(value);
         if (until === null) continue;
-        // Нативное имя связывается с числовым ID только по явному ответу сервера.
+        // Дополнительный, ещё неизвестный alias связывается с ID только по явному ответу сервера.
         if ([res.skillId, res.normalizedSkillId].flatMap(ids).some(id => aliases.has(id))) for (const id of ids(req.action)) aliases.add(id);
-        for (const id of aliases) updateSkill(id, until, server, received);
+        for (const id of compatibleAliases(aliases)) updateSkill(id, until, server, received);
       }
     }
     // Безопасный be из hook сохраняет полный список, который общий redact режет до8.
@@ -114,7 +127,7 @@
         (blockedBy === 'skill' || num(res.skillRemainingMs) > 0 || !failure) &&
         (has(res, 'cooldownUntilMs') || has(res, 'readyAtMs'))) {
         const until = res.cooldownUntilMs ?? res.readyAtMs;
-        for (const id of new Set([req.action, res.normalizedSkillId, res.skillId].filter(Boolean))) updateSkill(id, until, server, now);
+        for (const id of compatibleAliases(new Set([req.action, res.normalizedSkillId, res.skillId].filter(Boolean)))) updateSkill(id, until, server, now);
       }
       const attackRejected = failure && req.action === 'attack' && /^attack_cooldown$/i.test(String(res.code || res.error || ''));
       if (server !== null && (!failure || blockedBy === 'skill' || attackRejected) && blockedBy !== 'global') {
@@ -143,11 +156,11 @@
     return {
       observe, observeSync,
       globalWait(id) { return id && spawn && String(id) !== spawn ? 0 : left(globalUntil); },
-      skillWait(id, idSpawn) { return idSpawn && spawn && String(idSpawn) !== spawn ? 0 : left(skills[String(id)]?.until || 0); },
+      skillWait(id, idSpawn) { return idSpawn && spawn && String(idSpawn) !== spawn ? 0 : left(skills[skillKey(id)]?.until || 0); },
       // 8.0.3: since — время нашего последнего нажатия: откат, полученный ДО него (sync до клика), об этом нажатии ничего не знает
       skillKnown(id, idSpawn, since = 0) {
         if (idSpawn && spawn && String(idSpawn) !== spawn) return false;
-        const info = skills[String(id)];
+        const info = skills[skillKey(id)];
         return !!info && clock() - info.observed < 30000 && info.observed >= since;
       },
       recentlyGlobalRejected(since = 0) { return globalRejectAt >= since && globalRejectAt > 0 && clock() - globalRejectAt < 2000; },
