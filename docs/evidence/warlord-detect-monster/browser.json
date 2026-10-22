@@ -1,0 +1,696 @@
+{
+  "kind": "actual Chrome MV3; controlled page DOM/fetch client and locally fulfilled HTTPS",
+  "root": "/workspace/prog",
+  "sourceHashes": {
+    "content.js": "ac1d1c014d01572bbb76e1cf13fc7a596e65322d412e266e479c333b11425088",
+    "hook.js": "7fff97b0cd7d91eadb5514f768c16466c3870ded35188f55d436dd54a00a1ea3",
+    "background.js": "efac9b54534322811f96d5d41d8094436693bf7cfb354f1360428164eb8c0681",
+    "engine-core.js": "7e254d6ce571b1971625061f493c71838288cf27f96232cdfe93515d35959ed3",
+    "modules/buffs.js": "8949cdfe95eb5e70731bf56729d90ebfacaded895416e16c00fb3a8e808368f4",
+    "modules/combat.js": "855ac9a9131f7238bff118003927b00cc6fb482592ea2608b630d5481e5c9d4f",
+    "modules/fightlab.js": "9ef2d3f30bf9771e9511beeaba8a149680d4c8371909c82117150535462a8868"
+  },
+  "fixtureBoundaries": {
+    "panel": "Controlled DOM/buttons and fetch client implementing battleId + expectedRevision. Native renderer/executor JS are not used.",
+    "startup": "Exactly one MAIN page GET before Start. No test calls to resync/snapshot/module functions to supply Detect evidence after Start; own isolated-world inventory preflight must initiate the panel trip.",
+    "owner": "Real background storage listener receives a foreign lock belonging to an about:blank tab; no second game account/tab.",
+    "replay": "Reposts a captured real hook response after its request context has been consumed; no new netStart is synthesized.",
+    "unknown": "Server applies a mutation but returns malformed JSON. Actual document reload plus positive plan for another ID checks the persisted fence without waiting 630 seconds."
+  },
+  "liveGame": false,
+  "liveGameRequests": 0,
+  "proof": [
+    {
+      "case": "owned-three",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792680463252,
+          "revision": 101,
+          "mp": 482,
+          "expiresAt": 1792681063252,
+          "intentId": "[1792680462715,\"mvjnntlp-1-2f36ebad-b54f-46a6-aef5-1fcfc9bd0705\",1]:87:1"
+        },
+        {
+          "body": {
+            "battleId": "l2_75",
+            "expectedRevision": 101
+          },
+          "at": 1792680463568,
+          "revision": 102,
+          "mp": 468,
+          "expiresAt": 1792681063568,
+          "intentId": "[1792680462715,\"mvjnntlp-1-2f36ebad-b54f-46a6-aef5-1fcfc9bd0705\",1]:75:2"
+        },
+        {
+          "body": {
+            "battleId": "l2_104",
+            "expectedRevision": 102
+          },
+          "at": 1792680463898,
+          "revision": 103,
+          "mp": 447,
+          "expiresAt": 1792681063898,
+          "intentId": "[1792680462715,\"mvjnntlp-1-2f36ebad-b54f-46a6-aef5-1fcfc9bd0705\",1]:104:3"
+        }
+      ],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680462271,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680462624,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/skill-panel.html",
+          "at": 1792680462923,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/skill-panel.html",
+          "at": 1792680462992,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680464115,
+          "revision": 103
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680464198,
+          "revision": 103
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680464620,
+          "revision": 103
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680462256
+        },
+        {
+          "path": "/skill-panel.html",
+          "at": 1792680462904
+        },
+        {
+          "path": "/map.html",
+          "at": 1792680464097
+        }
+      ],
+      "outsideProof": {
+        "[\"AuditHero\",\"human_warlord\",3,104]": {
+          "at": 1792680463901,
+          "char": "AuditHero",
+          "expiresAt": 1792681063898,
+          "prof": "human_warlord",
+          "requestAt": 1792680463770,
+          "revision": 103,
+          "skillId": 104,
+          "slot": 3,
+          "until": 1792681063770
+        },
+        "[\"AuditHero\",\"human_warlord\",3,75]": {
+          "at": 1792680463572,
+          "char": "AuditHero",
+          "expiresAt": 1792681063568,
+          "prof": "human_warlord",
+          "requestAt": 1792680463457,
+          "revision": 102,
+          "skillId": 75,
+          "slot": 3,
+          "until": 1792681063457
+        },
+        "[\"AuditHero\",\"human_warlord\",3,87]": {
+          "at": 1792680463258,
+          "char": "AuditHero",
+          "expiresAt": 1792681063252,
+          "prof": "human_warlord",
+          "requestAt": 1792680463129,
+          "revision": 101,
+          "skillId": 87,
+          "slot": 3,
+          "until": 1792681063129
+        }
+      }
+    },
+    {
+      "case": "owned-four",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792680468072,
+          "revision": 101,
+          "mp": 482,
+          "expiresAt": 1792681068072,
+          "intentId": "[1792680467540,\"mvjnnxbh-1-5f3167de-2d80-4721-bd99-de9e67fbcc4d\",1]:87:1"
+        },
+        {
+          "body": {
+            "battleId": "l2_75",
+            "expectedRevision": 101
+          },
+          "at": 1792680468396,
+          "revision": 102,
+          "mp": 468,
+          "expiresAt": 1792681068396,
+          "intentId": "[1792680467540,\"mvjnnxbh-1-5f3167de-2d80-4721-bd99-de9e67fbcc4d\",1]:75:2"
+        },
+        {
+          "body": {
+            "battleId": "l2_104",
+            "expectedRevision": 102
+          },
+          "at": 1792680468738,
+          "revision": 103,
+          "mp": 447,
+          "expiresAt": 1792681068738,
+          "intentId": "[1792680467540,\"mvjnnxbh-1-5f3167de-2d80-4721-bd99-de9e67fbcc4d\",1]:104:3"
+        },
+        {
+          "body": {
+            "battleId": "l2_80",
+            "expectedRevision": 103
+          },
+          "at": 1792680469061,
+          "revision": 104,
+          "mp": 440,
+          "expiresAt": 1792681069061,
+          "intentId": "[1792680467540,\"mvjnnxbh-1-5f3167de-2d80-4721-bd99-de9e67fbcc4d\",1]:80:4"
+        }
+      ],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680467012,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680467444,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/skill-panel.html",
+          "at": 1792680467748,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/skill-panel.html",
+          "at": 1792680467794,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680469294,
+          "revision": 104
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680469382,
+          "revision": 104
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680469965,
+          "revision": 104
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680466996
+        },
+        {
+          "path": "/skill-panel.html",
+          "at": 1792680467726
+        },
+        {
+          "path": "/map.html",
+          "at": 1792680469261
+        }
+      ],
+      "outsideProof": {
+        "[\"AuditHero\",\"human_warlord\",3,104]": {
+          "at": 1792680468741,
+          "char": "AuditHero",
+          "expiresAt": 1792681068738,
+          "prof": "human_warlord",
+          "requestAt": 1792680468611,
+          "revision": 103,
+          "skillId": 104,
+          "slot": 3,
+          "until": 1792681068611
+        },
+        "[\"AuditHero\",\"human_warlord\",3,75]": {
+          "at": 1792680468400,
+          "char": "AuditHero",
+          "expiresAt": 1792681068396,
+          "prof": "human_warlord",
+          "requestAt": 1792680468299,
+          "revision": 102,
+          "skillId": 75,
+          "slot": 3,
+          "until": 1792681068299
+        },
+        "[\"AuditHero\",\"human_warlord\",3,80]": {
+          "at": 1792680469065,
+          "char": "AuditHero",
+          "expiresAt": 1792681069061,
+          "prof": "human_warlord",
+          "requestAt": 1792680468941,
+          "revision": 104,
+          "skillId": 80,
+          "slot": 3,
+          "until": 1792681068941
+        },
+        "[\"AuditHero\",\"human_warlord\",3,87]": {
+          "at": 1792680468077,
+          "char": "AuditHero",
+          "expiresAt": 1792681068072,
+          "prof": "human_warlord",
+          "requestAt": 1792680467943,
+          "revision": 101,
+          "skillId": 87,
+          "slot": 3,
+          "until": 1792681067943
+        }
+      }
+    },
+    {
+      "case": "monster-unlisted",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680472340,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680472741,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680472877,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680472325
+        }
+      ]
+    },
+    {
+      "case": "monster-unknown-cost",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680476033,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680476394,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680476497,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680476017
+        }
+      ]
+    },
+    {
+      "case": "monster-negative-cost",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680479639,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680479977,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680480078,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680479622
+        }
+      ]
+    },
+    {
+      "case": "monster-cooldown",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680483246,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680483593,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680483673,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680483230
+        }
+      ]
+    },
+    {
+      "case": "stop-own-read",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680486811,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680487157,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680486798
+        }
+      ]
+    },
+    {
+      "case": "owner-own-read",
+      "pass": true,
+      "casts": [],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680496323,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680496676,
+          "revision": 100
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680496301
+        }
+      ]
+    },
+    {
+      "case": "unknown-reload",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792680500400,
+          "revision": 101,
+          "mp": 482,
+          "expiresAt": 1792681100400,
+          "intentId": "[1792680499768,\"mvjnom6t-1-1955c494-f15f-4f66-8b63-c2554a902566\",1]:87:1"
+        }
+      ],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680499259,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680499669,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/skill-panel.html",
+          "at": 1792680500046,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/skill-panel.html",
+          "at": 1792680500109,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/skill-panel.html",
+          "at": 1792680500667,
+          "revision": 101
+        },
+        {
+          "reader": "own",
+          "page": "/skill-panel.html",
+          "at": 1792680500722,
+          "revision": 101
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680499248
+        },
+        {
+          "path": "/skill-panel.html",
+          "at": 1792680500007
+        },
+        {
+          "path": "/skill-panel.html",
+          "at": 1792680500651
+        }
+      ],
+      "reloadPlan": {
+        "id": 75,
+        "cost": 14,
+        "revision": 101
+      }
+    },
+    {
+      "case": "replay-ack",
+      "pass": true,
+      "casts": [
+        {
+          "body": {
+            "battleId": "l2_87",
+            "expectedRevision": 100
+          },
+          "at": 1792680505809,
+          "revision": 101,
+          "mp": 482,
+          "expiresAt": 1792681105809,
+          "intentId": "[1792680505290,\"mvjnoqgf-1-2e61dd40-194a-4bbd-8fc8-70e7d5573a7f\",1]:87:1"
+        },
+        {
+          "body": {
+            "battleId": "l2_75",
+            "expectedRevision": 101
+          },
+          "at": 1792680506150,
+          "revision": 102,
+          "mp": 468,
+          "expiresAt": 1792681106150,
+          "intentId": "[1792680505290,\"mvjnoqgf-1-2e61dd40-194a-4bbd-8fc8-70e7d5573a7f\",1]:75:2"
+        },
+        {
+          "body": {
+            "battleId": "l2_104",
+            "expectedRevision": 102
+          },
+          "at": 1792680506434,
+          "revision": 103,
+          "mp": 447,
+          "expiresAt": 1792681106434,
+          "intentId": "[1792680505290,\"mvjnoqgf-1-2e61dd40-194a-4bbd-8fc8-70e7d5573a7f\",1]:104:3"
+        }
+      ],
+      "reads": [
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680504836,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680505195,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/skill-panel.html",
+          "at": 1792680505511,
+          "revision": 100
+        },
+        {
+          "reader": "own",
+          "page": "/skill-panel.html",
+          "at": 1792680505577,
+          "revision": 100
+        },
+        {
+          "reader": "page",
+          "page": "/map.html",
+          "at": 1792680506681,
+          "revision": 103
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680506731,
+          "revision": 103
+        },
+        {
+          "reader": "own",
+          "page": "/map.html",
+          "at": 1792680507164,
+          "revision": 103
+        }
+      ],
+      "visits": [
+        {
+          "path": "/map.html",
+          "at": 1792680504817
+        },
+        {
+          "path": "/skill-panel.html",
+          "at": 1792680505491
+        },
+        {
+          "path": "/map.html",
+          "at": 1792680506663
+        }
+      ],
+      "outsideProof": {
+        "[\"AuditHero\",\"human_warlord\",3,104]": {
+          "at": 1792680506437,
+          "char": "AuditHero",
+          "expiresAt": 1792681106434,
+          "prof": "human_warlord",
+          "requestAt": 1792680506358,
+          "revision": 103,
+          "skillId": 104,
+          "slot": 3,
+          "until": 1792681106358
+        },
+        "[\"AuditHero\",\"human_warlord\",3,75]": {
+          "at": 1792680506155,
+          "char": "AuditHero",
+          "expiresAt": 1792681106150,
+          "prof": "human_warlord",
+          "requestAt": 1792680506057,
+          "revision": 102,
+          "skillId": 75,
+          "slot": 3,
+          "until": 1792681106057
+        },
+        "[\"AuditHero\",\"human_warlord\",3,87]": {
+          "at": 1792680505816,
+          "char": "AuditHero",
+          "expiresAt": 1792681105809,
+          "prof": "human_warlord",
+          "requestAt": 1792680505714,
+          "revision": 101,
+          "skillId": 87,
+          "slot": 3,
+          "until": 1792681105714
+        }
+      }
+    }
+  ],
+  "pass": 10,
+  "fail": 0,
+  "browser": "156.0.8078.4",
+  "extensionVersion": "20.50",
+  "cases": 10,
+  "localMockOutsidePosts": 11
+}

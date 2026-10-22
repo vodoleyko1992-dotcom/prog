@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-22T14:49:42.826001+00:00",
+  "base": "6bcd21b",
+  "version": "20.50",
+  "zipBuilt": false,
+  "logAnalysis": "log-analysis.json",
+  "ownedSnapshotRegression": {
+    "pass": 30,
+    "fail": 0,
+    "baselinePass": 26,
+    "baselineFail": 4
+  },
+  "monsterRegression": {
+    "pass": 39,
+    "fail": 0,
+    "baselinePass": 11,
+    "baselineFail": 28
+  },
+  "legacyCases": 211,
+  "nodeFiles": 618,
+  "nodeFail": 0,
+  "envcheckFactories": 34,
+  "envcheck": "PASS",
+  "syntaxFiles": 9,
+  "syntax": "PASS",
+  "bashSmokesSyntax": "PASS",
+  "diffCheck": "PASS",
+  "actualMv3Browser": {
+    "pass": 10,
+    "fail": 0,
+    "proof": "browser.json",
+    "baseline": "browser-baseline.json",
+    "boundary": "actual extension MAIN hook/content/background and native fetch; controlled local skill-panel DOM/client, no live game renderer",
+    "postStartResyncInjected": false
+  },
+  "independentReview": "PASS, no blockers",
+  "snapshotFeed": "validated owned invRefresh; original request-start time; no extra GET",
+  "monsterOutsideCapabilityRequired": true,
+  "monsterOutsideBonusOrTtlMeasuredLive": false,
+  "monsterNativeBattleSuccessFromUserLog": true,
+  "manifestAndProfileUnchanged": true,
+  "liteSharedCdMirror": true,
+  "liveGameRequests": 0,
+  "fullHistoricalBrowserRunner": false,
+  "result": "PASS"
+}

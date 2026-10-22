@@ -2,6 +2,12 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
+## 23.10.2026, 00:38 UTC+10 — Codex — Detect Monster80 и owned preflight (PR в подготовке)
+
+- TXT20.50/окно00:21–00:29: новыйMonster80 изучен00:28:32, два ручных боевых200; tooltip30%Monster/Beast10мин/MP24/CD3. Outside-эффект80/видРБ/стакинг четырёх не установлены. Сначала прежний локальный20.48 обновлён до3a011bb/#358, затем чистоffдо6bcd21b/#359 без перекрытия наших runtime.
+- Исправлен воспроизведённый разрыв invRefresh→Detect: собственный preflight после аренды передаёт snapshot после actor/ACK guards, без новых GET. Добавлен80 в native/автороли/hook/CD/панель с обязательной свежей castableSelfBuffs capability перед outside-попыткой. Unknown/Stop/MP/CD и ручные роли сохранены. Новые30/30owned и39/39Monster PASS (исходники26/4 и11/28); независимое ревью без блокеров. Финальный Node618/0FAIL,syntax9/env34/bash/diff PASS. ActualChrome156MV3 10/10 PASS/0JS/0внешних запросов: owned3/4безpost-Startresync,capability/MP/CD/Stop/owner/unknown/replay; DOM/client панели управляемые.7SW/sourceSHA совпали,старыйstartupбыл0casts/0панели. Отчёты — `evidence/warlord-detect-monster/validation.json` и browser.json.
+- Версия20.50, настройки/base-profile/архивы прежние; sharedCD зеркалирован в Lite source, егоZIP не собирался. Игровых запросов нет. СборкаChrome20.51 предложена отдельно, подтверждения пока нет. Следующий шаг — публикация исходников, затем ZIP по подтверждению и контрольный журнал.
+
 ## 23.10.2026, 00:29 UTC+10 — Codex — возврат после ошибки загрузки боя ([PR #359](https://github.com/vodoleyko1992-dotcom/prog/pull/359))
 
 - По TXT/HTML 14:21 найден эпизод 23.10 00:20:43: игра не загрузила бой _128, бот 7 раз повторил возврат; в 00:21:04 игрок вышел через `a.l2-battle-back-map` → `/map.html`. Первичная причина игры не установлена: сетевого ответа в интервале нет. Сохранённые HTML не содержат этого боя.

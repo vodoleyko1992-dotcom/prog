@@ -83,8 +83,8 @@ const warlordToggleClass = () => /^(?:human[ _-])?(?:warlord|dreadnought)$/i.tes
 const warlordToggleAliases = { 'vicious stance': 312, 'жорстка стійка': 312, 'focus attack': 317, 'зосереджений удар': 317, 'фокусована атака': 317 };
 const warlordToggleId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? id === 312 || id === 317 ? id : 0 : Object.hasOwn(warlordToggleAliases, name) ? warlordToggleAliases[name] : 0; };
 // 20.50: лишь точные английские/украинские имена Detect; объект панели подтверждает ID через native action, не по этому списку.
-const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104 };
-const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
+const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104, 'detect monster weakness': 80, 'вразливість монстрів': 80 };
+const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104, 80].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};

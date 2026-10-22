@@ -6,11 +6,11 @@
  root.L2V7Factories.buffs = function create_buffs(env) {
 const location = env.routeLocation || root.location;
 // 20.50 (живые проверки22.10): native Detect-ID и outside усиление имеют разные сроки/результат. Подтверждаем именно outside ACK.
-const DETECT_IDS = [75,87,104], DETECT_ACTION = {75:'detect_insect_weakness',87:'detect_animal_weakness',104:'detect_plant_weakness'};
-const DETECT_NAMES = {'detect insect weakness':75,'вразливість комах':75,'detect animal weakness':87,'вразливість звірів':87,'detect plant weakness':104,'вразливість рослин':104};
+const DETECT_IDS = [75,87,104,80], DETECT_ACTION = {75:'detect_insect_weakness',87:'detect_animal_weakness',104:'detect_plant_weakness',80:'detect_monster_weakness'};
+const DETECT_NAMES = {'detect insect weakness':75,'вразливість комах':75,'detect animal weakness':87,'вразливість звірів':87,'detect plant weakness':104,'вразливість рослин':104,'detect monster weakness':80,'вразливість монстрів':80};
 const DETECT_MS = 600000, DETECT_FRESH = 30000, DETECT_JOB_MS = 60000, DETECT_RETRY_MS = 630000, detectBoot = Date.now();
 let detectSnapshot = null, detectNet = Promise.resolve(), detectSerial = 0, detectStorageWait = 0, detectAbandoned = null;
-const detectSkillId = x => { const id = +(String(x?.battleId || x?.l2SkillId || '').replace(/^l2_/,'')); return DETECT_IDS.includes(id) ? id : null; };
+const detectSkillId = x => { const id = +(String(x?.battleId || x?.l2SkillId || '').replace(/^l2_/,'')); return DETECT_IDS.includes(id) ? id : x?.battleId===DETECT_ACTION[80]&&+x.l2SkillId===80 ? 80 : null; };
 const detectActor = () => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,env.leaseEpoch,env.rt.manualKickAt || 0,env.rt.classSwT || 0]);
 const detectKey = id => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof || '',env.rt.classCur?.slot ?? null,id]);
 const detectSelected = () => [...new Set(env.names(env.cfg.nBuffs).map(n => env.ilOf?.(n)?.id || (Object.hasOwn(DETECT_NAMES,n) ? DETECT_NAMES[n] : +n.replace(/^l2_/,''))).filter(id => DETECT_IDS.includes(id)))];
@@ -67,6 +67,9 @@ function detectOutsidePlan() {
   for(const id of detectSelected()){
     if(detectHasProof(id,s))continue;
     const intent=env.rt.detectOutsideIntent?.[detectKey(id)];if(detectIntentBlocks(intent,s)||detectCooling(id,s))continue;
+    // 23.10, новый Monster80 проверен только native в бою. Outside разрешает свежий явный каталог сервера, не learned/tooltip.
+    const capability=s.ch.castableSelfBuffs?.find(x=>detectSkillId(x)===id);
+    if(id===80&&(!capability||!Number.isFinite(capability.mpCost)||capability.mpCost<0))continue;
     const learned=s.ch.learnedBattleSkillsDetail.some(x=>detectSkillId(x)===id&&x.level>0);
     const onPanel=s.ch.battleHotbarSlots.some(x=>x&&(x.k==='s'&&+x.id===id||x.k==='a'&&x.a===DETECT_ACTION[id]));
     const cost=detectCost(id,s);if(!learned||!onPanel||cost==null||mp.cur<cost)continue;
@@ -172,8 +175,10 @@ async function detectOutsideStep() {
   if(!await detectSave({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:i},detectOutside:{...J,phase:'wait',phaseAt:Date.now(),pendingId:plan.id}},valid)){
     return false;
   }
-  const current=detectFresh(),mp=env.meMp?.(),again=env.detectPanel?.()?.slots?.find(x=>x.id===plan.id);
-  if(!valid()||!detectJobSame(J)||!current||current.ch.revision!==plan.revision||!mp||!Number.isFinite(mp.cur)||mp.cur<plan.cost||detectCooling(plan.id,current)||again?.button!==b.button||!again.ready){
+  const current=detectFresh(),mp=env.meMp?.(),again=env.detectPanel?.()?.slots?.find(x=>x.id===plan.id),capability=current?.ch.castableSelfBuffs?.find(x=>detectSkillId(x)===plan.id);
+  if(!valid()||!detectJobSame(J)||!current||current.ch.revision!==plan.revision||!mp||!Number.isFinite(mp.cur)||mp.cur<plan.cost
+    ||plan.id===80&&(!capability||!Number.isFinite(capability.mpCost)||capability.mpCost<0||mp.cur<capability.mpCost)
+    ||detectCooling(plan.id,current)||again?.button!==b.button||!again.ready){
     if(env.rt.char===i.char&&env.rt.detectOutsideIntent?.[key]?.id===i.id)await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'notSent'}}});return false;
   }
   if(env.fire(b.button)===false)await env.setRt({detectOutsideIntent:{...(env.rt.detectOutsideIntent||{}),[key]:{...i,phase:'notSent'}}});
@@ -1084,6 +1089,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { detectOutsideMaintain, detectOutsideQueue, detectOutsideStep, detectOutsideNote, detectOutsideRequest, detectOutsidePlan, vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { detectOutsideSnapshot:detectOwnSnapshot, detectOutsideMaintain, detectOutsideQueue, detectOutsideStep, detectOutsideNote, detectOutsideRequest, detectOutsidePlan, vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
