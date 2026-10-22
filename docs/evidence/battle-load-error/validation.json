@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Asia/Vladivostok",
+  "base": "3a011bb",
+  "installed_version_in_log": "20.49",
+  "source_version": "20.50",
+  "inputs": [
+    {
+      "name": "l2wap-pages-2026-10-22-14-21.html",
+      "sha256": "aaeca88cbbf8de9725a1d56ac87299e31c98a7691c7a4132b74ac97f17620c4a"
+    },
+    {
+      "name": "l2bot-log-2026-10-22-14-21.txt",
+      "sha256": "9a2735537986167382b3c91d48e0c45f14d21cf38d708da71a93186417686545"
+    },
+    {
+      "name": "l2bot-learn-2026-10-22-14-21.html",
+      "sha256": "fa8f0a32b1e4ddc7c8b1afc5d35ec94441c6b233774c2007418974281d852b17"
+    }
+  ],
+  "facts": [
+    {
+      "line": 1280,
+      "time": "00:20:33.892",
+      "event": "Предыдущий бой _106 завершён: win=true, mobHp=0, revision=439452."
+    },
+    {
+      "line": 1287,
+      "time": "00:20:43.267",
+      "event": "Новый _128: #battle-load-err, Не вдалося завантажити бій, пустые HP/MP."
+    },
+    {
+      "lines": [
+        1288,
+        1307
+      ],
+      "time": "00:20:43–00:21:02",
+      "event": "7 попыток возврата, 6 сообщений Выход из боя не завершён, адрес прежний."
+    },
+    {
+      "line": 1310,
+      "time": "00:21:04.239",
+      "event": "Ручной клик a.l2-battle-back-map href=/map.html."
+    },
+    {
+      "line": 1311,
+      "time": "00:21:06.771",
+      "event": "Карта открылась, HP8180/11814, затем успешные бои катакомб."
+    }
+  ],
+  "cause": {
+    "confirmed_bot": "toMap ищет ID кнопок и BACK=Назад на карту/мапу, ссылка ошибки имеет класс и украинский текст Повернутися на карту.",
+    "unknown_game": "Причина первичного отказа загрузки не записана. В интервале ошибки нет [N] событий; ранний HTTP502 в22:49 — отдельный эпизод."
+  },
+  "changes": "Видимая штатная ссылка внутри #battle-load-err найдена во время ожидания, нажимается через fire. Для неё нет принудительной смены URL при запрете/неуспешном маршруте. Обычные leave/поражение/победа сохранены.",
+  "checks": {
+    "node_full": {
+      "pass": 616,
+      "fail": 0,
+      "command": "node tests/run-all.cjs"
+    },
+    "node_target_final": {
+      "groups_pass": 8,
+      "fail": 0
+    },
+    "baseline_node": {
+      "groups_pass": 2,
+      "groups_fail": 6
+    },
+    "browser": {
+      "checks_pass": 17,
+      "fail": 0,
+      "version": "154.0.8037.57",
+      "pageErrors": 0,
+      "liveRequests": 0
+    },
+    "envcheck": "34/34 PASS",
+    "syntax": "PASS",
+    "diff": "PASS",
+    "review": "Независимое ревью без блокеров."
+  },
+  "limits": [
+    "DOM ошибки реконструирован по логу: сохранённые HTML содержат только skill-panel и char.",
+    "Chrome использует точные navigation/shown/byText/fire, управляемые actor/waitFor/route; не полный MV3 и не живая игра.",
+    "Живых игровых запросов нет; версия, настройки, ZIP и Firefox/Lite не меняются."
+  ],
+  "source_sha256": {
+    "modules/navigation.js": "f9e17a1c400da0e5366d12a057f911b55e5b3ccd4425331a4dd9e1bc215af205",
+    "tests/v2050-battle-load-error.test.js": "2dcd8c714c947c60a86fd4ae32d545eadd76ab4111e376f9157825586cf063ef",
+    "tests/battle-load-error-browser.cjs": "b8959243667e2ec6a9dc2fd7f40d748ef9d168a509f4702f9235d20ba1d64f70"
+  }
+}
