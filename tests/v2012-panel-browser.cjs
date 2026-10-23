@@ -21,7 +21,8 @@ const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
     await h.openTab('supply');
     await P.locator('#shopReserve').fill(''); await P.locator('#shopReserve').blur(); await until(async () => (await h.get(['cfg'])).cfg.shopReserve === 200000);
     // UI-3: галка TvT в PvP ведёт список задач; tsBuy выключен с пояснением
-    await h.openTab('pvp'); await until(() => P.locator('#tvtOn').isChecked());
+    await h.openTab('tvt');   // 23.10: TvT — свой раздел
+    await until(() => P.locator('#tvtOn').isChecked());
     await P.locator('#tvtOn').uncheck(); await until(async () => !(await h.get(['cfg'])).cfg.autoTasks.includes('tvt'));
     await until(async () => !await P.locator('[data-auto-task="tvt"]').isChecked(), 5000);   // галка задачи TvT синхронна после перерисовки
     assert.equal(await P.locator('#tsBuy').isDisabled(), true); assert.match(await P.locator('#tsBuy').evaluate(e => e.closest('label').nextElementSibling.textContent), /Задачи бота/);

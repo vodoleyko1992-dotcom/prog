@@ -643,6 +643,8 @@ function mobEps(name, champ) {                   // EXP/с вида моба п�
 }
 function mobValRank(out, champOn = champRuleOn()) {
   const hl = env.heroLvl() || 0, V = env.rt.mobVal || {};
+  // 20.54 (квест плаща Goddard, стадия охоты): засчитываются только мобы не ниже уровня героя — в своём приоритете они первыми
+  const huntUp = !!env.storyHuntUp?.(), up = c => huntUp && hl && (c.lvl || 0) >= hl ? 1 : 0;
   const zMed = medOf((env.rt.zoneMobs?.[env.rt.zone] || []).map(n => mobEps(n, false) || 0));
   const zn = (env.rt.zoneMobs?.[env.rt.zone] || []).filter(n => mobEps(n, false)).length;
   const med = zn >= 3 ? zMed : medOf(out.filter(c => !c.champ).map(c => mobEps(c.name, false) || 0));
@@ -654,13 +656,13 @@ function mobValRank(out, champOn = champRuleOn()) {
     const v = raw ?? (ch ? chMed || med * 3 : med);
     c.eps = raw;
     c.val = v > 0 ? v * sk / (sk + PAGE_S * pg) : 0;   // с учётом листания до его страницы
-    c.low = zn >= 3 && raw != null && !ch && !c.ql && raw < 0.7 * zMed;
+    c.low = zn >= 3 && raw != null && !ch && !c.ql && raw < 0.7 * zMed && !(huntUp && hl && (c.lvl || 0) >= hl);
   }
   const keep = out.filter(c => !c.low);
   const list = keep.length ? keep : out;
   const cap = hl ? hl + 5 : 999, lv = c => (c.lvl || 0) <= cap ? c.lvl || 0 : 2 * cap - c.lvl;   // выше героя +5 — чем выше, тем позже
   // 10.0.5: в одном приоритете FA-чемпион (оранжевый/красный в окне −5) первым, красный раньше оранжевого
-  return list.sort((a, b) => a.rank - b.rank || (b.faHot ? FA_P[b.tier] || 0 : 0) - (a.faHot ? FA_P[a.tier] || 0 : 0) || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, FA, выгода, уровень, ближе
+  return list.sort((a, b) => a.rank - b.rank || (b.faHot ? FA_P[b.tier] || 0 : 0) - (a.faHot ? FA_P[a.tier] || 0 : 0) || up(b) - up(a) || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, FA, выгода, уровень, ближе
 }
 // 20.43 (разбор 21.10): вклад одного боя в замеры охоты (mobVal, zoneStat, rt.eff) — не больше 3× обычного времени на такую награду:
 // у этого вида (≥ 3 боёв этого класса), для нового вида — у способа прихода (rt.eff[via], ≥ 5 боёв). Пример: у вида 30 боёв по 3 с, один

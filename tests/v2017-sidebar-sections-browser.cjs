@@ -3,14 +3,14 @@ const assert=require('node:assert/strict');
 const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
 // 20.54 (прогон смоуков 23.10): «Автозаточка» временно убрана решением игрока (19.10, после 20.25) — кнопка hidden, showTab('enchant') → «Обзор»,
 // разметка #enchantPanel сохранена для восстановления. «Крафт» (PR #358, 86cbe91) встал третьим разделом: Alt+3…0 сдвинулись на один
-// (подсказки кнопок — «Маммон (Alt+8)», «ЛС (Alt+9)», «TvT и PvP (Alt+0)»), у «Сервиса» горячей клавиши больше нет — открываем кнопкой.
+// (подсказки кнопок — «Маммон (Alt+8)», «ЛС (Alt+9)», с #378 «PvP (Alt+0)»), у «Сервиса» и нового «TvT» горячей клавиши больше нет — открываем кнопкой.
 (async()=>{const h=await harness();try{
  const P=h.popup;
  await h.sw.evaluate(async()=>{const{rt,cfg}=await chrome.storage.local.get(['rt','cfg']);await chrome.storage.local.set({rt:{...rt,weaponAug:{w:123,e:7,o:'prominence',g:'A'},weapons:[{id:123,name:'Тестовый посох',where:'надето'}],panel:[{cdKey:'ls_prominence'}]},cfg:{...cfg,mmTpMax:345000,sealMin:123,sealAuto:true}})});
  await P.reload();await until(()=>P.locator('#lsCurrent').textContent().then(s=>s.includes('Тестовый посох')));
  assert.equal(await P.locator('#moduleNav [data-tab="enchant"]').isVisible(),false,'кнопка автозаточки скрыта');await P.evaluate(()=>showTab('enchant'));
  assert.equal(await P.locator('section.act').getAttribute('id'),'tab-overview','enchant → Обзор');assert.equal(await P.locator('#enchantPanel').count(),1,'разметка заточки сохранена');assert.equal(await P.locator('#enchantPanel').isVisible(),false);
- for(const [tab,field]of [['mammon','#mmTpMax'],['lifestone','#sealAuto'],['pvp','#tvtOn'],['svc','#cfgExport']]){
+ for(const [tab,field]of [['mammon','#mmTpMax'],['lifestone','#sealAuto'],['pvp','#pvpAll'],['tvt','#tvtOn'],['svc','#cfgExport']]){  // 23.10 (#378): PvP и TvT — отдельные разделы
   await h.openTab(tab);assert.equal(await P.locator(field).isVisible(),true,tab);assert.equal(await P.locator('section.act').getAttribute('id'),'tab-'+tab);
  }
  await h.openTab('mammon');assert.equal(await P.locator('#mmTpMax').inputValue(),'345000');

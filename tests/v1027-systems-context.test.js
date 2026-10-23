@@ -15,7 +15,7 @@ function fixture(n,extra={}){
 }
 test('story GET старого героя не создаёт готовые к сдаче квесты нового; новый герой опрашивается сразу',async()=>{
  const f=fixture('story'),g=defer();let calls=0;f.e.gameGet=()=>{calls++;return g.p};const old=f.M.storyTick(true);f.e.rt={char:'New'};g.done(response({quest:{stage:'return_to_ladd'}}));await old;assert.equal(f.e.rt.story,undefined);
- f.e.gameGet=async()=>{calls++;return response({quest:{stage:'hunt_bosses'}})};await f.M.storyTick();assert.equal(calls,3);assert.equal(f.e.rt.story.subclass.ready,false);
+ f.e.gameGet=async()=>{calls++;return response({quest:{stage:'hunt_bosses'}})};await f.M.storyTick();assert.equal(calls,4);   // 20.54: + квест плаща Goddardassert.equal(f.e.rt.story.subclass.ready,false);
 });
 for(const change of ['character','manual','replacement','stop','owner'])test(`story готовая сдача → ${change} при ACK не стирает новую задачу и не уводит на старую точку`,async()=>{
  const f=fixture('story');f.loc.pathname='/subclass-quest.html';const J={kind:'subclass',key:'subclass:return_to_ladd',t:Date.now(),home:'old-zone'},N={kind:'noblesse',key:'noblesse:2',t:2,home:'new-zone'};f.e.rt.storyJob=J;

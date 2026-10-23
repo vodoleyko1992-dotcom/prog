@@ -207,12 +207,13 @@
   <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+7)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
   <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+8)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
   <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+9)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
-  <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+0)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
+  <button data-tab="pvp" data-short="PvP" title="Нападать на всех, «не трогать», цели PvP и лист врагов (Alt+0)"><span class="ic">⚔</span><span class="lb">PvP</span></button>
   <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
   <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
   <button data-tab="supply" data-short="Снабжение" title="Закупка банок, сосок и руды, резерв адены"><span class="ic">🛒</span><span class="lb">Снабжение</span></button>
   <button data-tab="sub" data-short="Сабкласс" title="Сменить класс у Maestro Reorin и одеть лучшее из сумки"><span class="ic">🧬</span><span class="lb">Сабкласс</span></button>
   <button data-tab="speed" data-short="Скорость" title="Темп обычных шагов, боя и рыбалки"><span class="ic">◷</span><span class="lb">Скорость</span></button>
+  <button data-tab="tvt" data-short="TvT" title="TvT 3 раза в день и магазин TvT"><span class="ic">⚑</span><span class="lb">TvT</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -373,6 +374,7 @@
   <h4>👑 Сабкласс и Noblesse</h4>
   <div id="storyBox" class="camp">Прогресс бот узнает у игры сам</div>
   <label title="Часть квеста выполнена (убийства и сбор) → бот летит к NPC (Virgil, Caradine, Magister Ladd), жмёт «Завершить часть» и возвращается на точку. Не в бою, не в туре РБ/эпиков, не перед TvT. Взять квест и выбрать сабкласс — только вы">Сдавать готовые части сам <input id="storyTurnIn" type="checkbox"></label>
+  <label title="Квест «Слід Океану Полум'я» (A-плащ Cloak of Goddard Guardian): бот сам сдаёт припасы, ткань с РБ Ashakiel и охоту Scout Adrian (Варка), забирает плащ у Captain Andrei (Годдард); в туре РБ ставит Ashakiel первым, на охоте бьёт мобов не ниже своего уровня. Работает и без задачи «Квесты». Взять квест — только вы">Квест плаща Goddard — вести сам <input id="goddardQuest" type="checkbox"></label>
   <label title="Телепорт к NPC квеста (Rune ≈20 000, Goddard ≈18 000, Ivory Tower, Oren). Дороже — бот не летит">Макс. цена телепорта к NPC, адены <input id="storyTpMax" type="number" min="0" step="10000"></label>
   <div class="hint">Квест сабкласса: 75 ур. основного класса и 4 РБ (Cabrio, Hallate, Kernon, Golkonda) — в туре по РБ бот бьёт их первыми, если они по силам. Noblesse: сабкласс 50+, ★ мобы квеста — цели. С Noblesse бот не покупает Noblesse Blessing за FA, а ставит свой с панели боя. При смене класса замеры скиллов, кота, зон и РБ у каждого класса свои.</div>
 
@@ -822,20 +824,10 @@
 </section>
 
 <section id="tab-pvp">
-  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
-  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
-  <div class="hint">При включённом TvT регистрация всегда первая: мест всего 20. Фарм и РБ прерываются для записи; до подтверждения регистрации другие дела не начинаются.</div>
-  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
-  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
-  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
-  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
-  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
-  <div id="tsBox" class="hint"></div>
-  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
-  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
-  <div id="tsGoalBox" class="hint"></div>
-  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
-  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
+  <h4>⚔ PvP: нападать на всех</h4>
+  <label title="Любой игрок на локации — цель, как только бот его заметил (кроме ников ниже). Цвет ника, уровень и сила не проверяются">⚔ Нападать на всех игроков <input id="pvpAll" type="checkbox"></label>
+  <label title="Ники через запятую, без учёта регистра. Их бот не атакует ни в каком режиме PvP и не отвечает им">Не трогать (ники через запятую) <input id="pvpSpare" class="wide" autocomplete="off" spellcheck="false"></label>
+  <div class="hint">Игрок появился на локации — бот добивает текущего моба, выходит на карту и жмёт «Атакувати» у его ника; напал сам — бот отвечает. Не нападает на ники из «Не трогать», на свою группу и клан, когда игра не даёт кнопки атаки (город, безопасная зона), и во время похода, тура РБ, эпиков, рыбалки и перед TvT. За нападение на игрока с обычным ником игра может дать карму. Кто убил героя, попадает в «Лист врагов»: после 2 проигрышей подряд бот не трогает его до нового уровня.</div>
   <div class="subsec-title">🎯 PvP</div>
   <h4>🎯 Атаковать при встрече</h4>
   <div id="pvpTargetsPanel"></div>
@@ -984,6 +976,23 @@
   <label for="reactMin">Реакция — минимум, мс <input id="reactMin" type="number" min="80"></label>
   <label for="reactMax">Реакция — максимум, мс <input id="reactMax" type="number" min="80"></label>
   <div class="hint">Интервал реакции не уменьшает общую паузу между действиями.</div>
+</section>
+
+<section id="tab-tvt">
+  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
+  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
+  <div class="hint">При включённом TvT регистрация всегда первая: мест всего 20. Фарм и РБ прерываются для записи; до подтверждения регистрации другие дела не начинаются.</div>
+  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
+  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
+  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
+  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
+  <div id="tsBox" class="hint"></div>
+  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
+  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
+  <div id="tsGoalBox" class="hint"></div>
+  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
+  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
 </section>
 
 </div><!-- /.workarea -->

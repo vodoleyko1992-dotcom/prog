@@ -78,7 +78,7 @@ const PAGES = {
   const r1 = await run('/map.html', null, async () => { on = true; tabOwner = true; leaseEpoch = 'e'; rt.zone = 'coliseum'; await L2V7Modules.story.storyTick(true);   // 10.0: без точки возврата бот не уходит сдавать
     const busy = await L2V7Modules.story.storyStep(); return { st: rt.story, busy, job: rt.storyJob }; });
   const hdr = auth.filter(a => /^\/game\/story-quests\//.test(a[0]));
-  if (!(r1.res.st?.noblesse?.ready === true && r1.res.st.subclass?.completed === true && r1.res.busy === true && r1.res.job?.kind === 'noblesse' && hdr.length === 2 && hdr.every(a => a[1] === 'Bearer tok-123') && !r1.errors.length)) {
+  if (!(r1.res.st?.noblesse?.ready === true && r1.res.st.subclass?.completed === true && r1.res.busy === true && r1.res.job?.kind === 'noblesse' && hdr.length === 3 &&   /* 20.54: + квест плаща Goddard */ hdr.every(a => a[1] === 'Bearer tok-123') && !r1.errors.length)) {
     console.error('FAIL 1', JSON.stringify({ r1, auth })); process.exit(1); }
   console.log('PASS browser: story quests polled with the page token (Bearer), part 1 ready → trip to the NPC');
   // 2. страница квеста, NPC не рядом: цена Rune 20 000 ≤ лимита 100 000 → «Телепорт» нажат один раз

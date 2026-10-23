@@ -27,6 +27,29 @@ const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
 const heroLvl = () => +env.heroLevel?.() || +env.rt.lvl || 0;
 const token = () => ({ char: env.rt.char, kick: +env.rt.manualKickAt || 0 });
 const active = T => env.on !== false && env.tabOwner !== false && T.char === env.rt.char && T.kick === (+env.rt.manualKickAt || 0);
+// 20.54 (John 23.10: «Убиваем ВСЕХ кроме Teddy и tms», «сразу как только замечаем»): режим «нападать на всех» (cfg.pvpAll) —
+// любой игрок на локации цель, кроме ников из cfg.pvpSpare (по умолчанию Teddy, tms; без учёта регистра). Цвет ника, уровень, «убивает
+// нас за N ударов» и HP 80 % в этом режиме не проверяются; группа, свой клан, запрет игры (нет кнопки атаки) и занятость — как раньше.
+const spareSet = () => new Set(String(env.cfg.pvpSpare ?? 'Teddy, tms').split(/[\s,;]+/).map(low).filter(Boolean));
+const spared = name => !!name && spareSet().has(low(name));
+const allOn = () => env.cfg.pvpAll === true;
+// отказы/нажатия по посторонним (их нет в листе врагов) — в sessionStorage вкладки: страница игры перезагружается на каждом переходе
+const ALL_SKIP = 'l2bot-pvpAllSkip';
+function allSkip() { try { const v = JSON.parse(sessionStorage.getItem(ALL_SKIP) || '{}'); return v && typeof v === 'object' && v.char === env.rt.char ? v : { char: env.rt.char }; } catch (e) { return { char: env.rt.char }; } }
+function allSkipSet(k, ms, why) {
+  const S = allSkip(), now = Date.now();
+  for (const [x, v] of Object.entries(S)) if (x !== 'char' && !(v?.until > now)) delete S[x];
+  if (ms > 0) S[k] = { until: now + ms, why }; else delete S[k];
+  try { sessionStorage.setItem(ALL_SKIP, JSON.stringify(S)); } catch (e) {}
+}
+// посторонний игрок как запись листа (не сохраняется, пока не убьёт нас — тогда noteDefeat заносит его в лист обычным путём)
+function stranger(h) {
+  const k = keyOf(h.id, h.name), K = allSkip()[k];
+  return { id: h.id || '', name: h.name, lvl: h.lvl || 0, kills: 0, w: 0, l: 0, stranger: true, ...(K?.until > Date.now() ? { skipT: K.until, skipWhy: K.why } : {}) };
+}
+const isSelf = h => !!h?.name && low(h.name) === low(env.rt.char);
+// враг из листа или (режим «всех») любой игрок на локации
+const foe = h => isSelf(h) ? null : find(h.id, h.name) || (allOn() && h.name ? stranger(h) : null);
 let cacheChar = env.rt.char;
 function ownCache() { if (cacheChar !== env.rt.char) { cacheChar = env.rt.char; HERO.t = INC.t = scanT = 0; HERO.list = []; INC.list = []; HERO.zone = ''; DONE.clear(); } }
 const list = () => env.rt.enemies && typeof env.rt.enemies === 'object' ? env.rt.enemies : {};
@@ -109,10 +132,12 @@ function domHeroes() {
 // пусто — можно; иначе причина (для журнала и меню)
 function verdict(e, h, me, o = {}) {
   if (!e) return 'не в листе';
+  if (spared(e.name) || spared(h?.name)) return 'в списке «не трогать» (PvP)';
+  const all = allOn();
   const explicit = env.rt.pvpTargets?.[e.id];
   if (env.cfg.pvpOnSight !== false && explicit?.enabled && explicit.id === e.id && low(explicit.name) === low(e.name))
     return 'цель ведёт раздел «Атаковать при встрече»'; // Не обходить его клановый/серверный запрет через обычный список.
-  if (env.cfg.enemyHunt === false) return 'нападение выключено в меню';
+  if (env.cfg.enemyHunt === false && !all) return 'нападение выключено в меню';
   if (e.ignore) return 'вы отметили «не трогать»';
   const L = heroLvl();
   if (e.blockLvl && L && L <= e.blockLvl) return e.skipWhy || 'проигрывали — жду нового уровня';
@@ -132,6 +157,7 @@ function verdict(e, h, me, o = {}) {
   }
   if (h.atk === false) return h.why || 'игра не даёт напасть (нет кнопки атаки)';
   if (h.ok === false) return h.why || 'игра не даёт напасть';
+  if (all) return '';   // «бить всех»: сразу, без оценки силы
   if (env.cfg.enemyFlagOnly !== false && h.col !== undefined && !['pk', 'aggressor'].includes(h.col)) return 'ник не красный и не фиолетовый — за нападение дадут карму';
   const lv = h.lvl || e.lvl || 0, above = env.cfg.enemyLvlAbove ?? 3;
   if (lv && L && lv - L > above) return `выше нас на ${lv - L} ур.`;
@@ -146,7 +172,7 @@ function pick() {
   ownCache();
   if (Date.now() - HERO.t > 90000) return null;
   const me = env.meHp?.();
-  return HERO.list.map(h => ({ h, e: find(h.id, h.name) })).filter(x => x.e && !verdict(x.e, x.h, me))
+  return HERO.list.map(h => ({ h, e: foe(h) })).filter(x => x.e && !verdict(x.e, x.h, me))
     .sort((a, b) => (b.e.kills || 0) - (a.e.kills || 0))[0] || null;
 }
 // бот занят тем, что прерывать нельзя (поход, тур РБ/эпиков, рыбалка, катакомбы, TvT скоро)
@@ -178,9 +204,17 @@ async function onStart(d) {
   const tid = String(d.req?.targetCharacterId || ''), e = find(tid, '');
   if (d.status >= 200 && d.status < 300 && !d.res?.error) { if (e) env.rec('B', 'враги', `бой с ${e.name} начат`); return; }
   const code = String(d.res?.error || d.status || ''), now = Date.now();
-  if (!e) return;
   const city = /pvp_target_safe|pvp_attacker_safe|pvp_location_mismatch/.test(code), gone = /pvp_target_dead|offline/.test(code);
   const why = city ? 'в городе / безопасной зоне' : gone ? 'не в игре или уже мёртв' : `игра отказала (${code})`;
+  if (!e) {
+    // 20.54: посторонний в режиме «бить всех» — пауза этого игрока во вкладке (обрыв сети / 5xx — не отказ)
+    if (!allOn() || !tid || d.status == null || d.status >= 500) return;
+    const h = HERO.list.find(x => x.id === tid), nm = h?.name || env.rt.enemyHunt?.name || tid;
+    allSkipSet(keyOf(tid, ''), (city ? 10 : gone ? 5 : 15) * MIN, why);
+    if (env.rt.enemyHunt) await env.setRt({ enemyHunt: null });
+    env.rec('B', 'враги', `напасть на ${nm} не вышло: ${why}`);
+    return;
+  }
   const E = { ...list() }; E[keyOf(e.id, e.name)] = { ...e, skipT: now + (city ? 10 : gone ? 5 : 15) * MIN, skipWhy: why };
   await env.setRt({ enemies: E, enemyHunt: null });
   env.rec('B', 'враги', `напасть на ${e.name} не вышло: ${why}`);
@@ -197,7 +231,7 @@ async function tick() {
   ownCache();
   const T0 = token();
   if (!active(T0)) return;
-  if (env.cfg.enemyHunt === false || scanBusy || !Object.keys(list()).length) return;
+  if (scanBusy || (!allOn() && (env.cfg.enemyHunt === false || !Object.keys(list()).length))) return;
   const every = Math.max(15, +env.cfg.enemyScanS || 30) * 1000;
   if (Date.now() - scanT < every || Date.now() - HERO.t < every) return;   // на карте игра сама опрашивает /game/map/sync раз в 15 с
   if (busy() || /tvt|arena|dungeon|catacomb|city|town|fishing/i.test(location.pathname)) return;
@@ -220,7 +254,7 @@ async function clanRead(T0) {
   if (Date.now() - clanReadT < 5000) return; clanReadT = Date.now();
   const S = await env.pvpSelfRead(); if (!active(T0) || !S?.clanId) return;
   for (const h of HERO.list) {
-    if (h.clanKnown === true || !h.id || !find(h.id, h.name)) continue;
+    if (h.clanKnown === true || !h.id || !foe(h)) continue;
     const c = await env.pvpHeroClan?.(h.id, h.name); if (!active(T0)) return;
     if (c && Object.hasOwn(c, 'clanId')) { h.clanId = c.clanId; h.clanKnown = true; }
   }
@@ -236,11 +270,11 @@ async function step() {
     if (env.shown(res) || env.victory?.()) { await env.setRt({ enemyHunt: null }); env.setStatus('Враги: бой окончен — на карту'); await env.sleep(1500); if (!active(T0)) return false; await env.toMap(); return true; }
     return false;
   }
-  if (env.cfg.enemyHunt === false || !Object.keys(list()).length) return false;
+  if (!allOn() && (env.cfg.enemyHunt === false || !Object.keys(list()).length)) return false;
   // враг из листа напал на нас сейчас — отвечаем кнопкой игры «Атакувати»
   if (Date.now() - INC.t < 20000 && INC.list.length && !busy()) {
     for (const x of INC.list) {
-      const e = find(x.id, x.name), h = HERO.list.find(y => (x.id && y.id === x.id) || low(y.name) === low(x.name));
+      const e = foe(x), h = HERO.list.find(y => (x.id && y.id === x.id) || low(y.name) === low(x.name));
       if (!e || verdict(e, h || {}, null, { incoming: true })) continue;
       const btn = env.$q('#l2-pvp-incoming-attack');
       if (!env.shown(btn) || btn.disabled) break;
@@ -251,7 +285,7 @@ async function step() {
         return id ? id === String(x.id || '') : x === INC.list[0];
       };
       if (!sameTarget()) continue;
-      env.rec('B', 'враги', `${e.name} напал на нас — отвечаю (враг из листа, убивал нас ${e.kills} раз)`);
+      env.rec('B', 'враги', e.stranger ? `${e.name} напал на нас — отвечаю (режим «бить всех»)` : `${e.name} напал на нас — отвечаю (враг из листа, убивал нас ${e.kills} раз)`);
       await env.setRt({ enemyHunt: { id: e.id || x.id, name: e.name, t: Date.now(), via: 'incoming' } });
       if (!active(T0)) return false;
       if (!sameTarget() || !env.shown(btn) || btn.disabled || verdict(e, h || {}, null, { incoming: true }) || busy()) { await env.setRt({ enemyHunt: null }); continue; }
@@ -259,29 +293,36 @@ async function step() {
     }
   }
   if (env.isMap() && Date.now() - HERO.t > 20000) { const dh = domHeroes(); if (dh.length) noteHeroes(dh, HERO.zone); }
-  if (env.pvpSelfRead && !busy() && Date.now() - HERO.t <= 90000 && HERO.list.some(h => find(h.id, h.name))) await clanRead(T0);
+  if (env.pvpSelfRead && !busy() && Date.now() - HERO.t <= 90000 && HERO.list.some(h => foe(h))) await clanRead(T0);
   if (!active(T0)) return false;
   const p = pick(); if (!p || busy()) return false;
   if (env.isBattle()) {                                    // идёт бой с мобом — добиваем, на врага после победы
     if (!env.victory?.()) return false;
-    env.rec('B', 'враги', `враг ${p.e.name} на локации — после победы иду на карту`);
+    env.rec('B', 'враги', `${p.e.stranger ? 'игрок' : 'враг'} ${p.e.name} на локации — после победы иду на карту`);
     await env.toMap(); return true;
   }
   if (!env.isMap()) return false;                          // не на локации (город, магазин…) — обычный путь бота вернёт на карту
   const sel = `#map-hero-list li[data-character-id="${CSS.escape(p.h.id || p.e.id || '')}"] .l2-map-hero-name-link--battle`;
   const btn = (p.h.id || p.e.id) ? await env.waitX(() => { const b = env.$q(sel); return env.shown(b) ? b : null; }, 3000, 150) : null;
-  if (!active(T0) || busy() || verdict(find(p.e.id, p.e.name), p.h)) return false;
+  if (!active(T0) || busy() || verdict(foe(p.h), p.h)) return false;
+  if (!btn && p.e.stranger) { allSkipSet(keyOf(p.h.id, p.h.name), 2 * MIN, 'нет кнопки атаки в списке игроков'); return false; }
   if (!btn) {
     const E = { ...list() }; E[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нет кнопки атаки в списке игроков' };
     await env.setRt({ enemies: E }); return false;
   }
   const lv = p.h.lvl || p.e.lvl;
   env.setStatus(`Враги: нападаю на ${p.e.name}`);
-  env.rec('B', 'враги', `нападаю на ${p.e.name}${lv ? ` (${lv} ур.)` : ''} — убивал нас ${p.e.kills} раз, ответных побед ${p.e.w || 0}, поражений ${p.e.l || 0}`);
+  env.rec('B', 'враги', p.e.stranger ? `нападаю на ${p.e.name}${lv ? ` (${lv} ур.)` : ''} — режим «бить всех»`
+    : `нападаю на ${p.e.name}${lv ? ` (${lv} ур.)` : ''} — убивал нас ${p.e.kills} раз, ответных побед ${p.e.w || 0}, поражений ${p.e.l || 0}`);
   // 10.0 (аудит): кнопка не запустила бой — не жать её каждые 4 с: этот враг 2 мин не выбирается (бой начался — неважно)
-  const E2 = { ...list() }; E2[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нажал «напасть», жду боя' };
-  await env.setRt({ enemyHunt: { id: p.e.id || p.h.id, name: p.e.name, t: Date.now(), via: 'map' }, enemies: E2 });
-  if (!active(T0) || busy() || !env.shown(btn) || btn.disabled || env.cfg.enemyHunt === false || find(p.e.id, p.e.name)?.ignore) return false;
+  if (p.e.stranger) {
+    allSkipSet(keyOf(p.h.id, p.h.name), 2 * MIN, 'нажал «напасть», жду боя');
+    await env.setRt({ enemyHunt: { id: p.h.id, name: p.h.name, t: Date.now(), via: 'map', all: true } });
+  } else {
+    const E2 = { ...list() }; E2[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нажал «напасть», жду боя' };
+    await env.setRt({ enemyHunt: { id: p.e.id || p.h.id, name: p.e.name, t: Date.now(), via: 'map' }, enemies: E2 });
+  }
+  if (!active(T0) || busy() || !env.shown(btn) || btn.disabled || (env.cfg.enemyHunt === false && !allOn()) || find(p.e.id, p.e.name)?.ignore || spared(p.h.name)) return false;
   env.fire(btn);
   await env.sleep(4000);
   return true;
@@ -293,6 +334,6 @@ function brief(e, now = Date.now()) {
     + ` · ответ: побед ${e.w || 0}, поражений ${e.l || 0}${e.hitMax ? ` · удар до ${fmtA(e.hitMax)}` : ''}${e.seenT ? ` · видели ${ago(e.seenT)} назад` : ''}`
     + (e.ignore ? ' · не трогать' : e.blockLvl ? ` · ${e.skipWhy || 'ждёт нового уровня'}` : (e.skipT || 0) > now ? ` · пауза: ${e.skipWhy || ''}` : '');
 }
- return { hitsOf, noteDefeat, noteHeroes, domHeroes, verdict, pick, busy, onNet, onStart, onWin, tick, step, brief, find, _state: { HERO, INC } };
+ return { spared, allOn, hitsOf, noteDefeat, noteHeroes, domHeroes, verdict, pick, busy, onNet, onStart, onWin, tick, step, brief, find, _state: { HERO, INC } };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

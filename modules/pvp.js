@@ -100,6 +100,8 @@ async function seedConfirmed(){
 }
 function verdict(t,h){
  if(!exact(t,h))return 'цель выключена или изменился ID/ник';
+ // 20.54 (John 23.10): ники из «Не трогать» (cfg.pvpSpare, по умолчанию Teddy, tms) не атакуются и явной целью
+ if(new Set(String(env.cfg.pvpSpare??'Teddy, tms').split(/[\s,;]+/).map(low).filter(Boolean)).has(low(h?.name)))return 'в списке «не трогать» (PvP)';
  if(env.cfg.pvpOnSight===false)return 'атака при встрече выключена';
  if(pending())return 'сначала вернуться в город после PvP-смерти';
  const K=skipOf(h?.id);if(K)return K.why||'пауза после отказа';

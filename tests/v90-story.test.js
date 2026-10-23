@@ -97,7 +97,7 @@ const active = (o = {}) => ({ ...RAW_N, part: 1, active: true, subclassLevel: 52
     const c = (read('defaults.js') + '\n' + read('content.js')), b = read('modules/buffs.js'), rd = read('modules/raid.js');
     assert.match(c, /L2V7Modules\.story = L2V7Factories\.story\(/);
     assert.match(c, /story-quests\\\/\(noblesse\|subclass\)/); assert.match(c, /story-quests\\\/\[\\w-\]\+\(\?:\\\/\\w\+\)\?\)\$\/\.test\(path\)\) L2V7Modules\.story\.charNote\(ch\)/, 'own hero only (path-limited)');
-    assert.match(c, /L2V7Modules\.story\.storyTick\(\)[\s\S]{0,200}L2V7Modules\.story\.storyStep\(\)/);
+    assert.match(c, /L2V7Modules\.story\.storyTick\([^)]*\)[\s\S]{0,200}L2V7Modules\.story\.storyStep\([^)]*\)/);
     assert.match(c, /rt\.story\?\.noblesse, open = \[\.\.\.\(rt\.profQuest\?\.open/);
     assert.match(c, /storyTurnIn: true, storyTpMax: 100000/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /storyTurnIn: true, storyTpMax: 100000/);
     assert.match(read('base-profile.json'), /"storyTurnIn":true,"storyTpMax":100000/);

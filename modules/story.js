@@ -12,7 +12,18 @@ const location = env.routeLocation || root.location;
 const Q = {
   noblesse: { root: '/game/story-quests/noblesse', page: '/noblesse-quest.html', act: 'noblesse', name: 'Noblesse', done: 'advance' },
   subclass: { root: '/game/story-quests/subclass', page: '/subclass-quest.html', act: 'subclass', name: 'сабкласс', done: 'complete' },
+  // 20.54 (John 23.10 14:56, лог 20.53 + код страниц игры captain-andrei.js/scout-adrian.js): «Слід Океану Полум'я» — A-плащ Cloak of Goddard
+  // Guardian. Стадии: not_started → (Andrei, Годдард: accept) → collect_supplies → (Adrian, Варка: turn-in-supplies) → kill_ashakiel →
+  // (Adrian: turn-in-cloth) → kill_equal_level_mobs 150 → (Adrian: report-hunt) → return_to_andrei → (Andrei: claim-reward). kb/quest-goddard.md
+  goddard: { root: '/game/story-quests/goddard-ocean-flame', name: 'плащ Goddard' },
 };
+// NPC квеста Goddard: страница, префикс id разметки, телепорт к нему. Страница Adrian пускает только в зоне Варки рядом с ним
+// (quest.location.atScoutAdrian), Andrei — только в городе Годдард (atCaptainAndrei)
+const GD_NPC = {
+  adrian: { page: '/scout-adrian.html', pre: 'scout-adrian', tp: 'varka_silenos_stronghold', name: 'Scout Adrian' },
+  andrei: { page: '/captain-andrei.html', pre: 'captain-andrei', tp: 'goddard', name: 'Captain Andrei' },
+};
+const GD_ACT = { 'turn-in-supplies': 'сдать припасы', 'turn-in-cloth': 'сдать Cloth of Ocean Flame', 'report-hunt': 'доложить об охоте', 'claim-reward': 'забрать плащ' };
 const POLL = 10 * 60000, JOB_MAX = 4 * 60000, RETRY = 30 * 60000;
 // 9.0: всё, что зависит от класса (скиллы и их замеры, кот, дебаффы, EXP/ч зон, вердикты РБ «по силам») — у каждого класса своё.
 // При переключении класса эти ключи памяти уходят в rt.classStash[<старый класс>] и возвращаются из stash нового (или пустые)
@@ -34,6 +45,20 @@ const low = s => String(s || '').trim().toLowerCase();
 // ответ игры → короткая запись rt.story[kind]
 function norm(kind, q) {
   if (!q || typeof q !== 'object') return null;
+  if (kind === 'goddard') {
+    const st = String(q.stage || 'not_started'), a = q.actions || {};
+    const supplies = (Array.isArray(q.supplies) ? q.supplies : []).map(r => ({ id: +r?.itemId || 0, name: String(r?.name || ''), have: +r?.have || 0, need: +r?.need || 0 }));
+    const supOk = supplies.length > 0 && supplies.every(r => r.have >= r.need), cloth = +q.ashakiel?.clothHave || 0;
+    const hunt = { have: +q.hunt?.have || 0, need: +q.hunt?.need || 150 };
+    // готовность считаем сами: кнопки сдачи (actions.can*) игра даёт только рядом с NPC
+    const act = st === 'collect_supplies' && (supOk || a.canTurnInSupplies) ? 'turn-in-supplies' : st === 'kill_ashakiel' && (cloth >= 1 || a.canTurnInCloth) ? 'turn-in-cloth'
+      : st === 'kill_equal_level_mobs' && (hunt.have >= hunt.need || a.canReportHunt) ? 'report-hunt' : st === 'return_to_andrei' ? 'claim-reward' : '';
+    const npc = st === 'return_to_andrei' || st === 'not_started' ? 'andrei' : 'adrian';
+    return { stage: st, active: st !== 'not_started', completed: !!q.completed || st === 'completed', min: +q.minLevel || 70, lvl: +q.effectiveLevel || 0,
+      supplies, cloth, hunt, rb: q.ashakiel?.spawnId ? String(q.ashakiel.spawnId) : '', rbName: String(q.ashakiel?.name || 'Ocean Flame Ashakiel'), rbLvl: +q.ashakiel?.level || 76,
+      act, ready: !!act, canAccept: !!a.canAccept, npcKey: npc, npc: GD_NPC[npc].name, npcTp: GD_NPC[npc].tp,
+      atNpc: npc === 'andrei' ? !!q.location?.atCaptainAndrei : !!q.location?.atScoutAdrian };
+  }
   if (kind === 'noblesse') {
     const tg = (Array.isArray(q.targets) ? q.targets : []).filter(t => t?.name).map(t => ({ name: String(t.name), lvl: +t.level || 0, have: +t.have || 0, need: +t.need || 0, tp: t.teleportId || '' }));
     // 14.10 (полный аудит, noblesse-quest.js): canAdvance включает близость NPC. Готовую часть надо сначала отвезти к нему;
@@ -49,8 +74,19 @@ function norm(kind, q) {
     ready: !!q.actions?.canComplete || ret, canAccept: !!q.actions?.canAccept, atNpc: ret ? !!q.location?.atLadd : !!q.location?.atReorin,
     npc: ret ? q.npc?.ladd?.name || 'Magister Ladd' : q.npc?.reorin?.name || 'Maestro Reorin', npcTp: (ret ? q.npc?.ladd?.teleportId : q.npc?.reorin?.teleportId) || '' };
 }
-const sigOf = s => JSON.stringify([s.part, s.stage, s.completed, s.ready, s.canAccept, s.atNpc, (s.targets || []).map(t => `${t.name}:${t.have}/${t.need}`), (s.bosses || []).map(b => b.id + (b.done ? '+' : ''))]);
-const line = (kind, s) => kind === 'noblesse'
+// Goddard: охота 150 мобов — запись и строка журнала раз в 25 убийств, а не на каждое
+const sigOf = s => JSON.stringify([s.part, s.stage, s.completed, s.ready, s.canAccept, s.atNpc, (s.targets || []).map(t => `${t.name}:${t.have}/${t.need}`), (s.bosses || []).map(b => b.id + (b.done ? '+' : '')),
+  ...(s.hunt ? [s.cloth, (s.supplies || []).map(r => r.have >= r.need ? 1 : 0).join(''), Math.min(s.hunt.need, Math.floor(s.hunt.have / 25) * 25)] : [])]);
+function gdLine(s) {
+  if (s.completed) return 'квест пройден, плащ получен 🧥';
+  if (!s.active) return s.lvl && s.lvl < s.min ? `не взят (нужен ${s.min} ур.)` : `не взят — возьми у Captain Andrei в Годдарде (${s.min}+ ур.)`;
+  if (s.stage === 'collect_supplies') return `припасы: ${s.supplies.map(r => `${r.name} ${r.have}/${r.need}`).join(', ')}${s.ready ? ' — готово, сдать Scout Adrian (Варка)' : ''}`;
+  if (s.stage === 'kill_ashakiel') return s.cloth >= 1 ? 'Cloth of Ocean Flame есть — сдать Scout Adrian (Варка)' : `убить РБ ${s.rbName} ${s.rbLvl} (тур РБ ставит его первым) и принести Cloth of Ocean Flame`;
+  if (s.stage === 'kill_equal_level_mobs') return `охота: мобы не ниже своего уровня ${s.hunt.have}/${s.hunt.need}${s.ready ? ' — готово, доложить Scout Adrian' : ' (Варка 75–78, Годдард 71–78)'}`;
+  if (s.stage === 'return_to_andrei') return 'вернуться к Captain Andrei в Годдард и забрать плащ';
+  return s.stage;
+}
+const line = (kind, s) => kind === 'goddard' ? gdLine(s) : kind === 'noblesse'
   ? (s.completed ? 'квест Noblesse пройден 👑' : !s.active ? `не взят${s.canAccept ? ' (можно взять у Virgil в Rune)' : ''}` : `часть ${s.part}/${s.of}: ${s.targets.map(t => `${t.name} ${t.have}/${t.need}`).join(', ') || 'поговорить с ' + s.npc}${s.ready ? ' — готово, сдать ' + s.npc : ''}`)
   : (s.completed ? 'квест сабкласса пройден — выбери класс в «Персонаж → Сабклассы»' : !s.active ? `не взят${s.canAccept ? ' (можно взять у Maestro Reorin)' : ` (нужен ${s.min || 75} ур.)`}`
     : s.stage === 'hunt_bosses' ? `РБ: ${s.bosses.map(b => `${b.done ? '✓' : '★'} ${b.name} ${b.lvl}`).join(', ')}` : `вернуться к ${s.npc}${s.ready ? ' — готово' : ''}`);
@@ -65,7 +101,18 @@ function rbIds() {
   if (S.subclass?.stage === 'hunt_bosses') for (const b of S.subclass.bosses) if (!b.done) out.add(b.id);
   const names = openNames();
   if (names.length) for (const [id, x] of Object.entries(env.rt.rbList || {})) if (names.includes(low(x.name))) out.add(id);
+  for (const id of rbFirst()) out.add(id);
   return [...out];
+}
+// 20.54: РБ квеста Goddard (Ashakiel) — тур ставит его раньше порядка по уровню, пока ткань не добыта
+function rbFirst() {
+  const g = env.rt.story?.goddard;
+  return env.cfg.goddardQuest !== false && g?.stage === 'kill_ashakiel' && !g.completed && g.cloth < 1 && g.rb ? [g.rb] : [];
+}
+// 20.54: стадия охоты Goddard — 150 мобов не ниже уровня героя: на карте такие идут первыми в своём приоритете (mobfarm.mobValRank)
+function huntUp() {
+  const g = env.rt.story?.goddard;
+  return env.cfg.goddardQuest !== false && g?.stage === 'kill_equal_level_mobs' && !g.completed && g.hunt?.have < g.hunt?.need;
 }
 function qNote(kind, q) {
   if (!Q[kind]) return null;
@@ -229,12 +276,13 @@ async function getJson(path) {
   return { ok: r.ok, status: r.status, j };
 }
 // фоновый опрос (только GET): прогресс обоих квестов раз в 10 мин
-async function storyTick(force) {
+async function storyTick(force, only) {
   const T0 = token();
   if (pollChar !== env.rt.char) { pollChar = env.rt.char; pollT = ssNum(pollKey()); }
   if (!force && Date.now() - pollT < POLL) return;
   pollT = Date.now(); ssSet(pollKey(), pollT);
   for (const kind of Object.keys(Q)) {
+    if (only && kind !== only) continue;
     const S = env.rt.story?.[kind];
     if (!force && S?.completed && Date.now() - (S.t || 0) < 24 * 3600000) continue;   // пройденный — раз в сутки
     // 20.43 (разбор 21.10): сбой сети по-прежнему тихо (повтор через 10 мин), ошибка кода разбора квеста — в журнал
@@ -242,14 +290,15 @@ async function storyTick(force) {
   }
 }
 // ---- сдача готовой части ----
-function want() {
-  if (env.cfg.storyTurnIn === false) return null;
+function want(only) {
   const S = env.rt.story || {}, tried = env.rt.storyTried || {}, now = Date.now();
   for (const kind of Object.keys(Q)) {
+    if (kind === 'goddard' ? env.cfg.goddardQuest === false : env.cfg.storyTurnIn === false || only === 'goddard') continue;
     const s = S[kind];
     if (!s?.ready || s.completed) continue;
     const key = `${kind}:${s.part ?? s.stage}`;
     if (now - (tried[key] || 0) < RETRY) continue;
+    if (kind === 'goddard') return { kind, key: `${key}:${s.act}`, act: s.act, npc: s.npcKey, why: `${GD_ACT[s.act] || s.act} (${s.npc})` };
     return { kind, key, why: line(kind, s) };
   }
   return null;
@@ -323,6 +372,7 @@ async function teleport(J, tp, target, price, allowed) {
   if (!ok && allowed()) env.setStatus('Квест: исход телепорта неизвестен — проверяю NPC, повторная оплата запрещена');
   return ok;
 }
+const offFor = J => J?.kind === 'goddard' ? env.cfg.goddardQuest === false : env.cfg.storyTurnIn === false;
 async function cancel(J) {
   if (!sameJob(J)) return;
   const tried = { ...(env.rt.storyTried || {}) }; delete tried[J.key];
@@ -333,7 +383,8 @@ async function step(J) {
   const T0 = token(), allowed = () => active(T0) && sameJob(J);
   if (!allowed()) return;
   if (paymentPending()) { await paymentReconcile(); return; }
-  if (env.cfg.storyTurnIn === false) return cancel(J);
+  if (offFor(J)) return cancel(J);
+  if (J.kind === 'goddard') return gdStep(J, allowed);
   const P = Q[J.kind];
   if (location.pathname !== P.page) { env.setStatus(`Квест ${P.name}: иду сдавать часть`); location.href = P.page; await env.sleep(4000); return; }
   const box = await env.waitX(() => { const a = env.$q(`#${P.act}-quest-actions`); return a && a.children.length ? a : null; }, 10000, 200);
@@ -361,31 +412,65 @@ async function step(J) {
   if (!withinBudget(price)) return finish(J, false, `телепорт к NPC ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
   await teleport(J, tp, id, price, allowed);
 }
-// шаг в главном цикле. true — занят квестом (цикл идёт на следующий круг)
-async function storyStep() {
+// 20.54: сдача у NPC квеста Goddard. Своих кнопок телепорта у страниц нет: летим обычным перелётом (rt.zoneGo, служба quests — цена и
+// неизвестная оплата под защитой navigation) в Варку / Годдард, свежим GET проверяем «NPC рядом» и жмём кнопку страницы, как игрок
+async function gdStep(J, allowed) {
+  const N = GD_NPC[J.npc];
+  if (!N) return finish(J, false, 'неизвестный NPC');
+  if (location.pathname === N.page) {
+    const box = await env.waitX(() => { const a = env.$q(`#${N.pre}-quest-actions`); return a && a.children.length ? a : null; }, 10000, 200);
+    if (!allowed()) return;
+    if (offFor(J)) return cancel(J);
+    const err = () => (env.$q(`#${N.pre}-err`)?.textContent || '').trim();
+    const btn = () => box?.querySelector(`button[data-action="${J.act}"]`) || null;
+    const b = btn();
+    if (!b || b.disabled) return finish(J, false, err() || `у ${N.name} нет кнопки «${GD_ACT[J.act] || J.act}» — условия ещё не выполнены`);
+    env.fire(b);
+    await env.waitX(() => !btn() || err() || null, 8000, 200);
+    if (!allowed()) return;
+    const e = err();
+    return finish(J, !e && !btn(), e ? `игра отказала: ${e.slice(0, 80)}` : `${GD_ACT[J.act] || J.act}: готово`);
+  }
+  const r = await getJson(Q.goddard.root);
+  if (!allowed()) return;
+  const s = r.ok && r.j?.quest ? qNote('goddard', r.j.quest) : null;
+  if (!s) return finish(J, false, `прогресс квеста не получен (HTTP ${r.status})`);
+  if (s.completed || s.act !== J.act) return finish(J, true, s.completed ? 'квест пройден' : `стадия уже другая: ${gdLine(s)}`);
+  if (s.atNpc) { env.setStatus(`Квест Goddard: к ${N.name}`); location.href = N.page; await env.sleep(4000); return; }
+  if (J.tpT) return finish(J, false, `после перелёта в ${N.tp} ${N.name} не рядом — открой его один раз вручную и пришли лог`);
+  if (env.rt.zoneGo || env.rt.travelCheck) return;
+  env.rec('B', 'квест', `Goddard: лечу к ${N.name} (${N.tp}) — ${GD_ACT[J.act] || J.act}`);
+  await env.setRt({ storyJob: { ...J, tpT: Date.now() }, zoneGo: { id: N.tp, t: Date.now(), why: `квест Goddard: ${N.name}`, svc: 'quests' }, zoneGoT: 0 });
+}
+// шаг в главном цикле. true — занят квестом (цикл идёт на следующий круг). only='goddard' — задача «Квесты» не выбрана, а квест
+// плаща ведётся своим выключателем (cfg.goddardQuest)
+async function storyStep(only) {
   if (paymentPending()) { await paymentReconcile(); return true; }
   if (env.on === false || env.tabOwner === false) return false;
   const J = env.rt.storyJob;
   if (J) {
-    if (env.cfg.storyTurnIn === false) { await cancel(J); return true; }
+    if (only && J.kind !== only) return false;
+    if (offFor(J)) { await cancel(J); return true; }
     if (env.isBattle()) return false;
     if (Date.now() - (J.t || 0) > JOB_MAX) { await finish(J, false, 'не уложился в 4 мин'); return true; }
     await step(J); return true;
   }
-  const w = want();
-  if (!w || !env.awayFree()) return false;
-  const home = !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
+  const w = want(only);
+  // 20.54: в туре РБ отлучиться можно только на простое тура ≥ 3 мин (как за ценой кузнеца, mammon.modeFree priceOnly)
+  if (!w || !(env.awayFree() || w.kind === 'goddard' && env.awayIdle?.())) return false;
+  const raid = env.autonomyMode() === 'raid';
+  const home = !env.fishNow() && env.autonomyMode() !== 'cat' && !raid ? env.rt.zone || null : null;
   // 10.0 (аудит): «стоять там, где оставили» — точка неизвестна (после телепорта к РБ/смерти) или найдена только по мобам (out:…, телепорта туда нет) —
   // бот не вернулся бы; сдаём, когда точка снова определится по карте
   // 10.0: без режима (только задачи) бот стоит, где стоял — точка возврата не нужна
-  if (!env.fishNow() && !['cat', 'tasks'].includes(env.autonomyMode()) && (!home || /^out:/.test(home))) return false;
+  if (!env.fishNow() && !['cat', 'tasks'].includes(env.autonomyMode()) && !(raid && w.kind === 'goddard') && (!home || /^out:/.test(home))) return false;   // 20.54: из тура — без точки, тур сам выберет следующий РБ
   const tried = Object.fromEntries(Object.entries(env.rt.storyTried || {}).filter(([, t]) => Date.now() - t < 86400000));
   await env.setRt({ storyJob: { ...w, home, char: env.rt.char, kick: +env.rt.manualKickAt || 0, t: Date.now() }, storyTried: { ...tried, [w.key]: Date.now() } });
   env.rec('B', 'квест', `${Q[w.kind].name}: иду сдавать — ${w.why}`);
   return true;
 }
 // 10.0 (лог 12.10 12:01: заказ Маммона висел, пока шла цепочка): готовую часть есть смысл сдать — цепочку прерываем после боя
-function chainWant() { const w = want(); if (!w || !env.awayFree(true)) return null; const z = env.rt.zone; return z && !/^out:/.test(z) ? w : null; }
-return { chainWant, Q, CLASS_KEYS, profUp, stashPromote, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line, onNet, paymentReconcile };
+function chainWant(only) { const w = want(only); if (!w || !env.awayFree(true)) return null; const z = env.rt.zone; return z && !/^out:/.test(z) ? w : null; }
+return { chainWant, Q, CLASS_KEYS, profUp, stashPromote, norm, qNote, charNote, classNote, openNames, rbIds, rbFirst, huntUp, gdLine, storyTick, want, finish, tpPrice, step, storyStep, line, onNet, paymentReconcile };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

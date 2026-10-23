@@ -3867,8 +3867,10 @@ async function loopSideJobs() {
   if (await L2V7Modules.craft?.step?.()) { await sleep(200); return true; }
   if (loopStale()) return true;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
   // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
-  if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
-  if (L2EngineCore.taskAllowed(cfg,'quests') && await L2V7Modules.story.storyStep()) { await sleep(200); return true; }
+  // 20.54 (John 23.10): квест плаща Goddard — своим выключателем cfg.goddardQuest (ВКЛ), даже если задача «Квесты» не выбрана
+  { const qOk = L2EngineCore.taskAllowed(cfg,'quests'), gOnly = !qOk && cfg.goddardQuest !== false ? 'goddard' : undefined;
+    if (qOk || gOnly) L2V7Modules.story.storyTick(false, gOnly).catch(e => modErr('квесты (фон)', e));   // 20.43 (разбор 21.10): сбой опроса — в журнал
+    if ((qOk || gOnly) && await L2V7Modules.story.storyStep(gOnly)) { await sleep(200); return true; } }
   if (loopStale()) return true;
   // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
   if (!Array.isArray(cfg.autoTasks) && await L2V7Modules.tvtshop.shopStep()) { await sleep(200); return true; }
@@ -5645,6 +5647,7 @@ addEventListener('message', e => {
     if (['/character','/character/town/buffer','/character/subclasses/switch'].includes(path)) L2V7Modules.buffs?.vipNote?.(d.res.character);
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
+    if (/^\/game\/story-quests\/goddard-ocean-flame(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.story.qNote('goddard', d.res.quest);   // 20.54: квест A-плаща Goddard (карта опрашивает сама)
     if (/^\/game\/story-quests\/starter-saga(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.sagaNote(d.res.quest);   // 10.0.10: сюжетный квест новичка → rt.storySaga (кампания авто)
     if (/^\/game\/story-quests\/dion-campaign(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.dionNote(d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
@@ -6169,7 +6172,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get heroAt(){return heroAt;},   // 20.54: тур РБ видит cityId героя (Ashen) из последнего ответа игры
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
-  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faBalOf() { return (...a) => L2V7Modules.buffs.faBalOf(...a); }, get faCost() { return faCost; }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get storyRbFirst() { return () => L2V7Modules.story.rbFirst(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faBalOf() { return (...a) => L2V7Modules.buffs.faBalOf(...a); }, get faCost() { return faCost; }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
@@ -6401,7 +6404,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get actionWait(){return actionWait}, get r
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get crafterKit(){return L2V7Modules.crafterkit}, get selfHold(){return selfHoldStart}, get selfHoldOn(){return selfHoldOn}, get selfHoldOf(){return selfHoldOf}, get selfHoldText(){return selfHoldText}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
-  get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(L2EngineCore.taskAllowed(cfg,'quests') ? undefined : 'goddard'); }, get storyHuntUp() { return () => !!L2V7Modules.story?.huntUp?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -6750,7 +6753,7 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get routeMode(){return routeMode}, g
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 
 // 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
-L2V7Modules.story = L2V7Factories.story({ get quietErr(){return modErr}, get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+L2V7Modules.story = L2V7Factories.story({ get quietErr(){return modErr}, get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get awayIdle() { return () => L2V7Modules.mammon.modeFree(false, false, true); }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; }, get on() { return on; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 
@@ -7804,6 +7807,13 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   });
   // 20.43 (разбор 21.10): общие флаги 7.2.1 «мобы/чемпионы невосприимчивы к дебаффам» без срока выключали дебаффы на всех таких целях.
   // Теперь иммунитет моба/чемпиона — по виду на сутки (combat: rt.debuffImmune.sp); старые флаги снимаем, РБ (.rb) остаётся
+  // 20.54 (John 23.10: «по ПВП … Убиваем ВСЕХ кроме Teddy и tms»): режим «нападать на всех» (cfg.pvpAll) по умолчанию ВКЛ, а задача
+  // PvP («pvp» в выбранных задачах) включается один раз — без неё ни лист врагов, ни новый режим не работают. Потом — как выберет игрок
+  once('pvpAll2054', () => {
+    cf.enemyHunt = true;
+    const at = C('autoTasks');
+    if (Array.isArray(at) && !at.includes('pvp')) cf.autoTasks = [...at, 'pvp'];
+  });
   once('dbfImm2043', () => {
     const I = rf.debuffImmune || rt.debuffImmune;
     if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
