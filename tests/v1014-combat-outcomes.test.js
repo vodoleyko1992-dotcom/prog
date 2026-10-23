@@ -182,3 +182,9 @@ test('цель второй страницы → настоящий gotoPage/att
  await f.combat.battle();assert.ok(f.events.indexOf('page-2')<f.events.indexOf('target-second'));assert.ok(f.events.indexOf('target-second')<f.events.indexOf('Blaze'));
  assert.equal(env.rt.kills,1);assert.equal(env.rt.loot.Coal,2);assert.equal(f.events.filter(x=>x==='hunt').length,1);
 });
+// 20.54 (лог John 02:56:49): начатый игроком бой с чемпионом неизвестного цвета после ▶ не бросаем; нетронутый — как раньше
+for(const started of [true,false])test(`неизвестный цвет чемпиона: ${started?'начатый бой доводим':'нетронутый — на карту'}`,async()=>{
+ const f=championFixture('');if(started)f.hp.textContent='820 / 1000';
+ f.env.extraKillsInLog=()=>{f.events.push('fight-entered');f.env.on=false;return []};await f.combat.battle();
+ assert.equal(f.events.includes('fight-entered'),started);assert.equal(f.events.includes('map'),!started);
+});

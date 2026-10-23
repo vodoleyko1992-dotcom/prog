@@ -10,9 +10,10 @@ function fixture(o={}) {
  const trance=skill('Battle Trance','battle_trance',{n:'Battle Trance',c:'Расход HP',t:'HP_SELF_COST',target:'SELF',o:'ACTIVE',autoUse:false,mp:0});
  const frenzy=skill('Frenzy','l2_176',{n:'Frenzy',id:176,c:'Бафф',t:'BUFF',target:'SELF',o:'ACTIVE',pc:{hp:30},mp:25});
  const zealot=skill('Zealot','l2_420',{n:'Zealot',id:420,c:'Бафф',t:'BUFF',target:'SELF',o:'ACTIVE',pc:{hp:30},mp:136});
+ const guts=skill('Guts','l2_139',{n:'Guts',id:139,c:'Бафф',t:'BUFF',target:'SELF',o:'ACTIVE',pc:{hp:30},mp:16});
  const heal=skill('Battle Roar','l2_121',{n:'Battle Roar',id:121,c:'Лечение',t:'HEAL_PERCENT',target:'SELF',o:'ACTIVE',mp:25});
  const pot=skill('Велике зілля HP','battle_potion_use',{n:'Велике зілля HP'});pot.kind='предмет';
- slots.splice(0,slots.length,atk,trance,frenzy,zealot,heal,pot);
+ slots.splice(0,slots.length,atk,trance,frenzy,zealot,guts,heal,pot);
  const names=s=>String(s||'').split(/[,|]/).map(x=>x.trim().toLowerCase()).filter(Boolean);
  Object.assign(env.cfg,{destroyerLimits:true,nKeyBuffs:'Frenzy',nBuffs:'',nHeal:'Battle Roar',nPower:'',nUltra:'',nAttack:'Атака',autoRoles:false,chain:false,rbFrenzyDive:false,hpPotAt:50,stopHp:25,rbTurnPrice:false});
  Object.assign(env.rt,{prof:o.prof||'orc_raider',classCur:{prof:o.prof||'orc_raider',slot:1},skillDb:{},rbDb:{},buffAt:{}});
@@ -23,7 +24,7 @@ function fixture(o={}) {
   fire:b=>{
    used.push(b.title);seq++;f.setNet({start:seq,done:seq,okN:seq,ok:true,action:env.slotAction(b),doneT:0});
    if(b===trance){if(o.failedDrop)return false;if(!o.noDrop)cur=Math.floor(max*(o.dropPct??.25));}
-   else if(b===frenzy||b===zealot){active.add(b.title.toLowerCase());mp-=b.meta.mp;}
+   else if(b===frenzy||b===zealot||b===guts){active.add(b.title.toLowerCase());mp-=b.meta.mp;}
    else if(b===heal||b===pot){cur=max;env.on=false;}
    else env.on=false;
    return true;
@@ -33,7 +34,7 @@ function fixture(o={}) {
  let hitsIn=o.hitsIn??[300,350,400,380];env.fightHitsIn=()=>hitsIn;env.champs={isHard:c=>c.lvl>=73&&c.tier!=='blue'};
  if(o.rb)env.rt.rbDb['rb-fixture']={hitP90:100,sp:200};
  if(o.battleRb){env.isBoss=()=>true;env.rbAssess=()=>({retreat:false});env.rt.via='manual';env.rt.target=null;f.location.search='?spawnId=l2dop_rb_fixture';env.rt.rbDb.l2dop_rb_fixture={hitP90:100,sp:200};}
- return {...f,ctx,used,active,cooldown,trance,frenzy,zealot,heal,pot,setHp:n=>cur=n,setMp:n=>mp=n,setHits:h=>hitsIn=h,plan:(mob={cur:o.mobCur??900,max:1000})=>combat.limitPlan(ctx,env.meHp(),env.meMp(),mob)};
+ return {...f,ctx,used,active,cooldown,trance,frenzy,zealot,guts,heal,pot,setHp:n=>cur=n,setMp:n=>mp=n,setHits:h=>hitsIn=h,plan:(mob={cur:o.mobCur??900,max:1000})=>combat.limitPlan(ctx,env.meHp(),env.meMp(),mob)};
 }
 
 test('Raider на обычном мобе: Frenzy не тратим сливом HP',()=>{const f=fixture();assert.equal(f.plan(),null);});
@@ -68,4 +69,17 @@ test('чемпион: свой слив HP не вызывает отход «м
 test('меню и умолчания: limitBig ВКЛ',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),root=path.join(__dirname,'..'),box={};vm.runInNewContext(fs.readFileSync(path.join(root,'defaults.js'),'utf8'),box);
  assert.equal(box.L2Defaults.CFG.limitBig,true);assert.match(fs.readFileSync(path.join(root,'popup.html'),'utf8'),/id="limitBig" type="checkbox"/);assert.match(fs.readFileSync(path.join(root,'popup.js'),'utf8'),/'limitBig'/);
+});
+
+test('Guts: после слива первым, затем Frenzy (лог 02:56 Hatu Weird Bee)',()=>{
+ const f=fixture({rb:true});f.env.cfg.nKeyBuffs='Frenzy, Guts';assert.equal(f.plan()?.b,f.trance);
+ f.setHp(Math.floor(37261*.25));assert.equal(f.plan()?.b,f.guts);f.active.add('guts');assert.equal(f.plan()?.b,f.frenzy);
+});
+test('Guts без готового Frenzy: ради одной защиты HP не сливаем',()=>{
+ const f=fixture({rb:true});f.env.cfg.nKeyBuffs='Frenzy, Guts';f.cooldown.add('l2_176');assert.equal(f.plan(),null);
+ f.setHp(Math.floor(37261*.25));assert.equal(f.plan()?.b,f.guts,'HP уже низкое само — Guts жмём');
+});
+test('красный чемпион бьёт по 542 при HP 5275 (лог 02:55, смерть): не сливаем',()=>{
+ const f=fixture({champ:true,tier:'red',lvl:35,hitsIn:[542,542,542]});f.env.cfg.nKeyBuffs='Frenzy, Guts';
+ f.setHp(5275);f.env.meHp=()=>({cur:5275,max:5275,pct:100});assert.equal(f.plan(),null);
 });
