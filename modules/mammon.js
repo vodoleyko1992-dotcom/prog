@@ -141,12 +141,16 @@ async function mmTick() {
 }
 // ---- снаряжение и цены улучшения ----
 // из ответов игры /character (character.inventory.eq: belt/cloak/tattoo/… — число или {itemId, specialGearLevel})
+const upgradable = id => id >= 910618 && id <= 929999;
 function eqNote(eq) {
   if (!eq || typeof eq !== 'object') return;
   const out = {};
   for (const [slot, v] of Object.entries(eq)) {
     const id = +(v && typeof v === 'object' ? v.itemId : v) || 0;
-    if (id < 910618) continue;                     // улучшаемые вещи — 9106xx/9200xx (mammon-gear.json); прочее не нужно
+    // улучшаемые вещи — 9106xx/9200xx (mammon-gear.json); прочее не нужно. 20.56 (лог John 23.10 04:06–04:10): клановое оружие
+    // (9002282 штормер, 9002284 кастер — 7 знаков) тоже «≥ 910618» и попадало в цели Маммона безымянным «★ #9002284 Lv.0» — его
+    // выбирали вместо Cloak of Goddard Guardian, а кузнец такой вещи не знает («вещи-цели нет у кузнеца в списке»)
+    if (!upgradable(id)) continue;
     const lvl = v && typeof v === 'object' ? +(v.specialGearLevel ?? v.level ?? 0) || 0 : 0;
     out[slot] = [id, lvl];
   }
