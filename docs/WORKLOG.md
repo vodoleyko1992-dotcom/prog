@@ -4,10 +4,10 @@
 
 
 
-## 23.10.2026, 22:41 UTC+10 — Codex — скорость по умолчанию без задержки (PR в подготовке)
+## 23.10.2026, 22:41 UTC+10 — Codex — скорость по умолчанию без задержки ([PR #372](https://github.com/vodoleyko1992-dotcom/prog/pull/372))
 
 - Игрок уточнил default без задержки. Общий DEF/base-profile/runtime fallback теперь0; бегунок0–5с/0,1с, ноль подписан «Без задержки». Свои положительные значения сохраняются, штатная реакция/серверные КД и Stop/context guards остаются. При0 темп не вызывает sleep; включение учитывает последний клик.
-- Новые10 unit и обновлённыеcore/UI PASS; actual Chromium156/MV3 offline: старый профиль без ключа→0, три клика за3,2мс без добавочного ожидания,0save/reload, positive/profile/narrow dock PASS;0POST/ошибок. Полный Node: 630 файлов PASS / 0 FAIL; syntax9/env34/diff PASS. Evidence default-off* в docs/evidence/speed-panel/. Версия/ZIP прежние; осталось завершить публикацию, затем контрольный лог после отдельно запрошенной сборки. Строка ведущего сохранена.
+- Новые10 unit и обновлённыеcore/UI PASS; actual Chromium156/MV3 offline: старый профиль без ключа→0, три клика за3,2мс без добавочного ожидания,0save/reload, positive/profile/narrow dock PASS;0POST/ошибок. Полный Node: 630 файлов PASS / 0 FAIL; syntax9/env34/diff PASS. Evidence default-off* в docs/evidence/speed-panel/. Версия/ZIP прежние; PR #372 опубликован; следующий шаг — контрольный лог после отдельно запрошенной сборки. Строка ведущего сохранена.
 
 ## 23.10.2026, 20:46 UTC+10 — Codex — отдельная панель скорости ([PR #371](https://github.com/vodoleyko1992-dotcom/prog/pull/371))
 
