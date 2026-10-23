@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.54",
-  "description": "L2wap Bot 20.54 — Frenzy и Guts на РБ/эпиках/чемпионах, PvP «бить всех», квест A-плаща, разделы РБ/Эпики, магистр по оружию",
+  "version": "20.55",
+  "description": "L2wap Bot 20.55 — TvT после выбывания, подтверждение городского баффа, Guts/Frenzy на РБ и чемпионах",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.54"
+  "version_name": "20.55"
 }
