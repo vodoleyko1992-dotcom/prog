@@ -471,7 +471,8 @@
   // не откладываем уже помеченную отправку и не держим очередь кликов после Stop.
   function createActionPace({ delay, sleep, clock = Date.now, read = () => 0, write = () => {} }) {
     let last = 0;
-    const gap = () => { const n = Number(delay()); return Number.isFinite(n) ? Math.max(500, Math.min(5000, n)) : 1000; };
+    // 23.10: по просьбе игрока 0 — без дополнительной задержки; выбранную положительную паузу сохраняем.
+    const gap = () => { const n = Number(delay()); return Number.isFinite(n) ? Math.max(0, Math.min(5000, n)) : 0; };
     const previous = () => {
       const now = clock(); let saved = 0;
       try { saved = Number(read()); } catch (_) {}
@@ -479,7 +480,7 @@
       if (last > now) last = 0;
       return Math.max(last, Number.isFinite(saved) && saved > 0 && saved <= now ? saved : 0);
     };
-    const left = () => { const at = previous(); return at > 0 ? Math.max(0, at + gap() - clock()) : 0; };
+    const left = () => { const ms = gap(); if (!ms) return 0; const at = previous(); return at > 0 ? Math.max(0, at + ms - clock()) : 0; };
     function note() { last = clock(); try { write(last); } catch (_) {} }
     async function wait(valid = () => true) {
       while (valid()) {
