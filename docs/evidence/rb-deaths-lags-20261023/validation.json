@@ -21,10 +21,10 @@
   ],
   "checks": {
     "node": {
-      "testFilesPass": 623,
+      "testFilesPass": 624,
       "testFilesFail": 0,
-      "logSha256": "54c589f843fba46101af03b9e460418159347b925fad29d30088b35b7fe06057",
-      "sourceLog": "all-unit-final.log",
+      "logSha256": "d00b580ecf43742d522d6f4fc2aab9461dcaacadf3a5a4ff3a68f99693364169",
+      "sourceLog": "all-unit-merge.log",
       "targeted": {
         "leave": {
           "pass": 133,
@@ -44,11 +44,13 @@
           "baselinePass": 33,
           "baselineFail": 26
         }
-      }
+      },
+      "preIntegrationFilesPass": 623
     },
     "syntax": {
-      "pass": 5,
-      "evidence": "source-checks.json"
+      "pass": 10,
+      "initialOwnChangedFiles": 5,
+      "evidence": "merge-checks.json"
     },
     "envcheck": {
       "pass": 34,
@@ -92,5 +94,14 @@
     "If a matching leave ACK arrives during the already started failed-leave persistence, a conservative per-boss one-hour leaveBadUntil may remain; navigation is vetoed and other concurrent database state is not rolled back.",
     "No full extension browser suite, physical Android or live game/account run. Current installed ZIP does not contain these source-only fixes."
   ],
-  "nextStep": "Archive only on a separate build request; then collect control logs for raid exit and dungeon recovery. Free inventory space before retrying item receipt."
+  "nextStep": "Archive only on a separate build request; then collect control logs for raid exit and dungeon recovery. Free inventory space before retrying item receipt.",
+  "integration": {
+    "base": "ee5ad69",
+    "parallelPr": 368,
+    "scope": "Cat auto-buff/UI/task changes and one new Node test; production content/combat SHA unchanged; both journal entries preserved.",
+    "finalNodeTestFiles": 624,
+    "productionShaUnchanged": true,
+    "result": "PASS",
+    "evidence": "merge-checks.json"
+  }
 }

@@ -1,0 +1,13 @@
+{
+  "atUtc": "2026-10-23T02:41:28.280090+00:00",
+  "result": "PASS",
+  "integratedPr": 368,
+  "integratedBase": "ee5ad69",
+  "nodeTestFilesPass": 624,
+  "nodeTestFilesFail": 0,
+  "logSha256": "d00b580ecf43742d522d6f4fc2aab9461dcaacadf3a5a4ff3a68f99693364169",
+  "syntaxJavaScriptFilesPass": 10,
+  "envcheckModulesPass": 34,
+  "conflictsResolved": "Only top HANDOFF/WORKLOG insertions; both records retained.",
+  "raidRuntimeShaUnchanged": true
+}
