@@ -2,6 +2,12 @@
 
 **Ведущий: Claude (с 23.10.2026, 23:00 UTC+10, John «я вернулся в клод»).** Codex код без прямой просьбы не правит; при возврате («работаем на ГПТ») — сначала этот журнал и открытые PR `claude/*`.
 
+## 24.10.2026, 01:45 UTC+10 — Claude — PvP: отдельный раздел, «бить всех, кроме Teddy и tms»
+
+- John: «по ПВП — выделяем в отдельное меню… Убиваем ВСЕХ кроме Teddy и tms», «сразу как только замечаем». Меню: «TvT и PvP» разделён на «PvP» и «TvT» (новая кнопка в конце, Alt-клавиши прежних разделов не сдвинулись).
+- enemies.js: режим `pvpAll` (ВКЛ) — посторонний игрок на локации цель без записи в лист врагов; отказы/нажатия по нему — пауза в sessionStorage. `pvpSpare` (Teddy, tms) — и в pvp.js. Группа/клан/кнопка игры/занятость прежние. engine-core: pvpAll в группе задачи pvp; once `pvpAll2054` включает задачу PvP.
+- Проверки: новый `tests/v2054-pvp-all.test.js` и `tests/v2054-pvp-all-browser.cjs` PASS; полный Node 634 PASS / 0 FAIL; syntax/envcheck PASS; браузерные v1015-pvp-ui, v1015-pvp-mv3 (в базе падали из-за старых ожиданий, обновлены — теперь PASS, в MV3 видно нажатие на постороннего при pvpAll), v2012-panel, v100-tvtshop PASS. v92-enemies-browser и v2017-sidebar падают и в базе (известный список 49). Живой PvP не проверялся.
+
 ## 24.10.2026, 01:20 UTC+10 — Claude — квест A-плаща Goddard «Слід Океану Полум'я» (лог 00:56)
 
 - Лог John: квест взят у Captain Andrei, стадия `kill_ashakiel`, ответ квеста в логе обрезан на 800 знаках. Полная схема — из кода страниц игры `captain-andrei.js` / `scout-adrian.js` (скачаны без входа) и прежнего `kb/raw/sq-goddard.json`: стадии `collect_supplies → kill_ashakiel → kill_equal_level_mobs (150) → return_to_andrei`, POST `<root>/turn-in-supplies|turn-in-cloth|report-hunt|claim-reward {expectedRevision}`. Факты — `kb/quest-goddard.md`.

@@ -7799,6 +7799,13 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   });
   // 20.43 (разбор 21.10): общие флаги 7.2.1 «мобы/чемпионы невосприимчивы к дебаффам» без срока выключали дебаффы на всех таких целях.
   // Теперь иммунитет моба/чемпиона — по виду на сутки (combat: rt.debuffImmune.sp); старые флаги снимаем, РБ (.rb) остаётся
+  // 20.54 (John 23.10: «по ПВП … Убиваем ВСЕХ кроме Teddy и tms»): режим «нападать на всех» (cfg.pvpAll) по умолчанию ВКЛ, а задача
+  // PvP («pvp» в выбранных задачах) включается один раз — без неё ни лист врагов, ни новый режим не работают. Потом — как выберет игрок
+  once('pvpAll2054', () => {
+    cf.enemyHunt = true;
+    const at = C('autoTasks');
+    if (Array.isArray(at) && !at.includes('pvp')) cf.autoTasks = [...at, 'pvp'];
+  });
   once('dbfImm2043', () => {
     const I = rf.debuffImmune || rt.debuffImmune;
     if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
