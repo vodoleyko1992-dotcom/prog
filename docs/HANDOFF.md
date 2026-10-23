@@ -1,5 +1,9 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 23.10.2026 — инструменты Claude Code (PR в подготовке)
+
+**Решение игрока (23.10):** в репозиторий добавить Task Observer, Claude Code Setup и Headroom; OmniRoute не ставить. Claude-Mem в облачных сессиях не работает — не добавлен. Подробности и проверки — запись WORKLOG 23.10 10:16. **Открыто:** регистрация хука Task Observer в `.claude/settings.json` ждёт подтверждения игрока.
+
 ## 23.10.2026 — Firefox20.51 по прямой просьбе ([PR #362](https://github.com/vodoleyko1992-dotcom/prog/pull/362))
 
 **Готово:** основной FirefoxZIP из234737b с#358/#359/#361, включая последние Detect после ChromeZIP20.51. Версия20.51 сохранена по AGENTS; основной runtime, manifest, профиль, Chrome/Lite и62старыхZIP прежние. Пакет68файлов/1655391байт, SHA256 `6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce`; путь `builds/l2wap-bot-v20.51-firefox.zip`. Clean staging; независимые CRC/allowlist/67sourceSHA/68extractedSHA/109resourceclosure/privacy/64baseline PASS.
