@@ -365,6 +365,9 @@
     if(!allowed(s)){if(s.status==='running')await pause('Остановлено, страница или настройки изменились; продолжение вручную');env.setStatus?.('ЛС: '+(current()?.reason||'Ожидание команды'));return true;}
     if(now()<s.nextAt)return true;
     if(s.attempts>=s.maxAttempts)return await finish(s,'Достигнут лимит попыток');
+    // 23.10: темп ждём до снимка и pending; таймаут отправки начинается только у самого POST.
+    if(env.actionWait&&!await env.actionWait(()=>current()?.id===s.id&&allowed(current())))return true;
+    if(current()?.id!==s.id||!allowed(current()))return true;
     const snap=await snapshot();if(current()?.id!==s.id||!allowed(s))return true;
     if(!snap)return await pause('Не удалось прочитать актуальное оружие и материалы');
     const w=snap.inventory.eq.l1;

@@ -151,7 +151,10 @@ test('исходник: главный цикл, сторож вкладки, с
   // 20.43 (доводка 21.10): передышек может быть несколько — в статусе ожидания все, ближайшая первой
   assert.match(slice(content, 'async function tasksIdle() {', '\n}\n'), /const holds=L2EngineCore\.selfHoldList\(rt\)\.filter\(h=>h\.task\)\.sort\(\(a,b\)=>a\.until-b\.until\);\s+if\(holds\.length\)\{setStatus\(`⏸ \$\{holds\.map\(selfHoldText\)\.join\(' · '\)\}/);
   for (const m of ['mobfarm', 'raid', 'epics', 'actions']) {
-    const factory = content.slice(content.indexOf(`L2V7Modules.${m} = L2V7Factories.${m}({`)).split('\n').slice(0, 2).join('\n');
+    // 23.10.2026: новые зависимости темпа не задают порядок геттеров; проверяем полный binding.
+    const start = content.indexOf(`L2V7Modules.${m} = L2V7Factories.${m}({`), end = content.indexOf('\n});', start);
+    assert.ok(start >= 0 && end > start, `binding ${m}`);
+    const factory = content.slice(start, end);
     assert.match(factory, /get selfHold\(\)\{return selfHoldStart\}/, `геттер selfHold у ${m}`);
   }
 });

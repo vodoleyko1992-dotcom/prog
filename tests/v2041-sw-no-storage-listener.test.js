@@ -203,7 +203,7 @@ test('писатели on:false вне фона зовут badgeSync; «Очис
   const content = read('content.js'), popup = read('popup.js');
   for (const file of ['modules/dungeons.js', 'modules/fishing.js']) assert.match(read(file), /await chrome\.storage\.local\.set\(\{ on: false \}\); env\.badgeSync\?\.\(\);/, file);
   assert.match(content, /const badgeSync = \(\) => \{ try \{ chrome\.runtime\.sendMessage\(\{ cmd: 'badgeSync' \}\)/);
-  for (const m of ['fishing', 'dungeons']) assert.match(content, new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{ get badgeSync\\(\\)\\{return badgeSync\\}`), m);
+  for (const m of ['fishing', 'dungeons']) assert.match(content, new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{[^\\n]*?get badgeSync\\(\\)\\{return badgeSync\\}`), m);
   assert.match(popup, /on: false, stopMeta: \{ source: 'memory-import'[^\n]*\n\s*try \{ chrome\.runtime\.sendMessage\(\{ cmd: 'badgeSync' \}\)/);
   assert.match(popup, /snapbytes: 0, exLogKey: null, exSnapT: 0 \}\); load\(\); \};/);
   for (const [file, src] of [['background.js', bgSrc], ['popup.js', popup]]) assert.doesNotMatch(src, /snapBytesReset/, file);

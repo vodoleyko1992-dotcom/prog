@@ -10,7 +10,7 @@ const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
 // 22.10: выделенный раздел крафта добавлен после охоты.
-const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub'];
+const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
 // 20.25: снятая автозаточка остаётся скрытым контейнером, доступных вкладок на одну меньше.

@@ -321,7 +321,10 @@ async function tvtFight() {
   if (!env.rt.tvtIn) { await env.setRt({ tvtIn: tvtState()?.id || 1 }); env.rec('B', 'TvT', 'на арене — жду старт'); }
   let lastPot = 0, lastMpPot = 0, lastTgt = 0, lastTgtId = '', lastBack = 0, lastPet = 0, lastMpNote = 0;
   const t0 = Date.now();
-  while (fighting() && isArena() && Date.now() - t0 < 12 * 60000) {
+  const canFight = () => fighting() && isArena() && Date.now() - t0 < 12 * 60000;
+  while (canFight()) {
+    // 23.10: после паузы выбираем цель и лечение по свежему состоянию, до любых sent/таймеров.
+    if (env.actionWait && !await env.actionWait(canFight) || !canFight()) return false;
     const S = tvtState() || {};
     if (S.eliminated) return tvtLeave('выбыл из боя');
     if (!/ACTIVE/i.test(S.phase) && !(S.start && tvtNow() >= S.start)) {   // подготовка: ждём, отмечаемся (страница сама шлёт presence)
@@ -394,9 +397,13 @@ async function tvtFight() {
     if (env.TVTC?.actErr && Date.now() - env.TVTC.actErr.t < 1500) await env.sleep(300);   // сервер отказал (откат/MP) — не долбим
     if (!fighting()) return false;
     // 10.0.11: «Атака питомца» — у Warlock кот основной урон, на арене он бьёт только по своей кнопке (#tvt-summon-attack-btn)
-    const petBtn = env.$q('#tvt-summon-attack-btn');
-    if (env.cfg.tvtPet !== false && env.shown(petBtn) && !petBtn.disabled && env.TVTC?.selfSummon?.alive !== false && Date.now() - lastPet > 1500) {
-      lastPet = Date.now(); env.fire(petBtn); await env.sleep(env.rnd(120, 200));
+    const petReady = () => { const b = env.$q('#tvt-summon-attack-btn'); return env.cfg.tvtPet !== false && env.shown(b) && !b.disabled && env.TVTC?.selfSummon?.alive !== false && Date.now() - lastPet > 1500; };
+    if (petReady()) {
+      if (env.actionWait && !await env.actionWait(canFight) || !canFight()) return false;
+      const state = tvtState() || {}, target = env.TVTC?.selectedTarget;
+      if (state.eliminated || /RESULT|FINISH|ENDED|IDLE|CANCEL/i.test(state.phase) || env.shown(env.$q('#tvt-result-section')) || env.shown(env.$q('#tvt-self-dead')) || target?.alive === false || target?.hp === 0) continue;
+      // За ожидание игра могла заменить кнопку, убрать кота или завершить бой.
+      if (petReady()) { lastPet = Date.now(); env.fire(env.$q('#tvt-summon-attack-btn')); await env.sleep(env.rnd(120, 200)); }
     }
   }
   // Stop, потеря вкладки, смена страницы и предел одного вызова — не серверный итог события.

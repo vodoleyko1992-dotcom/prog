@@ -467,6 +467,31 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
+  // 23.10.2026: темп бота задаётся отдельно от серверных КД. Ждём до подготовки действия,
+  // не откладываем уже помеченную отправку и не держим очередь кликов после Stop.
+  function createActionPace({ delay, sleep, clock = Date.now, read = () => 0, write = () => {} }) {
+    let last = 0;
+    const gap = () => { const n = Number(delay()); return Number.isFinite(n) ? Math.max(500, Math.min(5000, n)) : 1000; };
+    const previous = () => {
+      const now = clock(); let saved = 0;
+      try { saved = Number(read()); } catch (_) {}
+      // Часы могли перевести назад: будущая отметка не создаёт вечного ожидания.
+      if (last > now) last = 0;
+      return Math.max(last, Number.isFinite(saved) && saved > 0 && saved <= now ? saved : 0);
+    };
+    const left = () => { const at = previous(); return at > 0 ? Math.max(0, at + gap() - clock()) : 0; };
+    function note() { last = clock(); try { write(last); } catch (_) {} }
+    async function wait(valid = () => true) {
+      while (valid()) {
+        const ms = left(); if (!ms) return valid();
+        // Короткие части позволяют Stop, смене героя и новому значению бегунка прервать ожидание.
+        await sleep(Math.min(100, ms));
+      }
+      return false;
+    }
+    return { wait, note, left, gap };
+  }
+
   // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
   // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
@@ -474,6 +499,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

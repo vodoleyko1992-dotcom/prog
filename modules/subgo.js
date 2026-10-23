@@ -175,8 +175,11 @@
   async function hero() { const R = await getJ('/character'), ch = R.j?.character; return ch && (!env.rt.char || ch.name === env.rt.char) && Number.isSafeInteger(ch.revision) ? ch : null; }
   // POST с expectedRevision: 409 — revision ушла (игрок или страница тоже действуют), берём serverRevision и повторяем
   async function post409(path, mk, rev) {
+   const J = job(), who = env.rt.char, valid = () => sameJob(J) && env.rt.char === who && !env.isBattle?.() && env.canAct?.() !== false;
    let R = null;
    for (let i = 0; i < 4; i++) {
+    // 23.10 (бегунок скорости): комплект и 409-повторы тоже идут с общей паузой; отменённый шаг не отправляем.
+    if (env.actionWait && !await env.actionWait(valid) || !valid()) throw Error('action_cancelled');
     R = await postJ(path, mk(rev));
     if (R.status !== 409) return R;
     rev = Number.isSafeInteger(R.j?.serverRevision) ? R.j.serverRevision : (await hero())?.revision;
@@ -228,7 +231,7 @@
     for (const op of ops) {
      if (!sameJob(J) || env.isBattle?.()) return true;
      env.setStatus(`Сабкласс: ${op.op === 'equip' ? 'надеваю ' + op.it.name : 'снимаю ' + (SLOT_RU[op.slot] || op.slot)}`);
-     let R; try { R = await post409('/character/equip', r => body(op, r), rev); } catch (e) { R = { status: 0, j: { error: String(e?.message || e) } }; }
+     let R; try { R = await post409('/character/equip', r => body(op, r), rev); } catch (e) { if (e?.message === 'action_cancelled') return true; R = { status: 0, j: { error: String(e?.message || e) } }; }
      const c = R?.j?.character;
      if (c && Number.isSafeInteger(c.revision)) { rev = c.revision; cur = c; }
      if (R?.ok) { if (op.op === 'equip') done.push(op.it.name); }
@@ -290,6 +293,7 @@
     env.rec('B', 'саб', `класс: ${profRu(nc.l2Profession)} ${nc.level} (слот ${slot}) — баффы и слуга сняты игрой, одеваю лучшее`);
     return await gear(J, nc);
    } catch (e) {
+    if (e?.message === 'action_cancelled') return true;
     if (sameJob(J)) env.setStatus(`Сабкласс: ${String(e?.message || e).slice(0, 80)} — повторю`);
     await env.sleep(2000); return true;
    } finally { busy = false; }

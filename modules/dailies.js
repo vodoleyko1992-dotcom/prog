@@ -79,6 +79,8 @@ async function clanStep() {
   const F = env.rt.clanTaskFail; if (F && Date.now() - (F.t || 0) < FAIL_WAIT) return false;
   const char = env.rt.char, kick = +env.rt.manualKickAt || 0;
   const active = () => canRun() && env.rt.char === char && (+env.rt.manualKickAt || 0) === kick && env.cfg.clanTasks !== false;
+  if (!clanPlan()) return false;
+  if (env.actionWait && !await env.actionWait(active) || !active() || Date.now() - postT < POST_GAP) return false;
   const p = clanPlan(); if (!p) return false;
   postT = Date.now();
   const path = p.kind === 'take' ? `/game/clan-tasks/${encodeURIComponent(p.def.id)}/take` : `/game/clan-tasks/${encodeURIComponent(p.task.id)}/${p.kind}`;

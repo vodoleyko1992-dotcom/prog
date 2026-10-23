@@ -173,6 +173,8 @@ async function petPrepare(o = {}) {
   const waited=(kind,on)=>{const k=[who,key,settings,kind].join('|'),now=Date.now();let w=raidWaitSince.get(k);if(!on){raidWaitSince.delete(k);return null;}
     if(!w||now-w.last>30000)raidWaitSince.set(k,w={at:now,last:now,said:false});w.last=now;return now-w.at>=RAID_CONFIRM_MS?w:null;};
   try {
+    if (!env.rt[jobKey]?.pending && env.actionWait && !await env.actionWait(valid)) return true;
+    if (!valid()) return true;
     const data=await read('/character'),ch=data.character||data;
     if(!valid())return true;
     if(ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return failLater();
@@ -466,6 +468,9 @@ async function step({ afterWin = false, forceRead = false } = {}) {
   if (afterWin && !forceRead && !state().pending && gateHolds(T)) return false;   // 20.43: после победы — не чаще раза в 60 с без перемен
   busy = true; quiet = afterWin && !forceRead;
   try {
+    // 23.10: после победы тоже ждём общий темп до свежего снимка, не задерживая сверку неизвестной оплаты.
+    if (!state().pending && env.actionWait && !await env.actionWait(() => same(T, afterWin))) return false;
+    if (!same(T, afterWin)) return false;
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
     if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord, Dark Avenger / Hell Knight или Warsmith / Maestro', { nextCheckAt: Date.now() + 15000 }); return false; }

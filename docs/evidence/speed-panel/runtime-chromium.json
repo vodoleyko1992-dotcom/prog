@@ -1,0 +1,27 @@
+{
+  "browser": "Chromium",
+  "cases": [
+    {
+      "name": "real fire timing 500ms",
+      "intervals": [
+        500,
+        501
+      ]
+    },
+    {
+      "name": "updated setting 1700ms",
+      "interval": 1699
+    },
+    {
+      "name": "page reload retains timestamp",
+      "stored": true
+    },
+    {
+      "name": "Stop cancels waiting action; no late click",
+      "pass": true
+    }
+  ],
+  "requests": [],
+  "errors": [],
+  "posts": 0
+}

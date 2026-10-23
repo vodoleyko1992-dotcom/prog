@@ -17,7 +17,9 @@ function fixture({active=false,target=false,legacy=false,done=true}={}){
  fishPrepare:async()=>{calls.prepare++;return true},fSlot:()=>({}),fOk:()=>true,fishWatch(){},fishLog:()=>[],curBait:()=> 'basic',castRequestArm(){},
  Date,Math,console};env.qty=()=>10;env.fire=()=>{calls.cast++;env.on=false;return false};env.payments={blocked:()=>false};
  const section=src.slice(src.indexOf('async function fishing()'),src.indexOf('// 10.0.13 (аудит 14.10): у рыболовной'));
- const run=vm.runInNewContext('('+section+')',ctx);return {env,F,calls,run};
+ // 23.10.2026: новый шов темпа проверяем настоящими helper/continuation, а не успешной заглушкой.
+ const helpers=src.slice(src.indexOf('function fishContinuation()'),src.indexOf('async function fishSoft('));
+ const run=vm.runInNewContext(helpers+'\n('+section+')',ctx);return {env,F,calls,run};
 }
 for(const legacy of [false,true])test('выполненная цель блокирует обслуживание и новый заброс; legacy='+legacy,async()=>{
  const f=fixture({legacy});await f.run();assert.equal(f.calls.cast,0);assert.equal(f.calls.setup,0);assert.equal(f.calls.time,0);assert.equal(f.calls.halt,0);assert.equal(f.env.rt.fishTgt.doneT,123);assert.equal(f.env.rt.fishService,undefined);
@@ -52,4 +54,10 @@ test('цель выполнена пока сохранялось намерен
 });
 test('невыполненная цель допускает штатный заброс',async()=>{
  const f=fixture({done:false});f.env.rt.fishTgt.got=99;await f.run();assert.equal(f.calls.cast,1);assert.equal(f.env.rt.fishTgt.done,false);
+});
+
+test('цель выполнена во время общей паузы — новый заброс запрещён',async()=>{
+ const f=fixture({done:false});f.env.rt.fishTgt.got=99;let waited=0;
+ f.env.actionWait=async valid=>{waited++;assert.equal(valid(),true);f.env.rt.fishTgt.done=true;return true};
+ await f.run();assert.equal(waited,1);assert.equal(f.calls.cast,0);assert.equal(f.env.rt.fishCastPending,undefined);
 });

@@ -1,4 +1,5 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 20.12 (ревизия 17.10, аудит PAY-1/H1/M5): неизвестная оплата блокирует только платные шаги; бесплатная работа на месте
 // (бой и цепочка, фарм точки, рыбалка из сумки) идёт; сторож прогресса считает такую паузу честным ожиданием.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
@@ -51,7 +52,7 @@ test('бесплатный шаг: перелёты, автофарм зон, з
  {const f=freeStep();assert.equal(await f.box.paymentFreeStep({kind:'enchant',at:0}),false)}
 });
 function fireBox(page){
- const box={on:true,tabOwner:true,location:{pathname:page},PointerEvent:class{},MouseEvent:class{},window:{},
+ const box={actionNote(){},on:true,tabOwner:true,location:{pathname:page},PointerEvent:class{},MouseEvent:class{},window:{},
   L2V7Modules:{actions:{canAct:()=>true},payments:{blocked:()=>true,consumePermit:()=>false},pvp:{pending:()=>false}},
   isBattle:()=>false,isMap:()=>page==='/map.html',isFishing:()=>page==='/fishing.html',abHold:()=>false,invBusy:false,running:false,rt:{},$q:()=>null};
  vm.runInNewContext(cut('const PAY_FREE_MAP','// Single-writer settings update'),box);return box;

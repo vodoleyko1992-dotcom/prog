@@ -1,10 +1,11 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // LS hold выпускает только один проверенный запрос материалов, не общий доступ к магазину.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync(__dirname+'/../content.js','utf8'),code=src.slice(src.indexOf('async function gamePost('),src.indexOf('async function gameGet('));
 function fixture(){
  const calls=[],permits=[],expected={id:'purchase:1',path:'/game/mammon/merchant/buy',body:{category:'life_stones',itemKey:'s',qty:1,expectedRevision:10}};let used=false;
- const box={AbortController,setTimeout,clearTimeout,on:true,tabOwner:true,rt:{autoLs:{hold:true,pending:{kind:'supply'}}},gameAuth:()=>({}),
+ const box={actionNote(){},AbortController,setTimeout,clearTimeout,on:true,tabOwner:true,rt:{autoLs:{hold:true,pending:{kind:'supply'}}},gameAuth:()=>({}),
   L2V7Modules:{lifestone:{consumePermit:()=>false,consumeSupplyPermit:(id,path,body)=>{permits.push({id,path,body});if(used||id!==expected.id||path!==expected.path||JSON.stringify(body)!==JSON.stringify(expected.body))return false;used=true;return true}},pvp:{pending:()=>false},actions:{canAct:()=>true},payments:{blocked:()=>false}},
   fetch:async(path,options)=>{calls.push({path,options});return {ok:true,status:200}}};
  vm.createContext(box);vm.runInContext(code+';globalThis.post=gamePost',box);

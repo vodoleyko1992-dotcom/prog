@@ -269,7 +269,7 @@ async function activateMode(rtPatch, cfgPatch) {
 }
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax', 'craftMpKeep',
-              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
+              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed', 'actionDelayMs'];
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
@@ -278,6 +278,13 @@ const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlor
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
 const fmt = n => (n || 0).toLocaleString('ru');
+function paintActionDelay() {
+  const input = $('actionDelayMs'), output = $('actionDelayValue');
+  if (!input || !output) return;
+  const seconds = (+input.value / 1000).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' с';
+  output.textContent = seconds;
+  input.setAttribute('aria-valuetext', seconds);
+}
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
 function confirmClick(id, fn) {
@@ -335,6 +342,7 @@ async function load() {
     BOOL.forEach(k => $(k).checked = !!visible[k]);
     formChar = rt.char || '';
   }
+  paintActionDelay();
   recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
   const ver = chrome.runtime.getManifest().version, hl = healthLine(rt, wdog).trim(), S = sessInfo(rt);
@@ -1430,6 +1438,7 @@ async function saveFields(e) {
   if (n.champHpMult < 1.1) n.champHpMult = 1.1;
   if (n.buffSec < 10) n.buffSec = 10;
   if (n.reactMin < 80) n.reactMin = 80;
+  if (n.actionDelayMs != null) n.actionDelayMs = Math.round(Math.min(5000, Math.max(500, n.actionDelayMs)) / 100) * 100;
   if (n.campaignEvery < 5) n.campaignEvery = 5;
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
@@ -2155,6 +2164,7 @@ for(const key of rangeLimitKeys) {
 
 // 20.12 (ревизия 17.10, UI-1): общий обработчик — только у полей настроек (NUM/TXT/BOOL). Галки задач, поиск по ресурсам и прочие
 // служебные поля сохраняют себя сами; раньше их change вызывал save() без id и отправлял всю устаревшую форму.
+$('actionDelayMs').addEventListener('input', paintActionDelay);
 document.querySelectorAll('input,textarea,select').forEach(el => { if (el.id && (NUM.includes(el.id) || TXT.includes(el.id) || BOOL.includes(el.id)) && !['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', e => { void save(e).catch(() => {}); }); });
 
 $('check').onclick = async () => {

@@ -1,4 +1,5 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 14.10: память вкладки и подтверждённое хранилище разделены. Crash теряет sent, уже отправленный POST остаётся у сервера.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),test=require('node:test'),assert=require('node:assert/strict');
 const content=fs.readFileSync(process.env.L2_MAGISTER_CONTENT||path.join(__dirname,'../content.js'),'utf8');
@@ -20,7 +21,7 @@ function crashFixture({max=1}={}){
   q.resolve(q.response);return q.response;
  }
  function page(){
-  const id=++nextPage,ctx={console,URLSearchParams,Date:{now:()=>now},on:true,tabOwner:true,cfg:{autoMagister:true},rt:clone(disk),
+  const id=++nextPage,ctx={actionWait:async()=>true,console,URLSearchParams,Date:{now:()=>now},on:true,tabOwner:true,cfg:{autoMagister:true},rt:clone(disk),
    location:{pathname:'/magister.html',search:'?npcId=30344',href:''},heroNick:()=>ctx.rt.char,heroLevel:()=>75,
    autonomyMode:()=> 'auto',fishNow:()=>false,isBattle:()=>false,victory:()=>false,abHold:()=>false,antibotState:()=>null,
    names:s=>String(s).toLowerCase().split(',').map(x=>x.trim()),ilOf:()=>({}),petState:()=>null,rec(){},setStatus(){},

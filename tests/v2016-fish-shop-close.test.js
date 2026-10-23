@@ -1,4 +1,5 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 18.10 (скрин игрока 12:08, «не закрывает меню после докупки»): после покупки зарядов оплата ждёт сверки, общий запрет
 // кликов при неизвестной оплате глотал «Закрыть» магазина рыбака. Закрытие окна разрешено, прочие кнопки — по-прежнему нет.
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -7,7 +8,7 @@ const slice = (s, a, b) => { const i = s.indexOf(a), j = s.indexOf(b, i); assert
 class Ev { constructor(type) { this.type = type; } }
 const mk = (sel, text) => ({ textContent: text, value: '', events: [], closest: () => null, matches: s => s.split(',').map(x => x.trim()).includes(sel),
   scrollIntoView() {}, getBoundingClientRect: () => ({ left: 0, top: 0, width: 10, height: 10 }), dispatchEvent(e) { this.events.push(e.type); } });
-const c = { on: true, tabOwner: true, running: true, invBusy: false, rt: {}, window: {}, location: { pathname: '/fishing.html' }, PointerEvent: Ev, MouseEvent: Ev,
+const c = { actionNote() {}, on: true, tabOwner: true, running: true, invBusy: false, rt: {}, window: {}, location: { pathname: '/fishing.html' }, PointerEvent: Ev, MouseEvent: Ev,
   L2V7Modules: { payments: { blocked: () => true, consumePermit: () => false }, pvp: { pending: () => false }, actions: { canAct: () => true } },
   isBattle: () => false, isMap: () => false, isFishing: () => true, $q: () => null, abHold: () => false, loginPage: () => false };
 vm.createContext(c);

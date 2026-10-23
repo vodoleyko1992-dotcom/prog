@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-23T10:45:37Z",
+  "node": {
+    "filesPassed": 629,
+    "failed": 0,
+    "newScenarios": 60,
+    "extraFishingGoalRegression": 1
+  },
+  "syntax": {
+    "files": 39,
+    "result": "PASS"
+  },
+  "envcheck": {
+    "factories": 34,
+    "result": "PASS"
+  },
+  "diff": "PASS",
+  "browser": [
+    "ui-chromium.json",
+    "runtime-chromium.json"
+  ],
+  "review": "No remaining blockers after abHold fix",
+  "network": "All browser game responses local; no live gameplay",
+  "scope": "Paces main automation steps and combat/fishing loops; readonly polling and some local UI opening clicks are not a universal request rate limit",
+  "version": "20.51 unchanged",
+  "build": "Not requested for speed feature; no ZIP created"
+}

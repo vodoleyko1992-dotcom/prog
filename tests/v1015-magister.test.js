@@ -1,11 +1,12 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 const fs=require('fs'),vm=require('vm'),test=require('node:test'),assert=require('node:assert/strict');
 const content=fs.readFileSync(require('path').join(__dirname,'../content.js'),'utf8');
 const start=content.indexOf('const MAG_SKIP_DEF ='),end=content.indexOf('// ---------- выбило из игры:',start);
 const source=content.slice(start,end);
 function fixture(o={}){
  let now=1000000,revision=10,rank=o.rank??0,sp=o.sp??1000,calls=[],gets=[],readN=0;
- const ctx={console,URLSearchParams,Date:{now:()=>now},location:{pathname:o.path||'/magister.html',search:'?npcId=30344',href:''},
+ const ctx={actionWait:async()=>true,console,URLSearchParams,Date:{now:()=>now},location:{pathname:o.path||'/magister.html',search:'?npcId=30344',href:''},
  on:true,tabOwner:true,cfg:{autoMagister:true,...o.cfg},rt:{char:'hero',lvl:75,classCur:{prof:'human_warlock',slot:0},zone:'valley',panel:[{name:'Blaze'}],skills:{blaze:{dmgN:2}},magEnabled:true,...o.rt},
  heroNick:()=>ctx.rt.char,heroLevel:()=>ctx.rt.lvl,autonomyMode:()=>ctx.cfg.catMode?'cat':ctx.cfg.fishMode?'fish':'auto',isBattle:()=>ctx.location.pathname==='/battle.html',victory:()=>o.win!==false,
  abHold:()=>!!ctx.rt.abChal,antibotState:()=>ctx.rt.abChal?'check':ctx.rt.pveBlockUntil?'blocked':null,fishNow:()=>!!ctx.cfg.fishMode,names:s=>String(s).split(',').map(x=>x.trim().toLowerCase()),ilOf:()=>({c:'Маг. атака'}),petState:()=>null,rec(){},setStatus(){},rtCommit:async()=>true,
