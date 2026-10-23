@@ -18,7 +18,9 @@ function fixture(saved){
   combatCooldown:{skillKnown:()=>false,skillWait:()=>wait,globalWait:()=>global},cdSpawn:()=> 'dense_1',battleSpawn:()=> 'dense_1',
   activeBuffs:()=>buffs,noEffect:()=>false,meMp:()=>({cur:759,max:759}),skillMp:()=>18,
   setRt:async p=>{Object.assign(env.rt,p);return {ok:true}},rec:()=>{},actNet:()=>({start:net})};
- vm.runInContext(combat.replace('return { limitPlan,','return { managedTogglePlan, limitPlan,'),box);
+ // 20.51: сохраняем новые helpers перед limitPlan, добавляя только приватный seam плана тоггла.
+ const exports=combat.match(/^ return \{ [^\n]*\blimitPlan,/m)?.[0];assert.ok(exports,'combat export seam exists');
+ vm.runInContext(combat.replace(exports,exports.replace('limitPlan,','managedTogglePlan, limitPlan,')),box);
  const C=box.L2V7Factories.combat(env),ctx={block:{},seq:[]};env.slotsBy=C.slotsBy;
  const snap=(patch={})=>({name:'Hero',l2Profession:'human_warlord',revision:100,classSlots:{activeSlot:3},snapshotGeneratedAt:now,requestStartedAt:now,
   toggleStances:[{skillId:317,battleId:'l2_317',active:false},{skillId:312,battleId:'l2_312',active:false}],activeBuffs:[],inventory:{eq:{l1:{itemId:299}}},...patch});

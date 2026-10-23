@@ -61,7 +61,11 @@ test('конец боя, смерть, PvP и полные ответы не т�
 
 test('combat.act ставит метку только для удара и при включённом cfg.fastTurn; выключатель в «Бой»', () => {
   const combat = read('modules/combat.js');
-  assert.match(combat, /fastMark\(b, exact\);\n\s+if \(!env\.fire\(b\)\)/);
+  // 20.51: между меткой fastTurn и native-кликом есть guards/try-finally отдельного Detect.
+  const actStart = combat.indexOf('  const act = async '), actEnd = combat.indexOf('  const t0 = Date.now();\n  let progSig', actStart);
+  assert.ok(actStart >= 0 && actEnd > actStart, 'настоящий combat.act найден');
+  const act = combat.slice(actStart, actEnd), mark = act.indexOf('fastMark(b, exact);'), fire = act.indexOf('env.fire(b)');
+  assert.ok(mark >= 0 && fire > mark, 'combat.act ставит fastTurn-метку перед native-кликом');
   assert.match(combat, /env\.cfg\.fastTurn !== false && fastHit\(b, exact\)/);
   const src = combat.slice(combat.indexOf('const FAST_T'), combat.indexOf('const fastMark'));
   const fastHit = vm.runInNewContext(src + '\nfastHit;', { env: { ilOf: b => b.il }, healSlot: b => !!b.heal });

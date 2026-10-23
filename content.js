@@ -904,7 +904,7 @@ const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_
   // 20.48 (живой GET /character 22.10): локализованная поддержка Warlord — лечение/бафф, не прямые удары.
   battle_roar: 121, lionheart: 287,
   // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
-  focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104, detect_monster_weakness: 80,
+  focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104, detect_monster_weakness: 80, detect_dragon_weakness: 88,
   howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286 };
 IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
@@ -942,7 +942,7 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
   317: { o: 'TOGGLE', autoUse: false, managedToggle: true, dur: 0, reuse: 12000, L: 'L2WAP: Focus Attack · переключатель · выбранный постоянный эффект Warlord с пикой держим включённым · +2 точности и +10% силы крита по подсказке · поддержание ≈0.4 MP/с, разовая цена отдельно не измерена' },
   286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · отдельная связка с массовым ударом' },
-  75: { autoUse: false, managedDetect: true }, 80: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
+  75: { autoUse: false, managedDetect: true }, 80: { autoUse: false, managedDetect: true }, 88: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
   // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
@@ -5222,7 +5222,10 @@ async function invRefresh(active = () => true, ms = 6000, diagnostic = null) {
     INV_READY = invContext();
     phase='обновление служб';
     // 23.10 (лог00:25, Detect20.50): свой preflight проходит после аренды, даже когда стартовый GET страницы был до неё.
-    if (canConfirm() && current()) L2V7Modules.buffs?.detectOutsideSnapshot?.(c,at,'inventory');
+    if (canConfirm() && current()) {
+      L2V7Modules.buffs?.detectOutsideSnapshot?.(c,at,'inventory');
+      L2V7Modules.combat?.noteMonsterSnapshot?.({...c,requestStartedAt:at,monsterBuffs:Array.isArray(c.activeBuffs)?c.activeBuffs.filter(x=>[80,88].includes(+x?.skillId)):null});
+    }
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
     if(!current())return null;
@@ -5330,7 +5333,7 @@ function netContextStart(d) {
   if(d.rid==null)return;
   // 20.43 (ревью au/travel): метка своего телепорта (nativeNonce) — только первые 30 с после клика бота (navigation.nativeNonce):
   // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
-  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now()});
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now(),monsterToken:L2V7Modules.combat?.monsterRequestToken?.(d)||''});
   if (d.path === '/game/battle/action' && d.method === 'POST') L2V7Modules.combat?.noteToggleBattle?.(d,Date.now());
   if (d.path === '/character/skills/cast' && d.method === 'POST') L2V7Modules.buffs?.detectOutsideRequest?.(d,Date.now())?.catch?.(e=>quietErr('Detect request',e));
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
@@ -5471,6 +5474,7 @@ addEventListener('message', e => {
   d.paymentId=netContext.paymentId||'';
   d.retryOf=netContext.retryOf||0;
   if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
+  if(d.monster&&netContext.at){d.monster.requestStartedAt=netContext.at;d.monster.requestRid=d.rid;}
   if (path === '/character/skills/cast' || path === '/character' && on && tabOwner && netContext.lease && netContext.lease===leaseEpoch) L2V7Modules.buffs?.detectOutsideNote?.(path,d,netContext.at)?.catch?.(e=>quietErr('Detect ACK',e));
   // 20.12 (ревизия 17.10): счётчик убийств для лимита мобов — из ответов самой игры; конец боя без нового снимка — снимок устарел
   if (d.kc && d.status >= 200 && d.status < 300) killSnapNote(d.kc); else if (d.bt?.end) killSnapStale();
@@ -5530,8 +5534,12 @@ addEventListener('message', e => {
   if (path === '/character' && d.status >= 200 && d.status < 300 && d.pet && d.pet.name === rt.char && heroNick() === rt.char) {
     L2V7Modules.warlock.noteSnapshot(d.pet);
     L2V7Modules.combat.noteToggleSnapshot(d.pet);
+    if(on&&tabOwner&&netContext.lease&&netContext.lease===leaseEpoch)L2V7Modules.combat.noteMonsterSnapshot(d.pet);
   }
-  if (/^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path) && d.status >= 200 && d.status < 300 && meNow) L2V7Modules.combat.noteToggleBattle(d,netContext.at);
+  if (/^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path) && d.status >= 200 && d.status < 300 && meNow) {
+    L2V7Modules.combat.noteToggleBattle(d,netContext.at);
+    if(d.monster&&on&&tabOwner&&netContext.lease&&netContext.lease===leaseEpoch)L2V7Modules.combat.noteMonsterSnapshot(d.monster);
+  }
   // 20.43: собственный GET /character игры — тоже свежий источник слуги (поле есть только когда сервер его прислал)
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char && d.pet.activeSummon !== undefined) {
     const s = d.pet.activeSummon; petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || PET?.key || '', name: PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
@@ -5649,7 +5657,7 @@ addEventListener('message', e => {
   if(path==='/game/battle/action'&&d.rid!=null){
     // 20.43 (лог 21.10 22:07:37): код отказа battle_skill_not_allowed один и для «навык не под это оружие», и для «боя нет»
     // (error battle_none, reason not_in_battle) — в квитанции и error/reason/текст сервера, combat различает их без тоста страницы
-    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error,
+    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',expectedRevision:d.req?.expectedRevision??d.be?.request?.expectedRevision,revision:d.be?.revision,requestStartedAt:netContext.at,monsterToken:netContext.monsterToken||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error,
       error:String(d.res?.error||''),reason:String(d.res?.reason||''),message:String(d.res?.messageRu||d.res?.messageUk||d.res?.message||'').slice(0,200)});
     if(battleReceipts.size>64)battleReceipts.delete(battleReceipts.keys().next().value);
   }
@@ -6129,7 +6137,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get heroNick(){return heroNick}, get actionGeneration(){return ()=>automationGeneration}, get rtCommit(){return rtCommit}, get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },

@@ -11,12 +11,13 @@ const { flowFixture } = require('./warlock-combat-fixture.cjs');
 const source = fs.readFileSync(process.env.L2BOT_COMBAT_SOURCE || path.join(__dirname, '../modules/combat.js'), 'utf8');
 function privateSeams(text) {
   const capture = '  if (ctx.pet) { const n = env.actNet?.();';
-  const exports = ' return { limitPlan,';
+  // 20.51: новые публичные helpers могут стоять перед limitPlan; сохраняем весь экспорт.
+  const exports = text.match(/^ return \{ [^\n]*\blimitPlan,/m)?.[0];
   assert.ok(text.includes(capture), 'battle closure capture point exists');
-  assert.ok(text.includes(exports), 'combat exports capture point exists');
+  assert.ok(exports, 'combat exports capture point exists');
   return text.replace(capture,
     '  if (env.captureReplanClosures) return env.captureReplanClosures({ ctx, act, strikeStep, AGAIN });\n' + capture)
-    .replace(exports, ' return { replanState: { mpUntil }, limitPlan,');
+    .replace(exports, exports.replace('limitPlan,', 'replanState: { mpUntil }, limitPlan,'));
 }
 
 async function fixture() {

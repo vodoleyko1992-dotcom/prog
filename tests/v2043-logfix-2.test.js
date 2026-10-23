@@ -21,7 +21,7 @@ const NOT_ALLOWED = 'Цей скилл зараз недоступний для 
 test('квитанция хода хранит error, reason и текст отказа сервера', () => {
   const i0 = contentSrc.indexOf("  if(path==='/game/battle/action'&&d.rid!=null){"), end = 'battleReceipts.keys().next().value);\n  }', i1 = contentSrc.indexOf(end, i0);
   assert.ok(i0 > 0 && i1 > i0, 'блок квитанций найден');
-  const sb = { battleReceipts: new Map(), observeOwner: () => 'Hero', ACT_NET: { ok: false }, Date, String };
+  const sb = { battleReceipts: new Map(), observeOwner: () => 'Hero', ACT_NET: { ok: false }, netContext: { at: 1, monsterToken: '' }, Date, String };
   vm.runInNewContext(`this.on = (path, d) => {\n${contentSrc.slice(i0, i1 + end.length)}\n};`, sb);
   sb.on('/game/battle/action', { rid: 7, req: { action: 'wild_sweep' }, status: 400, res: { error: 'battle_skill_not_allowed', code: 'battle_skill_not_allowed', message: NOT_ALLOWED, blockedBy: '' } });
   const r = sb.battleReceipts.get(7);

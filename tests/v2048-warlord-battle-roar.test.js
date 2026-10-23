@@ -61,7 +61,7 @@ for(const [name,change]of Object.entries({
 }))test('MaxHP-подготовка не начинается: '+name,()=>{const f=fixture();change(f);assert.equal(plan(f),null);});
 function step(f,act){
  Object.assign(f.box,{env:f.env,ctx:f.ctx,act,NEXT:'next',AGAIN:'again',battleRoarPlan:f.C.battleRoarPlan,battleRoarActive:f.C.battleRoarActive,
-  slotsBy:f.C.slotsBy,ready:f.C.ready,affordable:f.C.affordable});
+  managedMonsterStep:f.C.managedMonsterStep,slotsBy:f.C.slotsBy,ready:f.C.ready,affordable:f.C.affordable});
  const a=combat.indexOf('  async function buffStep('),b=combat.indexOf('  // шаг: дебафф мага',a);
  vm.runInContext(combat.slice(a,b)+'\nthis.roarBuffStep=buffStep;',f.box);
  return ()=>f.box.roarBuffStep(f.env.meHp(),f.env.meMp(),{cur:100000,max:100000,pct:100});
