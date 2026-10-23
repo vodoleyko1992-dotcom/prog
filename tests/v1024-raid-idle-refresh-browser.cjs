@@ -5,9 +5,14 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { journey, bosses, until, delay } = require(path.join(process.env.L2_TEST_ROOT || path.join(__dirname, '..'), 'tests/v1024-journey-fixture.cjs'));
 
+// 20.54 (прогон смоуков 23.10): с 20.30 (0521983, #296) каждый Старт отбрасывает старый снимок и сначала заново читает весь список
+// РБ на /rb-bosses.html. Модель сервера согласована: страница списка и /game/raid-bosses показывают одно и то же; при Старте все РБ
+// мертвы, «воскрешение» сервер показывает с первого фонового опроса тура на карте. Проверки ожидания считаются от этого опроса.
+const revives = kind => ['revived', 'stop'].includes(kind);
 async function fixture(kind) {
-  const f = await journey({ travel: true });
-  const A = { listReads: 0, held: false, mapLoads: 0, paths: [], polls: [] };
+  const A = { listReads: 0, scanReads: 0, held: false, mapLoads: 0, paths: [], polls: [], mapAtPoll: null, pathsAtPoll: null };
+  const alive = (index, S) => index === 0 && revives(kind) && A.listReads > 0 && !S.wins.includes(bosses[0].id);
+  const f = await journey({ travel: true, rbAlive: (b, S) => alive(bosses.indexOf(b), S) });
   let release;
   const gate = new Promise(resolve => { release = resolve; });
   const expires = Date.now() + 5 * 3600000;
@@ -32,21 +37,31 @@ async function fixture(kind) {
         A.mapLoads++;
         return r.fulfill({ contentType: 'text/html; charset=utf-8', body: page });
       }
+      if (p === '/game/raid-bosses' && new URL(req.frame().url()).pathname === '/rb-bosses.html') {
+        // Свежий обход списка при Старте (цены страниц и первая проверка пустой очереди) идёт со страницы списка — это ещё
+        // не фоновый опрос ожидания на карте.
+        A.scanReads++;
+        return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ page: 1, pageSize: 15, total: bosses.length, totalPages: 1,
+          baseAdenaCost: 100000, adenaCost: 100000, characterLevel: 75, minRaidBossLevel: 63,
+          bosses: bosses.map((b, index) => ({ spawnId: b.id, name: b.name, level: b.lvl, bossType: 'raid', isAlive: alive(index, f.S), adenaCost: 100000, canAttack: true })) }) }).catch(() => {});
+      }
       if (p === '/game/raid-bosses') {
         assert.equal(req.method(), 'GET');
+        if (A.mapAtPoll === null) { A.mapAtPoll = A.mapLoads; A.pathsAtPoll = A.paths.length; }
         A.listReads++;
         A.polls.push(u.pathname + u.search);
         assert.equal(new URL(req.frame().url()).pathname, '/map.html', 'список обновляется только после ручного открытия страницы');
         const before = (await f.h.get(['rt'])).rt;
         if (A.listReads === 1) {
           assert.ok(before.rbHuntIdle > Date.now(), 'сценарий начал опрос уже после истечения простоя');
-          assert.ok(Date.now() - before.rbListT >= 170000, 'сценарий потерял старый снимок списка');
+          // 20.54: старый снимок (≥3 мин) Старт отбрасывает; опрос идёт по полному списку, прочитанному этим Стартом.
+          assert.ok(before.rbListStartRequired && before.rbListReadStart === before.rbListStartRequired && before.rbListVerifiedAt > 0, 'опрос до полного свежего списка Старта');
         }
         if (kind === 'stop' && !A.held) { A.held = true; await gate; }
         if (kind === 'error') return r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'fixture_unavailable' }) }).catch(() => {});
         return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ page: 1, pageSize: 15, total: bosses.length, totalPages: 1,
           baseAdenaCost: 100000, adenaCost: 100000, characterLevel: 75, minRaidBossLevel: 63,
-          bosses: bosses.map((b, index) => ({ spawnId: b.id, name: b.name, level: b.lvl, bossType: 'raid', isAlive: index === 0 && ['revived', 'stop'].includes(kind), adenaCost: 100000, canAttack: true })) }) }).catch(() => {});
+          bosses: bosses.map((b, index) => ({ spawnId: b.id, name: b.name, level: b.lvl, bossType: 'raid', isAlive: index === 0 && revives(kind) && !f.S.wins.includes(b.id), adenaCost: 100000, canAttack: true })) }) }).catch(() => {});
       }
       return r.fallback();
     } catch (error) {
@@ -78,7 +93,8 @@ async function test(kind) {
     assert.equal(await f.h.g.p.locator('.l2-map-mob-link').count(), 0, 'в исходной точке появились обычные мобы');
     assert.equal(await f.h.g.p.locator('.l2-map-mob-pin--raid').count(), 1);
     await f.start();
-    await until(() => f.A.listReads > 0, 15000);
+    // 20.54: сначала полный свежий обход при Старте, первый фоновый опрос — в обычном ритме тура (не чаще раза в 30 с).
+    await until(() => f.A.listReads > 0, 60000);
     if (kind === 'revived') {
       await until(() => f.S.wins.length >= 1, 45000);
       await f.h.click('stop');
@@ -86,7 +102,7 @@ async function test(kind) {
       assert.equal(f.S.teleports[0], bosses[0].id);
       assert.equal(f.S.wins[0], bosses[0].id);
       assert.equal(f.events.filter(event => event.kind === 'engage')[0]?.id, bosses[0].id);
-      assert.equal(f.A.mapLoads, 1, 'пустая карта перезагружалась вместо прямого опроса');
+      assert.equal(f.A.mapLoads, f.A.mapAtPoll, 'пустая карта перезагружалась вместо прямого опроса');
     } else if (kind === 'stop') {
       await until(() => f.A.held);
       await f.h.click('stop');
@@ -94,18 +110,20 @@ async function test(kind) {
       f.release();
       await delay(2500);
       assert.equal(await f.h.g.core('on'), false);
-      assert.equal(f.A.mapLoads, 1);
-      assert.equal(f.A.paths.includes('/rb-bosses.html'), false, 'поздний ответ открыл маршрут после Stop');
+      assert.equal(f.A.mapLoads, f.A.mapAtPoll);
+      assert.equal(f.A.paths.slice(f.A.pathsAtPoll).includes('/rb-bosses.html'), false, 'поздний ответ открыл маршрут после Stop');
     } else {
-      await until(() => f.h.g.core('on && rt.rbHuntIdle > Date.now()'));
+      await until(() => f.h.g.core('on && rt.rbHuntIdle > Date.now() && location.pathname === "/map.html"'));
+      const mapWait = f.A.mapLoads, pathsWait = f.A.paths.length;   // 20.54: ожидание на пустой карте после свежего обхода
       await delay(3000);
       const state = await f.h.g.core('({on,status:rt.status,idle:rt.rbHuntIdle,list:rt.rbList})');
       assert.equal(state.on, true, 'ожидание само остановило бота');
       assert.ok(state.idle > Date.now(), 'ожидание снято без подходящего РБ');
       assert.doesNotMatch(state.status || '', /фармлю мобов/i, 'бот обещает фармить отсутствующих мобов');
       assert.equal(f.A.listReads, 1, 'нет ограничителя частоты фонового опроса');
-      assert.equal(f.A.mapLoads, 1, 'пустая карта перезагружалась во время ожидания');
-      assert.equal(f.A.paths.includes('/rb-bosses.html'), false, 'неудачный опрос начал обход страниц');
+      assert.equal(f.A.mapLoads, mapWait, 'пустая карта перезагружалась во время ожидания');
+      assert.equal(f.A.paths.slice(pathsWait).includes('/rb-bosses.html'), false, 'неудачный опрос начал обход страниц');
+      assert.equal(f.A.paths.slice(f.A.pathsAtPoll).includes('/rb-bosses.html'), false, 'опрос начал обход страниц');
       assert.equal(Object.values(state.list).some(b => b.alive), false);
       await f.h.click('stop');
     }

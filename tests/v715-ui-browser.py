@@ -55,6 +55,8 @@ with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM','/usr/bin/chromium'),args=['--no-sandbox','--disable-dev-shm-usage'])
   # 20.12 (ревизия 17.10): широкий случай — настоящая ширина меню Chrome (body 760 px), а не 738: на 738 px body{width:760px}
   # честно даёт прокрутку, которой в настоящем popup нет.
+  NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed','tvt']  # 23.10 (#378): «TvT» — отдельный раздел в конце
+  VISIBLE=[t for t in NAV if t!='enchant']
   for width,height,label in [(760,720,'wide'),(375,720,'dock')]:
     page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
     page.evaluate(mock)
@@ -83,9 +85,9 @@ with sync_playwright() as p:
       return {sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth,
         nav:c(nav),plain:c(document.querySelector('section.act label')),
         proof:c(proof),proofActive:proof.classList.contains('on'),
-        rod:rod.value, navRows:new Set([...document.querySelectorAll('nav button[data-tab]')].map(b=>Math.round(b.getBoundingClientRect().top))).size,
+        rod:rod.value, navRows:new Set([...document.querySelectorAll('nav button[data-tab]')].filter(b=>!b.hidden&&b.offsetParent).map(b=>Math.round(b.getBoundingClientRect().top))).size,
         navOverflow:document.querySelector('nav').scrollWidth-document.querySelector('nav').clientWidth,
-        tabs:document.querySelectorAll('nav button[data-tab]').length,
+        tabs:document.querySelectorAll('nav button[data-tab]').length,visibleTabs:[...document.querySelectorAll('nav button[data-tab]')].filter(b=>!b.hidden&&b.offsetParent).map(b=>b.dataset.tab),
         btnText:getComputedStyle(nav).fontSize};
     }""")
     path=Path(__import__('os').environ.get('L2_SHOTS','/tmp'))/('l2bot-v7.1.5-ios-fishing-'+label+'.png')
@@ -94,10 +96,14 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==6,stats   # 20.12 (ревизия 17.10): 12 разделов сведены в 6
+    # 20.12 (ревизия 17.10): 12 разделов сведены в 6. 20.54 (прогон смоуков 23.10): с тех пор разделы снова выделены — 20.18 (10),
+    # «Лимиты»/«Снабжение» 19.10, «Сабкласс» 20.43, «Крафт» PR #358, «Скорость» PR #371; «Автозаточка» скрыта решением игрока 19.10.
+    assert stats['tabs']==len(NAV),stats
+    assert stats['visibleTabs']==VISIBLE,stats
     assert stats['sw']<=stats['cw']+1,stats
-    # 20.12 (ревизия 17.10): навигация — шесть кнопок в один ряд (flex/grid), без собственной горизонтальной прокрутки.
-    assert stats['navRows']==1 and stats['navOverflow']<=1,stats
+    # 20.12: навигация без собственной горизонтальной прокрутки. 20.54: раскладка по решениям после 20.13 — от 601 px колонка слева
+    # (игрок 18.10 «левый вариант»), по строке на раздел; уже 600 px — сетка коротких имён по 5 в ряд (20.18).
+    assert stats['navRows']==(len(VISIBLE) if width>600 else -(-len(VISIBLE)//5)) and stats['navOverflow']<=1,stats
     for section in ('nav','plain','proof'):
       ct=contrast(stats[section]['fg'],stats[section]['bg'])
       print(label, section, 'contrast=',round(ct,2))

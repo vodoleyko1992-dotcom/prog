@@ -7,6 +7,10 @@ old=(root/'tests/v715-ui-browser.py').read_text()
 mock=old.split('mock=r"""',1)[1].split('"""',1)[0].replace('7.1.5','7.1.12')
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM','/usr/bin/chromium'),args=['--no-sandbox','--disable-dev-shm-usage'])
+ # 20.54 (прогон смоуков 23.10): разделов уже не 6 — 20.18 (10), «Лимиты»/«Снабжение» 19.10, «Сабкласс» 20.43, «Крафт» PR #358,
+ # «Скорость» PR #371; «Автозаточка» скрыта решением игрока 19.10 (кнопка hidden). Проверяем точный список и раскладку по решениям после 20.13.
+ NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed','tvt']  # 23.10 (#378): «TvT» — отдельный раздел в конце
+ VISIBLE=[t for t in NAV if t!='enchant']
  for width,height,mode in [(760,680,'wide'),(375,740,'dock')]:
   page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
   errors=[]
@@ -25,13 +29,13 @@ with sync_playwright() as p:
   if mode=='dock':page.evaluate("document.documentElement.classList.add('docked')")
   # 20.12 (ревизия 17.10): кнопки «≡ Разделы» нет — шесть разделов всегда на виду.
   page.wait_for_timeout(80)
-  menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==6,menu   # 20.12: 12 разделов сведены в 6
+  menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,visibleTabs:[...document.querySelectorAll('#moduleNav button[data-tab]')].filter(b=>!b.hidden&&b.offsetParent).map(b=>b.dataset.tab),grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
+  assert menu['tabs']==len(NAV) and menu['visibleTabs']==VISIBLE,menu   # 20.12: 12 разделов сведены в 6; 20.54: текущий список
   assert menu['visible']!='none',menu
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-menu.png')))
   page.locator('#moduleNav button[data-tab="fish"]').click()
   page.wait_for_timeout(100)
-  metrics=page.evaluate('''() => {const act=document.querySelector('section.act'); const fld=act.querySelector('label');const e=document.querySelector('input#rodEnchantTo');return {pageWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,tab:act.id,rod:e.value, labelFont:getComputedStyle(fld).fontSize,buttonHeight:document.querySelector('#moduleNav button.act').getBoundingClientRect().height,modeHeight:document.querySelector('#modeToggle').getBoundingClientRect().height,navRows:new Set([...document.querySelectorAll('#moduleNav button[data-tab]')].map(b=>Math.round(b.getBoundingClientRect().top))).size,navOverflow:document.querySelector('#moduleNav').scrollWidth-document.querySelector('#moduleNav').clientWidth,bodyBg:getComputedStyle(document.body).backgroundColor,searchBg:getComputedStyle(document.querySelector('#uiSearch')).backgroundColor,tabName:document.querySelector('nav#moduleNav button.act').textContent+' '+document.querySelector('nav#moduleNav button.act').title};}''')
+  metrics=page.evaluate('''() => {const act=document.querySelector('section.act'); const fld=act.querySelector('label');const e=document.querySelector('input#rodEnchantTo');return {pageWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,tab:act.id,rod:e.value, labelFont:getComputedStyle(fld).fontSize,buttonHeight:document.querySelector('#moduleNav button.act').getBoundingClientRect().height,modeHeight:document.querySelector('#modeToggle').getBoundingClientRect().height,navRows:new Set([...document.querySelectorAll('#moduleNav button[data-tab]')].filter(b=>!b.hidden&&b.offsetParent).map(b=>Math.round(b.getBoundingClientRect().top))).size,navOverflow:document.querySelector('#moduleNav').scrollWidth-document.querySelector('#moduleNav').clientWidth,bodyBg:getComputedStyle(document.body).backgroundColor,searchBg:getComputedStyle(document.querySelector('#uiSearch')).backgroundColor,tabName:document.querySelector('nav#moduleNav button.act').textContent+' '+document.querySelector('nav#moduleNav button.act').title};}''')
   print(mode,'menu:',menu,'fields:',metrics,'errors:',errors[:4])
   assert metrics['scrollWidth']<=metrics['pageWidth']+1,metrics
   assert metrics['rod']=='10'
@@ -41,7 +45,8 @@ with sync_playwright() as p:
   # шесть разделов в один ряд без горизонтальной прокрутки, имя текущего раздела — у активной кнопки (в доке подпись скрыта, есть title).
   assert 28 <= metrics['buttonHeight'] <= 41, metrics # compact controls requested
   assert 24 <= metrics['modeHeight'] <= 41, metrics
-  assert metrics['navRows']==1 and metrics['navOverflow']<=1, metrics
+  # 20.54: от 601 px — колонка слева (игрок 18.10 «левый вариант»), по строке на раздел; уже — сетка коротких имён по 5 в ряд (20.18)
+  assert metrics['navRows']==(len(VISIBLE) if width>600 else -(-len(VISIBLE)//5)) and metrics['navOverflow']<=1, metrics
   assert 'Рыбалка' in metrics['tabName'], metrics
   assert len(errors)==0,errors
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-fishing.png')))
@@ -59,9 +64,13 @@ with sync_playwright() as p:
   assert page.locator('#quickModeGrid').is_visible()
   assert page.locator('#quickModeGrid button[data-mode]').count()==0
   tasks=page.locator('#autoTaskSelection input[data-auto-task]')
-  assert tasks.count()==15
-  assert set(tasks.evaluate_all('(els)=>els.map(e=>e.dataset.autoTask)'))=={'tvt','enchant','epic','raid','quests','fish','cat','auto','farm','mammon','dailies','clan','pvp','petbuff','resources'}
+  # 20.54 (прогон смоуков 23.10): 16-я задача «Крафт» (22.10, 337c33b — отдельный режим craft); «Автозаточка» осталась в разметке,
+  # но скрыта и выключена (решение игрока 19.10) — видимых галок 15
+  assert tasks.count()==16
+  assert set(tasks.evaluate_all('(els)=>els.map(e=>e.dataset.autoTask)'))=={'tvt','enchant','craft','epic','raid','quests','fish','cat','auto','farm','mammon','dailies','clan','pvp','petbuff','resources'}
+  assert tasks.evaluate_all('(els)=>els.filter(e=>e.offsetParent).map(e=>e.dataset.autoTask)').count('enchant')==0
+  assert page.locator('#autoTaskSelection input[data-auto-task="enchant"]').is_disabled()
   assert page.locator('#autoTaskSelection').is_visible()
   page.close()
  browser.close()
-print('PASS: Classic in-game layout, 6 sections, 15 allowed tasks, 375px dock, +10 setting, zero console errors')
+print('PASS: Classic in-game layout, 14 visible sections (enchant hidden), 16 allowed tasks (enchant hidden/disabled), 375px dock, +10 setting, zero console errors')

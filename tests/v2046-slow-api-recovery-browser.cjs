@@ -9,8 +9,12 @@ const executablePath = process.env.CHROMIUM || '/workspace/work/fixes-2046/brows
 const source = fs.readFileSync(process.env.SLOW_API_CONTENT_SOURCE || path.join(__dirname, '..', 'content.js'), 'utf8');
 const getStart = source.indexOf('async function gameGet('), getEnd = source.indexOf('// 7.2.5', getStart);
 const invStart = source.indexOf('let INV_NET ='), invEnd = source.indexOf('const actNet =', invStart);
-assert.ok(getStart >= 0 && getEnd > getStart && invStart >= 0 && invEnd > invStart, 'границы настоящих функций content.js найдены');
-const getSource = source.slice(getStart, getEnd), invSource = source.slice(invStart, invEnd);
+// 20.54 (прогон смоуков 23.10): с b7c65f6 (23.10, «Восстанавливать карту после затяжных отказов проверки сумки») inventoryReady
+// сверяет режим через modeSig(cfg) и пишет повтор в журнал rec(); Node-регресс получил заглушки в том же коммите, браузерный — нет.
+// modeSig берём настоящий из content.js, rec — наблюдаемая заглушка журнала.
+const sigStart = source.indexOf('const modeSig = '), sigEnd = source.indexOf("|| 'фарм на месте';", sigStart);
+assert.ok(getStart >= 0 && getEnd > getStart && invStart >= 0 && invEnd > invStart && sigStart >= 0 && sigEnd > sigStart, 'границы настоящих функций content.js найдены');
+const getSource = source.slice(getStart, getEnd), invSource = source.slice(invStart, invEnd), sigSource = source.slice(sigStart, sigEnd + "|| 'фарм на месте';".length);
 const delay = ms => new Promise(r => setTimeout(r, ms));
 async function until(fn, ms = 3000) { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return; await delay(20); } throw Error('fixture condition timed out'); }
 async function bounded(promise, ms, name) { let timer; try { return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(Error(name + ' did not finish in ' + ms + 'ms')), ms); })]); } finally { clearTimeout(timer); } }
@@ -25,7 +29,7 @@ const runner = () => `
 sessionStorage.clear();sessionStorage.setItem('l2bot-inv',JSON.stringify({char:'AuditHero',m:{1465:7},t:Date.now()}));
 let on=true,tabOwner=true,leaseEpoch='lease-one',automationGeneration=1;
 const cfg={},rt={char:'AuditHero',classCur:{prof:'human_warlord',slot:0},manualKickAt:0};
-const heroNick=()=>rt.char,gameAuth=()=>({}),writes=[],publications=[],statuses=[],traces=[];
+const heroNick=()=>rt.char,gameAuth=()=>({}),writes=[],publications=[],statuses=[],traces=[],journal=[];
 const setRt=async p=>{writes.push(p);Object.assign(rt,p);return {ok:true}},rtCommit=async()=>true,setStatus=s=>statuses.push(s);
 const L2V7Modules={payments:{pending:()=>null},mammon:{eqNote:async()=>publications.push('eq')},
  warlock:{noteSnapshot:()=>publications.push('snapshot')},buffs:{vipNote:()=>publications.push('vip')}};
@@ -33,6 +37,8 @@ const L2V7Modules={payments:{pending:()=>null},mammon:{eqNote:async()=>publicati
 const nativeFetch=globalThis.fetch.bind(globalThis);
 globalThis.fetch=async(...args)=>{const t={url:String(args[0]),at:performance.now(),signal:args[1]?.signal,headersMs:null};traces.push(t);
  const r=await nativeFetch(...args);t.headersMs=performance.now()-t.at;return r;};
+const rec=(src,kind,what)=>journal.push(kind+': '+what);
+${sigSource}
 ${getSource}
 ${invSource}
 // Наблюдаем переданный deadline, не меняя реализацию invRefresh/fetch/AbortSignal.
@@ -40,7 +46,7 @@ const nativeInvRefresh=invRefresh,readDeadlines=[];
 invRefresh=(...args)=>{readDeadlines.push(args[1]??6000);return nativeInvRefresh(...args);};
 const state=()=>({on,owner:tabOwner,lease:leaseEpoch,generation:automationGeneration,reading:!!INV_READ,ready:INV_READY,
  retry:{...INV_RETRY},qty:invQty(1465),inventory:INV_NET,stored:sessionStorage.getItem('l2bot-inv'),writes:writes.length,
- publications:[...publications],statuses:[...statuses],deadlines:[...readDeadlines],calls:traces.map(t=>({url:t.url,headersMs:t.headersMs,aborted:!!t.signal?.aborted,reason:t.signal?.reason?.name||''}))});
+ publications:[...publications],statuses:[...statuses],journal:[...journal],deadlines:[...readDeadlines],calls:traces.map(t=>({url:t.url,headersMs:t.headersMs,aborted:!!t.signal?.aborted,reason:t.signal?.reason?.name||''}))});
 globalThis.SlowFixture={state,read:async()=>{const at=performance.now(),ok=await inventoryReady();return {ok,ms:performance.now()-at,state:state()};},
  recover:async()=>{let polls=0;while(on&&tabOwner){polls++;if(await inventoryReady())return {polls,state:state()};await new Promise(r=>setTimeout(r,100));}throw Error('fixture stopped');},
  expire:()=>{INV_NET.t=Date.now()-300001;},
@@ -85,6 +91,7 @@ const server = http.createServer((req, res) => {
         assert.equal(r.state.reading, false); assert.equal(r.state.ready, ''); assert.equal(r.state.qty, 7);
         assert.equal(r.state.retry.n, 1); assert.equal(r.state.calls[0].aborted, true);
         assert.deepEqual(r.state.deadlines, [6000]);
+        assert.equal(r.state.journal.length, 1); assert.match(r.state.journal[0], /^сумка: Проверка 1 не подтверждена \(.*таймаут/, 'отказ сверки сумки виден в журнале');
         assert.deepEqual(r.state.publications, []); assert.equal(r.state.writes, 0);
         proof.push({ scenario: '200 headers then hung body', elapsedMs: Math.round(r.ms), nativeAbort: r.state.calls[0].reason, invReadReleased: !r.state.reading, published: r.state.publications.length });
       } finally { await p.close(); }
@@ -125,7 +132,7 @@ const server = http.createServer((req, res) => {
         const r = await bounded(pending, 4000, kind + ' during body');
         assert.equal(reads[0].ended, true, 'настоящий body дошёл после отмены владельца');
         assert.equal(r.ok, false); assert.equal(r.state.reading, false); assert.equal(r.state.ready, ''); assert.equal(r.state.qty, 7);
-        assert.equal(r.state.stored, before.stored); assert.equal(r.state.writes, 0); assert.deepEqual(r.state.publications, []);
+        assert.equal(r.state.stored, before.stored); assert.equal(r.state.writes, 0); assert.deepEqual(r.state.publications, []); assert.deepEqual(r.state.journal, [], 'чужой/остановленный запуск не пишет повтор');
         proof.push({ scenario: kind + ' during native body read', responseCompleted: true, published: 0, invReadReleased: true });
       } finally { await p.close(); }
     }

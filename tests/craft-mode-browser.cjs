@@ -94,6 +94,15 @@ async function runtime() {
   await page.evaluate(() => { void fixture.step(); }); await until(() => useApplied && posts.length === 1);
   assert.ok((await disk()).craftMpPending, 'до fetch сохранено durable намерение банки');
   await advance(20000); hangUse = false; await page.reload(); await page.waitForFunction(() => globalThis.fixture?.loaded); await step();
+  // 20.54 (прогон смоуков 23.10, Chromium 141): reload обрывает висящий fetch, и уходящая страница успевает записать
+  // «исход неизвестен» (sendMp → unknown: tries+1, свежий t). Тогда сверка законно ждёт PEND_WAIT 15 с от обрыва;
+  // в Chrome 156 (доказательство 20.51) запись не успевала. В обоих случаях до сверки — ни новой банки, ни крафта.
+  const aborted = (await disk()).craftMpPending;
+  if (aborted) {
+    assert.equal(aborted.tries, 1); assert.match((await disk()).craftSay?.why || '', /исход неизвестен/);
+    assert.equal(posts.length, 1); assert.equal(qty(728), 1);
+    await advance(16000); await step();
+  }
   assert.equal((await disk()).craftMpPending, null); assert.equal(posts.length, 1); assert.equal(qty(728), 1);
   await advance(2000); await step(); assert.equal(qty(1880), 5); assert.equal(posts.filter(x => x.path === '/character/consumable/use').length, 1);
   proof.push({ scenario: 'actual reload after accepted potion before response', potionPosts: 1, made: qty(1880), durableUsed: (await disk()).craftMpUsed });

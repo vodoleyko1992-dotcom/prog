@@ -21,6 +21,9 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  await h.popup.locator('#lsWeapon').selectOption({index:2});await h.popup.locator('#lsWeapon').blur();await until(async()=>!!(await h.get(['cfg'])).cfg.autoLs?.weaponKey);
  const selected=(await h.get(['cfg'])).cfg.autoLs.weaponKey;
  await h.popup.locator('#lsTargets').selectOption('prominence');await h.popup.locator('#lsTargets').blur();await until(async()=>(await h.get(['cfg'])).cfg.autoLs?.targets?.includes('prominence'));
+ // 20.54 (прогон смоуков 23.10): с 20.35 «Докупать Life Stone и Gemstone» ВКЛ по умолчанию и серия докупает остаток (10 попыток, в сумке 4) —
+ // без цен магазинов стенда серия вставала на паузу. Здесь проверяется выбор оружия, поэтому докупку выключаем галкой меню: только сумка.
+ await h.popup.locator('#lsBuyMaterials').uncheck();await until(async()=>(await h.get(['cfg'])).cfg.autoLs?.buyMaterials===false);
  await h.g.p.goto('https://l2wap.com/augmentation.html');await until(()=>h.g.core('typeof lifestonePrepareFree === "function"'));
  await h.popup.locator('#lsStart').click();await until(()=>h.popup.locator('body').innerText().then(s=>s.includes('Сначала наденьте выбранное оружие')));
  assert.equal(posts,0);assert.equal((await h.get(['on'])).on,false);

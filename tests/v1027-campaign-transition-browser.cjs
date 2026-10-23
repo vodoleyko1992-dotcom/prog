@@ -2,8 +2,10 @@
 // Настоящий MV3/hook; завершённый новичок → принятие Диона → следующая глава → reload/Stop.
 const assert=require('node:assert/strict');
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
+// 20.54 (прогон смоуков 23.10): с 20.43 (PR #325) у Warlock (rt.prof стенда) перед квестами идёт подготовка «кот → баффы» до 2 мин;
+// здесь проверяется только переход глав кампании, поэтому автопризыв кота выключен, как в v1027-campaign-location.
 (async()=>{const h=await harness();let chapter=2;const visits=[];try{
- await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,campAuto:false,campaign:false},rt:{...rt,campaignUrl:'/starter-story-quest.html',campaign:{title:'Путь новичка',targets:[{name:'Skeleton',ok:false}]},questSeen:{skeleton:Date.now()},qAlias:{Skeleton:'Skeleton'},campSkipUntil:Date.now()+600000}})});
+ await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,campAuto:false,campaign:false,petAuto:false},rt:{...rt,campaignUrl:'/starter-story-quest.html',campaign:{title:'Путь новичка',targets:[{name:'Skeleton',ok:false}]},questSeen:{skeleton:Date.now()},qAlias:{Skeleton:'Skeleton'},campSkipUntil:Date.now()+600000}})});
  const char=()=>({name:'AuditHero',level:24,l2Profession:'human_warrior',revision:100+chapter,hp:2801,maxHp:2801,mp:314,maxMp:314});
  const quest=()=>({stage:'active',chapter,completed:false,minLevel:22,chapterTitleRu:'Глава '+chapter});
  await h.ctx.route('https://l2wap.com/**',async r=>{const p=new URL(r.request().url()).pathname;const json=d=>r.fulfill({contentType:'application/json',body:JSON.stringify(d)});

@@ -10,7 +10,9 @@ const cases=[
  {name:'native GET',gcd:120,get:700},
  {name:'MP changed during wait',gcd:450,get:200,power:true,lowMp:true},
  {name:'global refusal',gcd:380,get:100,refused:true},
- {name:'Stop during native GET',gcd:120,get:700,stop:true},
+ // 20.54 (прогон 23.10): нажатие Stop в фоновом popup идёт 0,8–1,5 с — при родном GET 700 мс Stop
+ // приходил уже после его конца, и тест проверял не то. Окно GET длиннее; ниже — проверка, что Stop успел внутри.
+ {name:'Stop during native GET',gcd:120,get:2500,stop:true},
 ];
 
 async function scenario(test){
@@ -85,6 +87,7 @@ async function scenario(test){
    await until(()=>nativeStarted&&h.g.core('gameBusy().busy'));
    await h.click('stop');
    await until(()=>h.g.core('!on && !running'));
+   assert.equal(nativeEnded,false,'Stop reached the bot while the native GET was still pending');
    await delay(test.get+300);
    assert.deepEqual(acts.map(x=>x.action),['attack'],'Stop cancels the waiting next turn');
    assert.equal(ended,false);

@@ -97,9 +97,12 @@ const PAGES = {
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
     for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
-    await page.evaluate(() => showTab('mammon'));   // 20.12 (ревизия 17.10): Маммон — подраздел «Рыбалки и снабжения»
+    // 20.12 (ревизия 17.10): Маммон был подразделом «Рыбалки и снабжения»; 20.17/20.18: отдельный раздел #tab-mammon (10 разделов) —
+    // 20.54 (прогон смоуков 23.10): текст читаем из него, а не из #tab-fish (там остались только рыбалка и снаряжение)
+    await page.evaluate(() => showTab('mammon'));
     await page.waitForTimeout(1200);
-    const t = await page.$eval('#tab-fish', e => e.innerText), opts = await page.$$eval('#mmGoalItem option', o => o.length), sel = await page.$eval('#mmGoalItem', e => e.value);
+    if (await page.$eval('section.act', e => e.id) !== 'tab-mammon') { console.error('FAIL 4: showTab(mammon) не открыл #tab-mammon'); process.exit(1); }
+    const t = await page.$eval('#tab-mammon', e => e.innerText), opts = await page.$$eval('#mmGoalItem option', o => o.length), sel = await page.$eval('#mmGoalItem', e => e.value);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     await page.evaluate(() => document.querySelector('#mmPoll').click()); await page.waitForTimeout(200);
     const req = await page.evaluate(() => window.__mockState?.rt?.mmPollReq);

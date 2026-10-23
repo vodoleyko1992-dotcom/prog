@@ -14,9 +14,11 @@ const MC_BODY = `<p class="err" id="mail-compose-err" hidden></p><main id="mail-
 async function gameJs(f) { try { const r = await fetch('https://l2wap.com/' + f); return r.ok ? await r.text() : null; } catch (e) { return null; } }
 const ENV = `
   const contentSrc = window.__content, fireSrc = contentSrc.slice(contentSrc.indexOf('function fire(el) {'), contentSrc.indexOf('\\n}\\n', contentSrc.indexOf('function fire(el) {')) + 3);
-  const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt, recs = [];
+  // 20.54 (прогон смоуков 23.10): настоящий fire читает rt.autoLs (стоп-кран авто-ЛС, 20.35) и отмечает темп actionNote() (bc8204e,
+  // панель скорости 23.10) — стенд передаёт тот же rt героя; темп здесь не проверяется (actionNote — пустышка, его проверяют battle-load-error и v1015-magister).
+  const fire = (0, eval)('(function(rt){ const on = true, tabOwner = true, abHold = () => false, actionNote = () => {}, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })')(rt);
   const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye' }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
     sleep: ms => new Promise(r => setTimeout(r, Math.min(ms, 400))), waitX: async (fn, ms = 5000, st = 100) => { const t0 = Date.now(); for (;;) { const v = fn(); if (v) return v; if (Date.now() - t0 > ms) return null; await new Promise(r => setTimeout(r, st)); } },
     fire, $q: s => document.querySelector(s), isBattle: () => false, isFishing: () => false, fishState: () => null, fishNow: () => false, autonomyMode: () => 'hunt', tvtSoon: () => false,

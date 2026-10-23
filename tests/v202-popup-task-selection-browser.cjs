@@ -21,7 +21,12 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  assert.equal(await h.popup.locator('#petFullToggle').isVisible(),true);
  await h.openTab('overview');
  const tasks=h.popup.locator('#autoTaskSelection [data-auto-task]');
- for(let i=0;i<await tasks.count();i++){await tasks.nth(i).scrollIntoViewIfNeeded();assert.equal(await tasks.nth(i).isVisible(),true);await tasks.nth(i).click({trial:true});}
+ // 20.54 (прогон смоуков 23.10): автозаточка временно убрана (19.10, после 20.25/#288): её галка осталась в разметке скрытой и
+ // отключённой — она не должна быть видна и нажимаема; все остальные задачи по-прежнему видны и кликабельны на 360 px.
+ let seen=0;for(let i=0;i<await tasks.count();i++){const t=tasks.nth(i),key=await t.getAttribute('data-auto-task');
+  if(key==='enchant'){assert.equal(await t.isVisible(),false);assert.equal(await t.isDisabled(),true);assert.equal(await t.isChecked(),false);continue;}
+  await t.scrollIntoViewIfNeeded();assert.equal(await t.isVisible(),true,key);await t.click({trial:true});seen++;}
+ assert.equal(seen,await tasks.count()-1,'видны все задачи, кроме скрытой автозаточки');
  await h.popup.screenshot({path:'/tmp/v202-popup-task-selection-scrolled.png',fullPage:true});
  await h.popup.evaluate(()=>{document.querySelector('header').scrollTop=0;window.scrollTo(0,0)});
  await h.popup.screenshot({path:'/tmp/v202-popup-task-selection.png',fullPage:true});assert.deepEqual(errors,[]);assert.equal((await h.get(['on'])).on,false);

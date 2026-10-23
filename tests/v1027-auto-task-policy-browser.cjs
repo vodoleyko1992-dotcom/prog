@@ -14,7 +14,9 @@ const jobs=['tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJo
   await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="tasks"'));
   await until(()=>h.g.core(JSON.stringify(jobs)+'.every(k=>!rt[k])'));
   await delay(2300);assert.equal(h.g.p.url(),url);
-  assert.deepEqual(h.requests.slice(mark).filter(r=>r.method!=='GET'||(/\.html$|battle|quest|teleport|fishing|mammon|magister|rb-boss/.test(r.path))),[]);
+  // 20.54 (прогон смоуков 23.10): с 20.27 (#291) каждый Старт читает серверные сутки GET /game/time + /game/daily-quests независимо от
+  // галки дейликов — это чтение лимитов, не квест; остальные маршруты квестов/боя/телепортов по-прежнему запрещены.
+  assert.deepEqual(h.requests.slice(mark).filter(r=>r.method!=='GET'||r.path!=='/game/daily-quests'&&(/\.html$|battle|quest|teleport|fishing|mammon|magister|rb-boss/.test(r.path))),[]);
   const effective=await modes();assert.equal(effective.tvt,list.includes('tvt'));for(const key of ['fish','cat','quest','raid','enchant','shop','chain'])assert.equal(effective[key],false,key);
   const raw=(await h.get(['cfg'])).cfg;for(const key of legacy)assert.equal(raw[key],true,'raw '+key);
   await h.g.p.reload();await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="tasks"'));await delay(2200);assert.equal(new URL(h.g.p.url()).pathname,'/map.html');

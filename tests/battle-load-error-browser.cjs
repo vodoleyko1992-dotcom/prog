@@ -18,6 +18,9 @@ function slice(from, to) {
 const shown = slice('const visible = el =>', 'const isBattle =');
 const byText = slice('function byText(re,', '// 20.12 (ревизия 17.10, аудит core-a/C2)');
 const fire = slice('function fire(el) {', '// Single-writer settings update.');
+// 20.54 (прогон смоуков 23.10): с bc8204e (панель скорости, 23.10) fire отмечает темп через actionNote() до pointerdown;
+// берём точный actionNote, а actionPace стенда только считает отметки.
+const actionNote = slice('function actionNote() {', '// После перехода отметка остаётся');
 const report = { scope: 'real Chromium; reconstructed local DOM; exact navigation/shown/byText/fire; controlled waitFor/route/actor',
   liveRequests: [], pageErrors: [], checks: [], source: { navigation: crypto.createHash('sha256').update(current).digest('hex'),
     fire: crypto.createHash('sha256').update(fire).digest('hex') } };
@@ -41,7 +44,8 @@ async function scenario(browser, nav, opts = {}) {
   }, { opts });
   const setup = `(() => {
     let on = true, tabOwner = true, invBusy = false, running = true;
-    const rt = {}, S = {clicks: [], statuses: [], waitCalls: [], polls: 0, pointerEvents: [], routes: 0};
+    const rt = {}, S = {clicks: [], statuses: [], waitCalls: [], polls: 0, pointerEvents: [], routes: 0, paceNotes: 0};
+    const actionPace = {note: () => { S.paceNotes++; }};
     const opts = ${JSON.stringify(opts)};
     const isBattle = () => /battle/i.test(location.pathname);
     const isMap = () => /\\/map\\.html/i.test(location.pathname);
@@ -50,6 +54,7 @@ async function scenario(browser, nav, opts = {}) {
     const L2V7Modules = {actions:{canAct:()=>opts.block !== 'actions'}, payments:{blocked:()=>false}, pvp:{pending:()=>false}};
     ${shown}
     ${byText}
+    ${actionNote}
     ${fire}
     document.addEventListener('pointerdown', e => S.pointerEvents.push(e.target.tagName));
     document.addEventListener('click', e => {
@@ -96,7 +101,7 @@ async function scenario(browser, nav, opts = {}) {
       await check(`ссылка ошибки без ID возвращает на карту: cat=${cat}`, async () => {
         const r = await scenario(browser, current, { cat });
         assert.equal(r.pathname, '/map.html'); assert.deepEqual(r.clicks, ['l2-battle-back-map']);
-        assert.equal(r.routes, 1); assert.deepEqual(r.pointerEvents, ['A']);
+        assert.equal(r.routes, 1); assert.deepEqual(r.pointerEvents, ['A']); assert.equal(r.paceNotes, 1, 'настоящий клик отмечает темп один раз');
       });
       await check(`поздняя отрисовка ссылки: cat=${cat}`, async () => {
         const r = await scenario(browser, current, { cat, late: true });
@@ -106,7 +111,7 @@ async function scenario(browser, nav, opts = {}) {
         await check(`запрет не подменяется прямым URL: cat=${cat} ${JSON.stringify(flag)}`, async () => {
           const r = await scenario(browser, current, { cat, ...flag });
           assert.equal(r.pathname, '/battle.html'); assert.equal(r.routes, 0);
-          assert.equal(r.clicks.length, flag.rejectRoute ? 1 : 0);
+          assert.equal(r.clicks.length, flag.rejectRoute ? 1 : 0); assert.equal(r.paceNotes, r.pointerEvents.length, 'отметка темпа только у отправленного клика');
         });
       }
     }

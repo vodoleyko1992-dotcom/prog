@@ -12,6 +12,9 @@ async function fishingRecovery(kind){
  const accept=()=>{S.accepted++;state.revision++;state.basicBait.quantity--;state.target={name:'White Fish',currentHp:70,maxHp:70,stateHint:'Рыба замерла — Pumping'};state.logTail=[{text:'Что-то клюнуло!',kind:'bite'},{text:'Вы забросили удочку...',kind:'cast'}];};
  await h.ctx.route('https://l2wap.com/**',async r=>{try{const p=new URL(r.request().url()).pathname,json=(data,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   if(p==='/character')return json({character:char()});
+  // 20.54 (прогон смоуков 23.10): с 20.26 Старт ждёт серверную сверку суток (/game/time, /game/daily-quests); этот маршрут
+  // перекрывает общий из v1014 и отдавал {} — лимит рыбы держал заброс. Те же ответы, что в tests/tools/daily-server-fixture.cjs.
+  if(p==='/game/time'||p==='/game/daily-quests'){const d=require('./tools/daily-server-fixture.cjs')();return json(p==='/game/time'?d.clock:d.daily);}
   if(p==='/game/tvt')return json({phase:S.tvt?'REGISTRATION':'IDLE',eventId:'fixture-tvt',isRegistered:S.tvt,startsAt:Date.now()+30000,registrationEndsAt:Date.now()+20000,serverNow:Date.now()});
   if(p==='/game/fishing/state'){S.gets++;if(['stop','tvt','selection'].includes(kind)&&S.casts.length&&!S.held){S.held=true;await gate;}state.serverNowMs=Date.now();return json(state);}
   if(p==='/game/fishing/action'){

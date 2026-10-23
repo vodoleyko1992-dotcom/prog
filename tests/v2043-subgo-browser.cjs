@@ -25,7 +25,10 @@ async function until(fn, ms = 10000) { const end = Date.now() + ms; let last; do
     await p.click('#subGoStart');
     const st = await until(() => sw.evaluate(async () => { const s = await chrome.storage.local.get(['rt', 'on']); return s.rt?.subGo && s; }));
     assert.equal(st.rt.subGo.slot, 1); assert.equal(st.rt.subGo.wt, 'blunt'); assert.equal(st.rt.subGo.shield, 'on'); assert.equal(st.rt.subGo.gearOnly, false);
-    assert.equal(st.on, true, 'Старт вкладки запускает бота');
+    // 20.54 (прогон смоуков 23.10): subGoSend пишет команду (menuPatch), и только после её подтверждения жмёт «Старт» — on появляется позже
+    // rt.subGo; прежняя проверка в том же снимке падала через раз (2 из 3 одиночных прогонов). Ждём включения, а не читаем сразу.
+    const on = await until(() => sw.evaluate(async () => (await chrome.storage.local.get('on')).on === true)).catch(() => false);
+    assert.equal(on, true, 'Старт вкладки запускает бота');
     await until(() => p.locator('#subGoBox').textContent().then(s => /меняю класс на слот 1/.test(s)));
     // итог шага — в окне вкладки
     await sw.evaluate(async () => { const { rt } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, subGo: null, subGoSay: { t: Date.now(), ok: true, why: 'Fortune Seeker 76: надето 9 вещ.', worn: ['оружие: Елізій A-grade.'] } } }); });

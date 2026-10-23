@@ -3758,6 +3758,8 @@ function startPrepWanted() {
     && !rt.shop?.urgent && !rt.revive && startPrepSame(rt.startPrep) && rt.startPrep.phase !== 'done');
 }
 function prepHold() { return !isBattle() && startPrepEligible() && startPrepSame(rt.startPrep) && rt.startPrep.phase !== 'done'; }
+let startPrepSaid = '';
+function startPrepSay(S, line) { const k = `${S.id}:${S.phase}`; if (startPrepSaid !== k) { startPrepSaid = k; setStatus(line); } }
 async function loopStartPrep() {
   if (loopStale()) return true;
   if (!startPrepEligible()) { if (rt.petPrep && !rt.petPrep.pending) await setRt({ petPrep: null }); return false; }
@@ -3779,6 +3781,9 @@ async function loopStartPrep() {
   if (S.phase === 'summon') {
     // 20.43 (автономность, доводка 21.10, ревью): занятый шаг кота — со сном, как в loopGate. Раньше без него: при сбое чтения /character задачи
     // petPrep ещё нет, ветка loopGate не срабатывала, и следующий круг сразу снова читал персонажа (пауза чтения — в warlock, startReadAt)
+    // 20.54 (ревью прогона смоуков): шаг кота мог идти до 2 мин со старой строкой «Проверяю серверное время…» — пишем этап один раз
+    // на этап (не каждый тик: иначе перебивали бы точные строки warlock «подтвердите вручную», «жду MP» и засоряли журнал)
+    startPrepSay(S, `Старт: призыв кота перед задачей «${START_PREP_TASK[K.task]}»`);
     if (await W.startPrepare({ buffs: false })) { await sleep(300); return true; }
     if (!W.startReady('summon')) { setStatus('Старт: жду возможности призвать кота'); return false; }
     return next('self', 'кот на месте — баффы героя');
@@ -3792,6 +3797,7 @@ async function loopStartPrep() {
   }
   if (S.phase === 'pet') {
     if (rt.petBufferTrip) return false;          // платный набор кота в пути — его ведёт loopSideJobs
+    startPrepSay(S, `Старт: баффы кота перед задачей «${START_PREP_TASK[K.task]}»`);   // 20.54: см. этап призыва
     if (await W.startPrepare({ buffs: true })) { await sleep(300); return true; }
     if (!W.startReady('pet')) { setStatus('Старт: жду возможности бафнуть кота'); return false; }
     // 20.43 (ревью): свежее чтение — только при первом заходе этапа; дальше step соблюдает свою паузу (nextCheckAt 15 с после отказа
@@ -5596,7 +5602,8 @@ addEventListener('message', e => {
   // 14.10: в цепочке адрес может содержать первый spawnId. Для цвета используем актуальную цель принятого ответа игры.
   if (d.bt?.spawn && d.bt?.name && d.status >= 200 && d.status < 300 && !d.res?.error)
     BATTLE_NET = { spawn: d.bt.spawn, name: d.bt.name, kind: d.bt.kind, lvl: d.bt.lvl, max: d.bt.mobMax, tier: d.bt.tier || '', t: Date.now() };
-  { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { char:rt.char, dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
+  { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { char:rt.char, dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''),
+      city: typeof ch.cityId === 'string' ? ch.cityId : null, t: Date.now() };   // 20.54: cityId — тур РБ узнаёт Ashen и вне его страницы
     try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
   if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
     msg: String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 160), code: String(d.res?.error || ''), stone: d.req?.stone, qty: +d.req?.qty || 0 };
@@ -6162,6 +6169,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get s
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get selfHold(){return selfHoldStart}, get mapGate(){return mapGate}, get mapArriveOk(){return selfHoldMapOk}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get raidTeleportStart(){return ()=>RAID_TP_START}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
+  get heroAt(){return heroAt;},   // 20.54: тур РБ видит cityId героя (Ashen) из последнего ответа игры
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
   get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get storyRbFirst() { return () => L2V7Modules.story.rbFirst(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faBalOf() { return (...a) => L2V7Modules.buffs.faBalOf(...a); }, get faCost() { return faCost; }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
