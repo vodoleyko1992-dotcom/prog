@@ -1613,7 +1613,8 @@ function renderMammon(rt, d) {
     at.length ? `У крафтера ${C.to || to} (отправлено ${mmTime(C.t)}): ${at.map(([id, n]) => `${MM_RES[id] || '#' + id} ${fmt(n)}`).join(', ')} — жду готовое письмом` : '',
     U.length ? `📬 В почте не забрано: ${U.map(a => `${a.n} ×${fmt(a.q)} от ${a.s || '?'}`).join(', ')}` : rt.mmMail?.t ? `📭 Почта проверена ${mmTime(rt.mmMail.t)}: всё забрано` : ''].filter(Boolean).join('\n');
   // вещи: экипировка из ответов игры + список кузнеца + все из справочника (для выбора цели заранее)
-  const eq = Object.entries(rt.mmEq || {}), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
+  // 20.56: из надетого — только вещи кузнеца (9106xx/9200xx); клановое оружие старой памяти (#9002284) больше не попадает в цели
+  const eq = Object.entries(rt.mmEq || {}).filter(([, v]) => +v?.[0] >= 910618 && +v[0] <= 929999), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
   // 14.10: дубликат в сумке не подменяет надетую цель; свежий /character важнее старого списка кузнеца.
   const lvlOf = id => mammonGearLevel(rt, id);
   const nm = id => MMG?.[id]?.n || gear.find(g => g.id === id)?.n || '#' + id;

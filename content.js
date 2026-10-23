@@ -7818,6 +7818,12 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     const at = C('autoTasks');
     if (Array.isArray(at) && !at.includes('pvp')) cf.autoTasks = [...at, 'pvp'];
   });
+  // 20.56 (лог John 23.10 04:06–04:10, «не определяется А плащ и не могу его прокачать»): целью Маммона было выбрано клановое оружие
+  // (#9002282/#9002284 — меню показывало его безымянным), кузнец его не улучшает. Такую цель снимаем один раз — выбрать плащ заново
+  once('mmGoalClan2056', () => {
+    const g = +C('mmGoalItem') || 0;
+    if (g > 929999) cf.mmGoalItem = 0;
+  });
   once('dbfImm2043', () => {
     const I = rf.debuffImmune || rt.debuffImmune;
     if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
