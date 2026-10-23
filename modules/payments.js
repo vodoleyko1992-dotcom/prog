@@ -121,7 +121,8 @@
       if (!mine()) return false;
       local.delete(p.id); if(permit===p.id)permit=null;
       // 20.12: отказ/«не применилась» — оплата не прошла, а не «получена квитанция».
-      env.rec?.('B','оплата',evidence.spent===0?`${p.kind}: оплата не прошла (${evidence.kind==='state-not-applied'?'состояние героя не изменилось':'сервер отклонил'+(evidence.status?' '+evidence.status:'')}); ${p.quote.amount} ${p.quote.currency} не списаны, задача может повторить`
+      env.rec?.('B','оплата',evidence.kind==='free-unresolved'?`${p.kind}: бесплатный переход (0 ${p.quote.currency}) не подтверждён — списать ничего не могло, ожидание снято`
+        :evidence.spent===0?`${p.kind}: оплата не прошла (${evidence.kind==='state-not-applied'?'состояние героя не изменилось':'сервер отклонил'+(evidence.status?' '+evidence.status:'')}); ${p.quote.amount} ${p.quote.currency} не списаны, задача может повторить`
         :`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
       return true;
     } finally { if(durable&&unsettled.get(p.char)?.id===p.id)unsettled.delete(p.char); writing = false; }
