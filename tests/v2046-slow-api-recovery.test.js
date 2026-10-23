@@ -65,7 +65,7 @@ function fixture(){
  const box={Date:time.Date,AbortController,AbortSignal:{timeout(ms){const controller=new AbortController();time.set(()=>controller.abort(new DOMException('GET deadline','TimeoutError')),ms);return controller.signal}},
   setTimeout:time.set,clearTimeout:time.clear,gameAuth:()=>({}),cfg:{},on:true,tabOwner:true,leaseEpoch:'one',automationGeneration:1,
   rt:{char:'Hero',classCur:{prof:'dwarf_warsmith',slot:2},manualKickAt:0},heroNick:()=>hero,
-  sessionStorage:{getItem:k=>stored[k]??null,setItem:(k,v)=>stored[k]=v,removeItem:k=>delete stored[k]},setStatus:()=>{},
+  sessionStorage:{getItem:k=>stored[k]??null,setItem:(k,v)=>stored[k]=v,removeItem:k=>delete stored[k]},setStatus:()=>{},rec:()=>{},modeSig:c=>JSON.stringify(c),
   setRt:async p=>{Object.assign(box.rt,copy(p));writes.push(copy(p));return{ok:true}},rtCommit:async()=>true,
   L2V7Modules:{mammon:{eqNote(){}},warlock:{noteSnapshot:c=>publications.push(c)},buffs:{vipNote(){}},subclass:{charNote(){}},story:{charNote(c){box.rt.classCur={prof:c.l2Profession,slot:c.classSlots.activeSlot,t:time.now()}}}},
   fetch:(url,options)=>{

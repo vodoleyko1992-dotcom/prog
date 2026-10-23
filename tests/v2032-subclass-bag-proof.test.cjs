@@ -14,7 +14,7 @@ function fixture(o={}){
  const cfg={nWeaponMain:'Lance',weaponManual:true,weaponScanAuto:true},saved={rt:clone(rt)};
  const box={Date:class extends Date{static now(){return now}},console,cfg,on:true,tabOwner:true,leaseEpoch:'one',automationGeneration:4,rt,
   heroNick:()=>hero,sessionStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=v,removeItem:k=>delete store[k]},
-  gameGet:async()=>{gets++;if(getHook)await getHook();return{ok:true,json:async()=>({character:clone(answer)})}},setStatus:s=>statuses.push(s),
+  gameGet:async()=>{gets++;if(getHook)await getHook();return{ok:true,json:async()=>({character:clone(answer)})}},setStatus:s=>statuses.push(s),rec:(...a)=>events.push(a),modeSig:c=>JSON.stringify(c),
   setRt:async p=>{Object.assign(box.rt,clone(p));writes.push(clone(p));if(writeHook)await writeHook(p);return{ok:writeOk}},
   rtCommit:async()=>{commits++;if(commitHook)await commitHook();if(commitOk)saved.rt=clone(box.rt);return commitOk},
   L2V7Modules:{mammon:{eqNote:async()=>{}},warlock:{noteSnapshot(){}},subclass:{charNote(){}}}};

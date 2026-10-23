@@ -1,0 +1,47 @@
+{
+  "result": "PASS",
+  "baseCommit": "9b97ce2936ad9980806e60746d686f21a3860c60",
+  "sourceSha256": "f45a7f8248257179ddfc38d1567317a6ec3586db585eca88bc852f455b96dfed",
+  "node": {
+    "command": "node tests/run-all.cjs",
+    "filesPass": 619,
+    "filesFail": 0,
+    "newCasesPass": 60,
+    "baseline": {
+      "commit": "9b97ce2",
+      "newCasesPass": 27,
+      "newCasesFail": 33
+    },
+    "legacyFixtureChanges": "Четыре VM-стенда получили зависимости rec/modeSig; их поведенческие проверки сохранены. Первый общий прогон618/1: v2032 не имел новых зависимостей; после дополнения fixture33/33, полный повтор619/0.",
+    "discovery": "tests/run-all.cjs автоматически включает все *.test.js и *.test.cjs; новый файл реально исполнен в общем прогоне."
+  },
+  "browser": {
+    "report": "browser.json",
+    "scenariosPass": 15,
+    "scenariosFail": 0,
+    "actualBrowser": "Chromium154",
+    "liveGame": false,
+    "fullMV3": false
+  },
+  "syntax": {
+    "files": 7,
+    "result": "PASS"
+  },
+  "envcheck": "34/34 PASS",
+  "diffCheck": "PASS",
+  "review": "Независимый аудит без оставшихся блокеров; добавлены общий предикат подтверждения класса, payments.blocked и отмена старого режима во время GET.",
+  "unchanged": [
+    "manifest.json",
+    "base-profile.json",
+    "builds/",
+    "lite/"
+  ],
+  "noLiveGame": true,
+  "noNewZip": true,
+  "limits": [
+    "Причина сетевого/контекстного отказа в исходном журнале не установлена.",
+    "Браузер проверяет точные функции на localhost, не полный MV3: actor/IPC управляемые, длинные таймауты ускорены; 14с ответ и reload настоящие.",
+    "Обновление карты восстанавливает документ, но не гарантирует доступность сервера при продолжающемся сбое."
+  ],
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/365"
+}
