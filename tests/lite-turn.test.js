@@ -30,7 +30,7 @@ t('второй ход до ответа на первый не шлём: gameId
 });
 t('после ожидания игры — новый выбор: свежий откат из ответа или другой план отменяют клик', () => {
   assert.match(bot, /if \(!tvt && \(CD\.globalWait\(''\) > 0 \|\| \(s\.action && cdWait\(s\.action\) > 0 && cdKnown\(s\.action, pressAt\.get\(s\.action\) \|\| 0\)/);
-  assert.match(bot, /if \(still && !still\(\)\) \{ quick = true; return false; \}/);
+  assert.match(bot, /if \(still && !still\(\)\) \{ pressWhy = 'replan'; quick = true; return false; \}/);   // 1.6: + причина для шага спойла
   assert.match(bot, /await press\(plan, g, false, \(\) => \{ const p = L\.planTurn\(slotsNow\(false\), meStats\(\), mobHp\(\), opt\(\)\); return !!p && p\.slot\.key === plan\.slot\.key; \}\);/);
   // проверка плана — до клика, отказ «план сменился» ничего не блокирует
   assert.ok(bot.indexOf('if (still && !still())') < bot.indexOf('if (!fire(s.b, g)) { fastMark(\'\'); return false; }'));

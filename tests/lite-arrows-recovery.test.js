@@ -57,7 +57,7 @@ function snapshotHarness() {
     CLS: { name: 'A', prof: 'dark_elf_phantom_ranger', slot: 3 }, SNAP: null,
     NET: { starts: [], ends: new Map(), inflight: new Map() }, BUSY: /^\/character$/, CD: {}, Date: { now: () => now },
     log() {}, notify() {}, status() {}, abBlink() {}, progress() {}, profSync() {}, onSnapZone() {}, barMine: () => false,
-    wakeAll() {}, sess: { set() {} }, hudMark() {}, alive: g => ctx.owner && ctx.cfg.on && !ctx.dead && g === ctx.gen,
+    wakeAll() {}, sess: { set() {} }, hudMark() {}, wpnSeen() {}, alive: g => ctx.owner && ctx.cfg.on && !ctx.dead && g === ctx.gen,
     setRt(p) { Object.assign(ctx.rt, p); } };
   vm.createContext(ctx);
   const piece = (a, b) => bot.slice(bot.indexOf(a), bot.indexOf(b, bot.indexOf(a)));

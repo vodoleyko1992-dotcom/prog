@@ -9,9 +9,9 @@
 // В C же (1.4): окно меню на странице игры — свёрнуто на узком экране, «—» сворачивает в плавающую кнопку, кнопка и окно
 //   перетаскиваются и помнят место после перезагрузки, поджимаются при сужении окна, «⧉» — меню во вкладке, Старт из окна → «Lite ▶».
 // Сценарий D (Lite 1.2): быстрый удар — галка ВКЛ по умолчанию; ВЫКЛ → ВКЛ на модели основного 20.42 (ход 0,4 с, GET /character 0,35 с).
-// Сценарий E (Lite 1.3, John: «это сборка под БХ, а нужна под дестра»): у героя активен сабкласс Bounty Hunter, Титан — слот 2:
-//   меню предупреждает и не показывает скиллы БХ, после Старта бот ничего не жмёт; в игре переключили на Титана — охота пошла,
-//   в меню скиллы Титана; снова БХ — панель Титана в меню остаётся, бот ждёт.
+// Сценарий E (Lite 1.3, John: «это сборка под БХ, а нужна под дестра»): у героя активен класс, который Lite не ведёт (с 1.6 —
+//   маг Arcana Lord, слот 0), Титан — слот 2: меню предупреждает и не показывает скиллы мага, после Старта бот ничего не жмёт;
+//   в игре переключили на Титана — охота пошла, в меню скиллы Титана; снова маг — панель Титана в меню остаётся, бот ждёт.
 // Сценарий F (Lite 1.5, John: «есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный профиль
 //   на лука»): у героя активен Phantom Ranger (слоты как на аккаунте из разбора лука). Меню — вкладки «Дестр»/«Лук» со своими
 //   лимитами (старые настройки 1.4 — профиль Дестра); лук бьёт выстрелами под именем игры, баффы — да, Hex/стойка — нет;
@@ -19,9 +19,14 @@
 //   профиль Дестра (свой лимит 4, Fatal Strike, без выстрелов); снова лук — его 3 из 3 уже выполнены, бот стоит.
 // Сценарий G (Lite 1.5.1, John: «Vicious Stance то включает то выключает», «привел куда надо мне, не бьет мобов»): Старт в бою —
 //   место охоты сразу; стойку, которой игра не показывает, бот жмёт один раз; миг без полоски HP моба — не повод уходить из боя.
+// Сценарий H (Lite 1.6, John: «Сверстай еще в боте сектор "споил", возьми все данные из основного проекта Бот»): активен
+//   Bounty Hunter — вкладка «⛏ Споил» сама, раздел спойла с ресурсом и местами; с пикой каждый бой начинается со Spoil Festival
+//   (или Spoil, пока Festival на откате), Spoil Crush не жмётся, Sweeper — никогда; добыча «Спойл: X ×N» — в счёт и в меню;
+//   надели дубину — Whirlwind игра не даёт (пауза 5 мин), бой начинается со Spoil Crush; «Сбросить счёт» — с нуля.
+// В E (с 1.6) «другой класс» — основной маг Arcana Lord: Bounty Hunter стал своим профилем.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 // 20.54 (прогон смоуков 23.10): все 7 сценариев идут 285–321 с даже в одиночку — внешний «timeout 300» убивает Chromium посреди G
-//   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFG.
+//   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFGH.
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const EXT = path.resolve(process.env.LITE_EXT || path.join(__dirname, '..', 'lite'));   // LITE_EXT — распакованный ZIP для проверки сборки
@@ -49,7 +54,11 @@ function makeServer() {
       { teleportId: 'forge_gods', labelUk: 'Кузня богів', adenaCost: 20000, mobLevelMin: 70, mobLevelMax: 80 } ],
   };
   const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000,
-    double_shot: 2500, power_shot: 2500, stun_shot: 1500, soul_of_sagittarius: 1000, l2_77: 1000, l2_91: 1000, l2_122: 1000, vicious_stance: 1000 };
+    double_shot: 2500, power_shot: 2500, stun_shot: 1500, soul_of_sagittarius: 1000, l2_77: 1000, l2_91: 1000, l2_122: 1000, vicious_stance: 1000,
+    l2_254: 1500, l2_302: 2700, l2_348: 2100, l2_36: 1700, l2_42: 500 };   // 1.6: спойлер (Festival ≈2,7 с, Crush ≈2,1 с — логи основного бота 21.10)
+  // 1.6: оружие спойлера — Club (4) дубина, Short Spear (15) древковое; Spoil Crush — только с дубиной, Whirlwind — только с древковым:
+  // иначе 400 battle_skill_not_allowed «Цей скилл зараз недоступний…» (основной бот, combat.js). Итог спойла — строки лога (logTail).
+  const BLUNT_W = [4, 89, 6579];
   // 1.5 / 1.5.1 (пробный бой лука 21.10, archer-study.md §6, §6a): выстрел тратит 2 стрелы, атака — 1; стрел нет — 400 battle_no_arrows.
   // Выстрелы GCD не ставят; их откат сервер присылает под каноническим номером (l2_19 / l2_56 / l2_101), ранний выстрел —
   // 400 {code:'skill_cooldown', skillId, remainingMs} без serverNowMs.
@@ -61,7 +70,8 @@ function makeServer() {
     if (S.stance && S.stanceReport === 'buff') buffs.push({ skillId: 312, expiresAt: now + 3600000 });
     return { ...S.hero, activeBuffs: buffs,
       toggleStances: S.stanceReport === 'list' ? [{ battleId: 'vicious_stance', skillId: 312, level: 8, active: !!S.stance }] : S.hero.toggleStances,
-      ...(S.arrows != null ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []), { itemId: 728, qty: 50 }] } } : {}) }; };   // 0 стрел — стопки нет (§6a)
+      ...(S.arrows != null || S.weapon !== undefined ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []), { itemId: 728, qty: 50 }],   // 0 стрел — стопки нет (§6a)
+        ...(S.weapon !== undefined ? { eq: { l1: S.weapon == null ? null : { itemId: S.weapon, objectId: 'w1' } } } : {}) } } : {}) }; };   // 1.6: надетое оружие (спойлер)
   const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [] });
   function action(body) {
     const now = Date.now(), a = String(body.action || '');
@@ -76,6 +86,9 @@ function makeServer() {
     const h = S.hero, bow = /ranger|hawkeye|sagittarius|sentinel/.test(h.l2Profession);
     if (bow && ARROW_NEED[a] && (S.arrows || 0) < ARROW_NEED[a]) return [400, { error: 'battle_no_arrows', messageRu: 'Немає стріл потрібного грейду для лука' }];
     if (bow && ARROW_NEED[a]) S.arrows -= ARROW_NEED[a];
+    if ((a === 'l2_348' && !BLUNT_W.includes(S.weapon)) || (a === 'l2_36' && BLUNT_W.includes(S.weapon))) { (S.refused = S.refused || []).push(a); return [400, { error: 'battle_skill_not_allowed', message: 'Цей скилл зараз недоступний для твого персонажа' }]; }
+    (b.ok = b.ok || []).push(a);
+    const lines = [];
     if (!CANON[a]) S.gcd = now + (S.gcdMs || 250);
     if (a === 'attack') b.mobHp -= 700;
     else if (a === 'double_shot') { b.mobHp -= 1500; h.mp -= 98; }
@@ -90,13 +103,22 @@ function makeServer() {
     else if (a === 'battle_potion_use') { S.pots--; h.hp = Math.min(h.maxHp, h.hp + 3000); }
     else if (a === 'l2_286') {}
     else if (a === 'vicious_stance') { (S.stanceT = S.stanceT || []).push([now % 100000, S.stance, S.stanceReport]); if (!S.stanceStuck) S.stance = !S.stance; }
+    else if (a === 'l2_302') { h.mp -= 73; lines.push(`Spoil Festival: ${b.mobName}: ${b.spoiled ? 'вже заспойлено' : S.festFail ? 'промах (40%)' : 'успіх (100%)'}`); if (!S.festFail) b.spoiled = true; }
+    else if (a === 'l2_254') { h.mp -= 50; const ok = (S.spoilSeq || []).length ? S.spoilSeq.shift() : true; lines.push(ok ? 'Спойл успішний (59%)' : 'Спойл не вдався (56%)'); if (ok) b.spoiled = true; }
+    else if (a === 'l2_348') { b.mobHp -= 1200; h.mp -= 70; lines.push(`Ви завдаєте ${b.mobName} 1 200 урону`, 'Спойл успішний (61%)'); b.spoiled = true; }
+    else if (a === 'l2_36') { b.mobHp -= 1500; h.mp -= 40; }
     if (a !== 'battle_potion_use') S.cd[a] = now + ((S.cdSet || CD)[a] || 1000);
     h.hp -= S.killHero ? 9000 : 150;
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
-    if (b.mobHp <= 0) { b.mobHp = 0; h.inBattle = false; h.mobsKilled++; return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now } }]; }
+    if (b.mobHp <= 0) {
+      b.mobHp = 0; h.inBattle = false; h.mobsKilled++;
+      (S.done = S.done || []).push({ spoiled: !!b.spoiled, acts: b.ok.slice(), w: S.weapon });
+      if (b.spoiled) lines.push('Спойл: Mithril Ore ×2', 'Спойл: Coal ×1');
+      return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now }, logTail: lines }];
+    }
     // Как настоящая игра (battle-action-result.js): почти каждый ответ на ход несёт hotbarStale — страница перечитывает персонажа.
     return [200, { kind: 'delta', delta: { mobHp: b.mobHp, mobMaxHp: b.mobMaxHp, characterHp: h.hp, characterMaxHp: h.maxHp, characterMp: h.mp, characterMaxMp: h.maxMp,
-      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [CANON[a] || a]: S.cd[a] } } }];
+      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [CANON[a] || a]: S.cd[a] } }, logTail: lines, mobEffectsSig: b.spoiled ? 'spoil:1' : '' }];
   }
   function tvtState() {
     const t = S.tvt, now = Date.now();
@@ -162,7 +184,8 @@ const NAV = `<nav id="l2-nav-bottom"><a data-nav-role="outskirts" href="#" oncli
 function page(title, body) { return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>${HUD}${COMMON}${body}${NAV}</body></html>`; }
 const TITLES = { attack: 'Атака', l2_190: 'Fatal Strike — сильный удар', battle_trance: 'Battle Trance — HP до 25 %', l2_176: 'Frenzy — при HP ≤ 30 %', l2_420: 'Zealot', l2_286: 'Provoke — агро',
   double_shot: 'Double Shot — две стрелы', power_shot: 'Power Shot', stun_shot: 'Stun Shot — оглушение', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura',
-  soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance' };
+  soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance',
+  l2_254: 'Spoil — спойл', l2_302: 'Spoil Festival', l2_348: 'Spoil Crush', l2_36: 'Whirlwind', l2_42: 'Sweeper', l2_1177: 'Wind Strike', l2_1184: 'Ice Bolt' };
 function hotbar(H, pots) {
   const slots = H.battleHotbarSlots.map(s => s.k === 'a'
     ? `<button class="l2-battle-hotbar-slot" title="${TITLES[s.a]}" data-slot-cd="${s.a}">${s.a === 'attack' ? '' : `<img src="/skills/${s.a}.gif">`}<span class="l2-battle-hotbar-slot-cd" hidden><span class="l2-battle-hotbar-slot-cd__timer"></span></span></button>`
@@ -173,21 +196,26 @@ function hotbar(H, pots) {
 const BATTLE_JS = `<script>
 let busy=false;window.__lost=0;const sid=new URLSearchParams(location.search).get('spawnId');
 function render(b){if(!b)return;$('#battle-mob-title').textContent=b.mobName+' · ур. '+b.mobLevel+(b.kind==='champion'?' · чемпион':'');$('#battle-mob-hp-val').textContent=b.mobHp+' / '+b.mobMaxHp;}
+function logAdd(lines){for(const t of lines||[]){const d=document.createElement('div');d.className='l2-battle-log-line';const m=t.match(/^Спойл: (.+) (×\d+)$/);
+ if(m)d.innerHTML='<span class="l2-battle-log-line__spoil-prefix">Спойл:</span><span class="l2-battle-log-line__body"><span>'+m[1]+'</span><span>'+m[2]+'</span></span>';
+ else{const s=document.createElement('span');s.className='l2-battle-log-line__body';s.textContent=t;d.append(s);}$('#battle-log').append(d);}}
 fetch('/game/battle?spawnId='+sid).then(r=>r.json()).then(j=>render(j.battle));
 document.querySelectorAll('.l2-battle-hotbar-slot').forEach(el=>el.onclick=async()=>{
  if(busy){window.__lost++;return;}busy=true;const a=el.dataset.slotCd;
  const {status,j}=await post('/game/battle/action',a==='battle_potion_use'?{action:a,itemId:+el.dataset.item}:{action:a});
+ logAdd(j.logTail);if(j.mobEffectsSig!=null)$('#battle-mob-effects-row').dataset.effectsSig=j.mobEffectsSig;
  if(j.victory){$('#battle-mob-hp-val').textContent='0 / 4000';$('#battle-victory-inline').hidden=false;$('#battle-victory-hunt').hidden=false;}
  else if(j.defeat){$('#battle-defeat-root').hidden=false;}
  else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / '+(j.delta.mobMaxHp||4000);const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
   if(cd&&until){cd.hidden=false;cd.classList.add('l2-battle-hotbar-slot-cd--on');const tick=()=>{const left=until-Date.now();const tm=cd.querySelector('.l2-battle-hotbar-slot-cd__timer');if(left<=0){cd.hidden=true;cd.classList.remove('l2-battle-hotbar-slot-cd--on');return;}if(tm)tm.textContent=(left/1000).toFixed(1);setTimeout(tick,100);};tick();}}
  if(j.victory||j.defeat||status!==200||(j.delta&&j.delta.hotbarStale))await ch();busy=false;});
-$('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;render(j.battle);}};
+$('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;$('#battle-log').textContent='';$('#battle-mob-effects-row').dataset.effectsSig='';render(j.battle);}};
 $('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)await post('/game/battle/leave',{battleSpawnId:sid});location.href='/map.html';};
 $('#battle-defeat-tocity').onclick=async()=>{await post('/game/battle/defeat/to-city');location.href='/city.html';};
 </script>`;
 function battlePage(sv) {
-  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div>${hotbar(sv.S.hero, sv.S.pots)}
+  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div><div id="battle-mob-effects-row" data-effects-sig=""></div>${hotbar(sv.S.hero, sv.S.pots)}
+<div id="battle-log"></div>
 <div id="battle-victory-inline" hidden>Победа</div><button id="battle-victory-hunt" hidden>Охотиться дальше</button><button id="battle-back-map">Назад на карту</button>
 <div id="battle-defeat-root" hidden><button id="battle-defeat-tocity">Вернуться в город</button></div>${BATTLE_JS}`);
 }
@@ -559,31 +587,33 @@ async function scenarioE() {
     { slot: 2, owned: true, active: act === 2, profession: 'orc_titan', race: 'Orc', level: 76 },
     { slot: 3, owned: false, active: false, profession: null, race: null, level: null }] });
   const titan = { l2Profession: 'orc_titan', level: 76, classSlots: SLOTS(2), battleHotbarSlots: S.hero.battleHotbarSlots, learnedBattleSkillsDetail: S.hero.learnedBattleSkillsDetail };
-  const bh = { l2Profession: 'dwarf_bounty_hunter', level: 70, classSlots: SLOTS(1),
-    battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'l2_254' }, { k: 'a', a: 'l2_100' }, { k: 'a', a: 'l2_255' }],
-    learnedBattleSkillsDetail: [{ battleId: 'l2_254', nameUk: 'Spoil' }, { battleId: 'l2_100', nameUk: 'Stun Attack' }, { battleId: 'l2_255', nameUk: 'Power Smash' }] };
-  const BH_ACT = /^(?:l2_254|l2_100|l2_255)$/;
+  // 1.6: «чужой» класс — основной маг (БХ теперь свой профиль «Споил», сценарий H)
+  const bh = { l2Profession: 'human_arcana_lord', level: 78, classSlots: SLOTS(0),
+    battleHotbarSlots: [{ k: 'a', a: 'attack' }, { k: 'a', a: 'l2_1177' }, { k: 'a', a: 'l2_1184' }],
+    learnedBattleSkillsDetail: [{ battleId: 'l2_1177', nameUk: 'Wind Strike' }, { battleId: 'l2_1184', nameUk: 'Ice Bolt' }] };
+  const BH_ACT = /^(?:l2_1177|l2_1184)$/;
   try {
     S.champAt = 99;
     Object.assign(S.hero, bh);
     await h.game.goto('https://l2wap.com/map.html');
-    await until(async () => (await h.rt()).char?.prof === 'dwarf_bounty_hunter' && (await h.rt()).locs?.length === 2, 20000, 'герой БХ в памяти');
+    await until(async () => (await h.rt()).char?.prof === 'human_arcana_lord' && (await h.rt()).locs?.length === 2, 20000, 'герой-маг в памяти');
     const pp = await h.popup();
     await until(() => pp.evaluate(() => !document.getElementById('cls').hidden), 5000, 'предупреждение в меню');
     const warn = await pp.textContent('#cls');
-    assert.match(warn, /Сейчас в игре Dstr — Dwarf Bounty Hunter/); assert.match(warn, /переключите в игре класс на Orc Titan \(сабкласс 2, 76 ур\.\)/);
-    assert.match(await pp.textContent('#hero'), /Dstr, 70 ур\. · Dwarf Bounty Hunter/);
-    assert.equal(await pp.$$eval('#skills .sk', e => e.length), 0, 'скиллы БХ в меню');
+    assert.match(warn, /Сейчас в игре Dstr — Human Arcana Lord/);
+    assert.match(warn, /переключите в игре класс на Dwarf Bounty Hunter \(сабкласс 1, 70 ур\.\) или Orc Titan \(сабкласс 2, 76 ур\.\)/);
+    assert.match(await pp.textContent('#hero'), /Dstr, 78 ур\. · Human Arcana Lord/);
+    assert.equal(await pp.$$eval('#skills .sk', e => e.length), 0, 'скиллы мага в меню');
     assert.match(await pp.textContent('#skills'), /когда в игре будет активен Дестр\/Титан/);
-    assert.deepEqual((await h.rt()).bar || [], [], 'панель БХ в памяти');
+    assert.deepEqual((await h.rt()).bar || [], [], 'панель мага в памяти');
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана и лучника/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
+    await until(async () => /Lite ведёт только Дестра\/Титана, лучника и спойлера/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
     await delay(6000);
     assert.equal(S.spawnN, 0, 'начат бой'); assert.deepEqual(S.acts, []); assert.deepEqual(S.tp, []); assert.equal(S.tvt.isRegistered, false);
     assert.equal(h.game.url(), 'https://l2wap.com/map.html');
     const r1 = await h.rt();
-    assert.match(r1.status, /Сейчас в игре Dstr — Dwarf Bounty Hunter\. Lite ведёт только Дестра\/Титана и лучника: переключите в игре класс на Orc Titan \(сабкласс 2\)/);
-    assert.equal(logText(r1).match(/Lite только для Дестра и лучника/g)?.length, 1, 'запись в журнале одна');
+    assert.match(r1.status, /Сейчас в игре Dstr — Human Arcana Lord\. Lite ведёт только Дестра\/Титана, лучника и спойлера: переключите в игре класс на Dwarf Bounty Hunter \(сабкласс 1\) или Orc Titan \(сабкласс 2\)/);
+    assert.equal(logText(r1).match(/Lite только для Дестра, лучника и спойлера/g)?.length, 1, 'запись в журнале одна');
     // игрок переключил в игре сабкласс на Титана (слот 2): игра перечитала героя → Lite охотится, меню без предупреждения, скиллы Титана
     Object.assign(S.hero, titan);
     await until(() => S.acts.length >= 5, 30000, 'охота на Титане');
@@ -591,22 +621,22 @@ async function scenarioE() {
     const r2 = await h.rt();
     assert.match(logText(r2), /активен Orc Titan \(Dstr\) — продолжаю/);
     assert.equal(r2.barCls, 'orc_titan');
-    assert.ok(!S.acts.some(a => BH_ACT.test(a)), 'жал скилл БХ: ' + S.acts.join(','));
-    // Стоп, в игре снова БХ: в меню — предупреждение и панель Титана (панель БХ её не затирает); после Старта — снова ждёт
+    assert.ok(!S.acts.some(a => BH_ACT.test(a)), 'жал скилл мага: ' + S.acts.join(','));
+    // Стоп, в игре снова маг: в меню — предупреждение и панель Титана (панель мага её не затирает); после Старта — снова ждёт
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
     Object.assign(S.hero, bh, { inBattle: false }); S.battle = null;
-    await until(async () => (await h.rt()).char?.prof === 'dwarf_bounty_hunter', 10000, 'снова БХ');
+    await until(async () => (await h.rt()).char?.prof === 'human_arcana_lord', 10000, 'снова маг');
     await until(() => pp.evaluate(() => !document.getElementById('cls').hidden), 5000, 'предупреждение снова');
     assert.deepEqual(await pp.$$eval('#skills .sk', els => els.map(e => e.dataset.key)), ['l2_190', 'battle_trance', 'l2_176', 'l2_420', 'l2_286']);
     assert.equal((await h.rt()).barCls, 'orc_titan');
     const n = S.acts.length;
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана и лучника/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
+    await until(async () => /Lite ведёт только Дестра\/Титана, лучника и спойлера/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
     await delay(4000);
-    assert.equal(S.acts.length, n, 'ходы на БХ');
+    assert.equal(S.acts.length, n, 'ходы на маге');
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
     assert.deepEqual(h.errors, []);
-    console.log(`PASS E: сабкласс БХ — предупреждение «переключите сабкласс 2 на Orc Titan», скиллов БХ нет, 0 боёв/ходов/телепортов за 6 с; Титан — охота (${n} ходов), скиллы Титана; снова БХ — панель Титана в меню, бот ждёт`);
+    console.log(`PASS E: активен маг — предупреждение «переключите на Dwarf Bounty Hunter (сабкласс 1) или Orc Titan (сабкласс 2)», скиллов мага нет, 0 боёв/ходов/телепортов за 6 с; Титан — охота (${n} ходов), скиллы Титана; снова маг — панель Титана в меню, бот ждёт`);
   } catch (e) { console.error('DIAG E', { acts: h.S.acts.slice(-30).join(','), url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, char: r.char, barCls: r.barCls, bar: r.bar, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
   finally { await h.ctx.close(); }
 }
@@ -640,7 +670,7 @@ async function scenarioF() {
     const pp = await h.popup();
     // меню: открыт «Лук · в игре», скиллы лука с галками по умолчанию, стрелы в сумке
     await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 8), 5000, 'скиллы лука в меню');
-    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре']]);
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре'], ['spoil', false, '']]);   // 1.6: и вкладка спойлера
     assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'лук — не «чужой класс»');
     const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked]));
     assert.deepEqual(rows, [['double_shot', true], ['power_shot', true], ['stun_shot', true], ['l2_122', false], ['l2_77', true], ['l2_91', true], ['soul_of_sagittarius', true], ['vicious_stance', false]]);
@@ -705,7 +735,7 @@ async function scenarioF() {
     assert.match(logText(r3), /в игре Orc Titan \(Dstr\) — профиль «Дестр» вместо «Лук»: место охоты «Гавань Гірана», цель 4 мобов \(убито 0\)/);
     assert.equal(r3.by.archer.kills, 3); assert.equal(r3.by.archer.bar.length, 9); assert.equal(r3.barCls, 'orc_titan');
     // меню само перешло на Дестра; во вкладке лука — его 3 из 3 и его скиллы
-    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, '']]), 5000, 'меню: Дестр в игре');
+    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, ''], ['spoil', false, '']]), 5000, 'меню: Дестр в игре');
     await until(async () => (await pp.textContent('#kills')) === '4 / 4 ✔', 5000, 'счётчик Дестра');
     await pp.click('#profs button[data-kind="archer"]');
     await until(async () => (await pp.textContent('#kills')) === '3 / 3 ✔', 3000, 'счётчик лука');
@@ -804,6 +834,90 @@ async function scenarioG() {
   finally { await h.ctx.close(); }
 }
 
+// Сценарий H (Lite 1.6): спойлер — вкладка «⛏ Споил», места под ресурс, порядок спойла по оружию, добыча, Sweeper не жмётся.
+const BH_BAR = ['l2_254', 'l2_302', 'l2_348', 'l2_36', 'l2_42'];
+const BH_NAMES = { l2_254: 'Spoil', l2_302: 'Spoil Festival', l2_348: 'Spoil Crush', l2_36: 'Whirlwind', l2_42: 'Sweeper' };
+async function scenarioH() {
+  const h = await launch(), { S } = h;
+  const sel = pp => pp.evaluate(() => [...document.querySelectorAll('#profs button')].map(b => [b.dataset.kind, b.classList.contains('sel'), b.querySelector('i').textContent]));
+  const SP = /^(?:l2_254|l2_302|l2_348)$/;
+  const first = d => d.acts.find(a => a !== 'battle_potion_use');
+  try {
+    S.champAt = 99; S.weapon = 15; S.mobHp = 6000;                    // пика (Short Spear): Spoil Crush игра не даёт
+    Object.assign(S.hero, { l2Profession: 'dwarf_bounty_hunter', level: 70, classSlots: { activeSlot: 1, slots: [
+      { slot: 0, owned: true, active: false, profession: 'orc_titan', race: 'Orc', level: 76 },
+      { slot: 1, owned: true, active: true, profession: 'dwarf_bounty_hunter', race: 'Dwarf', level: 70 }] },
+      battleHotbarSlots: [{ k: 'a', a: 'attack' }, ...BH_BAR.map(a => ({ k: 'a', a })), { k: 'u', id: 1539 }],
+      learnedBattleSkillsDetail: BH_BAR.map(a => ({ battleId: a, nameUk: BH_NAMES[a] })) });
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, tvt: false, p: { spoil: { tvt: false, killLimit: 0, spoilRes: 'Mithril Ore' } } } }));
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).kind === 'spoil' && (await h.rt()).locs?.length === 2, 20000, 'профиль спойлера');
+    const pp = await h.popup();
+    // меню: открыт «Споил · в игре», скиллы БХ (Sweeper без галки), раздел спойла с ресурсом и местом под него
+    await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 5), 8000, 'скиллы спойлера в меню');
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', false, ''], ['spoil', true, ' · в игре']]);
+    assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'спойлер — не «чужой класс»');
+    const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked, e.querySelector('select').value]));
+    assert.deepEqual(rows, [['l2_254', true, 'spoil'], ['l2_302', true, 'spoil'], ['l2_348', true, 'spoil'], ['l2_36', true, 'attack'], ['l2_42', false, 'other']]);
+    assert.equal(await pp.isVisible('#spoilBox'), true);
+    assert.equal(await pp.inputValue('#spoilRes'), 'Mithril Ore');
+    assert.equal(await pp.isChecked('#spoilOn'), true); assert.equal(await pp.inputValue('#spoilTries'), '4');
+    await until(async () => /Кузня богів \(70–80\) · до 47 %/.test(await pp.textContent('#spoilSpots')), 5000, 'место под Mithril Ore');
+    assert.doesNotMatch(await pp.textContent('#spoilSpots'), /Гавань Гірана/, 'гавань (25–51) — не для 70 ур.');
+    await pp.click('#spoilSpots button[data-id="forge_gods"]');
+    await until(async () => (await h.pcfg('spoil')).zone === 'forge_gods', 3000, 'место из списка → место охоты');
+    await until(async () => /✔ Кузня богів/.test(await pp.textContent('#spoilSpots')), 3000, 'место отмечено');
+    await pp.selectOption('#zone', 'giran_harbor');                     // охотимся в гавани (мобы модели — только там)
+    await until(async () => (await h.pcfg('spoil')).zone === 'giran_harbor', 3000, 'место — гавань');
+    await pp.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
+    await h.game.bringToFront();
+    // (1) пика: каждый бой начинается со спойла (Festival, пока он готов, иначе Spoil), Spoil Crush не жмётся, все мобы заспойлены
+    await until(() => (S.done || []).length >= 4, 90000, '4 боя с пикой');
+    const pole = S.done.filter(d => d.w === 15);
+    for (const d of pole) { assert.match(first(d) || '', /^(?:l2_302|l2_254)$/, 'бой начат не со спойла: ' + d.acts.join(',')); assert.ok(d.spoiled, 'моб не заспойлен: ' + d.acts.join(',')); }
+    assert.ok(pole.some(d => first(d) === 'l2_302'), 'ни одного Festival первым');
+    assert.ok(!S.acts.includes('l2_348'), 'жал Spoil Crush с пикой');
+    let r = await until(async () => { const x = await h.rt(); return x.spoil?.mobs >= 4 && x; }, 5000, 'победы в счёте спойла');   // победа учитывается после ответа
+    assert.ok(r.spoil.sp === r.spoil.mobs, 'счёт: ' + JSON.stringify(r.spoil));
+    assert.ok(r.spoil.items['Mithril Ore'] >= 8 && r.spoil.items.Coal >= 4, 'добыча: ' + JSON.stringify(r.spoil.items));
+    assert.ok(r.spoil.mass >= 1 && r.spoil.massOk >= 1);
+    assert.match(logText(r), /Spoil Festival: Grave Robber ✅ 100%/);
+    await until(async () => /Заспойлено \d+ из \d+ мобов \(100 %\)/.test(await pp.textContent('#spoilStat')) && /Добыча: Mithril Ore \d+, Coal \d+/.test(await pp.textContent('#spoilStat')), 5000, 'счёт в меню');
+    // (2) Festival промахнулся, первый Spoil не прошёл — Spoil ещё раз (HP моба выше 30 %)
+    S.festFail = true; S.spoilSeq = [false, true];
+    const n1 = S.done.length;
+    await until(() => S.done.length >= n1 + 3 && !S.spoilSeq.length, 60000, 'бои с промахом Festival');
+    const miss = S.done.slice(n1).find(d => d.acts.filter(a => a === 'l2_254').length >= 2);
+    assert.ok(miss && miss.spoiled, 'повтор Spoil после промаха: ' + S.done.slice(n1).map(d => d.acts.join(',')).join(' | '));
+    r = await h.rt();
+    assert.ok(r.spoil.fail >= 1 && r.spoil.massFail >= 1, 'счёт промахов: ' + JSON.stringify(r.spoil));
+    S.festFail = false;
+    // (3) надели дубину (Club): Whirlwind игра не даёт — один отказ и пауза; бой начинается со Spoil Crush
+    S.weapon = 4; S.refused = [];
+    const n2 = S.done.length;
+    await until(() => S.done.filter((d, i) => i >= n2 && d.w === 4).length >= 4, 90000, '4 боя с дубиной');
+    const blunt = S.done.slice(n2).filter(d => d.w === 4);
+    assert.ok(blunt.some(d => first(d) === 'l2_348'), 'Spoil Crush первым — ни разу: ' + blunt.map(d => d.acts.join(',')).join(' | '));
+    for (const d of blunt.slice(1)) { assert.match(first(d) || '', SP, 'бой с дубиной начат не со спойла: ' + d.acts.join(',')); assert.ok(d.spoiled); }
+    assert.ok(!S.refused.includes('l2_348'), 'Spoil Crush с дубиной отказан');
+    assert.equal(S.refused.filter(a => a === 'l2_36').length, 1, 'Whirlwind жал после отказа: ' + S.refused.join(','));
+    assert.match(logText(await h.rt()), /Whirlwind: игра не даёт \(battle_skill_not_allowed\) — 5 мин не жму \(приём под другое оружие\)/);
+    assert.ok(!S.acts.includes('l2_42'), 'жал Sweeper');
+    // (4) «Сбросить счёт» — с нуля
+    const tR = Date.now();
+    await pp.click('#spoilReset');
+    await until(async () => (await h.rt()).spoil?.t0 >= tR && /счёт спойла сброшен/.test(logText(await h.rt())), 5000, 'сброс счёта');
+    assert.ok(((await h.rt()).spoil.mobs || 0) <= 1);
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(logText(await h.rt()), '\nходы:', S.acts.join(','));
+    const sum = r.spoil;
+    console.log(`PASS H: спойлер — вкладка «Споил · в игре», место под Mithril Ore «Кузня богів · до 47 %»; пика: ${pole.length} боёв начаты со спойла (Festival первым ${pole.filter(d => first(d) === 'l2_302').length}), Spoil Crush/Sweeper не жал; промах Festival → Spoil ×2; дубина: Crush первым, Whirlwind — 1 отказ и пауза; добыча Mithril Ore ${sum.items['Mithril Ore']}, Coal ${sum.items.Coal}; сброс счёта`);
+  } catch (e) { console.error('DIAG H', { acts: h.S.acts.slice(-40).join(','), done: JSON.stringify((S.done || []).slice(-6)), refused: S.refused, url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, zone: r.zone, spoil: r.spoil, spoilW: r.spoilW, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDEFG';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEFGH';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });

@@ -119,7 +119,7 @@ const UUID = '7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5f';
     && res.status === 'Выключен' && res.char && res.char.name === 'Dstr' && res.char.prof === 'dark_elf_phantom_ranger' && res.char.slot === 3 && res.bar.includes('double_shot')
     && res.barCls === 'dark_elf_phantom_ranger' && res.kind === 'archer' && res.warn === ''
     && JSON.stringify(res.skills) === JSON.stringify([['double_shot', true], ['power_shot', true]])
-    && JSON.stringify(res.profs) === JSON.stringify(['destr', 'archer* · в игре']) && res.arw === 'Стрелы: Fine Steel (C) 221'
+    && JSON.stringify(res.profs) === JSON.stringify(['destr', 'archer* · в игре', 'spoil'])   /* 1.6: третья вкладка — спойлер */ && res.arw === 'Стрелы: Fine Steel (C) 221'
     && res.profileEdit?.destr === 4 && res.profileEdit?.archer === 3
     && res.started?.on === true && res.started.owner && res.started.log && /КАПЧА/.test(res.started.status)
     && res.stopped?.on === false && res.stopped.status === 'Выключен' && res.stopped.log && res.posts.length === 0

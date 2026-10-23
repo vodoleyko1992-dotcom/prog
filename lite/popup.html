@@ -21,6 +21,7 @@
 <div id="profs" class="profs" role="tablist" aria-label="Профиль настроек">
   <button type="button" role="tab" data-kind="destr">⚔ Дестр<i></i></button>
   <button type="button" role="tab" data-kind="archer">🏹 Лук<i></i></button>
+  <button type="button" role="tab" data-kind="spoil">⛏ Споил<i></i></button>
 </div>
 <p id="profNote" class="hint"></p>
 
@@ -37,6 +38,18 @@
   </label>
   <label class="row">Сколько мобов убить <input id="limit" type="number" min="0" max="100000" step="1"> <span class="dim">0 — без лимита</span></label>
   <p class="hint">Бот бьёт ближайших обычных мобов; РБ, чемпионов и охрану эпиков не трогает. Ушёл с места (TvT, смерть) — вернётся телепортом за адену.</p>
+</section>
+
+<section id="spoilBox" hidden>
+  <h2>⛏ Споил <button id="spoilReset" type="button" class="small">Сбросить счёт</button></h2>
+  <label class="chk"><input id="spoilOn" type="checkbox"> <span>Спойлить мобов: дубина — Spoil Crush, иначе Spoil Festival, потом Spoil до попаданий</span></label>
+  <label class="row">Попыток Spoil на моба <input id="spoilTries" type="number" min="1" max="10" step="1"> <span class="dim">пока HP моба выше 30 %</span></label>
+  <label class="col">Что спойлить
+    <select id="spoilRes"><option value="">Любые ресурсы — бить ближайших</option></select>
+  </label>
+  <div id="spoilSpots" class="spots"></div>
+  <div id="spoilStat" class="dim"></div>
+  <p class="hint">Sweeper не нужен: добычу спойла игра кладёт в сумку сама. Тип оружия бот узнаёт сам — с дубиной Spoil Crush идёт первым.</p>
 </section>
 
 <section>
