@@ -1,10 +1,11 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 15.10: независимые границы фактических env ядра — режим меняется после получения callback.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),core=read('content.js');
 function binding(name){const i=core.indexOf('L2V7Modules.'+name+' = L2V7Factories.'+name+'('),j=core.indexOf('});',i);assert.ok(i>=0&&j>i,name);return core.slice(i,j+3)}
 function capture(name){
- const calls=[],c={actionLocation:{},cfg:{enchantMode:false},rt:{char:'Hero'},on:true,tabOwner:true,fire:node=>{calls.push(node);return true},L2V7Factories:{[name]:env=>env},L2V7Modules:{}};
+ const calls=[],c={actionWait:async()=>true,actionLocation:{},cfg:{enchantMode:false},rt:{char:'Hero'},on:true,tabOwner:true,fire:node=>{calls.push(node);return true},L2V7Factories:{[name]:env=>env},L2V7Modules:{}};
  vm.runInNewContext(binding(name),c);return {c,calls,env:c.L2V7Modules[name]};
 }
 for(const name of ['mammon','story','tvtshop','enemies'])test(name+': ранее полученный callback не нажимает кнопку после включения заточки',()=>{

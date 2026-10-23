@@ -1744,6 +1744,8 @@ async function battle() {
       if(!canSend())return false;if(!turnAnswered(pendingTurn))return 'lock';
     }
     pendingTurn=null;
+    // 23.10: общий темп ждём до снимков запроса и последних проверок HP/КД; отложенный клик не накапливаем.
+    if (env.actionWait && !await env.actionWait(canSend) || !canSend()) return false;
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
     // Не полагаемся на визуально готовую кнопку, когда сервер сообщил blockedBy=global.
     while (env.combatCooldown.globalWait() > 0) {

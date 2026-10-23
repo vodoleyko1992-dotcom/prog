@@ -374,6 +374,9 @@ async function runStep(now = Date.now()) {
   const char = env.rt.char;
   if (env.rt.craftPending?.code) return reconcile(t);
   if (env.rt.craftMpPending) return reconcileMp(t);
+  // 23.10: пауза до свежей книги/героя и durable намерения, никогда между намерением и отправкой.
+  if (env.actionWait && !await env.actionWait(() => active(t)) || !active(t)) return false;
+  now = Date.now();
   if (dedicated() && typeof env.plan === 'function') return chainStep(t, now);
   let mm = dedicated() ? { list: [] } : mammonWants();
   if (mm.bag) { let m = null; try { m = await env.invRefresh?.(); } catch (e) {} if (env.rt.char !== char || !env.on) return false; if (m) mm = mammonWants(); }

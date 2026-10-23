@@ -53,6 +53,9 @@
     if (writing || !active() || env.externalPending?.() || !spec?.key || !spec.kind || !spec.quote || !Number.isFinite(spec.quote.amount) || spec.quote.amount < 0 || !spec.quote.currency) return null;
     writing = true;
     try {
+      const before = context();
+      if (env.actionWait && !await env.actionWait(() => active() && context() === before)) return null;
+      if (!active() || context() !== before || env.externalPending?.()) return null;
       const previous = pending();
       // В этой же вкладке точно знаем, что клик ещё не отправлялся. После reload такого доказательства нет.
       if (previous && local.get(previous.id) === 'ready') {

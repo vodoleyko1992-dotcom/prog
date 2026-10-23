@@ -165,8 +165,8 @@
  }
  function locationProxy(native,manualAllowed=()=>false){
   const view={},navigate=()=>!env.challengeHold?.()&&(canAct()||(!env.on&&manualAllowed()));
-  for(const key of ['href','pathname','search','hash','origin','host','hostname','port','protocol'])Object.defineProperty(view,key,{get:()=>native[key],set:v=>{if(navigate())native[key]=v;}});
-  for(const key of ['assign','replace','reload'])view[key]=(...args)=>{if(navigate())return native[key](...args);};
+  for(const key of ['href','pathname','search','hash','origin','host','hostname','port','protocol'])Object.defineProperty(view,key,{get:()=>native[key],set:v=>{if(navigate()){env.actionNote?.();native[key]=v;}}});
+  for(const key of ['assign','replace','reload'])view[key]=(...args)=>{if(navigate()){env.actionNote?.();return native[key](...args);}};
   view.toString=()=>String(native);return view;
  }
 

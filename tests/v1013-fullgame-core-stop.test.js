@@ -1,4 +1,5 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 14.10: «Стоп» во время ожидания перед подтверждением не разрешает старому циклу покупать.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -7,7 +8,7 @@ function core() {
   const src = read('content.js'), start = src.indexOf('function fire(el)'), end = src.indexOf('// Single-writer settings update.', start);
   assert.ok(start >= 0 && end > start);
   // В полном runtime фабрика PvP уже есть; эти проверки сохраняют обычное состояние без смерти.
-  const box = { console, L2V7Modules: { pvp: { pending: () => false } }, on: true, running: true, tabOwner: true, invBusy: false, rt: {}, abHold: () => false,
+  const box = { actionNote() {}, console, L2V7Modules: { pvp: { pending: () => false } }, on: true, running: true, tabOwner: true, invBusy: false, rt: {}, abHold: () => false,
     PointerEvent: class { constructor(type) { this.type = type; } }, MouseEvent: class { constructor(type) { this.type = type; } } };
   box.window = box; vm.createContext(box); vm.runInContext(src.slice(start, end) + '\nthis.fire = fire;', box);
   return box;
@@ -70,7 +71,7 @@ test('исключения для ручного инвентаря и пане�
 
 function postCore() {
   const src = read('content.js'), start = src.indexOf('async function gamePost('), end = src.indexOf('async function gameGet(', start);
-  const requests = [], box = { rt:{}, console, L2V7Modules: { pvp: { pending: () => false } }, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
+  const requests = [], box = { actionNote() {}, rt:{}, console, L2V7Modules: { pvp: { pending: () => false } }, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
     autonomyMode: () => 'farm', // 15.10: проверяем Stop/lease обычного режима; смена на заточку покрыта отдельным диспетчерским тестом.
     gameAuth: () => ({}), fetch: async (url, init) => { requests.push({ url, method: init.method }); return { ok: true, json: async () => ({ clan: { name: 'Test' }, taskDefinitions: [], activeClanTasks: [], me: {} }) }; } };
   vm.createContext(box); vm.runInContext(src.slice(start, end) + '\nthis.gamePost=gamePost;', box);

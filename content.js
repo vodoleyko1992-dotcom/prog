@@ -87,7 +87,23 @@ async function idle(ms, label) {
     if (idleTvtBreak()) { rec('B', 'TvT', `прерываю ожидание «${String(label).slice(0, 60)}» — пора на TvT`); return; } setStatus(`${label} · ${Math.ceil((ms - (Date.now() - t0)) / 1000)} с`); await sleep(Math.min(1000, ms - (Date.now() - t0))); }
 }
 // «реакция» между ходами. На РБ — быстрее (модель 100 000 боёв: 300 → 150 мс среднее = −7 % времени боя; 600 мс = +17 %)
-const pause = () => { const rb = isBattle() && rt.target?.rb && cfg.rbFast !== false; return sleep(rb ? rnd(Math.min(cfg.reactMin, 100), Math.min(cfg.reactMax, 220)) : rnd(cfg.reactMin, cfg.reactMax)); };
+const actionPace = L2EngineCore.createActionPace({
+  delay: () => cfg.actionDelayMs, sleep,
+  read: () => { const p = JSON.parse(sessionStorage.getItem('l2bot.actionPace') || 'null'); return p?.char === (rt.char || '') ? p.at : 0; },
+  write: at => sessionStorage.setItem('l2bot.actionPace', JSON.stringify({ char: rt.char || '', at }))
+});
+async function actionWait(valid = () => true) {
+  const stamp = automationSnapshot(), cls = JSON.stringify(rt.classCur || null);
+  return actionPace.wait(() => automationCurrent(stamp) && cls === JSON.stringify(rt.classCur || null) && !abHold() && valid());
+}
+function actionNote() { if (on && tabOwner) actionPace.note(); }
+// После перехода отметка остаётся в этой вкладке: новая страница не начинает темп с нуля.
+addEventListener('pagehide', actionNote);
+const pause = async () => {
+  const stamp = automationSnapshot(), rb = isBattle() && rt.target?.rb && cfg.rbFast !== false;
+  await sleep(rb ? rnd(Math.min(cfg.reactMin, 100), Math.min(cfg.reactMax, 220)) : rnd(cfg.reactMin, cfg.reactMax));
+  return !on || automationCurrent(stamp) && await actionWait();
+};
 const visible = el => !!el && el.getClientRects().length > 0;
 const shown = el => !!el && !el.hidden && !el.closest('[hidden]') && visible(el);
 const isBattle = () => /battle/i.test(location.pathname);
@@ -148,6 +164,7 @@ function fire(el) {
   const o = { bubbles: true, cancelable: true, composed: true, view: window,
               clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0 };
   const p = { pointerId: 1, pointerType: 'mouse', isPrimary: true };
+  actionNote();
   el.dispatchEvent(new PointerEvent('pointerdown', { ...o, ...p, buttons: 1 }));
   el.dispatchEvent(new MouseEvent('mousedown', { ...o, buttons: 1 }));
   el.dispatchEvent(new PointerEvent('pointerup', { ...o, ...p }));
@@ -3399,6 +3416,7 @@ async function loopGate() {
   if(!on||!tabOwner)return true;
   if((Object.keys(cfg.limitRanges||{}).length || rt.dailyQuota) && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);return true;}
   L2V7Modules.actions?.enterFrame();
+  if (!await actionWait()) { await sleep(50); return true; }
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
   await L2V7Modules.craft?.noticeSync?.();
@@ -4100,6 +4118,7 @@ async function magisterStep() {
     // Короткий батч, чтобы main снова проверил TvT/Stop/срочную закупку. Остальные ранги остаются в job.
     for (let i = 0; i < 8 && magSame(M); i++) {
       if (rt.shop?.urgent || (cfg.tvtOn && L2V7Modules.tvt.tvtHold())) return;
+      if (!await actionWait(() => magSame(M))) return;
       // Ревизия читается ДО каталога. Любая ручная покупка между чтениями даст 409,
       // а не позволит оплатить следующий ранг по устаревшей цене/остатку SP.
       const snapshot = await magRead('/character');
@@ -4298,6 +4317,7 @@ async function gamePost(path, body, ms = 8000, lsPermit) {
   if (L2V7Modules.actions?.canAct?.() === false) throw new Error('action_cancelled');
   if (L2V7Modules.payments?.blocked?.() && !/^\/game\/(?:tvt\/register|battle\/(?:action|return-to-town))$/.test(path)) throw new Error('payment_unconfirmed');
   const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
+  actionNote();
   try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
 }
 async function gameGet(path, ms = 6000) {
@@ -6021,6 +6041,7 @@ async function actionScanStep(key){
 
 // 10.0.24: реестр продолжений. Read-only опросы не приобретают маршрут.
 L2V7Modules.actions = L2V7Factories.actions({
+ get actionNote(){return actionNote},
  get selfHold(){return selfHoldStart},
  get actionGeneration(){return ()=>automationGeneration},
  get rt(){return rt},get cfg(){return cfg},get on(){return on},get tabOwner(){return tabOwner},
@@ -6045,14 +6066,14 @@ L2V7Modules.actions = L2V7Factories.actions({
 const actionLocation=L2V7Modules.actions.locationProxy(location);
 // 20.43 (автономность, разбор 21.10): незакрытая квитанция перелёта (navigation.travelPending — исход клика сверяется, бот не на паузе)
 // запрещает новые оплаты так же, как ожидание оплаты кота и заточки
-L2V7Modules.payments = L2V7Factories.payments({
+L2V7Modules.payments = L2V7Factories.payments({ get actionWait(){return actionWait},
  get rt(){return rt},get setRt(){return setRt},get rtCommit(){return rtCommit},get on(){return on},get tabOwner(){return tabOwner},get rec(){return rec},get autonomyMode(){return autonomyMode},
  get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending||!!L2V7Modules.navigation?.travelPending?.()}
 });
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get badgeSync(){return badgeSync}, get dailyWorkReady(){return dailyWorkReady}, get fishTaskWaitKey(){return ()=>L2EngineCore.fishTaskWaitKey(cfg,rt)}, get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get actionWait(){return actionWait}, get badgeSync(){return badgeSync}, get dailyWorkReady(){return dailyWorkReady}, get fishTaskWaitKey(){return ()=>L2EngineCore.fishTaskWaitKey(cfg,rt)}, get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -6185,7 +6206,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get heroNick(){return heroNick}, get actionGeneration(){return ()=>automationGeneration}, get rtCommit(){return rtCommit}, get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get actionWait(){return actionWait}, get heroNick(){return heroNick}, get actionGeneration(){return ()=>automationGeneration}, get rtCommit(){return rtCommit}, get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
@@ -6335,7 +6356,7 @@ L2V7Modules.dungeons = L2V7Factories.dungeons({ get badgeSync(){return badgeSync
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.tvt = L2V7Factories.tvt({ get actionWait(){return actionWait}, get routeLocation(){return actionLocation}, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get gameGet() { return gameGet; }, get victory() { return victory; }, get leaveMark() { return leaveMark; },
   get TVT() { return TVT; }, set TVT(value) { TVT = value; },
   get TVTC() { return TVTC; }, set TVTC(value) { TVTC = value; },
@@ -6727,7 +6748,7 @@ L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get r
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
 // 20.43 (John 21.10 12:12): свой крафт материалов на сабе крафтера (modules/craft.js)
-L2V7Modules.craft = L2V7Factories.craft({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+L2V7Modules.craft = L2V7Factories.craft({ get actionWait(){return actionWait}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get actionGeneration() { return () => automationGeneration; }, get leaseEpoch() { return leaseEpoch; }, get mode() { return autonomyMode; },
   get plan() { return globalThis.L2CraftPlan?.plan; }, get notify() { return sendAlert; }, get clearAlert() { return clearAlert; },
   get role() { return () => L2V7Modules.subclass.role(); }, get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); }, get mammon() { return L2V7Modules.mammon; },
@@ -6743,7 +6764,7 @@ function kitPetNote(c) {
   petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || '', name: s?.nameUk || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
 }
 const kitPetHas = re => { const p = petState(); return !!p?.has && Date.now() - (+p.t || 0) < 10 * 60000 && re.test(String(p.key || '')); };
-L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get cfg() { return cfg; }, get rt() { return rt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
+L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get actionWait(){return actionWait}, get cfg() { return cfg; }, get rt() { return rt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
   get on() { return on; }, get tabOwner() { return tabOwner; }, get role() { return () => L2V7Modules.subclass.role(); }, get mode() { return autonomyMode; }, get lootGoal() { return lootGoal; },
   get isBattle() { return isBattle; }, get busy() { return () => fishNow() || tvtSoon(); }, get canAct() { return () => L2V7Modules.actions?.canAct?.(); },
   get gearBusy() { return () => !!rt.invScan || !!rt.autoLs?.hold || !!rt.autoLs?.pending || rt.weaponMetaPending?.status === 'pending' || !!L2V7Modules.subgo?.gearBusy?.(); },
@@ -6754,7 +6775,7 @@ L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get cfg() { return cfg; }, g
   get farmRbOn() { return farmRbOn; }, get rbCandidates() { return () => L2V7Modules.raid?.rbCandidates?.(); }, get mmNeed() { return id => L2V7Modules.mammon?.rawNeed?.(id); } });
 // 20.43 (John 21.10 13:37): вкладка «Сабкласс» — смена класса у Reorin и лучший комплект из сумки (modules/subgo.js). Свой POST идёт мимо hook.js,
 // поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры
-L2V7Modules.subgo = L2V7Factories.subgo({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
+L2V7Modules.subgo = L2V7Factories.subgo({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get actionWait(){return actionWait}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
   get on() { return on; }, get tabOwner() { return tabOwner; }, get isBattle() { return isBattle; }, get sleep() { return sleep; }, get rtCommit() { return rtCommit; },
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get crafterKit() { return L2V7Modules.crafterkit; },
   get taskNow() { return () => L2EngineCore.selectedTask(cfg, rt) ?? autonomyMode(); },
@@ -6780,7 +6801,7 @@ L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get leaseEpoch(){return leaseEpoch
   get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
-L2V7Modules.dailies = L2V7Factories.dailies({ get dailyFishBlocked(){return ()=>L2EngineCore.dailyBlocked(cfg,rt,'fish')}, get routeLocation(){return actionLocation}, get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get on() { return on && cfg.enchantMode !== true; }, get tabOwner() { return tabOwner; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
+L2V7Modules.dailies = L2V7Factories.dailies({ get actionWait(){return actionWait}, get dailyFishBlocked(){return ()=>L2EngineCore.dailyBlocked(cfg,rt,'fish')}, get routeLocation(){return actionLocation}, get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get on() { return on && cfg.enchantMode !== true; }, get tabOwner() { return tabOwner; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
   get campEnabled() { return campEnabled; }, get fishState() { return fishState; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 // Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
@@ -6860,7 +6881,7 @@ async function reduceLsAttempts(next) {
   cfg=withRb({...L2EngineCore.rawTaskConfig(cfg),autoLs:response.cfg.autoLs});
   rt={...rt,autoLs:response.autoLs};return {ok:true};
 }
-L2V7Modules.lifestone = L2V7Factories.lifestone({
+L2V7Modules.lifestone = L2V7Factories.lifestone({ get actionWait(){return actionWait},
   get cfg(){return cfg}, get rt(){return rt}, get on(){return on}, get tabOwner(){return tabOwner},
   get setRt(){return setRt}, get reduceAttempts(){return reduceLsAttempts}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
   get canPrepare(){return lifestonePrepareFree},
@@ -7253,7 +7274,7 @@ function warlockPetBuffGuess() {
   for (const n of names(cfg.nPetBuffs || '')) { const il = ilOf(n); if (!il || il.target !== 'PET' || !Number.isSafeInteger(il.id)) return null; out.push({ effectId: il.id === 1331 ? 4699 : il.id, name: n }); }
   return out;
 }
-L2V7Modules.warlock = L2V7Factories.warlock({ get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
+L2V7Modules.warlock = L2V7Factories.warlock({ get actionWait(){return actionWait}, get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
   get setCfg(){return setCfg}, get setStatus(){return setStatus}, get classNote(){return ch=>{L2V7Modules.story.charNote(ch);L2V7Modules.subclass.charNote(ch)}},
   get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get startPrepWanted(){return startPrepWanted}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
   get nativePanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()}, get nativePanelPath(){return ()=>location.pathname},

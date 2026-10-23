@@ -1,4 +1,5 @@
 'use strict';
+// 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 20.12 (ревизия 17.10, аудит core-a/C1, core-a/C2, core-a/H2, core-b/F2, farm/Q-4): «клапаны» главного цикла.
 // 1) сервер/вход/антибот раньше лимитов и PvP-восстановления; 2) отказ синхронизации лимитов не держит цикл вечно;
 // 3) устаревший ключ limitRanges отбрасывается фоном; 4) вход не блокируется неизвестной оплатой/PvP; 5) пульс сторожа — от живости main().
@@ -59,7 +60,7 @@ function fireBox(){
  const mk=(text,tag='button')=>({textContent:text,value:'',events:[],closest:s=>s==='form'?form:null,matches:s=>s.split(',').map(x=>x.trim()).includes(tag),
   scrollIntoView(){},getBoundingClientRect:()=>({left:0,top:0,width:10,height:10}),dispatchEvent(e){this.events.push(e.type)}});
  class Ev{constructor(type){this.type=type}}
- const c={on:true,tabOwner:true,running:true,invBusy:false,rt:{},window:{},location:{pathname:'/'},PointerEvent:Ev,MouseEvent:Ev,
+ const c={actionNote(){},on:true,tabOwner:true,running:true,invBusy:false,rt:{},window:{},location:{pathname:'/'},PointerEvent:Ev,MouseEvent:Ev,
   L2V7Modules:{payments:{blocked:()=>true,consumePermit:()=>false},pvp:{pending:()=>true},actions:{canAct:()=>true}},
   isBattle:()=>false,isMap:()=>false,isFishing:()=>false,$q:()=>null,abHold:()=>false,loginPage:()=>true};
  vm.createContext(c);

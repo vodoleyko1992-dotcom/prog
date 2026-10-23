@@ -244,8 +244,10 @@ async function step() {
   }
   const char = env.rt.char;
   if (s.pend) return reconcile(char);
+  const valid = () => env.rt.char === char && env.on && env.tabOwner && want() === kind && !env.isBattle?.() && !env.busy?.() && !env.gearBusy?.() && env.canAct?.() !== false;
+  if (env.actionWait && !await env.actionWait(valid) || !valid()) return false;
   // свежий ответ своего действия (≤ 3 с) заменяет GET; иначе — перечитать героя
-  let c = mem.last && now - mem.last.t < 3000 ? mem.last.c : null;
+  let c = mem.last && Date.now() - mem.last.t < 3000 ? mem.last.c : null;
   if (!c) { const R = await readChar(); if (env.rt.char !== char || !env.on) return false; c = R.c;
     if (!c?.revision) { later(s.phase ? 10000 : RECHECK); note('get', `не прочитан герой (${R.err || 'нет revision'}) — повторю ${s.phase ? 'через 10 с' : 'через минуту'}`); return false; } }
   mem.last = null;

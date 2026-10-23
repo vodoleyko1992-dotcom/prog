@@ -212,6 +212,7 @@
   <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
   <button data-tab="supply" data-short="Снабжение" title="Закупка банок, сосок и руды, резерв адены"><span class="ic">🛒</span><span class="lb">Снабжение</span></button>
   <button data-tab="sub" data-short="Сабкласс" title="Сменить класс у Maestro Reorin и одеть лучшее из сумки"><span class="ic">🧬</span><span class="lb">Сабкласс</span></button>
+  <button data-tab="speed" data-short="Скорость" title="Темп обычных шагов, боя и рыбалки"><span class="ic">◷</span><span class="lb">Скорость</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -460,7 +461,7 @@
   <label>🧪 Считать банки HP («убьём ли с банками?») <input id="rbUsePots" type="checkbox"></label>
   <label>Резерв банок (не тратить на РБ), шт. <input id="rbPotReserve" type="number" min="0"></label>
   <label>💧 Банки MP на РБ (при MP &lt; 80) <input id="rbMpPots" type="checkbox"></label>
-  <label>⚡ Быстрая реакция на РБ (100–220 мс) <input id="rbFast" type="checkbox"></label>
+  <label>⚡ Быстрая реакция на РБ (с общей паузой) <input id="rbFast" type="checkbox"></label>
   <div class="hint" data-cls="fighter">Модель 100 000 боёв (воин): бафф Bear −20 % времени, банки MP ещё −34 % (≈1,5 банки на РБ), быстрая реакция −7 %; Soul Breaker и Burning Fist в силовых −16 %. Станы на РБ бесполезны (HP и так держится вампириком). Без банок бот бережёт ману: по откату — удары с лучшим уроном на 1 MP (Force Blaster, Soul Breaker), дорогие — только из излишка.</div>
   <div class="hint">Бот меряет урон по РБ и потерю HP. Без банок не успеваем — считает, сколько банок нужно на всё убийство (с запасом 25 %) и хватит ли их за вычетом резерва и с учётом скорости питья. Этот расчёт остаётся справочным для обычного тура и не исключает цель.</div>
 
@@ -689,8 +690,6 @@
 <div class="hint">Какие слоты панели боя — банки и заряды. «🤖 Распознать» в разделе «Бой» заполняет их сам.</div>
   <h4>🧪 Зелья (бот изучает сам)</h4>
   <div id="potBox" class="zbox"><div class="hint">Пока пусто — бот запишет банки с панели в начале боя, а сколько лечит каждая — после первого глотка.</div></div>
-  <h4>Темп</h4>
-  <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
 </section>
 
 <section id="tab-enchant" data-disabled-auto-enchant hidden>
@@ -969,6 +968,21 @@
   <label>Щит <select id="subGoShield"><option value="auto">Авто — если оружие одноручное</option><option value="on">Надевать</option><option value="off">Не надевать</option></select></label>
   <div class="row"><button id="subGoStart" class="main">▶ Старт: сменить класс и одеть</button><button id="subGoGear" title="Класс не менять — только одеть лучшее для текущего класса">👕 Только одеть</button></div>
   <div id="subGoBox" class="hint" style="white-space:pre-line"></div>
+</section>
+
+<section id="tab-speed">
+  <h4>◷ Скорость бота</h4>
+  <label class="speed-control" for="actionDelayMs">
+    <span class="speed-heading"><span>Пауза между действиями</span><output id="actionDelayValue" for="actionDelayMs" aria-live="polite">1,0 с</output></span>
+    <span class="speed-track"><input id="actionDelayMs" type="range" min="500" max="5000" step="100" value="1000" aria-describedby="speedHint" aria-valuetext="1,0 с"></span>
+  </label>
+  <div class="speed-scale" aria-hidden="true"><span>0,5 с · быстрее</span><span>5,0 с · медленнее</span></div>
+  <div id="speedHint" class="hint">Замедляет обычные шаги, бой и рыбалку. Более долгие серверные паузы сохраняются. Значение сохраняется при отпускании бегунка.</div>
+  <div class="adv-start" data-adv="speed">⚙ Дополнительно: реакция</div>
+  <h4>Реакция бота</h4>
+  <label for="reactMin">Реакция — минимум, мс <input id="reactMin" type="number" min="80"></label>
+  <label for="reactMax">Реакция — максимум, мс <input id="reactMax" type="number" min="80"></label>
+  <div class="hint">Интервал реакции не уменьшает общую паузу между действиями.</div>
 </section>
 
 </div><!-- /.workarea -->
