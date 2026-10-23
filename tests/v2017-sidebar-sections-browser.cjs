@@ -5,7 +5,7 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  const P=h.popup;
  await h.sw.evaluate(async()=>{const{rt,cfg}=await chrome.storage.local.get(['rt','cfg']);await chrome.storage.local.set({rt:{...rt,weaponAug:{w:123,e:7,o:'prominence',g:'A'},weapons:[{id:123,name:'Тестовый посох',where:'надето'}],panel:[{cdKey:'ls_prominence'}]},cfg:{...cfg,mmTpMax:345000,sealMin:123,sealAuto:true}})});
  await P.reload();await until(()=>P.locator('#lsCurrent').textContent().then(s=>s.includes('Тестовый посох')));
- for(const [tab,field]of [['mammon','#mmTpMax'],['enchant','#enchantPanel'],['lifestone','#sealAuto'],['pvp','#pvpAll'],['tvt','#tvtOn'],['svc','#cfgExport']]){
+ for(const [tab,field]of [['mammon','#mmTpMax'],['enchant','#enchantPanel'],['lifestone','#sealAuto'],['pvp','#pvpAll'],['tvt','#tvtOn'],['epic','#epicCoinDailyMax'],['svc','#cfgExport']]){
   await h.openTab(tab);assert.equal(await P.locator(field).isVisible(),true,tab);assert.equal(await P.locator('section.act').getAttribute('id'),'tab-'+tab);
  }
  await h.openTab('mammon');assert.equal(await P.locator('#mmTpMax').inputValue(),'345000');
