@@ -2,6 +2,15 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
+## 23.10.2026, 10:16 UTC+10 — Claude — инструменты Claude Code в репозитории ([PR #363](https://github.com/vodoleyko1992-dotcom/prog/pull/363))
+
+- По прямой просьбе игрока «вставь в репозиторий» добавлены инструменты Claude Code; код бота, manifest, профиль и ZIP не менялись. Codex их не использует.
+- `.claude/skills/task-observer/` — навык rebelytics v3.7.0 (CC-BY-4.0), журнал наблюдений `docs/skill-observations/`; включение — строкой в CLAUDE.md. Стартовый хук `.claude/hooks/task-observer-start.sh` зарегистрирован в `.claude/settings.json` (SessionStart) по подтверждению игрока «Регистрируй» 23.10 10:20.
+- `.claude/skills/claude-automation-recommender/` — навык официального плагина Anthropic `claude-code-setup` (Apache-2.0); облачные сессии не ставят плагины из `enabledPlugins`, поэтому перенесён навыком.
+- `.mcp.json` — MCP-сервер Headroom 0.41.0 (`uvx`, только инструменты сжатия/извлечения, телеметрия выключена). Прокси-режим Headroom не подключён: при сбое прокси облачная сессия теряет связь с API.
+- Claude-Mem не добавлен: облачные сессии не ставят плагины, а его база не переживает одноразовый контейнер.
+- Проверки: 618 Node PASS / 0 FAIL, envcheck PASS, синтаксис хука, JSON `.mcp.json`, валидатор пакета task-observer PASS; MCP Headroom запущен через uvx, 3 инструмента, пробное сжатие PASS. Живую игру не открывали.
+
 ## 23.10.2026, 09:55 UTC+10 — Codex — сборка Firefox20.51 ([PR #362](https://github.com/vodoleyko1992-dotcom/prog/pull/362))
 
 - По прямой просьбе «Сборка под фаерфокс» собран основной Firefox20.51 из234737b, включая крафт#358, выход из ошибки боя#359 и Detect#361 после ChromeZIP20.51. Версию не поднимали, runtime/manifest/профиль/62старыхZIP/Chrome/Lite сохранены. Упаковка из чистого staging по68файлам, не рекурсивно из checkout.
