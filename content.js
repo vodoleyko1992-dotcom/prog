@@ -5696,6 +5696,9 @@ addEventListener('message', e => {
     const alive = TVT.selfCombat?.alive, selfCombat = typeof alive === 'boolean' ? { alive } : null;
     const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}|${TVT.schedule?.next?.slotKey || ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, registrationEndsAt: TVT.registrationEndsAt, registeredCount: TVT.registeredCount, maxPlayers: TVT.maxPlayers, off: TVT.off, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
+  // 20.55 (лог 24.10 03:00): павший без воскрешения и отказ «вы выбыли» — выбывание из этого события (см. tvt.tvtSelfOut)
+  try { if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error && d.res.self?.alive === false && !d.res.self.respawnAt && d.res.eventId) L2V7Modules.tvt.tvtSelfOut(d.res.eventId, 'HP 0, воскрешения нет');
+    if (path === '/game/tvt/action' && d.res?.error === 'tvt_attacker_dead') L2V7Modules.tvt.tvtSelfOut(TVTC?.eventId, 'сервер: «Ви вибули з цього TvT»'); } catch (er) {}
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 10.0.11 (лог 13.10 22:00): скиллы арены (MP, откат) и ответ на каждый удар — для выбора приёма по MP и для «клик ушёл на сервер?»
   if (path === '/game/tvt/skills' && Array.isArray(d.res?.skills)) {
