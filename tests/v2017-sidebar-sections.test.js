@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'popup.html'),'utf8'),js=fs.readFileSync(path.join(root,'popup.js'),'utf8');
 const section=id=>html.match(new RegExp('<section id="tab-'+id+'"[^>]*>([\\s\\S]*?)</section>'))?.[1]||'';
 test('Маммон, ЛС, PvP и сервис доступны напрямую; снятая автозаточка скрыта, контролы не дублируются',()=>{
- for(const [owner,ids]of Object.entries({mammon:['mmOrders','mmTpMax','mmGoalItem','mmGoalLvl','mmPlanBox','mmUpgrade','mmMailClaim'],enchant:['enchantModeToggle','enchantPanel'],lifestone:['lsCurrent','sealAuto','sealMin','sealNow','sealBox'],pvp:['pvpAll','pvpSpare','pvpTargetsPanel','enemyHunt'],tvt:['tvtOn','tsGoalItem'],svc:['cfgExport','memSave','recClear']})){
+ for(const [owner,ids]of Object.entries({mammon:['mmOrders','mmTpMax','mmGoalItem','mmGoalLvl','mmPlanBox','mmUpgrade','mmMailClaim'],enchant:['enchantModeToggle','enchantPanel'],lifestone:['lsCurrent','sealAuto','sealMin','sealNow','sealBox'],pvp:['pvpAll','pvpSpare','pvpTargetsPanel','enemyHunt'],tvt:['tvtOn','tsGoalItem'],epic:['epicToggle2','epicCoinDailyMax','epicFaFull','epicMaxDeaths','epicTable'],svc:['cfgExport','memSave','recClear']})){
   // 20.25: по запросу игрока автозаточка временно убрана; старые ID сохранены для восстановления.
   if(owner==='enchant') assert.match(html,/<button data-disabled-auto-enchant hidden data-tab="enchant"/);
   else assert.match(html,new RegExp('<button data-tab="'+owner+'"'));

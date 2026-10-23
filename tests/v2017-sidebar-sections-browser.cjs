@@ -10,7 +10,7 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  await P.reload();await until(()=>P.locator('#lsCurrent').textContent().then(s=>s.includes('Тестовый посох')));
  assert.equal(await P.locator('#moduleNav [data-tab="enchant"]').isVisible(),false,'кнопка автозаточки скрыта');await P.evaluate(()=>showTab('enchant'));
  assert.equal(await P.locator('section.act').getAttribute('id'),'tab-overview','enchant → Обзор');assert.equal(await P.locator('#enchantPanel').count(),1,'разметка заточки сохранена');assert.equal(await P.locator('#enchantPanel').isVisible(),false);
- for(const [tab,field]of [['mammon','#mmTpMax'],['lifestone','#sealAuto'],['pvp','#pvpAll'],['tvt','#tvtOn'],['svc','#cfgExport']]){  // 23.10 (#378): PvP и TvT — отдельные разделы
+ for(const [tab,field]of [['mammon','#mmTpMax'],['lifestone','#sealAuto'],['pvp','#pvpAll'],['tvt','#tvtOn'],['epic','#epicCoinDailyMax'],['svc','#cfgExport']]){  // 23.10 (#378): PvP и TvT — отдельные разделы; «Эпики» — отдельно от «РБ»
   await h.openTab(tab);assert.equal(await P.locator(field).isVisible(),true,tab);assert.equal(await P.locator('section.act').getAttribute('id'),'tab-'+tab);
  }
  await h.openTab('mammon');assert.equal(await P.locator('#mmTpMax').inputValue(),'345000');

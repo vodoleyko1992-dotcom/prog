@@ -9,8 +9,8 @@ const html = read('popup.html'), js = (read('defaults.js') + '\n' + read('popup.
 const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
-// 22.10: выделенный раздел крафта добавлен после охоты.
-const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt'];
+// 22.10: выделенный раздел крафта добавлен после охоты. 23.10: «Эпики» — свой раздел, не подраздел «РБ».
+const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt', 'epic'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
 // 20.25: снятая автозаточка остаётся скрытым контейнером, доступных вкладок на одну меньше.
@@ -21,7 +21,7 @@ for (const t of SECS) assert.match(html, new RegExp(`<button data-tab="${t}" dat
 // 2. старые имена разделов → новый раздел, метка на месте и лежит внутри него
 const tg = js.match(/const TAB_GROUP = \{([\s\S]*?)\};/)[1];
 const map = Object.fromEntries([...tg.matchAll(/(\w+): '(\w+)'/g)].map(m => [m[1], m[2]]));
-const OLD = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb',
+const OLD = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
   seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 assert.deepEqual(map, OLD);
