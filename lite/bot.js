@@ -20,7 +20,8 @@
   const K_CFG = 'lite.cfg', K_RT = 'lite.rt', K_CMD = 'lite.cmd';
   const DEF_RT = { k: { kills: 0 }, zone: null, status: '', statusT: 0, log: [], deaths: [], revive: null, goZone: '', tpTry: [], zoneBlockT: 0,
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
-    char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0, by: {}, arrowOut: null, arrowNote: 0, arrowLow: 0 };
+    char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0, by: {}, arrowOut: null, arrowNote: 0, arrowLow: 0,
+    spoil: null, spoilW: {} };                     // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
   // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
   let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
@@ -100,6 +101,9 @@
       if (k === kind) setRt({ cmdDone: c.id, k: { ...(rt.k || {}), kills: 0, lastK: null }, limitNoted: 0 });
       else setRt({ cmdDone: c.id, by: { ...(rt.by || {}), [k]: { ...((rt.by || {})[k] || {}), kills: 0, limitNoted: 0 } } });
       log(`${k === kind ? pr : L.KIND_RU[k] + ': '}счётчик мобов сброшен`);
+    } else if (c.type === 'spoilReset') {             // 1.6: счёт спойла с нуля (знание, что игра пишет итог спойла, остаётся)
+      setRt({ cmdDone: c.id, spoil: { t0: Date.now(), known: spStat().known || 0 } });
+      log('счёт спойла сброшен');
     } else setRt({ cmdDone: c.id });
     void flushRt();
   }
@@ -227,6 +231,7 @@
         const by = {};
         for (const x of c.inventory.stacks.slice(0, 2000)) if (x && L.ARROWS[+x.itemId] && Number.isSafeInteger(+x.qty) && +x.qty > 0) by[+x.itemId] = (by[+x.itemId] || 0) + +x.qty;
         const eq = c.inventory.eq;
+        if (eq && Object.prototype.hasOwnProperty.call(eq, 'l1')) wpnSeen(eq.l1 == null ? null : num(eq.l1.itemId));
         arrowsSeen(by, { name: c.name, prof: c.l2Profession, slot: c.classSlots?.activeSlot, rev: c.revision,
           weaponId: eq && Object.prototype.hasOwnProperty.call(eq, 'l1') ? (eq.l1 == null ? null : num(eq.l1.itemId)) : undefined }, { started });
       }
@@ -270,6 +275,7 @@
     if (r.add > 0) { progress(); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
     if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows, ch, seen);
+    if (ch.weaponId !== undefined) wpnSeen(ch.weaponId);
     const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null,
       ...(L.clsKind(ch.prof) === 'archer' && ARW ? { arrows: ARW.by } : {}) };
     if (JSON.stringify(c) !== JSON.stringify(rt.char)) setRt({ char: c });
@@ -366,7 +372,7 @@
     notify('arrows', 'L2wap Lite: нет стрел', 'Лучник без стрел не охотится. Положите стрелы в сумку — бот продолжит сам.');
   }
 
-  // ---------- класс героя (1.3): ведём только Дестра/Титана; 1.5 — и лучника, у каждого свой профиль ----------
+  // ---------- класс героя (1.3): ведём только Дестра/Титана; 1.5 — и лучника, 1.6 — и спойлера, у каждого свой профиль ----------
   function clsSet(name, prof, slot, slots) {
     if (typeof name !== 'string' || !name) return;
     if (CLS && (CLS.name !== name || CLS.prof !== prof || CLS.slot !== (Number.isInteger(slot) ? slot : null))) gen++;
@@ -390,7 +396,8 @@
     void flushRt();
   }
   // Панель в памяти прочитана у класса этого профиля (или класс тогда не был известен; память 1.2.1 — по герою в rt.char).
-  const barMine = () => (rt.barCls ? L.clsKind(rt.barCls) === L.rtKind(rt) : L.heroClass(rt.char?.prof).ok !== false);
+  // 1.6: спойлер теперь свой класс — панель без barCls, прочитанная у БХ, всё равно не Дестра: сверяем профиль героя, а не «ведём ли».
+  const barMine = () => (rt.barCls ? L.clsKind(rt.barCls) === L.rtKind(rt) : !rt.char?.prof || L.clsKind(rt.char.prof) === L.rtKind(rt));
   let pullT = 0;
   async function heroPull() {                       // игра ещё не присылала героя на этой странице — спросим сами (раз в 5 с)
     if (Date.now() - pageT0 < 1500 || Date.now() - pullT < 5000) { await sleep(300); return; }
@@ -399,13 +406,13 @@
   }
   function clsWait(hc) {
     const who = CLS.name, alts = (hc.alts || []).map(a => `${a.name} (${L.slotRu(a.slot)})`).join(' или ');
-    const how = alts ? `переключите в игре класс на ${alts}` : 'войдите в игру Дестром/Титаном или лучником либо переключите на него сабкласс';
-    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника: ${how}. Пока жду и ничего не жму`);
+    const how = alts ? `переключите в игре класс на ${alts}` : 'войдите в игру Дестром/Титаном, лучником или спойлером либо переключите на него сабкласс';
+    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера: ${how}. Пока жду и ничего не жму`);
     const sig = who + '|' + hc.name;
     if (rt.clsNote === sig) return;
     setRt({ clsNote: sig });
-    log(`активен ${hc.name} (${who}) — Lite только для Дестра и лучника: ничего не жму, жду ${alts || 'Дестра или лучника'}`);
-    notify('cls', 'L2wap Lite: нужен Дестр или лук', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника.`);
+    log(`активен ${hc.name} (${who}) — Lite только для Дестра, лучника и спойлера: ничего не жму, жду ${alts || 'Дестра, лучника или спойлера'}`);
+    notify('cls', 'L2wap Lite: нужен Дестр, лук или спойлер', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера.`);
   }
 
   // ---------- антибот: решает только человек ----------
@@ -476,6 +483,12 @@
     if (!cd || cd.hidden || !cd.classList.contains('l2-battle-hotbar-slot-cd--on')) return false;
     const t = parseFloat((cd.querySelector('.l2-battle-hotbar-slot-cd__timer')?.textContent || '').replace(',', '.'));
     return !(t <= 0.1);
+  }
+  // 1.6: через сколько мс слот будет готов — по своим блокировкам, модели откатов сервера и таймеру на панели.
+  function slotLeft(b, key, action) {
+    const now = Date.now(), t = parseFloat((b.querySelector('.l2-battle-hotbar-slot-cd--on .l2-battle-hotbar-slot-cd__timer')?.textContent || '').replace(',', '.'));
+    const srv = action && cdKnown(action, pressAt.get(action) || 0) ? cdWait(action) : 0;
+    return Math.max(0, (block.get(key) || 0) - now, CD.globalWait(''), srv, srv ? 0 : t > 0 ? t * 1000 : 0);
   }
   function slotReady(b, key, action) {
     const now = Date.now();
@@ -549,6 +562,7 @@
       const s = { ...info, b, action: action.toLowerCase(), i, ready: slotReady(b, info.key, action.toLowerCase()) };
       if (s.type === 'buff' || s.type === 'lowhp') s.active = !!(s.id && act.has(s.id));
       if (s.type === 'toggle') s.active = toggleState(s);
+      if (s.type === 'spoil') s.left = s.ready ? 0 : slotLeft(b, info.key, action.toLowerCase());   // 1.6: ждать ли откат спойла
       if (tvt) {
         const x = tvtSkill(action, name);
         if (x) { s.tvtOk = x.usable !== false && (s.type === 'basic' || !x.targetType || /enemy|enemies|opponent/i.test(x.targetType)); if (+x.mpCost > 0) s.mp = +x.mpCost; if (L.ms(x.readyAt) > tvtNow() + 50) s.ready = false; }
@@ -583,18 +597,25 @@
   // still() — план ещё тот же (Lite 1.1, основной бот 20.37): пока ждали игру, ответ мог назначить новый откат или сменить HP —
   // тогда не жмём старое, а сразу выбираем заново.
   let quick = false;                               // ход подтверждён сервером — следующий круг без «человеческой» паузы
+  // 1.6: чем кончилось последнее нажатие: ok | busy | cd | replan | lost | noresp | arrows | unavail | nomp | err (шагу спойла).
+  let pressWhy = '';
+  // 1.6: приём, который сервер не даёт с этим оружием («Цей скилл зараз недоступний…», battle_skill_not_allowed): не жмём 5 мин,
+  // а сменилось оружие — сразу снова пробуем (раньше бот жал его каждые 1,2 с и терял ход). Журнал — раз в 10 мин на приём.
+  const UNAVAIL = /not_allowed|unavailable|not_learned|weapon|недоступн|не можна використ|нельзя использ/i, UNAV_MS = 5 * 60000;
+  const unav = new Map();
   // Быстрый удар (1.2): одноразовая метка для hook.js «действие|время» — только на этот клик; пустое действие метку снимает.
   const fastMark = a => { try { const ds = document.documentElement.dataset; if (a) ds.l2liteFast = a + '|' + Date.now(); else delete ds.l2liteFast; } catch (e) {} };
   async function press(plan, g, tvt, still = null) {
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
+    pressWhy = 'busy';
     if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
-    if (!tvt && (CD.globalWait('') > 0 || (s.action && cdWait(s.action) > 0 && cdKnown(s.action, pressAt.get(s.action) || 0)))) { quick = true; return false; }
+    if (!tvt && (CD.globalWait('') > 0 || (s.action && cdWait(s.action) > 0 && cdKnown(s.action, pressAt.get(s.action) || 0)))) { pressWhy = 'cd'; quick = true; return false; }
     // 1.5.2: не стреляем без базы сумки этого документа: иначе каждый переход терял состав и повторял отказ стрел.
     if (!tvt && cfg.kind === 'archer' && (!ARW || ARW.realm !== arrowRealm(CLS))) {
       await heroNow();
       if (!(await gameIdle(1500, g)) || !alive(g) || !ARW || ARW.realm !== arrowRealm(CLS) || arrowsOut()) return false;
     }
-    if (still && !still()) { quick = true; return false; }
+    if (still && !still()) { pressWhy = 'replan'; quick = true; return false; }
     status(`${tvt ? 'TvT' : 'Бой'}: ${s.name} — ${plan.why}`);
     const t0 = Date.now(), frozen = frozenSince.has(key), arrowShot = ARW;
     const slackA = NET.actEnd ? t0 - (NET.actEnd + lockA) : 1e9, slackB = NET.charEnd ? t0 - (NET.charEnd + lockB) : 1e9, bindB = slackB < slackA, gap = Math.min(slackA, slackB);
@@ -605,7 +626,7 @@
     if (s.pot) lastPot = { ...lastPot, [s.pot]: t0 };
     const st = await waitFor(() => NET.starts.find(x => x.t >= t0 && x.path === path && x.method === 'POST'), 450, 15);
     if (!st) {                                       // игра клик не отправила: слот «занят» 0,7 с, запас, решавший впритык, растёт
-      fastMark('');
+      fastMark(''); pressWhy = 'lost';
       block.set(key, Date.now() + 700);
       if (frozen) frozenLost.set(key, (frozenLost.get(key) || 0) + 1);
       if (gap < 250) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
@@ -615,24 +636,34 @@
     }
     if (gap < 60) { if (bindB) lockB = Math.max(LOCK_B[0], lockB - 1); else lockA = Math.max(LOCK_A[0], lockA - 2); lockSave(); }   // прошёл впритык — чуть быстрее
     const end = await waitFor(() => NET.ends.get(st.rid), 6000, 20, g);
-    if (!end) return false;
+    if (!end) { pressWhy = 'noresp'; return false; }
     lostN.set(key, 0);
     if (!(end.status >= 200 && end.status < 300) || end.err) {
       // Отказ сервера: общий откат держит модель откатов (не слот); откат этого скилла, который сервер прислал, — тоже модель.
       const cdErr = end.by === 'global' || end.by === 'skill' || /cooldown|перезаряд/i.test(end.err);
       // 1.5: сервер не дал выстрелить из-за стрел (нет или не того грейда) — охоту ставим на паузу до новых стрел.
       if (!tvt && cfg.kind === 'archer' && /arrow|стріл|стрел/i.test(end.err || '')) {
+        pressWhy = 'arrows';
         if (!alive(g) || (arrowShot?.realm && arrowShot.realm !== arrowRealm(CLS))) return false;
         arrowRejected(arrowShot, g); log(`сервер не дал выстрелить: «${String(end.err).slice(0, 60)}» — стрел нет или они не под грейд лука`);
         return false;
       }
+      pressWhy = 'cd';
       if (end.by === 'global') { if (CD.globalWait('') <= 0) block.set(key, Date.now() + 300); quick = true; return false; }
       if (cdErr && s.action && cdWait(s.action) > 0) { quick = true; return false; }
       if (cdErr && end.rem > 0) { block.set(key, Date.now() + Math.min(end.rem, 30000) + 20); quick = true; return false; }   // 1.5.1: сервер сказал, сколько ждать
+      if (!tvt && !cdErr && s.type !== 'basic' && !s.pot && UNAVAIL.test(end.err || '')) {
+        pressWhy = 'unavail'; block.set(key, Date.now() + UNAV_MS); unav.set(key, Date.now() + UNAV_MS);
+        const nt = sess.get('l2lite.unavLog', {});
+        if (Date.now() - (nt[key] || 0) > 600000) { sess.set('l2lite.unavLog', { ...nt, [key]: Date.now() }); log(`${s.name}: игра не даёт (${String(end.err).slice(0, 60)}) — 5 мин не жму${L.wpnBySkill(s.id) || L.isCrush(s) ? ' (приём под другое оружие)' : ''}`); }
+        return false;
+      }
+      pressWhy = cdErr ? 'cd' : /mp|мана/i.test(end.err) ? 'nomp' : 'err';
       block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : cdErr ? 700 : 1200));
       return false;
     }
-    progress(); lastActOk = Date.now(); quick = true;
+    progress(); lastActOk = Date.now(); quick = true; pressWhy = 'ok';
+    if (s.id && L.wpnBySkill(s.id)) wpnLearn(L.wpnBySkill(s.id) === 'blunt' ? 'blunt' : 'other', s.name);   // 1.6: приём прошёл — оружие подходит ему
     if (s.action && s.type !== 'basic') {           // 1.5.1: выстрел добил моба — откат держим сами, иначе в новом бою ранний выстрел и отказ
       const w = cdWait(s.action);
       if (w > 0 && cdKnown(s.action, t0)) cdLen.set(s.action, w + Date.now() - t0);
@@ -681,6 +712,7 @@
     const s0 = SNAP;
     await waitFor(() => SNAP !== s0, 1500, 50, g);   // ответ /character игры после победы — свежий счётчик и локация
     if (!alive(g)) return;
+    if (cfg.kind === 'spoil') spoilVictory();
     const why = stopFarm();
     if (!why) {
       const hunt = await waitFor(() => { const b = $('#battle-victory-hunt'); return shown(b) && !b.disabled ? b : null; }, 2500, 100, g);
@@ -728,6 +760,11 @@
     if (Date.now() - Math.max(lastActOk, pageT0) > 45000) { log('45 с ни одного принятого хода — выхожу на карту'); lastActOk = Date.now(); await toMap(g); return; }
     const opt = () => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot });
     const slots = slotsNow(false), plan = L.planTurn(slots, meStats(), mob, opt());
+    // 1.6: спойлер — сначала спойл (как основной бот: Crush/Festival/Spoil в начале боя), но банки, лимиты и лечение — раньше него.
+    if (cfg.kind === 'spoil') {
+      spbFor(mob);
+      if (!(plan && (plan.slot.pot || plan.slot.type === 'lowhp' || plan.slot.type === 'heal')) && await spoilStep(slots, mob, g)) return;
+    }
     // Lite 1.1: всё на откате — ждём ровно до ближайшей готовности по ответу сервера (не дольше 0,1 с), а не круг с паузой.
     if (!plan) { status('Бой: жду отката'); await nap(Math.max(10, Math.min(readyIn(slots) + 5, 100))); quick = true; return; }
     await press(plan, g, false, () => { const p = L.planTurn(slotsNow(false), meStats(), mobHp(), opt()); return !!p && p.slot.key === plan.slot.key; });
@@ -736,11 +773,126 @@
   function readyIn(slots) {
     const now = Date.now(); let w = Infinity;
     for (const s of slots) {
-      if (s.on === false || s.type === 'other') continue;
+      if (s.on === false || s.type === 'other' || s.type === 'spoil') continue;
       const t = Math.max((block.get(s.key) || 0) - now, CD.globalWait(''), s.action ? cdWait(s.action) : 0);
       if (t > 0) w = Math.min(w, t);
     }
     return w;
+  }
+
+  // ---------- спойл (1.6, порт modules/loot.js основного бота): Spoil Crush / Spoil Festival / Spoil в начале боя, добыча после победы ----------
+  // Строки лога боя: текст строки — из частей через пробел, префикс «Спойл:» (новый renderer игры 14.10) — тоже (основной бот logLines).
+  function logLines() {
+    const box = $('#battle-log'); if (!box) return [];
+    const txt = l => { const b = l.querySelector('.l2-battle-log-line__body'); if (!b || b.children.length <= 1) return l.textContent;
+      const prefix = l.querySelector('.l2-battle-log-line__spoil-prefix')?.textContent.trim();
+      return [prefix, ...[...b.children].map(c => c.textContent.trim())].filter(Boolean).join(' '); };
+    return [...box.querySelectorAll('.l2-battle-log-line')].map(txt).map(x => String(x || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  }
+  const mobSpoiled = () => /(^|\|)spoil:/i.test($('#battle-mob-effects-row')?.dataset.effectsSig || '');   // значок спойла на мобе
+  const spoilSeen = before => L.newLines(before, logLines()).some(l => L.SPOIL_OK.test(l) || L.SPOIL_FAIL.test(l) || L.festivalParse([l]).length);
+  // Счёт спойла (rt.spoil): mobs — убито спойлером, sp — из них заспойлено, ok/fail — одиночный Spoil/Crush, ch — шанс из сообщения,
+  // mass/massOk/massFail — Festival, items — добыча {предмет: шт.}, loots — победы с добычей, known — игра пишет итог спойла, logT — сводка.
+  const spStat = () => ({ t0: Date.now(), mobs: 0, sp: 0, ok: 0, fail: 0, ch: 0, mass: 0, massOk: 0, massFail: 0, items: {}, loots: 0, known: 0, logT: 0, ...(rt.spoil || {}) });
+  // Оружие (номер надетого из ответа игры): тип — по справочнику, иначе по принятым приёмам (rt.spoilW). true — дубина, false — нет, null — не знаем.
+  let WPN = { id: undefined, t: 0 };
+  function wpnSeen(id) {
+    if (id !== null && !(Number.isSafeInteger(id) && id > 0)) return;
+    if (WPN.id !== undefined && WPN.id !== id) { for (const k of unav.keys()) block.delete(k); unav.clear(); }   // оружие сменили — приёмы снова пробуем
+    WPN = { id, t: Date.now() };
+  }
+  function wpnBlunt() {
+    if (WPN.id === undefined) return null;
+    if (WPN.id === null) return false;
+    const k = L.wpnKind(WPN.id) || (rt.spoilW || {})[WPN.id] || null;
+    return k === 'blunt' ? true : k ? false : null;
+  }
+  function wpnLearn(kind, why) {
+    if (cfg.kind !== 'spoil' || !(Number.isSafeInteger(WPN.id) && WPN.id > 0) || L.wpnKind(WPN.id) || (rt.spoilW || {})[WPN.id] === kind) return;
+    const W = Object.fromEntries(Object.entries({ ...(rt.spoilW || {}), [WPN.id]: kind }).slice(-20));
+    setRt({ spoilW: W });
+    log(`оружие #${WPN.id}: ${kind === 'blunt' ? 'дубина' : 'не дубина'} (${why}) — ${kind === 'blunt' ? 'Spoil Crush жму первым' : 'Spoil Crush не жму'}`);
+  }
+  // Память боя (sessionStorage — переживает перезагрузку страницы): тот же моб (адрес боя, имя, макс. HP), HP не выросло и бой
+  // не кончился победой — это тот же бой; иначе новый. {tries — принятые Spoil/Crush, spoiled, massTried — Festival был, waitT0 — с
+  // какого времени ждём откат, block — кнопки спойла, запрещённые до конца боя, log0 — лог на начале боя (для добычи), won — победа учтена}
+  const SPB_KEY = 'l2lite.spb';
+  let SPB = sess.get(SPB_KEY, null);
+  const spbSave = () => sess.set(SPB_KEY, SPB);
+  const mobNameNow = () => L.mobRow(($('#battle-mob-title')?.textContent || '').trim(), '').name || (BINFO && Date.now() - BINFO.t < 600000 ? BINFO.name : '') || '';
+  function spbFor(mob) {
+    const name = mobNameNow(), key = [spawnId(), name, mob.maxHp].join('|'), now = Date.now();
+    if (SPB && !SPB.won && SPB.key === key && now - (SPB.seen || 0) < 120000 && mob.hp <= (SPB.hp ?? mob.hp) + mob.maxHp * 0.05) {
+      if (SPB.hp !== mob.hp || now - SPB.seen > 5000) { SPB.hp = mob.hp; SPB.seen = now; spbSave(); }
+      return SPB;
+    }
+    SPB = { key, name, t0: now, seen: now, hp: mob.hp, tries: 0, spoiled: false, massTried: false, waitT0: 0, block: {}, log0: logLines().slice(-80), won: false };
+    spbSave();
+    return SPB;
+  }
+  // Спойлить нечем (на панели нет Spoil / Festival / Crush или они без галки) — одна строка в журнал раз в 30 мин.
+  function spoilNone(slots) {
+    if (slots.some(s => s.type === 'spoil' && s.on !== false) || Date.now() - (sess.get('l2lite.spNone', 0) || 0) < 1800000) return;
+    sess.set('l2lite.spNone', Date.now());
+    log('на панели боя нет включённых Spoil / Spoil Festival / Spoil Crush — не спойлю, просто бью (галки — в меню «Споил», раздел «Скиллы»)');
+  }
+  async function spoilStep(slots, mob, g) {
+    if (cfg.spoilOn === false || !mob || !(mob.hp > 0)) return false;
+    const st = spbFor(mob);
+    if (st.spoiled) return false;
+    if (mobSpoiled()) { st.spoiled = true; spbSave(); return false; }   // значок спойла уже висит — не жмём (игра ответила бы «уже заспойлен»)
+    const opt = () => ({ blunt: wpnBlunt(), tries: cfg.spoilTries, now: Date.now() });
+    if (WPN.id === undefined && Date.now() - WPN.t > 60000) { WPN.t = Date.now(); void heroNow(); }   // оружие не знаем — спросим игру (раз в минуту)
+    const p = L.spoilPlan(slots, meStats(), mob, st, opt());
+    if (!p) { spoilNone(slots); return false; }
+    if (p.wait) { if (!st.waitT0) { st.waitT0 = Date.now(); spbSave(); } status(`Бой: ${p.why}`); await nap(p.wait); quick = true; return true; }
+    const before = logLines(), key = p.slot.key;
+    const ok = await press(p, g, false, () => { const m = mobHp(), q = m && L.spoilPlan(slotsNow(false), meStats(), m, st, opt()); return !!q && !q.wait && q.slot.key === key; });
+    if (!alive(g)) return true;
+    if (!ok) {
+      if (pressWhy === 'unavail' || pressWhy === 'nomp') {      // до конца боя эту кнопку не жмём; Crush не дали — оружие не дубина
+        st.block[key] = Date.now() + 10 * 60000; spbSave();
+        if (pressWhy === 'unavail' && L.isCrush(p.slot)) wpnLearn('other', 'игра не дала Spoil Crush');
+        if (pressWhy === 'nomp') log(`${p.slot.name}: не хватило MP — в этом бою спойл им не жму`);
+      }
+      return true;
+    }
+    if (p.kind === 'mass') st.massTried = true; else st.tries++;
+    spbSave();
+    await waitFor(() => mobSpoiled() || spoilSeen(before), 1000, 40, g);
+    const fresh = L.newLines(before, logLines()), S = spStat();
+    if (p.kind === 'mass') {
+      // Итог Festival: «Spoil Festival: Моб: успіх (63%); Моб2: промах (51%)» — главный помечен или нет; соседи — в счёт.
+      const res = L.festivalParse(fresh), one = L.spoilResult(fresh), main = res.find(x => L.nameLike(x.name, st.name));
+      const oks = res.length ? res.filter(x => x.ok && !x.was).length : one.ok ? 1 : 0, bads = res.length ? res.filter(x => !x.ok).length : one.bad ? 1 : 0;
+      if (mobSpoiled() || main?.ok || (!res.length && one.ok)) st.spoiled = true;
+      Object.assign(S, { mass: S.mass + 1, massOk: S.massOk + oks, massFail: S.massFail + bads, known: res.length || one.ok ? 1 : S.known });
+      if (S.mass === 1) log(`Spoil Festival: ${res.length ? res.map(x => `${x.name} ${x.was ? 'уже' : x.ok ? '✅' : '✗'}${x.ch ? ' ' + x.ch + '%' : ''}`).join(', ') : one.ok ? '✅' : one.bad ? '✗' : 'игра итог не написала'}${st.spoiled ? '' : ' — главного добью обычным Spoil'}`);
+    } else {
+      const r = L.spoilResult(fresh);
+      if (r.ok && !S.known) log(`игра пишет итог спойла: «${r.ok.slice(0, 80)}» — дальше считаю по нему`);
+      if (r.ok || mobSpoiled()) { st.spoiled = true; S.ok++; if (r.ok) S.known = 1; if (r.ch) S.ch = r.ch; }
+      else if (r.bad) { S.fail++; if (r.ch) S.ch = r.ch; st.block[key] = Date.now() + 300; }
+      else if (!S.known && st.tries >= 2) st.spoiled = true;   // игра молчит (другой язык?) — после 2 нажатий считаем помеченным
+    }
+    spbSave(); setRt({ spoil: S });
+    return true;
+  }
+  // Победа спойлера: добыча «Спойл: X ×N» из лога (игра собирает её сама — Sweeper не жмём), счёт и сводка в журнал раз в 10 мин.
+  function spoilVictory() {
+    if (cfg.spoilOn === false || !SPB || SPB.won) return;
+    const st = SPB, loot = L.spoilLoot(L.newLines(st.log0 || [], logLines())), S = spStat(), items = { ...(S.items || {}) };
+    st.won = true; spbSave();
+    for (const x of loot) items[x.name] = (items[x.name] || 0) + x.n;
+    Object.assign(S, { mobs: S.mobs + 1, sp: S.sp + (st.spoiled || loot.length ? 1 : 0), loots: S.loots + (loot.length ? 1 : 0), items });
+    const keys = Object.keys(items);
+    if (keys.length > 60) for (const k of keys.sort((a, b) => items[a] - items[b]).slice(0, keys.length - 60)) delete items[k];
+    if (Date.now() - (S.logT || 0) > 600000) { S.logT = Date.now(); log(`спойл: ${spoilSummary(S)}`); }
+    setRt({ spoil: S });
+  }
+  function spoilSummary(S) {
+    const top = Object.entries(S.items || {}).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n, q]) => `${n} ${q}`).join(', ');
+    return `заспойлено ${S.sp} из ${S.mobs} мобов · Spoil ✅${S.ok} ✗${S.fail}${S.ch ? ` (шанс ${S.ch} %)` : ''}${S.mass ? ` · Festival ${S.mass} (✅${S.massOk} ✗${S.massFail})` : ''}${top ? ' · добыча: ' + top : ''}`;
   }
 
   // ---------- карта: ближайший обычный моб; цепочка «Охотиться дальше» — в бою ----------
@@ -794,13 +946,15 @@
     if (!alive(g)) return;
     if (!rows) { status('Карта: список мобов не загрузился — обновляю'); await sleep(3000); if (alive(g)) location.reload(); await sleep(3000); return; }
     for (const [id, t] of badSpawn) if (Date.now() - t > 120000) badSpawn.delete(id);
-    let m = L.pickMob(rows, { hero: heroLvl(), skip: new Set(badSpawn.keys()) });
+    // 1.6: спойлер с выбранным ресурсом — сначала ближайший моб, с которого он спойлится (уровень моба в ярусе ресурса).
+    const res = cfg.kind === 'spoil' && cfg.spoilOn !== false ? L.spoilRes(cfg.spoilRes) : null, prefer = res ? r => L.spoilChance(res, r.lvl) > 0 : null;
+    let m = L.pickMob(rows, { hero: heroLvl(), skip: new Set(badSpawn.keys()), prefer });
     for (let pg = 0; !m && pg < 3; pg++) {            // на первой странице только боссы/чемпионы — листаем дальше
       const next = $('#map-mob-page-next'); if (!shown(next) || next.disabled) break;
       const k0 = rows.map(r => r.id).join(','); fire(next, g);
       rows = await waitFor(() => { const r = mapRows(); return r.length && r.map(x => x.id).join(',') !== k0 ? r : null; }, 4000, 150, g);
       if (!rows) break;
-      m = L.pickMob(rows, { hero: heroLvl(), skip: new Set(badSpawn.keys()) });
+      m = L.pickMob(rows, { hero: heroLvl(), skip: new Set(badSpawn.keys()), prefer });
     }
     if (!m) {
       noMobT0 = noMobT0 || Date.now();
@@ -811,6 +965,7 @@
       await sleep(15000); if (alive(g)) location.reload(); await sleep(3000); return;
     }
     noMobT0 = 0;
+    if (res && !prefer(m) && Date.now() - (sess.get('l2lite.resLog', 0) || 0) > 600000) { sess.set('l2lite.resLog', Date.now()); log(`рядом нет мобов, с которых спойлится ${res.name} (нужен ${L.spoilMin(res)}+ ур.) — бью ближайших; места под ресурс — в меню «Споил»`); }
     status(`Атакую ${m.name}${m.lvl ? ' (' + m.lvl + ' ур.)' : ''}`);
     await flushRt();
     if (!fire(m.a, g)) return;

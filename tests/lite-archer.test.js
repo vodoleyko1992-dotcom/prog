@@ -17,7 +17,8 @@ test('лучники: 2-я и 3-я профессии трёх рас; кинж�
     'elf_moonlight_sentinel', 'Phantom Ranger', 'HAWKEYE']) { assert.equal(L.isArcher(p), true, p); assert.equal(L.clsKind(p), 'archer', p); }
   for (const p of ['dark_elf_assassin', 'human_rogue', 'elf_scout', 'dark_elf_abyss_walker', 'human_treasure_hunter', 'elf_plains_walker',
     'dark_elf_storm_screamer', 'orc_titan', '', null]) assert.equal(L.isArcher(p), false, String(p));
-  assert.equal(L.clsKind('orc_titan'), 'destr'); assert.equal(L.clsKind('dwarf_bounty_hunter'), null);
+  // 1.6: спойлер — свой профиль «Споил»; крафтер-гном — нет
+  assert.equal(L.clsKind('orc_titan'), 'destr'); assert.equal(L.clsKind('dwarf_bounty_hunter'), 'spoil'); assert.equal(L.clsKind('dwarf_warsmith'), null);
 });
 
 test('класс героя: активен Phantom Ranger — ведём (профиль лука); активен основной маг — подсказка про Титана и лука', () => {

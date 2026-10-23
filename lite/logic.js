@@ -4,6 +4,8 @@
 // счётчик убитых мобов по серверному character.mobsKilled, выбор моба на карте, цена телепорта.
 // Lite 1.5 (21.10, John: «это дестр, есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный
 // профиль на лука»): лучники (Hawkeye/Sagittarius, Silver Ranger/Moonlight Sentinel, Phantom Ranger/Ghost Sentinel) и два профиля настроек.
+// Lite 1.6 (23.10, John: «Сверстай еще в боте сектор "споил", возьми все данные из основного проекта Бот»): спойлер (Scavenger →
+// Bounty Hunter → Fortune Seeker) — третий профиль; спойл в бою по правилам modules/loot.js основного бота, уровни мобов под ресурс.
 (function (root) {
   'use strict';
 
@@ -55,11 +57,19 @@
     344: ['Lethal Blow', 'attack', 5773, 77, 0, 15, 0], 223: ['Sting', 'attack', 609, 83, 0, 11, 3], 96: ['Bleed', 'other', 100, 99, 0, 13, 3],
     356: ['Focus Chance', 'buff', 0, 36, 0, 120, 120], 357: ['Focus Power', 'buff', 0, 36, 0, 120, 120], 358: ['Bluff', 'other', 100, 35, 0, 30, 5],
     12: ['Switch', 'other', 80, 34, 0, 12, 1], 60: ['Fake Death', 'other', 0, 200, 0, 0, 3], 27: ['Unlock', 'other', 100, 67, 0, 120, 0],
+    // Lite 1.6: спойлер (skills-il.js; каталог магистра kb/data/game-skills-spoiler-20261016.json). Тип spoil — шаг спойла в начале боя,
+    // не удар (spoilPlan). Sweeper не жмём никогда: добычу спойла игра собирает сама (основной бот 7.2, игрок: «свип нам не нужен»).
+    // MP спойла — первого ранга (Spoil 12–67, Festival 73–204): не хватит — сервер откажет, и бот до конца боя спойл не жмёт.
+    254: ['Spoil', 'spoil', 0, 12, 0, 10, 15], 348: ['Spoil Crush', 'spoil', 2, 70, 0, 10, 0], 302: ['Spoil Festival', 'spoil', 0, 73, 0, 10, 15],
+    42: ['Sweeper', 'other', 0, 3, 0, 0.5, 0], 34: ['Bandage', 'other', 0, 19, 0, 3, 0],
   };
   // 1.5: оружие приёма (skills-il.js, «только: лук / кинжал / меч…»). В профиле лука приёмы ближнего боя по умолчанию не жмём,
   // в профиле Дестра — выстрелы: с чужим оружием сервер их не примет, а бот терял бы на них ходы. Галкой игрок включит сам.
   const BOW_ONLY = new Set([19, 24, 56, 101, 313, 314, 343, 354, 369, 413, 414]);
   const MELEE_ONLY = new Set([3, 12, 16, 30, 96, 223, 263, 344, 356, 357, 358]);
+  // 1.6: оружие спойлера по принятому сервером приёму (каталог магистра Ромера: Stun Attack и Hammer Crush — «только булава», Whirlwind
+  // и Wild Sweep — «только копьё»; Spoil Crush — дубина, skills-il.js). Прошёл такой приём — знаем, жать ли Spoil Crush первым.
+  const BLUNT_ONLY = new Set([100, 260, 348]), POLE_ONLY = new Set([36, 245]);
   // L2WAP у части воинских скиллов шлёт именованный actionId вместо l2_<id> (основной бот, NATIVE_SKILL_IL, лог 16.10 07:15).
   // 1.5: вся таблица игры L2_BATTLE_ID_TO_ACTION (battle-hotbar.js, тред «Изучение лука» 21.10; у лучника выстрелы приходят только
   // так: power_shot, double_shot, stun_shot, soul_of_sagittarius).
@@ -79,14 +89,15 @@
     sonic_focus: 8, sonic_buster: 9, fatal_strike: 190, hammer_crush: 260, triple_sonic_slash: 261, sonic_guard: 442, sonic_rage: 345,
     sonic_move: 451
   };
-  const TYPES = ['attack', 'buff', 'lowhp', 'trance', 'heal', 'toggle', 'other'];
-  const TYPE_RU = { attack: 'Удар', buff: 'Бафф', lowhp: 'При HP ≤ 30 %', trance: 'Транс → лимиты', heal: 'Лечение', toggle: 'Стойка', other: 'Не жать' };
+  const TYPES = ['attack', 'buff', 'lowhp', 'trance', 'heal', 'toggle', 'spoil', 'other'];
+  const TYPE_RU = { attack: 'Удар', buff: 'Бафф', lowhp: 'При HP ≤ 30 %', trance: 'Транс → лимиты', heal: 'Лечение', toggle: 'Стойка', spoil: 'Спойл', other: 'Не жать' };
   const LOW_ORDER = [176, 420, 139];              // после транса: Frenzy → Zealot → Guts (как PR #297 основного бота)
 
   const cleanTitle = t => String(t || '').split(/\s+[—–-]\s+|\s*\(|\n/)[0].trim();
   // Незнакомый скилл: тип по подсказке слота «Имя — описание». По умолчанию он выключен — игрок включает сам.
   function guessType(title) {
     const t = String(title || '').toLowerCase();
+    if (/^(?:spoil|спойл)/.test(t)) return 'spoil';                // 1.6: незнакомый приём спойла — шаг спойла, не удар
     if (/hp\s*(?:≤|<=|<|до)\s*30|при\s+hp|якщо\s+hp/.test(t)) return 'lowhp';
     if (/стойк|стійк|тоггл|toggle|включить и держать/.test(t)) return 'toggle';
     if (/лечит|лікує|восстан|віднов|heal/.test(t)) return 'heal';
@@ -105,8 +116,8 @@
   }
   // Что жмём, пока игрок сам не решил: известные удары, баффы, лимиты, транс и лечение — да; стойки и прочее — нет.
   // 1.5: kind — профиль (destr/archer): приёмы чужого оружия по умолчанию выключены.
-  const offWeapon = (info, kind) => !!info && (kind === 'archer' ? MELEE_ONLY.has(info.id) : kind === 'destr' ? BOW_ONLY.has(info.id) : false);
-  const defaultOn = (info, kind) => !!info && info.known && ['attack', 'buff', 'lowhp', 'trance', 'heal'].includes(info.type) && !offWeapon(info, kind);
+  const offWeapon = (info, kind) => !!info && (kind === 'archer' ? MELEE_ONLY.has(info.id) : kind === 'destr' || kind === 'spoil' ? BOW_ONLY.has(info.id) : false);
+  const defaultOn = (info, kind) => !!info && info.known && ['attack', 'buff', 'lowhp', 'trance', 'heal', 'spoil'].includes(info.type) && !offWeapon(info, kind);
   // Выбор игрока поверх таблицы: {on, type}. Тип «basic» (обычная атака) не меняется — она всегда запасной ход.
   function skillUse(info, choice, kind) {
     if (!info) return null;
@@ -289,6 +300,129 @@
   }
   const limitDone = (kills, limit) => +limit > 0 && +kills >= +limit;
 
+  // ---------- спойл (1.6, порт modules/loot.js основного бота 20.43–20.46) ----------
+  // Сообщения игры (content.js основного бота, логи 08.10 21:31 и 21.10): «Спойл успішний (59%)», «Спойл не вдався (56%)»,
+  // «Spoil: моб уже заспойлений»; итог Festival одной строкой «Spoil Festival: Моб: успіх (63%); Моб2: промах (51%)»;
+  // добыча после победы — «Спойл: Coal ×5» (игра собирает её сама, Sweeper не нужен).
+  const SPOIL_OK = /(спойл|spoil)[^.]{0,40}(актив|успе[шх]|успіш|успіх|наклад|наложен|activat|success)|(актив|успе[шх]|успіш)[^.]{0,30}(спойл|spoil)|condition of spoil|(уже|вже)\s+заспойл|already spoil/i;
+  const SPOIL_FAIL = /(спойл|spoil)[^.]{0,40}(не (удал|прош|сработ|вдав|спрацю)|провал|fail|resist)|(не (удал|прош|сработ|вдав|спрацю)|fail)[^.]{0,30}(спойл|spoil)/i;
+  const SPOIL_LOOT = /^(?:Спойл|Spoil)\s*:?\s*(.+?)\s*×\s*(\d+)/i;
+  const FEST_LINE = /^(?:spoil festival|спойл[- ]фестиваль)\s*:/i;
+  // Новые строки лога: одинаковые строки прошлых ходов новыми не считаются (основной бот newLines).
+  function newLines(before, after) {
+    const c = new Map(); (before || []).forEach(l => c.set(l, (c.get(l) || 0) + 1));
+    return (after || []).filter(l => { const n = c.get(l) || 0; if (n) { c.set(l, n - 1); return false; } return true; });
+  }
+  const nameLike = (a, b) => { a = String(a || '').toLowerCase().trim(); b = String(b || '').toLowerCase().trim(); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
+  // → [{name, ok, ch, was}] из строки итога Festival; «Моб: вже заспойлено» — метка уже висела (ok, was).
+  function festivalParse(lines) {
+    const L = (lines || []).find(l => FEST_LINE.test(String(l || '').trim())); if (!L) return [];
+    return L.replace(/^[^:]+:\s*/, '').split(/\s*;\s*/).map(part => {
+      const w = part.match(/^(.+?)\s*:\s*(?:вже|уже)\s+заспойл|^(.+?)\s*:\s*already\s+spoil/i);
+      if (w) return { name: (w[1] || w[2]).trim(), ok: true, ch: 0, was: true };
+      const m = part.match(/^(.+?)\s*:\s*(успіх|успех|success|ok|промах|провал|fail|miss)\s*(?:\((\d+)\s*%\))?/i);
+      return m ? { name: m[1].trim(), ok: /усп|success|ok/i.test(m[2]), ch: +m[3] || 0 } : null;
+    }).filter(Boolean);
+  }
+  // Итог одиночного спойла из новых строк: ok — строка успеха, bad — строка провала, ch — шанс из «(56%)».
+  function spoilResult(fresh) {
+    const ok = (fresh || []).find(l => SPOIL_OK.test(l) && !FEST_LINE.test(l)) || '';
+    const bad = ok ? '' : (fresh || []).find(l => SPOIL_FAIL.test(l) && !FEST_LINE.test(l)) || '';
+    return { ok, bad, ch: +((bad || ok).match(/(\d+)\s*%/) || [])[1] || 0 };
+  }
+  // Добыча спойла из строк победы → [{name, n}] (одинаковые предметы складываем).
+  function spoilLoot(lines) {
+    const by = new Map();
+    for (const l of lines || []) { const m = String(l || '').match(SPOIL_LOOT); if (m && m[1].length < 64) by.set(m[1].trim(), (by.get(m[1].trim()) || 0) + +m[2]); }
+    return [...by].map(([name, n]) => ({ name, n }));
+  }
+  const isMassSpoil = s => !!s && (s.id === 302 || /festival|фестивал/i.test(s.name || ''));
+  const isCrush = s => !!s && !isMassSpoil(s) && (s.id === 348 || /crush|розтрощ|сокруш/i.test(s.name || ''));
+  // Тип оружия по номеру предмета (items-il.json основного бота: wt «дубина»/«двуруч. дубина» и «древковое»): Spoil Crush — только
+  // с дубиной (иначе игра отвечает «скилл зараз недоступний»). Оружие L2WAP без типа в справочнике — по принятым приёмам (бот учится).
+  const idRanges = t => t.split(',').map(x => x.split('-').map(Number)).map(([a, b]) => [a, b ?? a]);
+  const WPN_BLUNT = idRanges('4-9,86-92,152-214,744,747-749,754,1300-1301,1304,1511,2370,2373,2501-2504,4221,4726-4758,4864-4905,5596-5607,6355,6365-6366,6369,6579,6584-6589,6596-6598,6608-6610,6613-6616,6716,6718-6719,7058,7701-7718,7816-7817,7822,7825,7829,7834,7890-7902,8120-8152,8212-8213,8218,8528,8531,8576-8577,8582,8585,8589,8680-8681,8687-8688,8763,8794-8799,8815-8820,8823-8824,8832,8836,8841-8843,8850-8851,8861,8866,8928-8930,8974,8976-8977,8984-8985,8993-8995,9002-9003,9013,9018,9023-9024');
+  const WPN_POLE = idRanges('15-16,93-98,291-307,1302-1303,1376,1472,3026,3937-3939,4834-4863,5626-5634,5817,6370,6599-6601,6621,7719-7721,7831,8205,8208,8214,8221,8591,8683,8803-8805,8829,8831,8840,8858,8860,8927,8972,8990,8992,9010,9012,9028');
+  const inRanges = (R, id) => R.some(([a, b]) => id >= a && id <= b);
+  const wpnKind = id => (!Number.isSafeInteger(id) || id <= 0 ? null : inRanges(WPN_BLUNT, id) ? 'blunt' : inRanges(WPN_POLE, id) ? 'pole' : null);
+  // Приём, принятый сервером, говорит об оружии: дубина — Stun Attack/Hammer Crush/Spoil Crush, древковое — Whirlwind/Wild Sweep.
+  const wpnBySkill = id => (BLUNT_ONLY.has(id) ? 'blunt' : POLE_ONLY.has(id) ? 'pole' : null);
+
+  // Шаг спойла (основной бот loot.spoilStep / massSpoilStep / spoilWait, 20.43–20.46):
+  // 1) дубина — первым Spoil Crush (удар + спойл за ход); вот-вот откатится (≤ 1 с) — ждём его;
+  // 2) Spoil Festival (100 % по всем живым рядом, выгоден и по одной цели) — один раз за бой, и после неудачного Spoil/Crush
+  //    («не прошёл спойл Crush'ем, а моб жив — следующий ход снова через Festival»); без дубины в начале боя вот-вот
+  //    откатится — ждём его (с дубиной ждём только Crush); на ожидания — не больше 1,5 с за бой;
+  // 3) обычный Spoil: до opt.tries попыток (4), повтор — пока HP моба > 30 %; Spoil Crush без подтверждённой дубины — после Spoil,
+  //    с подтверждённым другим оружием — никогда.
+  // sl — слоты боя (slotsNow; у слотов спойла type 'spoil', left — мс до готовности); st — память боя {tries, spoiled, massTried,
+  // waitT0, block: {key: до}}; opt {blunt: true | false | null, tries, now}. → null | {slot, kind: 'crush'|'mass'|'single', why} | {wait: мс, why}
+  const SPOIL_WAIT = 1000, SPOIL_WAIT_MAX = 1500;
+  function spoilPlan(sl, me, mob, st = {}, opt = {}) {
+    if (!mob || !(mob.maxHp > 0) || !(mob.hp > 0) || st.spoiled) return null;
+    const now = opt.now || Date.now(), tries = st.tries || 0, maxT = Number.isFinite(+opt.tries) ? Math.max(1, Math.min(10, +opt.tries)) : 4;
+    const blunt = opt.blunt === true ? true : opt.blunt === false ? false : null;
+    const mpKnown = Number.isFinite(me?.mp) && me?.maxMp > 0, mpOk = s => !(s.mp > 0) || !mpKnown || me.mp >= s.mp;
+    const sp = (sl || []).filter(s => s && s.type === 'spoil' && s.on !== false && !((st.block || {})[s.key] > now) && mpOk(s));
+    const crush = sp.filter(s => isCrush(s) && blunt !== false), mass = sp.filter(isMassSpoil), single = sp.filter(s => !isCrush(s) && !isMassSpoil(s));
+    const waitOk = !tries && !st.massTried && (!st.waitT0 || now - st.waitT0 < SPOIL_WAIT_MAX);
+    const soon = s => !s.ready && s.left > 0 && s.left <= SPOIL_WAIT;
+    const wait = (s, why) => ({ wait: Math.max(30, Math.min(150, Math.round(s.left))), slot: s, why });
+    if (blunt && !tries && !st.massTried) {
+      const c = crush.find(s => s.ready) || null;
+      if (c) return { slot: c, kind: 'crush', why: 'спойл: Spoil Crush (дубина)' };
+      const w = waitOk && crush.find(soon);
+      if (w) return wait(w, 'жду откат Spoil Crush');
+    }
+    if (!st.massTried) {
+      const m = mass.find(s => s.ready);
+      if (m) return { slot: m, kind: 'mass', why: tries ? 'масс-спойл после промаха' : 'масс-спойл' };
+      const w = !blunt && waitOk && mass.find(soon);
+      if (w) return wait(w, 'жду откат Spoil Festival');
+    }
+    if (tries >= maxT || (tries && mob.hp < mob.maxHp * 0.3)) return null;
+    const rank = s => (isCrush(s) ? (blunt ? 0 : 2) : 1);
+    const x = [...crush, ...single].filter(s => s.ready).sort((a, b) => rank(a) - rank(b) || (a.i || 0) - (b.i || 0))[0];
+    return x ? { slot: x, kind: isCrush(x) ? 'crush' : 'single', why: `спойл (${tries + 1})` } : null;
+  }
+
+  // Ресурсы спойла по уровню моба (справочник игры GET /game/farm-guide, kb/data/game-farm-guide.json, 23.10): у спойла все мобы
+  // одного яруса дают одно и то же сырьё — [номер, имя, [[ур. от, ур. до, шанс %], …]]. Последний ярус открыт вверх (мобы 80+).
+  const SPOIL_RES = [
+    [1869, 'Iron Ore', [[3, 35, 55], [40, 80, 60]]], [1870, 'Coal', [[3, 35, 55], [40, 80, 60]]], [1871, 'Charcoal', [[3, 35, 55], [40, 80, 60]]],
+    [1864, 'Stem', [[3, 35, 55], [40, 80, 60]]], [1868, 'Thread', [[3, 35, 55], [40, 80, 60]]], [1872, 'Animal Bone', [[3, 35, 55], [40, 80, 60]]],
+    [1865, 'Varnish', [[3, 35, 48], [40, 80, 53]]], [1867, 'Animal Skin', [[3, 35, 48], [40, 80, 53]]],
+    [1866, 'Suede', [[21, 39, 48], [40, 80, 53]]], [1873, 'Silver Nugget', [[21, 39, 48], [40, 80, 53]]],
+    [1875, 'Stone of Purity', [[36, 39, 42], [40, 80, 47]]], [1876, 'Mithril Ore', [[36, 39, 42], [40, 80, 47]]],
+    [1874, 'Oriharukon Ore', [[51, 80, 41]]], [1877, 'Adamantite Nugget', [[61, 80, 41]]],
+  ].map(([id, name, bands]) => ({ id, name, bands }));
+  const spoilRes = name => SPOIL_RES.find(r => r.name.toLowerCase() === String(name || '').trim().toLowerCase()) || null;
+  // Шанс ресурса со спойла моба этого уровня, % (0 — с такого моба не спойлится).
+  function spoilChance(res, lvl) {
+    const r = typeof res === 'string' ? spoilRes(res) : res, L = +lvl || 0;
+    if (!r || L <= 0) return 0;
+    const last = r.bands[r.bands.length - 1];
+    const b = r.bands.find(([a, z]) => L >= a && L <= z) || (L > last[1] ? last : null);
+    return b ? b[2] : 0;
+  }
+  const spoilMin = res => (res && res.bands.length ? res.bands[0][0] : 0);
+  // Места под ресурс для героя: локации из списка телепорта (rt.locs: {id, name, lo, hi}) с мобами не ниже героя −5 и не выше +5,
+  // у которых спойлится ресурс; лучше — больший шанс, затем мобы ближе к уровню героя. → до n мест {id, name, lo, hi, ch}
+  function spoilSpots(locs, res, hero, n = 3) {
+    const r = typeof res === 'string' ? spoilRes(res) : res, H = +hero || 0;
+    if (!r || H <= 0) return [];
+    const out = [];
+    for (const x of Array.isArray(locs) ? locs : []) {
+      if (!x || !x.id || !(x.lo > 0)) continue;
+      const lo = Math.max(x.lo, H - 5), hi = Math.min(x.hi > 0 ? x.hi : x.lo, H + 5);
+      if (lo > hi) continue;
+      let ch = 0;
+      for (let L = lo; L <= hi; L++) ch = Math.max(ch, spoilChance(r, L));
+      if (ch > 0) out.push({ id: x.id, name: x.name || x.id, lo: x.lo, hi: x.hi, ch, d: Math.abs((x.lo + (x.hi > 0 ? x.hi : x.lo)) / 2 - H) });
+    }
+    return out.sort((a, b) => b.ch - a.ch || a.d - b.d || String(a.name).localeCompare(String(b.name))).slice(0, n).map(({ d, ...x }) => x);
+  }
+
   // ---------- карта ----------
   // Метки «чемпион»/«босс» — только в приписке после имени (основной бот 7.2: «Hatar Ratman Boss · ур. 48» — обычный моб).
   const LV_RE = /^([^\p{L}\d]*)(.+?)\s*[·•]\s*ур\.?\s*(\d+)/iu;
@@ -314,10 +448,11 @@
   }
   // Ближайший обычный моб (список карты уже по дистанции). РБ, охрану эпиков, чемпионов и NPC не трогаем;
   // моб сильно выше героя (> +10) — тоже нет: бот рассчитан на автономную охоту без присмотра.
+  // 1.6: opt.prefer(row) — сначала ближайший из подходящих (спойлер: моб, с которого спойлится выбранный ресурс), нет таких — любой обычный.
   function pickMob(rows, opt = {}) {
     const above = Number.isFinite(+opt.above) ? +opt.above : 10;
-    return rows.find(r => r.id && !r.boss && !r.champ && !r.npc && !(opt.skip && opt.skip.has(r.id))
-      && !(opt.hero > 0 && r.lvl > 0 && r.lvl > opt.hero + above)) || null;
+    const ok = r => r.id && !r.boss && !r.champ && !r.npc && !(opt.skip && opt.skip.has(r.id)) && !(opt.hero > 0 && r.lvl > 0 && r.lvl > opt.hero + above);
+    return (typeof opt.prefer === 'function' && rows.find(r => ok(r) && opt.prefer(r))) || rows.find(ok) || null;
   }
 
   // ---------- класс героя ----------
@@ -331,12 +466,15 @@
   const profKey = p => String(p || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   const isDestr = p => /^(?:orc_)?(?:raider|destroyer|titan)$|^orc_fighter$/.test(profKey(p));
   const isArcher = p => /^(?:(?:human|elf|dark_elf)_)?(?:hawkeye|sagittarius|silver_ranger|moonlight_sentinel|phantom_ranger|ghost_sentinel)$/.test(profKey(p));
-  const clsKind = p => (isDestr(p) ? 'destr' : isArcher(p) ? 'archer' : null);
-  const KINDS = ['destr', 'archer'];
-  const KIND_RU = { destr: 'Дестр', archer: 'Лук' };
+  // 1.6: спойлер — гном Scavenger (1-я профессия, Spoil с 20 ур.) → Bounty Hunter (Spoil Festival с 40) → Fortune Seeker (Spoil Crush).
+  // Крафтеры Artisan/Warsmith/Maestro — не спойлеры: их Lite не ведёт.
+  const isSpoiler = p => /^(?:dwarf_)?(?:scavenger|bounty_hunter|fortune_seeker)$/.test(profKey(p));
+  const clsKind = p => (isDestr(p) ? 'destr' : isArcher(p) ? 'archer' : isSpoiler(p) ? 'spoil' : null);
+  const KINDS = ['destr', 'archer', 'spoil'];
+  const KIND_RU = { destr: 'Дестр', archer: 'Лук', spoil: 'Споил' };
   const profName = p => profKey(p).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  // ok: true — Дестр/Титан или лучник, false — другой класс, null — профессия не прочитана (не мешаем); kind — чей профиль.
-  // alt — слот Дестра или лучника у этого же героя (первый), alts — все такие слоты.
+  // ok: true — Дестр/Титан, лучник или спойлер (1.6), false — другой класс, null — профессия не прочитана (не мешаем); kind — чей профиль.
+  // alt — слот Дестра, лучника или спойлера у этого же героя (первый), alts — все такие слоты.
   function heroClass(prof, slots, slot) {
     const p = profKey(prof), kind = p ? clsKind(p) : null;
     const alts = (Array.isArray(slots) ? slots : []).filter(s => s && s.slot !== slot && clsKind(s.prof))
@@ -349,11 +487,13 @@
   const arrowsText = by => Object.entries(by || {}).filter(([, q]) => +q > 0).sort((a, b) => +a[0] - +b[0])
     .map(([id, q]) => `${ARROWS[id] || '#' + id} ${q}`).join(' · ');
 
-  // ---------- профили настроек (1.5): у Дестра и у лучника свои ----------
+  // ---------- профили настроек (1.5): у Дестра и у лучника свои; 1.6 — и у спойлера ----------
   // В хранилище lite.cfg: on — общий; поля профиля — в p.destr / p.archer. Настройки до 1.5 лежат прямо в lite.cfg —
   // это профиль Дестра (Lite до 1.5 вёл только его), профиль лука начинается с умолчаний.
-  const PROF_KEYS = ['zone', 'zoneName', 'killLimit', 'tvt', 'skills', 'hpPot', 'mpPot', 'maxDeaths', 'fastTurn'];
-  const DEF_PROF = { zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true };
+  // 1.6: поля спойла (spoilOn — спойлить, spoilTries — попыток обычного Spoil на моба, spoilRes — ресурс, под который выбираем мобов
+  // и места) есть у каждого профиля, но читает их только профиль «Споил».
+  const PROF_KEYS = ['zone', 'zoneName', 'killLimit', 'tvt', 'skills', 'hpPot', 'mpPot', 'maxDeaths', 'fastTurn', 'spoilOn', 'spoilTries', 'spoilRes'];
+  const DEF_PROF = { zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true, spoilOn: true, spoilTries: 4, spoilRes: '' };
   const kindOf = k => (KINDS.includes(k) ? k : 'destr');
   const pickProf = o => Object.fromEntries(PROF_KEYS.filter(k => o && o[k] !== undefined).map(k => [k, o[k]]));
   function profCfg(raw, kind) {
@@ -410,7 +550,9 @@
   const api = { SK, NATIVE, TYPES, TYPE_RU, cleanTitle, guessType, skillInfo, defaultOn, skillUse, fastHit, meMerge, potKind, planTurn,
     tvtView, phaseLive, tvtDecide, tvtPollGap, killStep, limitDone, mobRow, pickMob, teleportCost, fmtLeft, ms, BOW_ONLY, MELEE_ONLY, offWeapon, isDestr, isArcher, clsKind, KINDS, KIND_RU, profName, heroClass, slotRu, ARROWS, arrowsText,
     PROF_KEYS, DEF_PROF, profCfg, profPatch, rtKind, profRt, profSwap,
-    noMobWhy, TGL_DOM_ON, toggleOn, toggleDecide, toggleFlap, TGL_FLAP_MS, TGL_HOLD_MS };
+    noMobWhy, TGL_DOM_ON, toggleOn, toggleDecide, toggleFlap, TGL_FLAP_MS, TGL_HOLD_MS,
+    isSpoiler, SPOIL_OK, SPOIL_FAIL, SPOIL_LOOT, newLines, nameLike, festivalParse, spoilResult, spoilLoot, isMassSpoil, isCrush,
+    BLUNT_ONLY, POLE_ONLY, wpnKind, wpnBySkill, spoilPlan, SPOIL_WAIT, SPOIL_WAIT_MAX, SPOIL_RES, spoilRes, spoilChance, spoilMin, spoilSpots };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

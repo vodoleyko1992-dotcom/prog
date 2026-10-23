@@ -5,6 +5,7 @@
 // Lite 1.4 (21.10): то же меню — окном на странице игры (#dock), сворачивается в плавающую кнопку.
 // Lite 1.5 (21.10, John: «отдельный профиль на дестра, отдельный профиль на лука»): вкладки профилей «Дестр» и «Лук» — у каждого
 // свои место, лимит, TvT, скиллы и «Ещё»; открыт профиль активного в игре класса, другой можно настроить заранее.
+// Lite 1.6 (23.10, John: «Сверстай еще в боте сектор "споил"»): третий профиль «Споил» и его раздел — спойл, ресурс, места, счёт.
 'use strict';
 if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
 // 1.4: меню в окне на странице игры (bot.js, кнопка «—» сворачивает его в плавающую «Lite»): во всю ширину окна; странице — «готово»,
@@ -45,9 +46,9 @@ function paintStatus() {
   $('hero').textContent = c && c.name ? `${c.name}${c.lvl ? ', ' + c.lvl + ' ур.' : ''}${prof ? ' · ' + prof : ''}` : '';
   const hc = c && c.name ? L.heroClass(c.prof, c.slots, c.slot) : null, w = $('cls');
   w.hidden = hc?.ok !== false;
-  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана и лучника: `
+  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера: `
     + (hc.alts?.length ? `переключите в игре класс на ${hc.alts.map(a => `${a.name} (${L.slotRu(a.slot)}${a.lvl ? ', ' + a.lvl + ' ур.' : ''})`).join(' или ')}.`
-      : 'войдите в игру Дестром/Титаном или лучником либо переключите на него сабкласс.')
+      : 'войдите в игру Дестром/Титаном, лучником или спойлером либо переключите на него сабкласс.')
     + ' Пока активен другой класс, бот ничего не жмёт.' : '';
   paintProfs();
   const P = L.profRt(rt, kindView()), k = P.kills, lim = +cfg.killLimit || 0;
@@ -102,16 +103,56 @@ function paintProfs() {
     b.querySelector('i').textContent = k === inGame ? ' · в игре' : '';
   }
   $('profNote').textContent = view === act
-    ? (inGame ? `Бот работает по этому профилю: в игре ${view === 'archer' ? 'лучник' : 'Дестр'}.` : 'Последний профиль, по которому работал бот.')
-    : `Профиль ${view === 'archer' ? 'лука' : 'Дестра'} — бот возьмёт его сам, когда в игре станет активен ${view === 'archer' ? 'лучник' : 'Дестр/Титан'}. Здесь можно настроить его заранее.`;
+    ? (inGame ? `Бот работает по этому профилю: в игре ${WHO[view].now}.` : 'Последний профиль, по которому работал бот.')
+    : `Профиль ${WHO[view].of} — бот возьмёт его сам, когда в игре станет активен ${WHO[view].who}. Здесь можно настроить его заранее.`;
+}
+// Кто в профиле: «в игре лучник», «профиль лука», «станет активен лучник».
+const WHO = { destr: { now: 'Дестр', of: 'Дестра', who: 'Дестр/Титан' }, archer: { now: 'лучник', of: 'лука', who: 'лучник' },
+  spoil: { now: 'спойлер', of: 'спойлера', who: 'спойлер (Scavenger / Bounty Hunter / Fortune Seeker)' } };
+// 1.6: раздел «Споил» — только у профиля спойлера. Уровень героя для мест под ресурс — активного спойлера или его слота у героя.
+function spoilLvl() {
+  const c = rt.char || {};
+  if (L.clsKind(c.prof) === 'spoil') return +c.lvl || 0;
+  return +((c.slots || []).find(s => L.clsKind(s.prof) === 'spoil')?.lvl) || 0;
+}
+function paintSpoil() {
+  const box = $('spoilBox'), on = kindView() === 'spoil';
+  box.hidden = !on;
+  if (!on) return;
+  $('spoilOn').checked = cfg.spoilOn !== false;
+  if (document.activeElement !== $('spoilTries')) $('spoilTries').value = cfg.spoilTries;
+  const sel = $('spoilRes'), lvl = spoilLvl();
+  const opts = [['', 'Любые ресурсы — бить ближайших'], ...L.SPOIL_RES.map(r => [r.name, `${r.name} — мобы ${L.spoilMin(r)}+ ур. (до ${Math.max(...r.bands.map(b => b[2]))} %)`])];
+  const sig = JSON.stringify(opts);
+  if (sel.dataset.sig !== sig) { sel.replaceChildren(...opts.map(([value, textContent]) => el('option', { value, textContent }))); sel.dataset.sig = sig; }
+  sel.value = L.spoilRes(cfg.spoilRes) ? L.spoilRes(cfg.spoilRes).name : '';
+  // Места под ресурс: локации телепорта с мобами героя ±5 ур., у которых он спойлится (L.spoilSpots).
+  const res = L.spoilRes(cfg.spoilRes), spots = res ? L.spoilSpots(rt.locs, res, lvl) : [], sp = $('spoilSpots');
+  const ssig = JSON.stringify([res?.name, lvl, cfg.zone, spots]);
+  if (sp.dataset.sig !== ssig) {
+    sp.dataset.sig = ssig;
+    sp.replaceChildren(...(!res ? [] : !lvl ? [el('p', { className: 'hint', textContent: 'Места подберу, когда бот увидит уровень спойлера.' })]
+      : !spots.length ? [el('p', { className: 'hint', textContent: (rt.locs || []).length ? `Нет мест с мобами ${Math.max(1, lvl - 5)}–${lvl + 5} ур., с которых спойлится ${res.name}.` : 'Список мест появится, когда бот откроет игру.' })]
+      : [el('span', { className: 'dim', textContent: `Где спойлить ${res.name} (${lvl} ур. ±5):` }),
+        ...spots.map(x => { const b = el('button', { type: 'button', className: 'small' + (x.id === cfg.zone ? ' sel' : ''), textContent: `${x.id === cfg.zone ? '✔ ' : ''}${x.name} (${x.lo}–${x.hi ?? '?'}) · до ${x.ch} %` });
+          b.dataset.id = x.id; b.dataset.name = x.name; b.title = 'Охотиться здесь'; return b; })]));
+  }
+  // Счёт спойла: заспойлено из убитых, удачи одиночного спойла, Festival, добыча (выбранный ресурс — первым).
+  const S = rt.spoil || {}, it = Object.entries(S.items || {}).sort((a, b) => (res && b[0] === res.name) - (res && a[0] === res.name) || b[1] - a[1]);
+  const lines = [S.mobs ? `Заспойлено ${S.sp || 0} из ${S.mobs} мобов (${Math.round((S.sp || 0) * 100 / S.mobs)} %)${S.t0 ? ' с ' + hm(S.t0) : ''}` : 'Счёт спойла пуст — начнётся с первого боя спойлера.'];
+  if (S.ok || S.fail) lines.push(`Spoil: ✅ ${S.ok || 0} ✗ ${S.fail || 0}${S.ch ? ` · шанс по игре ${S.ch} %` : ''}`);
+  if (S.mass) lines.push(`Spoil Festival: ${S.mass} раз · помечено ${S.massOk || 0}, промахов ${S.massFail || 0}`);
+  if (it.length) lines.push('Добыча: ' + it.slice(0, 10).map(([n, q]) => `${n} ${q}`).join(', ') + (it.length > 10 ? ` и ещё ${it.length - 10}` : ''));
+  const st = $('spoilStat'), tsig = lines.join('\n');
+  if (st.dataset.sig !== tsig) { st.dataset.sig = tsig; st.replaceChildren(...lines.map(t => el('div', { textContent: t }))); }
 }
 function paintSkills() {
   // Панель другого класса (память 1.2.1 у сабкласса БХ) не показываем: rt.barCls — класс, у которого она прочитана.
   // 1.5: у Дестра и у лука панели свои (L.profRt: активный профиль — в rt, другой — в rt.by).
   const view = kindView(), P = L.profRt(rt, view);
-  const mine = P.barCls ? L.clsKind(P.barCls) === view : view === L.rtKind(rt) && L.heroClass(rt.char?.prof).ok !== false;
+  const mine = P.barCls ? L.clsKind(P.barCls) === view : view === L.rtKind(rt) && (!rt.char?.prof || L.clsKind(rt.char.prof) === view);
   const box = $('skills'), bar = mine ? (P.bar || []).filter(x => x && x.a && x.a !== 'attack') : [];
-  const who = view === 'archer' ? 'лучник' : 'Дестр/Титан';
+  const who = WHO[view].who;
   if (!bar.length) { box.replaceChildren(el('p', { className: 'hint', textContent: L.clsKind(rt.char?.prof) !== view
     ? `Скиллы появятся, когда в игре будет активен ${who}: бот прочитает его панель.` : `Откройте игру с включённым расширением — бот прочитает панель скиллов (${who}).` })); box.dataset.sig = ''; return; }
   const rows = bar.map(x => {
@@ -132,7 +173,7 @@ function paintSkills() {
   }));
 }
 let painted = '';                                  // 1.5: чей профиль на экране — сменился, поля перерисовываем и под курсором
-function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills();
+function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills(); paintSpoil();
   const fresh = painted !== cfg.kind; painted = cfg.kind;
   for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (fresh || document.activeElement !== $(k)) $(k).value = cfg[k];
   if (fresh || document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;
@@ -150,6 +191,14 @@ $('fastTurn').onchange = e => save({ fastTurn: e.target.checked });
 $('hpPot').onchange = e => save({ hpPot: clampNum(e.target.value, 10, 95, 50) });
 $('mpPot').onchange = e => save({ mpPot: clampNum(e.target.value, 5, 95, 25) });
 $('maxDeaths').onchange = e => save({ maxDeaths: clampNum(e.target.value, 1, 20, 3) });
+$('spoilOn').onchange = e => save({ spoilOn: e.target.checked });
+$('spoilTries').onchange = e => save({ spoilTries: clampNum(e.target.value, 1, 10, 4) });
+$('spoilRes').onchange = e => save({ spoilRes: e.target.value });
+$('spoilReset').onclick = () => save({}, 'spoilReset');
+$('spoilSpots').addEventListener('click', e => {           // «охотиться здесь»: место охоты профиля спойлера
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  save({ zone: b.dataset.id, zoneName: b.dataset.name });
+});
 $('skills').addEventListener('change', e => {
   const row = e.target.closest('.sk'); if (!row) return;
   const key = row.dataset.key, on = row.querySelector('input').checked, type = row.querySelector('select').value;

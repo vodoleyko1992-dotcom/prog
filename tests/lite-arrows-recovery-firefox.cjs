@@ -77,7 +77,7 @@ const nativeSnapshot = () => driver.executeAsyncScript('const done=arguments[arg
   // geckodriver запрещает прямую навигацию к moz-extension. Настоящий dock создаёт разрешённый iframe меню.
   // Новая временная установка по умолчанию OFF; проверим отсутствие действий до явного Start ниже.
   await driver.get('https://l2wap.com/map.html'); gamePage = true;
-  const manifest = await until(() => storage('manifest', null), 20000, 'настоящее меню в iframe'); assert.equal(manifest.version, '1.5.2');
+  const manifest = await until(() => storage('manifest', null), 20000, 'настоящее меню в iframe'); assert.equal(manifest.version, JSON.parse(execFileSync('unzip', ['-p', zip, 'manifest.json'], { encoding: 'utf8' })).version);   // 1.6: версия — из самого ZIP
   const off = { on: false, p: { archer: { zone: 'giran_harbor', zoneName: 'Гавань Гірана', killLimit: 0, tvt: false,
     skills: Object.fromEntries(S.hero.battleHotbarSlots.filter(x => x.a !== 'attack').map(x => [x.a, { on: false }])) } } };
   await storage('set', { 'lite.cfg': off });
