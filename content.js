@@ -3228,25 +3228,73 @@ const RB_FIT_1002 = {
   l2dop_rb_25220: { name: 'Death Lord Hallate', lvl: 73, dps: 2465, sp: 2640, hitP90: 845, maxHit: 874 },
   l2dop_rb_25126: { name: 'Longhorn Golkonda', lvl: 79, dps: 2397, sp: 2396, hitP90: 675, maxHit: 730 },
 };
-// 10.0.2 (лог 12.10 22:35:26–22:35:45, Death Lord Hallate): «пытаюсь выйти» → страница ушла на карту, но POST /game/battle/leave так и не
-// пришёл (сервер отвечал по 8 с) — бой на сервере шёл дальше, герой «на карте» стоял под ударами и погиб, а бот выбирал моба
-// (battle/start → 400 pve_defeat_pending). Перед нажатием выхода — метка (sessionStorage), ответ 2xx на leave её снимает; не снята через 2 с
-// на карте — бой не закончен: обратно на страницу боя (один раз), там бой/банки/аварийный выход как обычно. Остались в бою (выход не сработал) — метку
-// снимает сам бой (leaveMark(null))
-function leaveMark(id, name) { try { if (!id) { sessionStorage.removeItem('l2bot.leavePend'); return; } sessionStorage.setItem('l2bot.leavePend', JSON.stringify({ id, name: name || id, at: Date.now() })); sessionStorage.removeItem('l2bot.leaveOk'); } catch (e) {} }
+// 20.51 (лог23.10 11:31–11:58): ответ leave мог не дожить до навигации. Карта без ACK не доказывает продолжающийся бой:
+// прежний слепой возврат открывал старого РБ снова, обходя сохранённый safety skip. Сначала сверяем текущий бой read-only.
+function leaveMark(id, name) { try { if (!id) { sessionStorage.removeItem('l2bot.leavePend'); return; } const owner=typeof rt==='object'?{char:rt.char||'',prof:rt.classCur?.prof??null,slot:rt.classCur?.slot??null,kick:+rt.manualKickAt||0,...(typeof cfg==='object'&&typeof modeSig==='function'?{mode:modeSig(cfg)}:{})}:{}; sessionStorage.setItem('l2bot.leavePend', JSON.stringify({ id, name: name || id, at: Date.now(), ...owner })); sessionStorage.removeItem('l2bot.leaveOk'); } catch (e) {} }
 function leaveOk(id) { try { sessionStorage.setItem('l2bot.leaveOk', JSON.stringify({ id: id || '', at: Date.now() })); } catch (e) {} }
-function leavePending(now = Date.now()) {
-  let p = null, ok = null; try { p = JSON.parse(sessionStorage.getItem('l2bot.leavePend') || 'null'); ok = JSON.parse(sessionStorage.getItem('l2bot.leaveOk') || 'null'); } catch (e) {}
-  if (!p?.id || now - (p.at || 0) > 60000) return null;
-  if (ok && ok.at >= p.at && (!ok.id || ok.id === p.id)) return null;
-  return now - p.at >= 2000 ? p : null;
+function leavePending(now = Date.now(), includeGrace = false) {
+  let p = null; try { p = JSON.parse(sessionStorage.getItem('l2bot.leavePend') || 'null'); } catch (e) {}
+  if (!p?.id || !p.verifyAt && now - (p.at || 0) > 60000 || leaveAcked(p)===true) return null;
+  return includeGrace || now - p.at >= 2000 ? p : null;
 }
+function leaveAcked(p) { try { const ok=JSON.parse(sessionStorage.getItem('l2bot.leaveOk')||'null');return !!(ok&&ok.at>=p.at&&(!ok.id||ok.id===p.id)); } catch (_) { return null; } }
+function leaveSame(p) { try { const x=JSON.parse(sessionStorage.getItem('l2bot.leavePend')||'null');return x?.id===p.id&&x.at===p.at&&x.char===p.char&&x.prof===p.prof&&x.slot===p.slot&&x.kick===p.kick&&x.mode===p.mode; } catch (_) { return false; } }
+function leaveVerifySave(p) { try { if(!leaveSame(p))return false;sessionStorage.setItem('l2bot.leavePend',JSON.stringify(p));return true; } catch (_) { return false; } }
 async function leaveCheck() {
-  const p = leavePending(); if (!p) return false;
-  try { sessionStorage.removeItem('l2bot.leavePend'); } catch (e) {}
-  rec('B', 'РБ', `${p.name}: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой`);
-  (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/battle.html?spawnId=' + encodeURIComponent(p.id))); await sleep(4000);
-  return true;
+  const p=leavePending(Date.now(),true);if(!p)return false;
+  const stamp=automationSnapshot(),char=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot;
+  const safe=()=>automationCurrent(stamp)&&isMap()&&!!char&&heroNick()===char&&rt.classCur?.prof===prof&&rt.classCur?.slot===slot&&!antibotState();
+  const current=()=>safe()&&leaveSame(p)&&leaveAcked(p)===false;
+  if(!safe()){await sleep(300);return true;}
+  if(p.char&&(p.char!==char||p.prof!==prof||p.slot!==slot||p.kick!=null&&p.kick!==( +rt.manualKickAt||0)||p.mode!=null&&p.mode!==modeSig(cfg))){if(leaveSame(p))leaveMark(null);return false;}
+  if(leaveAcked(p)===null){if(safe()&&leaveSame(p))await pauseBot('Не удалось прочитать квитанцию выхода из боя; старого РБ повторно не открываю');return true;}
+  if(!current()){await sleep(300);return true;}
+  if(Date.now()-p.at<2000){setStatus('Жду подтверждения выхода из боя');await sleep(Math.min(1000,p.at+2000-Date.now()));return true;}
+  if(p.verifyNext>Date.now()){setStatus('Сверяю завершение боя; жду следующую проверку');await sleep(Math.min(1000,p.verifyNext-Date.now()));return true;}
+  const own=(c,min=0)=>c?.name===char&&Number.isSafeInteger(c.revision)&&c.revision>=min&&c.l2Profession===prof&&c.classSlots?.activeSlot===slot;
+  const attempt=Math.min(3,(+p.verifyN||0)+1);Object.assign(p,{verifyAt:p.verifyAt||Date.now(),verifyN:attempt,verifyNext:Date.now()+5000});
+  if(!leaveVerifySave(p)){if(current())await pauseBot('Не удалось сохранить сверку выхода из боя; старого РБ повторно не открываю');return true;}
+  let state='unknown',why='нет подтверждённых полей боя';
+  try {
+    const r=await gameGet('/character',4000);if(!current())return true;
+    if(!r.ok)why='HTTP '+(Number.isInteger(r.status)?r.status:'?');
+    else {
+      const j=await r.json();if(!current())return true;const c=j?.character||j;
+      if(j?.error||j?.ok===false)why='сервер отклонил сверку';
+      else if(own(c)&&c.inBattle===false)state='ended';
+      else if(own(c)&&c.inBattle===true){
+        if(typeof c.battleSpawnId==='string'&&c.battleSpawnId) { if(c.battleSpawnId===p.id)state='active';else why='подтверждён другой бой'; }
+        else {
+          const br=await gameGet('/game/battle',4000);if(!current())return true;
+          if(!br.ok)why='HTTP '+(Number.isInteger(br.status)?br.status:'?');
+          else {const d=await br.json();if(!current())return true;const bc=d?.character;
+            if(d?.error||d?.ok===false)why='сервер отклонил сверку';
+            else if(own(bc,c.revision)&&bc.inBattle===false)state='ended';
+            else if(own(bc,c.revision)&&bc.inBattle===true&&d?.battle?.spawnId===p.id&&d.battle.ended!==true&&!d.defeat&&!d.victory)state='active';
+            else why='активный РБ не подтверждён';
+          }
+        }
+      }
+    }
+  }catch(e){why=['TimeoutError','AbortError'].includes(e?.name)?'таймаут сверки':'ошибка чтения ответа';}
+  if(!current())return true;
+  if(state==='ended') {leaveMark(null);rec('B','РБ',`${p.name}: сервер подтвердил, что бой завершён — повторного захода не будет`);return false;}
+  if(state==='active') {
+    // Старое продолжение rbTryExit исчезло с документом и не сохранило запрет неработающего выхода. Не повторяем leave/map по кругу.
+    const until=Math.max(Date.now()+3600000,+rt.rbDb?.[p.id]?.leaveBadUntil||0);let saved=false;
+    try {const w=await setRt({rbDb:{...(rt.rbDb||{}),[p.id]:{...(rt.rbDb?.[p.id]||{}),leaveBadUntil:until}}});if(!current())return true;
+      if(w?.ok===true){saved=await rtCommit();if(!current())return true;}
+    }catch(_){saved=false;}
+    if(!current())return true;
+    if(saved&&rt.rbDb?.[p.id]?.leaveBadUntil>=until){leaveMark(null);rec('B','РБ',`${p.name}: сервер подтвердил продолжающийся бой с этим РБ — возвращаюсь; повторный выход запрещён на 1 час`);if(safe()&&leaveAcked(p)===false)location.href='/battle.html?spawnId='+encodeURIComponent(p.id);return true;}
+    why='не сохранён запрет повторного выхода';
+  }
+  Object.assign(p,{verifyNext:Date.now()+5000});
+  if(attempt>=3)Object.assign(p,{verifyN:0,verifyPausedAt:Date.now()});
+  if(!leaveVerifySave(p)){if(current())await pauseBot('Не удалось сохранить сверку выхода из боя; старого РБ повторно не открываю');return true;}
+  rec('B','РБ',`${p.name}: завершение боя не подтверждено (${why}), проверка ${attempt}/3; старого РБ не открываю`);
+  if(attempt>=3){if(current())await pauseBot('Три проверки не подтвердили завершение боя или активного РБ; проверь страницу и продолжи',{fault:true});return true;}
+  setStatus('Выход из боя: жду подтверждения сервера');await sleep(1000);return true;
 }
 // 20.13 (ревизия 17.10, шаг 7, аудит «Код»): main() был одной функцией на ≈300 строк с 21 повтором одной охранной строки.
 // Теперь круг цикла — mainTick(): шаги по порядку, как и были, каждый шаг — своя функция. Шаг возвращает true — «начать круг
@@ -5234,10 +5282,10 @@ async function invRefresh(active = () => true, ms = 6000, diagnostic = null) {
   finally { try { diagnostic?.({phase,reason,elapsedMs:Date.now()-at}); } catch (_) {} }
 }
 // 23.10 (лог10:36,20.51): повторы сумки подавались сторожу как живое ожидание; ручное обновление карты сняло простой.
-// Только перечитываем текущую карту, не сбрасывая маршруты/квитанции. Повторная перезагрузка — не чаще раза в 5 мин.
+// 23.10 (лог12:12): перечитываем текущую карту или подземелье, не сбрасывая маршруты/квитанции; не чаще раза в 5 мин.
 async function inventoryRecover(current) {
   const page=globalThis.location?.pathname;
-  if(page!=='/map.html'||!current())return false;
+  if(!['/map.html','/dungeon.html'].includes(page)||!current())return false;
   const stamp=automationSnapshot(),safe=()=>current()&&automationCurrent(stamp)&&!!leaseEpoch&&!cfg.taskOnly
     && !(invClassReady()&&INV_READY===invContext()&&invQty(0)!==null)&&!L2V7Modules.payments?.blocked?.()&&!L2V7Modules.payments?.pending?.()&&!L2V7Modules.navigation?.travelPending?.()
     &&!rt.fishCastPending&&!rt.revive&&!antibotState()&&!(rt.pveBlockUntil>Date.now())&&!(cfg.tvtOn&&L2V7Modules.tvt?.tvtHold?.());
@@ -5246,7 +5294,7 @@ async function inventoryRecover(current) {
   if(last?.char===rt.char&&last.page===page&&Number.isFinite(last.at)&&Date.now()-last.at<300000)return false;
   if(!await automationFlush(stamp)||!safe())return false;
   try{sessionStorage.setItem('l2bot-inv-reload',JSON.stringify({char:rt.char,page,at:Date.now()}));}catch(_){return false;}
-  rec('S','восстановление','Сумка не подтверждена после нескольких попыток — перезагружаю карту и продолжу проверку');
+  rec('S','восстановление',`Сумка не подтверждена после нескольких попыток — перезагружаю ${page==='/dungeon.html'?'страницу подземелья':'карту'} и продолжу проверку`);
   location.reload();return true;
 }
 // 15.10, MV3 startup: hook начинает раньше content и первый netStart может быть

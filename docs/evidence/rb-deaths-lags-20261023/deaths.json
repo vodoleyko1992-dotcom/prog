@@ -1,0 +1,878 @@
+{
+  "source": "l2bot-log-2026-10-23-02-08.txt",
+  "sourceAsDataOnly": true,
+  "browserTimezone": "Asia/Vladivostok UTC+10",
+  "botVersion": "20.51",
+  "liveRequests": 0,
+  "boundaries": [
+    "The B analysis fight duration resets after each re-entry; it is not total time spent on the boss.",
+    "Death-response character HP is already restored to approximately15% and is not HP immediately before the fatal hit.",
+    "Hekaton final fatal attack was not captured as a defeat packet; last POST is409revision_conflict, followed by UI death and return-to-town.",
+    "Battle log tails can overlap. Attack lines are preserved as packet evidence, not summed across repeated tails."
+  ],
+  "nearbyWins": [
+    {
+      "line": 5500,
+      "at": "11:29:21.261",
+      "boss": "Gargoyle Lord Tiphon",
+      "level": 65,
+      "durationSecondsReported": 93,
+      "potionsReported": 0,
+      "hpAtEndContext": [
+        20140,
+        21521
+      ]
+    },
+    {
+      "line": 6976,
+      "at": "11:34:56.209",
+      "boss": "Shilen's Priest Hisilrome",
+      "level": 65,
+      "durationSecondsReported": 142,
+      "potionsReported": 0,
+      "hpAtEndContext": [
+        13834,
+        20140
+      ]
+    },
+    {
+      "line": 8420,
+      "at": "11:45:30.209",
+      "boss": "Last Titan Utenus",
+      "level": 66,
+      "durationSecondsReported": 46,
+      "potionsReported": 0,
+      "hpAtEndContext": [
+        20013,
+        22873
+      ]
+    }
+  ],
+  "stopAndResume": [
+    {
+      "line": 7822,
+      "at": "11:38:04.793",
+      "kind": "automaticStopAfterThreeDeaths"
+    },
+    {
+      "line": 7840,
+      "at": "11:42:10.290",
+      "kind": "subsequentStartRecorded"
+    },
+    {
+      "line": 8089,
+      "at": "11:44:07.057",
+      "kind": "subsequentStartRecorded"
+    },
+    {
+      "line": 8839,
+      "at": "11:47:25.880",
+      "kind": "automaticStopAfterFourthDeath"
+    },
+    {
+      "line": 8877,
+      "at": "11:57:40.266",
+      "kind": "subsequentStartRecorded"
+    },
+    {
+      "line": 9100,
+      "at": "11:58:43.527",
+      "kind": "automaticStopAfterFifthDeath"
+    },
+    {
+      "line": 9120,
+      "at": "12:04:00.046",
+      "kind": "subsequentStartRecorded"
+    }
+  ],
+  "heroLevelEvidence": [
+    {
+      "line": 5689,
+      "source": "GET /character prefix",
+      "heroLevel": 65
+    },
+    {
+      "line": 7005,
+      "source": "B magister says66",
+      "heroLevel": 66
+    }
+  ],
+  "observedUnderestimatedCosts": [
+    {
+      "line": 5673,
+      "at": "11:29:52.507",
+      "boss": "Hekaton Prime",
+      "forecastOrdinaryHp": 1975,
+      "forecastSpecialHp": 2770,
+      "realCritical": 10522,
+      "realCriticalEvidenceLine": 5711
+    },
+    {
+      "line": 6162,
+      "at": "11:31:54.383",
+      "boss": "Rahha",
+      "knownDangerousHitHp": 10576
+    },
+    {
+      "line": 6187,
+      "at": "11:31:58.459",
+      "boss": "Rahha",
+      "afterReentryOrdinaryHp": 635,
+      "afterReentryPotionThresholdHp": 4675,
+      "knownDangerousHitEvidenceLine": 6162
+    },
+    {
+      "line": 8520,
+      "at": "11:46:05.994",
+      "boss": "Bloody Priest Rudelto",
+      "forecastOrdinaryHp": 2212,
+      "forecastSpecialHp": 6637,
+      "realOrdinaryRangeHp": [
+        5982,
+        6371
+      ]
+    },
+    {
+      "line": 9011,
+      "at": "11:58:18.657",
+      "boss": "Spirit of Andras the Betrayer",
+      "forecastOrdinaryHp": 2379,
+      "forecastSpecialHp": 7136,
+      "realOrdinaryHp": [
+        7024,
+        7376
+      ],
+      "realFatalCriticalHp": 12730
+    }
+  ],
+  "deaths": [
+    {
+      "boss": "Hekaton Prime",
+      "spawn": "l2dop_rb_25140",
+      "rangeLines": [
+        5675,
+        6005
+      ],
+      "firstStart": "11:29:53.546",
+      "deathRecognizedAt": "11:31:12.538",
+      "deathRecognizedLine": 6005,
+      "acceptedStarts": [
+        {
+          "line": 5675,
+          "at": "11:29:53.546",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442501,
+          "hp": 21521,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 5747,
+          "at": "11:30:07.997",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442508,
+          "hp": 16736,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 5794,
+          "at": "11:30:15.008",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442512,
+          "hp": 7478,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 5868,
+          "at": "11:30:28.143",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442521,
+          "hp": 17162,
+          "hpMax": 21521,
+          "mp": 1788,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 5964,
+          "at": "11:30:52.726",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442537,
+          "hp": 7035,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        }
+      ],
+      "exitWarningCount": 4,
+      "skipNoticeCount": 3,
+      "unconfirmedExitResumeCount": 3,
+      "lastAcceptedActionBeforeDefeat": null,
+      "defeatPacket": null,
+      "bossLevel": 65,
+      "heroLevelAtAttempt": 65,
+      "acceptedStartCount": 5,
+      "retreatNotes": [
+        {
+          "line": 5717,
+          "text": "11:30:03.294 [B] РБ Hekaton Prime: пытаюсь выйти — удар 10522 HP = 49 % моего макс. HP, у меня 16608 — двух таких ударов я не переживу (сервер должен подтвердить завершение боя) | battle?spawnId=l2dop_rb_25140 HP 16608/21521 MP 1798/1798 · моб Hekaton Prime 3264602/3384041"
+        },
+        {
+          "line": 5732,
+          "text": "11:30:05.803 [B] тур РБ Hekaton Prime: аварийный выход — пропуск 30 мин, без возврата к этому РБ | map HP 16608/21521 MP 1798/1798"
+        },
+        {
+          "line": 5735,
+          "text": "11:30:06.400 [B] РБ Hekaton Prime: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой | map HP 16608/21521 MP 1798/1798"
+        }
+      ]
+    },
+    {
+      "boss": "Rahha",
+      "spawn": "l2dop_rb_25051",
+      "rangeLines": [
+        6095,
+        6225
+      ],
+      "firstStart": "11:31:38.344",
+      "deathRecognizedAt": "11:32:08.790",
+      "deathRecognizedLine": 6225,
+      "acceptedStarts": [
+        {
+          "line": 6095,
+          "at": "11:31:38.344",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442551,
+          "hp": 21521,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 6185,
+          "at": "11:31:58.398",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442564,
+          "hp": 11985,
+          "hpMax": 21521,
+          "mp": 1798,
+          "mpMax": 1798,
+          "end": false,
+          "lose": false,
+          "error": ""
+        }
+      ],
+      "exitWarningCount": 1,
+      "skipNoticeCount": 1,
+      "unconfirmedExitResumeCount": 1,
+      "lastAcceptedActionBeforeDefeat": {
+        "line": 6217,
+        "at": "11:32:06.341",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442571,
+        "hp": 7222,
+        "hpMax": 21521,
+        "mp": 1577,
+        "mpMax": 1798,
+        "end": false,
+        "lose": false,
+        "error": ""
+      },
+      "defeatPacket": {
+        "line": 6222,
+        "at": "11:32:07.978",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "wild_sweep",
+        "revision": 442572,
+        "hp": 3228,
+        "hpMax": 21521,
+        "mp": 1577,
+        "mpMax": 1798,
+        "end": true,
+        "lose": true,
+        "error": "",
+        "fatalTail": [
+          "Бій розпочато: [Rahha] (ур. 65).",
+          "[Rahha] ударив тебе — −4955 HP.",
+          "Зілля: +600 HP.",
+          "⁠1236​Rahha · Крижаний болт — 2060 урона.",
+          "Зілля: +600 HP.",
+          "[Rahha] ударив тебе (крит!) — −10668 HP.",
+          "Ти знепритомнів… Бій завершено."
+        ]
+      },
+      "bossLevel": 65,
+      "heroLevelAtAttempt": 65,
+      "acceptedStartCount": 2,
+      "retreatNotes": [
+        {
+          "line": 6162,
+          "text": "11:31:54.383 [B] РБ Rahha: пытаюсь выйти — удар 10576 HP = 49 % моего макс. HP, у меня 11921 — двух таких ударов я не переживу (сервер должен подтвердить завершение боя) | battle?spawnId=l2dop_rb_25051 HP 11921/21521 MP 1798/1798 · моб Rahha 2032668/2384041"
+        },
+        {
+          "line": 6176,
+          "text": "11:31:56.489 [B] тур РБ Rahha: аварийный выход — пропуск 30 мин, без возврата к этому РБ | map HP 11921/21521 MP 1798/1798"
+        },
+        {
+          "line": 6179,
+          "text": "11:31:56.983 [B] РБ Rahha: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой | map HP 11921/21521 MP 1798/1798"
+        }
+      ]
+    },
+    {
+      "boss": "Demon's Agent Falston",
+      "spawn": "l2dop_rb_25322",
+      "rangeLines": [
+        7142,
+        7821
+      ],
+      "firstStart": "11:35:49.347",
+      "deathRecognizedAt": "11:38:04.614",
+      "deathRecognizedLine": 7821,
+      "acceptedStarts": [
+        {
+          "line": 7142,
+          "at": "11:35:49.347",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442709,
+          "hp": 21933,
+          "hpMax": 21933,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7230,
+          "at": "11:36:06.796",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442721,
+          "hp": 10807,
+          "hpMax": 21933,
+          "mp": 1681,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7286,
+          "at": "11:36:17.032",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442730,
+          "hp": 2094,
+          "hpMax": 21933,
+          "mp": 1582,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7336,
+          "at": "11:36:26.204",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442734,
+          "hp": 21933,
+          "hpMax": 21933,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7397,
+          "at": "11:36:37.735",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442743,
+          "hp": 12452,
+          "hpMax": 21933,
+          "mp": 1639,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7462,
+          "at": "11:36:51.104",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442755,
+          "hp": 5633,
+          "hpMax": 21933,
+          "mp": 1572,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7497,
+          "at": "11:36:55.933",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442758,
+          "hp": 1197,
+          "hpMax": 21933,
+          "mp": 1592,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7547,
+          "at": "11:37:05.457",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442762,
+          "hp": 21933,
+          "hpMax": 21933,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7619,
+          "at": "11:37:20.694",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442773,
+          "hp": 10578,
+          "hpMax": 21933,
+          "mp": 1738,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7691,
+          "at": "11:37:35.304",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442783,
+          "hp": 1328,
+          "hpMax": 21933,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7728,
+          "at": "11:37:41.859",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442787,
+          "hp": 1992,
+          "hpMax": 21933,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 7758,
+          "at": "11:37:48.020",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442791,
+          "hp": 3256,
+          "hpMax": 17537,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        }
+      ],
+      "exitWarningCount": 11,
+      "skipNoticeCount": 7,
+      "unconfirmedExitResumeCount": 11,
+      "lastAcceptedActionBeforeDefeat": {
+        "line": 7812,
+        "at": "11:38:00.824",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442805,
+        "hp": 6752,
+        "hpMax": 21933,
+        "mp": 1760,
+        "mpMax": 1839,
+        "end": false,
+        "lose": false,
+        "error": ""
+      },
+      "defeatPacket": {
+        "line": 7819,
+        "at": "11:38:03.545",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442806,
+        "hp": 3289,
+        "hpMax": 21933,
+        "mp": 1760,
+        "mpMax": 1839,
+        "end": true,
+        "lose": true,
+        "error": "",
+        "fatalTail": [
+          "Зілля: +600 HP.",
+          "Зілля: +600 HP.",
+          "⁠1220​Demon's Agent Falston · Полум’я — 799 урона.",
+          "Зілля: +600 HP.",
+          "[Demon's Agent Falston] ударив тебе — −5697 HP.",
+          "Зілля: +600 HP.",
+          "[Demon's Agent Falston] ударив тебе — −5723 HP.",
+          "[Demon's Agent Falston] ударив тебе — −5723 HP.",
+          "[Demon's Agent Falston] ударив тебе — −6046 HP.",
+          "Ти знепритомнів… Бій завершено."
+        ]
+      },
+      "bossLevel": 66,
+      "heroLevelAtAttempt": 66,
+      "acceptedStartCount": 12,
+      "retreatNotes": [
+        {
+          "line": 7201,
+          "text": "11:36:02.637 [B] РБ Demon's Agent Falston: пытаюсь выйти — удар 10478 HP = 48 % моего макс. HP, у меня 10743 — двух таких ударов я не переживу (сервер должен подтвердить завершение боя) | battle?spawnId=l2dop_rb_25322 HP 10743/21933 MP 1661/1839 · моб Demon's Agent Falston 2154591/2409850"
+        },
+        {
+          "line": 7219,
+          "text": "11:36:04.889 [B] тур РБ Demon's Agent Falston: аварийный выход — пропуск 30 мин, без возврата к этому РБ | map HP 10743/21933 MP 1661/1839"
+        },
+        {
+          "line": 7222,
+          "text": "11:36:05.444 [B] РБ Demon's Agent Falston: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой | map HP 10743/21933 MP 1661/1839"
+        }
+      ]
+    },
+    {
+      "boss": "Bloody Priest Rudelto",
+      "spawn": "l2dop_rb_25073",
+      "rangeLines": [
+        8523,
+        8838
+      ],
+      "firstStart": "11:46:08.112",
+      "deathRecognizedAt": "11:47:25.697",
+      "deathRecognizedLine": 8838,
+      "acceptedStarts": [
+        {
+          "line": 8523,
+          "at": "11:46:08.112",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442873,
+          "hp": 22873,
+          "hpMax": 22873,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 8583,
+          "at": "11:46:24.569",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442879,
+          "hp": 15896,
+          "hpMax": 22873,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 8642,
+          "at": "11:46:39.270",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442888,
+          "hp": 6438,
+          "hpMax": 22873,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 8740,
+          "at": "11:47:02.432",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442905,
+          "hp": 2121,
+          "hpMax": 22873,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        },
+        {
+          "line": 8791,
+          "at": "11:47:14.912",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442909,
+          "hp": 22873,
+          "hpMax": 22873,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        }
+      ],
+      "exitWarningCount": 4,
+      "skipNoticeCount": 3,
+      "unconfirmedExitResumeCount": 4,
+      "lastAcceptedActionBeforeDefeat": {
+        "line": 8828,
+        "at": "11:47:23.930",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442917,
+        "hp": 5717,
+        "hpMax": 22873,
+        "mp": 1839,
+        "mpMax": 1839,
+        "end": false,
+        "lose": false,
+        "error": ""
+      },
+      "defeatPacket": {
+        "line": 8835,
+        "at": "11:47:24.739",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442918,
+        "hp": 3430,
+        "hpMax": 22873,
+        "mp": 1839,
+        "mpMax": 1839,
+        "end": true,
+        "lose": true,
+        "error": "",
+        "fatalTail": [
+          "Зілля: HP уже повне — імпульс марнується.",
+          "⁠1181​Bloody Priest Rudelto · Удар полум’я — 1382 урона.",
+          "[Bloody Priest Rudelto] ударив тебе — −6249 HP.",
+          "Зілля: +600 HP.",
+          "[Bloody Priest Rudelto] ударив тебе — −5982 HP.",
+          "Зілля: +600 HP.",
+          "[Bloody Priest Rudelto] ударив тебе — −6137 HP.",
+          "Зілля: +600 HP.",
+          "[Bloody Priest Rudelto] ударив тебе — −6371 HP.",
+          "[Bloody Priest Rudelto] ударив тебе — −6371 HP.",
+          "[Bloody Priest Rudelto] ударив тебе — −6315 HP.",
+          "Ти знепритомнів… Бій завершено."
+        ]
+      },
+      "bossLevel": 69,
+      "heroLevelAtAttempt": 66,
+      "acceptedStartCount": 5,
+      "retreatNotes": [
+        {
+          "line": 8559,
+          "text": "11:46:17.678 [B] РБ Bloody Priest Rudelto: пытаюсь выйти — удар 12464 HP = 54 % моего макс. HP, у меня 15704 — двух таких ударов я не переживу (сервер должен подтвердить завершение боя) | battle?spawnId=l2dop_rb_25073 HP 15704/22873 MP 1839/1839 · моб Bloody Priest Rudelto 1994222/2480352"
+        },
+        {
+          "line": 8575,
+          "text": "11:46:22.197 [B] тур РБ Bloody Priest Rudelto: аварийный выход — пропуск 30 мин, без возврата к этому РБ | map HP 15704/22873 MP 1839/1839"
+        },
+        {
+          "line": 8576,
+          "text": "11:46:22.565 [B] РБ Bloody Priest Rudelto: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой | map HP 15704/22873 MP 1839/1839"
+        }
+      ]
+    },
+    {
+      "boss": "Spirit of Andras the Betrayer",
+      "spawn": "l2dop_rb_25233",
+      "rangeLines": [
+        9013,
+        9099
+      ],
+      "firstStart": "11:58:19.557",
+      "deathRecognizedAt": "11:58:43.343",
+      "deathRecognizedLine": 9099,
+      "acceptedStarts": [
+        {
+          "line": 9013,
+          "at": "11:58:19.557",
+          "method": "POST",
+          "path": "/game/battle/start",
+          "status": 200,
+          "action": "",
+          "revision": 442926,
+          "hp": 18477,
+          "hpMax": 18477,
+          "mp": 1839,
+          "mpMax": 1839,
+          "end": false,
+          "lose": false,
+          "error": ""
+        }
+      ],
+      "exitWarningCount": 0,
+      "skipNoticeCount": 0,
+      "unconfirmedExitResumeCount": 0,
+      "lastAcceptedActionBeforeDefeat": {
+        "line": 9092,
+        "at": "11:58:38.857",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "battle_potion_use",
+        "revision": 442942,
+        "hp": 8076,
+        "hpMax": 22873,
+        "mp": 1661,
+        "mpMax": 1839,
+        "end": false,
+        "lose": false,
+        "error": ""
+      },
+      "defeatPacket": {
+        "line": 9097,
+        "at": "11:58:40.587",
+        "method": "POST",
+        "path": "/game/battle/action",
+        "status": 200,
+        "action": "wild_sweep",
+        "revision": 442943,
+        "hp": 3430,
+        "hpMax": 22873,
+        "mp": 1661,
+        "mpMax": 1839,
+        "end": true,
+        "lose": true,
+        "error": "",
+        "fatalTail": [
+          "⁠1239​Spirit of Andras the Betrayer · Ураган — 2197 урона.",
+          "[Spirit of Andras the Betrayer] ударив тебе — −7024 HP.",
+          "Зілля: +600 HP.",
+          "Зілля: +600 HP.",
+          "[Spirit of Andras the Betrayer] ударив тебе — −7376 HP.",
+          "Зілля: +600 HP.",
+          "[Spirit of Andras the Betrayer] ударив тебе (крит!) — −12730 HP.",
+          "Ти знепритомнів… Бій завершено."
+        ]
+      },
+      "bossLevel": 69,
+      "heroLevelAtAttempt": 66,
+      "acceptedStartCount": 1,
+      "retreatNotes": []
+    }
+  ],
+  "sourceScope": "Sanitized selected evidence only; user attachments treated as data; no live game/account requests."
+}
