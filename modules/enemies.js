@@ -177,11 +177,14 @@ function pick() {
 }
 // бот занят тем, что прерывать нельзя (поход, тур РБ/эпиков, рыбалка, катакомбы, TvT скоро)
 function busy() {
-  const r = env.rt;
+  const r = env.rt, all = allOn();
   // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
-  if (r.shop || r.rbGo || r.zoneGo || r.travelCheck || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return true;
-  if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return true;
-  if (['epic', 'raid', 'fish', 'cat'].includes(env.autonomyMode())) return true;
+  if (r.shop || r.travelCheck || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return true;
+  // 20.54 (John 23.10: «похода, тура РБ, эпиков — в этих случаях как раз таки убивает всех»): в режиме «бить всех» поход (rbGo/zoneGo),
+  // тур РБ, РБ-сессия и эпики не мешают нападению — бой с боссом/мобом бот всё равно доводит до победы, потом карта и игрок
+  if (!all && (r.rbGo || r.zoneGo)) return true;
+  if (!all && (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick'))) return true;
+  if ((all ? ['fish', 'cat'] : ['epic', 'raid', 'fish', 'cat']).includes(env.autonomyMode())) return true;
   if (env.fishNow()) return true;
   if (env.cfg.tvtOn && (env.tvtHold?.() || env.tvtSoon?.())) return true;
   return false;

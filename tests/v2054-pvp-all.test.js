@@ -76,9 +76,13 @@ function mk(cfg, opts = {}) { const m = make({ cfg: { enemyHunt: true, pvpAll: t
   assert.equal(m.env.rt.enemyHunt.name, 'Stranger'); assert.equal(m.env.rt.enemyHunt.all, true);
   assert.equal(Object.keys(m.env.rt.enemies || {}).length, 0, 'посторонний не в листе врагов');
   assert.ok(m.recs.some(r => /нападаю на Stranger .*бить всех/.test(r)));
-  const busy = mk({}, { mode: 'raid', dom: { q: { [btnFor('x1')]: btn } } });
-  busy.en.noteHeroes([H('x1', 'Stranger')]);
-  assert.equal(await busy.en.step(), false); deq(busy.clicks, []);
+  // 23.10 (John): в туре РБ, походе и на эпиках — тоже нападаем; рыбалка/катакомбы — нет; без режима «всех» тур РБ — занятость
+  for (const [mode, rt, hit] of [['raid', {}, true], ['epic', { epic: { step: 'fight' } }, true], ['farm', { rbGo: { id: 'rb' }, zoneGo: { z: 1 } }, true], ['farm', { rbSess: { on: true } }, true], ['fish', {}, false], ['cat', {}, false], ['farm', { shop: { t: 1 } }, false]]) {
+    const b = mk({}, { mode, rt: { ...rt }, dom: { q: { [btnFor('x1')]: btn } } });
+    b.en.noteHeroes([H('x1', 'Stranger')]);
+    assert.equal(await b.en.step(), hit, mode + ' ' + JSON.stringify(rt)); assert.equal(b.clicks.length, hit ? 1 : 0);
+  }
+  const old = make({ cfg: { enemyHunt: true, pvpAll: false }, mode: 'raid' }); assert.equal(old.en.busy(), true, 'без «бить всех» тур РБ — занятость, как раньше');
   // бой с мобом — сначала добить, потом на карту
   const bt = mk({}, { page: '/battle.html', dom: { victory: true } });
   bt.en.noteHeroes([H('x1', 'Stranger')]);
