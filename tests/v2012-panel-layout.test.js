@@ -10,7 +10,7 @@ const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
 // 22.10: выделенный раздел крафта добавлен после охоты.
-const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed'];
+const SECS = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
 // 20.25: снятая автозаточка остаётся скрытым контейнером, доступных вкладок на одну меньше.
@@ -23,7 +23,7 @@ const tg = js.match(/const TAB_GROUP = \{([\s\S]*?)\};/)[1];
 const map = Object.fromEntries([...tg.matchAll(/(\w+): '(\w+)'/g)].map(m => [m[1], m[2]]));
 const OLD = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
-  seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
+  seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 assert.deepEqual(map, OLD);
 const secRange = s => { const a = html.indexOf(`<section id="tab-${s}"`); return [a, html.indexOf('</section>', a)]; };
 for (const [old, sec] of Object.entries(OLD)) {
@@ -36,7 +36,7 @@ for (const m of tt.matchAll(/:'(\w+)'/g)) assert.ok(secs.includes(m[1]) || OLD[m
 for (const m of html.matchAll(/data-goto="(\w+)"/g)) assert.ok(secs.includes(m[1]) || OLD[m[1]], 'data-goto ' + m[1]);
 
 // 3. «Дополнительно» в каждом разделе, сворачивается и помнится (uiState.adv), поиск и ссылки его раскрывают
-for (const s of SECS.filter(s => !['overview', 'craft', 'enchant', 'lifestone', 'supply', 'sub'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
+for (const s of SECS.filter(s => !['overview', 'craft', 'enchant', 'lifestone', 'supply', 'sub', 'tvt'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
 assert.match(js, /uiState\.adv \|\|= \{\};/);
 assert.match(js, /function revealEl\(el\)/); assert.match(js, /function advSet\(a, open\)/);
 assert.match(js, /showTab\(r\.tab\); revealEl\(r\.el\);/, 'поиск раскрывает блок «Дополнительно»');
