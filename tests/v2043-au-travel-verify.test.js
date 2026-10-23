@@ -285,7 +285,7 @@ test('ядро: «Задачи бота» и диспетчер не знают 
   assert.ok(!jobs.includes('travelCheck'), 'квитанция — не маршрут диспетчера');
   assert.ok(s.includes("'rbGo','zoneGo','travelCheck','dailyFish'"), 'закупка ЛС ждёт'); assert.ok(s.includes('!rt.zoneGo && !rt.travelCheck && !rt.tbuff'), 'баффер кота ждёт');
   assert.match(s.slice(s.indexOf('async function magisterStart('), s.indexOf('if (!magActive() || fishNow()', s.indexOf('async function magisterStart('))), /if \(rt\.travelCheck\) return false;/, 'магистр ждёт');
-  for (const [m, re] of [['mammon', /r\.zoneGo \|\| r\.travelCheck/], ['enemies', /r\.zoneGo \|\| r\.travelCheck/], ['pvp', /r\.zoneGo\|\|r\.travelCheck/], ['warlock', /env\.rt\.zoneGo \|\| !!env\.rt\.travelCheck/]])
+  for (const [m, re] of [['mammon', /r\.zoneGo \|\| r\.travelCheck/], ['enemies', /r\.shop \|\| r\.travelCheck/], ['pvp', /r\.zoneGo\|\|r\.travelCheck/], ['warlock', /env\.rt\.zoneGo \|\| !!env\.rt\.travelCheck/]])
     assert.match(read('modules/' + m + '.js'), re, m);
 });
 test('старая квитанция внутри zoneGo (до этой правки) переносится в rt.travelCheck и сверяется без клика', async () => {
