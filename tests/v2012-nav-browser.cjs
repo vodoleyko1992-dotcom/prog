@@ -8,9 +8,9 @@ const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
 // 20.54 (прогон смоуков 23.10): после 20.18 разделов стало больше — «Крафт» (PR #358, 22.10), «Сабкласс» (20.43, c945937),
 // «Скорость» (PR #371, 23.10); «Автозаточка» скрыта решением игрока 19.10 (кнопка hidden, showTab('enchant') → «Обзор»).
 // Проверяем точный текущий список вместо прежнего числа 12; все старые имена → раздел/метка проверяются как раньше.
-const NAV = ['overview', 'hunt', 'craft', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt'];   // 23.10 (#378): «TvT» — отдельный раздел
+const NAV = ['overview', 'hunt', 'craft', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt', 'epic'];   // 23.10 (#378): «TvT» — отдельный раздел; 23.10: «Эпики» — отдельно от «РБ»
 const VISIBLE = NAV.filter(t => t !== 'enchant');
-const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
+const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'epic', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
   pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'supply', seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 (async () => {
   const h = await harness(); try {
@@ -21,8 +21,8 @@ const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hun
     // 1. кнопки разделов по порядку (видны все, кроме скрытой автозаточки), по умолчанию все «Дополнительно» свёрнуты
     assert.deepEqual(await P.locator('#moduleNav button[data-tab]').evaluateAll(b => b.map(x => x.dataset.tab)), NAV);
     assert.deepEqual(await P.locator('#moduleNav button[data-tab]').evaluateAll(b => b.filter(x => !x.hidden && x.offsetParent).map(x => x.dataset.tab)), VISIBLE);
-    // 20.54: девятый блок «Дополнительно» — «Реакция» в разделе «Скорость» (PR #371)
-    assert.equal(await P.locator('.adv').count(), 9); assert.equal(await P.locator('.adv.closed').count(), 9);
+    // 20.54: девятый блок «Дополнительно» — «Реакция» в разделе «Скорость» (PR #371); 23.10: десятый — тонкая настройка «Эпиков»
+    assert.equal(await P.locator('.adv').count(), 10); assert.equal(await P.locator('.adv.closed').count(), 10);
     // автозаточка временно убрана (19.10, после 20.25): старое имя раздела открывает «Обзор», раздел не показывается
     await P.evaluate(() => showTab('enchant')); await delay(80);
     assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-overview', 'enchant → Обзор, пока автозаточка отключена');

@@ -201,7 +201,7 @@
   <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
   <button data-tab="craft" data-short="Крафт" title="Выбрать ресурс, количество и увидеть всю цепочку изготовления (Alt+3)"><span class="ic">⚒</span><span class="lb">Крафт</span></button>
-  <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+4)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
+  <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры боссов (Alt+4)"><span class="ic">♛</span><span class="lb">РБ</span></button>
   <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+5)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
   <button data-disabled-auto-enchant hidden data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+6)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
   <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+7)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
@@ -214,6 +214,7 @@
   <button data-tab="sub" data-short="Сабкласс" title="Сменить класс у Maestro Reorin и одеть лучшее из сумки"><span class="ic">🧬</span><span class="lb">Сабкласс</span></button>
   <button data-tab="speed" data-short="Скорость" title="Темп обычных шагов, боя и рыбалки"><span class="ic">◷</span><span class="lb">Скорость</span></button>
   <button data-tab="tvt" data-short="TvT" title="TvT 3 раза в день и магазин TvT"><span class="ic">⚑</span><span class="lb">TvT</span></button>
+  <button data-tab="epic" data-short="Эпики" title="Фарм эпик-боссов: выбор, Coin of Luck, тонкая настройка"><span class="ic">🐉</span><span class="lb">Эпики</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -444,12 +445,11 @@
   <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
   <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
   <div id="rbTourBox" class="hint" style="white-space:pre-line"></div>
-  <h4>🔥 Фулл бафф за FA: РБ-сессия и эпики (3 ч)</h4>
+  <h4>🔥 Фулл бафф за FA: РБ-сессия (3 ч)</h4>
   <div class="hint">Одна кнопка: бот берёт у баффера Fast Aden баффы из списка (на 3 ч) и бьёт РБ, пока они действуют. Погиб — слетает только Noblesse Blessing (если он в списке), бот сразу берёт его снова. Баффы слетели совсем — сессия окончена. За 2 мин до конца баффа — итог в журнал, «Тур по РБ» снимается из выбранных задач, остальные выбранные задачи продолжаются (без списка задач — прежний режим «Автофарм»).</div>
   <div id="rbSessBox" class="camp" style="white-space:pre-line">—</div>
   <label title="auto — готовый фулл бафф под класс (маг: M.Atk, маг. крит, откат, защита от спецударов; воин: P.Atk, скорость, крит). Или свои номера через запятую — порядок = очередь покупки">Баффы (auto — фулл бафф под класс, или номера через запятую) <input id="rbSessBuffs"></label>
   <label title="Тур по РБ без кнопки «РБ-сессия»: перед вылетом к выбранному РБ бот берёт тот же фулл бафф за FA (только то, чего нет или что кончается). Пока тур фармит мобов — не берёт">Тур РБ: фулл бафф за FA перед РБ <input id="rbFaFull" type="checkbox"></label>
-  <label title="Перед заходом на эпика, когда заход уже разрешён (по силам, жив, дорога выбрана): тот же фулл бафф за FA. Платный городской набор за 15 Coin of Luck тогда не берётся">Эпики: фулл бафф за FA вместо набора за Coin of Luck <input id="epicFaFull" type="checkbox"></label>
   <label>Погиб — сразу снова взять Noblesse Blessing (5 FA) <input id="rbSessNob" type="checkbox"></label>
   <div class="row"><button id="rbSessAuto" title="Подставить готовый набор под класс">⚡ Фулл бафф под класс</button><button id="rbSessStart">🔥 Начать РБ-сессию</button><button id="rbSessStop">⏹ Закончить</button></div>
   <h4>Как бот работает с РБ</h4>
@@ -475,22 +475,6 @@
   <div class="row"><button id="rbtImport" title="Alt+W. Файл слежки из облака (по строке на опрос) или таймеры другого персонажа — сольются с таймерами этого">📥 Загрузить таймеры из файла слежки</button><input id="rbtFile" type="file" accept=".json,.jsonl,.txt,application/json" hidden></div>
   <div id="rbTimerSum" class="hint" style="white-space:pre-line"></div>
   <div id="rbTimerTable" class="zbox"><div class="hint">Пока пусто — загрузите файл таймеров.</div></div>
-
-  <div class="subsec-title"><span id="tab-epic" class="tab-anchor"></span>🐉 Эпик-боссы</div>
-  <h4>🐉 Фарм эпиков</h4>
-  <div class="row"><button id="epicToggle2">🐉 Эпики: ВЫКЛ</button></div>
-  <div class="hint">Бот берёт выбранных эпиков по порядку, но только живых, к которым игра пускает и которые <b>по силам</b>: перед любой дорогой он спрашивает у игры цифры босса (HP, P.Atk, M.Atk, защиты) и считает спецудар, время боя и нужные банки — проверка сил до оплаты всегда. Дорога: эпик на этой же карте — без телепорта; потом логово за адену; за Coin of Luck — только если ничего другого нет и вы разрешили лимитом. Погиб — следующий заход только если подтверждено, что HP эпика между заходами сохраняется, иначе ждёт следующего появления. Мешают миньоны зоны — бьёт их. Опыт за смерти теряется.</div>
-  <label>Королева Муравьёв (АК) <input type="checkbox" class="epicChk" data-epic="ak"></label><label>Ядро <input type="checkbox" class="epicChk" data-epic="core"></label><label>Орфен <input type="checkbox" class="epicChk" data-epic="orfen"></label><label>Баюм <input type="checkbox" class="epicChk" data-epic="baium"></label><label>Валакас <input type="checkbox" class="epicChk" data-epic="valakas"></label><label>Антарас <input type="checkbox" class="epicChk" data-epic="antharas"></label><label>Фринтеза <input type="checkbox" class="epicChk" data-epic="frintezza"></label><label>Закен <input type="checkbox" class="epicChk" data-epic="zaken"></label>
-  <input id="epicList" hidden>
-  <label>💎 Coin of Luck на эпиков за 24 ч (0 — НЕ тратить) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
-  <label>Платных заходов на одно появление эпика (1) <input id="epicCoinPerBoss" type="number" min="0" step="1"></label>
-  <label>Не опускать баланс Coin of Luck ниже (0 — не проверять) <input id="epicCoinKeep" type="number" min="0" step="1"></label>
-  <label>Лимит аден на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicAdenaDailyMax" type="number" min="0" step="1"></label>
-  <div class="hint">Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). «0» — бот не тратит их никогда (так по умолчанию). Число — не больше стольких за 24 часа и не больше «платных заходов» на одно появление эпика; при неизвестной цене, после смерти или выхода из боя — никогда. Платный «Повний баф» (15 CoL) во время эпика — тоже в пределах этого лимита, иначе бесплатный «Звичайний баф». Считаются попытки: если сервер не подтвердил телепорт, резерв остаётся (учёт может быть завышен — это безопасная сторона).</div>
-  <div class="row"><button id="epicScan" title="Только чтение: список эпиков и цифры каждого босса с сервера, ≈полминуты">🔄 Проверить эпиков (бесплатно)</button></div>
-  <div id="epicSum" class="hint" style="white-space:pre-line"></div>
-  <div id="epicTable" class="zbox"><div class="hint">Пока пусто — нажмите «🔄 Проверить эпиков» (бот должен быть запущен)</div></div>
-  <div id="epicBox" class="camp" style="white-space:pre-line">Режим не запускался</div>
 
   <div class="adv-start" data-adv="rb">⚙ Дополнительно</div>
   <h4>🧪 Экспериментальные настройки</h4>
@@ -520,15 +504,6 @@
   <label data-cls="fighter">⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
   <div class="hint" data-cls="fighter">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <label title="Бой с РБ: ход, на который придётся спецудар, бот узнаёт по памяти боя (ритм ударов) и заранее держит запас HP. Выключено — запас HP только по полосе банок">РБ: учитывать ритм спецудара (память боя) <input id="rbSpikeRhythm" type="checkbox"></label>
-  <h4>🐉 Эпики — тонкая настройка</h4>
-  <label>Смертей на одного эпика за его появление (5) <input id="epicMaxDeaths" type="number" min="1"></label>
-  <label>Строго и на месте: не лезть и при «мало банок» (перед оплатой проверка всегда) <input id="epicCheck" type="checkbox"></label>
-  <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
-  <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
-  <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
-  <label>Не браться, если бой дольше, мин (0 — без предела) <input id="epicMaxFightMin" type="number" min="0" step="1"></label>
-  <label>Отходов на одно появление эпика (8) <input id="epicMaxRetreats" type="number" min="1" step="1"></label>
-  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится и возвращается (только бесплатно или через логово). Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас 85, Фринтеза 90. Игра пускает к боссам не ниже «уровень героя − 9»; выше героя больше чем на 10 бот не берёт. Общий стоп — 2 × «смертей на эпика» за час (не больше 20).</div>
   <h4>База РБ (все локации)</h4>
   <div id="rbList"><div class="hint">Пусто — включите «👑 Тур по РБ» и зайдите на карту</div></div>
   <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
@@ -993,6 +968,35 @@
   <div id="tsGoalBox" class="hint"></div>
   <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
   <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
+</section>
+
+<section id="tab-epic">
+  <h4>🐉 Фарм эпиков</h4>
+  <div class="row"><button id="epicToggle2">🐉 Эпики: ВЫКЛ</button></div>
+  <div class="hint">Бот берёт выбранных эпиков по порядку, но только живых, к которым игра пускает и которые <b>по силам</b>: перед любой дорогой он спрашивает у игры цифры босса (HP, P.Atk, M.Atk, защиты) и считает спецудар, время боя и нужные банки — проверка сил до оплаты всегда. Дорога: эпик на этой же карте — без телепорта; потом логово за адену; за Coin of Luck — только если ничего другого нет и вы разрешили лимитом. Погиб — следующий заход только если подтверждено, что HP эпика между заходами сохраняется, иначе ждёт следующего появления. Мешают миньоны зоны — бьёт их. Опыт за смерти теряется.</div>
+  <label title="Перед заходом на эпика, когда заход уже разрешён (по силам, жив, дорога выбрана): тот же фулл бафф за FA, что и для РБ (набор — в разделе «РБ»). Платный городской набор за 15 Coin of Luck тогда не берётся">Эпики: фулл бафф за FA вместо набора за Coin of Luck <input id="epicFaFull" type="checkbox"></label>
+  <label>Королева Муравьёв (АК) <input type="checkbox" class="epicChk" data-epic="ak"></label><label>Ядро <input type="checkbox" class="epicChk" data-epic="core"></label><label>Орфен <input type="checkbox" class="epicChk" data-epic="orfen"></label><label>Баюм <input type="checkbox" class="epicChk" data-epic="baium"></label><label>Валакас <input type="checkbox" class="epicChk" data-epic="valakas"></label><label>Антарас <input type="checkbox" class="epicChk" data-epic="antharas"></label><label>Фринтеза <input type="checkbox" class="epicChk" data-epic="frintezza"></label><label>Закен <input type="checkbox" class="epicChk" data-epic="zaken"></label>
+  <input id="epicList" hidden>
+  <label>💎 Coin of Luck на эпиков за 24 ч (0 — НЕ тратить) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
+  <label>Платных заходов на одно появление эпика (1) <input id="epicCoinPerBoss" type="number" min="0" step="1"></label>
+  <label>Не опускать баланс Coin of Luck ниже (0 — не проверять) <input id="epicCoinKeep" type="number" min="0" step="1"></label>
+  <label>Лимит аден на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicAdenaDailyMax" type="number" min="0" step="1"></label>
+  <div class="hint">Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). «0» — бот не тратит их никогда (так по умолчанию). Число — не больше стольких за 24 часа и не больше «платных заходов» на одно появление эпика; при неизвестной цене, после смерти или выхода из боя — никогда. Платный «Повний баф» (15 CoL) во время эпика — тоже в пределах этого лимита, иначе бесплатный «Звичайний баф». Считаются попытки: если сервер не подтвердил телепорт, резерв остаётся (учёт может быть завышен — это безопасная сторона).</div>
+  <div class="row"><button id="epicScan" title="Только чтение: список эпиков и цифры каждого босса с сервера, ≈полминуты">🔄 Проверить эпиков (бесплатно)</button></div>
+  <div id="epicSum" class="hint" style="white-space:pre-line"></div>
+  <div id="epicTable" class="zbox"><div class="hint">Пока пусто — нажмите «🔄 Проверить эпиков» (бот должен быть запущен)</div></div>
+  <div id="epicBox" class="camp" style="white-space:pre-line">Режим не запускался</div>
+
+  <div class="adv-start" data-adv="epic">⚙ Дополнительно</div>
+  <h4>🐉 Эпики — тонкая настройка</h4>
+  <label>Смертей на одного эпика за его появление (5) <input id="epicMaxDeaths" type="number" min="1"></label>
+  <label>Строго и на месте: не лезть и при «мало банок» (перед оплатой проверка всегда) <input id="epicCheck" type="checkbox"></label>
+  <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
+  <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
+  <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
+  <label>Не браться, если бой дольше, мин (0 — без предела) <input id="epicMaxFightMin" type="number" min="0" step="1"></label>
+  <label>Отходов на одно появление эпика (8) <input id="epicMaxRetreats" type="number" min="1" step="1"></label>
+  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится и возвращается (только бесплатно или через логово). Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас 85, Фринтеза 90. Игра пускает к боссам не ниже «уровень героя − 9»; выше героя больше чем на 10 бот не берёт. Общий стоп — 2 × «смертей на эпика» за час (не больше 20).</div>
 </section>
 
 </div><!-- /.workarea -->
