@@ -14,7 +14,7 @@ function fixture(){
   rt:{char:hero,classCur:{prof:'human_warlord',slot:3},manualKickAt:1,dailyStart:1},heroNick:()=>hero,
   sessionStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>store[k]=v,removeItem:k=>delete store[k]},
   setRt:async p=>{Object.assign(box.rt,clone(p));if(writeHook)await writeHook(p);return{ok:writeOK}},
-  rtCommit:async()=>{if(commitHook)await commitHook();return commitOK},setStatus(){},quietErr(){},
+  rtCommit:async()=>{if(commitHook)await commitHook();return commitOK},setStatus(){},rec(){},modeSig:c=>JSON.stringify(c),quietErr(){},
   gameGet:async p=>{assert.equal(p,'/character');gets++;return{ok,json:async()=>{if(bodyHook)await bodyHook();if(badJSON)throw new SyntaxError('local malformed JSON');return clone(answer)}}},
   L2V7Modules:{mammon:{eqNote:async()=>{if(eqHook)await eqHook()}},warlock:{noteSnapshot(){}},story:{charNote(c){box.rt.classCur={prof:c.l2Profession,slot:c.classSlots.activeSlot,t:now}}},subclass:{charNote(){}}}};
  vm.createContext(box);vm.runInContext(read('skills-il.js'),box);vm.runInContext(nativeMeta+';this.ilOf=ilOf;',box);vm.runInContext(read('modules/buffs.js'),box);

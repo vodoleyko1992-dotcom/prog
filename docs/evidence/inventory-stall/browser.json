@@ -1,0 +1,100 @@
+{
+  "result": "PASS",
+  "scenarios": 15,
+  "browser": "154.0.8037.57",
+  "sourceSha256": "f45a7f8248257179ddfc38d1567317a6ec3586db585eca88bc852f455b96dfed",
+  "gameGetSha256": "6bc5394d2a042fd3e13c29234ec69657e7634d41d23e9c43c8f024a2b6052e08",
+  "inventorySha256": "3a78074795d72d3ab8eafa614ccfaf10567d9e31e46cab3d117576c45aa112a4",
+  "boundary": "exact gameGet+inventory functions in real Chromium; native fetch/JSON/reload; controlled actor/IPC/route, loopback only; virtual clocks and AbortSignal timeout scheduling for long failures, native time and timeout for14s success; not full MV3",
+  "proof": [
+    {
+      "scenario": "real14s body succeeds on25s retry without reload",
+      "elapsedMs": 22022,
+      "retryBodyMs": 14006,
+      "configuredDeadlines": [
+        6000,
+        25000
+      ]
+    },
+    {
+      "scenario": "three timeouts cause one actual reload; recreated document confirms inventory and preserves route/receipt",
+      "virtualElapsedMs": 62000,
+      "reloads": 1,
+      "freshQty": 1000,
+      "configuredDeadlinesBeforeReload": [
+        6000,
+        25000,
+        25000
+      ]
+    },
+    {
+      "scenario": "new document retains five-minute cooldown; one reload allowed afterexpiry",
+      "suppressedDuringCooldown": true,
+      "reloadsAfterExpiry": 2
+    },
+    {
+      "scenario": "stop appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "owner appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "mode appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "captcha appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "payment appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "payment-blocked appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "travel appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "cast appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "action appears during third native body read",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "stop appears during durable flush before reload",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "captcha appears during durable flush before reload",
+      "reloads": 0,
+      "publications": 0
+    },
+    {
+      "scenario": "payment appears during durable flush before reload",
+      "reloads": 0,
+      "publications": 0
+    }
+  ],
+  "posts": 0,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "liveGame": false
+}

@@ -5156,6 +5156,7 @@ function augNote(a, path) {
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
 let INV_READY = '', INV_READ = null, INV_RETRY = { key: '', n: 0, at: 0 }, INV_CLASS_WAIT = null;
 const invContext = () => JSON.stringify([rt.char||'',rt.classCur?.prof??null,rt.classCur?.slot??null,leaseEpoch]);
+const invClassReady = () => INV_CLASS_WAIT?.char!==rt.char&&(!rt.invClassProof||rt.invClassProof.char!==rt.char||rt.invClassProof.prof===rt.classCur?.prof&&rt.invClassProof.slot===rt.classCur?.slot);
 const invNote = inv => { if (!Array.isArray(inv)) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invLevels = eq => Object.fromEntries(Object.values(eq || {}).map(v => [+(v?.itemId || v), +(v?.specialGearLevel ?? v?.level ?? 0)]).filter(([id]) => id >= 910618));
 const invQty = id => INV_NET?.char === rt.char && !!rt.char && INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
@@ -5171,15 +5172,18 @@ function invClassIdentity(c) {
 const invClassDisplay = p => String(p).replace(/^(?:dark_elf|human|elf|orc|dwarf)_/,'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
-async function invRefresh(active = () => true, ms = 6000) {
+async function invRefresh(active = () => true, ms = 6000, diagnostic = null) {
   const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now(),kick=+rt.manualKickAt||0;
+  let phase='запрос /character',reason='ответ не подтверждён';
   const running=typeof on==='boolean'?on:null,owner=typeof tabOwner==='boolean'?tabOwner:null,generation=typeof automationGeneration==='number'?automationGeneration:null;
   const same=()=>active()&&!!char&&rt.char===char&&leaseEpoch===lease&&(+rt.manualKickAt||0)===kick&&(heroNick()?heroNick()===char:true)
     &&(running===null||on===running)&&(owner===null||tabOwner===owner)&&(generation===null||automationGeneration===generation);
   const current=()=>same()&&JSON.stringify(rt.classCur||null)===classKey;
   try {
-    const r = await gameGet('/character', ms); if (!r.ok) return null;
+    const r = await gameGet('/character', ms); if (!r.ok) { reason='HTTP '+(Number.isInteger(r.status)?r.status:'?'); return null; }
+    phase='чтение JSON';
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
+    phase='проверка героя и класса';
     if(!current()||c?.name!==char)return null;
     const I=invClassIdentity(c),P=rt.invClassProof?.char===char?rt.invClassProof:null,W=INV_CLASS_WAIT?.char===char?INV_CLASS_WAIT:null;
     // Старый ответ и равная ревизия с другим активным классом не отменяют уже подтверждённый класс.
@@ -5195,6 +5199,7 @@ async function invRefresh(active = () => true, ms = 6000) {
       L2V7Modules.story.charNote(c);L2V7Modules.subclass?.charNote?.(c);
       const targetKey=JSON.stringify(rt.classCur||null),target=()=>canConfirm()&&JSON.stringify(rt.classCur||null)===targetKey&&rt.classCur?.prof===I.prof&&rt.classCur?.slot===I.slot;
       if(!target())return null;
+      phase='подтверждение смены класса в памяти';
       const saved=await setRt({invClassProof:I,prof:invClassDisplay(I.prof),lvl:c.level,weaponsT:0,weaponRec:null});
       if(!target()||saved?.ok!==true||!await rtCommit()||!target())return null;
       // Этот ответ меняет контекст. Сумку публикует только следующий GET уже под новым ключом класса.
@@ -5202,22 +5207,44 @@ async function invRefresh(active = () => true, ms = 6000) {
     }
     if(W&&!I)return null;
     if(I&&canConfirm()){
+      phase='подтверждение класса в памяти';
       const saved=await setRt({invClassProof:I,prof:invClassDisplay(I.prof),lvl:c.level});
       if(!current()||saved?.ok!==true||!await rtCommit()||!current())return null;
       INV_CLASS_WAIT=null;
     }else if(W)return null;
+    phase='разбор сумки';
     const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
     if (!m) return null;
+    phase='подтверждение экипировки';
     if (tabOwner && c?.inventory?.eq) await L2V7Modules.mammon.eqNote(c.inventory.eq);
     if(!current())return null;
     INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(c?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY = invContext();
+    phase='обновление служб';
     // 23.10 (лог00:25, Detect20.50): свой preflight проходит после аренды, даже когда стартовый GET страницы был до неё.
     if (canConfirm() && current()) L2V7Modules.buffs?.detectOutsideSnapshot?.(c,at,'inventory');
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
-    return current() ? m : null;
-  } catch (e) { return null; }
+    if(!current())return null;
+    reason='ok';return m;
+  } catch (e) { reason=['TimeoutError','AbortError'].includes(e?.name)?'таймаут':e?.name==='SyntaxError'?'некорректный JSON':'ошибка чтения';return null; }
+  finally { try { diagnostic?.({phase,reason,elapsedMs:Date.now()-at}); } catch (_) {} }
+}
+// 23.10 (лог10:36,20.51): повторы сумки подавались сторожу как живое ожидание; ручное обновление карты сняло простой.
+// Только перечитываем текущую карту, не сбрасывая маршруты/квитанции. Повторная перезагрузка — не чаще раза в 5 мин.
+async function inventoryRecover(current) {
+  const page=globalThis.location?.pathname;
+  if(page!=='/map.html'||!current())return false;
+  const stamp=automationSnapshot(),safe=()=>current()&&automationCurrent(stamp)&&!!leaseEpoch&&!cfg.taskOnly
+    && !(invClassReady()&&INV_READY===invContext()&&invQty(0)!==null)&&!L2V7Modules.payments?.blocked?.()&&!L2V7Modules.payments?.pending?.()&&!L2V7Modules.navigation?.travelPending?.()
+    &&!rt.fishCastPending&&!rt.revive&&!antibotState()&&!(rt.pveBlockUntil>Date.now())&&!(cfg.tvtOn&&L2V7Modules.tvt?.tvtHold?.());
+  if(!safe())return false;
+  let last;try{last=JSON.parse(sessionStorage.getItem('l2bot-inv-reload')||'null');}catch(_){return false;}
+  if(last?.char===rt.char&&last.page===page&&Number.isFinite(last.at)&&Date.now()-last.at<300000)return false;
+  if(!await automationFlush(stamp)||!safe())return false;
+  try{sessionStorage.setItem('l2bot-inv-reload',JSON.stringify({char:rt.char,page,at:Date.now()}));}catch(_){return false;}
+  rec('S','восстановление','Сумка не подтверждена после нескольких попыток — перезагружаю карту и продолжу проверку');
+  location.reload();return true;
 }
 // 15.10, MV3 startup: hook начинает раньше content и первый netStart может быть
 // потерян. Не принимаем чужой/непривязанный ответ: перед маршрутом сами читаем
@@ -5226,20 +5253,27 @@ async function inventoryReady() {
   if (!on || !tabOwner || !rt.char || heroNick()!==rt.char) return false;
   // Ручные задачи и сверка уже отправленной оплаты имеют собственный preflight.
   if (cfg.taskOnly || L2V7Modules.payments?.pending?.()) return true;
-  const key=invContext(),kick=+rt.manualKickAt||0,generation=typeof automationGeneration==='number'?automationGeneration:null;
-  const current=()=>on&&tabOwner&&heroNick()===rt.char&&key===invContext()&&(+rt.manualKickAt||0)===kick&&(generation===null||automationGeneration===generation);
-  const classReady=()=>INV_CLASS_WAIT?.char!==rt.char&&(!rt.invClassProof||rt.invClassProof.char!==rt.char||rt.invClassProof.prof===rt.classCur?.prof&&rt.invClassProof.slot===rt.classCur?.slot);
+  const key=invContext(),kick=+rt.manualKickAt||0,generation=typeof automationGeneration==='number'?automationGeneration:null,mode=modeSig(cfg);
+  const current=()=>on&&tabOwner&&heroNick()===rt.char&&key===invContext()&&(+rt.manualKickAt||0)===kick&&(generation===null||automationGeneration===generation)&&modeSig(cfg)===mode;
+  const run=JSON.stringify([key,kick,generation,mode]),sameRetry=INV_RETRY.key===key&&INV_RETRY.run===run;
+  const classReady=invClassReady;
   if (classReady()&&INV_READY===key && invQty(0)!==null) return true;
-  if (INV_RETRY.key===key && Date.now()<INV_RETRY.at) return false;
+  if (sameRetry && Date.now()<INV_RETRY.at) return false;
   if (INV_READ) { await INV_READ; return current()&&classReady()&&INV_READY===key&&invQty(0)!==null; }
-  const read=invRefresh(undefined, INV_RETRY.key===key&&INV_RETRY.n>0?25000:6000); INV_READ=read;
+  const since=sameRetry&&INV_RETRY.since!=null?INV_RETRY.since:Date.now();
+  let detail=null;
+  const read=invRefresh(undefined, sameRetry&&INV_RETRY.n>0?25000:6000,d=>{detail=d;}); INV_READ=read;
   try {
     const m=await read;
     if (!current()) return false;
     if (m) { INV_RETRY={key,n:0,at:0}; return INV_READY===key; }
-    const n=INV_RETRY.key===key?INV_RETRY.n+1:1;
-    INV_RETRY={key,n,at:Date.now()+Math.min(30000,2000*2**Math.min(4,n-1))};
-    setStatus('Сверяю сумку с сервером; без подтверждения закупку и маршруты не начинаю');
+    const n=sameRetry?INV_RETRY.n+1:1;
+    const wait=Math.min(30000,2000*2**Math.min(4,n-1));
+    INV_RETRY={key,run,n,since,at:Date.now()+wait};
+    const why=detail?`${detail.phase}: ${detail.reason}`:'ответ не подтверждён';
+    rec('S','сумка',`Проверка ${n} не подтверждена (${why}, ${Math.round((detail?.elapsedMs||0)/1000)} с); повтор через ${wait/1000} с`);
+    setStatus(`Сверяю сумку с сервером; попытка ${n}, ${why}; повтор через ${wait/1000} с`);
+    if(n>=3&&Date.now()-since>=60000)await inventoryRecover(current);
     return false;
   } finally { if (INV_READ===read) INV_READ=null; }
 }

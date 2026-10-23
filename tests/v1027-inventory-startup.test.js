@@ -4,7 +4,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../content.js'
 function fixture(){
  let now=1800000000000,hero='Hero',release,gets=0;const stored={'l2bot-inv':JSON.stringify({char:'Hero',m:{1465:0},t:now})},pets=[];
  const box={Date:class extends Date{static now(){return now}},cfg:{},on:true,tabOwner:true,leaseEpoch:'one',rt:{char:'Hero',classCur:{prof:'warlock',slot:0}},heroNick:()=>hero,
- sessionStorage:{getItem:k=>stored[k],setItem:(k,v)=>stored[k]=v},gameGet:()=>{gets++;return new Promise(r=>release=r)},setStatus:()=>{},L2V7Modules:{mammon:{eqNote(){}},warlock:{noteSnapshot:c=>pets.push(c)}}};
+ sessionStorage:{getItem:k=>stored[k],setItem:(k,v)=>stored[k]=v},gameGet:()=>{gets++;return new Promise(r=>release=r)},setStatus:()=>{},rec:()=>{},modeSig:c=>JSON.stringify(c),L2V7Modules:{mammon:{eqNote(){}},warlock:{noteSnapshot:c=>pets.push(c)}}};
  vm.runInNewContext(source.slice(source.indexOf('let INV_NET ='),source.indexOf('// 9.0: окно игры alert()'))+';this.qty=invQty;',box);
  const snap=()=>({name:hero,l2Profession:box.rt.classCur.prof,classSlots:{activeSlot:box.rt.classCur.slot},inventory:{stacks:[{itemId:1465,qty:1000}]}});
  return{box,stored,pets,gets:()=>gets,tick:n=>now+=n,reply:(c=snap(),ok=true)=>release({ok,json:async()=>({character:c})}),switch(){hero='Other';box.rt={char:'Other',classCur:{prof:'dark_avenger',slot:1}}}};
