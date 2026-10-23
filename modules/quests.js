@@ -334,6 +334,21 @@ const isQuests = () => /\/character-quests\.html/i.test(location.pathname);
 
 const campOn = () => (campEnabled() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
 
+// 23.10.2026, лог 12:47–12:48: Noblesse выбирался первым в «Мои квесты», но общая кампания не знает его DOM.
+// Готовые части Noblesse/сабкласса сдаёт story, а ★ цели продолжаем бить на карте без отключения режима квестов.
+const separateQuest = href => { try { return /^\/(?:noblesse|subclass)-quest\.html$/i.test(new URL(href, location.origin).pathname); } catch (_) { return false; } };
+const separateOnly = list => list.length > 0 && list.every(q => separateQuest(q.href));
+async function separateHunt(active, list) {
+  if (!active()) return;
+  const title = 'Квесты Noblesse / сабкласса', changed = env.rt.campaign?.title !== title;
+  const saved = await env.setRt({ campaign: { title, targets: [], t: Date.now() }, campaignUrl: '', campaignDue: false,
+    campaignViaMail: false, campOnce: false, sinceCamp: 0, campSkipUntil: 0, campOpenTry: 0, campActTry: 0,
+    ...(list ? { questList: list, questListT: Date.now() } : {}) });
+  if (!active() || saved?.ok === false) return;
+  if (changed) env.rec('B', 'кампания', 'Noblesse / сабкласс: продолжаю ★ охоту на карте; готовую часть сдаёт отдельная служба квеста');
+  if (location.pathname !== '/map.html') return env.goOutskirts();
+}
+
 async function goCampaign() {
   const active = campGuard(false); if (!active()) return;
   if (staleCampaignPage()) return leaveOldCampaign();
@@ -345,12 +360,21 @@ async function goCampaign() {
   if (isQuests()) return questsStep();
   if (env.isMail() && env.rt.campaignViaMail) return mailStep();   // v5.6: «Мои квесты» пусты — путь через почту (раньше: квесты ↔ почта по кругу)
   // 10.0.10: сюжетный квест новичка ещё идёт (storySaga) и адрес главы не запомнен — сразу на его страницу, без «Мои квесты» и почты
-  if (!env.rt.campaignUrl && env.rt.storySaga && !env.rt.storySaga.completed) {
+  if ((!env.rt.campaignUrl || separateQuest(env.rt.campaignUrl)) && env.rt.storySaga && !env.rt.storySaga.completed) {
     env.setStatus('Кампания: открываю сюжетный квест новичка'); location.href = '/starter-story-quest.html'; await env.sleep(4000); return;
   }
   const pathOf = h => { try { return new URL(h, location.origin).pathname; } catch (e) { return String(h || '').split('?')[0]; } };
   const QL = env.rt.questList || [], inList = !!env.rt.campaignUrl && QL.some(q => q.href && pathOf(env.rt.campaignUrl) === pathOf(q.href));
   if (activeDion() && campPath() === DION && location.pathname !== DION) { if (!active()) return; location.href = DION; await env.sleep(1000); return; }
+  if (separateQuest(location.pathname) || separateQuest(env.rt.campaignUrl)) {
+    if (!QL.some(q => q.href && !separateQuest(q.href))) return separateHunt(active);
+    // Старая специализированная страница не закрывает настоящую главу из смешанного списка.
+    const saved = await env.setRt({ campaign: null, campaignUrl: '', campaignDue: true });
+    if (!active() || saved?.ok === false) return;
+    location.href = '/character-quests.html'; await env.sleep(1000); return;
+  }
+  // Повторный campaignDue не открывает тот же список до обычного срока перечитывания; ★ охота остаётся включена.
+  if (separateOnly(QL) && env.rt.questListT && Date.now() - env.rt.questListT < 10 * 60000) return separateHunt(active);
   if (!env.rt.questListT || Date.now() - env.rt.questListT > 10 * 60000 || (env.rt.campaignUrl && !inList)) {
     env.setStatus('Кампания: открываю «Персонаж → Мои квесты»'); location.href = '/character-quests.html'; await env.sleep(4000); return;
   }
@@ -398,7 +422,16 @@ async function questsStep() {
   env.setStatus('Кампания: читаю «Мои квесты»');
   const links = await env.waitFor(() => { const a = [...document.querySelectorAll('a.l2-character-quests-entry__title')].filter(env.shown); return a.length ? a : env.shown(env.$q('#character-quests-list .l2-character-quests-empty')) ? [] : null; }, 8000, 300);
   if (!active()) return;
-  const link = links && (links.find(a => /campaign/i.test(a.getAttribute('href') || '') && a.closest('[class*="entry--ready"]')) || links.find(a => /campaign/i.test(a.getAttribute('href') || '')) || links[0]);
+  const generic = (links || []).filter(a => !separateQuest(a.getAttribute('href')));
+  const link = generic.find(a => /campaign/i.test(a.getAttribute('href') || '') && a.closest('[class*="entry--ready"]')) || generic.find(a => /campaign/i.test(a.getAttribute('href') || '')) || generic[0];
+  // Сохраняем все записи, включая специализированные; они не означают пустой список или завершённые квесты.
+  const entries = [...document.querySelectorAll('.l2-character-quests-entry')];
+  const list = entries.length ? entries.map(e => ({
+    title: e.querySelector('.l2-character-quests-entry__title')?.textContent.trim() || '',
+    href: e.querySelector('.l2-character-quests-entry__title')?.getAttribute('href') || '',
+    lines: [...e.querySelectorAll('.l2-character-quests-entry__line')].map(l => l.textContent.replace(/\s+/g, ' ').trim()) }))
+    : (links || []).map(a => ({ title: a.textContent.trim(), href: a.getAttribute('href') || '', lines: [] }));
+  if (!link && links?.length) return separateHunt(active, list);
   if (!link) {                                   // список пуст — старый путь через почту
     // 16.10, журналы 05:54/05:58: обе кампании сданы, список явно пуст; старая CTA почты не запускает Дион заново и не блокирует фарм.
     const closed = [env.rt.storySaga,env.rt.dionCampaign].every(q => q && (q.completed === true || q.stage === 'completed'));
@@ -412,12 +445,9 @@ async function questsStep() {
     location.href = '/mail.html'; await env.sleep(5000); return;
   }
   // прогресс прямо со страницы: «★ Cave Servant · Lv.46 — 0 / 80 (осталось 80)»
-  const list = [...document.querySelectorAll('.l2-character-quests-entry')].map(e => ({
-    title: e.querySelector('.l2-character-quests-entry__title')?.textContent.trim() || '',
-    href: e.querySelector('.l2-character-quests-entry__title')?.getAttribute('href') || '',
-    lines: [...e.querySelectorAll('.l2-character-quests-entry__line')].map(l => l.textContent.replace(/\s+/g, ' ').trim()) }));
   await env.setRt({ questList: list, questListT: Date.now() });
-  env.rec('B', 'кампания', `«Мои квесты» → ${link.textContent.trim()}${list[0]?.lines.length ? ' · ' + list[0].lines.join(' · ') : ''}`);
+  const selected = list.find(q => q.href === link.getAttribute('href'));
+  env.rec('B', 'кампания', `«Мои квесты» → ${link.textContent.trim()}${selected?.lines.length ? ' · ' + selected.lines.join(' · ') : ''}`);
   const href = location.href;
   if (!active()) return;
   env.fire(link);
