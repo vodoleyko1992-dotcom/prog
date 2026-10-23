@@ -5396,12 +5396,16 @@ const combatWait=(...args)=>combatSignal.wait(...args),combatPulse=ms=>combatSig
 // 15.10, ревизия: ответ без имени героя (TvT/карта/дейлики) принадлежит контексту начала запроса.
 // Отдельно от трёхсекундного busy: поздний ответ не становится ответом нового персонажа.
 const NET_CONTEXT = new Map();
+// 23.10 (лог 13:17, 23:15:58): ручной «Телепорт» игрока к другому РБ ушёл раньше клика бота — игра свой клик проглотила
+// (teleportInFlight), а оплата бота осталась «отправленной» без запроса. Последний старт телепорта РБ в этом документе — для raid.rbTeleportFire
+let RAID_TP_START = null;
 const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
 function netContextStart(d) {
   if(d.rid==null)return;
   // 20.43 (ревью au/travel): метка своего телепорта (nativeNonce) — только первые 30 с после клика бота (navigation.nativeNonce):
   // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
   NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now(),monsterToken:L2V7Modules.combat?.monsterRequestToken?.(d)||''});
+  if (d.path === '/game/raid-boss/teleport' && d.method === 'POST') RAID_TP_START = { t: Date.now(), id: String(d.req?.spawnId || ''), paymentId: NET_CONTEXT.get(d.rid)?.paymentId || '' };
   if (d.path === '/game/battle/action' && d.method === 'POST') L2V7Modules.combat?.noteToggleBattle?.(d,Date.now());
   if (d.path === '/character/skills/cast' && d.method === 'POST') L2V7Modules.buffs?.detectOutsideRequest?.(d,Date.now())?.catch?.(e=>quietErr('Detect request',e));
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
@@ -6153,7 +6157,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get s
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get selfHold(){return selfHoldStart}, get mapGate(){return mapGate}, get mapArriveOk(){return selfHoldMapOk}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get selfHold(){return selfHoldStart}, get mapGate(){return mapGate}, get mapArriveOk(){return selfHoldMapOk}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||raidIdleFarm()||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get raidTeleportStart(){return ()=>RAID_TP_START}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},

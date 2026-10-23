@@ -981,9 +981,16 @@ function rbListWhy(plan = rbTourPlan()) {
 }
 
 async function rbTeleportFire(b, patch) {
-  const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price, context=rbListPriceContext(), generation=env.actionGeneration?.();
+  const t0=Date.now(), target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price, context=rbListPriceContext(), generation=env.actionGeneration?.();
+  // 23.10 (лог 13:17, 23:15:58): пока бот читал /character перед оплатой Timiniel, игрок сам нажал «Телепорт» к Ancient Weird Drake.
+  // Игра держит один телепорт за раз (teleportInFlight) и клик бота проглотила, а оплата осталась «отправленной» без запроса —
+  // тур стоял на «исход телепорта не подтверждён» с 6% HP. Свой запрос этой страницы ещё не начат: любой старт телепорта РБ
+  // за последние 10 с — чужой, оплату не отправляем.
+  const foreign = () => { const s = env.raidTeleportStart?.(); return !!s && s.t >= t0 - 10000; };
+  const foreignNote = () => env.rec('B', 'тур РБ', `${target.name || id}: только что ушёл другой телепорт РБ (ручной клик?) — свою оплату не отправляю, дальше по карте`);
+  if (foreign()) { foreignNote(); return false; }
   const current = () => {
-    if (!id || !Number.isFinite(price) || price < 0 || !env.on || env.tabOwner === false || env.canAct?.() === false
+    if (!id || !Number.isFinite(price) || price < 0 || !env.on || env.tabOwner === false || env.canAct?.() === false || foreign()
       || context !== rbListPriceContext() || generation !== env.actionGeneration?.() || !isRbPage() || !rbListFreshStart()
       || b?.isConnected === false || b?.disabled || b?.dataset?.spawnId !== id) return false;
     const row = rbRowsParse()[id];
@@ -1006,7 +1013,8 @@ async function rbTeleportFire(b, patch) {
     // После последнего await: цена/DOM/герой могли измениться, а серверная бесплатная цена — истечь.
     // Непосланное намерение отменяем; между sent и кликом больше нет ожиданий.
     if (!current() || !Object.keys(patch).every(k=>JSON.stringify(env.rt[k])===JSON.stringify(patch[k])) || !env.payments.sent(P)) {
-      env.setStatus('РБ: перед переходом изменилась цель или подтверждённая цена — перечитаю, оплату не отправляю');
+      if (foreign()) foreignNote();
+      else env.setStatus('РБ: перед переходом изменилась цель или подтверждённая цена — перечитаю, оплату не отправляю');
       await rollback();await env.payments.cancel(P);return false;
     }
     const clicked=env.fire(b);
@@ -1036,6 +1044,10 @@ async function paymentReconcile(battleId) {
   if (id && win?.char === P.char && win.at >= P.at && win.at <= Date.now()) return env.payments.confirm(P,{kind:'target-victory',id});
   const target=env.isMap() && raidList().find(x=>x.id===E.id);
   if(target)return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+  // 23.10 (лог 13:17): бесплатный перелёт (VIP, expectedAdenaCost 0 — сервер другую цену не примет) ничего не списывает при любом исходе.
+  // Без квитанции и без цели на карте ожидание раньше не снималось никогда: тур стоял с 6% HP до ручного Стопа. Через 15 с снимаем его,
+  // шаг «прилёт» сам не найдёт цель на карте и перечитает список.
+  if(P.quote?.amount===0 && Date.now()-(+P.at||0)>=15000)return env.payments.confirm(P,{kind:'free-unresolved',id:E.id,spent:0});
   // 20.12: ревизия героя та же и адены не меньше — дважды за ≥2 мин: телепорт не применился.
   if(Number.isSafeInteger(E.revision) && typeof env.gameGet==='function' && env.payments.probeDue?.(P)){
     const char=env.rt.char;let ch=null;
