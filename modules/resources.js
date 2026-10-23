@@ -222,6 +222,11 @@ async function keepShots() {
   const pick = () => { const g = wanted(), re = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
     return (g && shotSlots().find(x => shotGradeOf(x) === g && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) || env.shotSlot(); };
   let b = pick();
+  // 23.10 (лог22:41): старый кэш B не должен заменять правильные A на панели. Перед заменой сверяем оружие с сервером.
+  if (b && wanted() && shotGradeOf(b) && wanted() !== shotGradeOf(b) && env.syncShotWeapon) {
+    if (!await env.syncShotWeapon(true) || env.on === false || env.tabOwner === false) return;
+    b = pick();
+  }
   if (!b) { await shotSlotAdd(); b = pick(); }
   // 10.0.19 (игрок 15.10: S-кастер, старые заряды на панели): включённый старый слот
   // тоже нужно заменить. Его состояние ON относится к старому предмету, а не к нужным зарядам.

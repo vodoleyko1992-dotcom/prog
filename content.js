@@ -5486,8 +5486,8 @@ async function weaponEquipNote(req) {
 }
 // 10.0.19 (игрок 15.10: S-кастер уже надет до обновления расширения): POST смены оружия
 // мог пройти без бота, тогда сохранённый A-кэш живёт весь фарм катакомб. Сверяем GET без выхода на карту.
-async function syncShotWeapon() {
-  if (!on || !tabOwner || !rt.shotMismatchPending && Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
+async function syncShotWeapon(force = false) {
+  if (!on || !tabOwner || !force && !rt.shotMismatchPending && Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
   const char = rt.char;
   setRt({shotEquipCheckT:Date.now()})?.catch?.(() => {});   // 20.41: отметка «проверено» — память вкладки сразу, запись без ожидания
   try {
@@ -5496,11 +5496,11 @@ async function syncShotWeapon() {
     const j = await r.json(), c = j?.character || j, slot = c?.inventory?.eq?.l1;
     const id = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
     if (!id) return;
-    if (!rt.shotMismatchPending && rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) return;
+    if (!rt.shotMismatchPending && rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) return true;
     await weaponEquipNote({action:'equip',itemId:id,expectedRevision:c.revision,
       targetInstanceId:slot?.targetInstanceId,enchant:slot?.enchant,
       enchantPAtkBonus:slot?.enchantPAtkBonus,enchantMAtkBonus:slot?.enchantMAtkBonus});
-    if (rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) await setRt({shotMismatchPending:false});
+    if (rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) { await setRt({shotMismatchPending:false}); return true; }
   } catch (e) { rec('B','оружие','не удалось сверить надетое оружие; повторю позже'); }
 }
 let RAID_PAY_NET = null;
@@ -5556,7 +5556,7 @@ addEventListener('message', e => {
     if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
-  if (path === '/game/battle/action' && /^(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error || '') && !rt.shotMismatchPending) {
+  if (path === '/game/battle/action' && /^(?:battle_)?(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error || '') && !rt.shotMismatchPending) {
     setRt({shotMismatchPending:true,shotEquipCheckT:0});
     rec('B','заряды','сервер отклонил грейд зарядов — сверяю надетое оружие перед следующим боем');
   }
@@ -6633,7 +6633,7 @@ L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, g
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_POT_RE; }, set HP_POT_RE(value) { HP_POT_RE = value; },
+L2V7Modules.resources = L2V7Factories.resources({ get syncShotWeapon() { return syncShotWeapon; }, get HP_POT_RE() { return HP_POT_RE; }, set HP_POT_RE(value) { HP_POT_RE = value; },
   get shotGrade() { return (...a) => L2V7Modules.economy.shotGrade(...a); }, get shotsMage() { return (...a) => L2V7Modules.economy.shotsMage(...a); }, get $q() { return $q; }, get shown() { return shown; },
   get MP_REGEN() { return MP_REGEN; }, set MP_REGEN(value) { MP_REGEN = value; },
   get POT_LAST() { return POT_LAST; }, set POT_LAST(value) { POT_LAST = value; },
@@ -7249,7 +7249,7 @@ if (typeof addEventListener==='function') addEventListener('message',e=>{
   const shot=/^\/(?:character\/equip|character\/subclasses(?:\/\w+)?|game\/battle\/hotbar|game\/(?:inventory|shop|drops-shop)\/[^?]+)$/.test(path)
     || path==='/game/battle/action' && /^(?:fighter_soulshot|mystic_spiritshot)_toggle$/.test(d.req?.action||'');
   if (d.method==='POST' && shot && d.status>=200 && d.status<300 && !d.error && !d.res?.error
-    || path==='/game/battle/action' && /^(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error||'')) L2V7Modules.warlock?.invalidateSnapshot?.();
+    || path==='/game/battle/action' && /^(?:battle_)?(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error||'')) L2V7Modules.warlock?.invalidateSnapshot?.();
 });
 // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo (поход к бафферу платный)
 const warlockCanRun = () => !rt.autoLs?.hold && !rt.autoLs?.pending && cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.() && (L2V7Modules.actions?.owns?.('petBufferTrip') || (!rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
