@@ -1,5 +1,11 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 23.10.2026 — быстрый Chrome20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
+
+По просьбе «Сборка под хром, по быстрому» собран `builds/l2wap-bot-v20.52.zip` с тем же функциональным кодом, что Firefox20.52.68файлов,1 665 738байт,SHA256 `75d6e13d10eb2346f56d404a94d9c1bc163d5e3388d5c7f577090fe888533c1b`. ExactZIP loaded Chromium156:20.52/208cfg/0errors; реальный Start quests-only→список→карта→★Vanor PASS,0POST/JS errors. Независимый CRC/68source/68extractedSHA/93closure/privacy PASS.625 Node-проверок переиспользованы на неизменённом manifest/content/runtime; полный исторический smoke не повторяли по прямой просьбе ускорить.
+
+Firefox20.52/Lite/профиль/Chrome20.51 сохранены. Chrome20.50 скопирован и побайтно проверен до удаления по политике одной предыдущейChrome; история git сохранена, `/mnt/project-files/builds` недоступна. [Отчёт](evidence/build-20.52-chrome/validation.json). PR#370 теперь включает обе сборки и остаётся draft из-за прежних неразобранных исторических smoke-ошибок. Живую игру не открывали. Следующий шаг — обновить ту же папку через↻ в chrome://extensions и проверить TXT.
+
 ## 23.10.2026 — Firefox20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
 
 По явной просьбе собран Firefox20.52 из4442b21: #367–#369 и прежний Detect-fix. Архив `builds/l2wap-bot-v20.52-firefox.zip`:68файлов,1 664 179байт, SHA256 `1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a`. Node625/0FAIL; syntax53runtime+5tests/env34/diff PASS. ExactZIP: Firefox153.5.1esr desktop smoke,13Detect и2Start-сценария Noblesse/автобаф кота PASS; AndroidAPI-simulation на производной копии PASS, физический Android не проверяли. Lint0errors/0notices/51прежнихwarnings; независимые CRC/source67/extracted68/closure94/privacy PASS. [Итог](evidence/build-20.52-firefox/validation.json).

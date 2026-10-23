@@ -1,0 +1,1 @@
+PASS actual Start, quests-only → list handoff → map → native ★ Vanor link, without Noblesse/list loop, paid requests or JS errors ["/character-quests.html","/map.html","/battle.html?spawnId=dense_9584"]
