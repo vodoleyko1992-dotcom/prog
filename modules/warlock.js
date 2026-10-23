@@ -31,7 +31,7 @@ const fullProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_')
 const fullClass = p => FULL_CLASS.test(fullProf(p));
 const golemClass = p => /^(warsmith|maestro)$/.test(fullProf(p));
 let classBusy = false, classReadAt = 0, classRevision = -1, classOwner = '', classSeenKey = '', raidBusy = false, raidProof = null;
-// 20.10: явное решение игрока — при выборе котовода включать полный бафф, без сброса бюджета.
+// 23.10.2026, решение игрока: на активном котоводе восстанавливать выключенный автобаф и при повторном снимке, без сброса бюджета.
 async function autoEnableClass(ch) {
   if (!env.on || !env.tabOwner || ch?.name !== charName() || ch.name !== env.heroNick()
     || !Number.isSafeInteger(ch.revision) || !Number.isInteger(ch.classSlots?.activeSlot) || !ch.l2Profession) return false;
@@ -40,14 +40,17 @@ async function autoEnableClass(ch) {
   if (ch.revision < Math.max(classRevision, old?.char === ch.name ? old.revision : -1) || ch.revision === classRevision && classSeenKey && classSeenKey !== key) return false;
   classRevision = ch.revision;classSeenKey=key;
   if (classBusy) return false;
-  if (old?.char === ch.name && old.key === key && old.kick === (+env.rt.manualKickAt || 0)) return false;
+  // В явном списке задач petFullAuto скрыт, пока не разрешён petbuff: включаем и саму галочку задачи.
+  const tasks = env.cfg.autoTasks, needsTask = Array.isArray(tasks) && !tasks.includes('petbuff');
+  const needsEnable = catClass(ch.l2Profession) && (needsTask || env.cfg.petFullAuto !== true || env.cfg.petBuffAuto !== true);
+  if (old?.char === ch.name && old.key === key && old.kick === (+env.rt.manualKickAt || 0) && !needsEnable) return false;
   const who = ch.name, epoch = env.leaseEpoch, kick = +env.rt.manualKickAt || 0;
   const valid = () => env.on && env.tabOwner && charName() === who && env.heroNick() === who && env.leaseEpoch === epoch && (+env.rt.manualKickAt || 0) === kick && classOwner === who && classSeenKey === key;
   classBusy = true;
   try {
     if (catClass(ch.l2Profession) && typeof env.setCfg === 'function') {
       if (!valid()) return false;
-      await env.setCfg({ petFullAuto:true, petBuffAuto:true });
+      await env.setCfg({ petFullAuto:true, petBuffAuto:true, ...(needsTask ? { autoTasks:[...tasks,'petbuff'] } : {}) });
       if (!valid()) return false;
       env.rec?.('B','суммон','Активен котовод — включён полный автобаф кота; бюджет и резерв сохранены');
     }
