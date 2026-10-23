@@ -55,7 +55,7 @@ with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM','/usr/bin/chromium'),args=['--no-sandbox','--disable-dev-shm-usage'])
   # 20.12 (ревизия 17.10): широкий случай — настоящая ширина меню Chrome (body 760 px), а не 738: на 738 px body{width:760px}
   # честно даёт прокрутку, которой в настоящем popup нет.
-  NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed','tvt']  # 23.10 (#378): «TvT» — отдельный раздел в конце
+  NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed','tvt','epic']  # 23.10 (#378): «TvT» — отдельный раздел в конце; 23.10: «Эпики» — отдельно от «РБ»
   VISIBLE=[t for t in NAV if t!='enchant']
   for width,height,label in [(760,720,'wide'),(375,720,'dock')]:
     page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)

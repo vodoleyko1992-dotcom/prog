@@ -5,7 +5,7 @@
 ## 24.10.2026, 02:10 UTC+10 — Claude — меню: «РБ» и «Эпики» отдельно
 
 - John: «Раздели режим РБ и ЭПИКИ, для удобства». Раздел «РБ и эпики» разделён: «РБ» (тур, «один РБ», РБ-сессия и набор за FA, таймеры, база РБ) и новый «Эпики» (кнопка в конце меню, Alt-клавиши прежних разделов не сдвинулись): выбор эпиков, Coin of Luck/адена, «фулл бафф за FA вместо Coin of Luck», проверка, таблица, тонкая настройка в «Дополнительно». Логика боя, id полей и настройки не менялись; `epic` убран из TAB_GROUP (теперь свой раздел).
-- Проверки: новый `tests/v2054-rb-epic-split.test.js` и `tests/v2054-rb-epic-split-browser.cjs` PASS; полный Node 635 PASS / 0 FAIL; syntax/envcheck PASS; браузерные v2012-panel, v1014-core-modes, v2014-tour-toggle, v1002-rbtimer PASS. v2017-sidebar и v2012-nav падают и в базе (известный список 49, до раздела «Эпики» не доходят).
+- Проверки: новый `tests/v2054-rb-epic-split.test.js` и `tests/v2054-rb-epic-split-browser.cjs` PASS; полный Node 635 PASS / 0 FAIL; syntax/envcheck PASS; после слияния с #379/#380 Node 638 PASS / 0 FAIL; браузерные v2017-sidebar, v2012-nav, v2013-nav-names, v715-ui (обновлены под 17-ю кнопку), v2012-panel, v1014-core-modes, v2014-tour-toggle, v1002-rbtimer PASS.
 
 ## 24.10.2026, 01:15 UTC+10 — Claude — полный браузерный прогон и исправления после 20.53
 
