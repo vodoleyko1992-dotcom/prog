@@ -2,7 +2,7 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
-## 23.10.2026, 10:16 UTC+10 — Claude — инструменты Claude Code в репозитории (PR в подготовке)
+## 23.10.2026, 10:16 UTC+10 — Claude — инструменты Claude Code в репозитории ([PR #363](https://github.com/vodoleyko1992-dotcom/prog/pull/363))
 
 - По прямой просьбе игрока «вставь в репозиторий» добавлены инструменты Claude Code; код бота, manifest, профиль и ZIP не менялись. Codex их не использует.
 - `.claude/skills/task-observer/` — навык rebelytics v3.7.0 (CC-BY-4.0), журнал наблюдений `docs/skill-observations/`; включение — строкой в CLAUDE.md. Хук `.claude/hooks/task-observer-start.sh` создан и проверен, но в `.claude/settings.json` не зарегистрирован: правку настроек должен подтвердить игрок.

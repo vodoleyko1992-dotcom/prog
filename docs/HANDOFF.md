@@ -1,6 +1,6 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 23.10.2026 — инструменты Claude Code (PR в подготовке)
+## 23.10.2026 — инструменты Claude Code ([PR #363](https://github.com/vodoleyko1992-dotcom/prog/pull/363))
 
 **Решение игрока (23.10):** в репозиторий добавить Task Observer, Claude Code Setup и Headroom; OmniRoute не ставить. Claude-Mem в облачных сессиях не работает — не добавлен. Подробности и проверки — запись WORKLOG 23.10 10:16. **Открыто:** регистрация хука Task Observer в `.claude/settings.json` ждёт подтверждения игрока.
 
