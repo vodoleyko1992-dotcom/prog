@@ -8,10 +8,10 @@ const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
 // 20.54 (прогон смоуков 23.10): после 20.18 разделов стало больше — «Крафт» (PR #358, 22.10), «Сабкласс» (20.43, c945937),
 // «Скорость» (PR #371, 23.10); «Автозаточка» скрыта решением игрока 19.10 (кнопка hidden, showTab('enchant') → «Обзор»).
 // Проверяем точный текущий список вместо прежнего числа 12; все старые имена → раздел/метка проверяются как раньше.
-const NAV = ['overview', 'hunt', 'craft', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed'];
+const NAV = ['overview', 'hunt', 'craft', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt'];   // 23.10 (#378): «TvT» — отдельный раздел
 const VISIBLE = NAV.filter(t => t !== 'enchant');
 const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
-  pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'supply', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
+  pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'supply', seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 (async () => {
   const h = await harness(); try {
     const P = h.popup;

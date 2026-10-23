@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const { harness, until } = require('./v1014-core-lifecycle-browser.cjs');
 // 20.54 (прогон смоуков 23.10): разделов уже не шесть — 20.18 (10), 19.10 «Лимиты»/«Снабжение» (12), «Сабкласс» (20.43), «Крафт» (PR #358),
 // «Скорость» (PR #371); «Автозаточка» скрыта (19.10, кнопка hidden). Колонка = по строке на каждую видимую кнопку; скрытая не считается.
-const VISIBLE = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed'];
+const VISIBLE = ['overview', 'hunt', 'craft', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed', 'tvt'];   // 23.10 (#378): «TvT» — отдельный раздел
 (async () => {
   const h = await harness(); try {
     const P = h.popup;

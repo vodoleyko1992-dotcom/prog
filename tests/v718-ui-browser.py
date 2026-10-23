@@ -9,7 +9,7 @@ with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM','/usr/bin/chromium'),args=['--no-sandbox','--disable-dev-shm-usage'])
  # 20.54 (прогон смоуков 23.10): разделов уже не 6 — 20.18 (10), «Лимиты»/«Снабжение» 19.10, «Сабкласс» 20.43, «Крафт» PR #358,
  # «Скорость» PR #371; «Автозаточка» скрыта решением игрока 19.10 (кнопка hidden). Проверяем точный список и раскладку по решениям после 20.13.
- NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed']
+ NAV=['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp','svc','limits','supply','sub','speed','tvt']  # 23.10 (#378): «TvT» — отдельный раздел в конце
  VISIBLE=[t for t in NAV if t!='enchant']
  for width,height,mode in [(760,680,'wide'),(375,740,'dock')]:
   page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
