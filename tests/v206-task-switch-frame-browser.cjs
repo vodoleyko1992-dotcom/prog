@@ -2,9 +2,11 @@
 // Настоящие MV3/main/hook и клики меню; вся игра заменена локальными ответами.
 const assert=require('node:assert/strict');
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
+// 20.54 (прогон смоуков 23.10): с 20.43 (PR #325) у Warlock (rt.prof стенда) перед автофармом идёт подготовка «кот → баффы» до 2 мин,
+// и переход на карту ждал её конца. Здесь проверяется смена задачи во время улова, поэтому автопризыв кота выключен.
 (async()=>{const h=await harness();let held=null,hp=300;const acts=[];
 try{
- await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,autoTasks:['fish','auto'],fishAutoSetup:false,fishRodBuy:false,fishProcess:false,fishShots:false,autoShots:false,potSlotAuto:false,reactMin:0,reactMax:0,townBuff:false,sealAuto:false},rt:{...rt,fishCastActive:true,fishCastPending:null,fish:{casts:1,caught:0},manualKickAt:0,actionOwner:null,actionPayments:{pending:null,history:[]}}});});
+ await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,autoTasks:['fish','auto'],fishAutoSetup:false,fishRodBuy:false,fishProcess:false,fishShots:false,autoShots:false,potSlotAuto:false,reactMin:0,reactMax:0,townBuff:false,sealAuto:false,petAuto:false},rt:{...rt,fishCastActive:true,fishCastPending:null,fish:{casts:1,caught:0},manualKickAt:0,actionOwner:null,actionPayments:{pending:null,history:[]}}});});
  await h.ctx.route('https://l2wap.com/**',async r=>{
  const path=new URL(r.request().url()).pathname;
  if(path==='/character')return r.fulfill({json:{character:{name:'AuditHero',level:75,inventory:{stacks:[]},hp:100,maxHp:100,mp:100,maxMp:100}}});

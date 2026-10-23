@@ -23,7 +23,8 @@ async function test(kind){const f=await journey(kind==='dynamic'?{dynamicFourth:
   assert.ok((await f.h.get(['rt'])).rt.tbuff.fa.length>=2,'прервана незавершённая очередь нескольких FA баффов');
   if(kind==='cat'){await f.h.tasks();await f.h.popup.locator('[data-auto-task=cat]').click();}   // 20.12 (ревизия 17.10): задачи — в «Обзоре»
   else {await f.h.tasks();/* 20.12: задачи — в «Обзоре» */await f.h.popup.locator('[data-auto-task="tvt"]').check();await f.h.popup.locator('[data-auto-task="raid"]').uncheck();}
-  await until(async()=>{const tasks=(await f.h.get(['cfg'])).cfg.autoTasks;return kind==='cat'?tasks.includes('cat'):tasks.length===1&&tasks[0]==='tvt';});
+  // 20.54 (прогон смоуков 23.10): у котовода остаётся отдельная задача petbuff (#368, решение 23.10); из задач тура РБ — только TvT.
+  await until(async()=>{const tasks=(await f.h.get(['cfg'])).cfg.autoTasks;return kind==='cat'?tasks.includes('cat'):JSON.stringify([...tasks].sort())==='["petbuff","tvt"]';});
   if(kind==='cat')assert.equal(await f.h.g.core('autonomyMode()'),'raid');
   const resumed=Date.now();f.release();
   await until(async()=>{const P=(await f.h.get(['rt'])).rt.actionPayments;return !P?.pending&&P?.history?.some(p=>p.kind==='fa-buff');},15000);

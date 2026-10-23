@@ -24,9 +24,11 @@ const CANDS = Array.from({ length: 25 }, (_, i) => i === 21 ? { itemKey: 'res:18
 // окружение модуля как в content.js (настоящий fire из content.js)
 const ENV = `
   const contentSrc = window.__content, fireSrc = contentSrc.slice(contentSrc.indexOf('function fire(el) {'), contentSrc.indexOf('\\n}\\n', contentSrc.indexOf('function fire(el) {')) + 3);
-  const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt || {}, recs = [], bag = window.__bag;
+  // 20.54 (прогон смоуков 23.10): настоящий fire читает rt.autoLs (стоп-кран авто-ЛС, 20.35) и отмечает темп actionNote() (bc8204e,
+  // панель скорости 23.10) — стенд передаёт тот же rt героя; темп здесь не проверяется (actionNote — пустышка, его проверяют battle-load-error и v1015-magister).
+  const on = true, tabOwner = true; const fire = (0, eval)('(function(rt){ const on = true, tabOwner = true, abHold = () => false, actionNote = () => {}, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })')(rt);
   const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye', mmCraftNote: false }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
     sleep: ms => new Promise(r => setTimeout(r, Math.min(ms, 400))), waitX: async (fn, ms = 5000, st = 100) => { const t0 = Date.now(); for (;;) { const v = fn(); if (v) return v; if (Date.now() - t0 > ms) return null; await new Promise(r => setTimeout(r, st)); } },
     fire, $q: s => document.querySelector(s), isBattle: () => false, isFishing: () => false, fishState: () => null, fishNow: () => false, autonomyMode: () => 'hunt', tvtSoon: () => false,

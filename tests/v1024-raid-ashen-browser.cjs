@@ -118,7 +118,11 @@ async function test(kind) {
       assert.equal(f.S.wins[0], bosses[0].id);
       assert.equal(f.events.filter(x => x.kind === 'engage')[0].id, bosses[0].id);
       assert.ok(f.A.events.indexOf('city-accepted') < f.A.events.indexOf('teleport'));
-      assert.equal(f.A.paths.filter(p => p === '/ashen-bastion.html').length, 1);
+      // 20.54 (прогон смоуков 23.10): с 20.30 Старт сначала заново читает весь список РБ (/rb-bosses.html), уходя со страницы Ashen.
+      // Выход по-прежнему один и штатный: тур один раз возвращается на Ashen за ссылкой «Вийти в місто», платит только после города.
+      assert.ok(f.paths.includes('/rb-bosses.html'), 'свежий список РБ после Старта не прочитан');
+      assert.equal(f.A.paths.filter(p => p === '/ashen-bastion.html').length, 2);
+      assert.deepEqual(f.A.paths.slice(-2), ['/ashen-bastion.html', '/city.html'], 'выход в город не со страницы Ashen');
       assert.equal(f.A.paths.filter(p => p === '/city.html').length, 1);
     } else {
       await until(() => f.A.heldRead, 10000);

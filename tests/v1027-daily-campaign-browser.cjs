@@ -2,8 +2,10 @@
 // Настоящий MV3 dispatcher: глава Диона не уступает ежедневной рыбалке. Все ответы локальные.
 const assert=require('node:assert/strict');
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
+// 20.54 (прогон смоуков 23.10): с 20.43 (PR #325) у Warlock перед квестами/фармом идёт подготовка «кот → баффы» до 2 мин;
+// здесь проверяется только диспетчер дейликов/кампании, поэтому автопризыв кота выключен, как в v1027-campaign-location.
 (async()=>{const h=await harness();try{
- await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,dailyAuto:true,campaign:true},rt:{...rt,campaign:{title:'Глава 3/10',targets:[{name:'Ol Mahum Guerilla',done:24,total:40,ok:false},{name:'Ol Mahum Raider',done:28,total:40,ok:false}]},campaignDue:false,campSkipUntil:Date.now()+600000,daily:{day:'20261015',t:Date.now(),tasks:{fishing_catch_50:{have:0,need:50,done:false}}}}})});
+ await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,dailyAuto:true,campaign:true,petAuto:false},rt:{...rt,campaign:{title:'Глава 3/10',targets:[{name:'Ol Mahum Guerilla',done:24,total:40,ok:false},{name:'Ol Mahum Raider',done:28,total:40,ok:false}]},campaignDue:false,campSkipUntil:Date.now()+600000,daily:{day:'20261015',t:Date.now(),tasks:{fishing_catch_50:{have:0,need:50,done:false}}}}})});
  await h.g.p.reload();await until(()=>h.g.core('cfg.campaign && rt.daily?.tasks?.fishing_catch_50?.need===50'));
  // Только счётчик вызовов: решение и запись состояния выполняет настоящий модуль через настоящий dispatcher.
  await h.g.core('window.__dailyCalls=0;window.__dailyOriginal=L2V7Modules.dailies.dailyStep;L2V7Modules.dailies.dailyStep=async(...a)=>{window.__dailyCalls++;return window.__dailyOriginal(...a)};true');

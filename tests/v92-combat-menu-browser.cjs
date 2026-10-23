@@ -36,7 +36,11 @@ const CASES = [
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const s of ['ui-v7.css', 'ui-game.css', 'enchant-ui.css', 'warlock-ui.css']) await page.addStyleTag({ content: read(s) });
-    for (const j of ['modules/fightlab.js', 'modules/enchant.js', 'enchant-ui.js', 'modules/warlock.js', 'warlock-ui.js', 'pvp-ui.js', 'defaults.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    // 20.54 (прогон смоуков 23.10): popup.js с 20.43 строит список Life Stone из L2Aug (augment.js), с 20.51 есть craft-plan.js —
+    // ручной список скриптов отстал от popup.html. Грузим ровно скрипты настоящего popup.html и в его порядке (как v92-enemies/v1002-rbtimer).
+    const popupScripts = [...read('popup.html').matchAll(/<script src="([^"]+)"><\/script>/g)].map(x => x[1]);
+    for (const j of ['augment.js', 'modules/fightlab.js', 'popup.js', 'ui-v7.js']) if (!popupScripts.includes(j)) { console.error('FAIL: popup.html не грузит ' + j); process.exit(1); }
+    for (const j of popupScripts) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="panel"]').click());
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {

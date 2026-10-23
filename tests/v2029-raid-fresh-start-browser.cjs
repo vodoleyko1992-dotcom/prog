@@ -41,10 +41,14 @@ async function scenario(mode){
    if(p.endsWith('.html'))return route.fulfill({contentType:'text/html; charset=utf-8',body:html(mode,false)});
    return route.fulfill({json:{}});
   });
+  // 20.54 (прогон смоуков 23.10): с 3a4ebba/#368 (решение игрока 23.10) Старт на котоводе сам включает задачу «Баф кота»
+  // (petbuff, petFullAuto/petBuffAuto). Эта запись cfg посреди круга меняет контекст кадра действий: первый переход тура к
+  // ?page=1 гасился, список открывал общий маршрут rbScan без номера страницы. Герой сценария — Warlock с уже включённым
+  // автобафом кота (как после первого Старта); набора кота в каталоге нет, поэтому покупок и походов нет.
   await h.sw.evaluate(async({oldId,mode})=>{
    const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']),now=Date.now();
    const old={name:'Cached Gordon',lvl:80,alive:true,price:100000,unit:'аден',page:3,t:now};
-   await chrome.storage.local.set({on:false,cfg:{...cfg,taskOnly:false,autoTasks:['raid','fish'],dailyKillLimit:0,dailyFishLimit:0,limitRanges:{},rbFaFull:false,rbValueTour:true,rbOrder:'up',rbMaxBelow:12,rbMaxAbove:12,rbTimers:false,rbProbe:false,tvtOn:false,petFullAuto:false,petAuto:false,petBuffAuto:false,townBuffSet:'off',faBuffs:'',nBuffs:'',nKeyBuffs:'',shopAuto:false,autoRoles:false,autoMagister:false,autoShots:false,potSlotAuto:false,reactMin:0,reactMax:0},
+   await chrome.storage.local.set({on:false,cfg:{...cfg,taskOnly:false,autoTasks:['raid','fish','petbuff'],dailyKillLimit:0,dailyFishLimit:0,limitRanges:{},rbFaFull:false,rbValueTour:true,rbOrder:'up',rbMaxBelow:12,rbMaxAbove:12,rbTimers:false,rbProbe:false,tvtOn:false,petFullAuto:true,petAuto:false,petBuffAuto:true,townBuffSet:'off',faBuffs:'',nBuffs:'',nKeyBuffs:'',shopAuto:false,autoRoles:false,autoMagister:false,autoShots:false,potSlotAuto:false,reactMin:0,reactMax:0},
     rt:{...rt,dailyStart:7,manualKickAt:12,classCur:{prof:'human_warlock',slot:0},rbList:{[oldId]:old},rbListT:now,rbListVerifiedAt:now,rbListIncomplete:false,rbListReadStart:'old-run',rbListStartRequired:'old-run',rbListStartSeq:0,rbTourView:{ready:[{id:oldId,...old}]},rbListVerifyNextAt:now+180000,rbFishWait:{at:now-1000,until:now+300000},rbHuntIdle:now+300000,rbHunt:{step:'pick',phase:'wait'},rbGo:mode==='partial'?{id:oldId,...old}:null,rbRefuse:null,rbScan:null,rbSess:null,actionPayments:null}});
    globalThis.raidStartWrites=[];
    chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.rt)globalThis.raidStartWrites.push({on:changes.on?.newValue,rt:changes.rt.newValue});});

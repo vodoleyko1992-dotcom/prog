@@ -5,6 +5,11 @@
 // строка «Задачи бота» в шапке открывает список задач в «Обзоре»; 800×600 — область настроек выше 170 px, 360 px — без горизонтальной прокрутки.
 const assert = require('node:assert/strict');
 const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
+// 20.54 (прогон смоуков 23.10): после 20.18 разделов стало больше — «Крафт» (PR #358, 22.10), «Сабкласс» (20.43, c945937),
+// «Скорость» (PR #371, 23.10); «Автозаточка» скрыта решением игрока 19.10 (кнопка hidden, showTab('enchant') → «Обзор»).
+// Проверяем точный текущий список вместо прежнего числа 12; все старые имена → раздел/метка проверяются как раньше.
+const NAV = ['overview', 'hunt', 'craft', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply', 'sub', 'speed'];
+const VISIBLE = NAV.filter(t => t !== 'enchant');
 const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
   pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'supply', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 (async () => {
@@ -13,9 +18,14 @@ const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hun
     await h.sw.evaluate(async () => { const { cfg, rt } = await chrome.storage.local.get(['cfg', 'rt']); await chrome.storage.local.set({ cfg: { ...cfg, autoTasks: ['fish', 'tvt'] }, rt: { ...rt, char: 'Warlock', lvl: 56, classCur: { prof: 'human_warlock' } } }); });
     await P.setViewportSize({ width: 800, height: 600 }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
     await P.evaluate(() => { try { localStorage.removeItem('ui5'); } catch (e) {} }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
-    // 1. шесть кнопок, по умолчанию все «Дополнительно» свёрнуты
-    assert.equal(await P.locator('#moduleNav button[data-tab]').count(), 12);
-    assert.equal(await P.locator('.adv').count(), 8); assert.equal(await P.locator('.adv.closed').count(), 8);
+    // 1. кнопки разделов по порядку (видны все, кроме скрытой автозаточки), по умолчанию все «Дополнительно» свёрнуты
+    assert.deepEqual(await P.locator('#moduleNav button[data-tab]').evaluateAll(b => b.map(x => x.dataset.tab)), NAV);
+    assert.deepEqual(await P.locator('#moduleNav button[data-tab]').evaluateAll(b => b.filter(x => !x.hidden && x.offsetParent).map(x => x.dataset.tab)), VISIBLE);
+    // 20.54: девятый блок «Дополнительно» — «Реакция» в разделе «Скорость» (PR #371)
+    assert.equal(await P.locator('.adv').count(), 9); assert.equal(await P.locator('.adv.closed').count(), 9);
+    // автозаточка временно убрана (19.10, после 20.25): старое имя раздела открывает «Обзор», раздел не показывается
+    await P.evaluate(() => showTab('enchant')); await delay(80);
+    assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-overview', 'enchant → Обзор, пока автозаточка отключена');
     // 2. старые имена → раздел и видимая метка (в т.ч. внутри «Дополнительно»: анализ боя, диагностика, добыча)
     for (const [old, sec] of Object.entries(OLD)) {
       await P.evaluate(t => showTab(t), old); await delay(80);
@@ -46,7 +56,7 @@ const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hun
     const m = await P.evaluate(() => ({ header: document.querySelector('header').offsetHeight, sec: document.querySelector('section.act').clientHeight, h: document.documentElement.scrollWidth > document.documentElement.clientWidth }));
     assert.ok(m.header <= 200 && m.sec > 170 && !m.h, JSON.stringify(m));
     await P.setViewportSize({ width: 360, height: 740 }); await P.goto('chrome-extension://' + h.id + '/popup.html?dock=1'); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
-    for (const t of ['overview', 'hunt', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply']) {
+    for (const t of VISIBLE) {
       await P.locator('#moduleNav [data-tab="' + t + '"]').click(); await delay(80);
       await P.evaluate(() => document.querySelectorAll('section.act .adv.closed > .adv-h').forEach(b => b.click()));
       // широкие таблицы (маршрут автофарма и т.п.) листаются внутри своей рамки overflow:auto — это не прокрутка страницы
@@ -56,6 +66,6 @@ const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hun
     }
     assert.equal(await P.locator('#moduleNav [data-tab="svc"]').isVisible(), true);
     assert.deepEqual(h.errors, []);
-    console.log('PASS v2012-nav-browser: 12 разделов, 19 старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
+    console.log('PASS v2012-nav-browser: ' + VISIBLE.length + ' видимых разделов (автозаточка скрыта), ' + Object.keys(OLD).length + ' старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
   } finally { await h.ctx.close(); }
 })().catch(e => { console.error('FAIL v2012-nav-browser:', e); process.exitCode = 1; });

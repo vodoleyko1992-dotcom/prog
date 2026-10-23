@@ -23,7 +23,9 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  await h.openTab('hunt');await P.locator('#tab-hunt [data-goto="limits"]').first().click();assert.equal(await P.locator('section.act').getAttribute('id'),'tab-limits');
  await h.openTab('overview');await P.locator('#uiSearch').fill('Рыбы в день');await until(()=>P.locator('#uiResults [data-i]').count());await P.locator('#uiResults [data-i]').first().click();
  assert.equal(await P.locator('section.act').getAttribute('id'),'tab-limits');assert.equal(await P.locator('#dailyFishLimit').isVisible(),true);
- await P.locator('#dailyFishLimit').blur();await P.keyboard.press('Alt+0');assert.equal(await P.locator('section.act').getAttribute('id'),'tab-svc');
+ await P.locator('#dailyFishLimit').blur();await P.keyboard.press('Alt+0');
+ // 20.54 (прогон смоуков 23.10): с «Крафтом» третьим разделом (PR #358, 86cbe91) Alt+0 — «TvT и PvP», как в подсказке кнопки; «Сервис» без горячей клавиши
+ assert.match(await P.locator('#moduleNav [data-tab="pvp"]').getAttribute('title'),/\(Alt\+0\)$/);assert.equal(await P.locator('section.act').getAttribute('id'),'tab-pvp');
  assert.equal((await h.get(['on'])).on,false);assert.deepEqual(h.errors,[]);assert.ok(h.requests.every(r=>r.method==='GET'));
- console.log('PASS MV3: логи сверху на 360/760/1100px, настоящая выгрузка, отдельные лимиты, сохранение/перезагрузка/ссылки/поиск/Alt+0 без запуска бота');
+ console.log('PASS MV3: логи сверху на 360/760/1100px, настоящая выгрузка, отдельные лимиты, сохранение/перезагрузка/ссылки/поиск/Alt+0 (PvP) без запуска бота');
 }finally{await h.ctx.close()}})().catch(e=>{console.error(e.stack);process.exitCode=1});

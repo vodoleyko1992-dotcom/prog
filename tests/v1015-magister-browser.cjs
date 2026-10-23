@@ -53,14 +53,18 @@ const clean=s=>s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<lin
    window.abHold=()=>!!rt.abChal;window.antibotState=()=>rt.abChal?'check':null;window.names=s=>String(s).toLowerCase().split(',').map(x=>x.trim());window.ilOf=()=>({c:'Маг. атака'});window.petState=()=>null;
    window.L2V7Modules={story:{charNote(){}},subclass:{charNote(){}},tvt:{tvtHold:()=>false}};
    window.setRt=async p=>{Object.assign(rt,p);return {ok:true}};window.rtCommit=async()=>true;window.rec=()=>{};window.setStatus=()=>{};
+   // 20.54 (прогон смоуков 23.10): magisterStep с bc8204e (панель скорости 23.10) ждёт темп actionWait перед каждым рангом, с 2361c2d (20.43)
+   // в catch проверяет уход со страницы pageLeaving/pageGone. Стенд: темп сразу разрешён, но считается; страница не уходит.
+   window.actionWait=async(valid=()=>true)=>{audit.paceWaits=(audit.paceWaits||0)+1;return valid()};
+   window.pageLeaving=false;window.pageGone=false;window.sleep=ms=>new Promise(r=>setTimeout(r,ms));
    window.gameGet=p=>L2.authFetch(p);window.gamePost=(p,b)=>L2.authFetch(p,{method:'POST',body:JSON.stringify(b)});
   });
   await f.page.addScriptTag({content:read('magister-block.js')});
   // Return/navigation is covered by independent actual combat-chain harness; retain this real public DOM for assertions.
   await f.page.evaluate(()=>{window.magBack=async M=>{audit.returned=true;rt.magister=null}});
  }
- test('новый bot helper на actual public guild учит оба ранга с последовательной ревизией',async()=>{const f=await fixture();await attachBot(f);await f.page.evaluate(()=>magisterStep());const a=await f.page.evaluate(()=>({a:audit,rt}));assert.deepEqual(a.a.calls.filter(x=>x.method==='POST').map(x=>x.body.expectedRevision),[7,8]);assert.equal(a.a.rank,2);assert.equal(a.a.snapshot.sp,800);assert.equal(a.rt.magChecked['0:human_warlock'].lvl,75);assert.equal(a.a.returned,true);await f.close()});
- test('новый helper actual public API 409 не повторяет POST и не маркирует уровень',async()=>{const f=await fixture({status:409});await attachBot(f);await f.page.evaluate(()=>magisterStep());const a=await f.page.evaluate(()=>({a:audit,rt}));assert.equal(a.a.calls.filter(x=>x.method==='POST').length,1);assert.equal(a.a.rank,0);assert.equal(a.rt.magChecked,undefined);await f.close()});
+ test('новый bot helper на actual public guild учит оба ранга с последовательной ревизией',async()=>{const f=await fixture();await attachBot(f);await f.page.evaluate(()=>magisterStep());const a=await f.page.evaluate(()=>({a:audit,rt}));assert.deepEqual(a.a.calls.filter(x=>x.method==='POST').map(x=>x.body.expectedRevision),[7,8]);assert.equal(a.a.rank,2);assert.equal(a.a.snapshot.sp,800);assert.equal(a.rt.magChecked['0:human_warlock'].lvl,75);assert.equal(a.a.returned,true);assert.equal(a.a.paceWaits,3,'темп перед каждым рангом и перед финальной сверкой');await f.close()});
+ test('новый helper actual public API 409 не повторяет POST и не маркирует уровень',async()=>{const f=await fixture({status:409});await attachBot(f);await f.page.evaluate(()=>magisterStep());const a=await f.page.evaluate(()=>({a:audit,rt}));assert.equal(a.a.calls.filter(x=>x.method==='POST').length,1);assert.equal(a.a.rank,0);assert.equal(a.rt.magChecked,undefined);assert.equal(a.a.paceWaits,1);await f.close()});
  test('проверка активности до запроса оставляет public guild без платных действий',async()=>{const f=await fixture();await attachBot(f);await f.page.evaluate(async()=>{rt.abChal={t:1};await magisterStep()});assert.equal(await f.page.evaluate(()=>audit.calls.filter(x=>x.method==='POST').length),0);await f.close()});
  let fails=0;for(const[n,f]of cases){try{await f();console.log('PASS',n)}catch(e){fails++;console.error('FAIL',n,e.message)}}await browser.close();if(fails)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1});

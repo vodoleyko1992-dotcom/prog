@@ -1,7 +1,7 @@
 'use strict';
 // 20.43 (разбор 21.10): настоящее меню расширения в Chromium (без игры и без сети). ПК: пояснения из title — прежние подсказки
 // при наведении, «i» из title скрыта; «Катакомбы» из «Задач бота» не пишут «Выключено»; «Лимиты» показывают сброс по Владивостоку;
-// поиск находит поле по пояснению и открывает подраздел другого класса; Alt+6 — по-прежнему «Рыбалка».
+// поиск находит поле по пояснению и открывает подраздел другого класса; Alt+6 — по-прежнему «Рыбалка» (20.54: с «Крафтом» — Alt+7).
 // Android-вкладка (html.tabbed): «i» из title видна и раскрывает пояснение, галка при этом не переключается.
 // 20.43 (ревью меню): «i» из title — первый «labelable» потомок label, клик по тексту подписи уходил в неё (галка не переключалась, под
 // подписью открывалось пояснение, на ПК — со скрытой «i»). Теперь подпись привязана к своему полю: клик по тексту на ПК и на Android
@@ -102,13 +102,16 @@ async function open(ua) {
     await P.locator('#uiSearch').fill('Станы (чемп'); await until(() => P.locator('#uiResults [data-i]').count());
     assert.doesNotMatch(await P.locator('#uiResults [data-i]').first().innerText(), /другого класса/, 'все классы показаны — пометки нет');
     await P.keyboard.press('Escape'); await delay(300); await P.locator('#showAllCls').click(); await until(() => P.evaluate(() => !document.documentElement.classList.contains('show-all')));
-    // горячие клавиши не изменились: Alt+6 — Рыбалка (как в подсказке кнопки), Alt+0 — Сервис
+    // горячие клавиши — как в подсказке кнопки. 20.54 (прогон смоуков 23.10): «Крафт» встал третьим разделом (PR #358, 86cbe91), номера
+    // сдвинулись: «Рыбалка» — Alt+7, Alt+0 — «TvT и PvP» («Сервис» без горячей клавиши); сверяем с title кнопки, а не с прежним номером.
     await P.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {});
-    await P.keyboard.press('Alt+6'); assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-fish');
-    await P.keyboard.press('Alt+0'); assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-svc');
+    for (const [key, tab] of [['7', 'fish'], ['0', 'pvp']]) {
+      assert.match(await P.locator('#moduleNav [data-tab="' + tab + '"]').getAttribute('title'), new RegExp('\\(Alt\\+' + key + '\\)$'));
+      await P.keyboard.press('Alt+' + key); assert.equal(await P.locator('section.act').getAttribute('id'), 'tab-' + tab, 'Alt+' + key);
+    }
     assert.equal((await h.sw.evaluate(() => chrome.storage.local.get('on'))).on, false);
     assert.deepEqual(h.errors, []); assert.ok(h.requests.every(r => r.startsWith('GET ')), JSON.stringify(h.requests));
-    console.log('PASS ПК: «i» из title скрыта (' + pc.auto + ' полей), клик по подписи — поле, а не пояснение, HELP как раньше, катакомбы из задач, сброс по Владивостоку, поиск по пояснению/другому классу, Alt+6/0');
+    console.log('PASS ПК: «i» из title скрыта (' + pc.auto + ' полей), клик по подписи — поле, а не пояснение, HELP как раньше, катакомбы из задач, сброс по Владивостоку, поиск по пояснению/другому классу, Alt+7/0');
   } finally { await h.ctx.close(); }
   h = await open(AND);
   try {

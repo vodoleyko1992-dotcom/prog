@@ -23,9 +23,15 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs'), assert
       return { check: () => set(true), uncheck: () => set(false) };
     };
     await check('fish').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('fish'));
-    await check('enchant').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));
+    // 20.54 (прогон смоуков 23.10): автозаточка временно убрана (19.10, после 20.25/#288, defaults.js AUTO_ENCHANT_DISABLED) — её галка
+    // скрыта и отключена. Прежний смысл шага сохраняем: старый список задач с 'enchant' (завершённая серия) не выбирает её,
+    // следующей остаётся рыбалка, а следующая правка списка из меню записывает его уже без 'enchant'.
+    const ench = h.popup.locator('#autoTaskSelection [data-auto-task="enchant"]');
+    assert.equal(await ench.isVisible(), false); assert.equal(await ench.isDisabled(), true);
+    await h.sw.evaluate(async () => { const { cfg } = await chrome.storage.local.get('cfg'); await chrome.storage.local.set({ cfg: { ...cfg, autoTasks: [...cfg.autoTasks, 'enchant'] } }); });
+    await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));
     await until(async () => /Следующая задача: Рыбалка/.test(await h.popup.locator('#modeSummary').innerText()));
-    await check('enchant').uncheck(); await until(async () => !(await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));
+    assert.equal(await ench.isChecked(), false); assert.equal(await h.popup.locator('#autoTaskSelection input:checked').count(), 2);
     await check('raid').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('raid'));
     let s = await h.get(['cfg', 'on']); assert.deepEqual(s.cfg.autoTasks, ['tvt', 'fish', 'raid']); assert.equal(s.on, false);
     await until(async () => /Тур по РБ/.test(await h.popup.locator('#modeSummary').innerText()));
