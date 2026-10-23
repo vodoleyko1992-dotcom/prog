@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-23T02:34:57.327424+00:00",
+  "result": "PASS_FOR_REPORTED_CASES",
+  "review": "No remaining runtime blockers found. Late matching leave-ACK and initial two-second marker-grace races found during review were fixed before the frozen content snapshot. Dungeon inventory allowlist patch preserves the existing guards.",
+  "sourceSha256": {
+    "content.js": "beb1bc4df53250da56f72db25b0a91146f3438a974f877454773445ae590559f",
+    "modules/combat.js": "a82e17fd8d2bd4ddfeb11deef4046a7eaf2ba1a0d9593b2650d093985b7d3d0d"
+  },
+  "browser": "Firefox",
+  "browserVersion": "153.5.1",
+  "completedCases": 19,
+  "healing": {
+    "pass": 13,
+    "evidence": "firefox-healing.json"
+  },
+  "leaveVerification": {
+    "pass": 6,
+    "evidence": "firefox-leave.json"
+  },
+  "browserCoverageLimits": [
+    "The asynchronous Stop-during-fetch Selenium case timed out at the harness completion gate; no passing browser result is claimed. No production failure was established by this harness timeout.",
+    "Remaining async owner/mode/class/actor/lease/captcha/late-ACK browser guards",
+    "Matching leave ACK during native JSON body read or durable write/commit",
+    "Failed durable commit browser scenario",
+    "Dungeon/map inventory-recovery reload/cooldown/browser guard scenarios"
+  ],
+  "unitCoverage": "Parent separately reports133/133 leave-verification unit cases; those are not browser results.",
+  "boundary": "Native Firefox executes exact selected source functions on loopback DOM/network/storage. This is not a full addon run; no live game/account, external URL, release ZIP rebuild, version change or settings mutation. Long leave backoff uses controlled Date offset and shortened sleep.",
+  "runtimeModifiedByReviewer": false,
+  "script": "firefox-functions.cjs"
+}

@@ -1,0 +1,27 @@
+{
+  "syntax": "PASS",
+  "jsFiles": [
+    "content.js",
+    "modules/combat.js",
+    "tests/v2051-dungeon-inventory-recovery.test.js",
+    "tests/v2051-rb-fullhp-potion.test.js",
+    "tests/v2051-rb-leave-verify.test.js"
+  ],
+  "preservedFiles": [
+    "builds/l2wap-bot-v20.50.zip",
+    "builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+    "builds/l2wap-bot-v20.51.zip",
+    "builds/l2wap-lite-v1.5.2-firefox.zip",
+    "builds/l2wap-lite-v1.5.2.zip",
+    "manifest.json",
+    "base-profile.json"
+  ],
+  "baseline": "91e37c3",
+  "sourceSha256": {
+    "content.js": "beb1bc4df53250da56f72db25b0a91146f3438a974f877454773445ae590559f",
+    "modules/combat.js": "a82e17fd8d2bd4ddfeb11deef4046a7eaf2ba1a0d9593b2650d093985b7d3d0d",
+    "tests/v2051-dungeon-inventory-recovery.test.js": "4b0241ed5a0726cd5f7425070697e485192434126ff590329c7ade43d12f6714",
+    "tests/v2051-rb-fullhp-potion.test.js": "212db318728b5a2015bbdd1a3c92ba6aabb20c490157a175dc268cfdf539480e",
+    "tests/v2051-rb-leave-verify.test.js": "01e0c9a941824158a46ad92ab5d4694548f20ff6af286c27172efd7ec2bd9d32"
+  }
+}

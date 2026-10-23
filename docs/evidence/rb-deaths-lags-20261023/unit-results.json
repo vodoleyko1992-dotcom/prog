@@ -1,0 +1,26 @@
+{
+  "testFilesPass": 623,
+  "testFilesFail": 0,
+  "logSha256": "54c589f843fba46101af03b9e460418159347b925fad29d30088b35b7fe06057",
+  "sourceLog": "all-unit-final.log",
+  "targeted": {
+    "leave": {
+      "pass": 133,
+      "fail": 0,
+      "baselinePass": 9,
+      "baselineFail": 124
+    },
+    "potion": {
+      "pass": 26,
+      "fail": 0,
+      "baselinePass": 14,
+      "baselineFail": 12
+    },
+    "dungeon": {
+      "pass": 59,
+      "fail": 0,
+      "baselinePass": 33,
+      "baselineFail": 26
+    }
+  }
+}

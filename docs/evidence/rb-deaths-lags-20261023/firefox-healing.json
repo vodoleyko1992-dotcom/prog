@@ -1,0 +1,114 @@
+{
+  "at": "2026-10-23T02:28:41.876Z",
+  "result": "PASS",
+  "part": "healing",
+  "browser": "Firefox",
+  "browserVersion": "153.5.1",
+  "cases": 13,
+  "sourceSha256": {
+    "modules/combat.js": "a82e17fd8d2bd4ddfeb11deef4046a7eaf2ba1a0d9593b2650d093985b7d3d0d"
+  },
+  "functionSha256": {
+    "price": "f52393b876dc8601da7ef6a31239712738cdf922b916f023c280bc66ad880fc3",
+    "band": "0977f78373e5df4fcaa531169e63dc9754995fae5f5d73725a7759efb5cf6044",
+    "emergency": "ae39aaf0928a597f83948c6b5b9a13fb16e39d8c02b61890e69a162a08d8a348",
+    "act": "de4033c9eed67ae41a57c054bad260ee51017f1345e3473017c4c581d15cd2ff",
+    "gameFree": "0edcadf09b929f4f5d0e30efd82861719ddb8acbc3023107217b2670887324b7"
+  },
+  "proof": [
+    {
+      "case": "full HP with price above max",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 22873,
+      "rolledBack": true
+    },
+    {
+      "case": "full HP with stale critical percentage",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 22873,
+      "rolledBack": true
+    },
+    {
+      "case": "one HP deficit still useful",
+      "result": "PASS",
+      "posts": 1,
+      "hp": 22872,
+      "rolledBack": false
+    },
+    {
+      "case": "fill during actual gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 22873,
+      "rolledBack": true
+    },
+    {
+      "case": "fill during actual global wait",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 22873,
+      "rolledBack": true
+    },
+    {
+      "case": "partial heal during gameFree",
+      "result": "PASS",
+      "posts": 1,
+      "hp": 22872,
+      "rolledBack": false
+    },
+    {
+      "case": "HUD disappears during gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": null,
+      "rolledBack": true
+    },
+    {
+      "case": "Stop during gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 10000,
+      "rolledBack": false
+    },
+    {
+      "case": "owner loss during gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 10000,
+      "rolledBack": false
+    },
+    {
+      "case": "mode change during gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 10000,
+      "rolledBack": false
+    },
+    {
+      "case": "emergency heals to full during gameFree",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 22873,
+      "rolledBack": true
+    },
+    {
+      "case": "fresh current hit overrides historic P90",
+      "result": "PASS",
+      "posts": 1,
+      "hp": 11921,
+      "rolledBack": false
+    },
+    {
+      "case": "no current hit keeps old safe choice",
+      "result": "PASS",
+      "posts": 0,
+      "hp": 11921,
+      "rolledBack": true
+    }
+  ],
+  "boundary": "Exact rbTurnHeal, emergency/band potion sections, act and gameFree in native Firefox. HP is read from local DOM and changes during native async game/global waits; a permitted fire performs a real DOM button click and loopback potion POST. Actor/lease/mode environment is controlled. Execution stops at the fire boundary, so potion ACK processing is not exercised. No addon installed, original game renderer/server or live account accessed.",
+  "liveGame": false,
+  "externalUrlsOpened": 0
+}
