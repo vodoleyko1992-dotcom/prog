@@ -1,5 +1,11 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 23.10.2026 — Firefox20.52 (PR в подготовке)
+
+По явной просьбе собран Firefox20.52 из4442b21: #367–#369 и прежний Detect-fix. Архив `builds/l2wap-bot-v20.52-firefox.zip`:68файлов,1 664 179байт, SHA256 `1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a`. Node625/0FAIL; syntax53runtime+5tests/env34/diff PASS. ExactZIP: Firefox153.5.1esr desktop smoke,13Detect и2Start-сценария Noblesse/автобаф кота PASS; AndroidAPI-simulation на производной копии PASS, физический Android не проверяли. Lint0errors/0notices/51прежнихwarnings; независимые CRC/source67/extracted68/closure94/privacy PASS. [Итог](evidence/build-20.52-firefox/validation.json).
+
+Расширенный исторический Chromium smoke остановлен после «ну что там так долго?»; полныйPASS не заявляется. Старые ожидания6вкладок вместо14, tab-fish вместоoverview и fixture modeSig воспроизводятся до version bump; отсутствуют часть снимков/cache. Выпуск не меняет функциональный runtime после#369, кроме строки версии. Chrome20.51/Lite1.5.2 и профиль сохранены. Прежний Firefox20.51-detect-fix убран из текущего git по политике одного Firefox: предварительно скопирован/побайтно проверен, доступен в истории4442b21; `/mnt/project-files/builds` недоступна. Живую игру не открывали. Обновлять в той же папке и нажать↻; следующий шаг — контрольный TXT после установки.
+
 ## 23.10.2026 — цикл «Мои квесты ↔ Noblesse» ([PR #369](https://github.com/vodoleyko1992-dotcom/prog/pull/369))
 
 **Причина по TXT/learn 02:48:** после ручного принятия Noblesse 1/4 (Vanor Silenos Chieftain 0/100, Varnish 100/100) общая кампания шесть раз выбирала первую ссылку Noblesse, затем не узнавала его страницу и возвращалась в список каждые ~4 с. Готовой сдачи ещё нет, поэтому специализированный `storyStep` правильно уступал ход. Noblesse POST в выгрузке связаны с ручными кликами; автоматическая повторная оплата не доказана.

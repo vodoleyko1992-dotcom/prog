@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-23T03:14:59.738Z",
+  "result": "PASS",
+  "zip": "/workspace/prog/builds/l2wap-bot-v20.52-firefox.zip",
+  "zipSha256": "1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a",
+  "kind": "Native Firefox exact ZIP; real Start/lease/dispatcher/storage and local loopback HTTPS game model",
+  "port": 40107,
+  "cases": [
+    {
+      "case": "Noblesse quests-only native Start",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "visits": [
+        "/character-quests.html",
+        "/map.html",
+        "/battle.html?spawnId=dense_9584"
+      ],
+      "autoTasks": [
+        "quests"
+      ],
+      "storyJob": null,
+      "campaign": {
+        "t": 1792725292342,
+        "targets": [],
+        "title": "Квесты Noblesse / сабкласса"
+      },
+      "gamePosts": 0,
+      "jsErrors": [],
+      "realGameRequests": 0,
+      "limits": "Controlled local game DOM/client, no actual battle actions or quest turn-in"
+    },
+    {
+      "case": "Cat class auto-enables task and both flags",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "autoTasks": [
+        "petbuff"
+      ],
+      "petFullAuto": true,
+      "petBuffAuto": true,
+      "budget": 0,
+      "reserve": 123456,
+      "financial": {
+        "spent": 1000000,
+        "lifetimeSpent": 1000000,
+        "budgetEpoch": 44,
+        "purchases": 1,
+        "unknownReserved": 0
+      },
+      "gamePosts": 0,
+      "jsErrors": [],
+      "realGameRequests": 0,
+      "limits": "Fresh owned synthetic GET character after actual Start; no paid buff purchase"
+    }
+  ],
+  "errors": []
+}

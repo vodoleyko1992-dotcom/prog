@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.51",
-  "description": "L2wap Bot 20.51 — крафт по цепочке до цели, удобный выбор ресурсов и оповещения о нехватке",
+  "version": "20.52",
+  "description": "L2wap Bot 20.52 — Noblesse без цикла, автобаф кота и восстановление после выхода с РБ",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.51"
+  "version_name": "20.52"
 }

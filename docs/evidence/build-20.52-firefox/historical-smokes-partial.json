@@ -1,0 +1,1137 @@
+[
+  {
+    "file": "tests/browser-smoke.py",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 3.6
+  },
+  {
+    "file": "tests/v7-chromium-runtime.py",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.19
+  },
+  {
+    "file": "tests/v715-ui-browser.py",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "Traceback (most recent call last):\n  File \"/workspace/prog/tests/v715-ui-browser.py\", line 97, in <module>\n    assert stats['tabs']==6,stats   # 20.12 (ревизия 17.10): 12 разделов сведены в 6\n           ^^^^^^^^^^^^^^^^\nAssertionError: {'sw': 760, 'cw': 760, 'nav': {'fg': 'rgb(255, 245, 222)', 'bg': 'rgb(112, 80, 38)'}, 'plain': {'fg': 'rgb(240, 225, 202)', 'bg': 'rgb(44, 33, 24)'}, 'proof': {'fg': 'rgb(255, 244, 217)', 'bg': 'rgb(112, 80, 39)'}, 'proofActive': True, 'rod': '10', 'navRows': 14, 'navOverflow': 0, 'tabs': 14, 'btnText': '12.5px'}",
+    "seconds": 2.43,
+    "assessment": {
+      "historical": true,
+      "proof": "direct stale expectation tabs==6 vs current14; UI source unchanged by build"
+    }
+  },
+  {
+    "file": "tests/v718-ui-browser.py",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "Traceback (most recent call last):\n  File \"/workspace/prog/tests/v718-ui-browser.py\", line 29, in <module>\n    assert menu['tabs']==6,menu   # 20.12: 12 разделов сведены в 6\n           ^^^^^^^^^^^^^^^\nAssertionError: {'tabs': 14, 'grid': 1, 'visible': 'flex', 'navText': '12.5px'}",
+    "seconds": 1.97,
+    "assessment": {
+      "historical": true,
+      "proof": "direct stale expectation tabs==6 vs current14; UI source unchanged by build"
+    }
+  },
+  {
+    "file": "tests/v719-fishing-toggle-browser.py",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 8.85
+  },
+  {
+    "file": "tests/v715-mage-dom-browser.py",
+    "status": "UNAVAILABLE",
+    "reason": "historical game DOM snapshots absent",
+    "seconds": 0.0
+  },
+  {
+    "file": "tests/battle-dom-smoke.py",
+    "status": "UNAVAILABLE",
+    "reason": "historical game DOM snapshots absent",
+    "seconds": 0.0
+  },
+  {
+    "file": "tests/v2050-detect-owned-start-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 55.28
+  },
+  {
+    "file": "tests/craft-goals-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 13.75
+  },
+  {
+    "file": "tests/v2050-detect-outside-browser.cjs",
+    "status": "UNAVAILABLE",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/workspace/work/warlord-audit/skill-panel.html'\n}\n\nNode.js v24.19.0",
+    "seconds": 0.32,
+    "rawStatus": "FAIL",
+    "reason": "required external saved DOM fixture /workspace/work/warlord-audit/skill-panel.html absent"
+  },
+  {
+    "file": "tests/v2049-warlord-metrics-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 4.63
+  },
+  {
+    "file": "tests/craft-mode-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 6.4
+  },
+  {
+    "file": "tests/v2047-farm-fishing-resume-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 0.92
+  },
+  {
+    "file": "tests/v2046-slow-api-recovery-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at eval (eval at evaluate (:370:30), <anonymous>:1:19)\n    at UtilityScript.evaluate (<anonymous>:372:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at /workspace/prog/tests/v2046-slow-api-recovery-browser.cjs:78:27 {\n  log: []\n}\n\nNode.js v24.19.0",
+    "seconds": 0.62,
+    "assessment": {
+      "historical": true,
+      "baselineCommit": "4442b21",
+      "baselineVersion": "20.51",
+      "baselineExit": 1,
+      "proof": "baseline reproduces ReferenceError modeSig is not defined",
+      "log": "baseline-slow-api.log"
+    }
+  },
+  {
+    "file": "tests/v2046-crafter-spoil-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 12.35
+  },
+  {
+    "file": "tests/v2046-golem-farm-keep-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 3.3
+  },
+  {
+    "file": "tests/v2046-craft-reload-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.37
+  },
+  {
+    "file": "tests/v2046-warlord-live-weapon-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 16.86
+  },
+  {
+    "file": "tests/v2048-warlord-support-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.73
+  },
+  {
+    "file": "tests/v2049-warlord-always-toggles-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 34.88
+  },
+  {
+    "file": "tests/lite-arrows-recovery-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 29.41
+  },
+  {
+    "file": "tests/v2043-menu-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at /workspace/prog/tests/v2043-menu-browser.cjs:107:45 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'tab-overview',\n  expected: 'tab-fish',\n  operator: 'strictEqual',\n  diff: 'simple'\n}",
+    "seconds": 5.75,
+    "assessment": {
+      "historical": true,
+      "baselineCommit": "4442b21",
+      "baselineVersion": "20.51",
+      "baselineExit": 1,
+      "proof": "baseline reproduces actual tab-overview / expected tab-fish",
+      "log": "baseline-menu.log"
+    }
+  },
+  {
+    "file": "tests/v2043-notify-stop-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 6.7
+  },
+  {
+    "file": "tests/v2043-au-breather-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 10.3
+  },
+  {
+    "file": "tests/v2043-learn-reset-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.89
+  },
+  {
+    "file": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 13.44
+  },
+  {
+    "file": "tests/v2043-au-travel-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 109.5
+  },
+  {
+    "file": "tests/v2043-fx-travel-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 27.05
+  },
+  {
+    "file": "tests/v2043-fx-travel-stop-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 48.74
+  },
+  {
+    "file": "tests/v2041-cat-native-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 8.66
+  },
+  {
+    "file": "tests/v2039-combat-storage-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 17.65
+  },
+  {
+    "file": "tests/v2038-cat-navigation-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 8.87
+  },
+  {
+    "file": "tests/v2035-mammon-dock-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.6
+  },
+  {
+    "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 7.1
+  },
+  {
+    "file": "tests/v2029-raid-native-quote-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 27.53
+  },
+  {
+    "file": "tests/v2029-raid-fresh-start-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "DIAG {\"mode\":\"complete\",\"requests\":[{\"path\":\"/map.html\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/character\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/game/time\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/game/daily-quests\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/character\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/character\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/character\",\"query\":\"\",\"method\":\"GET\"},{\"path\":\"/rb-bosses.html\",\"query\":\"\",\"method\":\"GET\"}],\"state\":{\"on\":true,\"rt\":{\"_src\":\"4pubp6psfdj\",\"actionOwner\":{\"at\":1792725253241,\"context\":\"[\\\"AuditHero\\\",\\\"raid\\\",1792725249941,\\\"auto\\\",\\\"\\\",\\\"\\\",[\\\"raid\\\",\\\"fish\\\",\\\"petbuff\\\"]]\",\"id\":\"d34c144f-b891-4f88-8c82-4c1543946501\",\"key\":\"rbScan\",\"page\":\"/map.html\",\"phase\":\"[\\\"\\\",0,[],\\\"\\\",0,\\\"\\\",\\\"\\\",\\\"\\\",0]\",\"progressAt\":1792725253241,\"seen\":{\"[\\\"/map.html\\\",\\\"[\\\\\\\"\\\\\\\",0,[],\\\\\\\"\\\\\\\",0,\\\\\\\"\\\\\\\",\\\\\\\"\\\\\\\",\\\\\\\"\\\\\\\",0]\\\"]\":1},\"stamp\":\"1792725250035\",\"visits\":1},\"actionPayments\":null,\"aliasDot2043\":1,\"aliasFix7121\":1,\"atkFix417\":1,\"bait721\":1,\"bounce\":0,\"camp721\":1,\"campaignDue\":true,\"cancel1007\":1,\"cdFix49\":1,\"cdFloor80\":1,\"cdS803\":1,\"champ803\":1,\"champAuto1005\":1,\"champInterval30_20261017\":1,\"champMark803\":1,\"char\":\"AuditHero\",\"classCur\":{\"prof\":\"human_warlock\",\"slot\":0},\"classPromo2043\":1,\"daily\":{\"day\":\"20261023\",\"t\":1792725249975,\"tasks\":{\"chat_social_10\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"daily_playtime_2h\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"damage_dealer_500k\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"fishing_catch_50\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"hunt_start_500\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"raid_boss_participate\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"skill_master_50\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0},\"strong_enemy_20\":{\"claimed\":false,\"done\":false,\"have\":0,\"need\":500,\"place\":null,\"score\":0}}},\"dailyFishMark\":{\"caught\":0,\"t0\":0},\"dailyKill2010\":1,\"dailyLimits8000_20261019\":1,\"dailyQuota\":{\"auto\":0,\"basis\":\"server\",\"cat\":0,\"day\":\"2026-10-23\",\"fish\":0,\"raid\":0,\"server\":0},\"dailyServerCheck\":{\"char\":\"AuditHero\",\"day\":\"2026-10-23\",\"start\":8,\"t\":1792725249975},\"dailyStart\":8,\"dbfGain803\":1,\"dbfImm2043\":1,\"deaths\":[],\"debuffDmg7120\":1,\"deep100\":1,\"deep10_7123\":1,\"deep20\":1,\"deep25\":1,\"deepHot\":false,\"dmgFix427\":1,\"engineRecoveryEpoch\":\"7.1.13\",\"epicCol803\":1,\"epicDeaths1005\":1,\"epicDeaths803\":1,\"epicTime1005\":1,\"faFull925\":1,\"farmMap100_2046\":1,\"ffDmgMig\":1,\"fish724\":1,\"fishBait803\":1,\"fishBuyMig\":1,\"fishCd803\":1,\"fishPack80\":1,\"fishTimeAuto20261018\":1,\"fistOff923\":1,\"hard1008\":1,\"hard924\":1,\"huntMig432\":1,\"lastWinT\":0,\"learnFix7116\":1,\"lvl\":75,\"lvl423\":1,\"lvl444\":1,\"lvl459\":1,\"lvlTop1007\":1,\"lvlTopMig\":1,\"mag7125\":1,\"magEveryLevel20261014\":1,\"manualKickAt\":1792725249941,\"mapReload\":0,\"menuKeyRev\":{\"sinceDeep\":1},\"menuRev\":1,\"mmEq\":{},\"mmEqT\":1792725249985,\"mobClickAt\":0,\"nativeDmg2041\":1,\"orangeValue1017\":1,\"oriOff1005\":1,\"pavelZone803\":1,\"petClassEntry\":{\"char\":\"AuditHero\",\"key\":\"0:warlock\",\"kick\":1792725249941,\"revision\":10,\"t\":1792725250008},\"petFull\":{\"nextCheckAt\":1792725260016,\"reason\":\"Нужен живой призванный суммон\",\"status\":\"pet\",\"waitKey\":\"[\\\"[true,10000000,10000000,null,200000,true]\\\",1792725249941,0,\\\"human_warlock\\\"]\"},\"prof\":\"Human Warlock\",\"queenBuff92\":1,\"rbDpsClass2041\":1,\"rbFishWait\":null,\"rbFit1002\":1,\"rbFix721\":1,\"rbGo\":null,\"rbHunt\":{\"next\":\"после запуска заново читаю живых и мёртвых РБ\",\"phase\":\"discover\",\"step\":\"pick\",\"t\":1792725250024},\"rbHuntIdle\":0,\"rbIdleMark\":null,\"rbIdleN\":0,\"rbKill30_20261018\":1,\"rbList\":{},\"rbListIncomplete\":true,\"rbListReadStart\":null,\"rbListStartRequired\":\"8:1792725249941:1\",\"rbListStartSeq\":1,\"rbListT\":0,\"rbListVerifiedAt\":0,\"rbListVerifyNextAt\":0,\"rbPotsMig\":1,\"rbRefuse\":null,\"rbScan\":{\"at\":1792725250035,\"document\":1792725249567.8,\"start\":\"8:1792725249941:1\"},\"rbSess\":null,\"rbStats925\":1,\"rbTourView\":null,\"rbZoneFix430\":1,\"rebal100\":1,\"retreat427\":1,\"scan\":null,\"serverClock\":{\"at\":1792725249966,\"gameDayKey\":\"2026-10-23\",\"nextDailyResetAt\":1792789200000,\"serverNowMs\":1792725249961,\"timeZone\":\"Europe/Kyiv\"},\"shopHpMig\":1,\"shots723\":1,\"sinceDeep\":999,\"skills\":{\"spoil\":{\"cdFloor\":0,\"cdNet\":0.3}},\"spoilCdMig\":2,\"status\":\"Проверяю серверное время и лимиты дня\",\"subInfo\":\"Класс сейчас: Warlock · ни крафтер, ни спойлер\",\"tbWatchT\":1792725249992,\"tour427\":1,\"trial7128\":1,\"tsGoal100\":1,\"ud721\":1,\"weap7128\":1,\"weaponsT\":1792725249039,\"win1007\":1,\"zone7128\":1}},\"errors\":[]}\nAssertionError [ERR_ASSERTION]: fresh scan starts at native page 1, not cached page 3\n\n'' !== '?page=1'\n\n    at scenario (/workspace/prog/tests/v2029-raid-fresh-start-browser.cjs:65:69)\n    at async /workspace/prog/tests/v2029-raid-fresh-start-browser.cjs:93:72",
+    "seconds": 5.29,
+    "assessment": {
+      "historical": true,
+      "baselineCommit": "4442b21",
+      "baselineVersion": "20.51",
+      "baselineExit": 1,
+      "proof": "baseline reproduces empty query vs ?page=1",
+      "log": "baseline-raid-fresh-start.log"
+    }
+  },
+  {
+    "file": "tests/v2029-vip-no-fa-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 4.8
+  },
+  {
+    "file": "tests/v2029-fish-overview-limit-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 5.76
+  },
+  {
+    "file": "tests/v2028-mammon-payment-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 7.16
+  },
+  {
+    "file": "tests/v2025-auto-enchant-disabled-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 3.93
+  },
+  {
+    "file": "tests/v2024-seal-aa-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 8.87
+  },
+  {
+    "file": "tests/v2024-vip-free-buff-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.72
+  },
+  {
+    "file": "tests/v2023-mammon-bag-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 3.33
+  },
+  {
+    "file": "tests/v2021-overview-daily-mobs-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 3.96
+  },
+  {
+    "file": "tests/v2020-base-limits-raid-ui-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 6.48
+  },
+  {
+    "file": "tests/v2020-supply-section-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at /workspace/prog/tests/v2020-supply-section-browser.cjs:29:41 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}",
+    "seconds": 4.02,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2019-raid-mob-counter-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 6.43
+  },
+  {
+    "file": "tests/v2018-limits-logs-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'tab-pvp'\n- 'tab-svc'\n       ^\n\n    at /workspace/prog/tests/v2018-limits-logs-browser.cjs:26:83",
+    "seconds": 6.53,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2017-autofarm-group-counter-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 13.86
+  },
+  {
+    "file": "tests/v2017-fishing-reload-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 26.2
+  },
+  {
+    "file": "tests/v2014-quick-start-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at /workspace/prog/tests/v2014-quick-start-browser.cjs:11:10 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}",
+    "seconds": 2.49,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2012-panel-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 14.38
+  },
+  {
+    "file": "tests/v2012-nav-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at /workspace/prog/tests/v2012-nav-browser.cjs:17:12 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 14,\n  expected: 12,\n  operator: 'strictEqual',\n  diff: 'simple'\n}",
+    "seconds": 2.76,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2017-sidebar-sections-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "    at /workspace/prog/tests/v2017-sidebar-sections-browser.cjs:9:31 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}",
+    "seconds": 2.08,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2017-lifestone-auto-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 14.45
+  },
+  {
+    "file": "tests/v2023-mammon-retired-raid-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.32
+  },
+  {
+    "file": "tests/v2022-native-cooldown-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 4.45
+  },
+  {
+    "file": "tests/v209-core-control-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.53
+  },
+  {
+    "file": "tests/v209-control-workspace-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 5.06
+  },
+  {
+    "file": "tests/v209-ui-controls-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.94
+  },
+  {
+    "file": "tests/v209-combat-contract-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 0.87
+  },
+  {
+    "file": "tests/v208-captcha-hold-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.84
+  },
+  {
+    "file": "tests/v208-tyrant-weapon-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 14.42
+  },
+  {
+    "file": "tests/v208-account-login-block-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.18
+  },
+  {
+    "file": "tests/v207-no-crafter-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.48
+  },
+  {
+    "file": "tests/v207-warlord-weapon-proof-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 32.92
+  },
+  {
+    "file": "tests/v206-raid-arrival-payment-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 5.66
+  },
+  {
+    "file": "tests/v206-enchant-quick-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.27
+  },
+  {
+    "file": "tests/v204-extension-update-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.18
+  },
+  {
+    "file": "tests/v206-warlord-two-pulls-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 27.0
+  },
+  {
+    "file": "tests/v206-task-switch-frame-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "DIAG [ 'reeling', 'reeling', 'reeling' ] {\"on\":true,\"running\":true,\"tabOwner\":true,\"status\":\"Рыбалка: Old Box 300/300 — Reeling\",\"mode\":\"farm\",\"frame\":true}\nError: timeout false\n    at until (/workspace/prog/tests/v1014-core-lifecycle-browser.cjs:9:179)\n    at async /workspace/prog/tests/v206-task-switch-frame-browser.cjs:23:2",
+    "seconds": 26.31,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v2037-vip-icon-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 24.99
+  },
+  {
+    "file": "tests/v2031-vip-greater-buff-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 4.4
+  },
+  {
+    "file": "tests/v2036-combat-scheduler-browser.cjs",
+    "status": "FAIL",
+    "exitCode": 1,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "tail": "\n  [\n    'attack',\n+   'attack'\n  ]\n\n    at scenario (/workspace/prog/tests/v2036-combat-scheduler-browser.cjs:89:11)\n    at async /workspace/prog/tests/v2036-combat-scheduler-browser.cjs:112:36",
+    "seconds": 20.88,
+    "assessment": {
+      "historical": null,
+      "proof": "not investigated before user requested acceleration; no PASS claim"
+    }
+  },
+  {
+    "file": "tests/v205-warlord-provoke-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 26.79
+  },
+  {
+    "file": "tests/v204-dock-layout-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 4.19
+  },
+  {
+    "file": "tests/v204-fa-buff-receipt-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 2.63
+  },
+  {
+    "file": "tests/v204-fishing-shop-repaint-browser.cjs",
+    "status": "UNAVAILABLE",
+    "exitCode": 1,
+    "blockedRealGame": 1,
+    "blockedExternal": 1,
+    "tail": "    at downloadPublic (/workspace/prog/tests/v1014-fishing-public-browser.cjs:9:19)\n    at /workspace/prog/tests/v204-fishing-shop-repaint-browser.cjs:19:18\n    at Object.<anonymous> (/workspace/prog/tests/v204-fishing-shop-repaint-browser.cjs:29:3)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)",
+    "reason": "required external asset blocked by offline guard",
+    "seconds": 0.32
+  },
+  {
+    "file": "tests/v203-warlord-native-skills-browser.cjs",
+    "status": "PASS",
+    "exitCode": 0,
+    "blockedRealGame": 0,
+    "blockedExternal": 0,
+    "seconds": 1.58
+  },
+  {
+    "file": "tests/v202-farm-local-quests-browser.cjs",
+    "status": "INTERRUPTED",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v202-enchant-diagnostics-browser.cjs",
+    "status": "INTERRUPTED",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v202-enchant-user-flow-browser.cjs",
+    "status": "UNAVAILABLE",
+    "exitCode": 1,
+    "blockedRealGame": 7,
+    "blockedExternal": 7,
+    "tail": "    at Array.map (<anonymous>)\n    at downloadPublic (/workspace/prog/tests/v1016-enchant-public-browser.cjs:8:214)\n    at /workspace/prog/tests/v202-enchant-user-flow-browser.cjs:8:18\n    at Object.<anonymous> (/workspace/prog/tests/v202-enchant-user-flow-browser.cjs:63:185)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)",
+    "reason": "required external asset blocked by offline guard",
+    "seconds": 0.37
+  },
+  {
+    "file": "tests/v202-popup-task-selection-browser.cjs",
+    "status": "INTERRUPTED",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v202-raid-fishing-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v101-fishing-cast-recovery-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v101-champion-all-pages-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1029-quest-champion-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1029-raid-live-targets-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1028-buff-interruption-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1028-probe-exit-navigation-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-enchant-selected-task-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-auto-task-policy-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-auto-task-selection-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-enchant-simple-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v721-tree-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v803-epic-dom-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v807-tablet-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v90-mammon-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v90-catacombs-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v90-autofarm-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v90-story-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v92-fightlab-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-polearm-damage-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v92-combat-menu-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v92-enemies-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v925-crafter-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v100-tvtshop-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1002-antibot-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1002-rbtimer-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1002-crafter-note-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1005-ind-fit-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1006-rbrun-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1009-mammon-visit-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-combat-public-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-character-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-inventory-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-lifecycle-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-modes-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-off-controls-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-core-settings-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1014-fishing-public-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v209-fishing-bait-auto-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-fishing-payments-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-enchant-native-balance-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-magister-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-magister-mv3-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1025-magister-max-rank-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1026-attack-deadline-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-campaign-transition-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-campaign-location-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-daily-campaign-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1027-resource-teleport-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-public-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-public-independent.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-pvp-mv3-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-pvp-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-clan-caster-mv3-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-warlock-mv3-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1015-warlock-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1023-panther-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1024-journey-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1024-raid-ashen-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1024-raid-idle-refresh-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-core-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-core-public-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-core-recovery-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-ui-analytics-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-raid-tour-ui-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v1016-enchant-mode-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  },
+  {
+    "file": "tests/v2051-noblesse-quest-loop-browser.cjs",
+    "status": "NOT_RUN",
+    "reason": "User requested accelerated delivery; broad historical smoke run stopped",
+    "seconds": null
+  }
+]

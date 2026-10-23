@@ -1,0 +1,39 @@
+{
+  "result": "PARTIAL_STOPPED_BY_USER_REQUEST",
+  "files": 150,
+  "counts": {
+    "PASS": 63,
+    "FAIL": 12,
+    "UNAVAILABLE": 5,
+    "TIMEOUT": 0,
+    "INTERRUPTED": 3,
+    "NOT_RUN": 67
+  },
+  "completed": 80,
+  "blockedRealGame": 8,
+  "blockedExternal": 8,
+  "realGameNetworkRequests": 0,
+  "networkSafety": "Node fetch/http blocked before request; early Playwright routes and Chromium DNS rules block unmocked external game access",
+  "stopReason": "User asked why delivery was taking so long; parent requested immediate stop of broad historical Chromium smoke run",
+  "historicalFailures": [
+    "tests/v715-ui-browser.py",
+    "tests/v718-ui-browser.py",
+    "tests/v2046-slow-api-recovery-browser.cjs",
+    "tests/v2043-menu-browser.cjs",
+    "tests/v2029-raid-fresh-start-browser.cjs"
+  ],
+  "uninvestigatedFailures": [
+    "tests/v2020-supply-section-browser.cjs",
+    "tests/v2018-limits-logs-browser.cjs",
+    "tests/v2014-quick-start-browser.cjs",
+    "tests/v2012-nav-browser.cjs",
+    "tests/v2017-sidebar-sections-browser.cjs",
+    "tests/v206-task-switch-frame-browser.cjs",
+    "tests/v2036-combat-scheduler-browser.cjs"
+  ],
+  "interrupted": [
+    "tests/v202-farm-local-quests-browser.cjs",
+    "tests/v202-enchant-diagnostics-browser.cjs",
+    "tests/v202-popup-task-selection-browser.cjs"
+  ]
+}

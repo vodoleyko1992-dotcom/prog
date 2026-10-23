@@ -1,0 +1,45 @@
+{
+  "version": "20.52",
+  "target": "Firefox",
+  "sourceBase": "4442b21",
+  "artifact": "builds/l2wap-bot-v20.52-firefox.zip",
+  "bytes": 1664179,
+  "sha256": "1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a",
+  "node": {
+    "passFiles": 625,
+    "failFiles": 0
+  },
+  "syntax": {
+    "runtimeFiles": 53,
+    "changedVersionTestFiles": 5,
+    "result": "PASS"
+  },
+  "envcheckModules": 34,
+  "nativeFirefox": "153.5.1esr",
+  "nativeDesktopSmoke": "PASS",
+  "nativeDetectCases": 13,
+  "nativeNoblesseAndCatCases": 2,
+  "androidApiSimulation": "PASS; derived copy on desktop Firefox, not physical Android",
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "packageAudit": "PASS:68file CRC/allowlist,67source SHA,68extracted SHA,94closure refs/privacy",
+  "historicalChromiumSmokes": {
+    "result": "INCOMPLETE_WITH_FAILURES",
+    "pass": 63,
+    "fail": 12,
+    "unavailable": 5,
+    "interrupted": 3,
+    "notRun": 67,
+    "historicalFailuresProven": 5,
+    "uninvestigatedFailures": 7,
+    "reasonStopped": "User requested faster delivery",
+    "fullPassClaimed": false
+  },
+  "liveGameUsed": false,
+  "physicalAndroidTested": false,
+  "previousArchives": "4 retained ZIPs+base-profile unchanged; previous Firefox backed up locally and retained in git history",
+  "publication": "ZIP delivered from review branch; automatic merge withheld because expanded smoke failures remain unresolved"
+}

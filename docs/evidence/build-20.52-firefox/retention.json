@@ -1,0 +1,13 @@
+{
+  "preserved": {
+    "builds/l2wap-bot-v20.50.zip": true,
+    "builds/l2wap-bot-v20.51.zip": true,
+    "builds/l2wap-lite-v1.5.2-firefox.zip": true,
+    "builds/l2wap-lite-v1.5.2.zip": true,
+    "base-profile.json": true
+  },
+  "previousFirefoxInGitCommit": "4442b21",
+  "previousFirefoxSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+  "previousFirefoxLocalBackupVerified": true,
+  "projectBuildsPathAvailable": false
+}
