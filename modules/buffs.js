@@ -66,7 +66,8 @@ function detectOutsidePlan() {
     ||!mp||!Number.isFinite(mp.cur)||mp.cur<=0)return null;
   for(const id of detectSelected()){
     if(detectHasProof(id,s))continue;
-    const intent=env.rt.detectOutsideIntent?.[detectKey(id)];if(detectIntentBlocks(intent,s)||detectCooling(id,s))continue;
+    const intent=env.rt.detectOutsideIntent?.[detectKey(id)],native=id===80?env.rt.monsterNativeIntent?.[detectKey(id)]:null;
+    if(detectIntentBlocks(intent,s)||native&&native.phase!=='answered'&&detectIntentBlocks(native,s)||detectCooling(id,s))continue;
     // 23.10, новый Monster80 проверен только native в бою. Outside разрешает свежий явный каталог сервера, не learned/tooltip.
     const capability=s.ch.castableSelfBuffs?.find(x=>detectSkillId(x)===id);
     if(id===80&&(!capability||!Number.isFinite(capability.mpCost)||capability.mpCost<0))continue;

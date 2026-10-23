@@ -1209,15 +1209,18 @@ function noteToggleSnapshot(ch) {
 function noteToggleBattle(d, startedAt = Date.now()) {
   const b = d?.be, revision = b?.revision, actor = toggleActor();
   if (!env.rt.char || b?.prof && b.prof !== env.rt.classCur?.prof || b?.slot != null && b.slot !== env.rt.classCur?.slot) return;
+  noteMonsterPositive(d);
   if (!Number.isSafeInteger(revision) || revision < 0) {
     // В полёте/без payload неизвестно даже направление ручного relative toggle. Ждём новый собственный OFF, удары не держим.
     const base = Math.max(toggleSnapshot?.actor === actor ? toggleSnapshot.revision : -1,toggleBattleRevision?.actor === actor ? toggleBattleRevision.revision : -1,
       Number.isSafeInteger(d?.req?.expectedRevision) ? d.req.expectedRevision : -1);
     const at = Number.isFinite(startedAt) ? Math.min(startedAt,Date.now()) : Date.now();
     toggleUnknown = { actor, at:Math.max(toggleUnknown?.actor === actor ? toggleUnknown.at : 0,at),baseRevision:base };
+    if(d?.path==='/game/battle/action'&&Number.isSafeInteger(d.rid))monsterRequest={actor:monsterActor(),rid:d.rid,at,baseRevision:base};
     return;
   }
   if (toggleSnapshot?.actor === actor && revision < toggleSnapshot.revision) return;
+  if(monsterRequest?.actor===monsterActor()&&d.rid===monsterRequest.rid)monsterRequest={...monsterRequest,doneRevision:revision,doneAt:Date.now()};
   // Более новый ход мог изменить относительную стойку даже при обрезанном payload: старое OFF больше не разрешает клик.
   toggleBattleRevision = { actor, revision:Math.max(toggleBattleRevision?.actor === actor ? toggleBattleRevision.revision : -1,revision) };
   const mods = d.res?.delta?.battleMods || d.res?.battle?.battleMods || {}, yes = v => v === true || v === 1 || v === '1';
@@ -1287,6 +1290,108 @@ async function managedToggleStep(ctx, me, act) {
     return true;
   }
   return false;
+}
+// 23.10, Firefox20.51/логи10:22 и10:40: Monster80 и Dragon88 подтверждены штатными боевыми action. Outside-политика отдельная.
+let monsterSnapshots = Object.create(null), monsterPositive = null, monsterSerial = 0, monsterClaim = null, monsterRequest = null;
+const MONSTER_FRESH = 30000, MONSTER_UNKNOWN = 630000, NATIVE_DETECT_IDS = [80,88];
+const NATIVE_DETECT = {80:{action:'detect_monster_weakness',name:'Вразливість монстрів',aliases:['вразливість монстрів','detect monster weakness','l2_80']},
+  88:{action:'detect_dragon_weakness',name:'Вразливість драконів',aliases:['вразливість драконів','detect dragon weakness','l2_88']}};
+const monsterActor = () => JSON.stringify([toggleActor(),env.actionGeneration?.(),env.battleExitContext?.()]);
+const monsterRow = (x,id) => +x?.l2SkillId===id||+x?.skillId===id||['l2_'+id,NATIVE_DETECT[id].action,String(id)].includes(String(x?.battleId||''));
+function noteMonsterSnapshot(ch) {
+  const now=Date.now(),at=ch?.requestStartedAt,actor=monsterActor();
+  // Полный owned battle.character — ответ собственного запроса, не частичный delta. Его свежесть по requestStartedAt, без выдуманного серверного времени.
+  const generated=ch?.nativeBattleSnapshot===true&&!Number.isFinite(ch.snapshotGeneratedAt)?at:ch?.snapshotGeneratedAt;
+  if(!ch||!env.on||!env.tabOwner||!env.rt.char||env.heroNick?.()!==env.rt.char||ch.name!==env.rt.char||ch.l2Profession!==env.rt.classCur?.prof
+    ||ch.classSlots?.activeSlot!==env.rt.classCur?.slot||ch.inBattle!==true||!Number.isSafeInteger(ch.revision)||ch.revision<0
+    ||!Number.isFinite(at)||at>now||now-at>MONSTER_FRESH||at<Math.max(+env.rt.classSwT||+env.rt.classCur?.t||0,+env.rt.manualKickAt||0)
+    ||!Number.isFinite(generated)||now-generated>MONSTER_FRESH||generated-now>5000||!Array.isArray(ch.monsterBuffs))return false;
+  if(NATIVE_DETECT_IDS.some(id=>monsterSnapshots[id]?.actor===actor&&ch.revision<monsterSnapshots[id].revision))return false;
+  for(const id of NATIVE_DETECT_IDS){
+    const old=monsterSnapshots[id]?.actor===actor?monsterSnapshots[id]:null;
+    const learned=ch.learnedBattleSkillsDetail?.find(x=>monsterRow(x,id)&&x.level>0),castable=ch.castableSelfBuffs?.find(x=>monsterRow(x,id));
+    let cost=null;
+    for(const row of [castable,learned])if(Number.isFinite(row?.mpCost)&&row.mpCost>=0){cost=row.mpCost;break;}
+    if(cost===null&&learned&&![castable,learned].some(row=>row?.mpCost!=null)){
+      const match=String(learned.hintUk||learned.hintRu||'').match(/\bMP\s*(\d+(?:[.,]\d+)?)/i);
+      if(match&&ch.skillMpCostMul===1)cost=+match[1].replace(',','.');
+      else {const row=Object.entries(env.rt.skillDb||{}).find(([name])=>env.ilOf?.(name)?.id===id)?.[1];if(row?.mpKnown===true&&Number.isFinite(row.mp)&&row.mp>=0)cost=row.mp;}
+    }
+    const carry=!Array.isArray(ch.learnedBattleSkillsDetail)&&old&&now-old.costAt<=MONSTER_FRESH;
+    if(carry&&cost===null)cost=old.cost;
+    const on=toggleBuffOn(ch.monsterBuffs,id);
+    monsterSnapshots[id]={actor,revision:ch.revision,at:old?.revision===ch.revision?Math.min(old.at,at):at,
+      generated:old?.revision===ch.revision?Math.min(old.generated,generated):generated,observedAt:at,fromBattle:ch.nativeBattleSnapshot===true,requestRid:ch.requestRid,
+      on:on||old?.revision===ch.revision&&old.on,learned:!!learned||!!carry&&old.learned,cost,costAt:carry?old.costAt:at};
+  }
+  return true;
+}
+function noteMonsterPositive(d) {
+  const revision=d?.be?.revision;if(!Number.isSafeInteger(revision)||revision<0)return;
+  const icons=d.res?.delta?.battleBuffIcons||d.res?.battle?.battleBuffIcons,actor=monsterActor();
+  const revisions=monsterPositive?.actor===actor?{...monsterPositive.revisions}:{};
+  for(const id of NATIVE_DETECT_IDS)if(d.hero?.buffs?.includes(id)||toggleBuffOn(d.res?.character?.activeBuffs,id)||Array.isArray(icons)&&icons.some(x=>+x.l2SkillId===id))revisions[id]=Math.max(revisions[id]??-1,revision);
+  monsterPositive={actor,revisions};
+}
+function managedMonsterPlan(ctx, ownIntent=null, id=null) {
+  if(id==null){for(const next of ownIntent?[ownIntent.id]:NATIVE_DETECT_IDS){const plan=managedMonsterPlan(ctx,ownIntent,next);if(plan)return plan;}return null;}
+  const meta=NATIVE_DETECT[id];if(!meta)return null;
+  if(!managedToggleClass()||env.on!==true||env.tabOwner!==true||env.canAct?.()===false||env.isBattle?.()!==true||env.pvpPending?.()||env.heroNick?.()!==env.rt.char)return null;
+  const selected=env.names(env.cfg.nBuffs).some(n=>(env.ilOf(n)?.id|| (meta.aliases.includes(n)?id:0))===id);
+  const b=selected&&[...document.querySelectorAll(env.SLOT)].find(b=>env.ilOf(b)?.id===id&&env.slotKind(b)==='скилл'&&env.shown(b)&&[meta.action,'l2_'+id].includes(env.slotAction(b)));
+  const s=monsterSnapshots[id],now=Date.now(),actor=monsterActor(),baseActor=toggleActor(),mp=env.meMp?.(),spawn=(env.cdSpawn||env.battleSpawn)();
+  const request=monsterRequest?.actor===actor?monsterRequest:null;
+  const ownFull=!!(s?.fromBattle&&request&&s.requestRid===request.rid&&s.observedAt===request.at&&Number.isSafeInteger(request.doneRevision)&&s.revision>=request.doneRevision&&s.revision>request.baseRevision);
+  const afterRequest=!!(request&&Number.isFinite(request.doneAt)&&s?.observedAt>request.doneAt&&s.revision>=request.doneRevision);
+  if(!b||!s||s.actor!==actor||!s.learned||now-s.costAt>MONSTER_FRESH||s.on||now-s.at>MONSTER_FRESH||now-s.generated>MONSTER_FRESH||toggleBuffOn(env.activeBuffs?.(),id)
+    ||monsterPositive?.actor===actor&&(monsterPositive.revisions[id]??-1)>=s.revision||toggleBattleRevision?.actor===baseActor&&toggleBattleRevision.revision>s.revision
+    ||toggleUnknown?.actor===baseActor&&!(s.revision>toggleUnknown.baseRevision&&(s.observedAt>toggleUnknown.at||ownFull))
+    ||request&&!ownFull&&!afterRequest||(ctx.block?.['monster'+id]||0)>now||env.noEffect?.(b)||!uiReady(b)||localCdLeft(b)>0||env.combatCooldown.globalWait()>0
+    ||[meta.action,'l2_'+id].some(k=>env.combatCooldown.skillWait(k,spawn)>0)||!mp||!Number.isFinite(mp.cur)||!Number.isFinite(s.cost)||s.cost<0||mp.cur<s.cost)return null;
+  const key=toggleKey(id),outside=env.rt.detectOutsideIntent?.[key],intent=env.rt.monsterNativeIntent?.[key],own=intent&&ownIntent&&intent.token===ownIntent.token;
+  if(outside&&!['confirmed','rejected','notSent'].includes(outside.phase)){const end=Math.max(+outside.at||0,+outside.requestAt||0)+MONSTER_UNKNOWN;
+    if(!Number.isFinite(outside.at)||now<end||s.at<end||s.generated<end||s.revision<=outside.baseRevision)return null;}
+  if(intent&&!own){
+    const fence=intent.phase==='answered'?+intent.answeredAt+3000:+intent.until;
+    if(!Number.isFinite(fence)||now<fence||s.at< (intent.phase==='answered'?intent.answeredAt:fence)||s.generated<(intent.phase==='answered'?intent.answeredAt:fence)||s.revision<=intent.baseRevision||intent.phase==='answered'&&s.revision<intent.answeredRevision)return null;
+  }
+  return {id,b,actor,revision:s.revision,key,cost:s.cost};
+}
+function armMonsterRequest(intent) {
+  if(intent.actor!==monsterActor()||env.rt.monsterNativeIntent?.[toggleKey(intent.id)]?.token!==intent.token)return false;
+  try{document.documentElement.dataset.l2botMonster=JSON.stringify({token:intent.token,revision:intent.baseRevision,action:NATIVE_DETECT[intent.id].action,at:Date.now()});}
+  catch(_){return false;}
+  monsterClaim={intent,actor:monsterActor(),at:Date.now(),rid:null};return true;
+}
+function clearMonsterMarker(){try{delete document.documentElement.dataset.l2botMonster;}catch(e){env.quietErr?.('метка Detect',e);}}
+function monsterRequestToken(d) {
+  const claim=monsterClaim,i=claim?.intent;if(!i||claim.actor!==monsterActor()||!env.on||!env.tabOwner||Date.now()-claim.at>15000
+    ||d?.monsterToken!==i.token||claim.rid!=null||d?.path!=='/game/battle/action'||d.method!=='POST'||!Number.isSafeInteger(d.rid)||!NATIVE_DETECT[i.id]||![NATIVE_DETECT[i.id].action,'l2_'+i.id].includes(d.req?.action)
+    ||d.req.expectedRevision!==i.baseRevision||env.rt.monsterNativeIntent?.[toggleKey(i.id)]?.token!==i.token)return '';
+  claim.rid=d.rid;return i.token;
+}
+async function managedMonsterStep(ctx, act) {
+  const plan=managedMonsterPlan(ctx);if(!plan)return false;
+  const intent={char:env.rt.char,prof:env.rt.classCur.prof,slot:env.rt.classCur.slot,id:plan.id,baseRevision:plan.revision,at:Date.now(),until:Date.now()+MONSTER_UNKNOWN,
+    token:JSON.stringify([plan.actor,Date.now(),++monsterSerial]),actor:plan.actor,phase:'prepared'};
+  const same=()=>env.rt.char===intent.char&&env.rt.classCur?.prof===intent.prof&&env.rt.classCur?.slot===intent.slot&&env.rt.monsterNativeIntent?.[plan.key]?.token===intent.token;
+  const clear=async()=>{if(!same())return;const all={...(env.rt.monsterNativeIntent||{})};delete all[plan.key];try{await env.setRt({monsterNativeIntent:all});}catch(e){env.quietErr?.('отмена намерения Detect',e);}};
+  try {const saved=await env.setRt({monsterNativeIntent:{...(env.rt.monsterNativeIntent||{}),[plan.key]:intent}});
+    if(saved?.ok!==true||!await env.rtCommit()){ctx.block['monster'+plan.id]=Date.now()+5000;return false;}
+  }catch(_){ctx.block['monster'+plan.id]=Date.now()+5000;return false;}
+  const needed=()=>{const next=managedMonsterPlan(ctx,intent);return next?.b===plan.b&&next.actor===plan.actor&&next.revision===plan.revision&&next.cost===plan.cost;};
+  if(!needed()){await clear();return false;}
+  const before=env.actNet?.().start||0;needed.monsterIntent=intent;
+  let result;try{result=await act(plan.b,'Бафф в бою: '+NATIVE_DETECT[plan.id].name,false,needed,true);}finally{monsterClaim=null;}
+  const net=env.actNet?.();
+  if((net?.start||0)===before){await clear();ctx.block['monster'+plan.id]=result==='unavail'?Infinity:Date.now()+700;return true;}
+  // Без точной квитанции свой отправленный ход неизвестен630с, в том числе после перезагрузки и смены аренды.
+  const receipt=env.actReceipt?.(net?.startRid),answered=net?.start===before+1&&receipt?.rid===net.startRid&&receipt.owner===net.startOwner&&receipt.owner===env.evidenceOwner?.()
+    &&receipt.action===env.slotAction(plan.b)&&receipt.ok===true&&receipt.monsterToken===intent.token&&receipt.expectedRevision===intent.baseRevision
+    &&Number.isFinite(receipt.requestStartedAt)&&receipt.requestStartedAt>=intent.at&&Number.isSafeInteger(receipt.revision)&&receipt.revision>intent.baseRevision;
+  if(same())try{await env.setRt({monsterNativeIntent:{...(env.rt.monsterNativeIntent||{}),[plan.key]:{...intent,phase:answered?'answered':'unknown',...(answered?{answeredAt:Date.now(),answeredRevision:receipt.revision}: {})}}});}catch(e){env.quietErr?.('квитанция Detect',e);}
+  if(result==='unavail')ctx.block['monster'+plan.id]=Infinity;
+  return true;
 }
 // MaxHP в начале текущего боя РБ: только выбранный игроком навык, подтверждённая пика и живые MP/КД/HUD.
 // Первое применение на раненом герое ещё не измерено полностью: роль «Лечение» и модель Interlude не меняем.
@@ -1655,7 +1760,7 @@ async function battle() {
     if (stillNeeded && !stillNeeded()) return 'lock';
     // 20.49: GET после Focus мог подтвердить OFF Vicious, пока обычный удар ждал gameFree. Сначала новый выбор подготовки.
     // При unknown/pending плана нет — атаку не задерживаем, она даст следующую родную ревизию.
-    if (exact === 'attack' && managedToggleIds.some(id => managedTogglePlan(ctx,id))) return 'lock';
+    if (exact === 'attack' && (managedToggleIds.some(id => managedTogglePlan(ctx,id)) || typeof managedMonsterPlan === 'function' && managedMonsterPlan(ctx))) return 'lock';
     // 20.12 (ревизия 17.10): MP не хватает — не 'lock' (тот значит «клик потерян в окне занятости», вызывающий повторяет сразу,
     // и цикл боя крутился без единой паузы — вкладка замирала), а 'nomp': слот «занят» 1,5 с, цикл идёт к банкам/другим действиям
     if (!mpFree && env.meMp && !affordable(b, env.meMp(), 0)) { if (env.skKey(b)) mpUntil.set(env.skKey(b), Date.now() + NOMP_MS); return 'nomp'; } // MP мог измениться за ожидание ответа игры
@@ -1674,7 +1779,10 @@ async function battle() {
     const bindB = slackB < slackA, gap = Math.min(slackA, slackB);   // какой запас решал и насколько впритык
     const net0 = env.actNet?.().start || 0;
     fastMark(b, exact);
-    if (!env.fire(b)) { try { delete document.documentElement.dataset.l2botFast; } catch (_) {} return false; }
+    // Метку native80 ставим только в синхронном окне собственного клика, после всех ожиданий/повторных guards.
+    if(stillNeeded?.monsterIntent&&(!canSend()||!stillNeeded()||!armMonsterRequest(stillNeeded.monsterIntent)))return 'lock';
+    let fired;try{fired=env.fire(b);}finally{if(stillNeeded?.monsterIntent)clearMonsterMarker();}
+    if (!fired) { try { delete document.documentElement.dataset.l2botFast; } catch (_) {} return false; }
     lastAct = Date.now();
     if (env.skKey(b)) pressAt.set(env.skKey(b), firedAt);
     const petActAlive = ctx.pet && env.petState?.()?.has !== false;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
@@ -2393,6 +2501,7 @@ async function battle() {
     if (Date.now() - (ctx.auditT || 0) > 15000) { ctx.auditT = Date.now(); try { await env.buffAuditStep(ctx, me); } catch (e) { console.warn(env.TAG, 'проверка баффов', e); } }
     let buffed = false;
     env.BUFF_CTX = ctx;
+    if (await managedMonsterStep(ctx, act)) return AGAIN;
     if (await env.spoilStep(ctx, act, mob)) return AGAIN;      // v5.3: ⛏ спойл в начале боя
     if (await env.toggleStep(ctx, me, act)) return AGAIN;           // v5.3: постоянные баффы (тогглы) — вкл/выкл по MP
     const roar = battleRoarPlan(ctx, me, mp);
@@ -2967,6 +3076,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

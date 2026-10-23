@@ -83,8 +83,8 @@ const warlordToggleClass = () => /^(?:human[ _-])?(?:warlord|dreadnought)$/i.tes
 const warlordToggleAliases = { 'vicious stance': 312, 'жорстка стійка': 312, 'focus attack': 317, 'зосереджений удар': 317, 'фокусована атака': 317 };
 const warlordToggleId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? id === 312 || id === 317 ? id : 0 : Object.hasOwn(warlordToggleAliases, name) ? warlordToggleAliases[name] : 0; };
 // 20.50: лишь точные английские/украинские имена Detect; объект панели подтверждает ID через native action, не по этому списку.
-const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104, 'detect monster weakness': 80, 'вразливість монстрів': 80 };
-const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104, 80].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
+const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104, 'detect monster weakness': 80, 'вразливість монстрів': 80, 'detect dragon weakness': 88, 'вразливість драконів': 88 };
+const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104, 80, 88].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
@@ -173,6 +173,7 @@ async function autoRoles() {
   if (!env.cfg.autoRoles || !env.isBattle()) return;
   const detectActor = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null, env.rt.classSwT || env.rt.classCur?.t || 0, env.rt.manualKickAt || 0]);
   const detectOwner = detectActor(), detectGeneration = env.actionGeneration?.();
+  const dragonRolesBefore=Object.fromEntries(['nAttack','nPower','nUltra','nStun','nDebuff','nDrain','nCharge','nForce'].map(k=>[k,String(env.cfg[k]??'')])),dragonClean=[];
   const detectCurrent = () => env.cfg.autoRoles && env.isBattle() && env.on !== false && env.tabOwner !== false && warlordToggleClass() && detectOwner === detectActor() && detectGeneration === env.actionGeneration?.();
   await env.itemsDb(); // рейтинг оружия по виду из справочника; не загружаем базу на каждой карте
   if (!env.cfg.autoRoles || !env.isBattle()) return;
@@ -281,6 +282,13 @@ async function autoRoles() {
     for (const [id, x] of toggleRepair) if (!seen.has(id)) { selected.push(x.name); seen.add(id); }
     fix.nToggles = selected.join(', '); // даже уже выбранный alias подтверждаем записью до отметки ремонта
   }
+  if (detectRepair.some(([id])=>id===88)) {
+    // 23.10, лог10:41: старый native Dragon ошибочно попал в силовые. Убираем только88 и только при разовом назначении баффа.
+    for(const k of ['nAttack','nPower','nUltra','nStun','nDebuff','nDrain','nCharge','nForce']){
+      const current=String(fix[k]??env.cfg[k]??''),kept=current.split(',').map(n=>n.trim()).filter(n=>n&&warlordDetectId(n.split('=')[0].trim())!==88).join(', ');
+      if(current.split(',').some(n=>warlordDetectId(n.split('=')[0].trim())===88)){fix[k]=kept;dragonClean.push(k);}
+    }
+  }
   if (detectRepair.length) {
     const values = String(fix.nBuffs ?? env.cfg.nBuffs ?? '').split(',').map(n => n.trim()).filter(Boolean), seen = new Set();
     const selected = values.filter(n => { const id = warlordDetectId(n); if (id && seen.has(id)) return false; if (id) seen.add(id); return true; });
@@ -290,6 +298,7 @@ async function autoRoles() {
   if (Object.keys(fix).length) {
     const { cfg: c = {} } = await chrome.storage.local.get('cfg');
     if (toggleRepair.length && !toggleCurrent() || detectRepair.length && (!detectCurrent() || c.autoRoles === false || Object.hasOwn(c, 'nBuffs') && c.nBuffs !== env.cfg.nBuffs)) return;
+    if(dragonClean.some(k=>String(env.cfg[k]??'')!==dragonRolesBefore[k]||String(c[k]??'')!==dragonRolesBefore[k]))return;
     const saved = await env.setCfg(fix); if (saved?.ok === false) return;
     env.rec('B', 'автороли', Object.entries(fix).map(([k, v]) => `${k}=${v}`).join(' · '));
     console.log(env.TAG, 'автоназначение ролей:', fix);

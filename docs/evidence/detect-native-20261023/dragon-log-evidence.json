@@ -1,0 +1,607 @@
+{
+  "result": "Dragon88 battle confirmed; outside88 not observed",
+  "sources": [
+    {
+      "file": "l2bot-log-2026-10-23-00-40.txt",
+      "bytes": 329530,
+      "lines": 623,
+      "sha256": "a8a073e8ed055a6328c2cabfb130b08b3d2e6a55866d72ecb499aa2b5e0ef55a"
+    },
+    {
+      "file": "l2bot-learn-2026-10-23-00-40.html",
+      "bytes": 102853,
+      "lines": 301,
+      "sha256": "1d74e7ed983ce5b72790de3c2ed233dee6f2dc4761abb2479e214e1769f4a31a"
+    }
+  ],
+  "version": "20.51",
+  "versionLine": 1,
+  "interval": {
+    "date": "2026-10-23",
+    "displayStart": "10:38:33",
+    "displayEnd": "10:40:38",
+    "events": 575,
+    "timezone": "Export display time; timezone not encoded."
+  },
+  "identity": {
+    "id": 88,
+    "nativeAction": "detect_dragon_weakness",
+    "names": [
+      "Detect Dragon Weakness",
+      "Вразливість драконів"
+    ],
+    "idProof": {
+      "cooldownKey": "l2_88",
+      "cooldownLine": 581,
+      "battleLine": 582,
+      "serverEffectPrefix": "88 followed by zero-width separator and Ukrainian effect name"
+    },
+    "nativeAliasLines": [
+      581,
+      582,
+      596,
+      597
+    ]
+  },
+  "learning": {
+    "cardClickLine": 406,
+    "cardMinLevel": 58,
+    "cardSpPerRank": 153000,
+    "botAttemptLine": 423,
+    "botAttemptTime": "10:40:04.543",
+    "botConfirmedLine": 424,
+    "botConfirmedTime": "10:40:05.339",
+    "rankBefore": 0,
+    "rankAfter": 1,
+    "limitation": "SP price is tooltip evidence, not an independently reconciled SP balance delta."
+  },
+  "roleAndPanel": {
+    "autoRoles": true,
+    "nBuffs": "бойовий клич, азарт бою, Вразливість комах, Вразливість звірів, Вразливість рослин, Вразливість монстрів",
+    "settingsLine": 4,
+    "dragonSelectedInRole": false,
+    "nativeSlot": 13,
+    "manualPlacementLine": 552,
+    "manualSlotClickLines": [
+      566,
+      571,
+      572,
+      576,
+      577,
+      580,
+      586,
+      587,
+      588,
+      589,
+      594
+    ],
+    "liveAutorolesEvents": 0
+  },
+  "parameters": {
+    "currentMagisterLines": [
+      38,
+      394
+    ],
+    "mp": 30,
+    "nominalCooldownSeconds": 3,
+    "sourcePolicy": "Current magister/game values supersede historical ILDB MP27/CD10."
+  },
+  "battleSuccess": {
+    "line": 582,
+    "time": "10:40:34.459",
+    "http": 200,
+    "action": "detect_dragon_weakness",
+    "expectedRevision": 440894,
+    "resultRevision": 440895,
+    "blockedBy": "",
+    "mpPriorHud": 1404,
+    "mpAfter": 1392,
+    "mpMax": 1504,
+    "netMpDelta": -12,
+    "mpLimitation": "Net HUD delta includes regeneration/other battle activity; not the isolated MP price. MP30 plus18 regeneration is compatible, not proven accounting.",
+    "cooldownKey": "l2_88",
+    "serverNowMs": 1792716034306,
+    "cooldownUntilMs": 1792716035074,
+    "remainingAtResponseMs": 768,
+    "effect": "Вразливість драконів: +30% P.Atk проти Dragon (10 хв).",
+    "effectLines": [
+      582,
+      593,
+      595,
+      599
+    ]
+  },
+  "manualRepeatRejected": {
+    "line": 597,
+    "time": "10:40:35.557",
+    "http": 400,
+    "blockedBy": "global",
+    "globalRemainingMs": 121,
+    "skillRemainingMs": 0,
+    "meaning": "Global cooldown refusal; does not indicate unlearned or unavailable Dragon."
+  },
+  "outside": {
+    "castRequests": [
+      {
+        "line": 221,
+        "time": "10:39:10.263",
+        "battleId": "l2_75",
+        "status": 200
+      }
+    ],
+    "dragon88Count": 0,
+    "castableSelfBuffsOccurrences": 0,
+    "activeBuffsOccurrences": 0
+  },
+  "html": {
+    "dragonNameOrAliasOccurrences": 0,
+    "nBuffsLines": [
+      73
+    ]
+  },
+  "conclusions": [
+    "Learning0→1, manual panel placement, one accepted manual native88 cast and one global400 repeat are explicit. Numerous clicks are not numerous successful casts.",
+    "Dragon is absent from exported nBuffs despite autoRoles:true.",
+    "The game confirms a10-minute +30% P.Atk Dragon-specific effect message. This does not identify the raid target as Dragon or measure actual P.Atk/DPS/stacking.",
+    "Outside88 usability, activeBuff88 expiry and complete capability rows are not proven. Only outside75 is recorded."
+  ],
+  "privacyAndLimits": [
+    "Selected technical fields only; account/hero identifiers, names and raw character responses excluded.",
+    "Read-only attachment analysis; no live game/account/network actions performed."
+  ],
+  "latestResult": "Old20.51 autoRoles misclassifies Dragon88 as nPower; thirty bot battle casts confirmed",
+  "followup0043": {
+    "sourceFiles": [
+      {
+        "file": "l2bot-log-2026-10-23-00-43.txt",
+        "bytes": 540731,
+        "lines": 879,
+        "sha256": "37eeef39bb20d98c3ae0272a613cac9c46bf28c67a4f652f08f670ecfd465a0e"
+      },
+      {
+        "file": "l2bot-learn-2026-10-23-00-43.html",
+        "bytes": 102894,
+        "lines": 301,
+        "sha256": "548cf2ad818cf45d782f7c75bdccad072b11cd9c899a3895a3f49a9349a2e484"
+      }
+    ],
+    "version": "20.51",
+    "interval": {
+      "date": "2026-10-23",
+      "start": "10:40:39",
+      "end": "10:43:18",
+      "events": 831,
+      "headerLine": 1
+    },
+    "roles": {
+      "autoRoles": true,
+      "nBuffs": "бойовий клич, азарт бою, Вразливість комах, Вразливість звірів, Вразливість рослин, Вразливість монстрів",
+      "nPower": "Грозова буря, Вихор, Дикий розмах, Вразливість драконів",
+      "settingsLine": 4,
+      "liveAutoroleLine": 162,
+      "liveAutoroleTime": "10:40:58.703",
+      "liveAutorole": "nPower adds Вразливість драконів",
+      "htmlNBuffsLines": [
+        73
+      ],
+      "htmlNPowerLines": [
+        83
+      ],
+      "conclusion": "Old20.51 places Dragon in offensive nPower, while nBuffs remains the four previous Detect skills. This classification persists in both exported settings and live autorole event."
+    },
+    "panel": {
+      "slot": 13,
+      "nativeAction": "detect_dragon_weakness",
+      "icon": "0088.jpg",
+      "headerLine": 29,
+      "livePanelLine": 159
+    },
+    "automaticDragon": {
+      "http200Count": 30,
+      "otherHttpCount": 0,
+      "botActionEventCount": 30,
+      "first": {
+        "line": 179,
+        "time": "10:41:03.797",
+        "http": 200,
+        "mp": 1410,
+        "error": "",
+        "blockedBy": "",
+        "revision": 440909,
+        "serverNowMs": 1792716063639
+      },
+      "last": {
+        "line": 545,
+        "time": "10:42:14.331",
+        "http": 200,
+        "mp": 1474,
+        "error": "",
+        "blockedBy": "",
+        "revision": 440977,
+        "serverNowMs": 1792716133961
+      },
+      "sameBattleBurst": {
+        "count": 29,
+        "firstLine": 179,
+        "lastLine": 396,
+        "firstTime": "10:41:03.797",
+        "lastTime": "10:41:45.259",
+        "serverIntervalMsMin": 1153,
+        "serverIntervalMsMax": 2244,
+        "serverIntervalMsMedian": 1476.0
+      },
+      "nextBattleCastLine": 545,
+      "acceptedActions": [
+        {
+          "line": 179,
+          "time": "10:41:03.797",
+          "http": 200,
+          "mp": 1410,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440909,
+          "serverNowMs": 1792716063639
+        },
+        {
+          "line": 193,
+          "time": "10:41:06.013",
+          "http": 200,
+          "mp": 1310,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440912,
+          "serverNowMs": 1792716065883
+        },
+        {
+          "line": 204,
+          "time": "10:41:07.628",
+          "http": 200,
+          "mp": 1298,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440914,
+          "serverNowMs": 1792716067498
+        },
+        {
+          "line": 212,
+          "time": "10:41:09.198",
+          "http": 200,
+          "mp": 1268,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440916,
+          "serverNowMs": 1792716069056
+        },
+        {
+          "line": 223,
+          "time": "10:41:10.880",
+          "http": 200,
+          "mp": 1256,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440918,
+          "serverNowMs": 1792716070731
+        },
+        {
+          "line": 234,
+          "time": "10:41:12.479",
+          "http": 200,
+          "mp": 1244,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440920,
+          "serverNowMs": 1792716072328
+        },
+        {
+          "line": 241,
+          "time": "10:41:13.674",
+          "http": 200,
+          "mp": 1195,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440922,
+          "serverNowMs": 1792716073545
+        },
+        {
+          "line": 248,
+          "time": "10:41:14.940",
+          "http": 200,
+          "mp": 1077,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440924,
+          "serverNowMs": 1792716074771
+        },
+        {
+          "line": 254,
+          "time": "10:41:16.610",
+          "http": 200,
+          "mp": 1065,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440926,
+          "serverNowMs": 1792716076475
+        },
+        {
+          "line": 261,
+          "time": "10:41:18.000",
+          "http": 200,
+          "mp": 988,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440928,
+          "serverNowMs": 1792716077835
+        },
+        {
+          "line": 266,
+          "time": "10:41:19.326",
+          "http": 200,
+          "mp": 939,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440930,
+          "serverNowMs": 1792716079198
+        },
+        {
+          "line": 270,
+          "time": "10:41:20.727",
+          "http": 200,
+          "mp": 844,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440932,
+          "serverNowMs": 1792716080438
+        },
+        {
+          "line": 277,
+          "time": "10:41:21.917",
+          "http": 200,
+          "mp": 744,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440934,
+          "serverNowMs": 1792716081780
+        },
+        {
+          "line": 282,
+          "time": "10:41:23.109",
+          "http": 200,
+          "mp": 649,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440936,
+          "serverNowMs": 1792716082941
+        },
+        {
+          "line": 290,
+          "time": "10:41:24.510",
+          "http": 200,
+          "mp": 600,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440938,
+          "serverNowMs": 1792716084363
+        },
+        {
+          "line": 296,
+          "time": "10:41:25.724",
+          "http": 200,
+          "mp": 523,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440940,
+          "serverNowMs": 1792716085573
+        },
+        {
+          "line": 303,
+          "time": "10:41:27.465",
+          "http": 200,
+          "mp": 511,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440942,
+          "serverNowMs": 1792716087185
+        },
+        {
+          "line": 311,
+          "time": "10:41:28.714",
+          "http": 200,
+          "mp": 416,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440944,
+          "serverNowMs": 1792716088586
+        },
+        {
+          "line": 320,
+          "time": "10:41:30.243",
+          "http": 200,
+          "mp": 404,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440946,
+          "serverNowMs": 1792716090115
+        },
+        {
+          "line": 328,
+          "time": "10:41:31.997",
+          "http": 200,
+          "mp": 827,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440949,
+          "serverNowMs": 1792716091872
+        },
+        {
+          "line": 338,
+          "time": "10:41:33.550",
+          "http": 200,
+          "mp": 815,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440951,
+          "serverNowMs": 1792716093419
+        },
+        {
+          "line": 344,
+          "time": "10:41:34.715",
+          "http": 200,
+          "mp": 720,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440953,
+          "serverNowMs": 1792716094572
+        },
+        {
+          "line": 349,
+          "time": "10:41:36.303",
+          "http": 200,
+          "mp": 708,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440955,
+          "serverNowMs": 1792716096161
+        },
+        {
+          "line": 354,
+          "time": "10:41:37.563",
+          "http": 200,
+          "mp": 631,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440957,
+          "serverNowMs": 1792716097404
+        },
+        {
+          "line": 364,
+          "time": "10:41:39.375",
+          "http": 200,
+          "mp": 601,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440959,
+          "serverNowMs": 1792716099073
+        },
+        {
+          "line": 372,
+          "time": "10:41:40.648",
+          "http": 200,
+          "mp": 524,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440961,
+          "serverNowMs": 1792716100496
+        },
+        {
+          "line": 379,
+          "time": "10:41:41.863",
+          "http": 200,
+          "mp": 424,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440963,
+          "serverNowMs": 1792716101740
+        },
+        {
+          "line": 387,
+          "time": "10:41:43.697",
+          "http": 200,
+          "mp": 847,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440966,
+          "serverNowMs": 1792716103554
+        },
+        {
+          "line": 396,
+          "time": "10:41:45.259",
+          "http": 200,
+          "mp": 835,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440968,
+          "serverNowMs": 1792716105127
+        },
+        {
+          "line": 545,
+          "time": "10:42:14.331",
+          "http": 200,
+          "mp": 1474,
+          "error": "",
+          "blockedBy": "",
+          "revision": 440977,
+          "serverNowMs": 1792716133961
+        }
+      ],
+      "botEventLines": [
+        180,
+        194,
+        205,
+        213,
+        224,
+        235,
+        242,
+        249,
+        255,
+        262,
+        267,
+        271,
+        278,
+        283,
+        291,
+        297,
+        304,
+        312,
+        321,
+        329,
+        339,
+        345,
+        350,
+        355,
+        365,
+        373,
+        380,
+        388,
+        397,
+        546
+      ],
+      "wrongOffensiveEstimate": {
+        "line": 180,
+        "text": "Bot lists Dragon as an offensive combat choice with estimated damage≈100009. This estimate is not evidence of Dragon dealing damage."
+      },
+      "interpretation": "Thirty Dragon battle requests are explicit and paired with thirty bot combat-action records; they are not user casts. Repeated accepted actions do not prove repeated DPS or beneficial stacking."
+    },
+    "manualDragonClicks": {
+      "count": 0,
+      "lines": []
+    },
+    "outside": {
+      "requests": [
+        {
+          "line": 103,
+          "time": "10:40:47.001",
+          "battleId": "l2_87",
+          "http": 200
+        },
+        {
+          "line": 470,
+          "time": "10:41:56.835",
+          "battleId": "l2_104",
+          "http": 200
+        }
+      ],
+      "dragon88Count": 0,
+      "conclusion": "Only Animal87 and Plant104 outside casts are recorded in this interval; no outside88 evidence."
+    },
+    "cancelAndErrors": {
+      "explicitBuffRemovalMessageLines": [],
+      "relevantCodeErrorLines": [],
+      "limitation": "No explicit cancel/error match in this export is not proof that no effect was removed; raw activeBuff expiry/capability fields remain unavailable."
+    },
+    "implications": [
+      "Dragon must be excluded from generic offensive selection and managed as a maintained self-buff; existing nPower assignment needs compatibility handling.",
+      "Keep role evidence separate from effect evidence: settings selected the wrong role, while actual native battle action is usable.",
+      "The log does not establish target Dragon taxonomy, actual P.Atk/DPS increase or stacking; prior tooltip MP30/CD3 remains the current nominal source."
+    ]
+  }
+}

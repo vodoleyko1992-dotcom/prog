@@ -1,0 +1,10 @@
+{
+  "atUtc": "2026-10-23T01:10:31.678089+00:00",
+  "result": "PASS",
+  "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/a8f6b6927b071f263c01c08aac2ca72b60120611/builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+  "commit": "a8f6b6927b071f263c01c08aac2ca72b60120611",
+  "bytes": 1661626,
+  "sha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+  "byteEqualToTestedArchive": true,
+  "pr": 366
+}

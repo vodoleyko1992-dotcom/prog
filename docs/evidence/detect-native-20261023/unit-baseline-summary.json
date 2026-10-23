@@ -1,0 +1,12 @@
+{
+  "result": "REGRESSION_REPRODUCED",
+  "baselineRef": "98c660c",
+  "testCases": 75,
+  "pass": 1,
+  "fail": 74,
+  "sourceLog": "baseline-unit-generic.log",
+  "sourceLogSha256": "c5fa3b5f675ae1c56ca8deb6b8387f0a13c9aaf617f391e64a3bf0d2063e9ec8",
+  "limitations": [
+    "Summary only; failed assertion stacks and state are not published."
+  ]
+}

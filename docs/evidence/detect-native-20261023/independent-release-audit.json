@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "archive": "builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+  "bytes": 1661626,
+  "sha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+  "file_count": 68,
+  "uncompressed_bytes": 6852208,
+  "source_files_compared": 67,
+  "extracted_files_compared": 68,
+  "baseline_files_compared": 6,
+  "closure_references_checked": 109,
+  "checks": {
+    "crc": true,
+    "no_duplicate_entries": true,
+    "safe_paths": true,
+    "no_symlinks": true,
+    "exact_allowlist": true,
+    "no_service_or_credential_files": true,
+    "all_nonmanifest_source_sha": true,
+    "all_extracted_sha": true,
+    "extracted_allowlist": true,
+    "exact_expected_firefox_manifest": true,
+    "manifest_html_css_static_js_closure": true,
+    "base_profile_no_credential_keys": true,
+    "baseline_archives_profile_manifest_unchanged": true
+  },
+  "errors": [],
+  "mismatched_source_files": [],
+  "missing_closure": [],
+  "limitations": [
+    "Статический аудит не подтверждает исполнение runtime в Firefox или совместимость настоящего Android.",
+    "Динамические URL проверяются отдельными browser-smoke; значения окружения и секретов не читались."
+  ],
+  "scope": "Final integrated sealed archive after base b186605. The6 preserved baseline files are four retained ZIP archives, manifest and profile.",
+  "baselinePaths": [
+    "builds/l2wap-bot-v20.50.zip",
+    "builds/l2wap-bot-v20.51.zip",
+    "builds/l2wap-lite-v1.5.2-firefox.zip",
+    "builds/l2wap-lite-v1.5.2.zip",
+    "base-profile.json",
+    "manifest.json"
+  ],
+  "previousFirefox": {
+    "backupFile": "previous-firefox20.51.zip",
+    "backupSha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+    "gitPolicy": "Superseded current Firefox removed from git under AGENTS; immutable repository history and a workspace backup retain it.",
+    "earlier58ZipRemoval": "Performed independently in PR364."
+  }
+}

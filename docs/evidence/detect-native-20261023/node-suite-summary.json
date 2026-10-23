@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "testFilesPass": 620,
+  "testFilesFail": 0,
+  "sourceLog": "all-unit-final-integrated.log",
+  "sourceLogSha256": "9c1ffcbe2d9ce33d0ce2ae3801fe3d86d5fe45364fbdf5e40d22aa8ac79de8b5",
+  "summaryLine": "== ИТОГ: 620 PASS / 0 FAIL ==",
+  "scope": "Complete Node runner after integration and browser-fixture ordering repair; a test file can contain multiple individual cases."
+}

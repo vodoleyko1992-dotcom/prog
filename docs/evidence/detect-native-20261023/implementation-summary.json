@@ -1,0 +1,84 @@
+{
+  "atUtc": "2026-10-23T01:10:32.527583+00:00",
+  "scope": "Final managed native Detect80/88 implementation integrated with base b186605, including PR365 inventory recovery, and validated on the exact delivered Firefox archive.",
+  "unit": {
+    "cases": 75,
+    "pass": 75,
+    "fail": 0,
+    "baselineRef": "98c660c",
+    "baselinePass": 1,
+    "baselineFail": 74
+  },
+  "checks": {
+    "syntaxFiles": 61,
+    "envcheckModules": 34,
+    "envcheck": "PASS",
+    "quietErrors": "PASS",
+    "diffCheck": "PASS"
+  },
+  "fullRunner": {
+    "testFilesPass": 620,
+    "testFilesFail": 0,
+    "evidence": "node-suite-summary.json"
+  },
+  "files": {
+    "content.js": "6ce8843769dcfc63451bc34b94e1bfee0e2fde344d5817d5ef9aa06924d1d070",
+    "hook.js": "caef612fe1c4ffcca7f67efc55f2e3dfff2288289b311a1e1024db6080affb62",
+    "modules/combat.js": "50618e8bb7ffaf4f54c7ab9bfa4d971dd74819d6d96fb607935db658d7b9f87e",
+    "modules/buffs.js": "43b35ba482c679a9c6210efa1491fd53e691313c379e47bfff66421e6fdc95c0",
+    "modules/equipment.js": "115f6970b9cc428a5117adf94d4ccf61ac58baa3444e0b087c4e5f1a401aec21",
+    "battle-cooldown.js": "3b9090cc8238a0be5d72d37611bd55f1c58088462197d56cef7669c90168e8fe",
+    "lite/battle-cooldown.js": "3b9090cc8238a0be5d72d37611bd55f1c58088462197d56cef7669c90168e8fe",
+    "tests/v2051-monster-native.test.js": "8a65e5d6bb19b6f2f64ae866907ce8310ff542ea0b0aa4d84143c89b53ea5972"
+  },
+  "contract": [
+    "native act only for chosen nBuffs, Warlord/Dreadnought, complete fresh per-ID absence, positive HUD/packet veto, actual learned MP",
+    "owner/class/Stop/generation/mode/canAct/pvp and both native/numeric CD repeated before fire",
+    "durable per-ID intent, synchronous one-use DOM marker binds hook netStart/rid/request revision/owner/ACK",
+    "unknown sent results fenced630s across reload; shared outside unknown fence for80; answered allows post-ACK fresh absence after3s",
+    "full battle character observations retain separate causal observedAt; replay does not refresh same-revision TTL; last-request rid fence prevents same-ms overlap",
+    "Dragon native alias88, real MP30, shared native/numeric server CD mapping; current nominal tooltip3s; once autoRoles correction removes only88 from old offensive roles and appends buff; manual removal and OFF preserved",
+    "Dragon role repair snapshots original offensive roles before awaits and aborts on changed env/storage for any cleaned key; 3 race regressions PASS"
+  ],
+  "unchanged": [
+    "manifest/version20.51 and base-profile",
+    "outside controller four original IDs and Monster capability guard",
+    "Four retained prior ZIP archives are unchanged; the superseded Firefox archive was removed under AGENTS and retained in immutable history and a workspace backup. The separate58-archive removal belongs to PR364.",
+    "Lite ZIP not rebuilt"
+  ],
+  "nativeFirefox": {
+    "casesPass": 13,
+    "casesFail": 0,
+    "archiveSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+    "browserVersion": "153.5.1",
+    "evidence": "firefox-native.json"
+  },
+  "archive": {
+    "file": "builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+    "bytes": 1661626,
+    "sha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+    "stage": "final integrated sealed archive"
+  },
+  "fixtureRepairs": {
+    "files": [
+      "tests/v2036-combat-replan.test.cjs",
+      "tests/v2048-warlord-battle-roar.test.js",
+      "tests/v2049-warlord-always-toggles.test.js",
+      "tests/v2043-logfix-2.test.js",
+      "tests/v2042-fast-turn.test.js",
+      "tests/v2051-monster-native-firefox.cjs"
+    ],
+    "reason": "Preserve actual exported helpers and new receipt context in source excerpts; fastTurn assertion checks order inside act without requiring adjacent lines. Existing behavioral assertions remain.",
+    "browserLostResultOrdering": "Lost-result cases initially enable only the first Detect, wait for durable phase unknown before reload, and enable all buttons after reload. A fixed400ms reload could unload an accepted second request before its ACK was recorded; durable prepared retention was valid. This fixture ordering repair does not change runtime or ZIP bytes."
+  },
+  "boundaries": [
+    "Native Firefox runs the actual extension and combat.battle/act, with controlled local DOM/fetch client; original live game renderer is not exercised.",
+    "Android check disables missing APIs in desktop Firefox; no physical Android run.",
+    "No live game/account access and no broad historical Chrome/browser suite."
+  ],
+  "integration": {
+    "base": "b186605",
+    "inventoryRecovery": "PR365 recovery diagnostics and actor/lease/generation guards are preserved; invRefresh feeds the new helper only after the existing ownership guards.",
+    "archivePolicy": "PR364 policy retains one current Firefox; this release supersedes the old Firefox ZIP."
+  }
+}

@@ -1,0 +1,373 @@
+{
+  "at": "2026-10-23T01:08:19.154Z",
+  "result": "PASS",
+  "zipSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+  "kind": "Native Firefox full extension Start/hook/owned snapshots/real combat.battle act; controlled local DOM+fetch client, no live game",
+  "cases": [
+    {
+      "case": "absent",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_monster_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 3,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,80]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717634920,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9sk1g-1-d61e674a-599d-430a-919d-a64858037ce1\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9sk1g-1-d61e674a-599d-430a-919d-a64858037ce1\\\",1792717634920,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717635822,
+            "answeredRevision": 101,
+            "at": 1792717635791,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 80,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717634920,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9sk1g-1-d61e674a-599d-430a-919d-a64858037ce1\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9sk1g-1-d61e674a-599d-430a-919d-a64858037ce1\\\\\\\",1792717634920,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717635791,1]",
+            "until": 1792718265791
+          }
+        }
+      }
+    },
+    {
+      "case": "present",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "lowmp",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "cd",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "lost",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_monster_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 3,
+      "revisionConflicts": 1,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,80]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717654160,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9sywb-1-cafd8cb7-e260-4190-b45a-3d49c65a2119\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9sywb-1-cafd8cb7-e260-4190-b45a-3d49c65a2119\\\",1792717654160,\\\"farm\\\"]\"]",
+            "at": 1792717655037,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 80,
+            "phase": "unknown",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717654160,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9sywb-1-cafd8cb7-e260-4190-b45a-3d49c65a2119\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9sywb-1-cafd8cb7-e260-4190-b45a-3d49c65a2119\\\\\\\",1792717654160,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717655037,1]",
+            "until": 1792718285037
+          }
+        }
+      }
+    },
+    {
+      "case": "cadence",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "detect_monster_weakness",
+        "attack"
+      ],
+      "posts": 3,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,80]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717660693,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9t3xm-1-d882e285-ef82-400c-8155-1eba6261ffaf\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9t3xm-1-d882e285-ef82-400c-8155-1eba6261ffaf\\\",1792717660693,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717661716,
+            "answeredRevision": 102,
+            "at": 1792717661594,
+            "baseRevision": 101,
+            "char": "AuditHero",
+            "id": 80,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717660693,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9t3xm-1-d882e285-ef82-400c-8155-1eba6261ffaf\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9t3xm-1-d882e285-ef82-400c-8155-1eba6261ffaf\\\\\\\",1792717660693,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717661594,1]",
+            "until": 1792718291594
+          }
+        }
+      }
+    },
+    {
+      "case": "dragon",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_dragon_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 3,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,88]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717665556,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9t7on-1-4a160d2c-50cf-4ae1-a334-504b98f76382\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9t7on-1-4a160d2c-50cf-4ae1-a334-504b98f76382\\\",1792717665556,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717666456,
+            "answeredRevision": 101,
+            "at": 1792717666434,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 88,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717665556,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9t7on-1-4a160d2c-50cf-4ae1-a334-504b98f76382\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9t7on-1-4a160d2c-50cf-4ae1-a334-504b98f76382\\\\\\\",1792717665556,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717666434,1]",
+            "until": 1792718296434
+          }
+        }
+      }
+    },
+    {
+      "case": "dragon-present",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "dragon-lowmp",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "dragon-cd",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "attack",
+        "attack"
+      ],
+      "posts": 2,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {}
+      }
+    },
+    {
+      "case": "dragon-lost",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_dragon_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 3,
+      "revisionConflicts": 1,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,88]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717684360,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9tm6t-1-1612a981-ae4c-4afc-9b9b-2b4dd482f04e\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9tm6t-1-1612a981-ae4c-4afc-9b9b-2b4dd482f04e\\\",1792717684360,\\\"farm\\\"]\"]",
+            "at": 1792717685237,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 88,
+            "phase": "unknown",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717684360,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9tm6t-1-1612a981-ae4c-4afc-9b9b-2b4dd482f04e\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9tm6t-1-1612a981-ae4c-4afc-9b9b-2b4dd482f04e\\\\\\\",1792717684360,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717685237,1]",
+            "until": 1792718315237
+          }
+        }
+      }
+    },
+    {
+      "case": "both",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_monster_weakness",
+        "detect_dragon_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 4,
+      "revisionConflicts": 0,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,80]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717690846,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\",1792717690846,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717691723,
+            "answeredRevision": 101,
+            "at": 1792717691707,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 80,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717690846,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\",1792717690846,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717691707,1]",
+            "until": 1792718321707
+          },
+          "[\"AuditHero\",\"human_warlord\",3,88]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717690846,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\",1792717690846,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717691847,
+            "answeredRevision": 102,
+            "at": 1792717691732,
+            "baseRevision": 101,
+            "char": "AuditHero",
+            "id": 88,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717690846,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9tr76-1-34211adf-feec-4c83-8918-503a3bba7ed7\\\\\\\",1792717690846,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717691732,2]",
+            "until": 1792718321732
+          }
+        }
+      }
+    },
+    {
+      "case": "both-lost",
+      "result": "PASS",
+      "browserVersion": "153.5.1",
+      "actions": [
+        "detect_monster_weakness",
+        "detect_dragon_weakness",
+        "attack",
+        "attack"
+      ],
+      "posts": 4,
+      "revisionConflicts": 1,
+      "realGameRequests": 0,
+      "controllerState": {
+        "detectOutside": null,
+        "detectOutsideIntent": {},
+        "detectOutsideProof": {},
+        "monsterNativeIntent": {
+          "[\"AuditHero\",\"human_warlord\",3,80]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717695763,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9tuzr-1-fd4e13e3-b0fc-49a1-b04a-ccc65cf539ee\\\\\\\"]\\\"]\",1,\"[\\\"AuditHero\\\",\\\"mvk9tuzr-1-fd4e13e3-b0fc-49a1-b04a-ccc65cf539ee\\\",1792717695763,\\\"farm\\\"]\"]",
+            "at": 1792717696625,
+            "baseRevision": 100,
+            "char": "AuditHero",
+            "id": 80,
+            "phase": "unknown",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717695763,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9tuzr-1-fd4e13e3-b0fc-49a1-b04a-ccc65cf539ee\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",1,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9tuzr-1-fd4e13e3-b0fc-49a1-b04a-ccc65cf539ee\\\\\\\",1792717695763,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717696625,1]",
+            "until": 1792718326625
+          },
+          "[\"AuditHero\",\"human_warlord\",3,88]": {
+            "actor": "[\"[\\\"AuditHero\\\",\\\"human_warlord\\\",3,0,1792717695763,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,\\\\\\\"mvk9tvzi-2-62b893f9-f585-422a-8cea-9cf4ae9eed38\\\\\\\"]\\\"]\",0,\"[\\\"AuditHero\\\",\\\"mvk9tvzi-2-62b893f9-f585-422a-8cea-9cf4ae9eed38\\\",1792717695763,\\\"farm\\\"]\"]",
+            "answeredAt": 1792717698374,
+            "answeredRevision": 102,
+            "at": 1792717698359,
+            "baseRevision": 101,
+            "char": "AuditHero",
+            "id": 88,
+            "phase": "answered",
+            "prof": "human_warlord",
+            "slot": 3,
+            "token": "[\"[\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"human_warlord\\\\\\\",3,0,1792717695763,\\\\\\\"[\\\\\\\\\\\\\\\"AuditHero\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"human_warlord\\\\\\\\\\\\\\\",3,0,\\\\\\\\\\\\\\\"mvk9tvzi-2-62b893f9-f585-422a-8cea-9cf4ae9eed38\\\\\\\\\\\\\\\"]\\\\\\\"]\\\",0,\\\"[\\\\\\\"AuditHero\\\\\\\",\\\\\\\"mvk9tvzi-2-62b893f9-f585-422a-8cea-9cf4ae9eed38\\\\\\\",1792717695763,\\\\\\\"farm\\\\\\\"]\\\"]\",1792717698359,1]",
+            "until": 1792718328359
+          }
+        }
+      }
+    }
+  ],
+  "errors": []
+}
