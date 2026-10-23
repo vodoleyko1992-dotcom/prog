@@ -53,7 +53,7 @@ function arena() {
   fire: b => { clicks.push({ b, at: now }); if (b === attack) { env.TVTC.actN++; env.TVTC.actT = now; } else env.on = false; } };
  const box = { env, Date: { now: () => now }, Math, Map, canRun: () => env.on, token: () => env.rt.char,
   active: t => env.on && t === env.rt.char, tvtState: () => state, isArena: () => true, tvtNow: () => now, tvtMs: n => +n || 0,
-  tvtEnemies: () => [enemy], tvtSkillsRefresh: async () => {}, mpNow: () => 100, mpMax: () => 0, skillInfo: () => ({}), chargeState: () => ({ n: 0, off: true }),
+  tvtEnemies: () => [enemy], tvtSkillsRefresh: async () => {}, tvtRefresh: async () => {}, mpNow: () => 100, mpMax: () => 0, skillInfo: () => ({}), chargeState: () => ({ n: 0, off: true }),
   tvtSkillAllowed: () => true, notStuck: () => true, srvReady: () => true, mpOk: () => true,
   misses: new Map(), slotKey: b => b.id, stuckNote: () => assert.fail('Намеренная пауза не должна считаться потерянным кликом') };
  const start = tvt.indexOf('async function tvtFight()'), end = tvt.indexOf('\n return { tvtNow', start);

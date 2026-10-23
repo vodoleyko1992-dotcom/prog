@@ -80,6 +80,21 @@ async function tvtRefresh(force = false) {
   } catch (e) { if (active(T0)) readFail++; } finally { if (reading === T0) reading = null; }
 }
 
+// 20.55 (лог 24.10 03:00:05–03:05:29): герой пал в TvT — ответ боя /game/tvt/combat/sync (self.alive=false, deaths 1) и отказ удара
+// tvt_attacker_dead «Ви вибули з цього TvT», а «выбыл» бот брал только из GET /game/tvt (selfCombat). Свежего GET в бою нет (читается
+// раз в минуту), игра уводила павшего в /chat.html, бот 45 с гонял chat ↔ арена («бой TvT через 0 с — иду на арену» ×25), потом
+// 4,5 мин стоял на арене «живых врагов нет — жду» до ручного «← Вернуться в город». Выбывание из боевых ответов этого же события
+// пишем в TVT и rt.tvt (переживает переход в чат) — tvtStep/tvtFight сразу возвращают прежний режим.
+function tvtSelfOut(eventId, why) {
+  const id = eventId || env.TVT?.eventId || env.rt.tvt?.eventId; if (!id) return false;
+  let hit = false;
+  if (env.TVT && env.TVT.eventId === id && env.TVT.selfCombat?.alive !== false) { env.TVT = { ...env.TVT, selfCombat: { ...(env.TVT.selfCombat || {}), alive: false } }; hit = true; }
+  const R = env.rt.tvt;
+  if (R && R.eventId === id && R.selfCombat?.alive !== false) { void env.setRt({ tvt: { ...R, selfCombat: { alive: false } } }); hit = true; }
+  if (hit) env.rec('B', 'TvT', `выбыл из боя (${why || 'ответ арены'}) — на арену этого события не возвращаюсь`);
+  return hit;
+}
+
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
 const LEAVE_KEY = 'l2bot.tvtLeaveT';
 const leaveRead = () => { try { return +root.sessionStorage?.getItem(LEAVE_KEY) || 0; } catch (e) { return 0; } };
@@ -325,6 +340,7 @@ async function tvtFight() {
   while (canFight()) {
     // 23.10: после паузы выбираем цель и лечение по свежему состоянию, до любых sent/таймеров.
     if (env.actionWait && !await env.actionWait(canFight) || !canFight()) return false;
+    void tvtRefresh();                              // 20.55: долгий бой — фаза/итог не только со слов страницы (GET сам ограничен по частоте)
     const S = tvtState() || {};
     if (S.eliminated) return tvtLeave('выбыл из боя');
     if (!/ACTIVE/i.test(S.phase) && !(S.start && tvtNow() >= S.start)) {   // подготовка: ждём, отмечаемся (страница сама шлёт presence)
@@ -409,6 +425,6 @@ async function tvtFight() {
   // Stop, потеря вкладки, смена страницы и предел одного вызова — не серверный итог события.
   return false;
 }
- return { tvtNow, tvtMs, tvtState, tvtRegistrationDue, tvtRefresh, tvtSkillAllowed, tvtSkillsRefresh, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, tvtActNote, skillInfo, mpNow, arenaPot, potKindOf };
+ return { tvtNow, tvtMs, tvtState, tvtRegistrationDue, tvtRefresh, tvtSkillAllowed, tvtSkillsRefresh, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, tvtActNote, tvtSelfOut, skillInfo, mpNow, arenaPot, potKindOf };
  };
 })(globalThis);
