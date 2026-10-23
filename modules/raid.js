@@ -917,7 +917,7 @@ function rbTourPlan() {
   // 14.10: единый расчёт выбора/причин для тура и меню. Вызов не пишет память и не делает игровых действий.
   const at = Date.now(), heroLvl = env.heroLvl(), lo = rbLo(heroLvl), hi = rbHi(heroLvl), listT = env.rt.rbListT || 0;
   const mode = env.cfg.rbValueTour ? 'value' : env.cfg.rbOrder === 'down' ? 'down' : 'up', dir = mode === 'down' ? -1 : 1;
-  const stale = !listT || at - listT > (mode === 'value' ? 10 : 15) * 60000, ready = [], blocked = [], quests = env.storyRbIds?.() || [];
+  const stale = !listT || at - listT > (mode === 'value' ? 10 : 15) * 60000, ready = [], blocked = [], quests = env.storyRbIds?.() || [], first = env.storyRbFirst?.() || [];   // 20.54: РБ квеста плаща Goddard — раньше порядка по уровню
   for (const [id, x] of Object.entries(env.rt.rbList || {})) {
     let block = rbListBlock(id, x, lo, hi);
     const wound = rbWounded(id) ? env.rt.rbWound[id] : null, tried = env.rt.rbGoTried?.[id] || 0;
@@ -932,7 +932,7 @@ function rbTourPlan() {
     if (block) blocked.push({ id, name: x.name || id, lvl: x.lvl, ...block });
     else ready.push({ id, ...x, evidence: rbDpsEvidence(id), ...(wound ? { wounded: wound } : {}), ...(quests.includes(id) ? { quest: true } : {}), ...(tried && at - tried <= env.RB_TRY_MS ? { retry: true } : {}) });
   }
-  ready.sort((a, b) => rbScrollOrder(a, b) || (mode === 'value' && !ordinaryLiveTour(a.id) && !ordinaryLiveTour(b.id) ? rbValueScore(b.id, b) - rbValueScore(a.id, a) : 0)
+  ready.sort((a, b) => rbScrollOrder(a, b) || first.includes(b.id) - first.includes(a.id) || (mode === 'value' && !ordinaryLiveTour(a.id) && !ordinaryLiveTour(b.id) ? rbValueScore(b.id, b) - rbValueScore(a.id, a) : 0)
     || dir * (a.lvl - b.lvl) || !!b.wounded - !!a.wounded
     || (a.wounded && b.wounded ? a.wounded.cur / a.wounded.max - b.wounded.cur / b.wounded.max : 0)
     || !!b.quest - !!a.quest || dir * ((a.ord ?? 1e9) - (b.ord ?? 1e9)) || a.id.localeCompare(b.id));

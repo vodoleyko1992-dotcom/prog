@@ -2,6 +2,12 @@
 
 **Ведущий: Claude (с 23.10.2026, 23:00 UTC+10, John «я вернулся в клод»).** Codex код без прямой просьбы не правит; при возврате («работаем на ГПТ») — сначала этот журнал и открытые PR `claude/*`.
 
+## 24.10.2026, 01:20 UTC+10 — Claude — квест A-плаща Goddard «Слід Океану Полум'я» (лог 00:56)
+
+- Лог John: квест взят у Captain Andrei, стадия `kill_ashakiel`, ответ квеста в логе обрезан на 800 знаках. Полная схема — из кода страниц игры `captain-andrei.js` / `scout-adrian.js` (скачаны без входа) и прежнего `kb/raw/sq-goddard.json`: стадии `collect_supplies → kill_ashakiel → kill_equal_level_mobs (150) → return_to_andrei`, POST `<root>/turn-in-supplies|turn-in-cloth|report-hunt|claim-reward {expectedRevision}`. Факты — `kb/quest-goddard.md`.
+- Бот: kind `goddard` в story.js (прогресс, строка журнала охоты раз в 25), `rbFirst` → тур РБ ставит Ashakiel первым, `huntUp` → mobValRank ставит мобов ≥ уровня героя первыми, сдача перелётом zoneGo (svc quests) + кнопка страницы; `cfg.goddardQuest` (ВКЛ), engine-core разрешает его storyJob без задачи «Квесты»; в туре — только на простое (`mammon.modeFree(..., priceOnly)`).
+- Проверки: новый `tests/v2054-goddard-quest.test.js` PASS, полный Node 633 PASS / 0 FAIL (5 тестов-шаблонов исходника обновлены под новый вызов storyTick/storyStep и третий опрос квеста), syntax/envcheck/diff PASS, браузерный v90-story-browser PASS. Живую игру не открывали, ZIP/версию не меняли.
+
 ## 23.10.2026, 23:30 UTC+10 — Claude — тур РБ встал после ручного телепорта (журнал 23:17, «Багануло»)
 
 - Журнал 23:15:58–23:17:11: тур выбрал Fairy Queen Timiniel; пока бот читал /character перед своей оплатой, игрок сам нажал «Телепорт» к Ancient Weird Drake (строки [U] — настоящие клики). Игра держит один телепорт за раз — клик бота проглочен, а оплата бота осталась «отправленной» без запроса. Бот отбил Drake до аварийного выхода (HP 6%), после чего стоял на «исход телепорта не подтверждён» и не лечился, пока игрок не нажал Стоп.

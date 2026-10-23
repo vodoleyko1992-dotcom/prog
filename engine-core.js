@@ -334,6 +334,8 @@
     if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && (selectedTask(c,rt) === 'fish' || fishTaskWait(c,rt))) return true;
     if (primary) return selectedTask(c,rt) === primary;
     const group = {mmJob:'mammon',storyJob:'quests',dailyFish:'fish',dailyRb:'raid',petBufferTrip:'petbuff',rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish',farmScan:'resources',recipeScan:'resources',rbScan:'raid'}[key];
+    // 20.54: сдача квеста плаща Goddard ведётся своим выключателем (goddardQuest) и без задачи «Квесты»
+    if (key === 'storyJob' && rt.storyJob?.kind === 'goddard' && c.goddardQuest !== false) return true;
     if (group) return taskAllowed(c,group);
     if (key === 'tsJob') return false;
     // 17.10 (лог 15:10, West): перелёт цели «Фарм ресурсов»/рецепта — работа задачи «ресурсы», а не чужой маршрут; иначе «Только задачи» отменял его каждые 4 с.
