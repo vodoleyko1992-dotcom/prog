@@ -1,0 +1,19 @@
+{
+  "baselineCommit": "4442b21",
+  "baselineVersion": "20.51",
+  "currentVersion": "20.52",
+  "unchanged": {
+    "popup.html": true,
+    "popup.js": true,
+    "ui-v7.js": true,
+    "ui-v7.css": true,
+    "ui-game.css": true,
+    "warlock-ui.js": true,
+    "modules/quests.js": true,
+    "modules/warlock.js": true,
+    "modules/raid.js": true,
+    "modules/combat.js": true,
+    "content.js without version header": true
+  },
+  "allComparedRuntimeUnchanged": true
+}

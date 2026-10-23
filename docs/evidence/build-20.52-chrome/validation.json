@@ -1,0 +1,48 @@
+{
+  "version": "20.52",
+  "files": 68,
+  "bytes": 1665738,
+  "sha256": "75d6e13d10eb2346f56d404a94d9c1bc163d5e3388d5c7f577090fe888533c1b",
+  "archive": "/workspace/prog/builds/l2wap-bot-v20.52.zip",
+  "extracted": "/workspace/work/build-20.52-chrome/extracted",
+  "nodeChecks": {
+    "reusedPassFiles": 625,
+    "failFiles": 0,
+    "from": "Firefox20.52 same source manifest/content/runtime; no functional changes"
+  },
+  "chromeZipload": {
+    "version": "20.52",
+    "cfgKeys": 208,
+    "errors": 0
+  },
+  "noblesseBrowser": {
+    "result": "PASS",
+    "path": [
+      "character-quests",
+      "map",
+      "battle?spawnId=dense_9584"
+    ],
+    "gamePosts": 0,
+    "jsErrors": 0
+  },
+  "fullHistoricalSmokesRepeated": false,
+  "reason": "Explicit quick build request",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/370",
+  "publication": "Added Chrome sibling to existing draft release; inherited historical smoke failures not resolved",
+  "liveGameUsed": false,
+  "previousChromeBackupSha256": "1fc01618439f32b527e58e2eaba58be0c98f0a42c84a97b239b555147e72ac67",
+  "keptArchives": {
+    "builds/l2wap-bot-v20.51.zip": "7520e3f26772394493436e5fc2d771091f38d7e00986f915a385f00edcef622b",
+    "builds/l2wap-lite-v1.5.2-firefox.zip": "a460da9df11b4a5db585027453621916b42a303605aaa8b4ffe27eaa01c42568",
+    "builds/l2wap-lite-v1.5.2.zip": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
+    "builds/l2wap-bot-v20.52-firefox.zip": "1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a",
+    "base-profile.json": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+  },
+  "download": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/1c9d24e/builds/l2wap-bot-v20.52.zip",
+    "httpStatus": 200,
+    "bytes": 1665738,
+    "sha256": "75d6e13d10eb2346f56d404a94d9c1bc163d5e3388d5c7f577090fe888533c1b",
+    "matchesCheckedArchive": true
+  }
+}

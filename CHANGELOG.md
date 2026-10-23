@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.52 Chrome и Firefox — Noblesse без цикла, автобаф кота, выход с РБ и восстановление подземелья](docs/changelog/CHANGELOG-20.52.md)
 - [20.51 Chrome — цепочки крафта до цели, удобный каталог ресурсов и оповещения о нехватке](docs/changelog/CHANGELOG-20.51.md)
 - [20.50 Chrome — три Detect Weakness Warlord перед боем, режим крафта и исправленные замеры пики](docs/changelog/CHANGELOG-20.50.md)
 - [20.49 Chrome — автоматическое поддержание Focus Attack и Vicious Stance Warlord](docs/changelog/CHANGELOG-20.49.md)
