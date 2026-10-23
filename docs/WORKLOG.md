@@ -5,7 +5,7 @@
 ## 23.10.2026, 10:16 UTC+10 — Claude — инструменты Claude Code в репозитории ([PR #363](https://github.com/vodoleyko1992-dotcom/prog/pull/363))
 
 - По прямой просьбе игрока «вставь в репозиторий» добавлены инструменты Claude Code; код бота, manifest, профиль и ZIP не менялись. Codex их не использует.
-- `.claude/skills/task-observer/` — навык rebelytics v3.7.0 (CC-BY-4.0), журнал наблюдений `docs/skill-observations/`; включение — строкой в CLAUDE.md. Хук `.claude/hooks/task-observer-start.sh` создан и проверен, но в `.claude/settings.json` не зарегистрирован: правку настроек должен подтвердить игрок.
+- `.claude/skills/task-observer/` — навык rebelytics v3.7.0 (CC-BY-4.0), журнал наблюдений `docs/skill-observations/`; включение — строкой в CLAUDE.md. Стартовый хук `.claude/hooks/task-observer-start.sh` зарегистрирован в `.claude/settings.json` (SessionStart) по подтверждению игрока «Регистрируй» 23.10 10:20.
 - `.claude/skills/claude-automation-recommender/` — навык официального плагина Anthropic `claude-code-setup` (Apache-2.0); облачные сессии не ставят плагины из `enabledPlugins`, поэтому перенесён навыком.
 - `.mcp.json` — MCP-сервер Headroom 0.41.0 (`uvx`, только инструменты сжатия/извлечения, телеметрия выключена). Прокси-режим Headroom не подключён: при сбое прокси облачная сессия теряет связь с API.
 - Claude-Mem не добавлен: облачные сессии не ставят плагины, а его база не переживает одноразовый контейнер.

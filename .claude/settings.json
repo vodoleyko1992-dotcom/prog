@@ -5,5 +5,19 @@
       "Edit(content.js)",
       "Edit(modules/combat.js)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/task-observer-start.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }

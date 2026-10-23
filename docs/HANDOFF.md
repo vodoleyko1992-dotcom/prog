@@ -2,7 +2,7 @@
 
 ## 23.10.2026 — инструменты Claude Code ([PR #363](https://github.com/vodoleyko1992-dotcom/prog/pull/363))
 
-**Решение игрока (23.10):** в репозиторий добавить Task Observer, Claude Code Setup и Headroom; OmniRoute не ставить. Claude-Mem в облачных сессиях не работает — не добавлен. Подробности и проверки — запись WORKLOG 23.10 10:16. **Открыто:** регистрация хука Task Observer в `.claude/settings.json` ждёт подтверждения игрока.
+**Решение игрока (23.10):** в репозиторий добавить Task Observer, Claude Code Setup и Headroom; OmniRoute не ставить. Claude-Mem в облачных сессиях не работает — не добавлен. Подробности и проверки — запись WORKLOG 23.10 10:16. Стартовый хук Task Observer зарегистрирован в `.claude/settings.json` по команде игрока «Регистрируй» (23.10 10:20). **Проверить** в следующей облачной сессии: хук сработал, навык task-observer загрузился, MCP Headroom подключился.
 
 ## 23.10.2026 — Firefox20.51 по прямой просьбе ([PR #362](https://github.com/vodoleyko1992-dotcom/prog/pull/362))
 
