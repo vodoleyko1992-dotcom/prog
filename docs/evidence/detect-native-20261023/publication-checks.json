@@ -1,0 +1,17 @@
+{
+  "atUtc": "2026-10-23T01:11:44.405444+00:00",
+  "result": "PASS",
+  "pr": 366,
+  "scope": "Required second pre-commit checks for evidence/PR-number/download documentation; runtime and ZIP unchanged since a8f6b69",
+  "node": {
+    "filesPass": 620,
+    "filesFail": 0,
+    "logSha256": "6e5d660f2ac5afbe3130169bbf3621c6cf3fda64ace9057fdfcff6b69a4d62a0"
+  },
+  "envcheck": {
+    "modules": 34,
+    "result": "PASS"
+  },
+  "diffCheck": "PASS",
+  "changedJavaScriptSinceRuntimeCommit": []
+}

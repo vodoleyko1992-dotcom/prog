@@ -1,0 +1,16 @@
+{
+  "result": "REGRESSION_REPRODUCED",
+  "case": "absent",
+  "expectedMonsterCasts": 1,
+  "actualMonsterCasts": 0,
+  "sourceLog": "native-baseline.log",
+  "sourceLogSha256": "e092e9ac2560ed85fea5f7a976a0e63327aff302c8c9c44a8e1bf014ec83b512",
+  "verifiedLogExcerpt": "AssertionError: absent: native cast count; 0 !== 1",
+  "reportedBaselineArchiveSha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+  "archiveShaSource": "Reported run metadata from the primary agent; the baseline log did not record an archive hash.",
+  "limitations": [
+    "The baseline log does not preserve action sequence; none is asserted here.",
+    "An unrelated invalid-manifest diagnostic is excluded.",
+    "This is a targeted functional baseline failure, not a full historical Firefox run."
+  ]
+}

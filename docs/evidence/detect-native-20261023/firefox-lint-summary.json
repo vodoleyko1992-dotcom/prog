@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "summary": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "warningCodes": {
+    "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+    "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+    "UNSAFE_VAR_ASSIGNMENT": 49
+  },
+  "errors": [],
+  "notices": [],
+  "archiveSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+  "basis": "Integrated final Firefox archive; absolute source paths and repeated warning details omitted.",
+  "limitations": [
+    "Lint warnings remain; this is not an AMO signing result."
+  ]
+}

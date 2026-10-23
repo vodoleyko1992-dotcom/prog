@@ -1,0 +1,118 @@
+{
+  "atUtc": "2026-10-23T01:10:32.527583+00:00",
+  "result": "PASS",
+  "version": "20.51",
+  "pr": 366,
+  "problem": "Monster80 was selected but had no confirmed outside capability; newly learned Dragon88 was misclassified as nPower and repeatedly cast by old generic automation.",
+  "change": "Dedicated native battle maintenance for selected80/88 with independent fresh complete absence, current MP/CD, durable intent and exact owned request/ACK. Dragon is removed once from old offensive autoroles and added to buffs, preserving manual OFF/removal and concurrent edits.",
+  "archive": {
+    "path": "builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+    "bytes": 1661626,
+    "files": 68,
+    "sha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+    "signed": false,
+    "stage": "final integrated sealed archive"
+  },
+  "checks": {
+    "targetedUnit": {
+      "cases": 75,
+      "pass": 75,
+      "fail": 0,
+      "evidence": "node-targeted.log"
+    },
+    "targetedUnitBaseline": {
+      "cases": 75,
+      "pass": 1,
+      "fail": 74,
+      "evidence": "unit-baseline-summary.json"
+    },
+    "fullNode": {
+      "testFilesPass": 620,
+      "testFilesFail": 0,
+      "evidence": "node-suite-summary.json"
+    },
+    "syntax": {
+      "files": 61,
+      "result": "PASS",
+      "evidence": "syntax-summary.json"
+    },
+    "envcheck": {
+      "modules": 34,
+      "result": "PASS",
+      "evidence": "envcheck.log"
+    },
+    "firefoxLint": {
+      "errors": 0,
+      "notices": 0,
+      "warnings": 51,
+      "evidence": "firefox-lint-summary.json"
+    },
+    "independentArchive": {
+      "result": "PASS",
+      "sourceHashes": 67,
+      "extractedHashes": 68,
+      "resourceReferences": 109,
+      "preservedBaselineFiles": 6,
+      "evidence": "independent-release-audit.json"
+    },
+    "nativeFirefox": {
+      "browserVersion": "153.5.1",
+      "casesPass": 13,
+      "casesFail": 0,
+      "archiveSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+      "realGameRequests": 0,
+      "evidence": "firefox-native.json",
+      "intentionalFixtureRevisionConflicts": 3,
+      "revisionConflictMeaning": "Expected409 responses in lost-result scenarios model stale queued native requests; the fixture records them separately from errors."
+    },
+    "nativeFirefoxBaseline": {
+      "expectedMonsterCasts": 1,
+      "actualMonsterCasts": 0,
+      "reportedArchiveSha256": "6fb6f539b34f9c6d927e75a80658659b438e3ae994391b76b488e048c6e180ce",
+      "archiveHashRecordedInBaselineLog": false,
+      "evidence": "firefox-baseline-summary.json"
+    },
+    "androidApiSimulation": {
+      "result": "PASS",
+      "checkedArchiveSha256": "e3cea17b56e4e0a62055bec719b1be1257e4e75ab8a5a466e5b0d5362e0b4365",
+      "archiveBinding": "Final integrated run metadata; the API-simulation log does not embed an archive hash.",
+      "physicalAndroid": false,
+      "evidence": "firefox-android-api-simulation.log",
+      "scope": "Desktop native Firefox with commands/notifications/badge APIs disabled; not an Android device."
+    }
+  },
+  "observedLogs": {
+    "initialMonster": "log-evidence.json",
+    "dragonLearningAndRepeatedOffensiveCasts": "dragon-log-evidence.json",
+    "dragonOldGenericHttp200": 30
+  },
+  "preserved": [
+    "manifest/version20.51 and base-profile are unchanged",
+    "Four retained prior ZIP archives are unchanged; together with manifest and profile they form the6-file preservation baseline",
+    "The superseded Firefox ZIP is removed from git under AGENTS and retained in immutable history and a byte-identical workspace backup. The separate58-ZIP deletion belongs to PR364.",
+    "PR365 inventory recovery and diagnostics remain integrated with the new native Detect controller"
+  ],
+  "boundaries": [
+    "No live game or account access; all browser game URLs use loopback fixtures.",
+    "No physical Android run; unsigned ZIP supports temporary desktop installation.",
+    "Full historical Chrome/browser suite was not repeated.",
+    "Native Firefox uses actual extension/Start/hook/combat.battle/act with controlled DOM/fetch client; original game renderer and real server mechanics are not revalidated.",
+    "Manual accepted battle casts and game effect messages do not prove outside88 capability, raid taxonomy, stacking or measured DPS increase.",
+    "The baseline native log proves expected1/actual0; its action sequence and exact archive hash were not independently recorded."
+  ],
+  "nextStep": "Stop bot, export settings/memory, replace files in the same Firefox folder, reload temporary addon and game tab, collect a control log.",
+  "releaseReady": true,
+  "fixtureLimitations": [
+    "Lost-result cases initially enable only the first Detect, wait for durable phase unknown before reload, and enable all buttons after reload. A fixed400ms reload could unload an accepted second request before its ACK was recorded; durable prepared retention was valid. This fixture ordering repair does not change runtime or ZIP bytes.",
+    "The13 controlled local scenarios verify selected guards and action sequences; they do not cover every network timing or the live server."
+  ],
+  "integration": {
+    "base": "b186605",
+    "includes": "PR364 archive policy and PR365 inventory recovery",
+    "finalFullNode": "620 PASS /0 FAIL",
+    "finalNativeFirefox": "13 PASS /0 FAIL on exact archive SHA"
+  },
+  "prUrl": "https://github.com/vodoleyko1992-dotcom/prog/pull/366",
+  "downloadEvidence": "download.json",
+  "deliveryVerified": true
+}

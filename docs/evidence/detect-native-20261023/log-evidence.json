@@ -1,0 +1,192 @@
+{
+  "result": "EVIDENCE_ONLY_PARTIAL_CAUSE",
+  "sources": [
+    {
+      "file": "l2bot-log-2026-10-23-00-22.txt",
+      "bytes": 2267738,
+      "lines": 3725,
+      "sha256": "75d86e620d761e663fc582513e5ba6c4ec938ae4dd26e282cfbaf3396f69f394"
+    },
+    {
+      "file": "l2bot-learn-2026-10-23-00-22.html",
+      "bytes": 92150,
+      "lines": 300,
+      "sha256": "6965737d721846cf6b4f9934f9e6965cebb4a40404ad69fc0da32d7007b839ab"
+    }
+  ],
+  "privacy": "Only selected technical fields saved. Account/character identifiers, names, login, cookies and raw character responses excluded.",
+  "version": {
+    "value": "20.51",
+    "txtLine": 1,
+    "htmlLine": 1,
+    "limitation": "Version string alone cannot identify Firefox vs Chrome or prove installed runtime bytes/source commit."
+  },
+  "interval": {
+    "date": "2026-10-23",
+    "displayedStart": "10:11:23",
+    "displayedEnd": "10:22:46",
+    "headerEventCount": 3674,
+    "txtLine": 1,
+    "htmlReportTime": "10:22:50",
+    "timezone": "Displayed export times; local timezone is not encoded in these lines."
+  },
+  "selection": {
+    "autoRoles": true,
+    "nBuffs": "бойовий клич, азарт бою, Вразливість комах, Вразливість звірів, Вразливість рослин, Вразливість монстрів",
+    "txtSettingLine": 4,
+    "txtLiveAutorolesLine": 666,
+    "htmlAutoRolesLines": [
+      5
+    ],
+    "htmlNBuffsLines": [
+      73
+    ],
+    "monsterPanelSlot": 15,
+    "monsterPanelLines": [
+      32,
+      664,
+      788
+    ],
+    "monsterNativeAction": "detect_monster_weakness",
+    "conclusion": "Monster is selected and present on the battle panel; omission from settings is not supported."
+  },
+  "outsideBotRoutes": [
+    {
+      "startLine": 724,
+      "startTime": "10:15:45.178",
+      "panelLoadLine": 725,
+      "postLines": [
+        732,
+        734,
+        736
+      ],
+      "postTimes": [
+        "10:15:47.138",
+        "10:15:47.948",
+        "10:15:48.684"
+      ],
+      "statuses": [
+        200,
+        200,
+        200
+      ],
+      "postPath": "/character/skills/cast",
+      "mpAtStart": 1234,
+      "mpMax": 1310,
+      "mpOnPostContext": [
+        1256,
+        1238,
+        1217
+      ],
+      "endLine": 753,
+      "endTime": "10:15:50.993",
+      "attribution": "POSTs occur inside the bot-owned detectOutside route with no intervening recorded user skill click. Request battleId explicitly identifies Insect75, Animal87 and Plant104.",
+      "skillBattleIds": [
+        "l2_75",
+        "l2_87",
+        "l2_104"
+      ],
+      "skillIds": [
+        75,
+        87,
+        104
+      ]
+    },
+    {
+      "startLine": 2716,
+      "startTime": "10:20:05.290",
+      "panelLoadLine": 2717,
+      "postLines": [
+        2727
+      ],
+      "postTimes": [
+        "10:20:07.105"
+      ],
+      "statuses": [
+        200
+      ],
+      "postPath": "/character/skills/cast",
+      "mpAtStart": 701,
+      "mpMax": 1348,
+      "mpOnPostContext": [
+        717
+      ],
+      "endLine": 2744,
+      "endTime": "10:20:09.167",
+      "attribution": "POST occurs inside the bot-owned detectOutside route; request battleId explicitly identifies Animal87.",
+      "skillBattleIds": [
+        "l2_87"
+      ],
+      "skillIds": [
+        87
+      ]
+    }
+  ],
+  "manualMonster": {
+    "pauseLine": 3719,
+    "pauseTime": "10:22:44.562",
+    "clickLine": 3721,
+    "clickTime": "10:22:45.602",
+    "eventSource": "U",
+    "slot": 15,
+    "displayedCooldownAtClick": "?; role summary also marks buff slots as cooldown, without a numeric monster-specific duration",
+    "requestLine": 3723,
+    "requestTime": "10:22:45.905",
+    "path": "/game/battle/action",
+    "action": "detect_monster_weakness",
+    "httpStatus": 200,
+    "blockedBy": "",
+    "mpBefore": 461,
+    "mpAfter": 437,
+    "mpMax": 1348,
+    "mpCostObserved": 24,
+    "resultLine": 3724,
+    "resultTime": "10:22:46.510",
+    "gameMessage": "Вразливість монстрів: +30% P.Atk проти Monster/Beast (10 хв).",
+    "cooldownLine": 3722,
+    "cooldownKey": "l2_80",
+    "serverNowMs": 1792714965766,
+    "cooldownUntilMs": 1792714966576,
+    "cooldownRemainingAtResponseMs": 810,
+    "limitation": "This accepted battle cast proves learned/battle usability and observed MP24. It does not prove outside-battle capability or global P.Atk stacking."
+  },
+  "capabilityAndBuffEvidence": {
+    "castableSelfBuffsOccurrences": 0,
+    "activeBuffsOccurrences": 0,
+    "knownId80InCapability": null,
+    "knownActiveOutsideMonsterBeforeManual": null,
+    "castResponseLines": [
+      732,
+      734,
+      736,
+      2727
+    ],
+    "castResponseSerializedChars": [
+      800,
+      800,
+      800,
+      800
+    ],
+    "requestFields": [
+      "battleId (l2_<skillId>)",
+      "expectedRevision"
+    ],
+    "limitation": "All four character/cast responses are cut to exactly800 characters, before castableSelfBuffs/activeBuffs. No absence/presence of ID80 in the original server capability can be inferred. The generic panel cooldown text does not identify a cause."
+  },
+  "counts": {
+    "explicitMonsterBattleActionRecords": 1,
+    "recordedBotMonsterSkillEvents": 0,
+    "outsideCastPost200": 4
+  },
+  "assessment": {
+    "proven": "The selected Monster skill is manually usable in battle. Bot-owned outside preparation successfully requests Insect75, Animal87 and Plant104, then refreshes Animal87 on a later route; no bot request for Monster80 appears. The sole explicit Monster battle cast is manual after pause.",
+    "notProven": "Exact reason the fourth Detect was skipped. Missing capability80, stale snapshot, active/unknown guards or CD cannot be distinguished by these exports. Request battleId does preserve exact outside IDs75/87/104/87.",
+    "mp": "Visible MP during both preparation routes exceeds the manually observed MP24 cost; MP shortage is not indicated at those points. This does not expose the controller snapshot used at each decision.",
+    "nextEvidenceNeeded": "Fresh original character capability and activeBuff snapshot, or local reproduction of the controller decision using the actual server/DOM capability fields; no new game requests made in this analysis."
+  },
+  "limits": [
+    "Only supplied TXT and learnHTML were read; extension runtime code and live game not inspected in this task.",
+    "LearnHTML contains aggregate API history, not raw capability/activeBuff snapshots.",
+    "HTTP200 plus request battleId identifies the outside skills75/87/104/87. Omitted response effect/capability fields prevent proving active duration, complete effect state or exact reason80 was skipped."
+  ]
+}
