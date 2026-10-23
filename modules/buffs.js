@@ -942,6 +942,21 @@ async function townBuffStep() {
     if(paidSet && (!P || !active() || !env.payments.sent(P))){if(P)await env.payments.cancel(P);await releaseUnsent();return;}
     const clicked=env.fire(btn);
     if(clicked===false){if(P)await env.payments.cancel(P,{notSent:true});await releaseUnsent();return done(`городской «${set}»: кнопка не нажалась`);}
+    // 20.55 (лог 24.10 03:06/03:16, «тупит на баффе»): игра добавила окно «Підтвердити отримання бафа?» (town-buffer-confirm.js) —
+    // кнопка набора только открывает его, POST /character/town/buffer уходит по «Підтвердити». Бот окно не нажимал: ответа нет →
+    // «без сознания» → лишний круг воскрешения → «без подтверждения» → сторож «баффы слетели» через 50 с, и так по кругу.
+    // Бесплатный «basic» подтверждаем, только если окно пишет «Безкоштовно»; платный — уже подготовленной оплатой (P) выше.
+    const cOv=await env.waitX(()=>{const o=env.$q('#town-buffer-confirm-overlay');return o&&!o.hidden?o:null;},3000,100);
+    if(!active()){if(P)await paymentReconcile();return;}
+    if(cOv){
+      const fee=(env.$q('#town-buffer-confirm-fee')?.textContent||'').trim(),acc=env.$q('#town-buffer-confirm-accept');
+      if(!acc||acc.disabled||(set==='basic'&&!/безкоштовно|бесплатно|free/i.test(fee))){
+        try{env.fire(env.$q('#town-buffer-confirm-cancel'));}catch(e){}
+        if(P)await env.payments.cancel(P,{notSent:true});await releaseUnsent();
+        return done(`городской «${set}»: окно подтверждения ${acc?`с ценой «${fee.slice(0,40)}»`:'без кнопки «Підтвердити»'} — не подтверждаю`);
+      }
+      env.fire(acc);
+    }
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
     const ok = await env.waitX(() => /накладено|наложен|applied/i.test(res()), 6000, 200);
     if(!active()){if(P)await paymentReconcile();return;}
