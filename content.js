@@ -3962,6 +3962,7 @@ function magScore(c) {
   const n = c.name.toLowerCase(), panel = (rt.panel || []).map(x => (x.name || '').toLowerCase());
   const il = ilOf(c.name) || {};
   if (names(cfg.magisterSkip ?? MAG_SKIP_DEF).includes(n)) return -1;
+  if (L2V7Modules.combat?.learnWeaponBarred?.(il)) return -1;   // 20.54: навык под оружие, которого у героя нет
   if (panel.includes(n) && /атака/.test(il.c || '')) return 100;
   const pet = (petState()?.key || '').replace(/_/g, ' ');
   if (/^summon /.test(n) && pet && n.includes(pet)) return 80;

@@ -1162,10 +1162,19 @@ const WT_ALIAS = { 'дуалы': 'парные мечи', dual: 'парные м
   sword: 'меч', bigsword: 'двуруч. меч', dagger: 'кинжал', bow: 'лук', fist: 'кастеты' };
 const WT_KNOWN = new Set(['меч', 'двуруч. меч', 'дубина', 'двуруч. дубина', 'кинжал', 'лук', 'древковое', 'кастеты', 'парные мечи']);
 const wtKind = s => { const t = String(s || '').trim().toLowerCase(), k = WT_ALIAS[t] || t; return WT_KNOWN.has(k) ? k : ''; };
-function weaponNeed(b) {
-  const w = b && env.ilOf?.(b)?.w; if (!w) return null;
+function weaponNeed(b) { return b ? weaponNeedIl(env.ilOf?.(b)) : null; }
+function weaponNeedIl(il) {
+  const w = il?.w; if (!w) return null;
   const need = String(w).split(',').map(wtKind);
   return need.length && need.every(Boolean) ? need : null;
+}
+// 20.54 (лог 23.10 16:11, Orc Raider с Claymore): автомагистр тратил SP на Iron Punch («Лише з кастетами»), Wild Sweep и
+// Polearm Mastery (только древковое), а на Two-handed Weapon Mastery SP уже не хватило. Навык под вид оружия, которого нет ни в руке,
+// ни в сумке (rt.weapons после скана), не учим. Сумка не прочитана или вид неизвестен — как раньше, решает каталог сервера
+function learnWeaponBarred(il) {
+  const need = weaponNeedIl(il); if (!need || !env.rt.weaponsT) return false;
+  const kinds = (env.rt.weapons || []).filter(w => !w.unknown).map(w => wtKind(w.wt)).filter(Boolean);
+  return kinds.length > 0 && !kinds.some(k => need.includes(k));
 }
 // 20.43 (ревью): запись rt.weapons «надето» устаревает без POST смены, который видит бот (смена руками до старта, вторая вкладка,
 // облачная сессия). Правая рука из GET /character игры (hook aug → rt.weaponAug.w = eq.l1, приходит и после каждого хода) другая
@@ -3081,6 +3090,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
  };
 })(globalThis);

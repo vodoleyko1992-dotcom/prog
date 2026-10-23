@@ -873,7 +873,11 @@ async function townBuffStep() {
     if(!active())return;
     const hpPct = () => env.meHp()?.pct ?? 0, msg = () => (env.$q('#town-buffer-msg')?.textContent || '').trim();
     let ok = false;
-    if (rb) {
+    // 20.54 (лог 23.10 16:11, 02:10:57): к бафферу пришли уже с полными HP/MP (реген в пути) — «Восстановить» жали впустую.
+    // Полные по шапке — запрос не шлём, задание закрываем как удачное
+    const mp0 = env.meMp?.(), full = rb && hpPct() >= 99 && mp0?.max > 0 && mp0.cur >= mp0.max * 0.99;
+    if (full) { ok = true; env.rec('B', 'восстановление', 'HP и MP уже полные — «Восстановить» не нужно'); }
+    else if (rb) {
       const hp0 = hpPct() | 0;
       await env.sleep(env.rnd(1300, 1800));                 // кнопка появляется раньше, чем страница готова: ранний клик → «Не удалось восстановить»
       if(!active())return;
