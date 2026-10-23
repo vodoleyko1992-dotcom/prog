@@ -8,7 +8,11 @@ async function test(opt={}){
  const S={revision:10,dead:!opt.target&&!opt.paidAwait,returned:false,restored:false,hp:opt.target||opt.paidAwait?9785:1434,returns:0,attacks:[],paid:0};
  const df=()=>({killerCharacterId:DID,killerName:'Dremia',deathEventId:EV,scope:'world',fullLog:['[Dremia] −16441 HP.']});
  // 15.10: полноценная сумка для startup preflight, неизвестный запас не подменяем нулём.
- const char=()=>({inventory:{stacks:[],eq:{}},id:SELF,name:'AuditHero',revision:S.revision,level:75,l2Profession:'human_warlock',classSlots:{activeSlot:0},clanId:'our-clan',hp:S.hp,maxHp:9785,mp:1000,maxMp:1000,inBattle:false,adena:'30000000',...(S.dead?{pvpDefeat:df()}:{}),activeSummon:{kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:1000,maxHp:1000,pAtk:3000,activeBuffs:[]}});
+ // 20.54 (прогон смоуков 23.10): с 20.32/3a4ebba (решение игрока) Старт на котоводе сам включает «Полный баф суммона»
+ // (petFullAuto) — при 30 млн адены и пустом наборе кот уводил героя в город раньше обычной охоты на врагов. В сценариях
+ // точной цели набор кота уже действует (как у живого героя после покупки), поход не нужен и проверяется только PvP.
+ const petFx=()=>opt.target?Array.from({length:26},(_,i)=>({skillId:1200+i,level:2,expiresAtMs:Date.now()+3600000})):[];
+ const char=()=>({inventory:{stacks:[],eq:{}},id:SELF,name:'AuditHero',revision:S.revision,level:75,l2Profession:'human_warlock',classSlots:{activeSlot:0},clanId:'our-clan',hp:S.hp,maxHp:9785,mp:1000,maxMp:1000,inBattle:false,adena:'30000000',...(S.dead?{pvpDefeat:df()}:{}),activeSummon:{kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:1000,maxHp:1000,pAtk:3000,activeBuffs:petFx()}});
  const target=()=>({characterId:DID,name:'Dremia',level:77,clanId:opt.clan?'our-clan':'their-clan',isPartyMember:!!opt.party,pvpAllowed:!opt.denial,pvpBlockedReasonUk:opt.denial?'Зона без PvP':'',battleOnNameClick:true,pvpNickColor:''});
  function html(path){
   const defeat=S.dead?'<section id="map-defeat-root"><div id="map-defeat-shout">Вас вбив гравець [Dremia]!</div><button id="map-defeat-tocity">Повернутися в місто</button></section>':'';
@@ -24,6 +28,9 @@ async function test(opt={}){
  await h.ctx.route('https://l2wap.com/**',async r=>{
   const p=new URL(r.request().url()).pathname,m=r.request().method();let data;try{data=r.request().postDataJSON()}catch(_){}
   calls.push({p,m,data,dead:S.dead,at:Date.now()});const json=(x,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(x)});
+  // 20.54 (прогон смоуков 23.10): с 20.27 (#291) Старт сверяет серверные сутки — /game/time и /game/daily-quests отдаёт
+  // общий daily-server-fixture харнесса; прежний ответ {} оставлял фарм в ожидании сверки и героя в городе.
+  if(p==='/game/time'||p==='/game/daily-quests')return r.fallback();
   if(p.endsWith('.html')){paths.push(p);return r.fulfill({contentType:'text/html; charset=utf-8',body:html(p)})}
   if(p==='/character')return json({character:char()});
   if(p==='/game/map/sync')return json({character:char(),...(S.dead?{pvpDefeat:df()}:{}),around:{nearbyHeroes:opt.target?[{...target(),characterId:'stranger-fixture',name:'Stranger'},target()]:[]}});

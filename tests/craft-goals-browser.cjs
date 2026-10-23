@@ -109,7 +109,17 @@ async function runtime() {
   await reset('unknown-intermediate', { mp: 500, n: 1, policy: { code: 'cokes', hang: true } });
   await page.evaluate(() => { void fixture.step(); }); await until(() => policy.hung && posts.length === 1); assert.ok((await state()).rt.craftPending);
   await page.evaluate(() => fixture.advance(20000)); await page.reload(); await page.waitForFunction(() => globalThis.fixture?.loaded); await step();
-  assert.equal((await state()).rt.craftMade.goal || 0, 0); assert.equal(posts.length, 1); for (let i = 0; i < 6; i++) await step();
+  assert.equal((await state()).rt.craftMade.goal || 0, 0); assert.equal(posts.length, 1);
+  // 20.54 (прогон смоуков 23.10, Chromium 141): reload обрывает висящий fetch, и уходящая страница успевает записать
+  // «результат неизвестен» (craft.js unknown: err 2, свежий t «от момента обрыва») — сверка законно ждёт PEND_WAIT 15 с.
+  // В Chrome 156 (доказательство 20.51) запись не успевала и сверка шла сразу. Повтора партии нет в обоих случаях.
+  const aborted = (await state()).rt.craftPending;
+  if (aborted) {
+    assert.equal(aborted.code, 'cokes'); assert.equal(aborted.err, 2); assert.equal(aborted.tries, 0);
+    assert.match((await state()).rt.craftSay?.why || '', /обрыв|ответ не пришёл/); assert.equal(posts.length, 1);
+    await step(16000); assert.equal(posts.length, 1); assert.equal((await state()).rt.craftPending, null);
+  }
+  for (let i = 0; i < 6; i++) await step();
   assert.equal(qty(IDS.oriharukon), 1); assert.equal((await state()).rt.craftMade.goal, 1); assert.equal(posts.filter(x => x.body.recipeCode === 'cokes').length, 1);
   proof.push({ scenario: 'настоящий reload после принятого полуфабриката без ответа: одна партия, финальная цель засчитана один раз', posts: structuredClone(posts) });
   await reset('retry-500', { mp: 500, n: 1, policy: { code: 'cokes', failOnce: true } }); await step(); await step(20000);

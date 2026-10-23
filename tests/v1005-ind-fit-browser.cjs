@@ -11,6 +11,15 @@ const game = w => `<!doctype html><html><head><title>L2WAP</title>
   const ctx = await chromium.launchPersistentContext('', { headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium',
     args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`] });
   const sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 15000 });
+  // 20.54 (прогон смоуков 23.10): стенд не ждал конца установки — onInstalled фона (базовый профиль, rec/autoSnap) в конце
+  // перезагружает открытые вкладки l2wap, и под нагрузкой это рвало goto map.html (net::ERR_ABORTED); иногда chrome.storage
+  // в только что поднятом service worker ещё не было. Ждём, как общий стенд v1014: storage доступен, установка записала cfg.rec и rt.
+  for (let t0 = Date.now(); ; await new Promise(r => setTimeout(r, 100))) {
+    const ready = await sw.evaluate(async () => { if (!globalThis.chrome?.storage?.local) return false; const s = await chrome.storage.local.get(['cfg', 'rt']); return !!s.cfg?.rec && !!s.rt; }).catch(() => false);
+    if (ready) break;
+    if (Date.now() - t0 > 20000) throw new Error('установка расширения не завершилась за 20 с');
+  }
+  await new Promise(r => setTimeout(r, 300));
   await sw.evaluate(() => chrome.storage.local.set({ cfg: { dock: false } }));
   let gw = 560;
   await ctx.route('https://l2wap.com/**', r => /\.html/.test(r.request().url()) ? r.fulfill({ contentType: 'text/html', body: game(gw) }) : r.fulfill({ contentType: 'application/json', body: '{}' }));

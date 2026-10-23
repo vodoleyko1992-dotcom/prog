@@ -20,6 +20,6 @@ assert.match(fn, /\+\+controlGeneration/, 'Стоп во время записи
 // видимость: только когда бот остановлен и не на паузе
 assert.match(js, /quick:!st\.paused \};/);
 assert.match(js, /\$\('quickStart'\)\.hidden = !activity\.quick;/);
-// узкая панель: без значков и подписи, четыре колонки без горизонтальной прокрутки
-assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/);
+// узкая панель: без значков и подписи, без горизонтальной прокрутки; 20.54: пять кнопок (с «Крафт» 22.10) в одну строку по ширине надписи
+assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(5,auto\)\}/);
 console.log('v2014-quick-start PASS');

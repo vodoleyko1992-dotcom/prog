@@ -1,14 +1,30 @@
 'use strict';
 // 20.50: настоящее MV3 и сохранённые native skill-panel/hotbar/executor/cast-client. Все HTTP-ответы локальные.
-// Требуется кэш публичных JS из разрешённого аудита; тест ничего не скачивает и не читает игровые credentials.
+// Публичные JS игры: кэш DETECT_NATIVE_CACHE или (20.54) GET статики l2wap.com без cookie; игровые credentials не читаются, POST в игру нет.
 // L2 framework/world-context — адаптер стенда; DOM кнопок создаёт неизменённый battle-hotbar.js, POST — native cast-client.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
-const cache=process.env.DETECT_NATIVE_CACHE||'/workspace/work/warlord-audit';
+// 20.54 (прогон смоуков 23.10): кэш аудита /workspace/work/warlord-audit был только на машине Codex и в репозиторий не попадал —
+// без него тест падал ENOENT. Теперь: DETECT_NATIVE_CACHE (офлайн-повтор) → прежний путь, если есть → публичные файлы игры
+// без аккаунта/cookie, как v1014-combat-public (только GET статики; POST и вход — нет). Хэши кэша 20.50 — для сравнения в отчёте.
+// Порядок: DETECT_NATIVE_CACHE → сохранённые копии в общей папке проекта /mnt/project-files/fixtures/native-detect (снято 23.10,
+// SHA256SUMS.txt рядом; код игры в git не кладём) → прежний путь Codex → живой GET статики (L2_FETCH_PUBLIC=1 — всегда живой).
+const cacheDir=process.env.L2_FETCH_PUBLIC==='1'?'':process.env.DETECT_NATIVE_CACHE||['/mnt/project-files/fixtures/native-detect','/workspace/work/warlord-audit'].find(d=>fs.existsSync(path.join(d,'skill-panel.html')))||'',hasCache=!!cacheDir;
 const nativeFiles=['skill-panel.html','battle-hotbar.js','battle-api-transport.js','l2-skill-cast-client.js','l2-skill-panel-executor.js','skill-panel.js'];
-const native=Object.fromEntries(nativeFiles.map(f=>[f,fs.readFileSync(path.join(cache,f),'utf8')]));
-const nativeHashes=Object.fromEntries(nativeFiles.map(f=>[f,createHash('sha256').update(native[f]).digest('hex')]));
-for(const id of ['skill-panel-load-err','skill-panel-content','skill-panel-hotbar-mount','skill-panel-status'])assert.ok(native['skill-panel.html'].includes('id="'+id+'"'),'native DOM anchor '+id);
+let native=null,nativeHashes=null,nativeSource='',nativeChangedSince2050=[];
+async function nativeSource1(f){
+ if(hasCache)return fs.readFileSync(path.join(cacheDir,f),'utf8');
+ const r=await fetch('https://l2wap.com/'+f,{headers:{'User-Agent':'Mozilla/5.0 L2BotPublicContractTest'},signal:AbortSignal.timeout(15000)});
+ if(!r.ok)throw Error(f+': HTTP '+r.status+' (нет кэша DETECT_NATIVE_CACHE и публичный файл игры недоступен)');return r.text();
+}
+async function loadNative(){
+ native=Object.fromEntries(await Promise.all(nativeFiles.map(async f=>[f,await nativeSource1(f)])));
+ nativeHashes=Object.fromEntries(nativeFiles.map(f=>[f,createHash('sha256').update(native[f]).digest('hex')]));
+ nativeSource=hasCache?'cache '+cacheDir:'public https://l2wap.com/ (GET без cookie)';
+ for(const id of ['skill-panel-load-err','skill-panel-content','skill-panel-hotbar-mount','skill-panel-status'])assert.ok(native['skill-panel.html'].includes('id="'+id+'"'),'native DOM anchor '+id);
+ try{const old=JSON.parse(fs.readFileSync(path.join(__dirname,'..','docs/evidence/build-20.50/detect-browser.json'),'utf8')).nativeAssetHashes||{};nativeChangedSince2050=nativeFiles.filter(f=>old[f]&&old[f]!==nativeHashes[f]);}catch{}
+ console.log('native assets:',nativeSource,nativeChangedSince2050.length?'изменились после кэша 20.50: '+nativeChangedSince2050.join(', '):'совпадают с кэшем 20.50');
+}
 const rows=[{id:87,mp:18,action:'detect_animal_weakness',name:'Detect Animal Weakness',label:'Вразливість звірів (Detect Animal Weakness)'},
  {id:75,mp:14,action:'detect_insect_weakness',name:'Detect Insect Weakness',label:'Вразливість комах (Detect Insect Weakness)'},
  {id:104,mp:21,action:'detect_plant_weakness',name:'Detect Plant Weakness',label:'Вразливість рослин (Detect Plant Weakness)'}];
@@ -132,9 +148,10 @@ async function scenario(mode){
  finally{release();await h.ctx.close()}
 }
 (async()=>{
+ await loadNative();
  const all=['native-ui','all-three','unknown-reload','stop','owner','class','mp-zero','mp-change','cooldown','fallback'],modes=process.env.DETECT_BROWSER_CASES?process.env.DETECT_BROWSER_CASES.split(','):all;
  for(const mode of modes){assert.ok(all.includes(mode),'неизвестный сценарий '+mode);await scenario(mode);}
- const report={browser:browserVersion,extensionVersion,runtimeHashes,nativeAssetHashes:nativeHashes,kind:'actual MV3 plus cached native hotbar renderer/skill-panel/executor/cast-client; controlled L2/world adapter and local routes',
+ const report={browser:browserVersion,extensionVersion,runtimeHashes,nativeAssetHashes:nativeHashes,nativeSource,nativeChangedSince2050,kind:'actual MV3 plus cached native hotbar renderer/skill-panel/executor/cast-client; controlled L2/world adapter and local routes',
   fixtureBoundaries:{framework:'Controlled L2 snapshot API and world-panel adapter; cached native renderer creates DOM and cached native executor/client creates POST.',map:'Controlled native fetch GET/character supplies the page snapshot; no cached map implementation.',owner:'Background storage receives a valid foreign lock owned by a local about:blank tab; actual content storage listener invalidates the lease. No second real game tab.',unknownReply:'Local server applies the cast and returns HTTP200 malformed JSON; fresh native GET plus actual positive plan of another ID proves the persisted fence; the full timeout is not waited.'},
   cases:proof.length,proof,liveGame:false,liveGamePosts:0,localMockOutsidePosts:proof.reduce((n,x)=>n+x.casts.length,0),localMockBattlePosts:proof.reduce((n,x)=>n+x.battlePosts.length,0),pageErrors:[],routeErrors:[]};
  if(process.env.DETECT_BROWSER_REPORT)fs.writeFileSync(path.resolve(process.env.DETECT_BROWSER_REPORT),JSON.stringify(report,null,2)+'\n');console.log('RESULT',JSON.stringify(report));

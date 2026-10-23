@@ -20,7 +20,9 @@ async function scenario(opt={}) {
   if(path==='/character/magister'){if(opt.stop&&paths.includes('/magister.html?npcId=30344')&&!held){held=true;await gate;}return json(catalog());}
   if(path==='/character/skills/learn'){if(opt.battle)assert.equal(S.won,true,'обучение только после подтверждённой победы');S.learns++;if(opt.conflict)return json({error:'revision_conflict'},409);assert.equal(data.expectedRevision,S.revision);assert.equal(data.battleId,'l2_1230');S.rank++;S.sp-=100;S.revision++;if(opt.reload&&!held){held=true;await gate;}return json({character:char()}).catch(()=>{})}
   if(path==='/game/battle/action'){S.won=true;S.level=75;S.revision++;return json({character:char(),victory:{fullLog:['Ты нанёс [Safe Mob] 1000 урона.'],rewards:{adena:50,exp:100,sp:10}}})}
-  if(path==='/game/time')return json({now:Date.now()});
+  // 20.54 (прогон смоуков 23.10): с 20.27 (#291) Старт сверяет серверные сутки по настоящему контракту /game/time
+  // (serverNowMs/gameDayKey) и /game/daily-quests — их отдаёт daily-server-fixture харнесса; {now} сервер не шлёт.
+  if(path==='/game/time'||path==='/game/daily-quests')return r.fallback();
   return json({});
  });
  try {

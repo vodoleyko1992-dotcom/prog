@@ -1000,7 +1000,15 @@ async function rbTeleportFire(b, patch) {
     if(!id || !Number.isFinite(price) || price<0)return false;
     // 20.12 (ревизия 17.10, аудит RB-1): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
     let before0=null;
-    if(typeof env.gameGet==='function')try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null,ch=j?.character||j;if(ch?.name===env.rt.char&&Number.isSafeInteger(ch.revision))before0={revision:ch.revision,adena:typeof ch.adena==='string'&&/^\d+$/.test(ch.adena)?+ch.adena:Number.isSafeInteger(ch.adena)?ch.adena:null,charId:ch.id};}catch(_){}
+    let inAshen=false;
+    if(typeof env.gameGet==='function')try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null,ch=j?.character||j;inAshen=ch?.name===env.rt.char&&ch.cityId==='ashen_bastion';if(ch?.name===env.rt.char&&Number.isSafeInteger(ch.revision))before0={revision:ch.revision,adena:typeof ch.adena==='string'&&/^\d+$/.test(ch.adena)?+ch.adena:Number.isSafeInteger(ch.adena)?ch.adena:null,charId:ch.id};}catch(_){}
+    // 20.54 (ревью прогона смоуков): последняя линия правила 15.10 для любого пути оплаты (сохранённый шаг go тура после Stop/Старта,
+    // одиночный rbGo): сервер говорит «герой в Ashen Bastion» — не платим; тур идёт на штатный выход в город, остальные ждут.
+    if(inAshen){
+      if(patch.rbHunt&&env.rt.rbHunt?.id===id){await huntSet({step:'exit',phase:'exit-ashen',id,name:target.name,lvl:target.lvl,page:target.page,price,exitAt:Date.now(),exitClickAt:0,next:`штатный выход из Ashen перед ${target.name||id}`});env.rec('B','тур РБ',`${target.name||id}: сервер держит героя в Ashen Bastion — сначала штатный выход в город, оплату не отправляю`);}
+      else env.setStatus('РБ: герой в Ashen Bastion — платный телепорт только после выхода в город');
+      return false;
+    }
     const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id,...(before0||{})}});
     if(!P){env.setStatus('РБ: платный переход ждёт подтверждения предыдущей оплаты');return false;}
     const before=Object.fromEntries(Object.keys(patch).map(k=>[k,env.rt[k]??null]));
@@ -1378,6 +1386,11 @@ async function rbOneStep() {
 // (город или «не в городе») счёт неудач обнуляет
 const ASHEN_RETRY_MS = 60000, ASHEN_MISS_MAX = 60, ASHEN_READ_MAX = 30;
 const ashenCityOk = ch => ch?.name === env.rt.char && /^l2dop_[a-z0-9_]+$/.test(ch.cityId || '') && ch.inBattle === false;
+// 20.54 (ревью прогона смоуков): на этап выхода ведут и метка ashenFrom/снимок heroAt. Подтверждённый город l2dop_* — как прежде,
+// продолжаем сохранённый маршрут. Пока выход не нажимали, другой свежий ответ «не Ashen» (деревня, карта) значит: выходить неоткуда,
+// правилу 15.10 не о чем — тур выбирает цель заново (вдруг РБ на этой карте — без телепорта). После нажатия — только город l2dop_*.
+const ashenAway = ch => !env.rt.rbHunt?.exitClickAt && ch?.name === env.rt.char && ch.inBattle === false
+  && typeof ch.cityId === 'string' && !!ch.cityId && ch.cityId !== 'ashen_bastion';
 async function ashenChar() {
   try { const r = await env.gameGet('/character'); const d = r.ok ? await r.json() : null; return d?.character || d; } catch (_) { return null; }
 }
@@ -1388,8 +1401,10 @@ async function rbExitAshen(H, active) {
   const expired=now-(H.exitAt||H.t||0)>ASHEN_RETRY_MS;
   const done=async ch=>{
     if(H.exitMiss)env.rec('B','тур РБ',`выход из Ashen Bastion подтверждён сервером (${ch.cityId}) после ${H.exitMiss} повт. — продолжаю к ${H.name}`);
-    await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReadFail:null,exitReloadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
+    await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReadFail:null,exitReloadAt:null,ashenFrom:null,ashenOkAt:Date.now(),next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
   };
+  const away=async ch=>huntSet({step:'pick',phase:'learn',exitAt:null,exitClickAt:null,exitReadAt:null,exitMiss:null,exitReadFail:null,exitReloadAt:null,ashenFrom:null,ashenOkAt:Date.now(),
+    next:`герой уже не в Ashen (${ch.cityId}) — выбираю цель заново`});
   // повтор выхода, начатый с другой страницы: на Ashen жмём ссылку сразу, не дожидаясь следующей сверки
   const retryHere=onAshen && +H.exitMiss>0 && !H.exitClickAt && !(+H.exitReloadAt>=+H.exitReadAt);
   if(expired && H.exitReadAt && now-H.exitReadAt<ASHEN_RETRY_MS && !retryHere){
@@ -1401,6 +1416,7 @@ async function rbExitAshen(H, active) {
     const ch=await ashenChar();
     if(!same())return;
     if(ashenCityOk(ch))return done(ch);
+    if(ashenAway(ch))return away(ch);   // 20.54: см. ashenAway (и при выходе по истечении)
     if(ch?.name!==env.rt.char || ch.inBattle!==false){
       // 20.43 (автономность, доводка 21.10): неудачная сверка — свой счёт подряд и пауза с причиной после ASHEN_READ_MAX (см. выше)
       const fail=(+H.exitReadFail||0)+1, what=!ch?'сервер не отдал героя':ch.name!==env.rt.char?'ответ не про этого героя':'герой в бою';
@@ -1448,7 +1464,17 @@ async function rbExitAshen(H, active) {
   const ch=await ashenChar();
   if(!same())return;
   // Первая загрузка /city.html ещё может отдавать прежнее cityId: URL не доказывает выход.
-  if(!ashenCityOk(ch)){env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;}
+  if(!ashenCityOk(ch)){
+    if(ashenAway(ch))return away(ch);   // 20.54: см. ashenAway
+    // 20.54 (прогон смоуков 23.10): выход ещё не нажат, сервер говорит «герой в Ashen», а мы на другой странице (список РБ после
+    // свежего чтения при Старте) — идём на страницу Ashen за штатной ссылкой. На странице города не уходим: там мог идти свой
+    // вход в город (первая загрузка ещё отдаёт старый cityId).
+    if(!env.rt.rbHunt?.exitClickAt && ch?.name===env.rt.char && ch.cityId==='ashen_bastion' && ch.inBattle===false && !/\/city\.html$/i.test(location.pathname)){
+      env.setStatus('Тур РБ: герой в Ashen Bastion — открываю его страницу для штатного выхода в город');
+      if(env.canAct?.()!==false)location.href='/ashen-bastion.html';await env.sleep(3000);return;
+    }
+    env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;
+  }
   return done(ch);
 }
 
@@ -1518,6 +1544,8 @@ async function rbHuntStep() {
       // «старым документом до Start», и rbListScan открывал её второй раз (+3–4 с на каждый запуск тура). Метка этого документа
       // говорит rbListScan, что следующий документ уже свежий; Start на открытой странице списка по-прежнему её перезагружает
       const start = env.rt.rbListStartRequired;
+      // 20.54 (прогон смоуков 23.10): уходим за списком со страницы Ashen — помним это до выбора цели (выход перед телепортом)
+      if (/\/ashen-bastion\.html$/i.test(location.pathname)) { await huntSet({ ashenFrom: Date.now() }); if (!active()) return; }
       if (start != null && env.rt.rbScan?.start !== start) {
         const saved = await env.setRt({rbScan:{start,document:rbListDocument,at:Date.now()}});
         if (saved?.ok === false || !active() || typeof env.rtCommit === 'function' && !await env.rtCommit() || !active()) return;
@@ -1618,7 +1646,7 @@ async function rbHuntStep() {
     // 8.0.3 (лог 11.10 09:16: 26 боёв у Тотема записались в статистику прежней зоны «Vanor Silenos» на 55 ур.): после телепорта зона
     // неизвестна — её определит карта по мобам (zoneHere), а EXP/ч не попадёт в чужую зону
     env.rec('B', 'тур РБ', `телепорт к ${H.name} (${H.lvl})${H.price ? ' · ' + H.price.toLocaleString('ru') + ' аден' : ''}`);
-    if (!await rbTeleportFire(b, { rbHunt: { ...H, step: 'arrive', phase: 'arrive', next: 'ожидаю подтверждение перехода и цель на карте', price: current.price, at: Date.now(), t: Date.now() }, rbWant: H.id, rbPaidAt: Date.now(), zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } })) return;
+    if (!await rbTeleportFire(b, { rbHunt: { ...H, step: 'arrive', phase: 'arrive', ashenFrom: null, next: 'ожидаю подтверждение перехода и цель на карте', price: current.price, at: Date.now(), t: Date.now() }, rbWant: H.id, rbPaidAt: Date.now(), zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } })) return;
     if (!active()) return;
     if (await env.waitX(() => !isRbPage() || (env.$q('#rb-load-err')?.textContent || '').trim() || null, 8000, 200) && !isRbPage()) return;
     if (!active()) return;
@@ -1759,7 +1787,10 @@ async function rbHuntStep() {
   if (!env.rt.rbListT || Date.now() - env.rt.rbListT > (env.cfg.rbValueTour ? 10 : 15) * 60000) {
     await rbHuntPhase('discover', 'обновляю список живых РБ');
     if (!active()) return;
-    if (!isRbPage()) { env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return; }
+    if (!isRbPage()) {
+      if (/\/ashen-bastion\.html$/i.test(location.pathname)) { await huntSet({ ashenFrom: Date.now() }); if (!active()) return; }   // 20.54: см. выше
+      env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return;
+    }
     return rbListScan();
   }
   // 20.43 (разбор 21.10): призыв кота перед РБ не подтвердился и после повтора (warlock.raidBlocked) — Warlock без кота слаб: тур ждёт
@@ -1895,7 +1926,13 @@ async function rbHuntStep() {
     return huntDone(p.id, `${p.name} (${p.lvl}): до телепорта по цифрам игры — не полезу: ${chk.why}`, false);
   }
   if (!active() || rbTourPlan().ready[0]?.id !== p.id) return;
-  if (/\/ashen-bastion\.html$/i.test(location.pathname)) {
+  // 20.54 (прогон смоуков 23.10, v1024-raid-ashen): с 20.30 Старт сначала заново читает весь список РБ — тур уходит со страницы
+  // Ashen на /rb-bosses.html и выбирал цель уже там, по адресу «не Ashen». Сервер при этом держит героя в Ashen (cityId), и перелёт
+  // оплачивался до штатного выхода в город (правило 15.10: платный телепорт тура — только после подтверждённого города).
+  // Метка ухода со страницы Ashen за списком (rbHunt.ashenFrom, ≤30 мин) и последний снимок героя игры (heroAt, cityId) тоже ведут
+  // на этап выхода; если герой уже не в Ashen, этап выхода сам подтвердит город по серверу и продолжит без переходов.
+  const at = env.heroAt?.();   // 20.54: снимок героя старше подтверждённого выхода (свой GET тура его не обновляет) — не в счёт
+  if (/\/ashen-bastion\.html$/i.test(location.pathname) || at?.city === 'ashen_bastion' && +at.t > +(env.rt.rbHunt?.ashenOkAt || 0) || Date.now() - (+env.rt.rbHunt?.ashenFrom || 0) < 30 * 60000) {
     await huntSet({step:'exit',phase:'exit-ashen',id:p.id,name:p.name,lvl:p.lvl,page:p.page,price:p.price,exitAt:Date.now(),exitClickAt:0,next:`штатный выход из Ashen перед ${p.name}`});
     return;
   }

@@ -26,8 +26,8 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  await h.openTab('rb');await P.locator('#tab-rb [data-goto="supply"]').click();assert.equal(await P.locator('#tab-supply').isVisible(),true);
  await h.openTab('overview');await P.locator('#uiSearch').fill('Spirit Ore');await until(()=>P.locator('#uiResults [data-i]').count());
  assert.match(await P.locator('#uiResults').innerText(),/Снабжение/);await P.locator('#uiResults [data-i]').first().click();assert.equal(await P.locator('#tab-supply').isVisible(),true);assert.equal(await P.locator('#shopSpirit').isVisible(),true);
- await P.keyboard.press('Alt+6');assert.equal(await P.locator('#tab-fish').isVisible(),true);
- await P.keyboard.press('Alt+0');assert.equal(await P.locator('#tab-svc').isVisible(),true);
+ // 20.54 (прогон смоуков 23.10): «Крафт» третьим разделом (PR #358, 86cbe91) сдвинул горячие клавиши — «Рыбалка» Alt+7, Alt+0 — «TvT и PvP» (как в подсказках кнопок)
+ for(const [key,tab]of [['7','fish'],['0','pvp']]){assert.match(await P.locator('#moduleNav [data-tab="'+tab+'"]').getAttribute('title'),new RegExp('\\(Alt\\+'+key+'\\)$'));await P.keyboard.press('Alt+'+key);assert.equal(await P.locator('#tab-'+tab).isVisible(),true,'Alt+'+key+' → '+tab);}
  for(const width of [360,760,1100]){
   await P.setViewportSize({width,height:850});await P.goto('chrome-extension://'+h.id+'/popup.html'+(width===760?'':'?dock=1'));
   await until(()=>P.evaluate(()=>!!document.querySelector('#start')?.onclick));await h.openTab('supply');
@@ -35,5 +35,5 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
   assert.equal(await P.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth),false,width+' без прокрутки вбок');
  }
  assert.equal((await h.get('on')).on,false);assert.deepEqual(h.errors,[]);assert.ok(h.requests.every(r=>r.method==='GET'));
- console.log('PASS MV3 supply: отдельный раздел, прежние значения/сохранение/reload/вкладка, поиск, ссылки РБ/рыбалки, Alt+6/0, 360/760/1100px, без игровых действий');
+ console.log('PASS MV3 supply: отдельный раздел, прежние значения/сохранение/reload/вкладка, поиск, ссылки РБ/рыбалки, Alt+7/0, 360/760/1100px, без игровых действий');
 }finally{await h.ctx.close()}})().catch(e=>{console.error(e);process.exitCode=1});

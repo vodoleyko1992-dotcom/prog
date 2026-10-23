@@ -20,6 +20,8 @@
 // Сценарий G (Lite 1.5.1, John: «Vicious Stance то включает то выключает», «привел куда надо мне, не бьет мобов»): Старт в бою —
 //   место охоты сразу; стойку, которой игра не показывает, бот жмёт один раз; миг без полоски HP моба — не повод уходить из боя.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
+// 20.54 (прогон смоуков 23.10): все 7 сценариев идут 285–321 с даже в одиночку — внешний «timeout 300» убивает Chromium посреди G
+//   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFG.
 const path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const EXT = path.resolve(process.env.LITE_EXT || path.join(__dirname, '..', 'lite'));   // LITE_EXT — распакованный ZIP для проверки сборки
