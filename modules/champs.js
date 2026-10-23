@@ -187,7 +187,9 @@ function judge(c, required = false) {
 function fleeCheck(ctx, me, mob, sec) {
   if (!ctx.champ || ctx.rb || !mob?.max || !(mob.cur > 0) || sec < 6) return null;
   const done = Math.max(0, (ctx.chHp0 || mob.max) - mob.cur), left = mob.cur / mob.max, lim = ctx.chLim || T_DEF[ctx.tier] || T_DEF.blue;
-  const hpMin = isHard(ctx) ? 50 : 30;             // 10.0.8: у усиленных 73+ атака ×4 — уходим раньше
+  // 20.54: своё снижение HP под Frenzy (Battle Trance → 25 %) — не опасность; 90 с действия Frenzy порог отхода 15 %
+  const dove = ctx.limitDiveT && Date.now() - ctx.limitDiveT < 90000;
+  const hpMin = isHard(ctx) ? 50 : dove ? 15 : 30;             // 10.0.8: у усиленных 73+ атака ×4 — уходим раньше
   if (me && me.pct < hpMin && left > 0.35) return { kind: 'danger', why: `моё HP ${Math.round(me.pct)} %${isHard(ctx) ? ' (чемпион 73+, атака ×4)' : ''}, у чемпиона ${Math.round(left * 100)} %` };
   if (ctx.chQuestQuick && sec >= 10) return { kind: 'slow', why: 'квестовая проба 10 с завершена — чемпион ещё жив' };
   if (sec >= 8 && done < mob.max * 0.03) return { kind: 'weak', why: `не пробиваю: за ${Math.round(sec)} с снято ${Math.round(done / mob.max * 100)} %` };

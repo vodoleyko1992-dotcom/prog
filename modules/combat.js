@@ -1054,19 +1054,40 @@ function frenzyDive(ctx, me) {                    // «сливаться под
 
 // 20.10, журнал11:28–11:31: вампиризм держит Titan на95–100%, ожидание урона не включает лимиты.
 // Battle Trance остаётся запрещён в общих ролях; только этот план разрешает точный native-навык.
-function limitPlan(ctx, me, mp) {
+// 20.54 (John 23.10 02:44, Orc Raider с Claymore: руками Battle Trance → HP 4859 → 1214 = 25 %, затем Frenzy; «будем юзать на эпиках,
+// чемпионах и РБ»): та же связка для любого класса с Battle Trance на панели, но только на крупной цели (РБ, эпик, чемпион) —
+// Frenzy с откатом 600 с на обычном мобе пропадает зря. Дестроер/Титан на обычных мобах — как в 20.31 (cfg.destroyerLimits).
+// Защита крупной цели: известны удары по нам и спецудар РБ, после слива HP переживает спецудар + несколько ударов,
+// у цели ещё есть что бить; усиленные чемпионы 73+ (атака ×4) — никогда
+function limitBigTarget(ctx, mob) {
+  if (env.cfg.limitBig === false || !(ctx.rb || ctx.champ)) return false;
+  if (ctx.champ && !ctx.rb && env.champs?.isHard?.(ctx)) return false;
+  const left = mob?.max > 0 ? mob.cur / mob.max : 1;
+  return left >= (ctx.rb ? 0.1 : 0.3);
+}
+function limitHitsIn(ctx) {                       // удары цели по нам: РБ — память РБ + этот бой; чемпион — память боя по имени + этот бой
+  if (ctx.rb) return (ctx.rb.hits || []).filter(n => Number.isFinite(n) && n > 0);
+  const h = env.fightHitsIn?.() || [];
+  return h.filter(n => Number.isFinite(n) && n > 0);
+}
+// Своё снижение HP под Frenzy — не повод для отхода по проценту HP 10 с (банки за это время поднимают HP; смертельные проверки остаются)
+const limitDiveFresh = ctx => !!ctx?.limitDiveT && Date.now() - ctx.limitDiveT < 10000;
+function limitPlan(ctx, me, mp, mob) {
   ctx.limitSkip = ''; ctx.limitUnsafe = false;
   const prof = String((env.rt.classCur ? env.rt.classCur.prof : env.rt.prof) || '').replace(/[_-]/g, ' ');
-  if (env.cfg.destroyerLimits === false || !/^(?:orc )?(?:destroyer|titan)$/i.test(prof) || !me || ![me.cur,me.max,me.pct,mp?.cur].every(Number.isFinite) || !(me.cur > 0 && me.max > 0)
-    || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.pvpPending?.() || ctx.champ || ctx.rb?.retreated || env.rt.epic?.step === 'retreatVerify') return null;
+  const destr = env.cfg.destroyerLimits !== false && /^(?:orc )?(?:destroyer|titan)$/i.test(prof), big = limitBigTarget(ctx, mob);
+  if (!(big || destr && !ctx.champ) || !me || ![me.cur,me.max,me.pct,mp?.cur].every(Number.isFinite) || !(me.cur > 0 && me.max > 0)
+    || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.pvpPending?.() || ctx.rb?.retreated || ctx.chOut || env.rt.epic?.step === 'retreatVerify') return null;
   const selected = [...new Set([...env.names(env.cfg.nKeyBuffs), ...env.names(env.cfg.nBuffs)])];
   const buffs = selected.map(bn => ({ bn, b: slotsBy(bn)[0] })).filter(x => x.b)
     .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
     .filter(x => !env.buffActive(x.bn, x.b) && ready(x.b) && (ctx.block?.['buff:' + x.bn] || 0) <= Date.now())
     .sort((a,b) => (a.il.id === 176 ? 0 : 1) - (b.il.id === 176 ? 0 : 1));
   if (!buffs.length) return null;
-  const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {}, hits = (ctx.rb?.hits || []).filter(n => Number.isFinite(n) && n > 0);
-  const hit = Math.max(d.hitP90 || 0, ...hits, 0), spike = Math.max(d.sp || 0, d.probe?.sp || 0, ctx.rb?.sp || 0);
+  const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {}, hits = limitHitsIn(ctx);
+  const sorted = [...hits].sort((a, b) => a - b), champHit = !ctx.rb && sorted.length ? sorted[Math.floor(sorted.length * 0.9)] : 0;
+  const hit = Math.max(d.hitP90 || 0, ...(ctx.rb ? hits : [champHit]), 0), spike = Math.max(d.sp || 0, d.probe?.sp || 0, ctx.rb?.sp || 0);
+  const bigOnly = big && (!destr || !ctx.rb);     // не Дестроер (и любой класс на чемпионе): строже — без замера ударов (и спецудара РБ) HP не сливаем
   const hpCost = x => Math.max(0, ...(Array.isArray(x.il.hp) ? x.il.hp : [x.il.hp]).filter(Number.isFinite));
   const low = buffs.find(x => me.pct <= x.il.pc.hp && affordable(x.b, mp, 0));
   if (low) {
@@ -1082,6 +1103,10 @@ function limitPlan(ctx, me, mp) {
   const after = Math.floor(me.max * .25) - buffs.reduce((sum,x) => sum + hpCost(x), 0);
   if (after < me.max * .20 || ctx.rb && (!(hit > 0 || spike > 0) || after <= spike + hit * (buffs.length + 2))) {
     ctx.limitSkip = 'HP после Battle Trance не покрывает запас под удары РБ или замер ударов неизвестен'; return null;
+  }
+  if (bigOnly && ctx.rb && !(spike > 0 && (d.hitP90 > 0 || hits.length >= 3))) { ctx.limitSkip = 'Frenzy на РБ: спецудар и обычные удары этого РБ ещё не замерены — HP не сливаю'; return null; }
+  if (bigOnly && !ctx.rb && (hits.length < 3 || after <= hit * (buffs.length + 3))) {
+    ctx.limitSkip = hits.length < 3 ? 'Frenzy на чемпионе: мало замеров его ударов — HP не сливаю' : 'Frenzy на чемпионе: после Battle Trance HP не хватит на его удары'; return null;
   }
   return { kind: 'trance', b };
 }
@@ -1952,7 +1977,7 @@ async function battle() {
     if (!victory() && await env.tvtStep?.()) return;
     if (victory()) break;
     if ((s = await mainTargetDead(mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
-    if ((s = await limitStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
+    if ((s = await limitStep(me, mp, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await emergencyBuffStep(me, mp, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await champFleeStep(me, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if (ctx.rb && me && mob && !ctx.rb.retreated) {
@@ -2135,21 +2160,21 @@ async function battle() {
   }
 
   // Подготовка лимитов идёт раньше банок/Battle Roar и старого ограничения Zealot на добивании РБ.
-  async function limitStep(me, mp) {
+  async function limitStep(me, mp, mob) {
     if (me?.pct <= 30) ctx.limitTranceUnverified = false;
-    const plan = limitPlan(ctx, me, mp);
+    const plan = limitPlan(ctx, me, mp, mob);
     if (!plan) {
       if (ctx.limitSkip && ctx.limitSkip !== ctx.limitSaid) { ctx.limitSaid = ctx.limitSkip; env.rec('B', 'лимиты', ctx.limitSkip); }
       return NEXT;
     }
     const actor = () => JSON.stringify([env.rt.char, env.rt.classCur?.slot, env.rt.classCur?.prof || env.rt.prof, (env.cdSpawn || env.battleSpawn)()]);
     const before = actor(), key = plan.kind === 'trance' ? 'limit:trance' : 'buff:' + plan.bn, netStart = env.actNet?.().start || 0;
-    const needed = () => actor() === before && limitPlan(ctx, env.meHp(), env.meMp())?.b === plan.b;
+    const needed = () => actor() === before && limitPlan(ctx, env.meHp(), env.meMp(), mobHp())?.b === plan.b;
     const result = await act(plan.b, plan.kind === 'trance'
       ? 'Лимиты: Battle Trance — снижаю HP до 25% для Frenzy/Zealot'
       : `Лимиты (HP ${me.pct | 0}%): ${env.cleanTitle(plan.b.title)}`, false, needed);
     if (actor() !== before || env.canAct?.() === false || !env.on || !env.tabOwner) return AGAIN;
-    if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) ctx.limitTranceUnverified = true;
+    if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) { ctx.limitTranceUnverified = true; ctx.limitDiveT = Date.now(); }
     // Не предполагаем25% после клика: следующий круг читает настоящее HP. Неизвестный исход не повторяем сразу.
     ctx.block[key] = result === 'unavail' ? Infinity : Date.now() + (result === true ? (plan.kind === 'trance' ? 30000 : 5000) : result === 'nomp' ? NOMP_MS : 3000);
     if (result === true && plan.kind === 'buff') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [plan.bn]: Date.now() } })?.catch?.(() => {});   // 20.41: без ожидания записи (память вкладки обновлена сразу)
@@ -2237,7 +2262,7 @@ async function battle() {
       // Выходим только штатной кнопкой, подтверждаем 2xx POST /game/battle/leave.
       // Для каждого эпика свой флаг непригодности выхода; глобальный epicLeaveBad больше не используется.
       if (ep && me && !ctx.rb.retreated && !((env.rt.epicDb?.[env.epicById(ctx.rb.id).k]?.leaveBadUntil || 0) > Date.now()) &&
-          env.cfg.epicRetreatHp > 0 && (me.pct <= env.cfg.epicRetreatHp || v.hopeless || v.lethal)) {
+          env.cfg.epicRetreatHp > 0 && (me.pct <= env.cfg.epicRetreatHp && !limitDiveFresh(ctx) || v.hopeless || v.lethal)) {
         const leave = env.$q('#battle-back-map') || env.$q('#l2-nav-bottom a[data-nav-role="outskirts"]');
         if (!leave) {
           await env.epicDbSet(env.epicById(ctx.rb.id).k, { leaveBadUntil: Date.now() + 3600000 });
@@ -3090,6 +3115,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
+ return { limitDiveFresh, armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
  };
 })(globalThis);

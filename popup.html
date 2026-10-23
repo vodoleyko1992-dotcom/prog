@@ -501,6 +501,8 @@
   <h4>⚒ Frenzy и ритм спецудара</h4>
   <label data-cls="fighter">Дестроер/Титан: Battle Trance → Frenzy и Zealot <input id="destroyerLimits" type="checkbox"></label>
   <div class="hint" data-cls="fighter">В обычном бою и на РБ снижает HP до 25% через готовый Battle Trance, включает выбранные лимиты, затем снова лечится. Нужны готовые Frenzy/Zealot и MP на связку; на РБ проверяется запас HP под известные удары.</div>
+  <label data-cls="fighter">РБ, эпики, чемпионы: Battle Trance → Frenzy (любой класс) <input id="limitBig" type="checkbox"></label>
+  <div class="hint" data-cls="fighter">Как руками: Battle Trance снижает HP до 25 %, сразу Frenzy (+30 % P.Atk, с оружием больше; 90 с, откат 10 мин), потом банки. Только на РБ/эпике/чемпионе и только когда удары цели уже замерены и HP после слива их переживает; на чемпионах 73+ — никогда. Нужны Battle Trance и Frenzy на панели и Frenzy в «Важных баффах».</div>
   <label data-cls="fighter">⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
   <div class="hint" data-cls="fighter">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <label title="Бой с РБ: ход, на который придётся спецудар, бот узнаёт по памяти боя (ритм ударов) и заранее держит запас HP. Выключено — запас HP только по полосе банок">РБ: учитывать ритм спецудара (память боя) <input id="rbSpikeRhythm" type="checkbox"></label>
