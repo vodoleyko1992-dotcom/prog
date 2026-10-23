@@ -670,7 +670,7 @@ async function scenarioF() {
     const pp = await h.popup();
     // меню: открыт «Лук · в игре», скиллы лука с галками по умолчанию, стрелы в сумке
     await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 8), 5000, 'скиллы лука в меню');
-    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре']]);
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре'], ['spoil', false, '']]);   // 1.6: и вкладка спойлера
     assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'лук — не «чужой класс»');
     const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked]));
     assert.deepEqual(rows, [['double_shot', true], ['power_shot', true], ['stun_shot', true], ['l2_122', false], ['l2_77', true], ['l2_91', true], ['soul_of_sagittarius', true], ['vicious_stance', false]]);
@@ -735,7 +735,7 @@ async function scenarioF() {
     assert.match(logText(r3), /в игре Orc Titan \(Dstr\) — профиль «Дестр» вместо «Лук»: место охоты «Гавань Гірана», цель 4 мобов \(убито 0\)/);
     assert.equal(r3.by.archer.kills, 3); assert.equal(r3.by.archer.bar.length, 9); assert.equal(r3.barCls, 'orc_titan');
     // меню само перешло на Дестра; во вкладке лука — его 3 из 3 и его скиллы
-    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, '']]), 5000, 'меню: Дестр в игре');
+    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, ''], ['spoil', false, '']]), 5000, 'меню: Дестр в игре');
     await until(async () => (await pp.textContent('#kills')) === '4 / 4 ✔', 5000, 'счётчик Дестра');
     await pp.click('#profs button[data-kind="archer"]');
     await until(async () => (await pp.textContent('#kills')) === '3 / 3 ✔', 3000, 'счётчик лука');
