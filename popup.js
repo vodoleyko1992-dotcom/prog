@@ -281,7 +281,7 @@ const fmt = n => (n || 0).toLocaleString('ru');
 function paintActionDelay() {
   const input = $('actionDelayMs'), output = $('actionDelayValue');
   if (!input || !output) return;
-  const seconds = (+input.value / 1000).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' с';
+  const seconds = +input.value === 0 ? 'Без задержки' : (+input.value / 1000).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' с';
   output.textContent = seconds;
   input.setAttribute('aria-valuetext', seconds);
 }
@@ -1438,7 +1438,7 @@ async function saveFields(e) {
   if (n.champHpMult < 1.1) n.champHpMult = 1.1;
   if (n.buffSec < 10) n.buffSec = 10;
   if (n.reactMin < 80) n.reactMin = 80;
-  if (n.actionDelayMs != null) n.actionDelayMs = Math.round(Math.min(5000, Math.max(500, n.actionDelayMs)) / 100) * 100;
+  if (n.actionDelayMs != null) n.actionDelayMs = Math.round(Math.min(5000, Math.max(0, n.actionDelayMs)) / 100) * 100;
   if (n.campaignEvery < 5) n.campaignEvery = 5;
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.

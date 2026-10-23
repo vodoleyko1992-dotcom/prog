@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-23T12:40:21.910Z",
+  "browser": "156.0.8078.4",
+  "localResponsesOnly": true,
+  "defaultWithoutSetting": 0,
+  "defaultOutput": "Без задержки",
+  "liveValue": "2,3 с",
+  "savedAfterRelease": 2300,
+  "keyboardValue": 2400,
+  "profiles": {
+    "AuditHero": 2400,
+    "OtherHero": 4200
+  },
+  "savedZeroReopened": true,
+  "reopened": true,
+  "viewports": [
+    {
+      "viewportWidth": 800,
+      "left": 277,
+      "right": 756,
+      "width": 800,
+      "overflow": false
+    },
+    {
+      "viewportWidth": 360,
+      "left": 57,
+      "right": 316,
+      "width": 360,
+      "overflow": false
+    },
+    {
+      "viewportWidth": 280,
+      "left": 57,
+      "right": 236,
+      "width": 280,
+      "overflow": false
+    }
+  ],
+  "botOn": false,
+  "nonGetRequests": 0,
+  "pageErrors": []
+}

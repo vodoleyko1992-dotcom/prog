@@ -973,11 +973,11 @@
 <section id="tab-speed">
   <h4>◷ Скорость бота</h4>
   <label class="speed-control" for="actionDelayMs">
-    <span class="speed-heading"><span>Пауза между действиями</span><output id="actionDelayValue" for="actionDelayMs" aria-live="polite">1,0 с</output></span>
-    <span class="speed-track"><input id="actionDelayMs" type="range" min="500" max="5000" step="100" value="1000" aria-describedby="speedHint" aria-valuetext="1,0 с"></span>
+    <span class="speed-heading"><span>Пауза между действиями</span><output id="actionDelayValue" for="actionDelayMs" aria-live="polite">Без задержки</output></span>
+    <span class="speed-track"><input id="actionDelayMs" type="range" min="0" max="5000" step="100" value="0" aria-describedby="speedHint" aria-valuetext="Без задержки"></span>
   </label>
-  <div class="speed-scale" aria-hidden="true"><span>0,5 с · быстрее</span><span>5,0 с · медленнее</span></div>
-  <div id="speedHint" class="hint">Замедляет обычные шаги, бой и рыбалку. Более долгие серверные паузы сохраняются. Значение сохраняется при отпускании бегунка.</div>
+  <div class="speed-scale" aria-hidden="true"><span>0 · без задержки</span><span>5,0 с · медленнее</span></div>
+  <div id="speedHint" class="hint">0 выключает дополнительную паузу. Штатная реакция и серверные паузы сохраняются. Значение сохраняется при отпускании бегунка.</div>
   <div class="adv-start" data-adv="speed">⚙ Дополнительно: реакция</div>
   <h4>Реакция бота</h4>
   <label for="reactMin">Реакция — минимум, мс <input id="reactMin" type="number" min="80"></label>

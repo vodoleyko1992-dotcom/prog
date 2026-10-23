@@ -32,7 +32,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   cancelFreeOk: true,   // 20.16: обычный моб, снимающий баффы, — цель, пока нет платных баффов за FA (buffs.cancelRisk)
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
-  actionDelayMs: 1000, reactMin: 150, reactMax: 450, buffSec: 118,
+  actionDelayMs: 0, reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true, destroyerLimits: true, fastTurn: true,
   // 20.13 (ревизия 17.10, шаг 5, quality/L3): скрытые настройки, умолчание которых раньше жило только в месте чтения
   // (`?? 30`, `!== false`…). Значения те же, поведение не меняется; теперь они видны в cfg, экспорте и проверке

@@ -13,7 +13,7 @@ function fixture(options = {}) {
     delay: value => { delay = value; }, stop: () => { live = false; }, wait: () => p.wait(() => live), saved: () => saved };
   return f;
 }
-for (const [value, expected] of [[undefined,1000],[NaN,1000],[Infinity,1000],[-1,500],[0,500],[500,500],[1234,1234],[5000,5000],[9000,5000]]) {
+for (const [value, expected] of [[undefined,0],[NaN,0],[Infinity,0],[-1,0],[0,0],[100,100],[500,500],[1234,1234],[5000,5000],[9000,5000]]) {
   test('пауза ограничена: '+String(value), () => assert.equal(fixture({delay:value}).p.gap(), expected));
 }
 test('первое действие без лишней задержки; ждём только остаток после фактической отправки', async () => {
@@ -42,8 +42,8 @@ test('перезагрузка страницы сохраняет остато�
 test('недоступное sessionStorage не отменяет темп в памяти страницы',async()=>{
   const f=fixture({delay:500,env:{read:()=>{throw Error('blocked');},write:()=>{throw Error('blocked');}}});f.p.note();await f.wait();assert.equal(f.now(),10500);
 });
-for (const at of [NaN,Infinity,-20,12000,'broken'])test('неверная сохранённая отметка не задерживает бота: '+at,()=>assert.equal(fixture({saved:at}).p.left(),0));
-test('перевод часов назад не создаёт бесконечную паузу',()=>{const f=fixture();f.p.note();f.advance(-100);assert.equal(f.p.left(),0);});
+for (const at of [NaN,Infinity,-20,12000,'broken'])test('неверная сохранённая отметка не задерживает бота: '+at,()=>assert.equal(fixture({delay:1000,saved:at}).p.left(),0));
+test('перевод часов назад не создаёт бесконечную паузу',()=>{const f=fixture({delay:1000});f.p.note();f.advance(-100);assert.equal(f.p.left(),0);});
 
 function paymentFixture(wait) {
   let state={char:'Hero'}, seq=[];
