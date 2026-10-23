@@ -5,7 +5,7 @@
 ## 23.10.2026, 15:07 UTC+10 — Codex — быстрый Chrome20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
 
 - По прямой просьбе быстрый ChromeZIP того же20.52 runtime:68файлов/1 665 738байт, SHA256 `75d6e13d10eb2346f56d404a94d9c1bc163d5e3388d5c7f577090fe888533c1b`. ZIPload Chromium156/208cfg/0errors, Start/Noblesse→★Vanor PASS, независимый CRC/SHA/closure/privacy PASS.625 Node-проверок переиспользованы, полный исторический smoke не повторялся.
-- Firefox20.52/Lite/профиль/Chrome20.51 сохранены; Chrome20.50 проверен/скопирован до удаления, остался в git-истории. PR#370 объединяет обе сборки и остаётся draft по ранее записанным smoke-блокерам. Живую игру не открывали. Осталось: доставка и контрольный TXT. Отчёт — `docs/evidence/build-20.52-chrome/validation.json`.
+- Firefox20.52/Lite/профиль/Chrome20.51 сохранены; Chrome20.50 проверен/скопирован до удаления, остался в git-истории. PR#370 объединяет обе сборки и остаётся draft по ранее записанным smoke-блокерам. Живую игру не открывали. Публичное скачивание проверено по SHA256/размеру; остался контрольный TXT. Отчёт — `docs/evidence/build-20.52-chrome/validation.json`.
 
 ## 23.10.2026, 13:17 UTC+10 — Codex — Firefox20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
 

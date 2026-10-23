@@ -37,5 +37,12 @@
     "builds/l2wap-lite-v1.5.2.zip": "ddadb453b48bd752b5926d9350c4d75b8d0952f10e1480a47817a59b275d6f31",
     "builds/l2wap-bot-v20.52-firefox.zip": "1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a",
     "base-profile.json": "dddebd75d623b296e9af9ddd0a2f2a33b586f4e6d28900a83af1794ebd4373ee"
+  },
+  "download": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/1c9d24e/builds/l2wap-bot-v20.52.zip",
+    "httpStatus": 200,
+    "bytes": 1665738,
+    "sha256": "75d6e13d10eb2346f56d404a94d9c1bc163d5e3388d5c7f577090fe888533c1b",
+    "matchesCheckedArchive": true
   }
 }
