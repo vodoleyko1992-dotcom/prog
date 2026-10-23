@@ -1071,6 +1071,9 @@ function limitHitsIn(ctx) {                       // удары цели по н
   return h.filter(n => Number.isFinite(n) && n > 0);
 }
 // Своё снижение HP под Frenzy — не повод для отхода по проценту HP 10 с (банки за это время поднимают HP; смертельные проверки остаются)
+// 20.54 (лог John 02:55–02:56): Guts l2_139 — «При HP 30% або нижче на 90 с: P.Def +100%», MP 16, откат 600 с. После слива первым
+// (защита на время низкого HP), затем Frenzy, затем Zealot
+const LIMIT_ORD = { 139: 0, 176: 1, 420: 2 };
 const limitDiveFresh = ctx => !!ctx?.limitDiveT && Date.now() - ctx.limitDiveT < 10000;
 function limitPlan(ctx, me, mp, mob) {
   ctx.limitSkip = ''; ctx.limitUnsafe = false;
@@ -1080,9 +1083,9 @@ function limitPlan(ctx, me, mp, mob) {
     || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.pvpPending?.() || ctx.rb?.retreated || ctx.chOut || env.rt.epic?.step === 'retreatVerify') return null;
   const selected = [...new Set([...env.names(env.cfg.nKeyBuffs), ...env.names(env.cfg.nBuffs)])];
   const buffs = selected.map(bn => ({ bn, b: slotsBy(bn)[0] })).filter(x => x.b)
-    .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
+    .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [139,176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
     .filter(x => !env.buffActive(x.bn, x.b) && ready(x.b) && (ctx.block?.['buff:' + x.bn] || 0) <= Date.now())
-    .sort((a,b) => (a.il.id === 176 ? 0 : 1) - (b.il.id === 176 ? 0 : 1));
+    .sort((a,b) => LIMIT_ORD[a.il.id] - LIMIT_ORD[b.il.id]);
   if (!buffs.length) return null;
   const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {}, hits = limitHitsIn(ctx);
   const sorted = [...hits].sort((a, b) => a - b), champHit = !ctx.rb && sorted.length ? sorted[Math.floor(sorted.length * 0.9)] : 0;
@@ -1095,7 +1098,8 @@ function limitPlan(ctx, me, mp, mob) {
     if (me.pct < 20 || me.cur - hpCost(low) <= spike + 2 * hit) { ctx.limitUnsafe = true; return null; }
     return { kind: 'buff', b: low.b, bn: low.bn };
   }
-  if (me.pct <= 30 || ctx.limitTranceUnverified || (ctx.block?.['limit:trance'] || 0) > Date.now()) return null;
+  // Guts (P.Def +100 %) — только вместе с атакующим лимитом: ради одной защиты HP не сливаем
+  if (me.pct <= 30 || !buffs.some(x => x.il.id !== 139) || ctx.limitTranceUnverified || (ctx.block?.['limit:trance'] || 0) > Date.now()) return null;
   const b = [...document.querySelectorAll(env.SLOT)].find(b => env.slotAction(b) === 'battle_trance');
   if (!b || !uiReady(b) || localCdLeft(b) > 0 || env.combatCooldown.skillWait('battle_trance', (env.cdSpawn || env.battleSpawn)()) > 0) return null;
   const need = actionMp(b) + buffs.reduce((sum,x) => sum + actionMp(x.b), 0);
@@ -2171,7 +2175,7 @@ async function battle() {
     const before = actor(), key = plan.kind === 'trance' ? 'limit:trance' : 'buff:' + plan.bn, netStart = env.actNet?.().start || 0;
     const needed = () => actor() === before && limitPlan(ctx, env.meHp(), env.meMp(), mobHp())?.b === plan.b;
     const result = await act(plan.b, plan.kind === 'trance'
-      ? 'Лимиты: Battle Trance — снижаю HP до 25% для Frenzy/Zealot'
+      ? 'Лимиты: Battle Trance — снижаю HP до 25% для Guts/Frenzy/Zealot'
       : `Лимиты (HP ${me.pct | 0}%): ${env.cleanTitle(plan.b.title)}`, false, needed);
     if (actor() !== before || env.canAct?.() === false || !env.on || !env.tabOwner) return AGAIN;
     if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) { ctx.limitTranceUnverified = true; ctx.limitDiveT = Date.now(); }
@@ -2875,7 +2879,12 @@ async function battleOpen() {
   if (ctx.champ) ctx.tier = color.tier;
   // 10.0.12: выбор цветов — жёсткий запрет игрока, действует и на квест/кампанию, и после первого удара слуги.
   if (ctx.champ && !isRb) {
-    const off = env.champs?.tierOff?.(ctx, true);
+    // 20.54 (лог John 02:56:49, Hatu Weird Bee 30): игрок начал бой с синим чемпионом руками (dense_*, цвет из карты потерян при смене
+    // страницы), снял 18 %, нажал ▶ — бот ушёл «цвет неизвестен — на карту». Неизвестный цвет в уже начатом бою — не повод бросать бой;
+    // запрещённый известный цвет и нетронутый бой — как раньше. Опасность бою оценивает отход (champs.fleeCheck)
+    const unknownStarted = !env.champs?.TIER_RU?.[({ green: 'blue', yellow: 'orange' })[String(ctx.tier || '').toLowerCase()] || String(ctx.tier || '').toLowerCase()]
+      && mob0?.max > 0 && mob0.cur < mob0.max * 0.98;
+    const off = !unknownStarted && env.champs?.tierOff?.(ctx, true);
     if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
   }
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
