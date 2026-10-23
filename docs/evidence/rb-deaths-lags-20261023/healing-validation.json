@@ -1,0 +1,42 @@
+{
+  "atUtc": "2026-10-23T02:21:43.895865+00:00",
+  "result": "PASS",
+  "scope": "Full-HP potion guard and live current-battle hit reserve only; no entry vetoes, prices, roles, defaults, manifest, archive or docs changes.",
+  "changed": [
+    "modules/combat.js",
+    "tests/v2051-rb-fullhp-potion.test.js"
+  ],
+  "targeted": {
+    "cases": 26,
+    "pass": 26,
+    "fail": 0,
+    "baselineRef": "91e37c3",
+    "baselinePass": 14,
+    "baselineFail": 12
+  },
+  "checks": {
+    "syntaxChangedJS": 2,
+    "legacyTurnPrice": "PASS",
+    "legacySpikeReserve": "PASS",
+    "battleRoar": {
+      "pass": 46,
+      "fail": 0
+    },
+    "combatReplan": {
+      "pass": 10,
+      "fail": 0
+    },
+    "diff": "PASS"
+  },
+  "behavior": [
+    "rbTurnHeal keeps the existing numerical floor/at and all real-deficit urgency, but need=false at cur>=max.",
+    "Normal and emergency potion calls recheck fresh HP through existing act stillNeeded after gameFree/global wait; canceled requests roll back lastHpPot and potion timing bookkeeping.",
+    "Current-battle finite positive boss hits cannot be hidden by an older lower d.hitP90. Prior fallback is retained. Stored d.maxHit and other boss records are not treated as fresh hits."
+  ],
+  "testingBoundary": "Behavioral VM executes actual source rbTurnHeal, actual normal/emergency potion blocks and actual act until the fire boundary. Controlled clock/HP/game waits; no browser or live game run.",
+  "causalityBoundary": "Wasted full-HP potion turns contribute inefficiency; these changes do not establish that potions could outheal the bosses or prevent every death.",
+  "hashes": {
+    "modules/combat.js": "a82e17fd8d2bd4ddfeb11deef4046a7eaf2ba1a0d9593b2650d093985b7d3d0d",
+    "tests/v2051-rb-fullhp-potion.test.js": "212db318728b5a2015bbdd1a3c92ba6aabb20c490157a175dc268cfdf539480e"
+  }
+}

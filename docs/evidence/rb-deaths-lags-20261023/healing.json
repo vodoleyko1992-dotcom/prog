@@ -1,0 +1,229 @@
+{
+  "scope": "Read-only analysis of healing, potion and MP evidence in uploaded TXT/learn. No live game requests or repo changes.",
+  "version": "20.51",
+  "windowBrowserUtcPlus10": [
+    "10:43:18",
+    "12:08:32"
+  ],
+  "serverConfirmedLosses": [
+    {
+      "line": 6222,
+      "time": "11:32:07.978",
+      "boss": "Rahha",
+      "action": "wild_sweep",
+      "serverLose": true,
+      "serverEnd": true,
+      "returnedHp": 3228,
+      "returnedMaxHp": 21521,
+      "mp": 1577,
+      "maxMp": 1798,
+      "recentBossHits": [
+        {
+          "amount": 4955,
+          "critical": false
+        },
+        {
+          "amount": 10668,
+          "critical": true
+        }
+      ],
+      "potHeal": 600,
+      "logMeta": {
+        "source": "delta.logTail",
+        "seq": 33,
+        "total": 33,
+        "omitted": 0,
+        "shortened": 0
+      }
+    },
+    {
+      "line": 7819,
+      "time": "11:38:03.545",
+      "boss": "Demon's Agent Falston",
+      "action": "battle_potion_use",
+      "serverLose": true,
+      "serverEnd": true,
+      "returnedHp": 3289,
+      "returnedMaxHp": 21933,
+      "mp": 1760,
+      "maxMp": 1839,
+      "recentBossHits": [
+        {
+          "amount": 5697,
+          "critical": false
+        },
+        {
+          "amount": 5723,
+          "critical": false
+        },
+        {
+          "amount": 5723,
+          "critical": false
+        },
+        {
+          "amount": 6046,
+          "critical": false
+        }
+      ],
+      "potHeal": 600,
+      "logMeta": {
+        "source": "delta.logTail",
+        "seq": 41,
+        "total": 36,
+        "omitted": 0,
+        "shortened": 0
+      }
+    },
+    {
+      "line": 8835,
+      "time": "11:47:24.739",
+      "boss": "Bloody Priest Rudelto",
+      "action": "battle_potion_use",
+      "serverLose": true,
+      "serverEnd": true,
+      "returnedHp": 3430,
+      "returnedMaxHp": 22873,
+      "mp": 1839,
+      "maxMp": 1839,
+      "recentBossHits": [
+        {
+          "amount": 6249,
+          "critical": false
+        },
+        {
+          "amount": 5982,
+          "critical": false
+        },
+        {
+          "amount": 6137,
+          "critical": false
+        },
+        {
+          "amount": 6371,
+          "critical": false
+        },
+        {
+          "amount": 6371,
+          "critical": false
+        },
+        {
+          "amount": 6315,
+          "critical": false
+        }
+      ],
+      "potHeal": 600,
+      "logMeta": {
+        "source": "delta.logTail",
+        "seq": 41,
+        "total": 36,
+        "omitted": 0,
+        "shortened": 0
+      }
+    },
+    {
+      "line": 9097,
+      "time": "11:58:40.587",
+      "boss": "Spirit of Andras the Betrayer",
+      "action": "wild_sweep",
+      "serverLose": true,
+      "serverEnd": true,
+      "returnedHp": 3430,
+      "returnedMaxHp": 22873,
+      "mp": 1661,
+      "maxMp": 1839,
+      "recentBossHits": [
+        {
+          "amount": 7024,
+          "critical": false
+        },
+        {
+          "amount": 7376,
+          "critical": false
+        },
+        {
+          "amount": 12730,
+          "critical": true
+        }
+      ],
+      "potHeal": 600,
+      "logMeta": {
+        "source": "delta.logTail",
+        "seq": 40,
+        "total": 36,
+        "omitted": 0,
+        "shortened": 0
+      }
+    }
+  ],
+  "additionalBotMarkedDeath": {
+    "boss": "Hekaton Prime",
+    "time": "11:31:12.538",
+    "line": 6005,
+    "lastAcceptedPotionLine": 5998,
+    "lastAcceptedPotionHp": 3077,
+    "nextPotionRevisionConflictLine": 6002,
+    "nextBattleGetsLackMob": true,
+    "explicitServerLoseInAvailableLog": false
+  },
+  "settings": {
+    "hpPotAt": 50,
+    "rbPotAt": 75,
+    "rbPotTo": 80,
+    "rbUsePots": true,
+    "rbBandAuto": true,
+    "rbTurnPrice": true,
+    "nHeal": "Бойовий рик",
+    "nDrain": "Vampiric Touch",
+    "drainPresentOnPanel": false,
+    "nHpPot": "Зілля зцілення"
+  },
+  "battleRoar": {
+    "sourceTooltip": "Battle Roar +30% HP and MaxHP for10min",
+    "andrasCastLine": 9047,
+    "andrasCastTime": "11:58:27.668",
+    "hpBefore": 18477,
+    "hpAfter": 22873,
+    "hpGain": 4396,
+    "maxHpAfter": 22873,
+    "mpCostObserved": 30,
+    "falstonCastLine": 7767,
+    "falstonBefore": [
+      3856,
+      17537
+    ],
+    "falstonAfter": [
+      8252,
+      21933
+    ],
+    "activeRecastNotReliableHealing": "Known prior live proof says active121 does not heal; code prevents using active roar as heal."
+  },
+  "fullHpPotionBug": {
+    "code": [
+      "modules/combat.js:1041",
+      "modules/combat.js:2048",
+      "modules/combat.js:2058",
+      "modules/combat.js:2071"
+    ],
+    "formula": "at = min(max*.96, spike+2*p90) + p90; need cur<at; at may exceed max",
+    "example": {
+      "boss": "Bloody Priest Rudelto",
+      "thresholdLine": 8793,
+      "threshold": 34960,
+      "maxHp": 22873,
+      "potionLine": 8795,
+      "potionTime": "11:47:15.914",
+      "hpAtPotion": 22873,
+      "serverMessage": "HP already full — pulse wasted"
+    },
+    "impact": "Consumes a potion and action at fullHP; contributes wasted turns, but not proof of the decisive death cause."
+  },
+  "conclusions": [
+    "Four deaths confirmed by explicit server lose:true; Hekaton only bot classification and empty battle state in available network rows.",
+    "Sustained received ordinary hits around5–7k and crits10–13k overwhelm +600 HP potion pulses.",
+    "MP and HP potion stock remain high; deaths are not caused by shortage of either.",
+    "Active Battle Roar is MaxHP support, not repeatable healing; its observed cast increased HP by4396.",
+    "Configured Vampiric Touch is not a real available panel button.",
+    "Revival appears in magister header but not panel/learn data; readiness/learned effect cannot be inferred.",
+    "Returned positive HP in explicit lose:true responses is post-loss restored state (near15%max), not proof of survival."
+  ]
+}

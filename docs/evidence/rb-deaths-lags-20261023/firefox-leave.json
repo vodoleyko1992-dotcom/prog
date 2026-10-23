@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-23T02:34:57.327424+00:00",
+  "result": "PASS",
+  "scope": "Only the six completed cases listed below; this is a partial browser check, not a complete run of the prepared harness.",
+  "browser": "Firefox",
+  "browserVersion": "153.5.1",
+  "sourceSha256": {
+    "content.js": "beb1bc4df53250da56f72db25b0a91146f3438a974f877454773445ae590559f"
+  },
+  "cases": 6,
+  "proof": [
+    {
+      "case": "fresh marker holds dispatcher during two-second ACK grace without GET",
+      "result": "PASS",
+      "characterReads": 0
+    },
+    {
+      "case": "fresh owned ended character clears pending without reentry",
+      "result": "PASS",
+      "battleNavigations": 0
+    },
+    {
+      "case": "exact active spawn resumes only after durable one-hour exit prohibition",
+      "result": "PASS",
+      "battleNavigations": 1
+    },
+    {
+      "case": "missing character spawn uses own newer battle snapshot before resume",
+      "result": "PASS",
+      "battleReads": 1
+    },
+    {
+      "case": "different active spawn gives three checks and pauses without old-spawn navigation",
+      "result": "PASS",
+      "reads": 3
+    },
+    {
+      "case": "unknown state preserves five-second backoff",
+      "result": "PASS",
+      "extraRequestsDuringBackoff": 0
+    }
+  ],
+  "notCompletedInBrowser": [
+    "The asynchronous Stop-during-fetch Selenium case timed out at the harness completion gate; no passing browser result is claimed. No production failure was established by this harness timeout."
+  ],
+  "notRunInBrowser": [
+    "Remaining async owner/mode/class/actor/lease/captcha/late-ACK browser guards",
+    "Matching leave ACK during native JSON body read or durable write/commit",
+    "Failed durable commit browser scenario",
+    "Dungeon/map inventory-recovery reload/cooldown/browser guard scenarios"
+  ],
+  "boundary": "Exact leaveMark/leavePending/leaveCheck and gameGet functions in native Firefox with loopback HTTP, native fetch/Response.json, sessionStorage and actual document navigation. Actor/lease/IPC are controlled; Date offset advances retry backoff and sleep is shortened. No addon was installed, no original game renderer/server or live account was accessed.",
+  "externalUrlsOpened": 0,
+  "liveGame": false
+}

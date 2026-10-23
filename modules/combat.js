@@ -1040,7 +1040,8 @@ function hpReserveBlocked(pot, reserve) {
 
 function rbTurnHeal(o) {                          // o: { cur, max, spike, p90, stopPct } → { need, floor, at }
   const floor = Math.min(o.max * 0.96, o.spike + 2 * o.p90), at = floor + o.p90;
-  const need = o.cur < at || o.cur / o.max * 100 <= (o.stopPct || 25) + 10;
+  // 20.51 (лог23.10 11:47): запас под сильный удар может быть выше MaxHP, но при полном HP банка не лечит.
+  const need = o.cur < o.max && (o.cur < at || o.cur / o.max * 100 <= (o.stopPct || 25) + 10);
   return { need, floor: Math.round(floor), at: Math.round(at) };
 }
 
@@ -1979,12 +1980,12 @@ async function battle() {
       // глотка), банка, а пока банка на паузе 1,1 с — вампирик или лечащий скилл, удар — только если лечить нечем
       const emDrain = drainPick(ctx, mp);
       if (emDrain && mageCombat() && (Date.now() - lastHpPot <= 1100 || drainPreferred(ctx, me, emDrain, pot))) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`);  continue; }
-      if (pot && Date.now() - lastHpPot > 1100) {
+      if (pot && me.cur < me.max && Date.now() - lastHpPot > 1100) {
         // 8.0.3 (лог 11.10 09:59:55 и 10:00:06.8, Тимініель: клик аварийной банки потерян в окне занятости игры, повтор — только через
         // 1,1–1,3 с, за 2,3 с до смерти): потерян в окне ('lock') — отметку банки откатываем, следующий цикл жмёт её снова сразу
         const prevPot = lastHpPot; lastHpPot = Date.now();
         if (ctx.rb) (ctx.rb.potT ||= []).push(Date.now());
-        const r = await act(pot, `Мало HP (${me.pct | 0}%) — банка: ${env.cleanTitle(pot.title)} (×${(env.qty(pot) ?? 1) - 1})`);
+        const r = await act(pot, `Мало HP (${me.pct | 0}%) — банка: ${env.cleanTitle(pot.title)} (×${(env.qty(pot) ?? 1) - 1})`, false, () => { const h = env.meHp(); return !!h && h.cur < h.max; });
         if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }
         continue;
       }
@@ -2019,8 +2020,10 @@ async function battle() {
     let potAt = env.cfg.hpPotAt;
     if (ctx.rb && me) {                            // 10.0 (аудит боя): HUD не отдал HP (me = null) — без TypeError на me.max
       const d = env.rt.rbDb?.[ctx.rb.id] || {};
-      const ordinaryP90 = d.hitP90 || (ctx.rb.hits?.length >= 3
-        ? [...ctx.rb.hits].sort((a,b)=>a-b)[Math.floor(ctx.rb.hits.length*0.9)] : Math.max(150, me.max * 0.06));
+      // 20.51 (лог23.10, Rahha11:31): старый P90≈635 не скрывает уже полученный в этом бою удар10576.
+      const ordinaryP90 = Math.max(d.hitP90 || (ctx.rb.hits?.length >= 3
+        ? [...ctx.rb.hits].sort((a,b)=>a-b)[Math.floor(ctx.rb.hits.length*0.9)] : Math.max(150, me.max * 0.06)), 0,
+        ...(ctx.rb.hits || []).filter(n => Number.isFinite(n) && n > 0));
       const spike = d.sp || Math.max(ctx.rb.sp || 0, d.probe?.sp || 0, me.max * 0.30);   // 9.2.5: бой-проба — оценка спецудара держит полосу банок
       const emergencyFloor = Math.min(me.max * 0.96, spike + 2 * ordinaryP90);
       // Measured spikes + two ordinary hits determine an adaptive safety band.
@@ -2059,7 +2062,7 @@ async function battle() {
       if (potAt > 0 && ctx.rb.usePots === false && me.cur > emergencyFloor) potAt = -1;
       if (frenzyDive(ctx, me)) { potAt = -1; if (!ctx.rb.diveNote) { ctx.rb.diveNote = 1; env.rec('B', 'РБ', `слив под Frenzy: банки не пью, пока HP не упадёт до ${env.ilOf(slotsBy('Frenzy')[0])?.pc?.hp || 30} % — там Frenzy`); } }
     }
-    const hpPot = me && me.pct <= potAt ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;
+    const hpPot = me && me.pct <= potAt && me.cur < me.max ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;
     const potLeft = env.qty(hpPot);
     const potReserveHit = ctx.rb && !ctx.rb.allIn && me && me.pct > 35 && hpReserveBlocked(hpPot, env.cfg.rbPotReserve);   // v4.44: резерв бережём, пока не припёрло   // на РБ резерв не трогаем; в режиме заходов банки бережём
     // v5.3: на РБ банки — чаще: у банки в l2wap нет своего отката (только общий ~0,2 с; лог 08.10 14:14), а пили раз в 2–5 с —
@@ -2067,7 +2070,7 @@ async function battle() {
     if (hpPot && potLeft !== 0 && !potReserveHit && me && me.pct <= potAt && Date.now() - lastHpPot > (ctx.rb ? 1100 : 2000)) {
       const prevPot = lastHpPot; lastHpPot = Date.now();
       if (ctx.rb) (ctx.rb.potT ||= []).push(Date.now());    // для оценки «хватит ли банок»
-      const r = await act(hpPot, `Банка HP${ctx.rb ? ` (РБ: осталось ${potLeft - 1}${ctx.rb.usePots ? ', убиваем с банками' : ''})` : ''}`);
+      const r = await act(hpPot, `Банка HP${ctx.rb ? ` (РБ: осталось ${potLeft - 1}${ctx.rb.usePots ? ', убиваем с банками' : ''})` : ''}`, false, () => { const h = env.meHp(); return !!h && h.cur < h.max; });
       if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }   // 8.0.3: клик потерян в окне занятости игры — банка не выпита, повтор сразу
       continue;
     }

@@ -1,0 +1,107 @@
+{
+  "atUtc": "2026-10-23T02:36:32.602910+00:00",
+  "result": "PASS_WITH_BROWSER_SCOPE_LIMITS",
+  "pr": 367,
+  "prUrl": "https://github.com/vodoleyko1992-dotcom/prog/pull/367",
+  "base": "91e37c30f044bf02997712e07d45d2294534c077",
+  "runtimeCommit": "c065025f80b207a000d6f9e19eb31c60103a8a36",
+  "sourceSha256": {
+    "content.js": "beb1bc4df53250da56f72db25b0a91146f3438a974f877454773445ae590559f",
+    "modules/combat.js": "a82e17fd8d2bd4ddfeb11deef4046a7eaf2ba1a0d9593b2650d093985b7d3d0d"
+  },
+  "version": "20.51",
+  "newArchiveBuilt": false,
+  "liveGameRequests": 0,
+  "changes": [
+    "Verify own fresh ended/active same-spawn state before returning after a missing leave ACK; hold grace/backoff, late ACK veto and actor/owner/Stop/class/mode fences.",
+    "Persist existing per-boss failed-leave prohibition before resuming a confirmed active battle; uncertain state never starts the old spawn.",
+    "Do not use an HP potion at full HP; recheck HP in actual act before firing, preserve cooldown rollback.",
+    "Current positive finite incoming hits cannot be hidden by a lower prior P90 in the current-battle potion reserve.",
+    "Permit existing bounded inventory recovery on current dungeon.html in addition to map.html with existing guards/flush/five-minute cooldown."
+  ],
+  "checks": {
+    "node": {
+      "testFilesPass": 624,
+      "testFilesFail": 0,
+      "logSha256": "d00b580ecf43742d522d6f4fc2aab9461dcaacadf3a5a4ff3a68f99693364169",
+      "sourceLog": "all-unit-merge.log",
+      "targeted": {
+        "leave": {
+          "pass": 133,
+          "fail": 0,
+          "baselinePass": 9,
+          "baselineFail": 124
+        },
+        "potion": {
+          "pass": 26,
+          "fail": 0,
+          "baselinePass": 14,
+          "baselineFail": 12
+        },
+        "dungeon": {
+          "pass": 59,
+          "fail": 0,
+          "baselinePass": 33,
+          "baselineFail": 26
+        }
+      },
+      "preIntegrationFilesPass": 623
+    },
+    "syntax": {
+      "pass": 10,
+      "initialOwnChangedFiles": 5,
+      "evidence": "merge-checks.json"
+    },
+    "envcheck": {
+      "pass": 34,
+      "evidence": "envcheck.log"
+    },
+    "bashSyntax": "PASS",
+    "diffCheck": "PASS",
+    "firefox": {
+      "reportedCasesPass": 19,
+      "healingPass": 13,
+      "leavePass": 6,
+      "result": "PASS_FOR_REPORTED_CASES",
+      "evidence": "firefox.json",
+      "scope": "Native Firefox exact extracted functions on loopback DOM/fetch/sessionStorage; not full addon or real game renderer."
+    },
+    "independentReview": "No remaining runtime blockers"
+  },
+  "evidence": {
+    "deaths": "deaths.json",
+    "healing": "healing.json",
+    "newLogs": "newlog.json"
+  },
+  "preserved": {
+    "files": [
+      "builds/l2wap-bot-v20.50.zip",
+      "builds/l2wap-bot-v20.51-firefox-detect-fix.zip",
+      "builds/l2wap-bot-v20.51.zip",
+      "builds/l2wap-lite-v1.5.2-firefox.zip",
+      "builds/l2wap-lite-v1.5.2.zip",
+      "manifest.json",
+      "base-profile.json"
+    ],
+    "result": "7/7 byte-equal to base91e37c3"
+  },
+  "boundaries": [
+    "Hekaton death is observed in bot/UI records but its exact lethal hit/full defeat packet is absent. Four other deaths have explicit server defeat packets.",
+    "Positive15% HP in defeat responses is post-defeat recovery/relocation, not pre-lethal HP.",
+    "Ordinary raid tour remains advisory by the player decision16Oct; these changes do not guarantee that all admitted bosses are survivable.",
+    "Server inventory_full still requires free bag slots; no automatic sale/discard/server mutation was introduced. Network delay root cause is not established.",
+    "Firefox content completed six core cases; additional asynchronous guard/dungeon cases were not completed in the Selenium harness and are not claimed as browser PASS. They are covered by targeted Node regressions. Healing firepoint uses real DOM click; potion ACK was not tested.",
+    "If a matching leave ACK arrives during the already started failed-leave persistence, a conservative per-boss one-hour leaveBadUntil may remain; navigation is vetoed and other concurrent database state is not rolled back.",
+    "No full extension browser suite, physical Android or live game/account run. Current installed ZIP does not contain these source-only fixes."
+  ],
+  "nextStep": "Archive only on a separate build request; then collect control logs for raid exit and dungeon recovery. Free inventory space before retrying item receipt.",
+  "integration": {
+    "base": "ee5ad69",
+    "parallelPr": 368,
+    "scope": "Cat auto-buff/UI/task changes and one new Node test; production content/combat SHA unchanged; both journal entries preserved.",
+    "finalNodeTestFiles": 624,
+    "productionShaUnchanged": true,
+    "result": "PASS",
+    "evidence": "merge-checks.json"
+  }
+}

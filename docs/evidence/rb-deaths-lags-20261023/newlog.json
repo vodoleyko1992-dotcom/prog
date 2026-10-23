@@ -1,0 +1,399 @@
+{
+  "source": "l2bot-log-2026-10-23-02-15.txt",
+  "sourceAsDataOnly": true,
+  "botVersionDisplayed": "20.51",
+  "browserTimezone": "Asia/Vladivostok UTC+10",
+  "window": {
+    "start": "2026-10-23 12:08:32",
+    "end": "2026-10-23 12:15:14"
+  },
+  "liveRequests": 0,
+  "combat": {
+    "postActions": 162,
+    "statusCounts": {
+      "200": 153,
+      "500": 9
+    },
+    "durationMedianMs": 303.5,
+    "durationMaxMs": 1044,
+    "outcomeLinesVictory": 70,
+    "deathEvents": 0,
+    "defeatPackets": 0
+  },
+  "fullInventoryFailures": {
+    "count": 9,
+    "meaning": "The game returned HTTP500 Internal Server Error with message inventory_full for offensive battle actions. The following action used the same expected revision and was accepted; this shows continued client progress, not a permanent battle lock. No server-side fix is inferred.",
+    "events": [
+      {
+        "line": 235,
+        "at": "12:08:59.766",
+        "status": 500,
+        "durationMs": 248,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_031",
+        "expectedRevision": 443260,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 238,
+          "at": "12:09:00.897",
+          "status": 200,
+          "durationMs": 362,
+          "action": "thunder_storm",
+          "spawn": "sdms_necropolis_of_martyrdom_031",
+          "expectedRevision": 443260,
+          "revision": 443261,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 1.131
+      },
+      {
+        "line": 394,
+        "at": "12:09:29.540",
+        "status": 500,
+        "durationMs": 222,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_071",
+        "expectedRevision": 443278,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 397,
+          "at": "12:09:30.447",
+          "status": 200,
+          "durationMs": 329,
+          "action": "thunder_storm",
+          "spawn": "sdms_necropolis_of_martyrdom_071",
+          "expectedRevision": 443278,
+          "revision": 443279,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 0.907
+      },
+      {
+        "line": 439,
+        "at": "12:09:35.914",
+        "status": 500,
+        "durationMs": 214,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_076",
+        "expectedRevision": 443286,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 444,
+          "at": "12:09:37.778",
+          "status": 200,
+          "durationMs": 261,
+          "action": "attack",
+          "spawn": "sdms_necropolis_of_martyrdom_076",
+          "expectedRevision": 443286,
+          "revision": 443287,
+          "error": "",
+          "message": "",
+          "win": false,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 1.864
+      },
+      {
+        "line": 441,
+        "at": "12:09:36.900",
+        "status": 500,
+        "durationMs": 222,
+        "action": "thunder_storm",
+        "spawn": "sdms_necropolis_of_martyrdom_076",
+        "expectedRevision": 443286,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 444,
+          "at": "12:09:37.778",
+          "status": 200,
+          "durationMs": 261,
+          "action": "attack",
+          "spawn": "sdms_necropolis_of_martyrdom_076",
+          "expectedRevision": 443286,
+          "revision": 443287,
+          "error": "",
+          "message": "",
+          "win": false,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 0.878
+      },
+      {
+        "line": 598,
+        "at": "12:10:02.177",
+        "status": 500,
+        "durationMs": 275,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_099",
+        "expectedRevision": 443319,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 605,
+          "at": "12:10:03.073",
+          "status": 200,
+          "durationMs": 315,
+          "action": "thunder_storm",
+          "spawn": "sdms_necropolis_of_martyrdom_099",
+          "expectedRevision": 443319,
+          "revision": 443320,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 0.896
+      },
+      {
+        "line": 1233,
+        "at": "12:11:47.377",
+        "status": 500,
+        "durationMs": 233,
+        "action": "thunder_storm",
+        "spawn": "sdms_necropolis_of_martyrdom_071",
+        "expectedRevision": 443425,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 1238,
+          "at": "12:11:49.174",
+          "status": 200,
+          "durationMs": 293,
+          "action": "wild_sweep",
+          "spawn": "sdms_necropolis_of_martyrdom_071",
+          "expectedRevision": 443425,
+          "revision": 443426,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 1.797
+      },
+      {
+        "line": 1235,
+        "at": "12:11:48.166",
+        "status": 500,
+        "durationMs": 215,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_071",
+        "expectedRevision": 443425,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 1238,
+          "at": "12:11:49.174",
+          "status": 200,
+          "durationMs": 293,
+          "action": "wild_sweep",
+          "spawn": "sdms_necropolis_of_martyrdom_071",
+          "expectedRevision": 443425,
+          "revision": 443426,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 1.008
+      },
+      {
+        "line": 1265,
+        "at": "12:11:53.214",
+        "status": 500,
+        "durationMs": 226,
+        "action": "whirlwind",
+        "spawn": "sdms_necropolis_of_martyrdom_051",
+        "expectedRevision": 443431,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 1274,
+          "at": "12:11:54.941",
+          "status": 200,
+          "durationMs": 287,
+          "action": "wild_sweep",
+          "spawn": "sdms_necropolis_of_martyrdom_051",
+          "expectedRevision": 443431,
+          "revision": 443432,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 1.727
+      },
+      {
+        "line": 1267,
+        "at": "12:11:53.959",
+        "status": 500,
+        "durationMs": 219,
+        "action": "thunder_storm",
+        "spawn": "sdms_necropolis_of_martyrdom_051",
+        "expectedRevision": 443431,
+        "revision": null,
+        "error": "Internal Server Error",
+        "message": "inventory_full",
+        "win": false,
+        "lose": false,
+        "nextAcceptedAction": {
+          "line": 1274,
+          "at": "12:11:54.941",
+          "status": 200,
+          "durationMs": 287,
+          "action": "wild_sweep",
+          "spawn": "sdms_necropolis_of_martyrdom_051",
+          "expectedRevision": 443431,
+          "revision": 443432,
+          "error": "",
+          "message": "",
+          "win": true,
+          "lose": false
+        },
+        "delayToNextAcceptedSeconds": 0.982
+      }
+    ]
+  },
+  "inventoryPreflightStall": {
+    "enteredDungeonLine": 1462,
+    "enteredDungeonAt": "12:12:45.307",
+    "blankDungeonLine": 1465,
+    "blankDungeonAt": "12:12:47.746",
+    "blankDungeonText": "— / —",
+    "failedAttempts": [
+      {
+        "line": 1466,
+        "at": "12:12:51.329",
+        "message": "Проверка 1 не подтверждена (запрос /character: таймаут, 6 с); повтор через 2 с",
+        "page": "/dungeon.html"
+      },
+      {
+        "line": 1468,
+        "at": "12:13:18.367",
+        "message": "Проверка 2 не подтверждена (запрос /character: таймаут, 25 с); повтор через 4 с",
+        "page": "/dungeon.html"
+      },
+      {
+        "line": 1469,
+        "at": "12:13:47.415",
+        "message": "Проверка 3 не подтверждена (запрос /character: таймаут, 25 с); повтор через 8 с",
+        "page": "/dungeon.html"
+      },
+      {
+        "line": 1470,
+        "at": "12:14:03.702",
+        "message": "Проверка 4 не подтверждена (запрос /character: ошибка чтения, 8 с); повтор через 16 с",
+        "page": "/dungeon.html"
+      },
+      {
+        "line": 1472,
+        "at": "12:14:44.863",
+        "message": "Проверка 5 не подтверждена (запрос /character: таймаут, 25 с); повтор через 30 с",
+        "page": "/dungeon.html"
+      }
+    ],
+    "samePageNewCoreLine": 1476,
+    "samePageNewCoreAt": "12:14:52.056",
+    "firstResumedBattleLine": 1583,
+    "firstResumedBattleAt": "12:15:11.140",
+    "observedRecoveryScopeGap": "inventoryRecover accepts only /map.html in the baseline. These repeated failures occurred on /dungeon.html, so that recovery guard refused this document. Existing6/25-second deadlines and retry backoff were working.",
+    "networkObservation": {
+      "line": 1475,
+      "completedAt": "12:14:51.610",
+      "path": "/game/chat/replies/unread-count",
+      "status": 200,
+      "durationMs": 47904
+    },
+    "notProven": [
+      "Precise remote server/network/browser cause of request delays.",
+      "A permanent JavaScript deadlock.",
+      "An extension reinstall or update in this interval."
+    ]
+  },
+  "mail": {
+    "line": 1506,
+    "at": "12:14:56.299",
+    "path": "/game/item-transfer/claim",
+    "status": 400,
+    "error": "inventory_full",
+    "followupLine": 1508,
+    "followupAt": "12:14:56.698",
+    "result": "Bot reports the attachment remains in mail; no automatic sale or disposal was performed."
+  },
+  "ordinaryActivity": {
+    "levelUp": {
+      "line": 1384,
+      "at": "12:12:12.270",
+      "level": 68
+    },
+    "magister": {
+      "startLine": 1411,
+      "endLine": 1434,
+      "start": "12:12:18.345",
+      "end": "12:12:37.873",
+      "result": "Ranks confirmed, then normal return to catacombs."
+    },
+    "learn": {
+      "source": "l2bot-learn-2026-10-23-02-15.html",
+      "changeEntries": 139,
+      "newestChange": "2026-10-23 12:06:36",
+      "changesInThisLogWindow": 0
+    }
+  },
+  "localCorrection": {
+    "patch": "dungeon-inventory-recovery.patch",
+    "test": "tests/v2051-dungeon-inventory-recovery.test.js",
+    "appliedByThisAgent": false,
+    "change": "Allow safe reload of the current dungeon document as well as map, keep all preflight/ownership/receipt/flush/cooldown guards and use an accurate Russian page label. No routes, battle start, purchases or inventory disposal.",
+    "checks": {
+      "newCases": 59,
+      "candidatePass": 59,
+      "candidateFail": 0,
+      "baselinePass": 33,
+      "baselineFail": 26,
+      "oldInventoryCasesCandidatePass": 60,
+      "oldInventoryCasesBaselinePass": 60,
+      "syntax": "PASS",
+      "finalSourcePass": 59,
+      "finalSourceFail": 0
+    },
+    "baselineRecoverySha256": "04c129888d87178c45aa408d75bc0b1f107efc3775c85a5561ec5ce5220913e0",
+    "candidateRecoverySha256": "ebd9f3815b2e831dea5f22d327d7c9c2f0ace162fa3b04bb6a315e88f7042d6c",
+    "notes": "Candidate source was held only in work and supplied via the test source override; content.js was not modified by this agent.",
+    "finalSourceRecoverySha256": "ebd9f3815b2e831dea5f22d327d7c9c2f0ace162fa3b04bb6a315e88f7042d6c",
+    "rootAppliedObserved": true
+  }
+}
