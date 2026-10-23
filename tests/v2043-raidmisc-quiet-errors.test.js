@@ -44,7 +44,7 @@ test('исходник: перечисленные тихие места пер�
   assert.match(raid,/rbDpsLearn\(S\.id, dps\)\.catch\(e => env\.quietErr\?\.\('тур РБ: замер DPS', e\)\)/);
   assert.match(combat,/try \{ warlordSkipNote\(ctx\); \} catch \(e\) \{ env\.quietErr\?\.\('агро Warlord', e\); \}/);
   assert.match(story,/catch \(e\) \{ env\.quietErr\?\.\('квесты: прогресс', e, true\); \}/);
-  assert.match(content,/storyTick\(\)\.catch\(e => modErr\('квесты \(фон\)', e\)\)/);
+  assert.match(content,/storyTick\([^)]*\)\.catch\(e => modErr\('квесты \(фон\)', e\)\)/);
   assert.equal((content.match(/farmGuideSync\([^)]*\)\.catch\(e => modErr\('справочник фарма', e\)\)/g)||[]).length,2);
   assert.match(content,/await farmGuideRetry\(\)\.catch\(e => modErr\('справочник фарма', e\)\)/);
   for(const m of ['raid','combat','story']){
