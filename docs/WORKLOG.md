@@ -2,7 +2,7 @@
 
 **Ведущий: ChatGPT/Codex (с 22.10.2026, 10:11 UTC+10, команда John «Временное переключение на ГПТ»).** Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`.
 
-## 23.10.2026, 13:17 UTC+10 — Codex — Firefox20.52 (PR в подготовке)
+## 23.10.2026, 13:17 UTC+10 — Codex — Firefox20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
 
 - По явной просьбе собран Firefox20.52 с#367–#369: Noblesse, автобаф кота и восстановлениеРБ/подземелья; Detect-fix сохранён. ZIP68файлов/1 664 179байт, SHA256 `1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a`.
 - Node625/0FAIL, syntax53+5/env34/diff PASS; exactFirefox153.5.1esr desktop+13Detect+2Noblesse/кот PASS, AndroidAPI-simulation PASS, lint0/0/51; независимый CRC/SHA/closure/privacy PASS. Исторический Chromium smoke:63 PASS/12 FAIL/5 UNAVAILABLE/3 INTERRUPTED/67 NOT_RUN; пять FAIL доказаны прежними, семь не исследованы. Автослияние отложено до разбора оставшихся ошибок; ZIP выдаётся из ветки проверки.

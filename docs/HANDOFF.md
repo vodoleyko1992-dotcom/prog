@@ -1,6 +1,6 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 23.10.2026 — Firefox20.52 (PR в подготовке)
+## 23.10.2026 — Firefox20.52 ([PR #370](https://github.com/vodoleyko1992-dotcom/prog/pull/370))
 
 По явной просьбе собран Firefox20.52 из4442b21: #367–#369 и прежний Detect-fix. Архив `builds/l2wap-bot-v20.52-firefox.zip`:68файлов,1 664 179байт, SHA256 `1deb17d029f886e891ed57c28f0b6744329122bfb4857555686dc7742251136a`. Node625/0FAIL; syntax53runtime+5tests/env34/diff PASS. ExactZIP: Firefox153.5.1esr desktop smoke,13Detect и2Start-сценария Noblesse/автобаф кота PASS; AndroidAPI-simulation на производной копии PASS, физический Android не проверяли. Lint0errors/0notices/51прежнихwarnings; независимые CRC/source67/extracted68/closure94/privacy PASS. [Итог](evidence/build-20.52-firefox/validation.json).
 
