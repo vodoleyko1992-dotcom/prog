@@ -922,7 +922,9 @@ const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_
   battle_roar: 121, lionheart: 287,
   // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
   focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104, detect_monster_weakness: 80, detect_dragon_weakness: 88,
-  howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286 };
+  howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286,
+  // 20.57 (лог 24.10 10:54, Dreadnought 3-я профессия): новые native actionId пики; ID — по ответу сервера skillCooldowns и иконкам панели.
+  earthquake: 347, shock_blast: 361, eye_hunter: 359, eye_slayer: 360, parry_stance: 339 };
 IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
@@ -959,6 +961,16 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
   317: { o: 'TOGGLE', autoUse: false, managedToggle: true, dur: 0, reuse: 12000, L: 'L2WAP: Focus Attack · переключатель · выбранный постоянный эффект Warlord с пикой держим включённым · +2 точности и +10% силы крита по подсказке · поддержание ≈0.4 MP/с, разовая цена отдельно не измерена' },
   286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · отдельная связка с массовым ударом' },
+  // 20.57 (лог 24.10 10:54, Dreadnought): Землетрус/Ударний імпульс — массовые удары пики, откат сервера ≈4,7–4,8 с (не 30 с Interlude:
+  // иначе Землетрус уходил в «ульты»). Землетрус: сила 4040, r≈150 вокруг себя, HP −340, цели теряют таргет. Ударний імпульс:
+  // сила 2072, r≈150 вокруг цели, шанс оглушения, снимает таргет. Урон/MP — по замерам.
+  347: { reuse: 4700, L: 'L2WAP: Earthquake · вокруг себя r≈150 · сила 4040 · HP −340 · цели теряют таргет · только пика · откат ≈4,7 с' },
+  361: { reuse: 4800, L: 'L2WAP: Shock Blast · вокруг цели r≈150 · сила 2072 · шанс оглушения · снимает таргет · только пика · откат ≈4,8 с' },
+  // Око мисливця/вбивці: +30% P.Atk по видам на 10 мин, как Detect — не удар; ставит отдельная служба native-баффов боя.
+  359: { autoUse: false, managedDetect: true, L: 'L2WAP: Eye of Hunter · +30% P.Atk против Animal, Plant, Insect · 10 мин' },
+  360: { autoUse: false, managedDetect: true, L: 'L2WAP: Eye of Slayer · +30% P.Atk против Beast, Magic Creature, Giant, Dragon · 10 мин' },
+  // Стійка парування: P.Def/M.Def +25%, но Atk. Spd −20%, Speed −10%, Accuracy −4 — минус ДПС; бот её не включает.
+  339: { autoUse: false, L: 'L2WAP: Parry Stance · защитная стойка: P.Def/M.Def +25%, Atk. Spd −20%, Accuracy −4 · бот не включает (минус ДПС)' },
   75: { autoUse: false, managedDetect: true }, 80: { autoUse: false, managedDetect: true }, 88: { autoUse: false, managedDetect: true }, 87: { autoUse: false, managedDetect: true }, 104: { autoUse: false, managedDetect: true },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },

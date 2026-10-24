@@ -83,8 +83,8 @@ const warlordToggleClass = () => /^(?:human[ _-])?(?:warlord|dreadnought)$/i.tes
 const warlordToggleAliases = { 'vicious stance': 312, 'жорстка стійка': 312, 'focus attack': 317, 'зосереджений удар': 317, 'фокусована атака': 317 };
 const warlordToggleId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? id === 312 || id === 317 ? id : 0 : Object.hasOwn(warlordToggleAliases, name) ? warlordToggleAliases[name] : 0; };
 // 20.50: лишь точные английские/украинские имена Detect; объект панели подтверждает ID через native action, не по этому списку.
-const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104, 'detect monster weakness': 80, 'вразливість монстрів': 80, 'detect dragon weakness': 88, 'вразливість драконів': 88 };
-const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104, 80, 88].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
+const warlordDetectAliases = { 'detect insect weakness': 75, 'вразливість комах': 75, 'detect animal weakness': 87, 'вразливість звірів': 87, 'detect plant weakness': 104, 'вразливість рослин': 104, 'detect monster weakness': 80, 'вразливість монстрів': 80, 'detect dragon weakness': 88, 'вразливість драконів': 88, 'eye of hunter': 359, 'око мисливця': 359, 'eye of slayer': 360, 'око вбивці': 360 };
+const warlordDetectId = x => { const id = env.ilOf(x)?.id, name = typeof x === 'string' ? x.trim().toLowerCase() : ''; return id != null ? [75, 87, 104, 80, 88, 359, 360].includes(id) ? id : 0 : Object.hasOwn(warlordDetectAliases, name) ? warlordDetectAliases[name] : 0; };
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
@@ -253,7 +253,7 @@ async function autoRoles() {
   if (missing.length) fix.nPower = [fix.nPower ?? env.cfg.nPower, ...missing.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');
   // 20.3: и уже виденные навыки Warlord с именованным actionId. Ремонт только один раз, после записи cfg.
   // 20.48: Battle Roar/Lionheart уже были видны с украинскими именами, но без native ID попадали в силовые.
-  const warrior = env.panelInventory().filter(x => [36, 48, 75, 78, 87, 100, 104, 116, 121, 130, 245, 255, 286, 287, 290, 312, 317].includes(env.ilOf(x)?.id)
+  const warrior = env.panelInventory().filter(x => [36, 48, 75, 78, 87, 100, 104, 116, 121, 130, 245, 255, 286, 287, 290, 312, 317, 339, 347, 359, 360, 361].includes(env.ilOf(x)?.id)
     && !(env.rt.warriorRoles1027 || []).includes(x.name.toLowerCase()));
   for (const x of warrior) {
     const n = x.name.toLowerCase();
@@ -262,7 +262,7 @@ async function autoRoles() {
       const values = current.split(',').map(v => v.trim()).filter(Boolean);
       if (recommended && !env.names(current).includes(n)) fix[k] = [...values, x.name].join(', ');
       // Лишь заведомо ошибочная боевая роль баффа/тоггла; свои прочие назначения сохраняем.
-      if (k === 'nPower' && [75, 78, 87, 104, 116, 121, 130, 286, 287, 290, 312, 317].includes(env.ilOf(x)?.id) && env.names(current).includes(n))
+      if (k === 'nPower' && [75, 78, 87, 104, 116, 121, 130, 286, 287, 290, 312, 317, 339, 359, 360].includes(env.ilOf(x)?.id) && env.names(current).includes(n))
         fix[k] = values.filter(v => v.toLowerCase() !== n).join(', ');
     }
   }
