@@ -45,3 +45,11 @@ test('автороли один раз чинят силовые: Око и Ст
 test('Warlord-сбор группы знает новые массовые удары пики',()=>{
  const src=read('modules/combat.js');assert.match(src,/\['whirlwind','thunder_storm','earthquake','shock_blast'\]\.includes\(env\.slotAction\(b\)\)/);
 });
+
+test('все пять Вразливостей и оба Ока остаются в баффах вместе (они складываются)',async()=>{
+ const f=fixture();const det=[['detect_insect_weakness','Вразливість комах'],['detect_animal_weakness','Вразливість звірів'],['detect_plant_weakness','Вразливість рослин'],['detect_monster_weakness','Вразливість монстрів'],['detect_dragon_weakness','Вразливість драконів']];
+ for(const [cdKey,name] of det)f.panel.push({cdKey,name,kind:'скилл'});
+ f.env.rt.warlordDetectRoles2050={75:true,87:true,104:true,80:true,88:true};f.env.rt.warriorRoles1027=[...OLD,...det.map(x=>x[1].toLowerCase())];f.env.rt.panelKnown=f.panel.map(x=>x.name.toLowerCase());
+ f.env.cfg.nBuffs='Бойовий клич, '+det.map(x=>x[1]).join(', ');await f.E.autoRoles();
+ const b=names(f.env.cfg.nBuffs);for(const n of [...det.map(x=>x[1].toLowerCase()),'око мисливця','око вбивці'])assert.ok(b.includes(n),n);
+});
