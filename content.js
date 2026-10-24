@@ -926,6 +926,8 @@ const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_
   // 20.57 (лог 24.10 10:54, Dreadnought 3-я профессия): новые native actionId пики; ID — по ответу сервера skillCooldowns и иконкам панели.
   earthquake: 347, shock_blast: 361, eye_hunter: 359, eye_slayer: 360, parry_stance: 339 };
 IL_BY_NAME['дикий розмах'] = 245;
+// 24.10: магистр называет Око по-английски иначе, чем Interlude («Eye of the Hunter» вместо «Eye of Hunter»).
+IL_BY_NAME['eye of the hunter'] = 359; IL_BY_NAME['eye of the slayer'] = 360;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
   if (x && typeof x === 'object') {
@@ -5313,7 +5315,7 @@ async function invRefresh(active = () => true, ms = 6000, diagnostic = null) {
     // 23.10 (лог00:25, Detect20.50): свой preflight проходит после аренды, даже когда стартовый GET страницы был до неё.
     if (canConfirm() && current()) {
       L2V7Modules.buffs?.detectOutsideSnapshot?.(c,at,'inventory');
-      L2V7Modules.combat?.noteMonsterSnapshot?.({...c,requestStartedAt:at,monsterBuffs:Array.isArray(c.activeBuffs)?c.activeBuffs.filter(x=>[80,88].includes(+x?.skillId)):null});
+      L2V7Modules.combat?.noteMonsterSnapshot?.({...c,requestStartedAt:at,monsterBuffs:Array.isArray(c.activeBuffs)?c.activeBuffs.filter(x=>[80,88,359,360].includes(+x?.skillId)):null});
     }
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
