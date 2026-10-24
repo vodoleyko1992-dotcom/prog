@@ -188,7 +188,9 @@ test('бот: спойл в начале боя после банок/лимит
   assert.match(bot, /if \(!tvt && !cdErr && s\.type !== 'basic' && !s\.pot && UNAVAIL\.test\(end\.err \|\| ''\)\)/, 'обычная атака и банки — не «недоступны»');
   // смена оружия — снова пробуем приёмы; значок спойла на мобе — не жмём
   assert.match(bot, /if \(WPN\.id !== undefined && WPN\.id !== id\) \{ for \(const k of unav\.keys\(\)\) block\.delete\(k\); unav\.clear\(\); \}/);
-  assert.match(bot, /if \(mobSpoiled\(\)\) \{ st\.spoiled = true; spbSave\(\); return false; \}/);
+  // 1.8: значок спойла на мобе — Spoil больше не жмём; масс-режим после Festival ещё смотрит соседей без метки
+  assert.match(bot, /if \(!st\.spoiled && mobSpoiled\(\)\) \{ st\.spoiled = true; spbSave\(\); \}/);
+  assert.match(bot, /if \(st\.spoiled && !\(mode === 'mass' && st\.massN\)\) return false;/);
   // игра молчит — после 2 нажатий считаем помеченным (как основной бот)
   assert.match(bot, /else if \(!S\.known && st\.tries >= 2\) st\.spoiled = true;/);
   // команда меню «сбросить счёт спойла»

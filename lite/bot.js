@@ -14,6 +14,9 @@
 // панель (активный профиль в rt, другой в rt.by). Сменили в игре класс Дестр ↔ лук — бот сам переключает профиль (profSync).
 // Lite 1.7 (24.10, John: «изучи мага в бастионе, массухи юзаем… создай доп модуль МАГ… автоопределение Дестр\лук\маг»): маг —
 // четвёртый профиль; массовые удары по соседям из боя (L.aoeGain), охота в Ashen Bastion по странице-списку (ashenStep).
+// Lite 1.8 (24.10, John: «Споил — с режимом спойла мобов: спойл фестивалем масс или соло спойлом, полностью автономный режим;
+// добавь раздел со скоростью работы бота»): режим спойла (cfg.spoilMode, L.spoilPlan), автономный спойлер — место охоты выбирает
+// сам (cfg.spoilAuto, autoTick), раздел «Скорость» — пауза между действиями (pace) и замер скорости (rt.spd).
 (() => {
   'use strict';
   if (window.__l2lite) return;
@@ -24,7 +27,9 @@
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
     char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0, by: {}, arrowOut: null, arrowNote: 0, arrowLow: 0,
     spoil: null, spoilW: {},                       // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
-    aoeEx: {} };                                   // 1.7: соседи массового удара по локациям {зона: {list: [{name, maxHp}], t}}
+    aoeEx: {},                                     // 1.7: соседи массового удара по локациям {зона: {list: [{name, maxHp}], t}}
+    spd: null,                                     // 1.8: замер скорости (L.speedNote) — с Старта или кнопки «Сбросить замер»
+    spotBad: {} };                                 // 1.8: автономный спойлер — места, куда пока не летим {id: до}
   // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
   let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
@@ -78,7 +83,16 @@
 
   function onCfg(prev) {
     if (prev.on !== cfg.on) { gen++; if (!cfg.on) { status('Выключен'); log('■ Стоп'); abBlink(false); } }
-    if (prev.zone !== cfg.zone) {
+    // 1.8: автономный спойлер включили — место выберет сам (autoTick); выключили — снова выбранное в меню или где стоит герой.
+    // Сменили ресурс — место под него подберём заново. Место из меню, пока автономный режим включён, не используется.
+    if (prev.kind === cfg.kind && cfg.kind === 'spoil' && (prev.spoilAuto === true) !== (cfg.spoilAuto === true)) {
+      gen++; autoT = 0;
+      if (cfg.spoilAuto === true) log('автономный спойлер: место охоты выбираю сам — под ресурс или по уровню героя');
+      else { setRt({ zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null, goZone: '', tpTry: [], zoneBlockT: 0 }); log(`автономный спойлер выключен — ${cfg.zone ? 'место охоты «' + (cfg.zoneName || cfg.zone) + '»' : 'охочусь там, где стоит герой'}`); }
+      return;
+    }
+    if (autoOn() && prev.spoilRes !== cfg.spoilRes) autoT = 0;
+    if (prev.zone !== cfg.zone && !autoOn()) {
       gen++;
       setRt({ zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null, goZone: '', tpTry: [], zoneBlockT: 0 });
       if (cfg.zone) log(`место охоты: «${cfg.zoneName || cfg.zone}»`);
@@ -94,11 +108,13 @@
     if (c.type === 'start') {
       gen++;
       const by = Object.fromEntries(Object.entries(rt.by || {}).map(([k, v]) => [k, { ...(v || {}), zone: null, limitNoted: 0 }]));
+      const zc = zoneCfg(), P = L.paceCfg(cfg);
       setRt({ cmdDone: c.id, k: { ...(rt.k || {}), lastK: null }, revive: null, goZone: '', tpTry: [], zoneBlockT: 0, deaths: [], limitNoted: 0, by, arrowOut: null, arrowNote: 0,
-        zone: cfg.zone ? { id: cfg.zone, name: cfg.zoneName || cfg.zone } : null });
-      log(`▶ Старт (профиль «${L.KIND_RU[kind]}»): ${cfg.zone ? 'место охоты «' + (cfg.zoneName || cfg.zone) + '»' : 'охочусь там, где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов' : 'без лимита мобов'}, TvT ${cfg.tvt ? 'вкл.' : 'выкл.'}`);
+        zone: zc ? { id: zc, name: cfg.zoneName || zc } : null, spd: { t0: Date.now() }, spotBad: {} });
+      autoT = 0;
+      log(`▶ Старт (профиль «${L.KIND_RU[kind]}»): ${autoOn() ? 'автономный спойлер — место выберу сам' : zc ? 'место охоты «' + (cfg.zoneName || zc) + '»' : 'охочусь там, где стоит герой'}, ${+cfg.killLimit > 0 ? 'цель ' + cfg.killLimit + ' мобов' : 'без лимита мобов'}, TvT ${cfg.tvt ? 'вкл.' : 'выкл.'}${kind === 'spoil' && cfg.spoilOn !== false ? ', спойл: ' + L.SPOIL_MODE_RU[L.spoilMode(cfg.spoilMode)] : ''}${P.delay ? ', пауза между действиями ' + (P.delay / 1000) + ' с' : ''}`);
       if (SNAP && Date.now() - SNAP.t < 30000) onSnapZone(SNAP);
-      if (!rt.zone && !cfg.zone) { zoneAskT = 0; void zoneAsk(); }   // 1.5.1: где стоит герой — спросим игру сразу
+      if (!rt.zone && !zc) { zoneAskT = 0; void zoneAsk(); }   // 1.5.1: где стоит герой — спросим игру сразу
     } else if (c.type === 'reset') {
       const k = L.KINDS.includes(c.kind) ? c.kind : kind;
       if (k === kind) setRt({ cmdDone: c.id, k: { ...(rt.k || {}), kills: 0, lastK: null }, limitNoted: 0 });
@@ -107,6 +123,9 @@
     } else if (c.type === 'spoilReset') {             // 1.6: счёт спойла с нуля (знание, что игра пишет итог спойла, остаётся)
       setRt({ cmdDone: c.id, spoil: { t0: Date.now(), known: spStat().known || 0 } });
       log('счёт спойла сброшен');
+    } else if (c.type === 'spdReset') {               // 1.8: замер скорости с нуля
+      setRt({ cmdDone: c.id, spd: { t0: Date.now() } });
+      log('замер скорости сброшен');
     } else setRt({ cmdDone: c.id });
     void flushRt();
   }
@@ -247,11 +266,11 @@
   // героя (на карте она делает это редко, бот стоял на «Запоминаю место охоты»), а спрашиваем сами раз в 3 с.
   let zoneAskT = 0, zoneLast = null;
   async function zoneAsk() {
-    if (rt.zone || cfg.zone || Date.now() - zoneAskT < 3000) return;
+    if (rt.zone || zoneCfg() || Date.now() - zoneAskT < 3000) return;
     zoneAskT = Date.now();
     const h = await heroNow();
     if (h) zoneLast = { ...h, t: Date.now() };
-    if (h && !rt.zone && !cfg.zone) onSnapZone(h);
+    if (h && !rt.zone && !zoneCfg()) onSnapZone(h);
   }
   // Почему место не запоминается — в журнал (раз в 2 мин), чтобы по журналу было видно, на чём бот стоит.
   function zoneWhy() {
@@ -275,7 +294,7 @@
     if (!owner) return;
     const lastK = rt.k?.lastK, r = L.killStep(rt.k, ch, !!cfg.on);
     if (r.st !== rt.k) setRt({ k: r.st });
-    if (r.add > 0) { progress(); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
+    if (r.add > 0) { progress(); spdNote({ kills: r.add }); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
     if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows, ch, seen);
     if (ch.weaponId !== undefined) wpnSeen(ch.weaponId);
@@ -305,7 +324,7 @@
       log(`окрестности «${z.name}» — «${ch.zoneName || ch.zone}»: это то же место охоты`);
       return;
     }
-    if (z || cfg.zone) return;
+    if (z || zoneCfg()) return;
     setRt({ zone: { id: ch.zone, name: ch.zoneName || ch.zone } });
     log(`место охоты — где стоит герой: «${ch.zoneName || ch.zone}»`);
   }
@@ -609,9 +628,27 @@
   const unav = new Map();
   // Быстрый удар (1.2): одноразовая метка для hook.js «действие|время» — только на этот клик; пустое действие метку снимает.
   const fastMark = a => { try { const ds = document.documentElement.dataset; if (a) ds.l2liteFast = a + '|' + Date.now(); else delete ds.l2liteFast; } catch (e) {} };
+  // ---------- скорость (1.8, раздел «⚡ Скорость»; основной бот 20.53 actionPace — админ игры просил замедлить ботов, PR #371/#372) ----------
+  // Пауза между действиями в игре (ход в бою, выбор моба, «Охотиться дальше», бой из списка Ashen, телепорт, запись и удар на TvT,
+  // баффер): следующее — не раньше чем через cfg.delayMs после прошлого. 0 — без паузы (как было). Ход ждёт ещё и откат/сервер, как раньше.
+  let paceT = 0;
+  async function pace(g) {
+    for (;;) {
+      const d = L.paceCfg(cfg).delay, left = paceT + d - Date.now();
+      if (!d || left <= 0) return true;
+      if (g && !alive(g)) return false;
+      if (left > 900) status(`Пауза между действиями: ещё ${Math.ceil(left / 1000)} с`);
+      progress();
+      await sleep(Math.min(left, 250));
+    }
+  }
+  const paced = () => { paceT = Date.now(); };
+  // Замер скорости (rt.spd): ход принят, победа, мобы по счётчику игры.
+  const spdNote = ev => { if (owner && cfg.on) setRt({ spd: L.speedNote(rt.spd, ev, Date.now()) }); };
   async function press(plan, g, tvt, still = null) {
     const s = plan.slot, key = s.key, path = tvt ? '/game/tvt/action' : '/game/battle/action';
     pressWhy = 'busy';
+    if (!(await pace(g))) return false;
     if (!(await gameIdle(1500, g)) || !alive(g) || !s.b.isConnected) return false;
     if (!tvt && (CD.globalWait('') > 0 || (s.action && cdWait(s.action) > 0 && cdKnown(s.action, pressAt.get(s.action) || 0)))) { pressWhy = 'cd'; quick = true; return false; }
     // 1.5.2: не стреляем без базы сумки этого документа: иначе каждый переход терял состав и повторял отказ стрел.
@@ -626,11 +663,13 @@
     if (s.action) pressAt.set(s.action, t0);
     pressAt.set(key, t0);
     fastMark(!tvt && cfg.fastTurn !== false && L.fastHit(s) ? s.action : '');
+    const pt0 = paceT;
     if (!fire(s.b, g)) { fastMark(''); return false; }
+    paced();
     if (s.pot) lastPot = { ...lastPot, [s.pot]: t0 };
     const st = await waitFor(() => NET.starts.find(x => x.t >= t0 && x.path === path && x.method === 'POST'), 450, 15);
     if (!st) {                                       // игра клик не отправила: слот «занят» 0,7 с, запас, решавший впритык, растёт
-      fastMark(''); pressWhy = 'lost';
+      fastMark(''); pressWhy = 'lost'; paceT = pt0;   // 1.8: потерянный клик — не действие, пауза между действиями его не считает
       block.set(key, Date.now() + 700);
       if (frozen) frozenLost.set(key, (frozenLost.get(key) || 0) + 1);
       if (gap < 250) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
@@ -666,7 +705,7 @@
       block.set(key, Date.now() + (/mp|мана/i.test(end.err) ? 1500 : cdErr ? 700 : 1200));
       return false;
     }
-    progress(); lastActOk = Date.now(); quick = true; pressWhy = 'ok';
+    progress(); lastActOk = Date.now(); quick = true; pressWhy = 'ok'; spdNote({ act: t0 });
     if (s.type === 'aoe' && MB) MB.aoeN++;          // 1.7: массовый принят — соседей после него видно в блоке «Додаткові цілі»
     if (s.id && L.wpnBySkill(s.id)) wpnLearn(L.wpnBySkill(s.id) === 'blunt' ? 'blunt' : 'other', s.name);   // 1.6: приём прошёл — оружие подходит ему
     if (s.action && s.type !== 'basic') {           // 1.5.1: выстрел добил моба — откат держим сами, иначе в новом бою ранний выстрел и отказ
@@ -712,8 +751,12 @@
     if (back && fire(back, g) && await waitFor(() => pageKind() !== 'battle', 8000, 100, g)) return;
     if (alive(g)) await go(inAshen() ? '/ashen-bastion.html' : '/map.html');   // 1.7: из боя Ashen «назад» — к его списку
   }
+  let winKey = '';
   async function afterVictory(g) {
     progress();
+    // 1.8: победа — в замер скорости один раз (экран победы видно несколько кругов; новая победа — после нового принятого хода)
+    const wk = spawnId() + '|' + lastActOk;
+    if (wk !== winKey) { winKey = wk; spdNote({ win: Date.now() }); }
     const s0 = SNAP;
     await waitFor(() => SNAP !== s0, 1500, 50, g);   // ответ /character игры после победы — свежий счётчик и локация
     if (!alive(g)) return;
@@ -727,7 +770,7 @@
       if (!sess.get('l2lite.ashChainLog', 0)) { sess.set('l2lite.ashChainLog', 1); log('Ashen: после победы — следующий главный из списка, не «Охотиться дальше»: цепочка даёт цель тоньше соседей, массовый удар добил бы одну'); }
       const nx = await ashenNext(g);
       if (!alive(g)) return;
-      if (nx) { status(`Ashen: следующий — ${nx.name} (HP ${nx.maxHp})`); await go('/battle.html?spawnId=' + encodeURIComponent(nx.id)); return; }
+      if (nx) { status(`Ashen: следующий — ${nx.name} (HP ${nx.maxHp})`); if (!(await pace(g))) return; paced(); await go('/battle.html?spawnId=' + encodeURIComponent(nx.id)); return; }
       status('Ashen: к списку мобов'); await toMap(g); return;
     }
     if (!why) {
@@ -735,8 +778,10 @@
       if (!alive(g)) return;
       if (hunt) {
         status('Охочусь дальше');
+        if (!(await pace(g))) return;
         await gameIdle();
         if (!alive(g) || !fire(hunt, g)) return;
+        paced();
         if (await waitFor(() => !victoryShown() && mobHp()?.hp > 0, 8000, 100, g)) { lastActOk = Date.now(); return; }
         if (!alive(g)) return;
         log('«Охотиться дальше» не начал новый бой — выбираю моба на карте');
@@ -886,7 +931,7 @@
       if (SPB.hp !== mob.hp || now - SPB.seen > 5000) { SPB.hp = mob.hp; SPB.seen = now; spbSave(); }
       return SPB;
     }
-    SPB = { key, name, t0: now, seen: now, hp: mob.hp, tries: 0, spoiled: false, massTried: false, waitT0: 0, block: {}, log0: logLines().slice(-80), won: false };
+    SPB = { key, name, t0: now, seen: now, hp: mob.hp, tries: 0, spoiled: false, massTried: false, massN: 0, marks: [], waitT0: 0, block: {}, log0: logLines().slice(-80), won: false };
     spbSave();
     return SPB;
   }
@@ -896,12 +941,22 @@
     sess.set('l2lite.spNone', Date.now());
     log('на панели боя нет включённых Spoil / Spoil Festival / Spoil Crush — не спойлю, просто бью (галки — в меню «Споил», раздел «Скиллы»)');
   }
+  // 1.8, масс-режим: живые соседи без метки Festival, которые умрут вместе с главным (L.festFresh), — только если панель бьёт
+  // массовым (пика: Whirlwind / Wild Sweep): одиночным ударом соседи не гибнут, и их спойл пропал бы.
+  // Сосед, убитый одним ударом, тут же снова полный — его метку снимает строка «Додаткова ціль повалена» (L.exDeaths) после прошлой сверки.
+  function festFreshNow(st, slots, mob) {
+    if (L.spoilMode(cfg.spoilMode) !== 'mass' || !st.massN || !slots.some(s => s.type === 'aoe' && s.on !== false)) return 0;
+    const lines = logLines(), dead = L.exDeaths(L.newLines(st.festLog || [], lines)), f = L.festFresh(st.marks, exNow(), mob, dead);
+    if (dead.length || JSON.stringify(f.marks) !== JSON.stringify(st.marks)) { st.marks = f.marks; st.festLog = lines.slice(-80); spbSave(); }
+    return f.fresh;
+  }
   async function spoilStep(slots, mob, g) {
     if (cfg.spoilOn === false || !mob || !(mob.hp > 0)) return false;
     const st = spbFor(mob);
-    if (st.spoiled) return false;
-    if (mobSpoiled()) { st.spoiled = true; spbSave(); return false; }   // значок спойла уже висит — не жмём (игра ответила бы «уже заспойлен»)
-    const opt = () => ({ blunt: wpnBlunt(), tries: cfg.spoilTries, now: Date.now() });
+    if (!st.spoiled && mobSpoiled()) { st.spoiled = true; spbSave(); }   // значок спойла уже висит — Spoil не жмём (игра ответила бы «уже заспойлен»)
+    const mode = L.spoilMode(cfg.spoilMode);
+    if (st.spoiled && !(mode === 'mass' && st.massN)) return false;
+    const opt = () => ({ blunt: wpnBlunt(), tries: cfg.spoilTries, now: Date.now(), mode, fresh: festFreshNow(st, slots, mobHp() || mob) });
     if (WPN.id === undefined && Date.now() - WPN.t > 60000) { WPN.t = Date.now(); void heroNow(); }   // оружие не знаем — спросим игру (раз в минуту)
     const p = L.spoilPlan(slots, meStats(), mob, st, opt());
     if (!p) { spoilNone(slots); return false; }
@@ -917,17 +972,20 @@
       }
       return true;
     }
-    if (p.kind === 'mass') st.massTried = true; else st.tries++;
+    const again = p.kind === 'mass' && st.massN > 0;
+    if (p.kind === 'mass') { st.massTried = true; st.massN = (st.massN || 0) + 1; } else st.tries++;
     spbSave();
-    await waitFor(() => mobSpoiled() || spoilSeen(before), 1000, 40, g);
+    await waitFor(() => (!again && mobSpoiled()) || spoilSeen(before), 1000, 40, g);
     const fresh = L.newLines(before, logLines()), S = spStat();
     if (p.kind === 'mass') {
       // Итог Festival: «Spoil Festival: Моб: успіх (63%); Моб2: промах (51%)» — главный помечен или нет; соседи — в счёт.
       const res = L.festivalParse(fresh), one = L.spoilResult(fresh), main = res.find(x => L.nameLike(x.name, st.name));
       const oks = res.length ? res.filter(x => x.ok && !x.was).length : one.ok ? 1 : 0, bads = res.length ? res.filter(x => !x.ok).length : one.bad ? 1 : 0;
       if (mobSpoiled() || main?.ok || (!res.length && one.ok)) st.spoiled = true;
+      st.marks = L.festMarks(res, exNow(), st.name, st.spoiled); st.festLog = logLines().slice(-80);   // 1.8: кто из соседей помечен — масс-режим жмёт Festival снова по новым
       Object.assign(S, { mass: S.mass + 1, massOk: S.massOk + oks, massFail: S.massFail + bads, known: res.length || one.ok ? 1 : S.known });
       if (S.mass === 1) log(`Spoil Festival: ${res.length ? res.map(x => `${x.name} ${x.was ? 'уже' : x.ok ? '✅' : '✗'}${x.ch ? ' ' + x.ch + '%' : ''}`).join(', ') : one.ok ? '✅' : one.bad ? '✗' : 'игра итог не написала'}${st.spoiled ? '' : ' — главного добью обычным Spoil'}`);
+      if (again && !sess.get('l2lite.refestLog', 0)) { sess.set('l2lite.refestLog', 1); log(`масс-спойл: рядом новые мобы без метки — Spoil Festival ещё раз (${res.length ? res.map(x => `${x.name} ${x.was ? 'уже' : x.ok ? '✅' : '✗'}`).join(', ') : 'итог не написан'})`); }
     } else {
       const r = L.spoilResult(fresh);
       if (r.ok && !S.known) log(`игра пишет итог спойла: «${r.ok.slice(0, 80)}» — дальше считаю по нему`);
@@ -949,6 +1007,46 @@
     if (keys.length > 60) for (const k of keys.sort((a, b) => items[a] - items[b]).slice(0, keys.length - 60)) delete items[k];
     if (Date.now() - (S.logT || 0) > 600000) { S.logT = Date.now(); log(`спойл: ${spoilSummary(S)}`); }
     setRt({ spoil: S });
+  }
+  // ---------- автономный спойлер (1.8, John 24.10: «полностью автономный режим») ----------
+  // Место охоты бот выбирает сам (L.spoilAutoSpots / L.spoilAutoPick): под выбранный ресурс или по уровню героя (мобы героя ±5 ур.).
+  // Переезжает, когда герой перерос место или нашлось лучше; место, где 90 с нет подходящих мобов, куда не долетели или где дважды
+  // за 30 мин погибли, 30–60 мин не берёт (rt.spotBad). Летит телепортом за адену, как к месту из меню; Coin of Luck — никогда.
+  const autoOn = () => cfg.kind === 'spoil' && cfg.spoilAuto === true;
+  const zoneCfg = () => (autoOn() ? '' : cfg.zone);   // место из меню, пока режим включён, не действует
+  let autoT = 0, autoLvl = 0;
+  const spotBadNow = () => Object.fromEntries(Object.entries(rt.spotBad || {}).filter(([, t]) => t > Date.now()));
+  function autoNote(key, text, ms = 600000) {
+    const m = sess.get('l2lite.autoLog', {});
+    if (Date.now() - (m[key] || 0) < ms) return;
+    sess.set('l2lite.autoLog', { ...m, [key]: Date.now() }); log(text);
+  }
+  function autoTick() {
+    if (!autoOn() || !owner) return;
+    const lvl = heroLvl();
+    if (Date.now() - autoT < 20000 && lvl === autoLvl) return;
+    autoT = Date.now(); autoLvl = lvl;
+    if (!lvl || !(rt.locs || []).length) { autoNote('wait', 'автономный спойлер: жду уровень героя и список мест от игры — пока охочусь там, где стою'); return; }
+    const res = L.spoilRes(cfg.spoilRes), spots = L.spoilAutoSpots(rt.locs, res, lvl, 50), bad = spotBadNow();
+    const pick = L.spoilAutoPick(spots, { bad: Object.keys(bad), cur: rt.zone?.auto ? rt.zone.id : '' });
+    if (!pick) { autoNote('none', `автономный спойлер: нет мест с мобами ${Math.max(1, lvl - 5)}–${lvl + 5} ур.${res ? ', с которых спойлится ' + res.name : ''}${Object.keys(bad).length ? ' (кроме отложенных)' : ''} — охочусь там, где стою`); return; }
+    if (rt.zone && rt.zone.id === pick.id) { if (!rt.zone.auto) setRt({ zone: { ...rt.zone, auto: true } }); return; }
+    setRt({ zone: { id: pick.id, name: pick.name, auto: true }, goZone: '', tpTry: [] });
+    log(`автономный спойлер: место охоты — «${pick.name}» (мобы ${pick.lo}–${pick.hi ?? '?'} ур., ${res ? res.name + ' до ' + pick.v + ' %' : 'сырьё по уровню героя ' + lvl})`);
+  }
+  function autoBad(id, ms, why) {
+    if (!autoOn() || !id) return;
+    setRt({ spotBad: Object.fromEntries(Object.entries({ ...spotBadNow(), [id]: Date.now() + ms }).slice(-30)) });
+    log(`автономный спойлер: «${rt.zone?.id === id ? rt.zone.name : id}» — ${why}; ${Math.round(ms / 60000)} мин туда не лечу, выбираю другое место`);
+    autoT = 0;
+  }
+  // Погиб на выбранном самим месте — второй раз за 30 мин: место опасно для героя, 60 мин его не берём.
+  function autoDeath() {
+    const z = rt.zone;
+    if (!autoOn() || !z?.auto || !(SNAP && zoneIs(SNAP.zone))) return;
+    const m = sess.get('l2lite.autoDeaths', {}), list = [...(m[z.id] || []).filter(t => Date.now() - t < 30 * 60000), Date.now()];
+    sess.set('l2lite.autoDeaths', { ...m, [z.id]: list });
+    if (list.length >= 2) autoBad(z.id, 60 * 60000, `${list.length} смерти за 30 мин`);
   }
   function spoilSummary(S) {
     const top = Object.entries(S.items || {}).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n, q]) => `${n} ${q}`).join(', ');
@@ -1027,17 +1125,25 @@
     }
     if (!m) {
       noMobT0 = noMobT0 || Date.now();
+      // 1.8: автономный спойлер — на выбранном самим месте 90 с нет подходящих мобов (карта перезагружается каждые 15 с — время
+      // в памяти вкладки) — место откладываем и выбираем другое.
+      const nm = sess.get('l2lite.noMob', null), nm0 = nm && nm.id === rt.zone?.id && Date.now() - nm.last < 60000 ? nm.t0 : Date.now();
+      sess.set('l2lite.noMob', { id: rt.zone?.id || '', t0: nm0, last: Date.now() });
+      if (autoOn() && rt.zone?.auto && S && zoneIs(S.zone) && Date.now() - nm0 > 90000) {
+        sess.set('l2lite.noMob', null); autoBad(rt.zone.id, 30 * 60000, 'нет подходящих мобов 1,5 мин'); autoTick(); progress(); return;
+      }
       // 1.5.1 (John 21.10: «не бьет мобов»): причина — в журнал (раз в 2 мин), чтобы было видно, почему бот стоит.
       const why = L.noMobWhy(rows || mapRows(), { hero: heroLvl(), skip: new Set(badSpawn.keys()) });
       if (Date.now() - (sess.get('l2lite.noMobLog', 0) || 0) > 120000) { sess.set('l2lite.noMobLog', Date.now()); log(`подходящих мобов нет — ${why}; обновляю карту каждые 15 с`); }
       status(`Подходящих мобов рядом нет (${why}) — обновлю карту через 15 с`); progress();
       await sleep(15000); if (alive(g)) location.reload(); await sleep(3000); return;
     }
-    noMobT0 = 0;
+    noMobT0 = 0; sess.set('l2lite.noMob', null);
     if (res && !prefer(m) && Date.now() - (sess.get('l2lite.resLog', 0) || 0) > 600000) { sess.set('l2lite.resLog', Date.now()); log(`рядом нет мобов, с которых спойлится ${res.name} (нужен ${L.spoilMin(res)}+ ур.) — бью ближайших; места под ресурс — в меню «Споил»`); }
     status(`Атакую ${m.name}${m.lvl ? ' (' + m.lvl + ' ур.)' : ''}`);
     await flushRt();
-    if (!fire(m.a, g)) return;
+    if (!(await pace(g)) || !fire(m.a, g)) return;
+    paced();
     if (!(await waitFor(() => pageKind() === 'battle', 10000, 100, g)) && alive(g)) { badSpawn.set(m.id, Date.now()); log(`${m.name}: бой не начался — пропускаю его 2 мин`); }
   }
 
@@ -1094,7 +1200,7 @@
     const S = snapFresh(20000);
     if (await battleBack(S)) return;
     if (S && S.zone && S.zone !== ASHEN && !S.inBattle) { await go('/map.html'); return; }   // герой не в Ashen — место охоты решает карта
-    if (!rt.zone && !cfg.zone) {
+    if (!rt.zone && !zoneCfg()) {
       status(snapFresh() ? 'Запоминаю место охоты' : 'Жду данные героя от игры');
       await zoneAsk();
       if (!rt.zone) { if (Date.now() - pageT0 > 10000) zoneWhy(); await sleep(1000); return; }
@@ -1139,7 +1245,8 @@
     if (aoe && exMax && !sess.get('l2lite.ashPickLog', 0)) { sess.set('l2lite.ashPickLog', 1); log(`Ashen: бью главного не тоньше соседей (HP ≥ ${exMax}) — массовый удар добивает троих за бой`); }
     status(`Ashen: атакую ${pick.name} (HP ${pick.maxHp || '—'})${aoe ? (exMax ? (pick.maxHp >= exMax ? ' — соседи умрут вместе с ним' : ' — тоньше соседей, другой цели нет') : ' — смотрю, кого задевает массовый') : ''}`);
     await flushRt();
-    if (!fire(pick.btn, g)) return;
+    if (!(await pace(g)) || !fire(pick.btn, g)) return;
+    paced();
     if (!(await waitFor(() => pageKind() === 'battle', 10000, 100, g)) && alive(g)) { badSpawn.set(ashKey(pick), Date.now()); log(`${pick.name}: бой не начался — пропускаю его 2 мин`); }
   }
 
@@ -1151,7 +1258,11 @@
     const there = h => (h.city ? '/city.html' : id === ASHEN ? '/ashen-bastion.html' : '/map.html');   // 1.7: Ashen — без карты
     if (S && (S.zone === id || (rt.zone?.id === id && zoneIs(S.zone))) && !S.inBattle) { setRt({ goZone: '' }); await go(there({ city: S.locType === 'city' })); return; }
     const tries = (rt.tpTry || []).filter(t => Date.now() - t < 15 * 60000);
-    const giveUp = async why => { log(`телепорт в «${name}»: ${why} — 15 мин охочусь там, где стою`); setRt({ goZone: '', zoneBlockT: Date.now() }); await go('/map.html'); };
+    const giveUp = async why => {
+      log(`телепорт в «${name}»: ${why} — 15 мин охочусь там, где стою`); setRt({ goZone: '', zoneBlockT: Date.now() });
+      if (autoOn() && rt.zone?.auto && rt.zone.id === id) autoBad(id, 30 * 60000, 'телепорт не удался');   // 1.8: после блока — другое место
+      await go('/map.html');
+    };
     if (tries.length >= 3) return giveUp('3 попытки за 15 мин не привели на место');
     status(`Телепорт: ищу «${name}»`);
     let n0 = -1, same = 0;
@@ -1179,8 +1290,10 @@
     if (Number.isFinite(adena) && cost.price > adena) return giveUp(`не хватает адены (${cost.price} > ${adena})`);
     setRt({ tpTry: [...tries, Date.now()] }); await flushRt();
     log(`телепорт → «${name}»${cost.price ? ' за ' + cost.price + ' аден' : ' (бесплатно)'}`);
+    if (!(await pace(g))) return;
     await gameIdle();
     if (!fire(btn, g)) return;
+    paced();
     await waitFor(() => pageKind() !== 'teleport' || /недостат|not enough/i.test(document.body.innerText.slice(-4000)), 8000, 200, g);
     if (alive(g) && pageKind() === 'teleport') return giveUp('игра не перенесла героя');
   }
@@ -1194,14 +1307,19 @@
       const deaths = [...(rt.deaths || []).filter(t => Date.now() - t < 30 * 60000), Date.now()];
       setRt({ deaths, revive: { t: Date.now(), step: 'city' } }); sess.set('l2lite.buffs', {}); sess.set('l2lite.tgl', {});   // 1.5.1: стойки после смерти слетают
       log(`☠ герой погиб (${deaths.length} за 30 мин)`);
+      autoDeath();
       if (deaths.length >= Math.max(1, +cfg.maxDeaths || 3)) {
         log(`☠ ${deaths.length} смерти за 30 мин — останавливаю бота, чтобы не терять опыт. Проверьте место охоты и скиллы`);
         notify('death', 'L2wap Lite остановлен', `${deaths.length} смерти за 30 минут.`);
-        await flushRt(); await chrome.storage.local.set({ [K_CFG]: { ...cfg, on: false } });
+        // 1.8: выключаем только on — свежий lite.cfg как есть. До 1.8 сюда писались настройки активного профиля плоско ({...cfg}),
+        // и профили p.destr / p.archer / p.spoil / p.mage пропадали.
+        await flushRt();
+        const cur = (await chrome.storage.local.get(K_CFG))[K_CFG] || RAW || {};
+        await chrome.storage.local.set({ [K_CFG]: { ...cur, on: false } });
         return true;
       }
     }
-    if (btn) { status('После смерти: «Вернуться в город»'); await gameIdle(); fire(btn, g); await waitFor(() => pageKind() === 'city' || !defeatShown(), 8000, 200, g); }
+    if (btn) { status('После смерти: «Вернуться в город»'); await pace(g); await gameIdle(); if (fire(btn, g)) paced(); await waitFor(() => pageKind() === 'city' || !defeatShown(), 8000, 200, g); }
     else await sleep(1000);
     return true;
   }
@@ -1239,7 +1357,7 @@
       const b = await waitFor(() => { const x = $('#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="basic"]'); return shown(x) && !x.disabled ? x : null; }, 10000, 200, g);
       if (!alive(g)) return;
       setRt({ revive: { ...rt.revive, buff: Date.now() } });
-      if (b) { await sleep(rnd(800, 1300)); fire(b, g); const ok = await waitFor(() => /накладено|наложен|applied/i.test(res()), 6000, 200, g); log(ok ? 'городской бафф «basic» наложен' : `городской бафф: ${res().slice(0, 80) || 'нет ответа'}`); }
+      if (b) { await sleep(rnd(800, 1300)); await pace(g); if (fire(b, g)) paced(); const ok = await waitFor(() => /накладено|наложен|applied/i.test(res()), 6000, 200, g); log(ok ? 'городской бафф «basic» наложен' : `городской бафф: ${res().slice(0, 80) || 'нет ответа'}`); }
     }
     const rb = await waitFor(() => $('#town-buffer-restore-btn'), 10000, 200, g);
     if (!alive(g)) return;
@@ -1248,8 +1366,8 @@
       await sleep(rnd(1300, 1800));
       for (const w of [0, 5000, 8000, 12000, 15000]) {
         if (w) { status(`Восстановление: игра пока не даёт — повтор через ${w / 1000} с`); progress(); await sleep(w); }
-        if (!alive(g)) return;
-        fire(rb, g);
+        if (!alive(g) || !(await pace(g))) return;
+        if (fire(rb, g)) paced();
         await waitFor(() => hpPct() >= 99 || /не удалось|не вдалося|failed|восстановлен|відновлен|restored/i.test(msg()), 7000, 200, g);
         if (hpPct() >= 90) break;
       }
@@ -1338,8 +1456,10 @@
       setRt({ tvtNoBtn: { id: V.id, n: nb } }); log(`TvT: кнопки «Зарегистрироваться» нет${why ? ' — ' + why : ''}`);
       return true;
     }
+    if (!(await pace(g))) return true;
     await gameIdle();
     if (!fire(b, g)) return true;
+    paced();
     log(`TvT: регистрация отправлена (${V.count}/${V.max})`);
     await sleep(1500); await tvtPoll(true);
     if (!alive(g)) return true;
@@ -1599,6 +1719,7 @@
     TVT_ACT = cfg.tvt ? tvtDecideNow(pg) : null;
     if (TVT_ACT && await tvtStep(pg, g)) return;
     if (!alive(g)) return;
+    autoTick();                                     // 1.8: автономный спойлер — место охоты (раз в 20 с и при новом уровне)
     if (pg === 'battle') return battleStep(g);
     if (pg === 'map') return mapStep(g);
     if (pg === 'ashen') return ashenStep(g);
@@ -1617,7 +1738,9 @@
       // Сторож: 4 мин без продвижения (ход, победа, переход, честное ожидание) — карта заново.
       if (cfg.on && owner && !dead && Date.now() - progT > 240000) { log('4 мин без продвижения — начинаю с карты'); progress(); try { await go('/map.html'); } catch (e) {} }
       // Lite 1.1 (основной бот 20.37): после хода, подтверждённого сервером, следующий круг ждёт только сервер и готовность игры.
-      await sleep(quick ? 0 : rnd(60, 140));
+      // 1.8: пауза круга — «реакция» из раздела «Скорость» (по умолчанию прежние 60–140 мс).
+      const P = L.paceCfg(cfg);
+      await sleep(quick ? 0 : rnd(P.lo, P.hi));
     }
   }
 

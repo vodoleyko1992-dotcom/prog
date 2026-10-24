@@ -155,10 +155,13 @@
   const defaultOn = (info, kind) => !!info && info.known && (['attack', 'aoe', 'buff', 'lowhp', 'trance', 'heal', 'spoil'].includes(info.type)
     || (kind === 'mage' && MAGE_ON.has(info.id))) && !offWeapon(info, kind);
   // Выбор игрока поверх таблицы: {on, type}. Тип «basic» (обычная атака) не меняется — она всегда запасной ход.
+  // 1.8 (John 24.10: «спойл фестивалем масс»): у спойлера приёмы пики Whirlwind / Wild Sweep — массовый удар: Festival метит пачку,
+  // а добычу спойла соседей игра даёт, только когда они гибнут (основной бот 20.14, loot.massSpoilStep) — пачку бьём вместе, как маг.
   function skillUse(info, choice, kind) {
     if (!info) return null;
     if (info.type === 'basic') return { ...info, on: true };
-    const type = choice && TYPES.includes(choice.type) ? choice.type : info.type;
+    const base = kind === 'spoil' && info.type === 'attack' && POLE_ONLY.has(info.id) ? 'aoe' : info.type;
+    const type = choice && TYPES.includes(choice.type) ? choice.type : base;
     const on = choice && typeof choice.on === 'boolean' ? choice.on : defaultOn(info, kind);
     return { ...info, type, on: on && type !== 'other' };
   }
@@ -416,35 +419,85 @@
   //    откатится — ждём его (с дубиной ждём только Crush); на ожидания — не больше 1,5 с за бой;
   // 3) обычный Spoil: до opt.tries попыток (4), повтор — пока HP моба > 30 %; Spoil Crush без подтверждённой дубины — после Spoil,
   //    с подтверждённым другим оружием — никогда.
-  // sl — слоты боя (slotsNow; у слотов спойла type 'spoil', left — мс до готовности); st — память боя {tries, spoiled, massTried,
-  // waitT0, block: {key: до}}; opt {blunt: true | false | null, tries, now}. → null | {slot, kind: 'crush'|'mass'|'single', why} | {wait: мс, why}
-  const SPOIL_WAIT = 1000, SPOIL_WAIT_MAX = 1500;
+  // 1.8 (John 24.10: «режим спойла мобов: спойл фестивалем масс или соло спойлом»): opt.mode —
+  //   auto — как 1.6 (выше: по оружию);
+  //   mass — Spoil Festival главный приём: первым и с дубиной, в начале боя ждём его откат до 3 с (бой цепочки ≈2,3–3 с, откат
+  //          Festival ≈2,7 с — основной бот 20.43, BH 75 с пикой), удары до него не идут; потом — ещё раз, когда рядом живые
+  //          непомеченные соседи, которые умрут вместе с главным (opt.fresh: подошли, возродились с полным HP, промах Festival), до 3 раз
+  //          за бой; главного, если Festival его не пометил, — обычным Spoil/Crush;
+  //   solo — только Spoil / Spoil Crush по главной цели, Festival не жмём (его MP и ход — на удар).
+  // sl — слоты боя (slotsNow; у слотов спойла type 'spoil', left — мс до готовности); st — память боя {tries, spoiled, massTried, massN,
+  // waitT0, block: {key: до}}; opt {blunt: true | false | null, tries, now, mode, fresh}. → null | {slot, kind: 'crush'|'mass'|'single', why} | {wait: мс, why}
+  const SPOIL_WAIT = 1000, SPOIL_WAIT_MAX = 1500, FEST_WAIT = 3000, FEST_WAIT_MAX = 3500, FEST_MAX = 3;
+  const SPOIL_MODES = ['auto', 'mass', 'solo'];
+  const SPOIL_MODE_RU = { auto: 'авто — по оружию', mass: 'масс — Spoil Festival', solo: 'соло — Spoil' };
+  const spoilMode = m => (SPOIL_MODES.includes(m) ? m : 'auto');
   function spoilPlan(sl, me, mob, st = {}, opt = {}) {
-    if (!mob || !(mob.maxHp > 0) || !(mob.hp > 0) || st.spoiled) return null;
+    if (!mob || !(mob.maxHp > 0) || !(mob.hp > 0)) return null;
     const now = opt.now || Date.now(), tries = st.tries || 0, maxT = Number.isFinite(+opt.tries) ? Math.max(1, Math.min(10, +opt.tries)) : 4;
-    const blunt = opt.blunt === true ? true : opt.blunt === false ? false : null;
+    const blunt = opt.blunt === true ? true : opt.blunt === false ? false : null, mode = spoilMode(opt.mode);
     const mpKnown = Number.isFinite(me?.mp) && me?.maxMp > 0, mpOk = s => !(s.mp > 0) || !mpKnown || me.mp >= s.mp;
     const sp = (sl || []).filter(s => s && s.type === 'spoil' && s.on !== false && !((st.block || {})[s.key] > now) && mpOk(s));
-    const crush = sp.filter(s => isCrush(s) && blunt !== false), mass = sp.filter(isMassSpoil), single = sp.filter(s => !isCrush(s) && !isMassSpoil(s));
-    const waitOk = !tries && !st.massTried && (!st.waitT0 || now - st.waitT0 < SPOIL_WAIT_MAX);
-    const soon = s => !s.ready && s.left > 0 && s.left <= SPOIL_WAIT;
+    const crush = sp.filter(s => isCrush(s) && blunt !== false), single = sp.filter(s => !isCrush(s) && !isMassSpoil(s));
+    const mass = mode === 'solo' ? [] : sp.filter(isMassSpoil), massN = st.massN || (st.massTried ? 1 : 0);
+    // масс: пачка у цели пополнилась непомеченными — Festival ещё раз (только готовый: ожидание — лишь в начале боя)
+    if (mode === 'mass' && massN > 0 && massN < FEST_MAX && opt.fresh > 0) {
+      const m = mass.find(s => s.ready);
+      if (m) return { slot: m, kind: 'mass', why: `масс-спойл: рядом ${opt.fresh} без метки` };
+    }
+    if (st.spoiled) return null;
+    const lim = mode === 'mass' ? FEST_WAIT : SPOIL_WAIT, waitMax = mode === 'mass' ? FEST_WAIT_MAX : SPOIL_WAIT_MAX;
+    const waitOk = !tries && !st.massTried && (!st.waitT0 || now - st.waitT0 < waitMax);
+    const soon = (s, ms = SPOIL_WAIT) => !s.ready && s.left > 0 && s.left <= ms;
     const wait = (s, why) => ({ wait: Math.max(30, Math.min(150, Math.round(s.left))), slot: s, why });
-    if (blunt && !tries && !st.massTried) {
+    if (blunt && !tries && !st.massTried && !(mode === 'mass' && mass.length)) {
       const c = crush.find(s => s.ready) || null;
       if (c) return { slot: c, kind: 'crush', why: 'спойл: Spoil Crush (дубина)' };
-      const w = waitOk && crush.find(soon);
+      const w = waitOk && crush.find(s => soon(s));
       if (w) return wait(w, 'жду откат Spoil Crush');
     }
     if (!st.massTried) {
       const m = mass.find(s => s.ready);
       if (m) return { slot: m, kind: 'mass', why: tries ? 'масс-спойл после промаха' : 'масс-спойл' };
-      const w = !blunt && waitOk && mass.find(soon);
+      const w = (mode === 'mass' || !blunt) && waitOk && mass.find(s => soon(s, lim));
       if (w) return wait(w, 'жду откат Spoil Festival');
     }
     if (tries >= maxT || (tries && mob.hp < mob.maxHp * 0.3)) return null;
     const rank = s => (isCrush(s) ? (blunt ? 0 : 2) : 1);
     const x = [...crush, ...single].filter(s => s.ready).sort((a, b) => rank(a) - rank(b) || (a.i || 0) - (b.i || 0))[0];
     return x ? { slot: x, kind: isCrush(x) ? 'crush' : 'single', why: `спойл (${tries + 1})` } : null;
+  }
+  // 1.8, масс-режим: кого из соседей пометил Festival. res — его итог (festivalParse: «Моб: успіх / промах / вже заспойлено»),
+  // ex — соседи на экране после него [{name, hp, maxHp}], mainName/mainOk — главный и помечен ли он (значок спойла).
+  // Имена в пачке часто одинаковые: помеченных соседей считаем по именам — удачи минус главный, если помечен он.
+  // Итога по мобам нет (другой язык игры) — считаем помеченными всех видимых, иначе Festival жался бы по кругу. → [{name, maxHp, hp}]
+  function festMarks(res, ex, mainName, mainOk) {
+    const alive = (Array.isArray(ex) ? ex : []).filter(x => x && x.hp > 0), mark = x => ({ name: x.name, maxHp: x.maxHp, hp: x.hp });
+    if (!Array.isArray(res) || !res.length) return alive.map(mark);
+    const oks = res.filter(r => r && r.ok).map(r => r.name);
+    if (mainOk) { const i = oks.findIndex(n => nameLike(n, mainName)); if (i >= 0) oks.splice(i, 1); }
+    const out = [];
+    for (const x of alive) { const i = oks.findIndex(n => nameLike(n, x.name) || (!x.name && oks.length)); if (i >= 0) { oks.splice(i, 1); out.push(mark(x)); } }
+    return out;
+  }
+  // «Додаткова ціль повалена: Dark Reaper.» — сосед погиб; на его месте тут же такой же полный моб, уже без метки (изучение мага
+  // 24.10). Сосед, убитый одним ударом, по HP не отличить от прежнего — поэтому метки снимаем по этим строкам. → [имя, …]
+  const EX_DEAD = /^(?:\[[\d:.]+\]\s*)?(?:Додаткова ціль повалена|Дополнительная цель повержена)\s*:\s*(.+?)\.?\s*$/i;
+  const exDeaths = lines => (Array.isArray(lines) ? lines : []).map(l => String(l || '').trim().match(EX_DEAD)?.[1]?.trim() || '').filter(Boolean);
+  // Сколько рядом живых соседей без метки, которые умрут вместе с главным (HP не больше, чем у него: массовый удар бьёт всех
+  // одинаково), и обновлённые метки. Помеченный — тот же моб: имя и макс. HP те же, HP не выросло; выросло или в журнале его
+  // смерть (dead — имена из exDeaths после прошлой сверки) — это уже новый моб. → {fresh, marks}
+  function festFresh(marks, ex, mob, dead) {
+    const left = (Array.isArray(marks) ? marks : []).filter(Boolean).map(x => ({ ...x })), out = [];
+    for (const n of Array.isArray(dead) ? dead : []) { const i = left.findIndex(m => nameLike(m.name, n)); const j = i >= 0 ? i : left.findIndex(m => !m.name); if (j >= 0) left.splice(j, 1); }
+    let fresh = 0;
+    for (const x of Array.isArray(ex) ? ex : []) {
+      if (!x || !(x.hp > 0)) continue;
+      const i = left.findIndex(m => (nameLike(m.name, x.name) || (!m.name && !x.name)) && (m.maxHp === x.maxHp || !(m.maxHp > 0)) && !(x.hp > m.hp + (x.maxHp > 0 ? x.maxHp : 0) * 0.05));
+      if (i >= 0) { left.splice(i, 1); out.push({ name: x.name, maxHp: x.maxHp, hp: x.hp }); }
+      else if (!(mob && mob.hp > 0) || !(x.hp > mob.hp)) fresh++;
+    }
+    return { fresh, marks: out };
   }
 
   // Ресурсы спойла по уровню моба (справочник игры GET /game/farm-guide, kb/data/game-farm-guide.json, 23.10): у спойла все мобы
@@ -482,6 +535,33 @@
       if (ch > 0) out.push({ id: x.id, name: x.name || x.id, lo: x.lo, hi: x.hi, ch, d: Math.abs((x.lo + (x.hi > 0 ? x.hi : x.lo)) / 2 - H) });
     }
     return out.sort((a, b) => b.ch - a.ch || a.d - b.d || String(a.name).localeCompare(String(b.name))).slice(0, n).map(({ d, ...x }) => x);
+  }
+  // 1.8, автономный спойлер (John 24.10: «полностью автономный режим»): место охоты бот выбирает сам. С ресурсом — места под него
+  // (spoilSpots, v — шанс); без ресурса — по уровню героя: мобы героя ±5 ур., ценность — сумма шансов всего сырья со спойла моба
+  // (ярус 40+ даёт всё базовое по 53–60 %, 51+ ещё Oriharukon, 61+ Adamantite, а мобы 36–39 базового не дают), дальше — ближе к уровню.
+  const spoilValue = lvl => SPOIL_RES.reduce((a, r) => a + spoilChance(r, lvl), 0);
+  function spoilAutoSpots(locs, res, hero, n = 5) {
+    const r = res ? (typeof res === 'string' ? spoilRes(res) : res) : null;
+    if (r) return spoilSpots((Array.isArray(locs) ? locs : []).filter(x => x && x.id !== 'ashen_bastion'), r, hero, n).map(x => ({ ...x, v: x.ch }));   // Ashen Bastion (без карты, мобы 85) автономный спойлер не выбирает
+    const H = +hero || 0, out = [];
+    if (H <= 0) return [];
+    for (const x of Array.isArray(locs) ? locs : []) {
+      if (!x || !x.id || !(x.lo > 0) || x.id === 'ashen_bastion') continue;
+      const lo = Math.max(x.lo, H - 5), hi = Math.min(x.hi > 0 ? x.hi : x.lo, H + 5);
+      if (lo > hi) continue;
+      let v = 0;
+      for (let L = lo; L <= hi; L++) v = Math.max(v, spoilValue(L));
+      if (v > 0) out.push({ id: x.id, name: x.name || x.id, lo: x.lo, hi: x.hi, v, d: Math.abs((x.lo + (x.hi > 0 ? x.hi : x.lo)) / 2 - H) });
+    }
+    return out.sort((a, b) => b.v - a.v || a.d - b.d || String(a.name).localeCompare(String(b.name))).slice(0, n).map(({ d, ...x }) => x);
+  }
+  // Какое место взять: лучшее из неиспорченных (bad — места, где не было мобов, не долетели или погибли); текущее держим, пока оно
+  // не хуже лучшего (не скачем между равными местами за адену). → место или null
+  function spoilAutoPick(spots, opt = {}) {
+    const bad = opt.bad instanceof Set ? opt.bad : new Set(opt.bad || []);
+    const ok = (Array.isArray(spots) ? spots : []).filter(x => x && x.id && !bad.has(x.id));
+    const cur = ok.find(x => x.id === opt.cur);
+    return cur && cur.v >= ok[0].v ? cur : ok[0] || null;
   }
 
   // ---------- карта ----------
@@ -557,15 +637,55 @@
   // это профиль Дестра (Lite до 1.5 вёл только его), профиль лука начинается с умолчаний.
   // 1.6: поля спойла (spoilOn — спойлить, spoilTries — попыток обычного Spoil на моба, spoilRes — ресурс, под который выбираем мобов
   // и места) есть у каждого профиля, но читает их только профиль «Споил».
-  const PROF_KEYS = ['zone', 'zoneName', 'killLimit', 'tvt', 'skills', 'hpPot', 'mpPot', 'maxDeaths', 'fastTurn', 'spoilOn', 'spoilTries', 'spoilRes'];
-  const DEF_PROF = { zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true, spoilOn: true, spoilTries: 4, spoilRes: '' };
+  // 1.8: spoilMode — режим спойла (auto / mass / solo, spoilPlan), spoilAuto — автономный спойлер (место выбирает сам, spoilAutoSpots).
+  const PROF_KEYS = ['zone', 'zoneName', 'killLimit', 'tvt', 'skills', 'hpPot', 'mpPot', 'maxDeaths', 'fastTurn', 'spoilOn', 'spoilTries', 'spoilRes', 'spoilMode', 'spoilAuto'];
+  const DEF_PROF = { zone: '', zoneName: '', killLimit: 0, tvt: true, skills: {}, hpPot: 50, mpPot: 25, maxDeaths: 3, fastTurn: true, spoilOn: true, spoilTries: 4, spoilRes: '',
+    spoilMode: 'auto', spoilAuto: false };
+  // 1.8, раздел «⚡ Скорость» (John 24.10: «добавь раздел со скоростью работы бота»; основной бот 20.53, раздел «Скорость»):
+  // общие для всех профилей — в lite.cfg наверху. delayMs — пауза между действиями в игре (0 — без паузы, как основной бот по решению John),
+  // reactMin/reactMax — пауза круга бота вне подтверждённого хода (Lite 1.1: 60–140 мс).
+  const G_KEYS = ['delayMs', 'reactMin', 'reactMax'];
+  const DEF_G = { delayMs: 0, reactMin: 60, reactMax: 140 };
   const kindOf = k => (KINDS.includes(k) ? k : 'destr');
   const pickProf = o => Object.fromEntries(PROF_KEYS.filter(k => o && o[k] !== undefined).map(k => [k, o[k]]));
+  const pickG = o => Object.fromEntries(G_KEYS.filter(k => o && o[k] !== undefined).map(k => [k, o[k]]));
   function profCfg(raw, kind) {
     const r = raw && typeof raw === 'object' ? raw : {}, k = kindOf(kind), own = r.p && typeof r.p === 'object' ? r.p[k] : null;
-    return { ...DEF_PROF, ...(k === 'destr' ? pickProf(r) : {}), ...pickProf(own), on: !!r.on, kind: k };
+    return { ...DEF_PROF, ...(k === 'destr' ? pickProf(r) : {}), ...pickProf(own), ...DEF_G, ...pickG(r), on: !!r.on, kind: k };
   }
-  // Запись из меню: поля профиля — в его p.<kind>, остальное (on) — наверх. Старые поля Дестра наверху не трогаем: p.destr важнее.
+  // Пауза и реакция из настроек — в границах: пауза 0–5 с (шаг 0,1 с, как в основном боте), реакция 0–3 с, «от» не больше «до».
+  function paceCfg(c) {
+    const n = (v, lo, hi, d) => { const x = v == null || v === '' ? NaN : Math.round(+v); return Number.isFinite(x) ? Math.min(hi, Math.max(lo, x)) : d; };
+    const delay = Math.round(n(c && c.delayMs, 0, 5000, 0) / 100) * 100, a = n(c && c.reactMin, 0, 3000, 60), b = n(c && c.reactMax, 0, 3000, 140);
+    return { delay, lo: Math.min(a, b), hi: Math.max(a, b) };
+  }
+  // Замер скорости (rt.spd, с Старта или кнопки «Сбросить замер»): acts — принятые сервером ходы, gapSum/gapN — промежутки между
+  // ходами одного боя (до 10 с), wins/cycSum/cycN — победы и время от победы до победы (до 5 мин), kills — мобы по счётчику игры.
+  // → {min — минут замера, apm — ходов в минуту, gap — средний промежуток между ходами, с, cyc — моб каждые N с, kph — мобов в час}
+  function speedStats(spd, now) {
+    const S = spd && typeof spd === 'object' ? spd : {}, t = (now || Date.now()) - (+S.t0 || 0), min = S.t0 > 0 && t > 0 ? t / 60000 : 0;
+    const r1 = x => Math.round(x * 10) / 10;
+    return { min: r1(min), acts: S.acts || 0, kills: S.kills || 0, wins: S.wins || 0,
+      apm: min >= 0.5 ? Math.round((S.acts || 0) / min) : null, gap: S.gapN ? Math.round(S.gapSum / S.gapN) / 1000 : null,
+      cyc: S.cycN ? r1(S.cycSum / S.cycN / 1000) : null, kph: min >= 2 ? Math.round((S.kills || 0) * 60 / min) : null };
+  }
+  // Учёт одного события замера: {act: t} — ход принят, {win: t} — победа, {kills: n} — счётчик игры вырос. → новый rt.spd
+  function speedNote(spd, ev, now) {
+    const t = now || Date.now(), S = { t0: t, acts: 0, gapSum: 0, gapN: 0, lastAct: 0, wins: 0, cycSum: 0, cycN: 0, lastWin: 0, kills: 0, ...(spd && typeof spd === 'object' ? spd : {}) };
+    if (ev && ev.act) {
+      const g = ev.act - S.lastAct;
+      if (S.lastAct && g > 0 && g <= 10000) { S.gapSum += g; S.gapN++; }
+      S.acts++; S.lastAct = ev.act;
+    }
+    if (ev && ev.win) {
+      const g = ev.win - S.lastWin;
+      if (S.lastWin && g > 0 && g <= 300000) { S.cycSum += g; S.cycN++; }
+      S.wins++; S.lastWin = ev.win; S.lastAct = 0;   // промежуток до первого хода следующего боя — не «между ходами»
+    }
+    if (ev && ev.kills > 0) S.kills += ev.kills;
+    return S;
+  }
+  // Запись из меню: поля профиля — в его p.<kind>, остальное (on, скорость) — наверх. Старые поля Дестра наверху не трогаем: p.destr важнее.
   function profPatch(raw, kind, patch) {
     const r = { ...(raw && typeof raw === 'object' ? raw : {}) }, k = kindOf(kind), p = { ...(r.p || {}) };
     for (const [key, v] of Object.entries(patch || {})) {
@@ -645,7 +765,9 @@
     noMobWhy, TGL_DOM_ON, toggleOn, toggleDecide, toggleFlap, TGL_FLAP_MS, TGL_HOLD_MS,
     isSpoiler, SPOIL_OK, SPOIL_FAIL, SPOIL_LOOT, newLines, nameLike, festivalParse, spoilResult, spoilLoot, isMassSpoil, isCrush,
     BLUNT_ONLY, POLE_ONLY, wpnKind, wpnBySkill, spoilPlan, SPOIL_WAIT, SPOIL_WAIT_MAX, SPOIL_RES, spoilRes, spoilChance, spoilMin, spoilSpots,
-    isMage, MAGE_ON, aoeGain, AOE_WAIT, ashenPick };
+    isMage, MAGE_ON, aoeGain, AOE_WAIT, ashenPick,
+    SPOIL_MODES, SPOIL_MODE_RU, spoilMode, FEST_WAIT, FEST_WAIT_MAX, FEST_MAX, festMarks, festFresh, exDeaths, spoilValue, spoilAutoSpots, spoilAutoPick,
+    G_KEYS, DEF_G, paceCfg, speedStats, speedNote };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

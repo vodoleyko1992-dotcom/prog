@@ -128,7 +128,7 @@ test('HP/MP: ответ на ход свежее панели — берём е�
 
 test('бот: метка только перед кликом обычного удара, не в TvT, по выключателю; снимается при неудаче', () => {
   const bot = read('lite/bot.js');
-  assert.match(bot, /fastMark\(!tvt && cfg\.fastTurn !== false && L\.fastHit\(s\) \? s\.action : ''\);\n\s+if \(!fire\(s\.b, g\)\) \{ fastMark\(''\); return false; \}/);
+  assert.match(bot, /fastMark\(!tvt && cfg\.fastTurn !== false && L\.fastHit\(s\) \? s\.action : ''\);\n\s+const pt0 = paceT;\n\s+if \(!fire\(s\.b, g\)\) \{ fastMark\(''\); return false; \}/);   // 1.8: pt0 — пауза между действиями
   assert.match(bot, /if \(!st\) \{[^\n]*\n\s+fastMark\(''\);/);
   assert.match(bot, /ds\.l2liteFast = a \+ '\|' \+ Date\.now\(\)/);
   assert.equal(L.DEF_PROF.fastTurn, true, 'по умолчанию ВКЛ (1.5: умолчания профиля — в logic.js)');

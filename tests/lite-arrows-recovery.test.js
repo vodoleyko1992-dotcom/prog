@@ -58,7 +58,9 @@ function snapshotHarness() {
     NET: { starts: [], ends: new Map(), inflight: new Map() }, BUSY: /^\/character$/, CD: {}, Date: { now: () => now },
     log() {}, notify() {}, status() {}, abBlink() {}, progress() {}, profSync() {}, onSnapZone() {}, barMine: () => false,
     wakeAll() {}, sess: { set() {} }, hudMark() {}, wpnSeen() {}, alive: g => ctx.owner && ctx.cfg.on && !ctx.dead && g === ctx.gen,
-    setRt(p) { Object.assign(ctx.rt, p); } };
+    setRt(p) { Object.assign(ctx.rt, p); },
+    // 1.8: автономный спойлер, пауза между действиями и замер скорости — у лука выключены
+    autoOn: () => false, zoneCfg: () => ctx.cfg.zone, autoT: 0, spdNote() {}, pace: async () => true, paced() {}, paceT: 0 };
   vm.createContext(ctx);
   const piece = (a, b) => bot.slice(bot.indexOf(a), bot.indexOf(b, bot.indexOf(a)));
   vm.runInContext(piece('  let ARW = null;', '  function arrowWait()') + '\n' + piece('  function onSnap(', '  // «Где стоит герой') + '\n'

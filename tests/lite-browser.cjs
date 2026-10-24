@@ -29,6 +29,10 @@
 //   самый толстый моб (соседи ещё не известны), массовые бьют троих, соседи узнаны; дальше — главный не тоньше соседей, после
 //   победы сразу следующий из списка игры (не «Охотиться дальше»); Elemental Crash — только когда соседи толще главного;
 //   Arcane Power включается один раз; 9 мобов — цель выполнена.
+// Сценарий J (Lite 1.8, John: «спойл фестивалем масс или соло спойлом, полностью автономный режим; раздел со скоростью работы
+//   бота»): Bounty Hunter с пикой у пачки (главный + 2 соседа под Whirlwind): режим «Масс» — каждый бой с Festival, откат ждёт,
+//   до него не бьёт; соседи возродились без метки — Festival ещё раз; режим «Соло» — без Festival; раздел «Скорость»: пауза 1 с
+//   между ходами и замер в меню; «Полностью автономно» — место под Mithril Ore бот выбрал сам и улетел туда.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 // 20.54 (прогон смоуков 23.10): все 7 сценариев идут 285–321 с даже в одиночку — внешний «timeout 300» убивает Chromium посреди G
 //   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFGH.
@@ -77,7 +81,8 @@ function makeServer() {
       toggleStances: S.stanceReport === 'list' ? [{ battleId: 'vicious_stance', skillId: 312, level: 8, active: !!S.stance }] : S.hero.toggleStances,
       ...(S.arrows != null || S.weapon !== undefined ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []), { itemId: 728, qty: 50 }],   // 0 стрел — стопки нет (§6a)
         ...(S.weapon !== undefined ? { eq: { l1: S.weapon == null ? null : { itemId: S.weapon, objectId: 'w1' } } } : {}) } } : {}) }; };   // 1.6: надетое оружие (спойлер)
-  const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [] });
+  const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [], t0: Date.now(),
+    ...(S.pack && kind !== 'champion' ? { ex: S.pack.map(([n, hp]) => ({ name: n, mobHp: hp, mobMaxHp: hp, spoiled: false })) } : {}) });   // 1.8: пачка соседей
   function action(body) {
     const now = Date.now(), a = String(body.action || '');
     S.acts.push(a); S.actT.push(now);
@@ -93,6 +98,7 @@ function makeServer() {
     if (bow && ARROW_NEED[a]) S.arrows -= ARROW_NEED[a];
     if ((a === 'l2_348' && !BLUNT_W.includes(S.weapon)) || (a === 'l2_36' && BLUNT_W.includes(S.weapon))) { (S.refused = S.refused || []).push(a); return [400, { error: 'battle_skill_not_allowed', message: 'Цей скилл зараз недоступний для твого персонажа' }]; }
     (b.ok = b.ok || []).push(a);
+    if (!b.first && a !== 'battle_potion_use') { b.first = a; b.t1 = now; }   // 1.8: первый ход боя и когда (ждал ли бот откат Festival)
     const lines = [];
     if (!CANON[a]) S.gcd = now + (S.gcdMs || 250);
     if (a === 'attack') b.mobHp -= 700;
@@ -108,10 +114,17 @@ function makeServer() {
     else if (a === 'battle_potion_use') { S.pots--; h.hp = Math.min(h.maxHp, h.hp + 3000); }
     else if (a === 'l2_286') {}
     else if (a === 'vicious_stance') { (S.stanceT = S.stanceT || []).push([now % 100000, S.stance, S.stanceReport]); if (!S.stanceStuck) S.stance = !S.stance; }
-    else if (a === 'l2_302') { h.mp -= 73; lines.push(`Spoil Festival: ${b.mobName}: ${b.spoiled ? 'вже заспойлено' : S.festFail ? 'промах (40%)' : 'успіх (100%)'}`); if (!S.festFail) b.spoiled = true; }
+    else if (a === 'l2_302') { h.mp -= 73;
+      // 1.8: пачка у цели (S.pack) — Festival метит и соседей, итог по каждому мобу
+      const ex = (b.ex || []).map(x => { const r = `${x.name}: ${x.spoiled ? 'вже заспойлено' : 'успіх (100%)'}`; x.spoiled = true; return r; });
+      lines.push(`Spoil Festival: ${[`${b.mobName}: ${b.spoiled ? 'вже заспойлено' : S.festFail ? 'промах (40%)' : 'успіх (100%)'}`, ...ex].join('; ')}`); if (!S.festFail) b.spoiled = true;
+      if (b.ex) b.wx = b.ex.map(x => ({ name: x.name, mobHp: x.mobHp, mobMaxHp: x.mobMaxHp })); }
     else if (a === 'l2_254') { h.mp -= 50; const ok = (S.spoilSeq || []).length ? S.spoilSeq.shift() : true; lines.push(ok ? 'Спойл успішний (59%)' : 'Спойл не вдався (56%)'); if (ok) b.spoiled = true; }
     else if (a === 'l2_348') { b.mobHp -= 1200; h.mp -= 70; lines.push(`Ви завдаєте ${b.mobName} 1 200 урону`, 'Спойл успішний (61%)'); b.spoiled = true; }
-    else if (a === 'l2_36') { b.mobHp -= 1500; h.mp -= 40; }
+    else if (a === 'l2_36') { b.mobHp -= 1500; h.mp -= 40;
+      // 1.8: Whirlwind бьёт и пачку; павший сосед +1 к счёту, его спойл — в добычу, и он снова полный (без метки)
+      if (b.ex) { for (const x of b.ex) { x.mobHp -= 1500; if (x.mobHp <= 0) { h.mobsKilled++; S.exKills = (S.exKills || 0) + 1; lines.push(`Додаткова ціль повалена: ${x.name}.`); if (x.spoiled) { S.exLoot = (S.exLoot || 0) + 1; lines.push('Спойл: Mithril Ore ×1'); } x.mobHp = x.mobMaxHp; x.spoiled = false; } }
+        b.wx = b.ex.map(x => ({ name: x.name, mobHp: x.mobHp, mobMaxHp: x.mobMaxHp })); } }
     // 1.7: маг в Ashen (kb/lite-mage-study.md) — массовый бьёт главного и двух соседей одинаково, умерший сосед +1 к счёту и снова полный
     else if (a === 'l2_1176' || a === 'l2_1181') {
       const dmg = a === 'l2_1176' ? 500 : 400; b.mobHp -= dmg; h.mp -= 70;
@@ -125,7 +138,7 @@ function makeServer() {
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
     if (b.mobHp <= 0) {
       b.mobHp = 0; h.inBattle = false; h.mobsKilled++;
-      (S.done = S.done || []).push({ spoiled: !!b.spoiled, acts: b.ok.slice(), w: S.weapon, sp: b.spawnId });
+      (S.done = S.done || []).push({ spoiled: !!b.spoiled, acts: b.ok.slice(), w: S.weapon, sp: b.spawnId, t0: b.t0, t1: b.t1, first: b.first });
       if (b.ex) S.ashDead[b.spawnId] = now + 30000;                // 1.7: Ashen — главный возрождается ≈30 с
       if (b.spoiled) lines.push('Спойл: Mithril Ore ×2', 'Спойл: Coal ×1');
       return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now }, logTail: lines }];
@@ -234,7 +247,7 @@ document.querySelectorAll('.l2-battle-hotbar-slot').forEach(el=>el.onclick=async
  else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / '+(j.delta.mobMaxHp||4000);const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
   if(cd&&until){cd.hidden=false;cd.classList.add('l2-battle-hotbar-slot-cd--on');const tick=()=>{const left=until-Date.now();const tm=cd.querySelector('.l2-battle-hotbar-slot-cd__timer');if(left<=0){cd.hidden=true;cd.classList.remove('l2-battle-hotbar-slot-cd--on');return;}if(tm)tm.textContent=(left/1000).toFixed(1);setTimeout(tick,100);};tick();}}
  if(j.victory||j.defeat||status!==200||(j.delta&&j.delta.hotbarStale))await ch();busy=false;});
-$('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;$('#battle-log').textContent='';$('#battle-mob-effects-row').dataset.effectsSig='';render(j.battle);}};
+$('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;$('#battle-whirlwind-extras').hidden=true;$('#battle-log').textContent='';$('#battle-mob-effects-row').dataset.effectsSig='';render(j.battle);}};
 $('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)await post('/game/battle/leave',{battleSpawnId:sid});location.href=/^ashen_/.test(sid)?'/ashen-bastion.html':'/map.html';};
 $('#battle-defeat-tocity').onclick=async()=>{await post('/game/battle/defeat/to-city');location.href='/city.html';};
 </script>`;
@@ -896,7 +909,7 @@ async function scenarioH() {
     assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', false, ''], ['spoil', true, ' · в игре'], ['mage', false, '']]);
     assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'спойлер — не «чужой класс»');
     const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked, e.querySelector('select').value]));
-    assert.deepEqual(rows, [['l2_254', true, 'spoil'], ['l2_302', true, 'spoil'], ['l2_348', true, 'spoil'], ['l2_36', true, 'attack'], ['l2_42', false, 'other']]);
+    assert.deepEqual(rows, [['l2_254', true, 'spoil'], ['l2_302', true, 'spoil'], ['l2_348', true, 'spoil'], ['l2_36', true, 'aoe'], ['l2_42', false, 'other']]);   // 1.8: Whirlwind спойлера — массовый
     assert.equal(await pp.isVisible('#spoilBox'), true);
     assert.equal(await pp.inputValue('#spoilRes'), 'Mithril Ore');
     assert.equal(await pp.isChecked('#spoilOn'), true); assert.equal(await pp.inputValue('#spoilTries'), '4');
@@ -953,6 +966,100 @@ async function scenarioH() {
     const sum = r.spoil;
     console.log(`PASS H: спойлер — вкладка «Споил · в игре», место под Mithril Ore «Кузня богів · до 47 %»; пика: ${pole.length} боёв начаты со спойла (Festival первым ${pole.filter(d => first(d) === 'l2_302').length}), Spoil Crush/Sweeper не жал; промах Festival → Spoil ×2; дубина: Crush первым, Whirlwind — 1 отказ и пауза; добыча Mithril Ore ${sum.items['Mithril Ore']}, Coal ${sum.items.Coal}; сброс счёта`);
   } catch (e) { console.error('DIAG H', { acts: h.S.acts.slice(-40).join(','), done: JSON.stringify((S.done || []).slice(-6)), refused: S.refused, url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, zone: r.zone, spoil: r.spoil, spoilW: r.spoilW, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
+// 1.8: спойлер у пачки — режимы «Масс» и «Соло», раздел «Скорость», автономный выбор места
+async function scenarioJ() {
+  const h = await launch(), { S } = h;
+  const battles = from => S.done.slice(from).filter(d => d.w === 15);
+  try {
+    S.champAt = 99; S.weapon = 15; S.mobHp = 3000; S.pack = [['Grave Robber', 1400], ['Ghoul', 1400]];
+    S.cdSet = { ...S.cdSet, attack: 600, l2_254: 1500, l2_302: 4000, l2_348: 2100, l2_36: 1700, l2_42: 500 };   // Festival 4 с — дольше боя (≈2 с)
+    Object.assign(S.hero, { l2Profession: 'dwarf_bounty_hunter', level: 70, classSlots: { activeSlot: 1, slots: [
+      { slot: 0, owned: true, active: false, profession: 'orc_titan', race: 'Orc', level: 76 },
+      { slot: 1, owned: true, active: true, profession: 'dwarf_bounty_hunter', race: 'Dwarf', level: 70 }] },
+      battleHotbarSlots: [{ k: 'a', a: 'attack' }, ...BH_BAR.map(a => ({ k: 'a', a })), { k: 'u', id: 1539 }],
+      learnedBattleSkillsDetail: BH_BAR.map(a => ({ battleId: a, nameUk: BH_NAMES[a] })) });
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, tvt: false, p: { spoil: { tvt: false, killLimit: 0, spoilRes: 'Mithril Ore', zone: 'giran_harbor', zoneName: 'Гавань Гірана' } } } }));
+    await h.game.goto('https://l2wap.com/map.html');
+    await until(async () => (await h.rt()).kind === 'spoil' && (await h.rt()).locs?.length === 2, 20000, 'профиль спойлера');
+    const pp = await h.popup();
+    // меню: режим «Авто» по умолчанию, раздел «Скорость» — без паузы, реакция 60–140, «Быстрый удар» там же
+    await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 5), 8000, 'скиллы спойлера в меню');
+    assert.equal(await pp.inputValue('#spoilMode'), 'auto');
+    assert.equal(await pp.isChecked('#spoilAuto'), false);
+    assert.equal(await pp.isVisible('#speedBox'), true);
+    assert.equal(await pp.inputValue('#delayMs'), '0'); assert.equal(await pp.textContent('#delayVal'), 'без паузы');
+    assert.equal(await pp.inputValue('#reactMin'), '60'); assert.equal(await pp.inputValue('#reactMax'), '140');
+    assert.equal(await pp.isChecked('#speedBox #fastTurn'), true);
+    assert.match(await pp.textContent('#spdStat'), /Замер начнётся со Старта/);
+    await pp.selectOption('#spoilMode', 'mass');
+    await until(async () => (await h.pcfg('spoil')).spoilMode === 'mass', 3000, 'режим «Масс»');
+    assert.match(await pp.textContent('#spoilModeHint'), /Spoil Festival первым, даже с дубиной/);
+    await pp.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
+    await h.game.bringToFront();
+    // (1) масс: Festival (откат 4 с) дольше боя — бот ждёт его в начале каждого боя и до него не бьёт
+    await until(() => battles(0).length >= 4, 90000, '4 боя в масс-режиме');
+    const mass = battles(0);
+    for (const d of mass) { assert.equal(d.first, 'l2_302', 'бой начат не с Festival: ' + d.acts.join(',')); assert.ok(d.spoiled); assert.ok(!d.acts.includes('l2_254'), 'Spoil при помеченном главном: ' + d.acts.join(',')); }
+    const waited = mass.slice(1).filter(d => d.t1 - d.t0 >= 800);
+    assert.ok(waited.length >= 2, 'ждал откат Festival: ' + mass.map(d => d.t1 - d.t0).join(','));
+    assert.ok(S.exKills >= 4 && S.exLoot >= 4, `соседи под Whirlwind и их спойл: убито ${S.exKills}, добыча ${S.exLoot}`);
+    let r = await h.rt();
+    assert.match(logText(r), /▶ Старт \(профиль «Споил»\):[^\n]*спойл: масс — Spoil Festival/);
+    // (2) масс, длинный бой: соседи гибнут от Whirlwind и возрождаются без метки — Festival ещё раз (до 3 за бой)
+    S.mobHp = 9000; S.cdSet = { ...S.cdSet, l2_302: 2700 };
+    const n2 = S.done.length;
+    await until(() => battles(n2).some(d => d.acts.filter(a => a === 'l2_302').length >= 2), 60000, 'повторный Festival');
+    for (const d of battles(n2)) assert.ok(d.acts.filter(a => a === 'l2_302').length <= 3, 'Festival больше 3 раз: ' + d.acts.join(','));
+    assert.match(logText(await h.rt()), /масс-спойл: рядом новые мобы без метки — Spoil Festival ещё раз/);
+    // (3) соло: Festival не жмём — бой со Spoil
+    S.mobHp = 3000;
+    await pp.selectOption('#spoilMode', 'solo');
+    await until(async () => (await h.pcfg('spoil')).spoilMode === 'solo', 3000, 'режим «Соло»');
+    await until(() => { const i = S.done.length - 1; return i >= 0 && !S.done[i].acts.includes('l2_302') ? i : false; }, 30000, 'бой без Festival');
+    const n3 = S.done.length;
+    await until(() => battles(n3).length >= 3, 60000, '3 боя в соло-режиме');
+    for (const d of battles(n3)) { assert.ok(!d.acts.includes('l2_302'), 'Festival в соло: ' + d.acts.join(',')); assert.equal(d.first, 'l2_254', 'соло — первым Spoil: ' + d.acts.join(',')); }
+    // (4) скорость: пауза 1 с — между ходами не меньше секунды; замер в меню
+    await pp.fill('#delayMs', '1000');
+    await until(async () => L.profCfg(await h.cfg(), 'spoil').delayMs === 1000, 3000, 'пауза 1 с');
+    assert.equal(await pp.textContent('#delayVal'), '1 с');
+    const i4 = S.actT.length;
+    await until(() => S.actT.length >= i4 + 8, 40000, '8 ходов с паузой');
+    const gaps = S.actT.slice(i4 + 1).map((t, i) => t - S.actT[i4 + i]);
+    assert.ok(Math.min(...gaps) >= 950, 'ход раньше паузы: ' + gaps.join(','));
+    await until(async () => /ход каждые [\d,]+ с/.test(await pp.textContent('#spdStat')), 15000, 'замер в меню');
+    const st = await pp.textContent('#spdStat');
+    assert.match(st, /Замер с \d\d:\d\d/); assert.match(st, /ходов \d+, побед \d+, мобов \d+/);
+    await pp.fill('#delayMs', '0');
+    await until(async () => L.profCfg(await h.cfg(), 'spoil').delayMs === 0, 3000, 'без паузы');
+    r = await h.rt();
+    assert.ok(r.spd && r.spd.acts > 10 && r.spd.wins >= 5 && r.spd.kills >= 5, 'замер: ' + JSON.stringify(r.spd));
+    const tR = Date.now();
+    await pp.click('#spdReset');
+    await until(async () => (await h.rt()).spd?.t0 >= tR, 5000, 'сброс замера');
+    // (5) полностью автономно: место под Mithril Ore для 70 ур. — «Кузня богів» (70–80); бот выбрал сам и улетел
+    await pp.check('#spoilAuto');
+    await until(async () => (await h.pcfg('spoil')).spoilAuto === true, 3000, 'галка «Полностью автономно»');
+    await until(async () => (await h.rt()).zone?.id === 'forge_gods' && (await h.rt()).zone.auto, 30000, 'место выбрано само');
+    await until(() => S.tp.includes('forge_gods'), 30000, 'телепорт на выбранное место');
+    assert.equal(await pp.isDisabled('#zone'), true, 'место из списка не действует');
+    await until(async () => /Место выбирает автономный спойлер: сейчас «Кузня богів»/.test(await pp.textContent('#zoneAuto')), 5000, 'подпись места');
+    await until(async () => /✔ Кузня богів \(70–80\) · до 47 %/.test(await pp.textContent('#spoilSpots')), 5000, 'места автономного выбора');
+    r = await h.rt();
+    assert.match(logText(r), /автономный спойлер: место охоты — «Кузня богів» \(мобы 70–80 ур\., Mithril Ore до 47 %\)/);
+    assert.match(await pp.textContent('#now'), /Место охоты: Кузня богів \(выбрал сам\)/);
+    // выключили — снова место из меню (гавань)
+    await pp.uncheck('#spoilAuto');
+    await until(async () => (await h.rt()).zone?.id === 'giran_harbor' && !(await h.rt()).zone.auto, 10000, 'место из меню после выключения');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(logText(await h.rt()), '\nходы:', S.acts.join(','));
+    console.log(`PASS J: спойлер у пачки — «Масс»: ${mass.length} боёв с Festival первым (ждал откат в ${waited.length}), соседей убито ${S.exKills}, их спойл ${S.exLoot}; повторный Festival по возродившимся; «Соло» без Festival; пауза 1 с (мин. промежуток ${Math.min(...gaps)} мс) и замер в меню; автономно — «Кузня богів» под Mithril Ore, телепорт`);
+  } catch (e) { console.error('DIAG J', { acts: S.acts.slice(-40).join(','), done: JSON.stringify((S.done || []).slice(-6)), tp: S.tp, url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, zone: r.zone, spoil: r.spoil, spd: r.spd, spotBad: r.spotBad, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
   finally { await h.ctx.close(); }
 }
 
@@ -1015,5 +1122,5 @@ async function scenarioI() {
 }
 
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDEFGHI';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); if (ONLY.includes('I')) await scenarioI(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEFGHIJ';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); if (ONLY.includes('I')) await scenarioI(); if (ONLY.includes('J')) await scenarioJ(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });

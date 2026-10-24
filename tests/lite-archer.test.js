@@ -75,7 +75,7 @@ test('профили: настройки 1.4 — профиль Дестра, у
   const d = L.profCfg(old, 'destr'), a = L.profCfg(old, 'archer');
   assert.equal(d.kind, 'destr'); assert.equal(d.zone, 'giran_harbor'); assert.equal(d.killLimit, 7); assert.equal(d.tvt, false); assert.equal(d.hpPot, 40);
   assert.deepEqual(d.skills, old.skills); assert.equal(d.on, true);
-  assert.deepEqual({ ...a, kind: undefined, on: undefined }, { ...L.DEF_PROF, kind: undefined, on: undefined }, 'лук — с умолчаний');
+  assert.deepEqual({ ...a, kind: undefined, on: undefined }, { ...L.DEF_PROF, ...L.DEF_G, kind: undefined, on: undefined }, 'лук — с умолчаний (1.8: и общие настройки скорости)');
   assert.equal(a.on, true, 'Старт общий');
   assert.equal(L.profCfg(old, 'нечто').kind, 'destr');
   let raw = L.profPatch(old, 'archer', { killLimit: 3, skills: { power_shot: { on: false, type: 'attack' } } });
