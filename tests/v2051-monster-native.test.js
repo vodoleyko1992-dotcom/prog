@@ -3,7 +3,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const root=process.env.L2_MONSTER_SOURCE_ROOT||__dirname+'/..',read=p=>fs.readFileSync(root+'/'+p,'utf8'),core=read('content.js');
 function fixture(saved={},detectId=80){
- const meta=detectId===88?{action:'detect_dragon_weakness',name:'Вразливість драконів',en:'Detect Dragon Weakness',mp:30}:{action:'detect_monster_weakness',name:'Вразливість монстрів',en:'Detect Monster Weakness',mp:24};
+ const meta={88:{action:'detect_dragon_weakness',name:'Вразливість драконів',en:'Detect Dragon Weakness',mp:30},
+  359:{action:'eye_hunter',name:'Око мисливця',en:'Eye of Hunter',mp:39},360:{action:'eye_slayer',name:'Око вбивці',en:'Eye of Slayer',mp:40}}[detectId]||{action:'detect_monster_weakness',name:'Вразливість монстрів',en:'Detect Monster Weakness',mp:24};
  let now=1792714960000,net=0,owner='lease1',generation=1,hud=[],wait={},global=0,clicks=0,receipt=null;
  const box={console,Date:class extends Date{static now(){return now}},location:{pathname:'/battle.html',search:'?spawnId=local_1'}};vm.createContext(box);
  vm.runInContext(read('skills-il.js')+'\n'+core.slice(core.indexOf('const IL = typeof IL_DB'),core.indexOf('// ---------- база предметов'))+'\nthis.ilOf=ilOf;',box);
@@ -171,4 +172,27 @@ test('авторолиOFF сохраняютролиDragon; потерянный
 for(const key of ['nPower','nStun','nForce'])test('разовоеисправление88 не стираетсвежуюручнуюправку '+key,async()=>{
  const f=dragonRoles();f.env.cfg[key]='Вихор, Вразливість драконів';let writes=0;f.env.setCfg=async p=>{writes++;Object.assign(f.env.cfg,p);return{ok:true}};
  f.box.chrome.storage.local.get=async()=>({cfg:{...f.env.cfg,[key]:'Мій новий удар'}});await f.E.autoRoles();assert.equal(writes,0);assert.equal(f.env.rt.warlordDetectRoles2050,undefined);
+});
+
+// 24.10 (лог 10:54, Dreadnought): Око мисливця359/Око вбивці360 — тот же native-самобафф боя, что80/88.
+for(const id of [359,360])test('Eye '+id+' ставится native-кнопкой один раз, ценаMP с сервера, активный не повторяется',async()=>{
+ const f=fixture({},id);f.env.cfg.nBuffs=f.meta.name;note(f);assert.equal(f.env.ilOf(f.b).id,id);assert.equal(f.env.ilOf(f.b).autoUse,false);assert.equal(f.C.ready(f.b),false,'не generic-бафф');
+ assert.equal(await run(f),true);assert.equal(f.clicks(),1);assert.equal(Object.values(f.env.rt.monsterNativeIntent)[0].id,id);
+ const g=fixture({},id);g.env.meMp=()=>({cur:f.meta.mp-1,max:100});note(g);assert.equal(await run(g),false);
+ const h=fixture({},id);note(h,{monsterBuffs:[{skillId:id,expiresAtMs:h.now()+600000}]});assert.equal(await run(h),false);
+ const k=fixture({},id);k.wait(f.meta.action,3000);note(k);assert.equal(await run(k),false);
+});
+test('hook: eye_slayer/eye_hunter — claim и полные выборки359/360',()=>{
+ const src=read('hook.js'),a=src.indexOf('  function start(u, method, req)'),b=src.indexOf('  // 20.42',a),messages=[],box={TRACK:/./,STORY_TP:/^\/never$/,ridN:0,mutationN:0,storyRetry:null,Date,Number,location:{origin:'https://local.invalid'},window:{postMessage:d=>messages.push(d)},document:{documentElement:{dataset:{l2botMonster:JSON.stringify({token:'eye',revision:7,action:'eye_slayer',at:Date.now()})}}}};
+ vm.createContext(box);vm.runInContext(src.slice(a,b)+'\nthis.start=start;',box);box.start({pathname:'/game/battle/action'},'POST',{action:'eye_slayer',expectedRevision:7});
+ assert.deepEqual(JSON.parse(JSON.stringify(messages[0].req)),{action:'eye_slayer',expectedRevision:7});assert.equal(messages[0].monsterToken,'eye');
+ const s2=read('hook.js'),c0=s2.indexOf('  const petOf ='),c1=s2.indexOf('  // 20.12',c0),bx={};vm.createContext(bx);vm.runInContext(s2.slice(c0,c1)+'\nthis.petOf=petOf;this.monsterOf=monsterOf;',bx);
+ const c={name:'Hero',revision:100,activeBuffs:[{skillId:359},{skillId:360},{skillId:1}],learnedBattleSkillsDetail:[{battleId:'eye_hunter',l2SkillId:359,level:1,mpCost:39},{battleId:'l2_360',level:1,mpCost:40}]};
+ const p=bx.petOf({pathname:'/character'},{character:c});assert.deepEqual(JSON.parse(JSON.stringify(p.monsterBuffs.map(x=>x.skillId))),[359,360]);assert.equal(p.learnedBattleSkillsDetail[0].mpCost,39);
+ const m=bx.monsterOf({pathname:'/game/battle/action'},{character:c});assert.equal(m.learnedBattleSkillsDetail.length,2);assert.equal(m.learnedBattleSkillsDetail[1].mpCost,40);
+});
+test('откаты сервера: eye_slayer→l2_360, earthquake→l2_347, shock_blast→l2_361 (main и Lite)',()=>{
+ for(const file of ['battle-cooldown.js','lite/battle-cooldown.js'])for(const [a,id] of [['eye_slayer',360],['eye_hunter',359],['earthquake',347],['shock_blast',361]]){
+  let now=10000;const box={};vm.createContext(box);vm.runInContext(read(file),box);const C=box.L2BattleCooldown.createBattleCooldown(()=>now);
+  C.observe({action:a,battleSpawnId:'local'},{serverNowMs:now,skillCooldowns:{['l2_'+id]:14700}},200,'local');assert.ok(C.skillWait(a,'local')>0,a);now=14741;assert.equal(C.skillWait(a,'local'),0,a);}
 });

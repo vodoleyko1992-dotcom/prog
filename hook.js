@@ -54,7 +54,7 @@
       // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
       activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
       // 23.10: отсутствие80 доказывает полная выборка до общего обрезания activeBuffs до60.
-      monsterBuffs:Array.isArray(c.activeBuffs)?c.activeBuffs.filter(x=>[80,88].includes(+x?.skillId)).map(x=>({skillId:+x.skillId,expiresAtMs:n(x.expiresAtMs)??n(x.expiresAt)})):null,
+      monsterBuffs:Array.isArray(c.activeBuffs)?c.activeBuffs.filter(x=>[80,88,359,360].includes(+x?.skillId)).map(x=>({skillId:+x.skillId,expiresAtMs:n(x.expiresAtMs)??n(x.expiresAt)})):null,
       // Публичный состав модели урона: UID/имена владельцев и динамические HP/MP сюда не попадают.
       snapshotGeneratedAt: n(c.snapshotGeneratedAt), inBattle:typeof c.inBattle==='boolean'?c.inBattle:null,
       battleHotbarSlots:Array.isArray(c.battleHotbarSlots)?c.battleHotbarSlots.slice(0,80).map(x=>x?{k:String(x.k||'').slice(0,8),id:n(x.id),...(['detect_insect_weakness','detect_animal_weakness','detect_plant_weakness','detect_monster_weakness','detect_dragon_weakness'].includes(x.a)?{a:x.a}:{})}:null):null,
@@ -65,7 +65,7 @@
         return [slot,{...Object.fromEntries(['itemId','enchant','specialGearLevel','enchantPAtkBonus','enchantMAtkBonus'].map(k=>[k,n(x[k])])),
           augmentation:{outcomeId:String(x.augmentation?.outcomeId||'').slice(0,80)},clanWeaponAttrs:attrs(x.clanWeaponAttrs),clanArmorAttrs:attrs(x.clanArmorAttrs)}];
       })), stacks:Array.isArray(c.inventory.stacks)?c.inventory.stacks.slice(0,2000).map(x=>({itemId:n(x.itemId),qty:n(x.qty)})):null } : null,
-      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level),...([75,87,104,80,88].includes(+x.l2SkillId||+String(x.battleId||'').replace(/^l2_/,''))?{mpCost:n(x.mpCost),hintUk:String(x.hintUk||'').slice(0,500),hintRu:String(x.hintRu||'').slice(0,500)}:{})})) : null,
+      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level),...([75,87,104,80,88,359,360].includes(+x.l2SkillId||+String(x.battleId||'').replace(/^l2_/,''))||['eye_hunter','eye_slayer'].includes(x.battleId)?{mpCost:n(x.mpCost),hintUk:String(x.hintUk||'').slice(0,500),hintRu:String(x.hintRu||'').slice(0,500)}:{})})) : null,
       activeSummon: p && typeof p === 'object' ? { kind: String(p.kind || '').slice(0,30), key: String(p.key || '').slice(0,60),
         ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','mAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
         activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : p===null?null:undefined };
@@ -73,12 +73,12 @@
   // 23.10: полная character-выборка80 в штатных ответах боя; delta без character.activeBuffs не доказывает отсутствия.
   const monsterOf = (u,o) => { try {
     if(!/^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(u.pathname))return undefined;
-    const c=o?.character,n=v=>Number.isFinite(v)?v:null,id=x=>[80,88].includes(+x?.l2SkillId)||['l2_80','l2_88','detect_monster_weakness','detect_dragon_weakness','80','88'].includes(String(x?.battleId||''));
+    const c=o?.character,n=v=>Number.isFinite(v)?v:null,id=x=>[80,88,359,360].includes(+x?.l2SkillId)||['l2_80','l2_88','l2_359','l2_360','detect_monster_weakness','detect_dragon_weakness','eye_hunter','eye_slayer','80','88','359','360'].includes(String(x?.battleId||''));
     if(!c||typeof c.name!=='string'||!Number.isSafeInteger(o.revision??c.revision)||!Array.isArray(c.activeBuffs))return undefined;
     return {name:c.name.slice(0,120),l2Profession:String(c.l2Profession||'').slice(0,60),classSlots:{activeSlot:n(c.classSlots?.activeSlot)},revision:o.revision??c.revision,
       inBattle:typeof c.inBattle==='boolean'?c.inBattle:null,nativeBattleSnapshot:true,snapshotGeneratedAt:n(c.snapshotGeneratedAt),skillMpCostMul:n(c.skillMpCostMul),
-      monsterBuffs:c.activeBuffs.filter(x=>[80,88].includes(+x?.skillId)).map(x=>({skillId:+x.skillId,expiresAtMs:n(x.expiresAtMs)??n(x.expiresAt)})),
-      learnedBattleSkillsDetail:Array.isArray(c.learnedBattleSkillsDetail)?c.learnedBattleSkillsDetail.filter(id).slice(0,4).map(x=>({battleId:String(x.battleId||'').slice(0,80),l2SkillId:n(x.l2SkillId),level:n(x.level),mpCost:n(x.mpCost),hintUk:String(x.hintUk||'').slice(0,500),hintRu:String(x.hintRu||'').slice(0,500)})):null};
+      monsterBuffs:c.activeBuffs.filter(x=>[80,88,359,360].includes(+x?.skillId)).map(x=>({skillId:+x.skillId,expiresAtMs:n(x.expiresAtMs)??n(x.expiresAt)})),
+      learnedBattleSkillsDetail:Array.isArray(c.learnedBattleSkillsDetail)?c.learnedBattleSkillsDetail.filter(id).slice(0,6).map(x=>({battleId:String(x.battleId||'').slice(0,80),l2SkillId:n(x.l2SkillId),level:n(x.level),mpCost:n(x.mpCost),hintUk:String(x.hintUk||'').slice(0,500),hintRu:String(x.hintRu||'').slice(0,500)})):null};
   }catch(_){return undefined;} };
   // 20.12 (ревизия 17.10): серверный счётчик убийств из ответов самой игры (её GET /character после каждого хода) —
   // дневной лимит мобов больше не делает свой GET перед и после каждого боя. Только имя, mobsKilled и revision.
@@ -281,14 +281,16 @@
   // Native quest UI держит busy на весь409→resync→retry. Сопоставляем только
   // один такой retry; иной POST/истечение окна разрывает связь, GET её не забирает.
   function start(u, method, req) {
+    // 24.10: native-самобаффы боя (Detect80/88, Eye of Hunter359/Slayer360 Dreadnought) — action → l2_ID.
+    const MONSTER_ACT={detect_monster_weakness:'l2_80',detect_dragon_weakness:'l2_88',eye_hunter:'l2_359',eye_slayer:'l2_360'};
     if (!TRACK.test(u.pathname)) return {};
     const rid=++ridN, story=method==='POST'&&STORY_TP.test(u.pathname), r=storyRetry;
     const detail=story&&typeof req?.targetId==='string'&&Number.isSafeInteger(req.expectedRevision)?{targetId:req.targetId.slice(0,120),expectedRevision:req.expectedRevision}:null;
     const fa=method==='POST'&&u.pathname==='/character/town/fast-aden-buffer/apply'&&typeof req?.set==='string'&&Number.isSafeInteger(req.skillId)&&Number.isSafeInteger(req.expectedCostFastAden)&&Number.isSafeInteger(req.expectedRevision)?{set:req.set.slice(0,40),skillId:req.skillId,expectedCostFastAden:req.expectedCostFastAden,expectedRevision:req.expectedRevision}:null;
     const detect=method==='POST'&&u.pathname==='/character/skills/cast'&&/^l2_(?:75|87|104|80)$/.test(req?.battleId||'')&&Number.isSafeInteger(req.expectedRevision)?{battleId:req.battleId,expectedRevision:req.expectedRevision}:null;
-    const monster=method==='POST'&&u.pathname==='/game/battle/action'&&['detect_monster_weakness','l2_80','detect_dragon_weakness','l2_88'].includes(req?.action)&&Number.isSafeInteger(req.expectedRevision)?{action:req.action,expectedRevision:req.expectedRevision}:null;
+    const monster=method==='POST'&&u.pathname==='/game/battle/action'&&Object.keys(MONSTER_ACT).concat(Object.values(MONSTER_ACT)).includes(req?.action)&&Number.isSafeInteger(req.expectedRevision)?{action:req.action,expectedRevision:req.expectedRevision}:null;
     let monsterToken='';if(monster)try{const h=document.documentElement,v=JSON.parse(h.dataset.l2botMonster||'null');delete h.dataset.l2botMonster;
-      if(v&&typeof v.token==='string'&&v.revision===monster.expectedRevision&&(v.action===monster.action||v.action==='detect_monster_weakness'&&monster.action==='l2_80'||v.action==='detect_dragon_weakness'&&monster.action==='l2_88')&&Date.now()-v.at>=0&&Date.now()-v.at<1500)monsterToken=v.token;}catch(_){}
+      if(v&&typeof v.token==='string'&&v.revision===monster.expectedRevision&&(v.action===monster.action||MONSTER_ACT[v.action]===monster.action)&&Date.now()-v.at>=0&&Date.now()-v.at<1500)monsterToken=v.token;}catch(_){}
     const retryOf=story&&detail&&r&&r.path===u.pathname&&r.targetId===detail.targetId&&detail.expectedRevision>=r.revision&&Date.now()-r.at<=10000?r.rid:0;
     if(method==='POST'){mutationN++;storyRetry=null;}
     try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:fa?{req:fa}:detect?{req:detect}:monster?{req:monster,...(monsterToken?{monsterToken}:{})}:method==='POST'&&u.pathname==='/game/fishing/action'&&req?.action==='cast'&&Number.isSafeInteger(req.expectedRevision)?{req:{action:'cast',expectedRevision:req.expectedRevision}}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}

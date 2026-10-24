@@ -1332,9 +1332,12 @@ async function managedToggleStep(ctx, me, act) {
 }
 // 23.10, Firefox20.51/логи10:22 и10:40: Monster80 и Dragon88 подтверждены штатными боевыми action. Outside-политика отдельная.
 let monsterSnapshots = Object.create(null), monsterPositive = null, monsterSerial = 0, monsterClaim = null, monsterRequest = null;
-const MONSTER_FRESH = 30000, MONSTER_UNKNOWN = 630000, NATIVE_DETECT_IDS = [80,88];
+const MONSTER_FRESH = 30000, MONSTER_UNKNOWN = 630000, NATIVE_DETECT_IDS = [80,88,359,360];
 const NATIVE_DETECT = {80:{action:'detect_monster_weakness',name:'Вразливість монстрів',aliases:['вразливість монстрів','detect monster weakness','l2_80']},
-  88:{action:'detect_dragon_weakness',name:'Вразливість драконів',aliases:['вразливість драконів','detect dragon weakness','l2_88']}};
+  88:{action:'detect_dragon_weakness',name:'Вразливість драконів',aliases:['вразливість драконів','detect dragon weakness','l2_88']},
+  // 24.10 (лог 10:54, Dreadnought): Eye of Hunter/Slayer — тот же самобафф 10 мин штатной боевой кнопкой, outside не проверен.
+  359:{action:'eye_hunter',name:'Око мисливця',aliases:['око мисливця','eye of hunter','l2_359']},
+  360:{action:'eye_slayer',name:'Око вбивці',aliases:['око вбивці','eye of slayer','l2_360']}};
 const monsterActor = () => JSON.stringify([toggleActor(),env.actionGeneration?.(),env.battleExitContext?.()]);
 const monsterRow = (x,id) => +x?.l2SkillId===id||+x?.skillId===id||['l2_'+id,NATIVE_DETECT[id].action,String(id)].includes(String(x?.battleId||''));
 function noteMonsterSnapshot(ch) {
@@ -1495,7 +1498,7 @@ function warlordPullPlan(ctx, mp) {
   if (!me || !(me.cur > 0 && me.max > 0) || !mob?.cur || !mp || !Number.isFinite(mp.cur) || mp.cur < (+env.cfg.skillMpMin || 0)) return null;
   const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
   const powers = new Set(env.names(env.cfg.nPower).map(n => n.toLowerCase()));
-  const aoes = slots.filter(b => ['whirlwind','thunder_storm'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && !weaponBarred(b) && ready(b) && free('power:' + b.title))
+  const aoes = slots.filter(b => ['whirlwind','thunder_storm','earthquake','shock_blast'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && !weaponBarred(b) && ready(b) && free('power:' + b.title))
     .map(b => { const cost=warlordPullCost(b),name=env.cleanTitle(b.title),damage=env.expDmg(name),model=env.fightGroupOn?.(name,mob.max),each=Math.min(damage||0,model?.damage||0);
       const near=extraMobs().filter(x=>x.cur>0),useful=Math.min(mob.cur,damage||0)+near.reduce((s,x)=>s+Math.min(x.cur,each),0),kills=(damage>=mob.cur?1:0)+near.filter(x=>each*.85>=x.cur).length;
       return {b,cost,useful,kills}; }).filter(x => x.cost != null && mp.cur > x.cost).sort((a,b) => b.kills-a.kills || b.useful-a.useful || a.cost-b.cost);
