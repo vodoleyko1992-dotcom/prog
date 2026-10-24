@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.56",
+  "version": "20.57",
   "description": "L2wap Bot 20.56 — A-плащ Goddard в целях Маммона, TvT после выбывания, подтверждение городского баффа",
   "permissions": [
     "storage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.56"
+  "version_name": "20.57"
 }
