@@ -9,9 +9,10 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs');
     await h.sw.evaluate(async () => { const { cfg } = await chrome.storage.local.get('cfg'); const clean = { ...cfg }; delete clean.actionDelayMs; await chrome.storage.local.set({ cfg: clean }); });
     await P.evaluate(() => { document.activeElement?.blur(); return load(); });
     await P.locator('nav [data-tab="speed"]').click();
-    assert.equal(await P.locator('#actionDelayValue').textContent(), 'Без задержки');
-    assert.equal(await P.locator('#actionDelayMs').inputValue(), '0');
-    assert.equal(await P.locator('#actionDelayMs').getAttribute('aria-valuetext'), 'Без задержки');
+    // 20.59 (John 24.10): умолчание — 0,5 с
+    assert.equal(await P.locator('#actionDelayValue').textContent(), '0,5 с');
+    assert.equal(await P.locator('#actionDelayMs').inputValue(), '500');
+    assert.equal(await P.locator('#actionDelayMs').getAttribute('aria-valuetext'), '0,5 с');
     await P.locator('#actionDelayMs').evaluate(input => { input.value = '2300'; input.dispatchEvent(new Event('input', { bubbles: true })); });
     assert.equal(await P.locator('#actionDelayValue').textContent(), '2,3 с');
     assert.equal((await h.get(['cfg'])).cfg.actionDelayMs, undefined, 'перетаскивание показывает значение до сохранения');
@@ -61,6 +62,6 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs');
       fs.mkdirSync(path.dirname(process.env.SPEED_PANEL_EVIDENCE), { recursive: true });
       fs.writeFileSync(process.env.SPEED_PANEL_EVIDENCE, JSON.stringify(evidence, null, 2) + '\n');
     }
-    console.log('PASS speed panel: default zero, live seconds, save on change, keyboard, reopen/profile, zero save/reopen, 800/360/280px dock, no actions or errors');
+    console.log('PASS speed panel: default 0.5 s, live seconds, save on change, keyboard, reopen/profile, zero save/reopen, 800/360/280px dock, no actions or errors');
   } finally { await h.ctx.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

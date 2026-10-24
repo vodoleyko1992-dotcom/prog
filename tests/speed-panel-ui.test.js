@@ -7,9 +7,9 @@ const part = (start, end) => { const a = popup.indexOf(start), b = popup.indexOf
 
 test('общая пауза доступна в отдельном разделе и сохраняется в базовом профиле', () => {
   const speed = html.slice(html.indexOf('<section id="tab-speed">'), html.indexOf('</section>', html.indexOf('<section id="tab-speed">')));
-  assert.equal(defaults.actionDelayMs, 0);
+  assert.equal(defaults.actionDelayMs, 500);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.actionDelayMs, defaults.actionDelayMs);
-  assert.match(speed, /<input id="actionDelayMs" type="range" min="0" max="5000" step="100" value="0" aria-describedby="speedHint"/);
+  assert.match(speed, /<input id="actionDelayMs" type="range" min="0" max="5000" step="100" value="500" aria-describedby="speedHint"/);
   assert.match(speed, /<label class="speed-control" for="actionDelayMs">/);
   assert.match(speed, /<output id="actionDelayValue" for="actionDelayMs" aria-live="polite">/);
   assert.match(speed, /id="reactMin"/); assert.match(speed, /id="reactMax"/);
@@ -40,7 +40,7 @@ function fixture() {
 
 test('изменение паузы пишет один ключ текущего героя и соблюдает границы бегунка', async () => {
   const { box, field, writes } = fixture();
-  for (const [value, expected] of [['2300', 2300], ['0', 0], ['100', 100], ['400', 400], ['-100', 0], ['9999', 5000], ['675', 700], ['', 0]]) {
+  for (const [value, expected] of [['2300', 2300], ['0', 0], ['100', 100], ['400', 400], ['-100', 0], ['9999', 5000], ['675', 700], ['', defaults.actionDelayMs]]) {
     field.value = value; await box.save({ target: { id: 'actionDelayMs' } });
     assert.deepEqual(JSON.parse(JSON.stringify(writes.at(-1))), { rtPatch: {}, cfgPatch: { actionDelayMs: expected }, expectedChar: 'Hero' });
   }
