@@ -2,6 +2,7 @@
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
 - [20.61 Chrome — Ashen Bastion без предела «до героя +5»](docs/changelog/CHANGELOG-20.61.md)
+- [20.62 (в работе) — Rebirth: защиты смены саба, оружия и заточки](docs/changelog/CHANGELOG-20.62.md)
 - [20.60 Chrome — кольцо Queen Ant, заряды мага после смены саба, бафф суммона без бюджета, рыбалка и чемпионы](docs/changelog/CHANGELOG-20.60.md)
 - [20.59 Chrome — пауза 0,5 с, Frenzy на эпиках, страница крафта](docs/changelog/CHANGELOG-20.59.md)
 - [20.58 Chrome — МП-банки в режиме крафта](docs/changelog/CHANGELOG-20.58.md)

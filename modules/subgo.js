@@ -42,10 +42,12 @@
  const num = v => { const n = +v; return Number.isFinite(n) ? n : 0; };
  // броня клановых вещей в каталоге без armorType — по имени: «магічн» роба, «важк» тяжёлая, остальное лёгкая
  const armorTypeOf = g => g?.armorType || (/магіч|magic|robe|mystic/i.test(g?.nameUk || '') ? 'magic' : /важк|heavy/i.test(g?.nameUk || '') ? 'heavy' : g?.slot && /chest|legs|fullarmor|head|gloves|feet/.test(g.slot) ? 'light' : null);
+ // 20.62 (анонс Rebirth 25.10): у оружия/щитов Rebirth своя атака/блок на экземпляре и случайные бонусы — каталог их не знает
+ const isRebirth = row => !!row && (num(row.rebirthWeaponAttack) > 0 || num(row.rebirthShieldPoints) > 0 || !!row.rebirthAffixes);
  // токен экземпляра в сумке — как у игры (l2-enchant-client.js mkBagEnchantTargetId + weapon-augmentation-display.js bagInstanceId)
  function bagToken(row, slot) {
   const id = +row.itemId, en = Math.max(0, Math.floor(num(row.enchant)));
-  if (num(row.rebirthWeaponAttack) > 0 || num(row.rebirthShieldPoints) > 0 || row.rebirthAffixes) return null;   // перерождённые — не умеем, пусть надевает игрок
+  if (isRebirth(row)) return null;   // перерождённые — не умеем, пусть надевает игрок
   const uid = String(row.augmentation?.uid || '');
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uid)) return `bag:${id}:${en}:aug-${uid}`;
   // клановые вещи (clan-armor-inventory-client.js): экземпляр по своему UID; живая проверка 21.10: без него «Предмета немає в сумці»
@@ -63,6 +65,23 @@
   return `bag:${id}:${en}`;
  }
  const eqRow = v => v == null ? null : typeof v === 'number' ? { itemId: v, enchant: 0 } : v.itemId ? v : null;
+ // 20.62 (анонс Rebirth 25.10: «при переключении классов вся надетая экипировка снимается в инвентарь; если места недостаточно,
+ // переключение будет заблокировано»): хватит ли места в сумке под надетое. null — игра не прислала inventoryCapacity (не мешаем).
+ // Надетое, у которого в сумке уже есть такая же простая стопка (кольца/серьги), места не занимает
+ function bagRoom(ch) {
+  const c = ch?.inventoryCapacity || ch?.inventory?.inventoryCapacity, max = +c?.maxSlots, used = +c?.usedSlots;
+  if (!Number.isFinite(max) || !Number.isFinite(used) || max <= 0 || used < 0) return null;
+  const eq = ch?.inventory?.eq || {}, plain = r => !r.clanWeaponUid && !r.clanShieldUid && !r.augmentation && !isRebirth(r);
+  const bag = (ch?.inventory?.stacks || []).filter(r => +r.qty > 0 && plain(r));
+  let need = 0;
+  for (const k of ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'le1', 'le2', 'lr1', 'lr2', 'neck']) {
+   const r = eqRow(eq[k]); if (!r || k === 'l2' && r.itemId === eqRow(eq.l1)?.itemId) continue;
+   if (plain(r) && bag.some(b => +b.itemId === +r.itemId && Math.floor(num(b.enchant)) === Math.floor(num(r.enchant)))) continue;
+   need++;
+  }
+  const free = Math.max(0, max - used);
+  return { free, need, ok: free >= need };
+ }
  // все вещи героя (надетые и в сумке) с данными каталога; n — сколько экземпляров (стопка одинаковых колец)
  function pool(ch, cat) {
   const G = {}; for (const g of cat?.gearCatalog || []) G[+g.itemId] = g;
@@ -98,14 +117,17 @@
   const W = all.filter(it => it.slot === 'rhand' && (mage ? it.g.weaponMode === 'magic' : it.g.weaponMode !== 'magic'));
   const order = opt.wt?.length ? opt.wt : mage ? null : classWt(prof);
   let weapon = null;
-  if (order) for (const t of order) { weapon = best(W.filter(it => it.g.weaponType === t), it => wpow(it, mage)); if (weapon) break; }
+  // 20.62 (Rebirth): надетое перерождённое оружие/щит не меняем — грейд и цифры каталога не отражают его силу
+  const keepR = k => all.find(it => it.where === k && isRebirth(it.row)) || null, rW = keepR('l1'), rS = keepR('l2');
+  if (rW) { weapon = rW; why.push('перерождённое оружие оставляю'); }
+  else if (order) for (const t of order) { weapon = best(W.filter(it => it.g.weaponType === t), it => wpow(it, mage)); if (weapon) break; }
   if (!weapon) weapon = best(W, it => wpow(it, mage));
   if (!weapon && order?.length) why.push(`нет оружия вида ${order.map(t => WT_RU[t] || t).join('/')}`);
   slots.l1 = weapon;
   // щит
   const twoH = !!weapon?.g?.blocksShield || /^(?:bigsword|bigblunt|pole|bow|dual|fist)$/.test(weapon?.g?.weaponType || '');
   const wantShield = opt.shield ?? true;
-  slots.l2 = wantShield && !twoH ? best(all.filter(it => it.slot === 'lhand'), it => num(it.st.shieldDef) + it.en * 3) : null;
+  slots.l2 = wantShield && !twoH ? rS || best(all.filter(it => it.slot === 'lhand'), it => num(it.st.shieldDef) + it.en * 3) : null;
   if (twoH) why.push('двуручное — без щита');
   // броня: по каждому типу считаем комплект (шлем/перчатки/ботинки + грудь и ноги или цельная), выбираем лучший с бонусом сета
   const sets = cat?.armorSetCatalog || [];
@@ -165,7 +187,7 @@
  }
  const body = (op, rev) => op.op === 'unequip' ? { action: 'unequip', slot: op.slot, expectedRevision: rev }
   : { action: 'equip', itemId: op.it.id, enchant: op.it.en, targetInstanceId: op.it.token, ...(op.it.slot === 'rhand' && op.it.row.enchantPAtkBonus != null ? { enchantPAtkBonus: Math.floor(num(op.it.row.enchantPAtkBonus)), enchantMAtkBonus: Math.floor(num(op.it.row.enchantMAtkBonus)) } : {}), expectedRevision: rev };
- const L2SubGear = { planGear, diff, body, pool, bagToken, epicJ, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
+ const L2SubGear = { planGear, diff, body, pool, bagToken, bagRoom, isRebirth, epicJ, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
  root.L2SubGear = L2SubGear;
  // 20.43 (John 21.10): вкладка «Сабкласс» → «▶ Старт»: rt.subGo {slot, kit, wt, shield, t}. Шаг ядра (loopMenuJobs, вне боя):
  // к Reorin (бесплатный с VIP телепорт — сразу POST, платный — обычный перелёт zoneGo с защитой оплаты) → switch → комплект → страница карты.
@@ -275,6 +297,9 @@
     if (ch.classSlots?.activeSlot === slot) return await gear(J, ch);
     const row = (ch.classSlots?.slots || []).find(x => +x.slot === slot);
     if (!row?.owned) { await finish(J, false, `слот ${slot}: класса нет`); return true; }
+    // 20.62 (Rebirth): игра не сменит класс, если снятое не влезет в сумку — проверяем до телепорта, чтобы не платить зря
+    const room = bagRoom(ch);
+    if (room && !room.ok) { await finish(J, false, `в сумке свободно ${room.free} мест, а при смене класса игра снимет в сумку ${room.need} вещ. — освободите ${room.need - room.free} мест(а) и нажмите Старт снова`); return true; }
     const S = await getJ('/character/subclasses'); if (!sameJob(J)) return true;
     if (!S.ok) { await finish(J, false, `список классов не прочитан (${errOf(S)})`); return true; }
     if (!S.j?.classes?.nearClassMaster) {
@@ -299,7 +324,8 @@
     if (!R.ok) {
      const busyErr = /busy/.test(String(R.j?.error || R.j?.code || ''));
      if (busyErr && (+J.busyN || 0) < 3) { await env.setRt({ subGo: { ...env.rt.subGo, busyN: (+J.busyN || 0) + 1 } }); env.setStatus('Сабкласс: игра занята (бой/движение) — повторю'); await env.sleep(5000); return true; }
-     await finish(J, false, `смена класса: ${errOf(R)}`); return true;
+     const full = /inventory|space|full|місц|мест|сумк|інвентар|инвентар/i.test(String(R.j?.error || R.j?.code || '') + ' ' + errOf(R));
+     await finish(J, false, `смена класса: ${errOf(R)}${full ? ' — похоже, в сумке не хватает места под снятые вещи: освободите место и нажмите Старт снова' : ''}`); return true;
     }
     const nc = await hero(); if (!sameJob(J)) return true;
     if (!nc || nc.classSlots?.activeSlot !== slot) { await finish(J, false, 'игра не подтвердила смену класса'); return true; }
