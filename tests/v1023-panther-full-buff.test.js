@@ -11,8 +11,9 @@ for(const prof of ['human_dark_avenger','human_hell_knight'])test(prof+' пол�
 test('ручной полный бафф пантеры распознаётся без повторной покупки',async()=>{
  const f=panther();f.apply();await f.step();assert.equal(f.calls.length,0);assert.equal(f.status(),'active');assert.equal(f.api().summary().spent,0);assert.equal(f.env.rt.petFull.snapshot.petKey,'dark_panther');
 });
-for(const gate of ['off','dead','budget','wrong-key','wrong-skill','wrong-class'])test('пантере не покупаем при '+gate,async()=>{
- const f=panther();if(gate==='off')f.env.cfg.petFullAuto=false;if(gate==='dead')f.ch.activeSummon.hp=0;if(gate==='budget')f.env.cfg.petFullBudget=0;if(gate==='wrong-key')f.ch.activeSummon.key='kai_the_cat';if(gate==='wrong-skill')f.ch.activeSummon.summonSkillId=1276;if(gate==='wrong-class')f.ch.l2Profession='dwarf_artisan';await f.step();assert.equal(f.calls.length,0);
+// 20.60: общего бюджета нет — ворота по цене одного набора
+for(const gate of ['off','dead','price','wrong-key','wrong-skill','wrong-class'])test('пантере не покупаем при '+gate,async()=>{
+ const f=panther();if(gate==='off')f.env.cfg.petFullAuto=false;if(gate==='dead')f.ch.activeSummon.hp=0;if(gate==='price')f.env.cfg.petFullMaxPrice=1;if(gate==='wrong-key')f.ch.activeSummon.key='kai_the_cat';if(gate==='wrong-skill')f.ch.activeSummon.summonSkillId=1276;if(gate==='wrong-class')f.ch.l2Profession='dwarf_artisan';await f.step();assert.equal(f.calls.length,0);
 });
 test('неопределённая покупка пантере не повторяется после reload',async()=>{
  const f=panther({post:()=>{throw Error('timeout')}});await f.step();assert.equal(f.status(),'unknown');f.reload();f.tick(16000);await f.step();assert.equal(f.calls.length,1);assert.equal(f.api().summary().reserved,10000000);

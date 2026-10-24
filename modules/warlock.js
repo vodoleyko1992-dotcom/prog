@@ -12,7 +12,10 @@ const mine = T => env.tabOwner === true && T?.lease === env.leaseEpoch && !!T?.c
 const active = () => env.on === true && env.tabOwner === true && option('petFullAuto') === true;
 const priority = afterWin => env.canRun?.() !== false && !env.rt.autoLs?.hold && !env.rt.autoLs?.pending && (!env.isBattle() || (afterWin && env.victory())) && !env.fishState()
   && !env.tvtHold() && !env.abHold() && !env.antibotState() && !env.rt.revive && !env.rt.shop?.urgent;
-const signature = () => JSON.stringify([option('petFullAuto'), option('petFullBudget'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
+// 20.60 (John 24.10: «Убери вообще лимит на Бафф суммонов»; лог 22:13–22:15 — тур РБ ждал «Бюджет автобафа исчерпан»): общий бюджет
+// наборов снят. petFullBudget больше не читается и не входит в ключ ожидания — старое ожидание «бюджет» после обновления снимается сразу.
+// Остались защита цены одного набора, резерв адены и запрет повторной оплаты при неизвестном исходе
+const signature = () => JSON.stringify([option('petFullAuto'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
 const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature() });
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
 // 20.43 (разбор 21.10, ревью): каждый срок следующей проверки пишется вместе с ключом, при котором он назначен (waitKey). Иначе после
@@ -378,10 +381,10 @@ function gateHolds(T) {
   return true;
 }
 function summary() {
-  const S = state(), budget = number(option('petFullBudget'));
+  const S = state();
   const reserved = (S.unknownReserved || 0) + (S.pending ? S.pending.price || 0 : 0);
   return { char: charName(), pendingId: S.pending?.id || null, unknownReserved: S.unknownReserved || 0, enabled: option('petFullAuto') === true, status: S.status || 'off', reason: S.reason || 'Автобаф выключен',
-    price: S.lastPrice ?? null, budget, spent: S.spent || 0, reserved, remaining: budget === null ? null : Math.max(0, budget - (S.spent || 0) - reserved),
+    price: S.lastPrice ?? null, budget: null, spent: S.spent || 0, reserved, remaining: null,   // 20.60: без общего бюджета
     lifetimeSpent: S.lifetimeSpent || 0, purchases: S.purchases || 0, expiresAt: S.expiresAt || 0, observedMs: S.observedMs || 0, renew: option('petFullRenew') === true, budgetEpoch: S.budgetEpoch || 0 };
 }
 // 20.43 (разбор 21.10): у Warlock проверка набора после победы (свой GET /character + каталог + две записи памяти ≈1–1,3 с) шла раз
@@ -488,15 +491,14 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери суммона повторно не покупаю', { nextCheckAt: Math.max(Date.now() + 10000, last.expiresAt) }); return false; }
     if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     if (last && ch.revision < last.revision) { await status(T, 'stale', 'Снимок старее последней покупки; жду свежее состояние'); return false; }
-    const budget = number(option('petFullBudget')), cap = number(option('petFullMaxPrice'));
+    const cap = number(option('petFullMaxPrice'));
     const reserve = number(option('petFullReserve') ?? env.cfg.shopReserve ?? 0), adena = number(ch.adena);
     const fence = S.archiveFence;
-    if (fence && (ch.revision < fence.verifiedRevision || (Date.now() < fence.possibleUntil && !(budget > fence.budgetAtArchive)))) {
-      await status(T, 'archived', 'Неопределённый расход остаётся в резерве; дождитесь возможного срока или задайте дополнительный бюджет',
+    if (fence && (ch.revision < fence.verifiedRevision || Date.now() < fence.possibleUntil)) {
+      await status(T, 'archived', 'Неопределённый расход: новый набор — после возможного срока прежнего',
         { nextCheckAt: ch.revision < fence.verifiedRevision ? Date.now() + 10000 : Math.min(Date.now() + NO_BUY_MS, Math.max(Date.now() + 10000, +fence.possibleUntil || 0)) }); return false;
     }
     if (cap === null || set.price > cap) { await status(T, 'price', `Цена ${set.price} выше разрешённой ${cap ?? '?'}`, { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
-    if (budget === null || set.price > budget - (S.spent || 0) - (S.unknownReserved || 0)) { await status(T, 'budget', 'Бюджет автобафа исчерпан; увеличьте лимит или явно сбросьте расход', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     if (reserve === null || adena === null || adena - set.price < reserve) { await status(T, 'reserve', 'Не хватает адены с учётом резерва', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     // Оплата только после подтверждённого штатного входа в город; прямой POST с карты не предполагаем.
     if (env.townBufferReady?.() !== true) {
@@ -575,7 +577,7 @@ async function archiveUnknown(expected = {}) {
       history: [...(state().history || []), entry].slice(-50), archiveFence: { verifiedRevision: ch.revision, possibleUntil, budgetAtArchive: budget },
       nextCheckAt: 0, status: 'archived', reason: 'Попытка завершена пользователем; возможный расход сохранён в резерве' });
     if (!await durableOrRestore(T, beforeArchive, ['pending','unknownReserved','history','archiveFence','nextCheckAt','status','reason'], saved)) return { ok: false, reason: 'Архив не сохранён; попытка остаётся заблокированной' };
-    return { ok: true, reason: 'Резерв сохранён; для новой покупки нужен дополнительный бюджет или истечение возможного срока' };
+    return { ok: true, reason: 'Неизвестный исход сохранён; новая покупка — после истечения возможного срока' };
   } catch (_) { return { ok: false, reason: 'Свежая сверка не получена; резерв сохранён' }; }
   finally { busy = false; }
 }
@@ -584,7 +586,7 @@ async function resetBudget(expected = {}) {
   if (expected.char !== T.char || expected.budgetEpoch !== (state().budgetEpoch || 0) || expected.spent !== (state().spent || 0)) return false; if (!mine(T) || busy || state().pending) return false;
   // Только явная команда пользователя; переключение задачи и перезагрузка бюджет не обнуляют.
   const before = { ...state() };
-  const saved = await patch({ spent: 0, budgetEpoch: Date.now(), status: 'ready', reason: 'Бюджет сброшен пользователем', nextCheckAt: 0 });
+  const saved = await patch({ spent: 0, budgetEpoch: Date.now(), status: 'ready', reason: 'Счётчик расхода сброшен пользователем', nextCheckAt: 0 });
   return durableOrRestore(T, before, ['spent','budgetEpoch','status','reason','nextCheckAt'], saved);
 }
 const modelManaged = () => /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || env.rt.prof || '');

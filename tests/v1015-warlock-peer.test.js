@@ -31,7 +31,7 @@ test('prepared reload unchanged revision+wallet still reserves possible in-fligh
 });
 
 for(const phase of ['/character','/character/town/buffer/catalog'])for(const change of ['captcha','config','character'])test(change+' during '+phase+' never pays',async()=>{
- const f=fixture({read:(path,e)=>{if(path!==phase)return;if(change==='captcha')e.antibotState=()=> 'check';if(change==='config')e.cfg.petFullBudget=0;if(change==='character')e.rt.char='other'}});
+ const f=fixture({read:(path,e)=>{if(path!==phase)return;if(change==='captcha')e.antibotState=()=> 'check';if(change==='config')e.cfg.petFullMaxPrice=9999999;if(change==='character')e.rt.char='other'}});
  await f.step();assert.equal(f.calls.length,0);
 });
 
