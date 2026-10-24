@@ -3,12 +3,14 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/../content.js', 'utf8');
 const section = (a, b) => source.slice(source.indexOf(a), source.indexOf(b, source.indexOf(a)));
-const loop = section('async function loopCraft()', '// PvP, «один РБ»');
+const loop = section('const isCraftPage', '// PvP, «один РБ»');   // 24.10: вместе с переходом на /craft.html
 function fixture() {
   const calls = [], f = { mode: 'craft', on: true, tabOwner: true, cfg: { tvtOn: true }, rt: {}, fighting: false, fishing: false, hooked: false, hold: false, ab: false, role: 'crafter',
     autonomyMode: () => f.mode, antibotGuard: async () => f.ab, isBattle: () => f.fighting, isFishing: () => f.fishing, fishState: () => f.hooked,
     battle: async () => calls.push('battle'), fishFight: async () => calls.push('fish'), shopStep: async () => calls.push('shop'),
-    sleep: async () => {}, setStatus: s => calls.push(s), calls, console,
+    sleep: async () => {}, setStatus: s => calls.push(s), calls, console, Date, JSON,
+    location: { pathname: '/craft.html', set href(v) { calls.push('go ' + v); } }, ss: new Map(), rtCommit: async () => {},
+    sessionStorage: { getItem: k => f.ss.get(k) ?? null, setItem: (k, v) => f.ss.set(k, v) },
     L2V7Modules: { subclass: { role: () => f.role }, craft: { step: async () => { calls.push('craft'); return false; }, text: () => 'очередь выполнена' },
       tvt: { tvtHold: () => f.hold, tvtWait: async () => calls.push('tvt') }, actions: { hasPending: () => false, dispatch: async () => { calls.push('dispatch'); return true; } } } };
   vm.createContext(f); vm.runInContext(loop, f); return f;
@@ -105,4 +107,21 @@ test('подключённая фабрика получает режим и з�
     assert.equal(env.free(), false, key); delete f.rt[key]; delete f.L2V7Modules.navigation;
   }
   f.mode = 'farm'; assert.equal(env.free(), false, 'фоновый крафт подчиняется прежнему modeFree');
+});
+// 24.10 (John: «надо, чтобы бот открывал страницу крафта сам в режиме активного крафта»)
+test('крафтер в режиме крафта сам открывает /craft.html, на странице крафта — крафтит', async () => {
+  const f = fixture(); f.location.pathname = '/city.html';
+  assert.equal(await f.loopCraft(), true); assert.deepEqual(f.calls, ['Крафт: открываю страницу крафта', 'go /craft.html']);
+  f.calls.length = 0; f.location.pathname = '/craft.html'; await f.loopCraft(); assert.deepEqual(f.calls, ['craft', 'Крафт: очередь выполнена']);
+});
+test('страница крафта не открывается: после 3 переходов за 2 мин крафт идёт на месте', async () => {
+  const f = fixture(); f.location.pathname = '/city.html';
+  for (let i = 0; i < 3; i++) await f.loopCraft();
+  f.calls.length = 0; await f.loopCraft(); assert.deepEqual(f.calls, ['craft', 'Крафт: очередь выполнена']);
+});
+test('на страницу крафта не уходит из боя, рыбалки, TvT и без класса крафтера', async () => {
+  for (const set of [f => { f.fighting = true; }, f => { f.fishing = true; f.hooked = true; }, f => { f.hold = true; }, f => { f.role = 'fighter'; }]) {
+    const f = fixture(); f.location.pathname = '/city.html'; set(f); await f.loopCraft();
+    assert.ok(!f.calls.some(x => /^go /.test(x)), f.calls.join());
+  }
 });
