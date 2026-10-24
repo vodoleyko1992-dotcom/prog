@@ -101,7 +101,7 @@ const ORF = 'l2dop_rb_29014', orfSt = { hp: 487686, patk: 3920, pdef: 1601, matk
 
   // 5. бой: выход по rbFlee стоит до аварийной банки, работает и в бою игрока (manualRb), кроме своей эпик-цепочки; выход подтверждается
   const combat = read('modules/combat.js');
-  const iFlee = combat.indexOf('const fl = !epChain && env.rbFlee ? env.rbFlee(ctx, me, mob) : null;'), iPot = combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {");
+  const iFlee = combat.indexOf('const fl = !epChain && env.rbFlee ? env.rbFlee(ctx, me, mob) : null;'), iPot = combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)");
   assert.ok(iFlee > 0 && iPot > iFlee, 'flee check runs before the emergency potion');
   const fb = combat.slice(iFlee, iPot);
   assert.match(fb, /const leave = env\.\$q\('#battle-back-map'\);/);

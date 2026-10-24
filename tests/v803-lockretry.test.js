@@ -7,13 +7,13 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
 
 (async () => {
   // 1. аварийная банка: 'lock' → следующий цикл жмёт банку сразу (без 1,1 с), учёт банок РБ (potT) не растёт; дошла — как раньше
-  const i0 = combat.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {'), i1 = combat.indexOf('    ctx.emWait = 0;', i0);
+  const i0 = combat.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)'), i1 = combat.indexOf('    ctx.emWait = 0;', i0);
   assert.ok(i0 > 0 && i1 > i0, 'emergency potion block');
   const block = combat.slice(i0, i1);
   const run = async results => {
     const calls = []; let now = 5_000_000;
     const sb = { env: { cfg: { stopHp: 25 }, hpPotPick: () => ({ title: 'Зілля' }), cleanTitle: s => s, qty: () => 10, hpPots: () => [1], rec: () => {} },
-      ctx: { rb: { id: 'x' } }, me: { pct: 4, cur: 200, max: 6000 }, mp: null, drainPick: () => null, healPick: () => null, mageCombat: () => true, Date: { now: () => now }, Math,
+      ctx: { rb: { id: 'x' } }, me: { pct: 4, cur: 200, max: 6000 }, mp: null, epicFrenzyHold: () => false, epicFrenzyFloor: () => 0, drainPick: () => null, healPick: () => null, mageCombat: () => true, Date: { now: () => now }, Math,
       act: async (b, st) => { calls.push(now); return results[calls.length - 1]; } };
     vm.runInNewContext(`let lastHpPot = 0; this.step = async () => { for (let i = 0; i < 1; i++) {\n${block}\n} };`, sb);
     for (let k = 0; k < results.length; k++) { await sb.step(); now += 50; }

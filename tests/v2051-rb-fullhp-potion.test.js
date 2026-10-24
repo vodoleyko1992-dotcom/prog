@@ -6,7 +6,7 @@ const source=fs.readFileSync(process.env.L2BOT_COMBAT_SOURCE||path.join(__dirnam
 function between(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,'реальный участок найден: '+start);return source.slice(a,b);}
 const priceSource=between('function rbTurnHeal(','function frenzyDive(');
 const bandSource=between('    let potAt = env.cfg.hpPotAt;','    if ((s = await mpPotStep(me, mp))');
-const emergencySource=between('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {','    ctx.emWait = 0;');
+const emergencySource=between('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)','    ctx.emWait = 0;');
 const actSource=between('  const act = async ','  const t0 = Date.now();\n  let progSig');
 const price=vm.runInNewContext(priceSource+';rbTurnHeal;',{Math});
 const copy=x=>JSON.parse(JSON.stringify(x));
@@ -30,7 +30,7 @@ function fixture({hp=22873,max=22873,pct=hp/max*100,sp=1329,p90=13002,hits=[],rb
   pulse:async()=>{global=0;if(change&&stage==='global'){const f=change;change=null;f()}},
   gameFree:async()=>{if(change&&stage==='gameFree'){const f=change;change=null;f()}return{dT:0,gE:0}},
   lockA:0,lockB:0,noticeText:()=>'',fastMark:()=>{},affordable:()=>true,
-  hpReserveBlocked:()=>false,frenzyDive:()=>false,slotsBy:()=>[],
+  hpReserveBlocked:()=>false,frenzyDive:()=>false,epicFrenzyHold:()=>false,epicFrenzyFloor:()=>0,slotsBy:()=>[],
   drainPick:()=>null,mageCombat:()=>false,drainPreferred:()=>false,healPick:()=>null,
   lastHpPot:0,lastAct:0,lastActT:0};
  vm.createContext(box);vm.runInContext(priceSource+'\n'+actSource+'\nthis.actualAct=act;',box);

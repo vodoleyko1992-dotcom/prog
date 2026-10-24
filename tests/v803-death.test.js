@@ -89,7 +89,7 @@ const content = read('content.js'), combat = read('modules/combat.js');
   // 4. бой: ход без ответа > 8 с — не жмём, отметка, проверка сервера; отвечает — перезагрузка; не отвечает — ждём, ≥ 20 с — перезагрузка
   { const i0 = combat.indexOf('    { const an = env.actNet?.(), hangMs'), i1 = combat.indexOf('    if (ctx.pet) petTick(ctx);', i0);
     assert.ok(i0 > 0 && i1 > i0, 'hang block found');
-    assert.ok(i0 < combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {"), 'before any action of the loop');
+    assert.ok(i0 < combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)"), 'before any action of the loop');
     const block = combat.slice(i0, i1);
     const run = async ({ hangMs, up, start = 7, done = 6, slots = 3, answerDuring = false }) => {
       let now = 1_000_000; const NET = { start, done, t: now - hangMs }, recs = [], marks = [], reloads = [];

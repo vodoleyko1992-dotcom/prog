@@ -25,7 +25,7 @@ const content = read('content.js'), combat = read('modules/combat.js');
   // 2. combat: метка после начала боя → журнал, РБ не «недобитый», на карту; до начала боя / при победе — бой идёт
   { const i0 = combat.indexOf('    { const g = env.actNet?.().gone;'), i1 = combat.indexOf('    // 8.0.3 (лог 11.10 10:31:48', i0);
     assert.ok(i0 > 0 && i1 > i0, 'combat block found');
-    assert.ok(i0 < combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {"), 'before any action of the loop');
+    assert.ok(i0 < combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)"), 'before any action of the loop');
     const block = combat.slice(i0, i1);
     const run = async ({ goneT, rb = true, win = false }) => {
       const NET = { start: 9, done: 9, gone: goneT == null ? null : { t: goneT, spawn: 'l2dop_rb_25423' } }, recs = [], patches = [];
