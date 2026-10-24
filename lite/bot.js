@@ -29,8 +29,8 @@
     spoil: null, spoilW: {},                       // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
     aoeEx: {},                                     // 1.7: соседи массового удара по локациям {зона: {list: [{name, maxHp}], t}}
     spd: null,                                     // 1.8: замер скорости (L.speedNote) — с Старта или кнопки «Сбросить замер»
-    spotBad: {},                                   // 1.8: автономный спойлер — места, куда пока не летим {id: до}
-    pots: null, potNote: '' };                     // 1.8.1: банки в сумке {mp, hp, t} для меню; potNote — что уже сказали в журнал (low|out)
+    pots: null, potNote: '',                       // 1.8.1: банки в сумке {mp, hp, t} для меню; potNote — что уже сказали в журнал (low|out)
+    spotBad: {} };                                 // 1.8: автономный спойлер — места, куда пока не летим {id: до}
   // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
   let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
@@ -450,7 +450,8 @@
     if (!alive(g)) { await close(); return true; }
     if (i < 0) { await close(); return warn('в сумке их тоже нет'); }
     const pk = picks[i], nm = (pk.getAttribute('title') || '').replace(/\s*×.*$/, ''), q = ((pk.getAttribute('title') || '').match(/×\s*([\d\s  ]+)$/) || [])[1] || '';
-    fire(pk, g);
+    if (!(await pace(g))) { await close(); return true; }   // 1.8: выбор банки — действие в игре (запрос), пауза «Скорости» и для него
+    fire(pk, g); paced();
     const ok = await waitFor(() => !shown($('.l2-battle-hotbar-modal__panel')) || !empty.isConnected || !empty.classList.contains('l2-battle-hotbar-slot--empty'), 3000, 100, g);
     await close();
     log(ok ? `банка ${label} кончилась на панели — поставил «${nm}» (×${q.replace(/\D/g, '')}) на пустой слот` : `не удалось поставить «${nm}» на панель`);
