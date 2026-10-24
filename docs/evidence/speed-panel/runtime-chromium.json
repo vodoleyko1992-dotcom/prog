@@ -4,13 +4,13 @@
     {
       "name": "real fire timing 500ms",
       "intervals": [
-        500,
-        501
+        514,
+        500
       ]
     },
     {
       "name": "updated setting 1700ms",
-      "interval": 1699
+      "interval": 1700
     },
     {
       "name": "page reload retains timestamp",
