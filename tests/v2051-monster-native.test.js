@@ -179,6 +179,11 @@ for(const id of [359,360])test('Eye '+id+' ставится native-кнопко�
  const f=fixture({},id);f.env.cfg.nBuffs=f.meta.name;note(f);assert.equal(f.env.ilOf(f.b).id,id);assert.equal(f.env.ilOf(f.b).autoUse,false);assert.equal(f.C.ready(f.b),false,'не generic-бафф');
  assert.equal(await run(f),true);assert.equal(f.clicks(),1);assert.equal(Object.values(f.env.rt.monsterNativeIntent)[0].id,id);
  const g=fixture({},id);g.env.meMp=()=>({cur:f.meta.mp-1,max:100});note(g);assert.equal(await run(g),false);
+ // Настоящий learned без mpCost и подсказка без «MP N» (магистр показывает MP 0): цена — верх справочника 70/71.
+ const real={learnedBattleSkillsDetail:[{battleId:'l2_'+id,level:1,hintUk:'+30% P.Atk, 10 хв. Відкат 2 с.'}]},il=id===359?70:71;
+ for(const name of [f.meta.name,id===359?'Eye of the Hunter':'Eye of the Slayer']){const r=fixture({},id);r.env.cfg.nBuffs=name;r.env.meMp=()=>({cur:500,max:500});note(r,real);assert.equal(await run(r),true,name);assert.equal(r.clicks(),1);}
+ const low=fixture({},id);low.env.meMp=()=>({cur:il-1,max:500});note(low,real);assert.equal(await run(low),false,'MP ниже оценки');
+ const none=fixture({},id);none.env.meMp=()=>({cur:500,max:500});note(none,{learnedBattleSkillsDetail:[]});assert.equal(await run(none),false,'не выучен — оценка не подставляется');
  const h=fixture({},id);note(h,{monsterBuffs:[{skillId:id,expiresAtMs:h.now()+600000}]});assert.equal(await run(h),false);
  const k=fixture({},id);k.wait(f.meta.action,3000);note(k);assert.equal(await run(k),false);
 });

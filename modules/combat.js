@@ -1336,8 +1336,10 @@ const MONSTER_FRESH = 30000, MONSTER_UNKNOWN = 630000, NATIVE_DETECT_IDS = [80,8
 const NATIVE_DETECT = {80:{action:'detect_monster_weakness',name:'Вразливість монстрів',aliases:['вразливість монстрів','detect monster weakness','l2_80']},
   88:{action:'detect_dragon_weakness',name:'Вразливість драконів',aliases:['вразливість драконів','detect dragon weakness','l2_88']},
   // 24.10 (лог 10:54, Dreadnought): Eye of Hunter/Slayer — тот же самобафф 10 мин штатной боевой кнопкой, outside не проверен.
-  359:{action:'eye_hunter',name:'Око мисливця',aliases:['око мисливця','eye of hunter','l2_359']},
-  360:{action:'eye_slayer',name:'Око вбивці',aliases:['око вбивці','eye of slayer','l2_360']}};
+  // Каталог/магистр не даёт их цену (learned без mpCost, в подсказке «MP 0»): без цены служба не ставила Око вовсе.
+  // Тогда берём верх справочника Interlude (70/71 MP, живой расход ≈40) — завышенная цена только требует запаса MP.
+  359:{action:'eye_hunter',name:'Око мисливця',aliases:['око мисливця','eye of hunter','eye of the hunter','l2_359'],ilMp:true},
+  360:{action:'eye_slayer',name:'Око вбивці',aliases:['око вбивці','eye of slayer','eye of the slayer','l2_360'],ilMp:true}};
 const monsterActor = () => JSON.stringify([toggleActor(),env.actionGeneration?.(),env.battleExitContext?.()]);
 const monsterRow = (x,id) => +x?.l2SkillId===id||+x?.skillId===id||['l2_'+id,NATIVE_DETECT[id].action,String(id)].includes(String(x?.battleId||''));
 function noteMonsterSnapshot(ch) {
@@ -1361,6 +1363,7 @@ function noteMonsterSnapshot(ch) {
     }
     const carry=!Array.isArray(ch.learnedBattleSkillsDetail)&&old&&now-old.costAt<=MONSTER_FRESH;
     if(carry&&cost===null)cost=old.cost;
+    if(cost===null&&learned&&NATIVE_DETECT[id].ilMp){const v=[].concat(env.ilOf?.({cdKey:NATIVE_DETECT[id].action,name:''})?.mp).filter(x=>Number.isFinite(x)&&x>0);if(v.length)cost=Math.max(...v);}
     const on=toggleBuffOn(ch.monsterBuffs,id);
     monsterSnapshots[id]={actor,revision:ch.revision,at:old?.revision===ch.revision?Math.min(old.at,at):at,
       generated:old?.revision===ch.revision?Math.min(old.generated,generated):generated,observedAt:at,fromBattle:ch.nativeBattleSnapshot===true,requestRid:ch.requestRid,
