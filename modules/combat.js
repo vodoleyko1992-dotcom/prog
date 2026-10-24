@@ -2036,7 +2036,8 @@ async function battle() {
     // недоступне», и РБ добивал героя у баффера, лог 01:48). Поэтому мало HP — банки как можно чаще (вкл. резерв), а если
     // банка на откате — бьём дальше (вампирик тоже лечит), а не стоим и не уходим
     // 8.0.3: уход СО СТРАНИЦЫ бой не прекращает, а штатная кнопка выхода — прекращает (см. выше: аварийный выход от смертельных ударов)
-    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {
+    // 20.59: на эпике в окне Frenzy HP 25 % — цель слива, не авария; банка только у края (epicFrenzyFloor, полоса банок ниже)
+    if (me && me.pct <= Math.max(env.cfg.stopHp, 25) && !(epicFrenzyHold(ctx) && me.cur > epicFrenzyFloor(ctx, me))) {
       const pot = env.hpPotPick(true);
       // 10.0.5 (лог 13.10 10:51:56–10:52:06, Fierce Tiger King Angel): после лага HP 6–24 %, бот 10 с чередовал банку (+600 HP) и Blaze,
       // а Vampiric Touch (+1 880 HP за ход) и Corpse Life Drain не жал — вампиризм был запрещён ниже стоп-HP + 10 %, лечение на РБ отдано
@@ -2195,6 +2196,11 @@ async function battle() {
   // Подготовка лимитов идёт раньше банок/Battle Roar и старого ограничения Zealot на добивании РБ.
   async function limitStep(me, mp, mob) {
     if (me?.pct <= 30) ctx.limitTranceUnverified = false;
+    // 20.59 (лог 24.10 19:23:24, Core): Battle Trance нажат руками — бот принял слив за удар Core «5220 HP — смертельно» и сразу пил
+    // банку на 24 %. Принятый сервером Trance (любой, и ручной) в этом бою = свой слив: замер ударов РБ заново, на эпике — окно Frenzy.
+    ctx.born ||= Date.now();
+    const tranceT = env.actNet?.()?.tranceT || 0;
+    if (tranceT >= ctx.born && tranceT > (ctx.limitDiveT || 0)) { ctx.limitDiveT = tranceT; if (ctx.rb) { ctx.limitDiveHits = (ctx.rb.hits || []).length; ctx.rb.frenzyHoldNote = 0; } }
     const plan = limitPlan(ctx, me, mp, mob);
     if (!plan) {
       if (ctx.limitSkip && ctx.limitSkip !== ctx.limitSaid) { ctx.limitSaid = ctx.limitSkip; env.rec('B', 'лимиты', ctx.limitSkip); }

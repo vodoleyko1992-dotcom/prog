@@ -1771,3 +1771,4 @@
 
 - Сделано: по анонсу игры прочитан `GET /game/farm-guide` (данные страницы форума). Новые разделы `rareResources` и `gradePieces` теперь попадают в базу фарма бота (content.farmGuideMerge), в меню — свои разделы после «Ресурсы». Рецепты и цены магазина совпали с MM_RECIPES/MM_SHOP. В игре спойл базовых ресурсов теперь со всех мобов, с 40+ на 5 % выше. kb: `game-farm-guide.json`, `raw/farm-guide.json`, раздел «Обновление 21.10» в `kb/game-live.md`.
 - Проверки: 590 Node-файлов PASS (новый v2045-farm-guide-sections), node --check, envcheck PASS. ZIP не собирался; в игре только один GET.
+- Дополнение по логу 19:25 (QA/Core/Orfen): ручной Battle Trance больше не принимается за удар эпика (ACT_NET.tranceT → ctx.limitDiveT), аварийная банка на 25 % в окне Frenzy молчит до края. Core/Orfen бьют 2300–2750 > 2573 HP после слива — там бот не сливается.

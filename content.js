@@ -5594,7 +5594,8 @@ addEventListener('message', e => {
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = !d.error && d.status >= 200 && d.status < 300 && !d.res?.error && d.res?.ok !== false && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
-    if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
+    if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;
+    if (ACT_NET.ok && ACT_NET.action === 'battle_trance') ACT_NET.tranceT = Date.now();   // 20.59 (лог 24.10 19:23, Core): слив и руками — бой знает о нём                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
   if (path === '/game/battle/action' && /^(?:battle_)?(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error || '') && !rt.shotMismatchPending) {

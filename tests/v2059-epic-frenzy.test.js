@@ -55,3 +55,25 @@ test('меню и умолчания: epicFrenzy ВКЛ',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),root=path.join(__dirname,'..'),box={};vm.runInNewContext(fs.readFileSync(path.join(root,'defaults.js'),'utf8'),box);
  assert.equal(box.L2Defaults.CFG.epicFrenzy,true);assert.match(fs.readFileSync(path.join(root,'popup.html'),'utf8'),/id="epicFrenzy" type="checkbox"/);assert.match(fs.readFileSync(path.join(root,'popup.js'),'utf8'),/'epicFrenzy'/);
 });
+
+// Лог 24.10 19:23:24, Core: Battle Trance нажат руками → HP 2573 (25 %); бот счёл слив ударом Core «5220 — смертельно» и пил банку на 24 %.
+const fs2=require('node:fs'),path2=require('node:path'),vm2=require('node:vm'),SRC=fs2.readFileSync(path2.join(__dirname,'..','modules/combat.js'),'utf8');
+const emBlock=(()=>{const i0=SRC.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)'),i1=SRC.indexOf('    ctx.emWait = 0;',i0);assert.ok(i0>0&&i1>i0);return SRC.slice(i0,i1);})();
+async function emergency(hold,cur){
+ const calls=[],sb={env:{cfg:{stopHp:25},hpPotPick:()=>({title:'Велике зілля HP'}),cleanTitle:s=>s,qty:()=>77,hpPots:()=>[1],rec:()=>{}},
+  ctx:{rb:{id:'core'}},me:{pct:cur/MAX*100,cur,max:MAX},mp:null,drainPick:()=>null,healPick:()=>null,mageCombat:()=>false,Date,Math,
+  epicFrenzyHold:()=>hold,epicFrenzyFloor:()=>2490,act:async b=>{calls.push(b.title);return true}};
+ vm2.runInNewContext(`let lastHpPot = 0; this.step = async () => { for (let i = 0; i < 1; i++) {\n${emBlock}\n} };`,sb);await sb.step();return calls;
+}
+test('лог 19:23 Core: в окне Frenzy 25 % HP — не авария; у края и без окна — банка как раньше',async()=>{
+ assert.deepEqual(await emergency(true,2573),[],'HP после слива выше края — бьёмся под Frenzy');
+ assert.deepEqual(await emergency(true,900),['Велике зілля HP'],'у края — банка');
+ assert.deepEqual(await emergency(false,2573),['Велике зілля HP'],'без окна Frenzy — прежняя аварийная банка');
+});
+test('ручной Battle Trance: слив этого боя замечается, старый из прошлого боя — нет',()=>{
+ const i0=SRC.indexOf('    ctx.born ||= Date.now();'),i1=SRC.indexOf('    const plan = limitPlan(',i0);assert.ok(i0>0&&i1>i0);
+ const run=(tranceT,born)=>{const ctx={rb:{id:'core',hits:[2400,2700]},born};vm2.runInNewContext(SRC.slice(i0,i1),{ctx,env:{actNet:()=>({tranceT})},Date});return ctx;};
+ const now=Date.now(),c=run(now,now-5000);assert.equal(c.limitDiveT,now);assert.equal(c.limitDiveHits,2);
+ assert.equal(run(now-60000,now-5000).limitDiveT,undefined,'Trance прошлого боя');
+ const cs=fs2.readFileSync(path2.join(__dirname,'..','content.js'),'utf8');assert.match(cs,/ACT_NET\.ok && ACT_NET\.action === 'battle_trance'\) ACT_NET\.tranceT = Date\.now\(\)/);
+});

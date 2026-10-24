@@ -9,7 +9,7 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
 
 (async () => {
   // 1. аварийный блок: порядок вампирик → банка → вампирик/лечение, удар только без лечения
-  const i0 = combat.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {'), i1 = combat.indexOf('    ctx.emWait = 0;', i0);
+  const i0 = combat.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)'), i1 = combat.indexOf('    ctx.emWait = 0;', i0);
   assert.ok(i0 > 0 && i1 > i0, 'emergency block');
   const block = combat.slice(i0, i1);
   const drainModel = combat.slice(combat.indexOf('function drainPreferred('), combat.indexOf('function drainPick('));
@@ -18,7 +18,7 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
     // 10.0.15: сохраняем исходный сценарий с серверным CD1.5s, не искусственным block после act.
     const calls = []; let now = 5_000_000, drainUntil = 0;
     const ctx = { rb: { id: 'x' }, block: {}, seq: [] };
-    const sb = { env: { cfg: { stopHp: 25 }, hpPotPick: () => pot, cleanTitle: s => s, qty: () => 10, hpPots: () => pot ? [{ b: pot, heal: 600 }] : [], fightHealOn: () => ({ n: 3, p20: 1880 }), rec: () => {} },
+    const sb = { epicFrenzyHold: () => false, epicFrenzyFloor: () => 0, env: { cfg: { stopHp: 25 }, hpPotPick: () => pot, cleanTitle: s => s, qty: () => 10, hpPots: () => pot ? [{ b: pot, heal: 600 }] : [], fightHealOn: () => ({ n: 3, p20: 1880 }), rec: () => {} },
       ctx, me: { pct: 19, cur: 1659, max: 8517 }, mp: { cur: 5000 }, Date: { now: () => now }, Math, mageCombat: () => mage,
       ready: () => true, drainPick: c => drain && drainUntil <= now ? VT : null,
       healPick: c => heal && (c.block['heal:' + CLD.title] || 0) <= now ? CLD : null,

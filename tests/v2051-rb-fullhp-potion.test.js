@@ -6,7 +6,7 @@ const source=fs.readFileSync(process.env.L2BOT_COMBAT_SOURCE||path.join(__dirnam
 function between(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,'реальный участок найден: '+start);return source.slice(a,b);}
 const priceSource=between('function rbTurnHeal(','function frenzyDive(');
 const bandSource=between('    let potAt = env.cfg.hpPotAt;','    if ((s = await mpPotStep(me, mp))');
-const emergencySource=between('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {','    ctx.emWait = 0;');
+const emergencySource=between('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)','    ctx.emWait = 0;');
 const actSource=between('  const act = async ','  const t0 = Date.now();\n  let progSig');
 const price=vm.runInNewContext(priceSource+';rbTurnHeal;',{Math});
 const copy=x=>JSON.parse(JSON.stringify(x));
