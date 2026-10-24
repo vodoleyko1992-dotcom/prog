@@ -3634,6 +3634,19 @@ async function loopEnchant() {
     await sleep(200); return true;
   }
 }
+// 24.10 (John: «надо, чтобы бот открывал страницу крафта сам в режиме активного крафта»): крафтер в режиме крафта
+// стоит на /craft.html игры. Не больше 3 переходов за 2 мин (страница не открылась — крафтим на месте, как раньше).
+const isCraftPage = () => /\/craft\.html$/i.test(location.pathname);
+async function craftPageGo() {
+  if (isCraftPage() || L2V7Modules.actions?.canAct?.() === false) return false;
+  const K = 'l2bot-craftNav', now = Date.now();
+  let t = []; try { t = (JSON.parse(sessionStorage.getItem(K) || '[]') || []).filter(x => now - x < 120000); } catch (e) {}
+  if (t.length >= 3) return false;
+  try { sessionStorage.setItem(K, JSON.stringify([...t, now])); } catch (e) {}
+  setStatus('Крафт: открываю страницу крафта'); await rtCommit();
+  if (!on || !tabOwner || autonomyMode() !== 'craft' || isBattle()) return true;
+  location.href = '/craft.html'; await sleep(4000); return true;
+}
 // 22.10 (журнал 22:15–22:17): отдельный крафт держит круг и при ожидании сырья/маны, без новой охоты и городских баффов.
 async function loopCraft() {
   if (autonomyMode() !== 'craft') return false;
@@ -3647,6 +3660,7 @@ async function loopCraft() {
   else if (rt.shop?.urgent && Date.now() - (rt.shop.t || 0) < 300000) await shopStep();
   else if (rt.subGo) { await L2V7Modules.subgo.step(); await sleep(200); return true; } // явная команда меню, в том числе выбор крафтера
   else if (L2V7Modules.subclass.role() !== 'crafter') setStatus('Крафт: выберите класс крафтера — класс сам не переключаю');
+  else if (await craftPageGo()) return true;
   else {
     await L2V7Modules.craft.step();
     if (on && tabOwner && autonomyMode() === 'craft') setStatus('Крафт: ' + (L2V7Modules.craft.text() || 'добавьте рецепт и количество в очередь').replace(/\n/g, ' · '));
