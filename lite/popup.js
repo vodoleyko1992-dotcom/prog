@@ -46,9 +46,9 @@ function paintStatus() {
   $('hero').textContent = c && c.name ? `${c.name}${c.lvl ? ', ' + c.lvl + ' ур.' : ''}${prof ? ' · ' + prof : ''}` : '';
   const hc = c && c.name ? L.heroClass(c.prof, c.slots, c.slot) : null, w = $('cls');
   w.hidden = hc?.ok !== false;
-  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера: `
+  w.textContent = hc?.ok === false ? `⚠ Сейчас в игре ${c.name} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника, спойлера и мага: `
     + (hc.alts?.length ? `переключите в игре класс на ${hc.alts.map(a => `${a.name} (${L.slotRu(a.slot)}${a.lvl ? ', ' + a.lvl + ' ур.' : ''})`).join(' или ')}.`
-      : 'войдите в игру Дестром/Титаном, лучником или спойлером либо переключите на него сабкласс.')
+      : 'войдите в игру Дестром/Титаном, лучником, спойлером или магом либо переключите на него сабкласс.')
     + ' Пока активен другой класс, бот ничего не жмёт.' : '';
   paintProfs();
   const P = L.profRt(rt, kindView()), k = P.kills, lim = +cfg.killLimit || 0;
@@ -108,7 +108,17 @@ function paintProfs() {
 }
 // Кто в профиле: «в игре лучник», «профиль лука», «станет активен лучник».
 const WHO = { destr: { now: 'Дестр', of: 'Дестра', who: 'Дестр/Титан' }, archer: { now: 'лучник', of: 'лука', who: 'лучник' },
-  spoil: { now: 'спойлер', of: 'спойлера', who: 'спойлер (Scavenger / Bounty Hunter / Fortune Seeker)' } };
+  spoil: { now: 'спойлер', of: 'спойлера', who: 'спойлер (Scavenger / Bounty Hunter / Fortune Seeker)' },
+  mage: { now: 'маг', of: 'мага', who: 'маг-нюкер (Sorcerer / Necromancer / Spellsinger / Spellhowler и их 3-я профессия)' } };
+// 1.7: раздел «Маг» — у профиля мага. Кого задевает массовый удар в Ashen Bastion — из боёв (rt.aoeEx).
+function paintMage() {
+  const box = $('mageBox'), on = kindView() === 'mage';
+  box.hidden = !on;
+  if (!on) return;
+  const A = (rt.aoeEx || {}).ashen_bastion, list = A && Array.isArray(A.list) ? A.list : [], mx = Math.max(0, ...list.map(x => +x.maxHp || 0));
+  const t = list.length ? `Соседи в Ashen: ${list.map(x => `${x.name} (HP ${x.maxHp})`).join(', ')} — цель беру с HP не меньше ${mx}.` : 'Кого задевает массовый удар в Ashen, бот узнает в первом бою там.';
+  if ($('mageEx').textContent !== t) $('mageEx').textContent = t;
+}
 // 1.6: раздел «Споил» — только у профиля спойлера. Уровень героя для мест под ресурс — активного спойлера или его слота у героя.
 function spoilLvl() {
   const c = rt.char || {};
@@ -173,7 +183,7 @@ function paintSkills() {
   }));
 }
 let painted = '';                                  // 1.5: чей профиль на экране — сменился, поля перерисовываем и под курсором
-function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills(); paintSpoil();
+function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills(); paintSpoil(); paintMage();
   const fresh = painted !== cfg.kind; painted = cfg.kind;
   for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (fresh || document.activeElement !== $(k)) $(k).value = cfg[k];
   if (fresh || document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;

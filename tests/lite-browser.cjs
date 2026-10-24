@@ -24,6 +24,11 @@
 //   (или Spoil, пока Festival на откате), Spoil Crush не жмётся, Sweeper — никогда; добыча «Спойл: X ×N» — в счёт и в меню;
 //   надели дубину — Whirlwind игра не даёт (пауза 5 мин), бой начинается со Spoil Crush; «Сбросить счёт» — с нуля.
 // В E (с 1.6) «другой класс» — основной маг Arcana Lord: Bounty Hunter стал своим профилем.
+// Сценарий I (Lite 1.7, John: «изучи мага в бастионе, массухи юзаем… создай доп модуль МАГ… автоопределение Дестр\лук\маг»):
+//   активен Storm Screamer в Ashen Bastion (разметка и правила — kb/lite-mage-study.md): вкладка «🔮 Маг» сама; первый бой —
+//   самый толстый моб (соседи ещё не известны), массовые бьют троих, соседи узнаны; дальше — главный не тоньше соседей, после
+//   победы сразу следующий из списка игры (не «Охотиться дальше»); Elemental Crash — только когда соседи толще главного;
+//   Arcane Power включается один раз; 9 мобов — цель выполнена.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 // 20.54 (прогон смоуков 23.10): все 7 сценариев идут 285–321 с даже в одиночку — внешний «timeout 300» убивает Chromium посреди G
 //   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFGH.
@@ -49,13 +54,13 @@ function makeServer() {
     mobHp: 4000, lat: { action: 0, character: 0 }, slowNext: 0, actT: [], pending: 0, overlap: 0, charN: 0,
     tvt: { phase: 'IDLE', eventId: 'tvt-0800', isRegistered: false, registeredCount: 4, maxPlayers: 20, schedule: { enabled: true, next: { slotKey: 'tvt-0800', registrationOpensAt: Date.now() + 100000 } } },   // запись скоро — бот опрашивает часто
     enemies: [{ characterId: 'e1', name: 'Enemy1', level: 70, hp: 3000, maxHp: 3000, cp: 0, alive: true }, { characterId: 'e2', name: 'Enemy2', level: 72, hp: 2000, maxHp: 2000, cp: 0, alive: true }],
-    target: null, buffer: [], locations: [
+    target: null, buffer: [], ash: [], ashDead: {}, locations: [
       { teleportId: 'giran_harbor', labelUk: 'Гавань Гірана', adenaCost: 2500, mobLevelMin: 25, mobLevelMax: 51 },
       { teleportId: 'forge_gods', labelUk: 'Кузня богів', adenaCost: 20000, mobLevelMin: 70, mobLevelMax: 80 } ],
   };
   const CD = { attack: 600, l2_190: 2500, battle_trance: 120000, l2_176: 120000, l2_420: 120000, l2_286: 5000,
     double_shot: 2500, power_shot: 2500, stun_shot: 1500, soul_of_sagittarius: 1000, l2_77: 1000, l2_91: 1000, l2_122: 1000, vicious_stance: 1000,
-    l2_254: 1500, l2_302: 2700, l2_348: 2100, l2_36: 1700, l2_42: 500 };   // 1.6: спойлер (Festival ≈2,7 с, Crush ≈2,1 с — логи основного бота 21.10)
+    l2_254: 1500, l2_302: 2700, l2_348: 2100, l2_36: 1700, l2_42: 500, l2_1176: 600, l2_1181: 600, l2_1292: 30000, l2_337: 500 };   // 1.6: спойлер (Festival ≈2,7 с, Crush ≈2,1 с — логи основного бота 21.10)
   // 1.6: оружие спойлера — Club (4) дубина, Short Spear (15) древковое; Spoil Crush — только с дубиной, Whirlwind — только с древковым:
   // иначе 400 battle_skill_not_allowed «Цей скилл зараз недоступний…» (основной бот, combat.js). Итог спойла — строки лога (logTail).
   const BLUNT_W = [4, 89, 6579];
@@ -107,18 +112,27 @@ function makeServer() {
     else if (a === 'l2_254') { h.mp -= 50; const ok = (S.spoilSeq || []).length ? S.spoilSeq.shift() : true; lines.push(ok ? 'Спойл успішний (59%)' : 'Спойл не вдався (56%)'); if (ok) b.spoiled = true; }
     else if (a === 'l2_348') { b.mobHp -= 1200; h.mp -= 70; lines.push(`Ви завдаєте ${b.mobName} 1 200 урону`, 'Спойл успішний (61%)'); b.spoiled = true; }
     else if (a === 'l2_36') { b.mobHp -= 1500; h.mp -= 40; }
+    // 1.7: маг в Ashen (kb/lite-mage-study.md) — массовый бьёт главного и двух соседей одинаково, умерший сосед +1 к счёту и снова полный
+    else if (a === 'l2_1176' || a === 'l2_1181') {
+      const dmg = a === 'l2_1176' ? 500 : 400; b.mobHp -= dmg; h.mp -= 70;
+      if (b.ex) { for (const x of b.ex) { x.mobHp -= dmg; if (x.mobHp <= 0) { h.mobsKilled++; S.exKills = (S.exKills || 0) + 1; lines.push(`Додаткова ціль повалена: ${x.name}.`); x.mobHp = x.mobMaxHp; } }
+        lines.push(`Буря: додаткові цілі — ${b.ex.map(x => x.name + ' −' + dmg).join(', ')}.`); b.wx = b.ex.map(x => ({ name: x.name, mobHp: x.mobHp, mobMaxHp: x.mobMaxHp })); }
+    }
+    else if (a === 'l2_1292') { (S.crash = S.crash || []).push({ main: b.mobHp, ex: (b.ex || []).map(x => x.mobHp) }); b.mobHp -= 1500; h.mp -= 200; }
+    else if (a === 'l2_337') { const t = S.hero.toggleStances.find(x => x.skillId === 337); if (t) t.active = !t.active; S.apN = (S.apN || 0) + 1; }
     if (a !== 'battle_potion_use') S.cd[a] = now + ((S.cdSet || CD)[a] || 1000);
     h.hp -= S.killHero ? 9000 : 150;
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
     if (b.mobHp <= 0) {
       b.mobHp = 0; h.inBattle = false; h.mobsKilled++;
-      (S.done = S.done || []).push({ spoiled: !!b.spoiled, acts: b.ok.slice(), w: S.weapon });
+      (S.done = S.done || []).push({ spoiled: !!b.spoiled, acts: b.ok.slice(), w: S.weapon, sp: b.spawnId });
+      if (b.ex) S.ashDead[b.spawnId] = now + 30000;                // 1.7: Ashen — главный возрождается ≈30 с
       if (b.spoiled) lines.push('Спойл: Mithril Ore ×2', 'Спойл: Coal ×1');
       return [200, { victory: { spawnId: b.spawnId, mobName: b.mobName }, delta: { mobHp: 0, serverNowMs: now }, logTail: lines }];
     }
     // Как настоящая игра (battle-action-result.js): почти каждый ответ на ход несёт hotbarStale — страница перечитывает персонажа.
     return [200, { kind: 'delta', delta: { mobHp: b.mobHp, mobMaxHp: b.mobMaxHp, characterHp: h.hp, characterMaxHp: h.maxHp, characterMp: h.mp, characterMaxMp: h.maxMp,
-      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [CANON[a] || a]: S.cd[a] } }, logTail: lines, mobEffectsSig: b.spoiled ? 'spoil:1' : '' }];
+      hotbarStale: true, serverNowMs: now, globalCooldownUntilMs: S.gcd, skillCooldowns: { [CANON[a] || a]: S.cd[a] }, ...(b.wx ? { whirlwindExtras: b.wx } : {}) }, logTail: lines, mobEffectsSig: b.spoiled ? 'spoil:1' : '' }];
   }
   function tvtState() {
     const t = S.tvt, now = Date.now();
@@ -132,10 +146,18 @@ function makeServer() {
     if (p === '/game/battle/start') {
       if (S.hero.inBattle) return [400, { error: 'already_in_battle' }];
       const sp = body.spawnId; S.spawnN++;
-      S.battle = mob(sp, sp.startsWith('champ_') ? 'Yeti' : 'Grave Robber', sp.startsWith('champ_') ? 'champion' : 'aggressive', sp.startsWith('champ_') ? 'orange' : '');
+      const am = (S.ash || []).find(m => m.id === sp);
+      if (am) {                                                     // 1.7: Ashen — соседи массового удара: первые два моба списка, кроме главного
+        if ((S.ashDead[sp] || 0) > now) return [400, { error: 'mob_respawning' }];
+        (S.ashStarts = S.ashStarts || []).push(sp);
+        S.battle = { spawnId: sp, mobName: am.name, mobLevel: 85, kind: 'aggressive', championTier: '', mobHp: am.maxHp, mobMaxHp: am.maxHp, log: [],
+          ex: S.ash.filter(m => m.id !== sp).slice(0, 2).map(m => ({ name: m.name, mobHp: m.maxHp, mobMaxHp: m.maxHp })) };
+      } else S.battle = mob(sp, sp.startsWith('champ_') ? 'Yeti' : 'Grave Robber', sp.startsWith('champ_') ? 'champion' : 'aggressive', sp.startsWith('champ_') ? 'orange' : '');
       S.hero.inBattle = true; S.hero.battleSpawnId = sp; return [200, { battle: S.battle }];
     }
     if (p === '/game/battle/action') return action(body);
+    if (p === '/game/ashen-bastion/mobs') { S.ashGet = (S.ashGet || 0) + 1; return [200, { location: 'ashen_bastion', total: S.ash.length, offset: 0, limit: 25,
+      mobs: S.ash.map(m => ({ ...m, level: 85, respawnSeconds: Math.max(0, Math.ceil(((S.ashDead[m.id] || 0) - now) / 1000)) })) }]; }
     if (p === '/game/battle/hunt-continue') {
       if (S.hero.inBattle) return [400, { error: 'in_battle' }];
       S.chainN++; S.spawnN++;
@@ -185,7 +207,8 @@ function page(title, body) { return `<!doctype html><html><head><meta charset="u
 const TITLES = { attack: 'Атака', l2_190: 'Fatal Strike — сильный удар', battle_trance: 'Battle Trance — HP до 25 %', l2_176: 'Frenzy — при HP ≤ 30 %', l2_420: 'Zealot', l2_286: 'Provoke — агро',
   double_shot: 'Double Shot — две стрелы', power_shot: 'Power Shot', stun_shot: 'Stun Shot — оглушение', l2_122: 'Hex', l2_77: 'Attack Aura', l2_91: 'Defense Aura',
   soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance',
-  l2_254: 'Spoil — спойл', l2_302: 'Spoil Festival', l2_348: 'Spoil Crush', l2_36: 'Whirlwind', l2_42: 'Sweeper', l2_1177: 'Wind Strike', l2_1184: 'Ice Bolt' };
+  l2_254: 'Spoil — спойл', l2_302: 'Spoil Festival', l2_348: 'Spoil Crush', l2_36: 'Whirlwind', l2_42: 'Sweeper', l2_1177: 'Wind Strike', l2_1184: 'Ice Bolt',
+  l2_1176: 'Blizzard — до 3 целей', l2_1181: 'Flame Strike', l2_1292: 'Elemental Crash', l2_337: 'Arcane Power — стойка' };
 function hotbar(H, pots) {
   const slots = H.battleHotbarSlots.map(s => s.k === 'a'
     ? `<button class="l2-battle-hotbar-slot" title="${TITLES[s.a]}" data-slot-cd="${s.a}">${s.a === 'attack' ? '' : `<img src="/skills/${s.a}.gif">`}<span class="l2-battle-hotbar-slot-cd" hidden><span class="l2-battle-hotbar-slot-cd__timer"></span></span></button>`
@@ -199,22 +222,24 @@ function render(b){if(!b)return;$('#battle-mob-title').textContent=b.mobName+' �
 function logAdd(lines){for(const t of lines||[]){const d=document.createElement('div');d.className='l2-battle-log-line';const m=t.match(/^Спойл: (.+) (×\d+)$/);
  if(m)d.innerHTML='<span class="l2-battle-log-line__spoil-prefix">Спойл:</span><span class="l2-battle-log-line__body"><span>'+m[1]+'</span><span>'+m[2]+'</span></span>';
  else{const s=document.createElement('span');s.className='l2-battle-log-line__body';s.textContent=t;d.append(s);}$('#battle-log').append(d);}}
-fetch('/game/battle?spawnId='+sid).then(r=>r.json()).then(j=>render(j.battle));
+fetch('/game/battle?spawnId='+sid).then(r=>r.json()).then(async j=>{const b=j.battle;
+ if(/^ashen_/.test(sid)&&!(b&&b.spawnId===sid&&b.mobHp>0)){const s=await post('/game/battle/start',{spawnId:sid});render(s.j.battle);return;}render(b);});
 document.querySelectorAll('.l2-battle-hotbar-slot').forEach(el=>el.onclick=async()=>{
  if(busy){window.__lost++;return;}busy=true;const a=el.dataset.slotCd;
  const {status,j}=await post('/game/battle/action',a==='battle_potion_use'?{action:a,itemId:+el.dataset.item}:{action:a});
  logAdd(j.logTail);if(j.mobEffectsSig!=null)$('#battle-mob-effects-row').dataset.effectsSig=j.mobEffectsSig;
+ const wx=j.delta&&j.delta.whirlwindExtras;if(wx){const r=$('#battle-whirlwind-extras');r.hidden=false;r.innerHTML=wx.map(x=>'<div class="l2-battle-whirlwind-extra"><span class="l2-battle-whirlwind-extra__name">'+x.name+'</span><div class="l2-battle-whirlwind-extra__bar"><span class="l2-battle-bar-innertext">'+x.mobHp+' / '+x.mobMaxHp+'</span></div></div>').join('');}
  if(j.victory){$('#battle-mob-hp-val').textContent='0 / 4000';$('#battle-victory-inline').hidden=false;$('#battle-victory-hunt').hidden=false;}
  else if(j.defeat){$('#battle-defeat-root').hidden=false;}
  else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / '+(j.delta.mobMaxHp||4000);const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
   if(cd&&until){cd.hidden=false;cd.classList.add('l2-battle-hotbar-slot-cd--on');const tick=()=>{const left=until-Date.now();const tm=cd.querySelector('.l2-battle-hotbar-slot-cd__timer');if(left<=0){cd.hidden=true;cd.classList.remove('l2-battle-hotbar-slot-cd--on');return;}if(tm)tm.textContent=(left/1000).toFixed(1);setTimeout(tick,100);};tick();}}
  if(j.victory||j.defeat||status!==200||(j.delta&&j.delta.hotbarStale))await ch();busy=false;});
 $('#battle-victory-hunt').onclick=async()=>{const {j}=await post('/game/battle/hunt-continue');if(j.battle){$('#battle-victory-inline').hidden=true;$('#battle-victory-hunt').hidden=true;$('#battle-log').textContent='';$('#battle-mob-effects-row').dataset.effectsSig='';render(j.battle);}};
-$('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)await post('/game/battle/leave',{battleSpawnId:sid});location.href='/map.html';};
+$('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)await post('/game/battle/leave',{battleSpawnId:sid});location.href=/^ashen_/.test(sid)?'/ashen-bastion.html':'/map.html';};
 $('#battle-defeat-tocity').onclick=async()=>{await post('/game/battle/defeat/to-city');location.href='/city.html';};
 </script>`;
 function battlePage(sv) {
-  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div><div id="battle-mob-effects-row" data-effects-sig=""></div>${hotbar(sv.S.hero, sv.S.pots)}
+  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div><div id="battle-whirlwind-extras" hidden></div><div id="battle-mob-effects-row" data-effects-sig=""></div>${hotbar(sv.S.hero, sv.S.pots)}
 <div id="battle-log"></div>
 <div id="battle-victory-inline" hidden>Победа</div><button id="battle-victory-hunt" hidden>Охотиться дальше</button><button id="battle-back-map">Назад на карту</button>
 <div id="battle-defeat-root" hidden><button id="battle-defeat-tocity">Вернуться в город</button></div>${BATTLE_JS}`);
@@ -235,6 +260,18 @@ function teleportPage(sv) {
   return page('Телепорт', `<button class="l2-teleport-miru-city-btn" data-surroundings-key="giran">Гіран</button><div id="tp-rows" hidden>${rows}</div>
 <script>document.querySelector('.l2-teleport-miru-city-btn').onclick=()=>{$('#tp-rows').hidden=false;};
 document.querySelectorAll('.l2-teleport-miru-tp-btn').forEach(b=>b.onclick=async()=>{await post('/game/teleport',{teleportId:b.dataset.teleportId});location.href='/map.html';});</script>`);
+}
+// 1.7: Ashen Bastion — карты нет, список мобов на своей странице (разметка как у игры, kb/lite-mage-study.md §2); «Бій» — переход в бой
+function ashenPage(sv) {
+  const now = Date.now(), fmt = n => n.toLocaleString('uk-UA');
+  const rows = sv.S.ash.map(m => { const left = Math.ceil(((sv.S.ashDead[m.id] || 0) - now) / 1000);
+    return `<article class="ashen-mob"><div class="ashen-details"><button type="button" class="ashen-name ashen-name-button">${m.name} · Lv 85</button>
+<div class="ashen-meta"><span class="ashen-meta__hp">HP ${fmt(m.maxHp)}</span><span class="ashen-meta__sep"> · </span><span class="ashen-meta__exp">EXP ${fmt(m.exp)}</span></div></div>
+<button type="button" class="l2-town-btn ashen-fight" data-id="${m.id}"${left > 0 ? ' disabled' : ''}>${left > 0 ? '⏳ ' + left + 'с' : 'Бій'}</button></article>`; }).join('');
+  return page('Ashen Bastion', `<a href="/city.html" id="ashen-exit-city">Вийти в місто (Aden) →</a><span id="ashen-page-counter">${sv.S.ash.length} монстрів · 85 рівень</span>
+<button type="button" id="ashen-reload">Оновити</button><p class="err" id="ashen-error" hidden></p><div id="ashen-mobs">${rows}</div>
+<div class="ashen-pager"><button id="ashen-prev" disabled>←</button><span id="ashen-page-number">1 / 1</span><button id="ashen-next" disabled>→</button></div>
+<script>document.querySelectorAll('.ashen-fight').forEach(b=>b.onclick=()=>{location.href='/battle.html?spawnId='+encodeURIComponent(b.dataset.id);});$('#ashen-reload').onclick=()=>location.reload();</script>`);
 }
 const cityPage = () => page('Город', `<a class="l2-town-miru-item--buffer-statue" href="/town-buffer.html">Магическая статуя</a>`);
 const bufferPage = () => page('Баффер', `<div id="town-buffer-sets"><button class="l2-town-buffer-set-apply" data-set-id="basic">Базовый</button></div>
@@ -273,6 +310,7 @@ async function launch() {
     const html = b => route.fulfill({ contentType: 'text/html; charset=utf-8', body: sv.S.noPoll ? b.replace('setInterval(ch,2500);', '') : b }).catch(() => {});
     if (p === '/map.html') return html(mapPage(sv));
     if (p === '/battle.html') return html(battlePage(sv));
+    if (p === '/ashen-bastion.html') return html(ashenPage(sv));
     if (p === '/teleport.html') return html(teleportPage(sv));
     if (p === '/city.html') return html(cityPage(sv));
     if (p === '/town-buffer.html') return html(bufferPage(sv));
@@ -607,13 +645,13 @@ async function scenarioE() {
     assert.match(await pp.textContent('#skills'), /когда в игре будет активен Дестр\/Титан/);
     assert.deepEqual((await h.rt()).bar || [], [], 'панель мага в памяти');
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана, лучника и спойлера/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
+    await until(async () => /Lite ведёт только Дестра\/Титана, лучника, спойлера и мага/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра»');
     await delay(6000);
     assert.equal(S.spawnN, 0, 'начат бой'); assert.deepEqual(S.acts, []); assert.deepEqual(S.tp, []); assert.equal(S.tvt.isRegistered, false);
     assert.equal(h.game.url(), 'https://l2wap.com/map.html');
     const r1 = await h.rt();
-    assert.match(r1.status, /Сейчас в игре Dstr — Human Arcana Lord\. Lite ведёт только Дестра\/Титана, лучника и спойлера: переключите в игре класс на Dwarf Bounty Hunter \(сабкласс 1\) или Orc Titan \(сабкласс 2\)/);
-    assert.equal(logText(r1).match(/Lite только для Дестра, лучника и спойлера/g)?.length, 1, 'запись в журнале одна');
+    assert.match(r1.status, /Сейчас в игре Dstr — Human Arcana Lord\. Lite ведёт только Дестра\/Титана, лучника, спойлера и мага: переключите в игре класс на Dwarf Bounty Hunter \(сабкласс 1\) или Orc Titan \(сабкласс 2\)/);
+    assert.equal(logText(r1).match(/Lite только для Дестра, лучника, спойлера и мага/g)?.length, 1, 'запись в журнале одна');
     // игрок переключил в игре сабкласс на Титана (слот 2): игра перечитала героя → Lite охотится, меню без предупреждения, скиллы Титана
     Object.assign(S.hero, titan);
     await until(() => S.acts.length >= 5, 30000, 'охота на Титане');
@@ -631,7 +669,7 @@ async function scenarioE() {
     assert.equal((await h.rt()).barCls, 'orc_titan');
     const n = S.acts.length;
     await pp.click('#run');
-    await until(async () => /Lite ведёт только Дестра\/Титана, лучника и спойлера/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
+    await until(async () => /Lite ведёт только Дестра\/Титана, лучника, спойлера и мага/.test((await h.rt()).status || ''), 10000, 'статус «жду Дестра» после Старта');
     await delay(4000);
     assert.equal(S.acts.length, n, 'ходы на маге');
     await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
@@ -670,7 +708,7 @@ async function scenarioF() {
     const pp = await h.popup();
     // меню: открыт «Лук · в игре», скиллы лука с галками по умолчанию, стрелы в сумке
     await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 8), 5000, 'скиллы лука в меню');
-    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре'], ['spoil', false, '']]);   // 1.6: и вкладка спойлера
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', true, ' · в игре'], ['spoil', false, ''], ['mage', false, '']]);   // 1.6: и вкладка спойлера, 1.7 — мага
     assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'лук — не «чужой класс»');
     const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked]));
     assert.deepEqual(rows, [['double_shot', true], ['power_shot', true], ['stun_shot', true], ['l2_122', false], ['l2_77', true], ['l2_91', true], ['soul_of_sagittarius', true], ['vicious_stance', false]]);
@@ -735,7 +773,7 @@ async function scenarioF() {
     assert.match(logText(r3), /в игре Orc Titan \(Dstr\) — профиль «Дестр» вместо «Лук»: место охоты «Гавань Гірана», цель 4 мобов \(убито 0\)/);
     assert.equal(r3.by.archer.kills, 3); assert.equal(r3.by.archer.bar.length, 9); assert.equal(r3.barCls, 'orc_titan');
     // меню само перешло на Дестра; во вкладке лука — его 3 из 3 и его скиллы
-    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, ''], ['spoil', false, '']]), 5000, 'меню: Дестр в игре');
+    await until(async () => JSON.stringify(await sel(pp)) === JSON.stringify([['destr', true, ' · в игре'], ['archer', false, ''], ['spoil', false, ''], ['mage', false, '']]), 5000, 'меню: Дестр в игре');
     await until(async () => (await pp.textContent('#kills')) === '4 / 4 ✔', 5000, 'счётчик Дестра');
     await pp.click('#profs button[data-kind="archer"]');
     await until(async () => (await pp.textContent('#kills')) === '3 / 3 ✔', 3000, 'счётчик лука');
@@ -855,7 +893,7 @@ async function scenarioH() {
     const pp = await h.popup();
     // меню: открыт «Споил · в игре», скиллы БХ (Sweeper без галки), раздел спойла с ресурсом и местом под него
     await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 5), 8000, 'скиллы спойлера в меню');
-    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', false, ''], ['spoil', true, ' · в игре']]);
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', false, ''], ['spoil', true, ' · в игре'], ['mage', false, '']]);
     assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'спойлер — не «чужой класс»');
     const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked, e.querySelector('select').value]));
     assert.deepEqual(rows, [['l2_254', true, 'spoil'], ['l2_302', true, 'spoil'], ['l2_348', true, 'spoil'], ['l2_36', true, 'attack'], ['l2_42', false, 'other']]);
@@ -918,6 +956,64 @@ async function scenarioH() {
   finally { await h.ctx.close(); }
 }
 
+// 1.7: маг в Ashen Bastion (живой список 24.10, HP ÷ 100: соседи — Dark Reaper 2674 и Infernal Knight 2663)
+const ASH = [['Dark Reaper', 2674], ['Infernal Knight', 2663], ['Cursed Warlock', 2696], ['Abyss Walker', 2685], ['Doom Bringer', 2631], ['Ashen Guardian', 2620],
+  ['Dark Reaper', 2652], ['Infernal Knight', 2642], ['Abyss Walker', 2587], ['Ashen Guardian', 2576], ['Cursed Warlock', 3925], ['Abyss Walker', 3935]]
+  .map(([name, maxHp], i) => ({ id: 'ashen_bastion_mob_' + String(i + 1).padStart(3, '0'), name, maxHp, exp: 540 }));
+const MAGE_BAR = ['l2_1176', 'l2_1181', 'l2_1292', 'l2_337'];
+async function scenarioI() {
+  const h = await launch(), { S } = h;
+  const sel = pp => pp.evaluate(() => [...document.querySelectorAll('#profs button')].map(b => [b.dataset.kind, b.classList.contains('sel'), b.querySelector('i').textContent]));
+  try {
+    S.ash = ASH.map(m => ({ ...m })); S.ashDead = {};
+    S.locations.push({ teleportId: 'ashen_bastion', labelUk: 'Ashen Bastion', adenaCost: 0, mobLevelMin: null, mobLevelMax: null });
+    Object.assign(S.hero, { l2Profession: 'dark_elf_storm_screamer', level: 78, currentZoneId: 'ashen_bastion', currentZoneNameUk: 'Ashen Bastion', locationType: 'zone',
+      mp: 6000, maxMp: 6000, toggleStances: [{ battleId: 'l2_337', skillId: 337, level: 1, active: false }],
+      classSlots: { activeSlot: 0, slots: [{ slot: 0, owned: true, active: true, profession: 'dark_elf_storm_screamer', race: 'Dark Elf', level: 78 },
+        { slot: 2, owned: true, active: false, profession: 'orc_titan', race: 'Orc', level: 77 }] },
+      battleHotbarSlots: [{ k: 'a', a: 'attack' }, ...MAGE_BAR.map(a => ({ k: 'a', a }))],
+      learnedBattleSkillsDetail: MAGE_BAR.map(a => ({ battleId: a, nameUk: TITLES[a].split(' — ')[0] })) });
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, p: { mage: { tvt: false, killLimit: 9 } } } }));
+    await h.game.goto('https://l2wap.com/ashen-bastion.html');
+    await until(async () => (await h.rt()).kind === 'mage' && (await h.rt()).bar?.length >= 4, 20000, 'профиль мага и панель');
+    const pp = await h.popup();
+    await until(() => pp.evaluate(() => document.querySelectorAll('#skills .sk').length === 4), 8000, 'скиллы мага в меню');
+    assert.deepEqual(await sel(pp), [['destr', false, ''], ['archer', false, ''], ['spoil', false, ''], ['mage', true, ' · в игре']]);
+    assert.equal(await pp.evaluate(() => document.getElementById('cls').hidden), true, 'маг — не «чужой класс»');
+    const rows = await pp.$$eval('#skills .sk', els => els.map(e => [e.dataset.key, e.querySelector('input').checked, e.querySelector('select').value]));
+    assert.deepEqual(rows, [['l2_1176', true, 'aoe'], ['l2_1181', true, 'aoe'], ['l2_1292', true, 'attack'], ['l2_337', true, 'toggle']]);
+    assert.equal(await pp.isVisible('#mageBox'), true);
+    assert.match(await pp.textContent('#mageEx'), /узнает в первом бою/);
+    assert.equal(await pp.inputValue('#limit'), '9');
+    await pp.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
+    await h.game.bringToFront();
+    await until(async () => (await h.rt()).k?.kills >= 9, 120000, '9 убитых');
+    await until(async () => /Цель выполнена/.test((await h.rt()).status || ''), 20000, 'цель выполнена');
+    const r = await h.rt();
+    // первый бой — самый толстый (соседи не известны), дальше — не тоньше соседей; три убийства за каждый бой
+    assert.equal(S.ashStarts[0], 'ashen_bastion_mob_012', 'первый главный: ' + S.ashStarts.join(','));
+    for (const id of S.ashStarts.slice(1)) assert.ok(ASH.find(m => m.id === id).maxHp >= 2674 && !/_00[12]$/.test(id), 'главный тоньше соседей или сам сосед: ' + S.ashStarts.join(','));
+    assert.equal(S.ashStarts[1], 'ashen_bastion_mob_004', 'лучший главный — самый тонкий из не тоньше соседей (EXP одинаковый)');
+    assert.equal(S.done.length, 3, 'боёв: ' + S.done.length); assert.equal(S.exKills, 6, 'соседей убито: ' + S.exKills);
+    assert.equal(S.chainN, 0, 'жал «Охотиться дальше» в Ashen');
+    assert.ok(S.ashGet >= 2, 'следующий главный — своим GET списка');
+    // Elemental Crash — только когда соседи толще главного (иначе обогнал бы их); обычной атакой маг не бьёт
+    for (const c of S.crash || []) assert.ok(c.ex.some(x => x > c.main), 'Crash при соседях не толще главного: ' + JSON.stringify(c));
+    assert.ok(!S.acts.includes('attack'), 'маг жал обычную атаку');
+    assert.equal(S.apN, 1, 'Arcane Power — один раз');
+    assert.deepEqual(r.aoeEx.ashen_bastion.list, [{ name: 'Dark Reaper', maxHp: 2674 }, { name: 'Infernal Knight', maxHp: 2663 }]);
+    assert.match(logText(r), /массовый удар задевает ещё 2: Dark Reaper \(HP 2674\), Infernal Knight \(HP 2663\) — в Ashen беру цель не тоньше их/);
+    assert.match(logText(r), /Ashen: после победы — следующий главный из списка, не «Охотиться дальше»/);
+    await until(async () => /Соседи в Ashen: Dark Reaper \(HP 2674\), Infernal Knight \(HP 2663\) — цель беру с HP не меньше 2674/.test(await pp.textContent('#mageEx')), 5000, 'соседи в меню');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(logText(r), '\nходы:', S.acts.join(','));
+    console.log(`PASS I: маг в Ashen — вкладка «Маг · в игре», 3 боя (${S.ashStarts.join(', ')}), по 3 убийства за бой (соседей ${S.exKills}), «Охотиться дальше» не жал, Arcane Power — 1 раз, Crash ${(S.crash || []).length} раз при соседях толще главного; соседи в меню`);
+  } catch (e) { console.error('DIAG I', { acts: S.acts.slice(-40).join(','), starts: S.ashStarts, done: JSON.stringify((S.done || []).slice(-4)), url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, kind: r.kind, zone: r.zone, k: r.k, aoeEx: r.aoeEx, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDEFGH';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEFGHI';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); if (ONLY.includes('I')) await scenarioI(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
