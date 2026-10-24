@@ -201,3 +201,15 @@ test('откаты сервера: eye_slayer→l2_360, earthquake→l2_347, sho
   let now=10000;const box={};vm.createContext(box);vm.runInContext(read(file),box);const C=box.L2BattleCooldown.createBattleCooldown(()=>now);
   C.observe({action:a,battleSpawnId:'local'},{serverNowMs:now,skillCooldowns:{['l2_'+id]:14700}},200,'local');assert.ok(C.skillWait(a,'local')>0,a);now=14741;assert.equal(C.skillWait(a,'local'),0,a);}
 });
+
+// John 24.10 (скрин панели): все Вразливості и оба Ока складываются — служба ставит каждый выбранный, не один из них.
+test('80, 88, 359, 360 выбраны вместе — ставятся по очереди все четыре',async()=>{
+ const ids=[80,88,359,360],fx=ids.map(id=>fixture({},id)),f=fx[0];for(const g of fx.slice(1))f.panel.push(g.b);
+ f.env.cfg.nBuffs=fx.map(g=>g.meta.name).join(', ');f.env.meMp=()=>({cur:4000,max:4490});
+ const learned=[{battleId:'l2_80',level:1,mpCost:24},{battleId:'l2_88',level:1,mpCost:30},{battleId:'l2_359',level:1},{battleId:'l2_360',level:1}];
+ const on=[],seen=[];
+ for(let i=0;i<4;i++){note(f,{revision:100+i*10,learnedBattleSkillsDetail:learned,monsterBuffs:on.map(id=>({skillId:id,expiresAtMs:f.now()+600000}))});
+  const plan=f.C.managedMonsterPlan(f.ctx);assert.ok(plan,'шаг '+i);assert.equal(seen.includes(plan.id),false);seen.push(plan.id);on.push(plan.id);f.advance(31);}
+ assert.deepEqual([...seen].sort((a,b)=>a-b),ids);
+ note(f,{revision:200,learnedBattleSkillsDetail:learned,monsterBuffs:ids.map(id=>({skillId:id,expiresAtMs:f.now()+600000}))});assert.equal(f.C.managedMonsterPlan(f.ctx),null,'все активны — не повторяем');
+});
