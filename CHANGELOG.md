@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.58 Chrome — МП-банки в режиме крафта](docs/changelog/CHANGELOG-20.58.md)
 - [20.57 Chrome — навыки пики Dreadnought](docs/changelog/CHANGELOG-20.57.md)
 - [20.56 Chrome — A-плащ Goddard выбирается целью Маммона](docs/changelog/CHANGELOG-20.56.md)
 - [20.55 Chrome — подтверждение городского баффа, TvT после выбывания](docs/changelog/CHANGELOG-20.55.md)
