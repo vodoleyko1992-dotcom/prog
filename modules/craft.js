@@ -92,7 +92,10 @@ function pick(book, list, keepPct = 20, now = Date.now(), skip = {}, floorMp = 0
     if (!lack.length && byMp < 1 && (max > 0 || inputsKnown)) { mpWait = true; mpTarget ||= { r, w, need: mp }; why.push(`${nm(r)}: жду ману (${mp} MP за штуку, запас ${floor} MP)`); continue; }
     if (max < 1 || lack.length) { why.push(`${nm(r)}: не хватает ${lack.join(', ') || 'сырья'}`); continue; }
     const count = Math.min(runs, max, byMp, BATCH);
-    return { r, count, w, out: count * outQ(r), mp: count * mp };
+    // 24.10 (лог 24.10 18:15, Leather ×1…×4 при MP 20/3506): партию урезала мана, а не сырьё — режим крафта выпьет банку до POST.
+    const raw = inputsKnown ? Math.min(...r.ingredients.map(i => Math.floor((+i.have || 0) / +i.quantity))) : max;
+    const full = Math.min(runs, raw, BATCH), mpShort = mp > 0 && count < full ? { r, w, need: full * mp } : null;
+    return { r, count, w, out: count * outQ(r), mp: count * mp, ...(mpShort ? { mpShort } : {}) };
   }
   return { why: why.join('; ') || 'крафтить нечего', mpWait, mpTarget };
 }
@@ -182,7 +185,11 @@ async function reconcile(t) {
 }
 // 22.10 (лог: четыре ручные банки 728 вне боя): каждый POST расходует одну уже имеющуюся банку.
 // Намерение живёт в rt до ACK результата. Рост MP может быть регеном; подтверждение неизвестного исхода — расход предмета.
-const MP_ITEM = 728;
+const MP_ITEM = 728, MP_POT = 500;   // банка 728 = +500 MP (журнал 22.10 22:16: 1497 → 1997 → 2497)
+// 24.10 (лог 24.10 18:15): прежде банка шла только при MP меньше цены ОДНОЙ штуки — при мане 20 и Leather 10 MP бот крафтил по 1–4 штуки
+// на реген 5 с и банки не трогал. Теперь партию, урезанную маной, сначала добираем банкой, если +500 MP влезут целиком.
+const potFirst = (p, c) => !!p?.mpShort && dedicated() && env.cfg.craftMpPots !== false && (+S().potNo || 0) <= Date.now()
+  && validMp(c) && c.mp + MP_POT <= c.maxMp && countOf(c, MP_ITEM) >= 1;
 const validMp = c => Number.isFinite(c?.mp) && c.mp >= 0 && Number.isFinite(c?.maxMp) && c.maxMp > 0 && c.mp <= c.maxMp;
 const validHero = (c, t) => Number.isSafeInteger(c?.revision) && c.revision >= 0 && c.name === t.char && Array.isArray(c.inventory?.stacks) && validMp(c);
 const validCrafterHero = (c,t) => validHero(c,t) && (c.l2Profession==null || /(?:artisan|warsmith|maestro)/i.test(c.l2Profession))
@@ -223,6 +230,7 @@ async function sendMp(t, p, retry = false) {
   if (!res.ok) {
     const why = `МП-банка: игра отказала — ${j?.messageRu || j?.messageUk || j?.error || 'HTTP ' + res.status}`;
     if (retry) { await mpSay(Date.now(), why + '; первый исход ещё сверяется'); return true; }
+    S().potNo = Date.now() + IDLE; save();   // отказ игры: 5 мин крафтим на свою ману, без банки «на добор»
     await settleMp(t, p, false, why); later(Date.now(), MP_WAIT); return true;
   }
   return settleMp(t, p, true, 'Использована МП-банка из сумки — продолжаю крафт');
@@ -343,6 +351,7 @@ async function chainStep(t, now) {
   const p=pick(book,list,0,now,S().fails,0);
   if (!p.r && p.mpWait) return restoreMp(t,p.mpTarget,now);
   if (!p.r) { later(now,MP_WAIT); await say(now,p.why); return false; }
+  if (potFirst(p,c)) return restoreMp(t,{...p.mpShort,need:Math.min(p.mpShort.need,c.maxMp)},now);
   return performCraft(t,book,p,c,now);
 }
 
@@ -404,6 +413,7 @@ async function runStep(now = Date.now()) {
     if (!validMp(ch)) { later(now, MP_WAIT); await say(now, 'Не прочитаны MP персонажа — крафт подождёт'); return false; }
     p = pick({ ...book, currentMp: ch.mp, maxMp: ch.maxMp }, list, 0, now, S().fails, 0);
     if (!p.r) { later(now, BUSY); await say(now, p.why); return false; }
+    if (potFirst(p, ch)) return restoreMp(t, { ...p.mpShort, need: Math.min(p.mpShort.need, ch.maxMp) }, now);
   }
   return performCraft(t, book, p, ch, now);
 }

@@ -86,8 +86,34 @@ test('цена рецепта выше maxMP: банки не тратит', asy
   const w = world({ mp: 0, maxMp: 50 }), a = w.reload(); await a.C.step(); assert.equal(w.posts.length, 0); assert.match(w.disk.craftSay.why, /банка не поможет/);
 });
 test('свежие MP снизились между книгой и персонажем: партия пересчитана и не превосходит MP', async () => {
-  const w = world({ mp: 1000 }), a = w.reload({ get: url => { if (url === '/character') w.hero.mp = 200; } });
+  // 24.10: банок нет — иначе урезанную маной партию сначала добирает банка (отдельные тесты ниже)
+  const w = world({ mp: 1000, pots: 0 }), a = w.reload({ get: url => { if (url === '/character') w.hero.mp = 200; } });
   await a.C.step(); assert.equal(w.posts[0].body.craftCount, 2); assert.equal(w.hero.mp, 0);
+});
+// 24.10 (лог 24.10 18:15: Leather ×1…×4 за 10 MP при MP 20/3506, банки не тратились): партию, урезанную маной, добирает банка.
+test('лог 24.10: MP 20 из 3506 — сначала банки, потом полные партии по 100, а не по 2 штуки на реген', async () => {
+  const w = world({ mp: 20, maxMp: 3506, cost: 10, goal: 300, raw: 1000, pots: 50 }), a = w.reload();
+  for (let n = 0; n < 12 && w.crafted < 300; n++) await tick(w, a);
+  const crafts = w.posts.filter(x => x.url === '/game/craft/materials').map(x => x.body.craftCount);
+  assert.deepEqual(crafts, [100, 100, 100]); assert.equal(w.crafted, 300); assert.equal(w.posts[0].url, '/character/consumable/use');
+  assert.ok(w.pots >= 2 && w.pots <= 6, 'банки ' + w.pots);
+});
+test('урезанная партия без банок/с банками OFF крафтится сразу на свою ману, без ожидания минуты', async () => {
+  for (const o of [{ pots: 0 }, { cfg: { craftMpPots: false } }]) {
+    const w = world({ mp: 20, maxMp: 3506, cost: 10, goal: 300, raw: 1000, ...o }), a = w.reload({ cfg: o.cfg }); await a.C.step();
+    assert.equal(w.pots, 0); assert.deepEqual(w.posts.map(x => x.body.craftCount), [2]);
+  }
+});
+test('банка не льётся в почти полную ману: +500 не влезут — крафтит, сколько позволяет MP', async () => {
+  const w = world({ mp: 600, maxMp: 1000, goal: 12 }), a = w.reload(); await a.C.step();
+  assert.equal(w.pots, 0); assert.deepEqual(w.posts.map(x => x.body.craftCount), [6]);
+});
+test('отказ игры на банку «на добор»: 5 мин без банок, урезанная партия идёт на свою ману', async () => {
+  const w = world({ mp: 20, maxMp: 3506, cost: 10, goal: 300, raw: 1000 });
+  const a = w.reload({ post: (url, b, e, w) => url === '/character/consumable/use' ? { ok: false, status: 400, json: async () => ({ messageRu: 'нельзя' }) } : w.apply(url, b) });
+  await a.C.step(); assert.equal(w.posts.length, 1); assert.equal(w.disk.craftMpPending, null);
+  await tick(w, a, 61000); assert.deepEqual(w.posts.map(x => x.url), ['/character/consumable/use', '/game/craft/materials']);
+  assert.equal(w.posts[1].body.craftCount, 2);
 });
 for (const bad of [{ name: 'Other' }, { revision: null }, { mp: null }, { maxMp: 0 }, { inventory: null }]) test('неполный/чужой герой не разрешает MP-банку: ' + JSON.stringify(bad), async () => {
   const w = world({ mp: 0 }), a = w.reload({ get: url => { if (url === '/character') Object.assign(w.hero, clone(bad)); } });
