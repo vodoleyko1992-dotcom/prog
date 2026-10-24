@@ -126,6 +126,9 @@ function paintMage() {
   const A = (rt.aoeEx || {}).ashen_bastion, list = A && Array.isArray(A.list) ? A.list : [], mx = Math.max(0, ...list.map(x => +x.maxHp || 0));
   const t = list.length ? `Соседи в Ashen: ${list.map(x => `${x.name} (HP ${x.maxHp})`).join(', ')} — цель беру с HP не меньше ${mx}.` : 'Кого задевает массовый удар в Ashen, бот узнает в первом бою там.';
   if ($('mageEx').textContent !== t) $('mageEx').textContent = t;
+  // 1.8.1: банки в сумке — из ответа игры (бот пишет rt.pots, когда счёт заметно меняется)
+  const P = rt.pots, pt = P && Number.isFinite(+P.mp) ? `Банки в сумке: MP ${P.mp}${P.mp > 0 ? ` (≈${Math.max(1, Math.round(P.mp / 9))} мин боя)` : ' — нет, маг бьёт экономно и отдыхает'}, HP ${P.hp}.` : 'Сколько банок в сумке, бот узнает из ответа игры.';
+  if ($('magePots').textContent !== pt) $('magePots').textContent = pt;
 }
 // 1.6: раздел «Споил» — только у профиля спойлера. Уровень героя для мест под ресурс — активного спойлера или его слота у героя.
 function spoilLvl() {

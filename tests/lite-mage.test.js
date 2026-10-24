@@ -179,7 +179,7 @@ test('бот: страница Ashen, список вместо цепочки, 
   // два принятых массовых без соседей — «соседей нет»; новый моб — новая память боя
   assert.match(bot, /if \(s\.type === 'aoe' && MB\) MB\.aoeN\+\+;/);
   assert.match(bot, /return \{ extras: ex \|\| \(mb\.aoeN >= 2 \? \[\] : null\), aoeTry: !ex && mb\.aoeN < 2 \};/);
-  assert.match(bot, /mage: cfg\.kind === 'mage', \.\.\.\(m && m\.maxHp > 0 \? aoeView\(m\) : \{\}\)/);
+  assert.match(bot, /mage: cfg\.kind === 'mage', mpPots: mpPotsNow\(\), \.\.\.\(m && m\.maxHp > 0 \? aoeView\(m\) : \{\}\)/);
   // после победы в Ashen маг идёт к списку, а не «Охотиться дальше»; список — главный не тоньше соседей
   const av = bot.slice(bot.indexOf('async function afterVictory'), bot.indexOf('async function afterVictory') + 2500);
   assert.ok(av.indexOf('inAshen() && aoeProf()') > 0 && av.indexOf('inAshen() && aoeProf()') < av.indexOf("$('#battle-victory-hunt')"), 'список раньше цепочки');

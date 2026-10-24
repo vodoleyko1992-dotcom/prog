@@ -29,7 +29,8 @@
     spoil: null, spoilW: {},                       // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
     aoeEx: {},                                     // 1.7: соседи массового удара по локациям {зона: {list: [{name, maxHp}], t}}
     spd: null,                                     // 1.8: замер скорости (L.speedNote) — с Старта или кнопки «Сбросить замер»
-    spotBad: {} };                                 // 1.8: автономный спойлер — места, куда пока не летим {id: до}
+    spotBad: {},                                   // 1.8: автономный спойлер — места, куда пока не летим {id: до}
+    pots: null, potNote: '' };                     // 1.8.1: банки в сумке {mp, hp, t} для меню; potNote — что уже сказали в журнал (low|out)
   // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
   let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
@@ -250,6 +251,7 @@
         Array.isArray(c.classSlots?.slots) ? c.classSlots.slots.filter(s => s && s.owned === true).slice(0, 4).map(s => ({ slot: s.slot, prof: String(s.profession || ''), lvl: s.level })) : undefined);
       // 1.5.2: первый GET нового документа мог пройти до старта content-script. Свой свежий GET тоже даёт базу отказа стрел.
       if (Array.isArray(c.inventory?.stacks)) {
+        potsSeen(L.potsOf(c.inventory.stacks));
         const by = {};
         for (const x of c.inventory.stacks.slice(0, 2000)) if (x && L.ARROWS[+x.itemId] && Number.isSafeInteger(+x.qty) && +x.qty > 0) by[+x.itemId] = (by[+x.itemId] || 0) + +x.qty;
         const eq = c.inventory.eq;
@@ -258,7 +260,8 @@
           weaponId: eq && Object.prototype.hasOwnProperty.call(eq, 'l1') ? (eq.l1 == null ? null : num(eq.l1.itemId)) : undefined }, { started });
       }
       const h = { zone: String(c.currentZoneId || ''), zoneName: String(c.currentZoneNameUk || ''), inBattle: c.inBattle === true, city: c.locationType === 'city',
-        locType: String(c.locationType || ''), dung: String(c.activeDungeonId || ''), adena: num(c.adena) };
+        locType: String(c.locationType || ''), dung: String(c.activeDungeonId || ''), adena: num(c.adena),
+        hp: num(c.hp), maxHp: num(c.maxHp), mp: num(c.mp), maxMp: num(c.maxMp) };   // 1.8.1: отдых мага по MP вне боя
       return h;
     } catch (e) { return null; }
   }
@@ -297,6 +300,7 @@
     if (r.add > 0) { progress(); spdNote({ kills: r.add }); if (L.limitDone(r.st.kills, cfg.killLimit) && !rt.limitNoted) { setRt({ limitNoted: Date.now() }); log(`🎯 цель выполнена: убито ${r.st.kills} из ${cfg.killLimit} мобов — охоту остановил${cfg.tvt ? ', TvT продолжаю' : ''}`); notify('limit', 'L2wap Lite: цель выполнена', `Убито ${r.st.kills} мобов.`); } }
     if (r.why === 'jump') log(`счётчик игры вырос на ${ch.k - lastK} сразу — это не бот, считаю с этого места`);
     if (ch.arrows && typeof ch.arrows === 'object') arrowsSeen(ch.arrows, ch, seen);
+    if (ch.pots && typeof ch.pots === 'object') potsSeen(ch.pots);
     if (ch.weaponId !== undefined) wpnSeen(ch.weaponId);
     const c = { name: ch.name, lvl: ch.level || 0, prof: ch.prof || '', slot: ch.slot ?? null, slots: ch.slots || null,
       ...(L.clsKind(ch.prof) === 'archer' && ARW ? { arrows: ARW.by } : {}) };
@@ -392,6 +396,85 @@
     setRt({ arrowNote: Date.now() });
     log('нет стрел — охоту остановил, жду стрелы в сумке (бот их не покупает)');
     notify('arrows', 'L2wap Lite: нет стрел', 'Лучник без стрел не охотится. Положите стрелы в сумку — бот продолжит сам.');
+  }
+
+  // ---------- банки (1.8.1, John 24.10: «банки MP в долгой охоте») ----------
+  // POTS — банки в сумке {mp, hp, t} из ответа /character игры (hook pots) или своего GET. Модель долгой охоты
+  // (tests/tools/lite-mage-model.cjs): маг в Ashen пьёт ≈9 больших банок MP в минуту боя — стопка на панели кончается, и игра убирает
+  // слот. 1.7 оставался без банок: MP 0, обычная атака по 1 урону, бой часами. Теперь бот ставит на пустой слот другую стопку из сумки
+  // (potSlotFix), а когда банок нет совсем — бьёт экономно, снимает Arcane Power и отдыхает перед боем (L.planTurn, L.mpRest).
+  let POTS = null, potNoSlotT = 0;
+  const POT_LOW = 50;
+  function potsSeen(p) {
+    if (!p || typeof p !== 'object' || !Number.isFinite(+p.mp)) return;
+    const t = Date.now(), mp = Math.max(0, +p.mp || 0), hp = Math.max(0, +p.hp || 0);
+    POTS = { mp, hp, t };
+    if (!owner) return;
+    const o = rt.pots;                               // меню: пишем, когда счёт заметно сменился (каждый глоток — не повод писать)
+    if (!o || Math.abs(o.mp - mp) >= 10 || Math.abs(o.hp - hp) >= 10 || (!mp) !== (!o.mp) || (!hp) !== (!o.hp) || t - (o.t || 0) > 60000) setRt({ pots: { mp, hp, t } });
+    if (!cfg.on || cfg.kind !== 'mage') return;
+    const lvl = mp === 0 ? 'out' : mp < POT_LOW ? 'low' : '', was = rt.potNote || '';
+    if (lvl === was) return;
+    setRt({ potNote: lvl });
+    if (lvl === 'out') {
+      log('банки MP кончились — бью с лучшим уроном на 1 MP, Arcane Power снимаю, перед боем отдыхаю до 50 % MP. Купите «Зілля мани (велика банка)» — бот продолжит сам');
+      notify('mppots', 'L2wap Lite: банки MP кончились', 'Маг бьёт экономно и отдыхает. Купите банки MP — бот продолжит сам.');
+    } else if (was === 'out') log(`банки MP снова есть (${mp}) — бью как обычно`);
+    else if (lvl === 'low') log(`банок MP в сумке осталось ${mp} — хватит примерно на ${Math.max(1, Math.round(mp / 9))} мин боя`);
+  }
+  // Банок MP в сумке для хода: null — не знаем; поставить их на панель некуда (нет пустого слота) — для хода их нет.
+  const mpPotsNow = () => (!POTS || Date.now() - POTS.t > 600000 ? null : Date.now() - potNoSlotT < 120000 ? 0 : POTS.mp);
+  // Стопка банок кончилась — на пустой слот панели ставим другую из сумки (основной бот combat.potSlotRestore 7.1.30):
+  // пустой слот → вкладка «Розхідники» → банка (большая раньше малой: глоток — тоже ход). Не чаще раза в 2 мин; пустого слота нет —
+  // в журнал раз в 30 мин. → true, если окно выбора открывали (панель изменилась — ход выбрать заново).
+  async function potSlotFix(kind, g) {
+    const now = Date.now(), tk = 'l2lite.potFix.' + kind, label = kind === 'mp' ? 'MP' : 'HP';
+    if (now - (sess.get(tk, 0) || 0) < 120000) return false;
+    if (!POTS || now - POTS.t > 600000 || !(POTS[kind] > 0)) return false;   // сумку не видели или в ней их нет — ставить нечего
+    sess.set(tk, now);
+    const warn = why => {
+      const wk = 'l2lite.potWarn.' + kind;
+      if (now - (sess.get(wk, 0) || 0) > 1800000) { sess.set(wk, now); log(`банки ${label} нет на панели боя — ${why}`); }
+      return false;
+    };
+    const empty = $$('.l2-battle-hotbar-slot--empty').find(shown);
+    if (!empty) { if (kind === 'mp') potNoSlotT = now; return warn('пустого слота нет, поставьте банку на панель вручную'); }
+    const close = async () => { const c = $('#l2-bh-modal-close'); if (shown(c)) { fire(c, g); await sleep(300); } };
+    await gameIdle(1500, g);
+    if (!alive(g) || !fire(empty, g)) return false;
+    if (!(await waitFor(() => $('.l2-battle-hotbar-modal #l2-bh-modal-tabs'), 3000, 100, g))) { await close(); return warn('окно выбора слота не открылось'); }
+    const tab = $('.l2-battle-hotbar-tab[data-tab-key="consumable"]');
+    if (tab && !tab.classList.contains('l2-battle-hotbar-tab--on')) { fire(tab, g); await sleep(400); }
+    await waitFor(() => $('.l2-battle-hotbar-pick'), 2000, 100, g);
+    const picks = $$('.l2-battle-hotbar-pick'), i = L.potPick(picks.map(b => b.getAttribute('title') || ''), kind);
+    if (!alive(g)) { await close(); return true; }
+    if (i < 0) { await close(); return warn('в сумке их тоже нет'); }
+    const pk = picks[i], nm = (pk.getAttribute('title') || '').replace(/\s*×.*$/, ''), q = ((pk.getAttribute('title') || '').match(/×\s*([\d\s  ]+)$/) || [])[1] || '';
+    fire(pk, g);
+    const ok = await waitFor(() => !shown($('.l2-battle-hotbar-modal__panel')) || !empty.isConnected || !empty.classList.contains('l2-battle-hotbar-slot--empty'), 3000, 100, g);
+    await close();
+    log(ok ? `банка ${label} кончилась на панели — поставил «${nm}» (×${q.replace(/\D/g, '')}) на пустой слот` : `не удалось поставить «${nm}» на панель`);
+    return true;
+  }
+  // Отдых мага по MP перед боем (L.mpRest): банок MP нет совсем. MP вне боя шапка игры не обновляет — читаем своим GET раз в 10 с.
+  let mpReadT = 0, mpMe = null;
+  function mpRestCheck(me) {
+    const R = L.mpRest(sess.get('l2lite.mpRest', null), me, { mage: cfg.kind === 'mage', pots: mpPotsNow(), now: Date.now() });
+    sess.set('l2lite.mpRest', R.st);
+    if (R.stall) log(`MP вне боя не растёт ${L.REST_STALL / 1000} с — отдых не помогает, бьюсь как есть (экономно); снова попробую через ${L.REST_OFF / 60000} мин`);
+    return R;
+  }
+  async function mpRestGate() {
+    if (cfg.kind !== 'mage' || mpPotsNow() !== 0) return false;
+    let me = meStats();
+    const st = sess.get('l2lite.mpRest', null), resting = !!(st && st.t0);
+    if (!resting && !(me.maxMp > 0 && me.mp * 100 / me.maxMp < L.REST_LO)) return false;
+    if (Date.now() - mpReadT >= 10000) { mpReadT = Date.now(); const h = await heroNow(); if (h && h.maxMp > 0 && Number.isFinite(h.mp)) mpMe = { ...h, t: Date.now() }; }
+    if (mpMe && Date.now() - mpMe.t < 15000) me = mpMe;
+    const R = mpRestCheck(me);
+    if (!R.rest) { if (resting && !R.stall) log(`отдых по MP окончен: MP ${Math.round(me.mp * 100 / (me.maxMp || 1))} %`); return false; }
+    if (!resting) log(R.why);
+    status(R.why); progress(); await sleep(2000); return true;
   }
 
   // ---------- класс героя (1.3): ведём только Дестра/Титана; 1.5 — и лучника, 1.6 — и спойлера, у каждого свой профиль ----------
@@ -714,7 +797,11 @@
       else if (cdLen.get(s.action)) block.set(key, t0 + cdLen.get(s.action));
     }
     if ((s.type === 'buff' || s.type === 'lowhp') && s.id) markBuff(s.id, s.dur || 20);
-    if (s.type === 'toggle') { tglSet(key, { on: true, t: t0, flap: L.toggleFlap(tglMem()[key], t0) }); log(`${s.name}: стойку включил`); }
+    // 1.8.1: plan.off — стойку снимаем (Arcane Power тянет HP): память «выкл», чтобы старая подсветка не заставила «снять» её ещё раз.
+    if (s.type === 'toggle') {
+      if (plan.off) { tglSet(key, { on: false, off: 1, t: t0, flap: 0 }); log(`${s.name}: стойку снял — ${plan.why.replace(/^снимаю [^:]*:\s*/, '')}`); }
+      else { tglSet(key, { on: true, off: 0, t: t0, flap: L.toggleFlap(tglMem()[key], t0) }); log(`${s.name}: стойку включил`); }
+    }
     if (s.type === 'trance') log(`Battle Trance: HP до 25 % — дальше ${plan.why.replace(/^транс → /, '')}`);
     if (s.type === 'lowhp') log(`${s.name} включён при HP ${Math.round(meStats().hp * 100 / (meStats().maxHp || 1))} %`);
     return true;
@@ -762,6 +849,8 @@
     if (!alive(g)) return;
     if (cfg.kind === 'spoil') spoilVictory();
     const why = stopFarm();
+    // 1.8.1: банок MP нет и MP мало — к списку/на карту: там отдых до 50 % (L.mpRest), а не новый бой с пустой маной.
+    if (!why && cfg.kind === 'mage' && mpPotsNow() === 0 && mpRestCheck(meStats()).rest) { status('Бой окончен: банок MP нет — отдыхаю перед следующим'); await toMap(g); return; }
     // 1.7: маг в Ashen — не цепочкой: «Охотиться дальше» даёт моба тоньше соседей (mob_009, 258 718 HP), и массовый удар добивает
     // только его (kb/lite-mage-study.md). Следующего главного — не тоньше соседей — бот берёт из списка игры (свой GET той страницы,
     // что видел последней) и открывает его бой сразу, как кнопка «Бій» игры: без загрузки страницы списка (живой прогон 24.10: 6,9 с
@@ -820,15 +909,18 @@
     if (!rowsDone) { rowsDone = true; await rowsAll(g); barFromDom(); }
     if (Date.now() - Math.max(lastActOk, pageT0) > 45000) { log('45 с ни одного принятого хода — выхожу на карту'); lastActOk = Date.now(); await toMap(g); return; }
     // 1.7: маг — обычной атакой не добиваем; соседи массового удара — из блока игры «Додаткові цілі» (aoeView)
-    const opt = m => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot, mage: cfg.kind === 'mage', ...(m && m.maxHp > 0 ? aoeView(m) : {}) });
-    const slots = slotsNow(false), plan = L.planTurn(slots, meStats(), mob, opt(mob));
+    // 1.8.1: банки MP в сумке — для экономного режима и Arcane Power (L.planTurn); стопка на панели кончилась — ставим другую.
+    const opt = m => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot, mage: cfg.kind === 'mage', mpPots: mpPotsNow(), ...(m && m.maxHp > 0 ? aoeView(m) : {}) });
+    const slots = slotsNow(false);
+    if (cfg.kind === 'mage' && !slots.some(s => s.pot === 'mp' && (s.qty == null || s.qty > 0)) && await potSlotFix('mp', g)) return;
+    const plan = L.planTurn(slots, meStats(), mob, opt(mob));
     // 1.6: спойлер — сначала спойл (как основной бот: Crush/Festival/Spoil в начале боя), но банки, лимиты и лечение — раньше него.
     if (cfg.kind === 'spoil') {
       spbFor(mob);
       if (!(plan && (plan.slot.pot || plan.slot.type === 'lowhp' || plan.slot.type === 'heal')) && await spoilStep(slots, mob, g)) return;
     }
     // Lite 1.1: всё на откате — ждём ровно до ближайшей готовности по ответу сервера (не дольше 0,1 с), а не круг с паузой.
-    if (!plan) { status('Бой: жду отката'); await nap(Math.max(10, Math.min(readyIn(slots) + 5, 100))); quick = true; return; }
+    if (!plan) { status(cfg.kind === 'mage' && L.mpShort(slots, meStats()) ? `Бой: жду MP${mpPotsNow() === 0 ? ' — банок MP нет' : ''}` : 'Бой: жду отката'); await nap(Math.max(10, Math.min(readyIn(slots) + 5, 100))); quick = true; return; }
     await press(plan, g, false, () => { const m = mobHp(), p = L.planTurn(slotsNow(false), meStats(), m, opt(m)); return !!p && p.slot.key === plan.slot.key; });
   }
   // Через сколько мс станет готов ближайший нужный слот — по модели откатов сервера и своим блокировкам (Infinity — не знаем).
@@ -1107,6 +1199,7 @@
     const me = meStats(), pct = me.maxHp > 0 ? me.hp * 100 / me.maxHp : 100;
     if (pct < 30 && (!restT0 || Date.now() - restT0 < 90000)) { restT0 = restT0 || Date.now(); status(`HP ${Math.round(pct)} % — отдыхаю перед боем`); progress(); await sleep(1500); return; }
     if (pct >= 30) restT0 = 0;
+    if (await mpRestGate()) return;
     const tab = $('#map-list-mode-mobs');
     if (tab && !tab.classList.contains('is-active')) { fire(tab, g); await sleep(400); }
     let rows = await mapReady(10000, g);
@@ -1218,6 +1311,7 @@
     const me = meStats(), pct = me.maxHp > 0 ? me.hp * 100 / me.maxHp : 100;
     if (pct < 30 && (!restT0 || Date.now() - restT0 < 90000)) { restT0 = restT0 || Date.now(); status(`HP ${Math.round(pct)} % — отдыхаю перед боем`); progress(); await sleep(1500); return; }
     if (pct >= 30) restT0 = 0;
+    if (await mpRestGate()) return;
     const rows = await ashenReady(10000, g);
     if (!alive(g)) return;
     ashOffSave();
