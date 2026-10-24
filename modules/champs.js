@@ -120,6 +120,13 @@ function tierOff(c, colorsOnly = false) {
   if (minL > 0 && hl > 0 && hl < minL) return `герой ${hl} ур. — чемпионов бью с ${minL} ур. (настройка)`;
   return null;
 }
+// 20.60 (лог 24.10 20:43–20:51, West 59 Tyrant): синих чемпионов брал сразу после отхода с HP 29–57 % — три смерти за 8 мин и стоп
+// на час. Новый чемпион — только от cfg.champMinHp % HP (70; 0 = выкл); меньше — бьём обычных мобов, пока HP не восстановится
+function hpLow(me) {
+  const min = +(env.cfg?.champMinHp ?? 70) || 0;
+  if (!(min > 0) || !me || !(me.max > 0) || !Number.isFinite(me.pct)) return null;
+  return me.pct < min ? `моё HP ${Math.round(me.pct)} % — нового чемпиона беру от ${min} %` : null;
+}
 // вердикт прошлого боя с таким чемпионом ещё держит? → строка причины или null (10.0.10: и для цепочки «Охотиться дальше» в combat —
 // игрок 13.10 11:33: «уходит от чемпиона и возвращается к нему же»)
 function held(c) {
@@ -229,6 +236,6 @@ async function learn(ctx, outcome, dealt, sec) {
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { questQuick, valueMode, valueJudge, FA_P, FA_MOB, faRate, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
+ return { hpLow, questQuick, valueMode, valueJudge, FA_P, FA_MOB, faRate, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

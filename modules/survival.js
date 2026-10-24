@@ -71,7 +71,7 @@ async function onDeath() {
     ...(epicD ? { epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: now, cur: m?.cur ?? null, max: m?.max ?? null }] },
       epicDb: { ...(env.rt.epicDb || {}), [epicD.k]: { ...((env.rt.epicDb || {})[epicD.k] || {}), deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 } } } : {}),
     ...(seriesDeath ? { rbRun: { ...series, deaths: series.deaths + 1 } } : {}), ...(env.epicOn() || rbId ? { deaths1h } : {}),
-    lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {}, zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null }); }   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
+    lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, ...(env.rt.force?.n > 0 ? { force: { ...env.rt.force, n: 0, t: now } } : {}), catIn: null, toggleOn: {}, toggleOff: {}, zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null }); }   // после смерти тогглы слетают; 20.60 (лог 24.10 20:44:23): и энергия силы — первый бой бил Hurricane Assault при 0/4   // v5.3: после смерти в подземелье — входим заново
   catch (_) { saved = { ok: false }; }
   if(!active())return false;
   // Локальный rt уже изменён, но хранилище могло отказать. Без Stop следующий
