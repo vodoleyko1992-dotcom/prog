@@ -44,6 +44,8 @@
         .map(s => ({ slot: num(s.slot), prof: str(s.profession, 60) || '', lvl: num(s.level) })) : undefined,
       // Lite 1.5 (лучник): сколько стрел в сумке — по номерам стрел (тред «Изучение лука» 21.10: лук их требует, слота стрел нет).
       arrows: arrowsOf(c),
+      // 1.8.1 (маг в долгой охоте): сколько банок MP и HP в сумке — стопка на панели кончилась, бот ставит другую и знает, что банок нет.
+      pots: potsOf(c),
       // 1.5.2: только номер надетого оружия; экземпляры, ЛС и прочие поля сумки не передаются.
       weaponId: c.inventory?.eq && Object.prototype.hasOwnProperty.call(c.inventory.eq, 'l1') ? (c.inventory.eq.l1 == null ? null : num(c.inventory.eq.l1.itemId)) : undefined,
     };
@@ -54,6 +56,15 @@
     if (!st) return undefined;
     const r = {};
     for (const x of st.slice(0, 2000)) { const id = x && num(x.itemId), q = x && num(x.qty); if (ARROWS.includes(id) && q > 0) r[id] = (r[id] || 0) + q; }
+    return r;
+  }
+  // Номера банок — те же, что L.POT_MP / L.POT_HP в logic.js (тест lite-mage-mp сверяет).
+  const POT_MP = [726, 728, 920045], POT_HP = [725, 727, 1060, 1061, 1073, 1539, 1540, 920044];
+  function potsOf(c) {
+    const st = c.inventory && typeof c.inventory === 'object' && Array.isArray(c.inventory.stacks) ? c.inventory.stacks : null;
+    if (!st) return undefined;
+    const r = { mp: 0, hp: 0 };
+    for (const x of st.slice(0, 2000)) { const id = x && num(x.itemId), q = x && num(x.qty); if (q > 0) { if (POT_MP.includes(id)) r.mp += q; else if (POT_HP.includes(id)) r.hp += q; } }
     return r;
   }
   // Откаты боя — ровно те поля, которые читает battle-cooldown.js.

@@ -33,6 +33,10 @@
 //   бота»): Bounty Hunter с пикой у пачки (главный + 2 соседа под Whirlwind): режим «Масс» — каждый бой с Festival, откат ждёт,
 //   до него не бьёт; соседи возродились без метки — Festival ещё раз; режим «Соло» — без Festival; раздел «Скорость»: пауза 1 с
 //   между ходами и замер в меню; «Полностью автономно» — место под Mithril Ore бот выбрал сам и улетел туда.
+// Сценарий M (Lite 1.8.1, John: «Включение Arcane Power ботом, банки MP в долгой охоте»): маг в Ashen с Arcane Power, банок HP нет,
+//   на панели одна большая банка MP, в сумке — две малые. HP ≤ 30 % — стойку бот снимает сам (и больше не включает), большая банка
+//   кончилась — игра убрала слот, бот ставит малые из сумки через окно слота («Розхідники»), банки кончились совсем — журнал и
+//   экономный режим (только Flame Strike), обычной атакой не бьёт; меню показывает банки в сумке; 12 мобов — цель выполнена.
 // node tests/lite-browser.cjs   (CHROMIUM=…, PLAYWRIGHT_NODE=… при нестандартных путях)
 // 20.54 (прогон смоуков 23.10): все 7 сценариев идут 285–321 с даже в одиночку — внешний «timeout 300» убивает Chromium посреди G
 //   (DIAG с rt:{} и «не дождался: окно «СТРЕЛ НЕТ»» — следствие убитого браузера, не ошибка Lite). Давать ≥ 600 с или делить: LITE_ONLY=ABCD / EFGH.
@@ -58,7 +62,9 @@ function makeServer() {
     mobHp: 4000, lat: { action: 0, character: 0 }, slowNext: 0, actT: [], pending: 0, overlap: 0, charN: 0,
     tvt: { phase: 'IDLE', eventId: 'tvt-0800', isRegistered: false, registeredCount: 4, maxPlayers: 20, schedule: { enabled: true, next: { slotKey: 'tvt-0800', registrationOpensAt: Date.now() + 100000 } } },   // запись скоро — бот опрашивает часто
     enemies: [{ characterId: 'e1', name: 'Enemy1', level: 70, hp: 3000, maxHp: 3000, cp: 0, alive: true }, { characterId: 'e2', name: 'Enemy2', level: 72, hp: 2000, maxHp: 2000, cp: 0, alive: true }],
-    target: null, buffer: [], ash: [], ashDead: {}, locations: [
+    target: null, buffer: [], ash: [], ashDead: {},
+    mpInv: null, hit: null, regen: null, regenT: 0, mpUse: [], hotbarSet: [],   // 1.8.1 (M): банки MP в сумке {номер: шт.}, урон по герою за ход, реген {mp, hpOut} в с
+    locations: [
       { teleportId: 'giran_harbor', labelUk: 'Гавань Гірана', adenaCost: 2500, mobLevelMin: 25, mobLevelMax: 51 },
       { teleportId: 'forge_gods', labelUk: 'Кузня богів', adenaCost: 20000, mobLevelMin: 70, mobLevelMax: 80 } ],
   };
@@ -75,11 +81,15 @@ function makeServer() {
   const CANON = { double_shot: 'l2_19', power_shot: 'l2_56', stun_shot: 'l2_101' };
   // 1.5.1: стойку лука (Vicious Stance, 312) игра показывает по-разному: нигде (S.stanceReport 'none', как, видимо, у John),
   // в баффах героя ('buff') или в toggleStances ('list'). S.stanceStuck — нажатие принимается, но стойка не включается.
+  const MPI = { 726: ['Зілля мани (мала банка)', 200], 728: ['Зілля мани (велика банка)', 500] };   // 1.8.1 (M): банки MP (kb/data/items.json)
   const ch = () => { S.hero.revision++; const now = Date.now(), buffs = S.hero.activeBuffs.filter(b => b.expiresAt > now);
+    if (S.regen) { const dt = S.regenT ? (now - S.regenT) / 1000 : 0, H = S.hero; S.regenT = now;   // 1.8.1 (M): реген по времени; HP — только вне боя
+      H.mp = Math.min(H.maxMp, Math.round(H.mp + (S.regen.mp || 0) * dt)); if (!H.inBattle && H.hp > 0) H.hp = Math.min(H.maxHp, Math.round(H.hp + (S.regen.hpOut || 0) * dt)); }
     if (S.stance && S.stanceReport === 'buff') buffs.push({ skillId: 312, expiresAt: now + 3600000 });
     return { ...S.hero, activeBuffs: buffs,
       toggleStances: S.stanceReport === 'list' ? [{ battleId: 'vicious_stance', skillId: 312, level: 8, active: !!S.stance }] : S.hero.toggleStances,
-      ...(S.arrows != null || S.weapon !== undefined ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []), { itemId: 728, qty: 50 }],   // 0 стрел — стопки нет (§6a)
+      ...(S.arrows != null || S.weapon !== undefined || S.mpInv ? { inventory: { stacks: [...(S.arrows > 0 ? [{ itemId: 1342, qty: S.arrows }] : []),   // 0 стрел — стопки нет (§6a)
+        ...(S.mpInv ? Object.entries(S.mpInv).filter(([, q]) => q > 0).map(([id, q]) => ({ itemId: +id, qty: q })) : [{ itemId: 728, qty: 50 }])],
         ...(S.weapon !== undefined ? { eq: { l1: S.weapon == null ? null : { itemId: S.weapon, objectId: 'w1' } } } : {}) } } : {}) }; };   // 1.6: надетое оружие (спойлер)
   const mob = (spawnId, name, kind = 'aggressive', tier = '') => ({ spawnId, mobName: name, mobLevel: 75, kind, championTier: tier, mobHp: S.mobHp, mobMaxHp: S.mobHp, log: [], t0: Date.now(),
     ...(S.pack && kind !== 'champion' ? { ex: S.pack.map(([n, hp]) => ({ name: n, mobHp: hp, mobMaxHp: hp, spoiled: false })) } : {}) });   // 1.8: пачка соседей
@@ -111,6 +121,14 @@ function makeServer() {
     else if (a === 'battle_trance') h.hp = Math.round(h.maxHp * 0.25);
     else if (a === 'l2_176') h.activeBuffs.push({ skillId: 176, expiresAt: now + 90000 });
     else if (a === 'l2_420') { h.activeBuffs.push({ skillId: 420, expiresAt: now + 60000 }); h.hp -= 204; h.mp -= 136; }
+    else if (a === 'battle_potion_use' && S.mpInv && MPI[body.itemId]) {   // 1.8.1 (M): банка MP; стопка кончилась — игра убирает слот
+      const id = body.itemId; if (!(S.mpInv[id] > 0)) return [400, { error: 'item_missing' }];
+      S.mpInv[id]--; S.mpUse.push(id); h.mp = Math.min(h.maxMp, h.mp + MPI[id][1]);
+      if (!S.mpInv[id]) { const i = h.battleHotbarSlots.findIndex(x => x.k === 'u' && x.id === id); if (i >= 0) h.battleHotbarSlots[i] = { k: 'e' }; }
+      if (Object.values(S.mpInv).every(q => !q) && S.outIdx == null) S.outIdx = S.acts.length;
+      h.hp -= S.hit ?? 150;
+      return [200, { kind: 'delta', delta: { mobHp: b.mobHp, mobMaxHp: b.mobMaxHp, characterHp: h.hp, characterMaxHp: h.maxHp, characterMp: h.mp, characterMaxMp: h.maxMp, hotbarStale: true, serverNowMs: now, potQty: S.mpInv[id] }, logTail: [] }];
+    }
     else if (a === 'battle_potion_use') { S.pots--; h.hp = Math.min(h.maxHp, h.hp + 3000); }
     else if (a === 'l2_286') {}
     else if (a === 'vicious_stance') { (S.stanceT = S.stanceT || []).push([now % 100000, S.stance, S.stanceReport]); if (!S.stanceStuck) S.stance = !S.stance; }
@@ -132,9 +150,9 @@ function makeServer() {
         lines.push(`Буря: додаткові цілі — ${b.ex.map(x => x.name + ' −' + dmg).join(', ')}.`); b.wx = b.ex.map(x => ({ name: x.name, mobHp: x.mobHp, mobMaxHp: x.mobMaxHp })); }
     }
     else if (a === 'l2_1292') { (S.crash = S.crash || []).push({ main: b.mobHp, ex: (b.ex || []).map(x => x.mobHp) }); b.mobHp -= 1500; h.mp -= 200; }
-    else if (a === 'l2_337') { const t = S.hero.toggleStances.find(x => x.skillId === 337); if (t) t.active = !t.active; S.apN = (S.apN || 0) + 1; }
+    else if (a === 'l2_337') { const t = S.hero.toggleStances.find(x => x.skillId === 337); if (t) t.active = !t.active; S.apN = (S.apN || 0) + 1; (S.apSeq = S.apSeq || []).push([t && t.active ? 'on' : 'off', Math.round(h.hp * 100 / h.maxHp)]); if (S.regen && S.regenHpAfterAp) S.regen.hpOut = S.regenHpAfterAp; }
     if (a !== 'battle_potion_use') S.cd[a] = now + ((S.cdSet || CD)[a] || 1000);
-    h.hp -= S.killHero ? 9000 : 150;
+    h.hp -= S.killHero ? 9000 : S.hit ?? 150;
     if (h.hp <= 0) { h.hp = 0; h.inBattle = false; h.pveDefeat = { at: now }; return [200, { defeat: { spawnId: b.spawnId }, delta: { characterHp: 0, serverNowMs: now } }]; }
     if (b.mobHp <= 0) {
       b.mobHp = 0; h.inBattle = false; h.mobsKilled++;
@@ -169,6 +187,8 @@ function makeServer() {
       S.hero.inBattle = true; S.hero.battleSpawnId = sp; return [200, { battle: S.battle }];
     }
     if (p === '/game/battle/action') return action(body);
+    if (p === '/game/hotbar/set') { const i = +body.index, H = S.hero; if (!(H.battleHotbarSlots[i]?.k === 'e') || !(S.mpInv?.[body.itemId] > 0)) return [400, { error: 'bad_slot' }];   // 1.8.1 (M)
+      H.battleHotbarSlots[i] = { k: 'u', id: +body.itemId }; S.hotbarSet.push(+body.itemId); return [200, { ok: true }]; }
     if (p === '/game/ashen-bastion/mobs') { S.ashGet = (S.ashGet || 0) + 1; return [200, { location: 'ashen_bastion', total: S.ash.length, offset: 0, limit: 25,
       mobs: S.ash.map(m => ({ ...m, level: 85, respawnSeconds: Math.max(0, Math.ceil(((S.ashDead[m.id] || 0) - now) / 1000)) })) }]; }
     if (p === '/game/battle/hunt-continue') {
@@ -222,8 +242,12 @@ const TITLES = { attack: 'Атака', l2_190: 'Fatal Strike — сильный 
   soul_of_sagittarius: 'Soul of Sagittarius', vicious_stance: 'Vicious Stance',
   l2_254: 'Spoil — спойл', l2_302: 'Spoil Festival', l2_348: 'Spoil Crush', l2_36: 'Whirlwind', l2_42: 'Sweeper', l2_1177: 'Wind Strike', l2_1184: 'Ice Bolt',
   l2_1176: 'Blizzard — до 3 целей', l2_1181: 'Flame Strike', l2_1292: 'Elemental Crash', l2_337: 'Arcane Power — стойка' };
-function hotbar(H, pots) {
-  const slots = H.battleHotbarSlots.map(s => s.k === 'a'
+// 1.8.1 (M): банки MP (inv — S.mpInv) и пустой слот {k:'e'}: окно выбора слота (вкладка «Розхідники») ставит на него банку из сумки
+const MPN = { 726: 'Зілля мани (мала банка)', 728: 'Зілля мани (велика банка)' };
+function hotbar(H, pots, inv) {
+  const slots = H.battleHotbarSlots.map((s, i) => s.k === 'e' ? `<button class="l2-battle-hotbar-slot l2-battle-hotbar-slot--empty" title="Порожній слот ${i + 1}" data-idx="${i}"></button>`
+    : s.k === 'u' && inv && MPN[s.id] ? `<button class="l2-battle-hotbar-slot" title="${MPN[s.id]} ×${inv[s.id] || 0}" data-slot-cd="battle_potion_use" data-item="${s.id}" data-idx="${i}"><span class="l2-battle-hotbar-slot-uqty">${inv[s.id] || 0}</span><span class="l2-battle-hotbar-slot-cd" hidden></span></button>`
+    : s.k === 'a'
     ? `<button class="l2-battle-hotbar-slot" title="${TITLES[s.a]}" data-slot-cd="${s.a}">${s.a === 'attack' ? '' : `<img src="/skills/${s.a}.gif">`}<span class="l2-battle-hotbar-slot-cd" hidden><span class="l2-battle-hotbar-slot-cd__timer"></span></span></button>`
     : `<button class="l2-battle-hotbar-slot" title="Зілля зцілення ×${pots}" data-slot-cd="battle_potion_use" data-item="${s.id}"><span class="l2-battle-hotbar-slot-uqty">${pots}</span><span class="l2-battle-hotbar-slot-cd" hidden></span></button>`).join('');
   return `<div class="l2-battle-hotbar" data-visible-rows="3"><div class="l2-battle-hotbar__row">${slots}</div></div>`;
@@ -237,13 +261,26 @@ function logAdd(lines){for(const t of lines||[]){const d=document.createElement(
  else{const s=document.createElement('span');s.className='l2-battle-log-line__body';s.textContent=t;d.append(s);}$('#battle-log').append(d);}}
 fetch('/game/battle?spawnId='+sid).then(r=>r.json()).then(async j=>{const b=j.battle;
  if(/^ashen_/.test(sid)&&!(b&&b.spawnId===sid&&b.mobHp>0)){const s=await post('/game/battle/start',{spawnId:sid});render(s.j.battle);return;}render(b);});
+const MPN={726:'Зілля мани (мала банка)',728:'Зілля мани (велика банка)'};
+function potSlot(el,id,q){el.className='l2-battle-hotbar-slot';el.dataset.slotCd='battle_potion_use';el.dataset.item=id;el.title=MPN[id]+' ×'+q;el.innerHTML='<span class="l2-battle-hotbar-slot-uqty">'+q+'</span><span class="l2-battle-hotbar-slot-cd" hidden></span>';}
+async function slotModal(el){const m=document.createElement('div');m.className='l2-battle-hotbar-modal';
+ m.innerHTML='<div class="l2-battle-hotbar-modal__panel"><div id="l2-bh-modal-tabs"><button class="l2-battle-hotbar-tab l2-battle-hotbar-tab--on" data-tab-key="skills">Вміння</button><button class="l2-battle-hotbar-tab" data-tab-key="consumable">Розхідники</button></div><div id="bh-picks"></div><button id="l2-bh-modal-close">×</button></div>';
+ document.body.append(m);m.querySelector('#l2-bh-modal-close').onclick=()=>m.remove();
+ m.querySelector('[data-tab-key="consumable"]').onclick=async e=>{e.target.classList.add('l2-battle-hotbar-tab--on');const c=await ch();
+  const st=((c.inventory||{}).stacks||[]).filter(x=>MPN[x.itemId]&&x.qty>0);
+  $('#bh-picks').innerHTML=st.map(x=>'<button class="l2-battle-hotbar-pick" data-id="'+x.itemId+'" title="'+MPN[x.itemId]+' ×'+x.qty+'"></button>').join('')+'<button class="l2-battle-hotbar-pick" title="Свиток телепорту ×3"></button>';
+  document.querySelectorAll('.l2-battle-hotbar-pick[data-id]').forEach(b=>b.onclick=async()=>{const {status}=await post('/game/hotbar/set',{index:+el.dataset.idx,itemId:+b.dataset.id});
+   if(status===200){potSlot(el,+b.dataset.id,+b.title.replace(/\D/g,''));m.remove();}});};}
 document.querySelectorAll('.l2-battle-hotbar-slot').forEach(el=>el.onclick=async()=>{
+ if(el.classList.contains('l2-battle-hotbar-slot--empty')){slotModal(el);return;}
  if(busy){window.__lost++;return;}busy=true;const a=el.dataset.slotCd;
  const {status,j}=await post('/game/battle/action',a==='battle_potion_use'?{action:a,itemId:+el.dataset.item}:{action:a});
  logAdd(j.logTail);if(j.mobEffectsSig!=null)$('#battle-mob-effects-row').dataset.effectsSig=j.mobEffectsSig;
  const wx=j.delta&&j.delta.whirlwindExtras;if(wx){const r=$('#battle-whirlwind-extras');r.hidden=false;r.innerHTML=wx.map(x=>'<div class="l2-battle-whirlwind-extra"><span class="l2-battle-whirlwind-extra__name">'+x.name+'</span><div class="l2-battle-whirlwind-extra__bar"><span class="l2-battle-bar-innertext">'+x.mobHp+' / '+x.mobMaxHp+'</span></div></div>').join('');}
  if(j.victory){$('#battle-mob-hp-val').textContent='0 / 4000';$('#battle-victory-inline').hidden=false;$('#battle-victory-hunt').hidden=false;}
  else if(j.defeat){$('#battle-defeat-root').hidden=false;}
+ else if(j.delta&&j.delta.potQty!=null){const q=j.delta.potQty;if(q>0){el.title=el.title.replace(/×\s*\d+$/,'×'+q);el.querySelector('.l2-battle-hotbar-slot-uqty').textContent=q;}
+  else{el.className='l2-battle-hotbar-slot l2-battle-hotbar-slot--empty';delete el.dataset.slotCd;delete el.dataset.item;el.title='Порожній слот';el.innerHTML='';}}
  else if(j.delta){$('#battle-mob-hp-val').textContent=j.delta.mobHp+' / '+(j.delta.mobMaxHp||4000);const cd=el.querySelector('.l2-battle-hotbar-slot-cd');const until=(j.delta.skillCooldowns||{})[a];
   if(cd&&until){cd.hidden=false;cd.classList.add('l2-battle-hotbar-slot-cd--on');const tick=()=>{const left=until-Date.now();const tm=cd.querySelector('.l2-battle-hotbar-slot-cd__timer');if(left<=0){cd.hidden=true;cd.classList.remove('l2-battle-hotbar-slot-cd--on');return;}if(tm)tm.textContent=(left/1000).toFixed(1);setTimeout(tick,100);};tick();}}
  if(j.victory||j.defeat||status!==200||(j.delta&&j.delta.hotbarStale))await ch();busy=false;});
@@ -252,7 +289,7 @@ $('#battle-back-map').onclick=async()=>{if($('#battle-victory-inline').hidden)aw
 $('#battle-defeat-tocity').onclick=async()=>{await post('/game/battle/defeat/to-city');location.href='/city.html';};
 </script>`;
 function battlePage(sv) {
-  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div><div id="battle-whirlwind-extras" hidden></div><div id="battle-mob-effects-row" data-effects-sig=""></div>${hotbar(sv.S.hero, sv.S.pots)}
+  return page('Бой', `<div id="battle-mob-title"></div><div id="battle-mob-hp-val"></div><div id="battle-whirlwind-extras" hidden></div><div id="battle-mob-effects-row" data-effects-sig=""></div>${hotbar(sv.S.hero, sv.S.pots, sv.S.mpInv)}
 <div id="battle-log"></div>
 <div id="battle-victory-inline" hidden>Победа</div><button id="battle-victory-hunt" hidden>Охотиться дальше</button><button id="battle-back-map">Назад на карту</button>
 <div id="battle-defeat-root" hidden><button id="battle-defeat-tocity">Вернуться в город</button></div>${BATTLE_JS}`);
@@ -1121,6 +1158,54 @@ async function scenarioI() {
   finally { await h.ctx.close(); }
 }
 
+async function scenarioM() {
+  const h = await launch(), { S } = h;
+  try {
+    S.ash = ASH.map(m => ({ ...m })); S.ashDead = {};
+    S.locations.push({ teleportId: 'ashen_bastion', labelUk: 'Ashen Bastion', adenaCost: 0, mobLevelMin: null, mobLevelMax: null });
+    // Arcane Power уже включена, банок HP нет; MP 300 из 2000, большая банка ×1 на панели, малые ×2 только в сумке; реген MP 40/с,
+    // HP вне боя — 300/с только после первого нажатия стойки (иначе HP поднялся бы выше 30 % ещё до боя)
+    Object.assign(S.hero, { l2Profession: 'dark_elf_storm_screamer', level: 78, currentZoneId: 'ashen_bastion', currentZoneNameUk: 'Ashen Bastion', locationType: 'zone',
+      hp: 6500, maxHp: 20000, mp: 300, maxMp: 2000, toggleStances: [{ battleId: 'l2_337', skillId: 337, level: 1, active: true }],
+      classSlots: { activeSlot: 0, slots: [{ slot: 0, owned: true, active: true, profession: 'dark_elf_storm_screamer', race: 'Dark Elf', level: 78 }] },
+      battleHotbarSlots: [{ k: 'a', a: 'attack' }, ...MAGE_BAR.map(a => ({ k: 'a', a })), { k: 'u', id: 728 }, { k: 'e' }, { k: 'e' }],
+      learnedBattleSkillsDetail: MAGE_BAR.map(a => ({ battleId: a, nameUk: TITLES[a].split(' — ')[0] })) });
+    Object.assign(S, { mpInv: { 728: 1, 726: 2 }, hit: 100, regen: { mp: 40, hpOut: 0 }, regenHpAfterAp: 300, pots: 0 });
+    await h.sw.evaluate(() => chrome.storage.local.set({ 'lite.cfg': { on: false, p: { mage: { tvt: false, killLimit: 12 } } } }));
+    await h.game.goto('https://l2wap.com/ashen-bastion.html');
+    await until(async () => (await h.rt()).kind === 'mage' && (await h.rt()).bar?.length >= 4, 20000, 'профиль мага и панель');
+    const pp = await h.popup();
+    await until(async () => /Банки в сумке: MP 3 \(≈1 мин боя\), HP 0\./.test(await pp.textContent('#magePots')), 8000, 'банки в меню');
+    await pp.click('#run');
+    await until(async () => (await h.cfg()).on === true, 5000, 'Старт');
+    await h.game.bringToFront();
+    await until(async () => (await h.rt()).k?.kills >= 12, 180000, '12 убитых');
+    const r = await h.rt(), lt = logText(r);
+    // Arcane Power: первое нажатие — снятие при HP ≤ 30 % без банок HP; включить снова — только от 60 % HP и пока есть банки MP
+    assert.equal(S.apSeq[0][0], 'off', 'первое нажатие стойки: ' + JSON.stringify(S.apSeq)); assert.ok(S.apSeq[0][1] <= 30, 'HP при снятии: ' + S.apSeq[0][1]);
+    for (const [st, hp] of S.apSeq) if (st === 'on') assert.ok(hp >= 60, 'включил при HP ' + hp);
+    assert.ok(S.apN <= 3, 'стойка: ' + JSON.stringify(S.apSeq));
+    assert.match(lt, /Arcane Power: стойку снял — HP \d+ %, банок HP нет — она тянет HP/);
+    assert.doesNotMatch(lt, /включал дважды/);
+    // банки: большая первой; кончилась — слот пустой, бот поставил малую из сумки и пил её
+    assert.equal(S.mpUse[0], 728); assert.deepEqual(S.hotbarSet, [726], 'поставил на панель: ' + S.hotbarSet);
+    assert.deepEqual(S.mpUse.filter(x => x === 726).length, 2, 'малые: ' + S.mpUse);
+    assert.match(lt, /банка MP кончилась на панели — поставил «Зілля мани \(мала банка\)» \(×2\) на пустой слот/);
+    assert.match(lt, /банок MP в сумке осталось [1-3] — хватит примерно на 1 мин боя/);
+    // банки кончились совсем — журнал, дальше экономно: только Flame Strike (лучший урон на 1 MP), обычной атакой не бьёт
+    assert.match(lt, /банки MP кончились — бью с лучшим уроном на 1 MP/);
+    const after = S.acts.slice(S.outIdx).filter(a => /^l2_1(176|181|292)$/.test(a));
+    assert.ok(after.length >= 3 && after.every(a => a === 'l2_1181'), 'после банок: ' + after.join(','));
+    assert.ok(!S.acts.includes('attack'), 'маг жал обычную атаку');
+    await until(async () => /Банки в сумке: MP 0 — нет, маг бьёт экономно и отдыхает/.test(await pp.textContent('#magePots')), 8000, 'меню: банок нет');
+    await pp.click('#run'); await until(async () => (await h.cfg()).on === false, 5000, 'Стоп');
+    assert.deepEqual(h.errors, []);
+    if (process.env.LITE_LOG) console.log(lt, '\nходы:', S.acts.join(','));
+    console.log(`PASS M: маг без банок HP — Arcane Power снята при HP ${S.apSeq[0][1]} % (нажатия стойки: ${S.apSeq.map(x => x.join(' ')).join(', ')}); банки ${S.mpUse.join(',')}, малую поставил из сумки на пустой слот; без банок — только Flame Strike (${after.length}), обычной атаки нет; 12 убитых`);
+  } catch (e) { console.error('DIAG M', { acts: S.acts.slice(-40).join(','), mpUse: S.mpUse, set: S.hotbarSet, ap: S.apSeq, hero: { hp: S.hero.hp, mp: S.hero.mp }, url: h.game.url(), rt: await h.rt().then(r => ({ status: r.status, k: r.k, log: logText(r) })).catch(() => ({})), errors: h.errors }); throw e; }
+  finally { await h.ctx.close(); }
+}
+
 // LITE_ONLY=AC — только эти сценарии
-const ONLY = process.env.LITE_ONLY || 'ABCDEFGHIJ';
-(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); if (ONLY.includes('I')) await scenarioI(); if (ONLY.includes('J')) await scenarioJ(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });
+const ONLY = process.env.LITE_ONLY || 'ABCDEFGHIJM';
+(async () => { if (ONLY.includes('A')) await scenarioA(); if (ONLY.includes('B')) await scenarioB(); if (ONLY.includes('C')) await scenarioC(); if (ONLY.includes('D')) await scenarioD(); if (ONLY.includes('E')) await scenarioE(); if (ONLY.includes('F')) await scenarioF(); if (ONLY.includes('G')) await scenarioG(); if (ONLY.includes('H')) await scenarioH(); if (ONLY.includes('I')) await scenarioI(); if (ONLY.includes('J')) await scenarioJ(); if (ONLY.includes('M')) await scenarioM(); })().catch(e => { console.error(e.stack || e); process.exitCode = 1; });

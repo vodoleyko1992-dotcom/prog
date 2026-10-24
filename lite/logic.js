@@ -68,8 +68,9 @@
     // Lite 1.7: маг-нюкер (Wizard → Sorcerer/Necromancer → Archmage/Soultaker, Elven Wizard → Spellsinger → Mystic Muse,
     // Dark Wizard → Spellhowler → Storm Screamer). Живое изучение 24.10 (kb/lite-mage-study.md, Storm Screamer 78, M.Atk ≈91 тыс.):
     // тип aoe — массовый удар: Blizzard, Flame Strike и Hell бьют главную цель и ещё двух мобов одинаковым уроном (у Hell в IL — одна
-    // цель, на L2WAP — три). Сила — обычный урон без крита в тысячах (крит ≈ ×2,3), MP — замер с Arcane Power; откат большинства —
-    // общий магический ≈0,6 с. Сила остальных — по замеру одиночного урона, без замера — по силе IL (skills-il.js).
+    // цель, на L2WAP — три). Сила — обычный урон без крита в тысячах (крит ≈ ×2,3), MP — по боям изучения (Arcane Power у героя
+    // была выключена; с ней MP магии ×1,1); откат большинства — общий магический ≈0,6 с. Сила остальных — по замеру одиночного урона,
+    // без замера — по силе IL (skills-il.js). Сила на 1 MP — основа экономного режима мага без банок MP (planTurn).
     1176: ['Blizzard', 'aoe', 24, 71, 0, 0.6, 0], 1181: ['Flame Strike', 'aoe', 19, 28, 0, 0.6, 0], 1289: ['Hell', 'aoe', 70, 200, 0, 24, 0],
     1171: ['Blazing Circle', 'aoe', 22, 82, 0, 15, 0], 1296: ['Rain of Fire', 'aoe', 22, 55, 0, 20, 0],
     1292: ['Elemental Crash', 'attack', 96, 200, 0, 30, 0], 1267: ['Shadow Flare', 'attack', 37, 68, 0, 13, 0], 1265: ['Solar Flare', 'attack', 37, 68, 0, 13, 0],
@@ -188,7 +189,8 @@
   }
 
   // Банки по номеру предмета (TvT-арена подписывает их «#728 — зілля …») и по названию.
-  const POT_MP = [726, 728], POT_HP = [725, 727, 1060, 1061, 1073, 1539, 1540];
+  // 1.8.1: и «Велике зілля HP/MP» (#920044/#920045, 2500 за глоток, магазин TvT/FA; основной бот 18.10, modules/resources.js BIG_POT).
+  const POT_MP = [726, 728, 920045], POT_HP = [725, 727, 1060, 1061, 1073, 1539, 1540, 920044];
   function potKind(title) {
     const t = String(title || ''), id = +((t.match(/^#(\d+)\b/) || [])[1] || 0);
     if (POT_MP.includes(id)) return 'mp';
@@ -197,6 +199,40 @@
     if (/ман[аиы]|mana|\bmp\b/i.test(t)) return 'mp';
     if (/\bhp\b|зцілен|исцелен|лікуван|лечен|healing|здоров/i.test(t)) return 'hp';
     return null;
+  }
+  // 1.8.1: сколько MP даёт глоток (kb/data/items.json — замеры основного бота 10.10; kb/data/game-buffer.json — «Велике зілля»).
+  const POT_GAIN = { 726: 200, 728: 500, 920045: 2500 };
+  function potGain(title) {
+    const t = String(title || ''), id = +((t.match(/^#(\d+)\b/) || [])[1] || 0);
+    if (POT_GAIN[id]) return POT_GAIN[id];
+    if (/^(?:велике зілля|большое зелье|large)\b/i.test(t)) return 2500;
+    if (/велика банка|большая банка|greater/i.test(t)) return 500;
+    if (/мала банка|малая банка/i.test(t)) return 200;
+    return 300;
+  }
+  // Банки в сумке по номерам предметов (inventory.stacks из GET /character) → {mp, hp} штук.
+  function potsOf(stacks) {
+    if (!Array.isArray(stacks)) return null;
+    const r = { mp: 0, hp: 0 };
+    for (const x of stacks.slice(0, 2000)) {
+      const id = x && +x.itemId, q = x && +x.qty;
+      if (!(Number.isSafeInteger(q) && q > 0)) continue;
+      if (POT_MP.includes(id)) r.mp += q; else if (POT_HP.includes(id)) r.hp += q;
+    }
+    return r;
+  }
+  // Какую банку поставить на пустой слот панели (окно игры «Розхідники»: подпись «Зілля мани (велика банка) ×150»): нужного вида,
+  // с запасом; сильнее — выше (основной бот potSlotRestore: «велика» раньше «малої»), при равных — где больше штук. → индекс или -1.
+  function potPick(titles, kind) {
+    const qty = t => +((String(t || '').match(/×\s*([\d\s  ]+)$/) || [])[1] || '0').replace(/\D/g, '');
+    let best = -1, bk = null;
+    (titles || []).forEach((t, i) => {
+      const name = String(t || '').replace(/\s*×[\d\s  ]*$/, '');
+      if (potKind(name) !== kind || !(qty(t) > 0)) return;
+      const k = [kind === 'mp' ? potGain(name) : 0, qty(t)];
+      if (!bk || k[0] > bk[0] || (k[0] === bk[0] && k[1] > bk[1])) { best = i; bk = k; }
+    });
+    return best;
   }
 
   // ---------- стойка (toggle) ----------
@@ -211,6 +247,10 @@
   function toggleOn(ev = {}) {
     const now = ev.now || Date.now(), mem = ev.mem || null, snap = ev.snap || null;
     if (mem && mem.hold > now) return null;                        // щёлкала туда-сюда — не трогаем до конца паузы
+    // 1.8.1: стойку бот снял сам (mem.off — Arcane Power при низком HP без банок HP или у мага без банок MP). Подсветка слота и строка баффов могут ещё
+    // показывать её включённой (шапка и снимок до 2 мин старее нажатия) — верим своему нажатию, пока свежий снимок игры не скажет иначе:
+    // иначе бот снова «снял» бы её и тем самым включил.
+    if (mem && mem.off) return snap && snap.fresh && snap.entry ? !!snap.entry.on : false;
     if (ev.dom === true || ev.buff) return true;
     if (snap && snap.fresh && snap.entry) return !!snap.entry.on;  // игра сама показала состояние после нашего нажатия
     if (ev.dom === false) return false;
@@ -224,11 +264,12 @@
   const TGL_FLAP_MS = 120000, TGL_HOLD_MS = 30 * 60000;
   function toggleDecide(ev = {}) {
     const st = toggleOn(ev), mem = ev.mem, now = ev.now || Date.now();
-    if (st === false && mem && mem.t && now - mem.t < TGL_FLAP_MS && (mem.flap || 0) >= 1) return { st: null, hold: true };
+    if (st === false && mem && !mem.off && mem.t && now - mem.t < TGL_FLAP_MS && (mem.flap || 0) >= 1) return { st: null, hold: true };
     return { st, hold: false };
   }
   // Номер нажатия подряд для памяти стойки: прошлое нажатие было меньше 2 мин назад — +1, иначе счёт с нуля.
-  const toggleFlap = (mem, now) => (mem && mem.t && now - mem.t < TGL_FLAP_MS ? (mem.flap || 0) + 1 : 0);
+  // 1.8.1: после того как бот сам снял стойку (mem.off), включение — снова первое нажатие.
+  const toggleFlap = (mem, now) => (mem && mem.t && !mem.off && now - mem.t < TGL_FLAP_MS ? (mem.flap || 0) + 1 : 0);
 
   // ---------- массовый удар (1.7) ----------
   // Живое изучение 24.10 (kb/lite-mage-study.md): массовый удар мага бьёт главную цель и ещё двух мобов («додаткові цілі») одинаковым
@@ -245,11 +286,25 @@
   }
   const AOE_WAIT = 1500;                          // массовый вот-вот откатится — ждём его, а не бьём одиночным
 
+  // ---------- маг в долгой охоте: MP и Arcane Power (1.8.1) ----------
+  // Модель долгой охоты (tests/tools/lite-mage-model.cjs, kb/lite-mage-study.md §7) на этой логике: маг в Ashen тратит ≈75 MP/с охоты,
+  // 6 203 MP хватает на ≈1,5 мин, дальше всё решают банки MP: ≈530 больших в час (≈9 в минуту, ≈0,8 на бой из трёх убитых, 1,2 млн
+  // адены при доходе ≈100 млн). Малые (200 MP) дешевле на 1 MP, но глоток — тоже ход: с ними −12 % убитых в час.
+  // Стойки, которые сами тянут HP, — HP в секунду: Arcane Power «−50 HP/2 с» (живое изучение 24.10). Банок HP на панели нет, HP ≤ 30 % —
+  // снимаем её (отдых перед боем иначе не вернёт HP), снова включаем от 60 %. Банки HP есть — держим всегда: их хватает и на неё.
+  const TGL_DRAIN = { 337: 25 }, DRAIN_OFF = 30, DRAIN_ON = 60;
+  // Банок MP нет совсем (ни на панели, ни в сумке) — маг бьёт с лучшим уроном на 1 MP (Flame Strike 19/28 против Blizzard 24/71,
+  // Hell 70/200) при любом MP: MP возвращает только реген, и убийств в час столько, сколько урона на 1 MP (модель: порог «MP < 30 %»
+  // давал 114 убитых в час против 258 у старой логики, без порога — больше; основной бот: режим экономии — только когда банки MP нет).
+  const perMp = s => (s.pow || 0) / Math.max(1, s.mp || 0);
+
   // ---------- ход в бою ----------
   // slots: [{key, name, type ('basic'|attack|aoe|buff|lowhp|trance|heal|toggle|other), on, ready, active (бафф/стойка висит;
   //   у стойки null — состояние неизвестно), pot ('hp'|'mp'|null), qty, mp, hp, pow, id, i (порядок на панели), tvtOk, left (мс до готовности)}]
   // me: {hp, maxHp, mp, maxMp}; mob: {hp, maxHp} | null; opt: {now, hpPot, mpPot, lastPot: {hp, mp}, tvt,
-  //   1.7: mage — обычной атакой не добиваем; extras — соседи под массовым ударом (null — не видели); aoeTry — соседей не видели, пробуем}
+  //   1.7: mage — обычной атакой не добиваем; extras — соседи под массовым ударом (null — не видели); aoeTry — соседей не видели, пробуем;
+  //   1.8.1: mpPots — банок MP в сумке (null — не знаем; 0 и пустая панель — экономный режим мага)}
+  // → {slot, why} (1.8.1: off — нажатие снимает стойку) или null (ждать: откат, у мага — и нехватка MP).
   function planTurn(slots, me, mob, opt = {}) {
     const pct = (a, b) => (b > 0 && Number.isFinite(a) ? a * 100 / b : 100);
     const hpP = pct(me?.hp, me?.maxHp), mpKnown = Number.isFinite(me?.mp) && me?.maxMp > 0, mpP = pct(me?.mp, me?.maxMp);
@@ -260,6 +315,9 @@
     const potGap = k => now - ((opt.lastPot || {})[k] || 0) >= 1100;
     const pick = (slot, why) => ({ slot, why });
     const hpPot = slots.find(s => s.pot === 'hp' && can(s)), mpPot = slots.find(s => s.pot === 'mp' && can(s));
+    // 1.8.1: банки вообще есть (пусть на паузе между глотками) — для экономного режима мага и для стойки, тянущей HP.
+    const potAny = k => slots.some(s => s.pot === k && s.on !== false && (s.qty == null || s.qty > 0) && (!tvt || s.tvtOk !== false));
+    const hpAny = potAny('hp'), mpNone = !potAny('mp') && opt.mpPots === 0;   // банок MP точно нет: на панели нет, в сумке 0
     const hpTrig = Number.isFinite(+opt.hpPot) ? +opt.hpPot : 50, mpTrig = Number.isFinite(+opt.mpPot) ? +opt.mpPot : 25;
     const lowOrd = s => { const i = LOW_ORDER.indexOf(s.id); return i < 0 ? 9 : i; };
     const lowReady = tvt ? [] : slots.filter(s => s.type === 'lowhp' && s.on && !s.active && can(s) && mpOk(s) && hpOk(s)).sort((a, b) => lowOrd(a) - lowOrd(b));
@@ -269,10 +327,18 @@
     if (hpP <= 30 && lowReady.length) return pick(lowReady[0], `лимит при HP ${Math.round(hpP)} %`);
     if (hpP <= hpTrig && hpPot && potGap('hp')) return pick(hpPot, `банка HP (HP ${Math.round(hpP)} %)`);
     if (hpP <= hpTrig) { const h = slots.find(s => s.type === 'heal' && s.on && can(s) && mpOk(s)); if (h && !tvt) return pick(h, `лечение (HP ${Math.round(hpP)} %)`); }
+    // 1.8.1: Arcane Power тянет HP (модель долгой охоты, tests/tools/lite-mage-model.cjs). Снимаем её одним нажатием (стойку игра
+    // показала включённой), когда: банок HP нет и HP ≤ 30 %; у мага нет банок MP — впереди отдых по MP, а стойка тянет HP и вне боя.
+    const restAhead = !!opt.mage && mpKnown && mpNone;
+    if (!tvt && ((!hpAny && hpP <= DRAIN_OFF) || restAhead)) {
+      const dr = slots.find(s => s.type === 'toggle' && TGL_DRAIN[s.id] && s.active === true && can(s));
+      if (dr) return { slot: dr, why: `снимаю ${dr.name}: ${restAhead ? 'банок MP нет — впереди отдых, а она тянет HP' : `HP ${Math.round(hpP)} %, банок HP нет — она тянет HP`}`, off: true };
+    }
     if (mpKnown && mpP <= mpTrig && mpPot && potGap('mp')) return pick(mpPot, `банка MP (MP ${Math.round(mpP)} %)`);
     if (!tvt) {
       // Стойку жмём, только когда игра подтвердила, что она выключена (active === false): второе нажатие её бы сняло.
-      const tg = slots.find(s => s.type === 'toggle' && s.on && s.active === false && can(s) && mpOk(s));
+      // 1.8.1: стойку, которая тянет HP, без банок HP включаем только от 60 % HP, а у мага без банок MP — не включаем.
+      const tg = slots.find(s => s.type === 'toggle' && s.on && s.active === false && can(s) && mpOk(s) && (!TGL_DRAIN[s.id] || ((hpAny || hpP >= DRAIN_ON) && !restAhead)));
       if (tg) return pick(tg, 'включаю стойку');
       const bf = slots.find(s => s.type === 'buff' && s.on && !s.active && can(s) && mpOk(s) && hpOk(s));
       if (bf) return pick(bf, 'бафф');
@@ -289,17 +355,56 @@
     // 1.7: обычная атака мага ≈1 урона (основной бот) — ею мага не добиваем, иначе бой стоял бы на последних процентах
     if (basic && mobP <= 8 && !opt.mage) return pick(basic, 'добиваю обычной атакой');
     const byPow = (a, b) => (b.pow || 0) - (a.pow || 0) || (a.i || 0) - (b.i || 0);
+    // 1.8.1: экономный режим мага — банок MP нет совсем: сначала больше урона на 1 MP.
+    const eco = !!opt.mage && !tvt && mpKnown && mpNone, order = eco ? (a, b) => perMp(b) - perMp(a) || byPow(a, b) : byPow;
+    const tag = eco ? ' · экономлю MP: банок нет' : '';
     const hits = slots.filter(s => (s.type === 'attack' || s.type === 'aoe') && s.on && can(s) && mpOk(s) && hpOk(s));
     const ax = tvt ? 0 : aoeGain(mob, opt.extras, !!opt.aoeTry);
+    const aoeWhy = () => (Array.isArray(opt.extras) ? `массовый: +${ax} ${ax === 1 ? 'сосед умрёт' : 'соседа умрут'} вместе с целью` : 'массовый: проверяю соседей') + tag;
+    // 1.8.1: в экономном режиме ждём лучшее на 1 MP заклинание (откат ≤ 1,5 с или MP на него), а не тратим MP на худшее:
+    // в модели Hell (200 MP) в паузе Flame Strike (откат 0,6 с) съедал весь реген.
+    if (eco) {
+      const pool = slots.filter(s => (s.type === 'attack' || s.type === 'aoe') && s.on && (s.qty == null || s.qty > 0) && (!tvt || s.tvtOk !== false) && hpOk(s) && (s.ready || (s.left > 0 && s.left <= AOE_WAIT)));
+      const aoeP = pool.filter(s => s.type === 'aoe'), best = (ax > 0 && aoeP.length ? aoeP : pool).sort(order)[0];
+      if (best) return best.ready && mpOk(best) ? pick(best, best.type === 'aoe' && ax > 0 ? aoeWhy() : 'удар' + tag) : null;
+    }
     if (ax > 0) {
-      const aoe = hits.filter(s => s.type === 'aoe').sort(byPow)[0];
-      if (aoe) return pick(aoe, Array.isArray(opt.extras) ? `массовый: +${ax} ${ax === 1 ? 'сосед умрёт' : 'соседа умрут'} вместе с целью` : 'массовый: проверяю соседей');
+      const aoe = hits.filter(s => s.type === 'aoe').sort(order)[0];
+      if (aoe) return pick(aoe, aoeWhy());
       if (Array.isArray(opt.extras) && slots.some(s => s.type === 'aoe' && s.on !== false && !s.ready && s.left > 0 && s.left <= AOE_WAIT && mpOk(s) && (s.qty == null || s.qty > 0))) return null;
     }
-    const atk = hits.sort(byPow)[0];
-    if (atk) return pick(atk, atk.type === 'aoe' && Array.isArray(opt.extras) && opt.extras.length ? 'массовый по цели (соседи толще неё)' : 'удар');
-    if (basic) return pick(basic, 'атака');
+    const atk = hits.sort(order)[0];
+    if (atk) return pick(atk, (atk.type === 'aoe' && Array.isArray(opt.extras) && opt.extras.length ? 'массовый по цели (соседи толще неё)' : 'удар') + tag);
+    // 1.8.1: маг без MP обычной атакой (≈1 урона) не бьёт — бой стоял бы часами (модель долгой охоты: банки кончились — 0 убитых);
+    // ждём глоток (пауза между банками 1,1 с) или реген MP.
+    if (basic && !opt.mage) return pick(basic, 'атака');
     return null;
+  }
+  // 1.8.1: маг ждёт MP — ни одно включённое заклинание не по карману (для статуса боя и выхода из боя без MP).
+  function mpShort(slots, me) {
+    if (!(Number.isFinite(me?.mp) && me?.maxMp > 0)) return false;
+    const sp = (slots || []).filter(s => (s.type === 'attack' || s.type === 'aoe') && s.on !== false && s.mp > 0);
+    return !!sp.length && sp.every(s => me.mp < s.mp);
+  }
+  // 1.8.1: отдых мага перед боем. Банок MP нет совсем (pots === 0: ни в сумке, ни на панели) — MP возвращает только реген; бой с пустой
+  // маной стоит, а моб бьёт. MP < 15 % — не начинаем бой, ждём вне боя до 50 %. MP не растёт 90 с (реген вне боя не идёт) — отдых
+  // бесполезен: бьёмся как есть (в бою — экономные заклинания и ожидание MP), отдых снова пробуем через 10 мин.
+  // st — память отдыха {t0 — с какого времени отдыхаем, peak/peakT — лучший MP и когда он был, offT — когда отдых не помог}.
+  // → {rest, st, why, stall (отдых только что не помог)}
+  const REST_LO = 15, REST_HI = 50, REST_STALL = 90000, REST_OFF = 600000;
+  function mpRest(st, me, o = {}) {
+    const now = o.now || Date.now(), s = { ...(st && typeof st === 'object' ? st : {}) };
+    const mpP = me && me.maxMp > 0 && Number.isFinite(me.mp) ? me.mp * 100 / me.maxMp : null;
+    const stop = () => ({ rest: false, st: { ...s, t0: 0 }, why: '', stall: false });
+    if (!o.mage || mpP == null || o.pots !== 0) return stop();
+    if (!s.t0) {
+      if (mpP >= REST_LO || (s.offT && now - s.offT < REST_OFF)) return stop();
+      Object.assign(s, { t0: now, peak: me.mp, peakT: now });
+    }
+    if (mpP >= REST_HI) return stop();
+    if (me.mp > (s.peak || 0) + me.maxMp * 0.01) { s.peak = me.mp; s.peakT = now; }
+    if (now - (s.peakT || s.t0) > REST_STALL) return { rest: false, st: { ...s, t0: 0, offT: now }, why: '', stall: true };
+    return { rest: true, st: s, why: `банок MP нет, MP ${Math.round(mpP)} % — отдыхаю до ${REST_HI} % перед боем`, stall: false };
   }
 
   // ---------- TvT ----------
@@ -767,7 +872,8 @@
     BLUNT_ONLY, POLE_ONLY, wpnKind, wpnBySkill, spoilPlan, SPOIL_WAIT, SPOIL_WAIT_MAX, SPOIL_RES, spoilRes, spoilChance, spoilMin, spoilSpots,
     isMage, MAGE_ON, aoeGain, AOE_WAIT, ashenPick,
     SPOIL_MODES, SPOIL_MODE_RU, spoilMode, FEST_WAIT, FEST_WAIT_MAX, FEST_MAX, festMarks, festFresh, exDeaths, spoilValue, spoilAutoSpots, spoilAutoPick,
-    G_KEYS, DEF_G, paceCfg, speedStats, speedNote };
+    G_KEYS, DEF_G, paceCfg, speedStats, speedNote,
+    POT_MP, POT_HP, POT_GAIN, potGain, potsOf, potPick, TGL_DRAIN, DRAIN_OFF, DRAIN_ON, perMp, mpShort, mpRest, REST_LO, REST_HI, REST_STALL, REST_OFF };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
