@@ -32,7 +32,7 @@ menv.cfg.lvlAbove = 99; assert.deepEqual(pick(), ['a', 'b', 'c', 'q'], '99 — n
 menv.cfg.lvlAbove = 8; assert.deepEqual(pick(), ['a', 'b', 'c', 'q'], 'player widened to +8 — Tomb Guard allowed');
 // 3. combat: моб из цепочки выше предела — «не бью, на карту» (нетронутый бой, не РБ, не ★ квест, не источник ресурса, не чемпион главы)
 assert.match(combat, /const hl = env\.heroLvl\(\) \|\| env\.rt\.lvl \|\| 0, up = env\.cfg\.lvlAbove \?\? 5, lv = rbLvl \|\| ctx\.lvl \|\| 0, farmT = !!nm && \(env\.farmRules\?\.\(\) \|\| \[\]\)\.some\(x => x\.farm && x\.name === nm\);/);
-assert.match(combat, /if \(!isRb && hl && lv && up < 99 && lv > hl \+ up && !ctx\.questKill && !farmT && !\(ctx\.champ && env\.campActive\(\) && env\.campChampOpen\(\)\)\n\s+&& mob0 && mob0\.cur >= mob0\.max \* 0\.98 && !extraMobs\(\)\.some\(x => x\.cur > 0\)\) \{/);
+assert.match(combat, /if \(!isRb && !ashen && hl && lv && up < 99 && lv > hl \+ up && !ctx\.questKill && !farmT && !\(ctx\.champ && env\.campActive\(\) && env\.campChampOpen\(\)\)\n\s+&& mob0 && mob0\.cur >= mob0\.max \* 0\.98 && !extraMobs\(\)\.some\(x => x\.cur > 0\)\) \{/);
 assert.match(combat, /выше героя на \$\{lv - hl\} \(предел \+\$\{up\}\) — не бью, на карту`\); await env\.setRt\(\{ target: null \}\); return env\.toMap\(\);/);
 assert.ok(combat.indexOf('выше героя на ${lv - hl}') < combat.indexOf('ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;'), 'guard before the fight starts');
 // 10.0.15: проверяем farmRules внутри нужной фабрики, без зависимости от позиции новых getters.

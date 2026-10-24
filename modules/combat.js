@@ -2942,8 +2942,11 @@ async function battleOpen() {
   // 10.0.7 (игрок 13.10 03:16: «бот пытается бить моба больше чем на 5 лвл старше» — Warlock 67 против Tomb Guard 75): цепочка «Охотиться
   // дальше» подсовывает моба без выбора по карте — выше героя на > lvlAbove (по умолчанию +5) не бьём, идём на карту. Исключения — как в
   // mobfarm.candidates: ★ квест, источник ресурса, чемпион главы; РБ — свои пределы. Только нетронутый бой (HP ≥ 98 %, соседей нет)
+  // 20.61 (лог 25.10 09:11, John «на спойле не хочет бить бастион, хотя может справиться»): в Ashen Bastion все мобы 85 ур., место
+  // выбрал игрок, ashenStep уже отобрал моба по окну lvlMin/lvlMax — предел +5 там не действует (иначе бой → список → тот же бой по кругу)
   { const hl = env.heroLvl() || env.rt.lvl || 0, up = env.cfg.lvlAbove ?? 5, lv = rbLvl || ctx.lvl || 0, farmT = !!nm && (env.farmRules?.() || []).some(x => x.farm && x.name === nm);
-    if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
+    const ashen = ctx.ashen = /^ashen_bastion_mob_/i.test(String(spawnId || '')) || /^ashen_bastion_mob_/i.test(String(ctx.spawnId || ''));
+    if (!isRb && !ashen && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
         && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
       env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
   // 15.10: слабого случайного моба цепочки добиваем, даже без FA; нижний порог остаётся при выборе с карты.
@@ -3039,7 +3042,8 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.champ && ctx.chHp0 > 0 ? Math.min(ctx.max,ctx.chHp0) : ctx.max;
     const measured = env.fightDamage?.(ctx.name, ctx.spawnId || spawnId, t0);
     const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0), measured?.removed || 0);   // победа — главный добит (соседи живы — их остаток не наш)
-    const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
+    const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(ctx.ashen ? Math.max(dps, totalDps) : dps, 1);   // время на одного такого моба
+    // 20.61: в Ashen Bastion мобы 85 ур. толстые и стоят пачкой — бьём массовыми, «долго на одного» считаем по урону по всем, иначе вид на 2 ч выпадает
     env.champs?.noteDamage?.(ctx,base,ttk)?.catch?.(e=>console.warn(env.TAG,'состав боя',e));
     const d = env.rt.dps?.singleTarget ? env.rt.dps : { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
