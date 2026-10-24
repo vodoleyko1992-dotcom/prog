@@ -21,14 +21,17 @@ test('лучники: 2-я и 3-я профессии трёх рас; кинж�
   assert.equal(L.clsKind('orc_titan'), 'destr'); assert.equal(L.clsKind('dwarf_bounty_hunter'), 'spoil'); assert.equal(L.clsKind('dwarf_warsmith'), null);
 });
 
-test('класс героя: активен Phantom Ranger — ведём (профиль лука); активен основной маг — подсказка про Титана и лука', () => {
+test('класс героя: активен Phantom Ranger — ведём (профиль лука); основной маг — с 1.7 свой профиль; призыватель — подсказка про слоты', () => {
   const pr = L.heroClass('dark_elf_phantom_ranger', SLOTS, 3);
   assert.equal(pr.ok, true); assert.equal(pr.kind, 'archer'); assert.equal(pr.name, 'Dark Elf Phantom Ranger');
-  assert.deepEqual(pr.alts, [{ slot: 2, name: 'Orc Titan', lvl: 77, kind: 'destr' }]);
+  assert.deepEqual(pr.alts, [{ slot: 0, name: 'Dark Elf Storm Screamer', lvl: 78, kind: 'mage' }, { slot: 2, name: 'Orc Titan', lvl: 77, kind: 'destr' }]);
   const mage = L.heroClass('dark_elf_storm_screamer', SLOTS, 0);
-  assert.equal(mage.ok, false); assert.equal(mage.kind, null);
+  assert.equal(mage.ok, true); assert.equal(mage.kind, 'mage');   // 1.7 (John 24.10: «создай доп модуль МАГ»)
   assert.deepEqual(mage.alts.map(a => [a.slot, a.kind]), [[2, 'destr'], [3, 'archer']]);
-  assert.deepEqual(mage.alt, mage.alts[0]);
+  const sum = L.heroClass('human_warlock', SLOTS, 0);           // призыватель — не нюкер: Lite его не ведёт
+  assert.equal(sum.ok, false); assert.equal(sum.kind, null);
+  assert.deepEqual(sum.alts.map(a => [a.slot, a.kind]), [[2, 'destr'], [3, 'archer']]);
+  assert.deepEqual(sum.alt, sum.alts[0]);
   assert.equal(L.heroClass('orc_titan', SLOTS, 2).kind, 'destr');
 });
 

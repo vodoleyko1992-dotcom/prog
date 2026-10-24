@@ -6,6 +6,9 @@
 // профиль на лука»): лучники (Hawkeye/Sagittarius, Silver Ranger/Moonlight Sentinel, Phantom Ranger/Ghost Sentinel) и два профиля настроек.
 // Lite 1.6 (23.10, John: «Сверстай еще в боте сектор "споил", возьми все данные из основного проекта Бот»): спойлер (Scavenger →
 // Bounty Hunter → Fortune Seeker) — третий профиль; спойл в бою по правилам modules/loot.js основного бота, уровни мобов под ресурс.
+// Lite 1.7 (24.10, John: «изучи мага в бастионе, массухи юзаем тк от них есть прок, бьет сразу 3их мобов… создай доп модуль МАГ…
+// нужно автоопределение Дестр\лук\маг и авто-использование подходящего модуля»): маг-нюкер — четвёртый профиль; массовые удары
+// (тип aoe) и охота в Ashen Bastion — по живому изучению 24.10 (kb/lite-mage-study.md).
 (function (root) {
   'use strict';
 
@@ -62,7 +65,37 @@
     // MP спойла — первого ранга (Spoil 12–67, Festival 73–204): не хватит — сервер откажет, и бот до конца боя спойл не жмёт.
     254: ['Spoil', 'spoil', 0, 12, 0, 10, 15], 348: ['Spoil Crush', 'spoil', 2, 70, 0, 10, 0], 302: ['Spoil Festival', 'spoil', 0, 73, 0, 10, 15],
     42: ['Sweeper', 'other', 0, 3, 0, 0.5, 0], 34: ['Bandage', 'other', 0, 19, 0, 3, 0],
+    // Lite 1.7: маг-нюкер (Wizard → Sorcerer/Necromancer → Archmage/Soultaker, Elven Wizard → Spellsinger → Mystic Muse,
+    // Dark Wizard → Spellhowler → Storm Screamer). Живое изучение 24.10 (kb/lite-mage-study.md, Storm Screamer 78, M.Atk ≈91 тыс.):
+    // тип aoe — массовый удар: Blizzard, Flame Strike и Hell бьют главную цель и ещё двух мобов одинаковым уроном (у Hell в IL — одна
+    // цель, на L2WAP — три). Сила — обычный урон без крита в тысячах (крит ≈ ×2,3), MP — замер с Arcane Power; откат большинства —
+    // общий магический ≈0,6 с. Сила остальных — по замеру одиночного урона, без замера — по силе IL (skills-il.js).
+    1176: ['Blizzard', 'aoe', 24, 71, 0, 0.6, 0], 1181: ['Flame Strike', 'aoe', 19, 28, 0, 0.6, 0], 1289: ['Hell', 'aoe', 70, 200, 0, 24, 0],
+    1171: ['Blazing Circle', 'aoe', 22, 82, 0, 15, 0], 1296: ['Rain of Fire', 'aoe', 22, 55, 0, 20, 0],
+    1292: ['Elemental Crash', 'attack', 96, 200, 0, 30, 0], 1267: ['Shadow Flare', 'attack', 37, 68, 0, 13, 0], 1265: ['Solar Flare', 'attack', 37, 68, 0, 13, 0],
+    1341: ['Wind Vortex', 'attack', 39, 84, 0, 14, 0], 1339: ['Fire Vortex', 'attack', 39, 84, 0, 14, 0], 1342: ['Light Vortex', 'attack', 39, 84, 0, 14, 0],
+    1340: ['Ice Vortex', 'attack', 34, 84, 0, 14, 0], 1343: ['Dark Vortex', 'attack', 34, 72, 0, 14, 0], 1159: ['Death Link', 'attack', 34, 55, 0, 0.6, 0],
+    1148: ['Death Spike', 'attack', 34, 40, 0, 0.6, 0], 1239: ['Hurricane', 'attack', 31, 55, 0, 0.6, 0], 1230: ['Prominence', 'attack', 31, 55, 0, 0.6, 0],
+    1235: ['Hydro Blast', 'attack', 31, 55, 0, 0.6, 0], 1234: ['Vampiric Claw', 'attack', 33, 71, 0, 0.6, 0], 1231: ['Aura Flare', 'attack', 25, 55, 0, 0.6, 0],
+    1172: ['Aura Flare', 'attack', 22, 24, 0, 0.6, 0], 1178: ['Twister', 'attack', 22, 24, 0, 0.6, 0], 1220: ['Blaze', 'attack', 22, 24, 0, 0.6, 0],
+    1264: ['Solar Spark', 'attack', 15, 30, 0, 30, 0], 1266: ['Shadow Spark', 'attack', 15, 30, 0, 30, 0], 1177: ['Wind Strike', 'attack', 10, 12, 0, 0.6, 0],
+    1147: ['Vampiric Touch', 'attack', 15, 32, 0, 0.6, 0], 1184: ['Ice Bolt', 'attack', 8, 16, 0, 0.6, 0],
+    1011: ['Heal', 'heal', 300, 41, 0, 10, 0], 1015: ['Battle Heal', 'heal', 300, 62, 0, 3, 0], 1216: ['Self Heal', 'heal', 42, 7, 0, 10, 0],
+    // Arcane Power (стойка: M.Atk +30 %, MP магии +10 %) — у мага включена по умолчанию (MAGE_ON): игрок — «MP не экономим, приоритет ДПС».
+    337: ['Arcane Power', 'toggle', 0, 36, 0, 0, 1], 1283: ['Soul Guard', 'toggle', 0, 0, 0, 0, 3],
+    // Не жмём по умолчанию: семена и удары «по семенам» (без семян игра откажет), дебаффы, сон, яд, призывы, лечение с трупа, HP → MP.
+    1157: ['Body To Mind', 'other', 0, 0, 366, 20, 0], 1151: ['Corpse Life Drain', 'other', 0, 28, 0, 20, 0], 1338: ['Arcane Chaos', 'other', 40, 57, 0, 60, 30],
+    1167: ['Poisonous Cloud', 'other', 80, 82, 0, 20, 30], 1168: ['Curse: Poison', 'other', 80, 53, 0, 12, 30], 1164: ['Curse: Weakness', 'other', 80, 55, 0, 8, 15],
+    1222: ['Curse Chaos', 'other', 80, 55, 0, 8, 15], 1263: ['Curse Gloom', 'other', 80, 55, 0, 8, 15], 1269: ['Curse Disease', 'other', 80, 55, 0, 15, 120],
+    1160: ['Slow', 'other', 80, 55, 0, 7, 30], 1206: ['Wind Shackle', 'other', 80, 55, 0, 8, 15], 1074: ['Surrender To Wind', 'other', 80, 55, 0, 8, 15],
+    1224: ['Surrender To Poison', 'other', 80, 55, 0, 8, 15], 1064: ['Silence', 'other', 80, 55, 0, 60, 60], 1069: ['Sleep', 'other', 80, 55, 0, 10, 30],
+    1336: ['Curse of Doom', 'other', 80, 56, 0, 120, 120], 1337: ['Curse of Abyss', 'other', 80, 58, 0, 300, 120], 1298: ['Mass Slow', 'other', 40, 0, 610, 20, 30],
+    1056: ['Cancellation', 'other', 25, 55, 0, 120, 0], 1285: ['Seed of Fire', 'other', 0, 200, 0, 3600, 5], 1286: ['Seed of Water', 'other', 0, 200, 0, 3600, 5],
+    1287: ['Seed of Wind', 'other', 0, 200, 0, 3600, 5], 1288: ['Aura Symphony', 'other', 515, 200, 0, 30, 0], 1291: ['Demonic Wind', 'other', 350, 200, 0, 30, 0],
+    1294: ['Elemental Storm', 'other', 500, 200, 0, 38, 0], 1128: ['Summon Shadow', 'other', 0, 0, 0, 0, 0], 1228: ['Summon Silhouette', 'other', 0, 0, 0, 0, 0],
   };
+  // 1.7: у мага по умолчанию включена и эта стойка (Arcane Power, +30 % M.Atk).
+  const MAGE_ON = new Set([337]);
   // 1.5: оружие приёма (skills-il.js, «только: лук / кинжал / меч…»). В профиле лука приёмы ближнего боя по умолчанию не жмём,
   // в профиле Дестра — выстрелы: с чужим оружием сервер их не примет, а бот терял бы на них ходы. Галкой игрок включит сам.
   const BOW_ONLY = new Set([19, 24, 56, 101, 313, 314, 343, 354, 369, 413, 414]);
@@ -89,8 +122,8 @@
     sonic_focus: 8, sonic_buster: 9, fatal_strike: 190, hammer_crush: 260, triple_sonic_slash: 261, sonic_guard: 442, sonic_rage: 345,
     sonic_move: 451
   };
-  const TYPES = ['attack', 'buff', 'lowhp', 'trance', 'heal', 'toggle', 'spoil', 'other'];
-  const TYPE_RU = { attack: 'Удар', buff: 'Бафф', lowhp: 'При HP ≤ 30 %', trance: 'Транс → лимиты', heal: 'Лечение', toggle: 'Стойка', spoil: 'Спойл', other: 'Не жать' };
+  const TYPES = ['attack', 'aoe', 'buff', 'lowhp', 'trance', 'heal', 'toggle', 'spoil', 'other'];
+  const TYPE_RU = { attack: 'Удар', aoe: 'Массовый удар', buff: 'Бафф', lowhp: 'При HP ≤ 30 %', trance: 'Транс → лимиты', heal: 'Лечение', toggle: 'Стойка', spoil: 'Спойл', other: 'Не жать' };
   const LOW_ORDER = [176, 420, 139];              // после транса: Frenzy → Zealot → Guts (как PR #297 основного бота)
 
   const cleanTitle = t => String(t || '').split(/\s+[—–-]\s+|\s*\(|\n/)[0].trim();
@@ -116,8 +149,11 @@
   }
   // Что жмём, пока игрок сам не решил: известные удары, баффы, лимиты, транс и лечение — да; стойки и прочее — нет.
   // 1.5: kind — профиль (destr/archer): приёмы чужого оружия по умолчанию выключены.
-  const offWeapon = (info, kind) => !!info && (kind === 'archer' ? MELEE_ONLY.has(info.id) : kind === 'destr' || kind === 'spoil' ? BOW_ONLY.has(info.id) : false);
-  const defaultOn = (info, kind) => !!info && info.known && ['attack', 'buff', 'lowhp', 'trance', 'heal', 'spoil'].includes(info.type) && !offWeapon(info, kind);
+  // 1.7: маг — ни выстрелов, ни приёмов ближнего боя (обычная атака мага ≈1 урона, основной бот).
+  const offWeapon = (info, kind) => !!info && (kind === 'archer' ? MELEE_ONLY.has(info.id) : kind === 'destr' || kind === 'spoil' ? BOW_ONLY.has(info.id)
+    : kind === 'mage' ? BOW_ONLY.has(info.id) || MELEE_ONLY.has(info.id) : false);
+  const defaultOn = (info, kind) => !!info && info.known && (['attack', 'aoe', 'buff', 'lowhp', 'trance', 'heal', 'spoil'].includes(info.type)
+    || (kind === 'mage' && MAGE_ON.has(info.id))) && !offWeapon(info, kind);
   // Выбор игрока поверх таблицы: {on, type}. Тип «basic» (обычная атака) не меняется — она всегда запасной ход.
   function skillUse(info, choice, kind) {
     if (!info) return null;
@@ -131,13 +167,14 @@
   // из таблицы (l2_<id> с типом attack в SK) — не банки, баффы, лимиты, транс, стойки, лечение и не скилл, которому игрок сам сменил тип.
   // 1.5: и выстрелы лучника под именем игры (power_shot = l2_56 по NATIVE) — то же правило «известный удар из таблицы».
   // Прочие именованные удары (power_smash, whirlwind у воина) — как в основном боте, без метки; hook.js пропускает только *_shot.
-  const FAST_NAMED = /^[a-z]+_shot$/;
+  // 1.7: и массовый удар мага из таблицы (тип aoe) — ответ на него тот же delta хода, hook.js снимает hotbarStale по тем же правилам.
+  const FAST_NAMED = /^[a-z]+_shot$/, HIT_TYPES = ['attack', 'aoe'];
   function fastHit(s) {
     if (!s || s.pot || s.type === 'item') return false;
     if (s.type === 'basic') return s.action === 'attack';
     const a = String(s.action || ''), m = a.match(/^l2_(\d+)$/), id = m ? +m[1] : FAST_NAMED.test(a) && Object.prototype.hasOwnProperty.call(NATIVE, a) ? NATIVE[a] : null;
     const row = id ? SK[id] : null;
-    return s.type === 'attack' && !!row && row[1] === 'attack';
+    return HIT_TYPES.includes(s.type) && !!row && HIT_TYPES.includes(row[1]);
   }
   // HP/MP героя: панель игры или ответ на ход — что свежее (Lite 1.2: после быстрого удара игра до 5 с, с 1.5.1 — до 30 с, не перечитывает персонажа,
   // и панель может отставать). hud — числа с панели, hudT — когда они в последний раз менялись, resp — {hp, maxHp, mp, maxMp, t}.
@@ -190,10 +227,26 @@
   // Номер нажатия подряд для памяти стойки: прошлое нажатие было меньше 2 мин назад — +1, иначе счёт с нуля.
   const toggleFlap = (mem, now) => (mem && mem.t && now - mem.t < TGL_FLAP_MS ? (mem.flap || 0) + 1 : 0);
 
+  // ---------- массовый удар (1.7) ----------
+  // Живое изучение 24.10 (kb/lite-mage-study.md): массовый удар мага бьёт главную цель и ещё двух мобов («додаткові цілі») одинаковым
+  // уроном — и крит у всех троих тот же. Бой кончается, когда умирает главный: соседи, у которых HP не больше, чем у главного, умирают
+  // не позже него (+1 убийство каждый), а кто толще — остаётся раненым и в следующем бою снова полный: урон по нему пропал.
+  // Поэтому, пока хоть один сосед успевает умереть вместе с главным, жмём только массовые: одиночный удар по главному обогнал бы соседей.
+  // ex — соседи из боя [{hp, maxHp}] (null — ещё не видели: пробуем массовым, если есть), mob — главный.
+  // → сколько соседей добьёт массовый удар (0 — бить как одну цель: массовый идёт по силе наравне с одиночными).
+  function aoeGain(mob, ex, tryAoe) {
+    if (!Array.isArray(ex)) return tryAoe ? 2 : 0;
+    const live = ex.filter(x => x && !(x.hp <= 0));
+    if (!(mob && mob.hp > 0)) return live.length;
+    return live.filter(x => !(x.hp > mob.hp)).length;
+  }
+  const AOE_WAIT = 1500;                          // массовый вот-вот откатится — ждём его, а не бьём одиночным
+
   // ---------- ход в бою ----------
-  // slots: [{key, name, type ('basic'|attack|buff|lowhp|trance|heal|toggle|other), on, ready, active (бафф/стойка висит;
-  //   у стойки null — состояние неизвестно), pot ('hp'|'mp'|null), qty, mp, hp, pow, id, i (порядок на панели), tvtOk}]
-  // me: {hp, maxHp, mp, maxMp}; mob: {hp, maxHp} | null; opt: {now, hpPot, mpPot, lastPot: {hp, mp}, tvt}
+  // slots: [{key, name, type ('basic'|attack|aoe|buff|lowhp|trance|heal|toggle|other), on, ready, active (бафф/стойка висит;
+  //   у стойки null — состояние неизвестно), pot ('hp'|'mp'|null), qty, mp, hp, pow, id, i (порядок на панели), tvtOk, left (мс до готовности)}]
+  // me: {hp, maxHp, mp, maxMp}; mob: {hp, maxHp} | null; opt: {now, hpPot, mpPot, lastPot: {hp, mp}, tvt,
+  //   1.7: mage — обычной атакой не добиваем; extras — соседи под массовым ударом (null — не видели); aoeTry — соседей не видели, пробуем}
   function planTurn(slots, me, mob, opt = {}) {
     const pct = (a, b) => (b > 0 && Number.isFinite(a) ? a * 100 / b : 100);
     const hpP = pct(me?.hp, me?.maxHp), mpKnown = Number.isFinite(me?.mp) && me?.maxMp > 0, mpP = pct(me?.mp, me?.maxMp);
@@ -230,10 +283,18 @@
     }
     const basic = slots.find(s => s.type === 'basic' && can(s));
     const mobP = mob && mob.maxHp > 0 ? pct(mob.hp, mob.maxHp) : 100;
-    if (basic && mobP <= 8) return pick(basic, 'добиваю обычной атакой');
-    const atk = slots.filter(s => s.type === 'attack' && s.on && can(s) && mpOk(s) && hpOk(s))
-      .sort((a, b) => (b.pow || 0) - (a.pow || 0) || (a.i || 0) - (b.i || 0))[0];
-    if (atk) return pick(atk, 'удар');
+    // 1.7: обычная атака мага ≈1 урона (основной бот) — ею мага не добиваем, иначе бой стоял бы на последних процентах
+    if (basic && mobP <= 8 && !opt.mage) return pick(basic, 'добиваю обычной атакой');
+    const byPow = (a, b) => (b.pow || 0) - (a.pow || 0) || (a.i || 0) - (b.i || 0);
+    const hits = slots.filter(s => (s.type === 'attack' || s.type === 'aoe') && s.on && can(s) && mpOk(s) && hpOk(s));
+    const ax = tvt ? 0 : aoeGain(mob, opt.extras, !!opt.aoeTry);
+    if (ax > 0) {
+      const aoe = hits.filter(s => s.type === 'aoe').sort(byPow)[0];
+      if (aoe) return pick(aoe, Array.isArray(opt.extras) ? `массовый: +${ax} ${ax === 1 ? 'сосед умрёт' : 'соседа умрут'} вместе с целью` : 'массовый: проверяю соседей');
+      if (Array.isArray(opt.extras) && slots.some(s => s.type === 'aoe' && s.on !== false && !s.ready && s.left > 0 && s.left <= AOE_WAIT && mpOk(s) && (s.qty == null || s.qty > 0))) return null;
+    }
+    const atk = hits.sort(byPow)[0];
+    if (atk) return pick(atk, atk.type === 'aoe' && Array.isArray(opt.extras) && opt.extras.length ? 'массовый по цели (соседи толще неё)' : 'удар');
     if (basic) return pick(basic, 'атака');
     return null;
   }
@@ -469,11 +530,15 @@
   // 1.6: спойлер — гном Scavenger (1-я профессия, Spoil с 20 ур.) → Bounty Hunter (Spoil Festival с 40) → Fortune Seeker (Spoil Crush).
   // Крафтеры Artisan/Warsmith/Maestro — не спойлеры: их Lite не ведёт.
   const isSpoiler = p => /^(?:dwarf_)?(?:scavenger|bounty_hunter|fortune_seeker)$/.test(profKey(p));
-  const clsKind = p => (isDestr(p) ? 'destr' : isArcher(p) ? 'archer' : isSpoiler(p) ? 'spoil' : null);
-  const KINDS = ['destr', 'archer', 'spoil'];
-  const KIND_RU = { destr: 'Дестр', archer: 'Лук', spoil: 'Споил' };
+  // 1.7: маг-нюкер — человек Wizard → Sorcerer / Necromancer → Archmage / Soultaker, эльф Elven Wizard → Spellsinger → Mystic Muse,
+  // тёмный эльф Dark Wizard → Spellhowler → Storm Screamer (character.l2Profession «dark_elf_storm_screamer», живое изучение 24.10).
+  // Призыватели (Warlock, Elemental/Phantom Summoner и их 3-я профессия) и хилеры/баферы — не нюкеры: их Lite не ведёт.
+  const isMage = p => /^(?:(?:human|elf|dark_elf)_)?(?:wizard|elven_wizard|dark_wizard|sorcerer|necromancer|spellsinger|spellhowler|archmage|soultaker|mystic_muse|storm_screamer)$/.test(profKey(p));
+  const clsKind = p => (isDestr(p) ? 'destr' : isArcher(p) ? 'archer' : isSpoiler(p) ? 'spoil' : isMage(p) ? 'mage' : null);
+  const KINDS = ['destr', 'archer', 'spoil', 'mage'];
+  const KIND_RU = { destr: 'Дестр', archer: 'Лук', spoil: 'Споил', mage: 'Маг' };
   const profName = p => profKey(p).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  // ok: true — Дестр/Титан, лучник или спойлер (1.6), false — другой класс, null — профессия не прочитана (не мешаем); kind — чей профиль.
+  // ok: true — Дестр/Титан, лучник, спойлер (1.6) или маг (1.7), false — другой класс, null — профессия не прочитана (не мешаем); kind — чей профиль.
   // alt — слот Дестра, лучника или спойлера у этого же героя (первый), alts — все такие слоты.
   function heroClass(prof, slots, slot) {
     const p = profKey(prof), kind = p ? clsKind(p) : null;
@@ -535,14 +600,41 @@
 
   // ---------- телепорт ----------
   // Цена из строки «Телепорт» (основной бот, navigation.teleportCost): Coin of Luck никогда, неизвестная валюта/цена — не летим.
-  function teleportCost(rowText, priceText, curText) {
+  // 1.7: apiCost — цена в адене из списка игры /game/teleport/locations (adenaCost): 0 там и 0 на кнопке — бесплатный переход
+  // (Ashen Bastion: adenaCost 0, у кнопки нет слова «бесплатно»).
+  function teleportCost(rowText, priceText, curText, apiCost) {
     const txt = String(rowText || '').replace(/\s+/g, ' '), cur = String(curText || '');
     const col = /coin|luck|монет|удач|\bcol\b/i.test(cur), aden = /аден|adena/i.test(cur);
     const free = /бесплат|безкоштов|\bfree\b/i.test(txt), raw = priceText == null ? null : String(priceText).trim();
-    const price = raw != null && /^[\d\s.,]+$/.test(raw) && /\d/.test(raw) ? Number(raw.replace(/\D/g, '')) : free ? 0 : null;
+    const apiFree = apiCost === 0 && (!raw || /^[\s0.,]+$/.test(raw));
+    const price = raw != null && /^[\d\s.,]+$/.test(raw) && /\d/.test(raw) ? Number(raw.replace(/\D/g, '')) : free || apiFree ? 0 : null;
     const why = price == null ? 'цена не прочитана' : col ? 'Coin of Luck бот не тратит'
-      : price > 0 && !aden ? 'валюта не подтверждена как адена' : price === 0 && !free && !aden ? 'бесплатный переход не подтверждён' : '';
+      : price > 0 && !aden ? 'валюта не подтверждена как адена' : price === 0 && !free && !aden && !apiFree ? 'бесплатный переход не подтверждён' : '';
     return { price, why };
+  }
+
+  // ---------- Ashen Bastion (1.7) ----------
+  // Локация без карты: страница /ashen-bastion.html — 200 мобов 85 ур., по 25 на странице, у каждого кнопка «Бій» (или «⏳ Nс» —
+  // возрождается ≈30 с). Живое изучение 24.10: соседи массового удара в Ashen — всегда первые два моба списка (Dark Reaper 267 416 и
+  // Infernal Knight 266 329 HP), кого бы ни бил. Все трое умирают вместе, если у главного макс. HP не меньше, чем у соседей: лучший
+  // главный — самый тонкий из таких (бой короче), а цепочка игры «Охотиться дальше» даёт моба тоньше соседей (mob_009 258 718 HP) —
+  // соседи не успевают умереть. rows: [{name, lvl, maxHp, ready}], opt: {aoe — профиль бьёт массовыми, ex: [{name, maxHp}] — соседи
+  // из прошлых боёв, hero — уровень героя, skip(row) — пропустить}. → строка или null.
+  // Из подходящих — больше всего EXP на единицу HP главного: длина боя — HP главного, награда — EXP главного и соседей (у мобов
+  // 021–030 EXP ≈66 тыс. против ≈54 тыс. у 001–010 при том же HP). EXP соседей — opt.exExp, иначе ≈ двое средних из списка.
+  function ashenPick(rows, opt = {}) {
+    const ex = (Array.isArray(opt.ex) ? opt.ex : []).filter(x => x && x.maxHp > 0);
+    const isEx = r => ex.some(x => x.maxHp === r.maxHp && String(x.name || '').toLowerCase() === String(r.name || '').toLowerCase());
+    const hp = r => (r.maxHp > 0 ? r.maxHp : 0), xp = r => (r.exp > 0 ? r.exp : 0);
+    const ok = (rows || []).filter(r => r && r.ready && !(opt.hero > 0 && r.lvl > 0 && r.lvl > opt.hero + 10)
+      && !(typeof opt.skip === 'function' && opt.skip(r)) && !(opt.aoe && isEx(r)));
+    if (!ok.length) return null;
+    const best = (list, add) => list.slice().sort((a, b) => (xp(b) + add) / (hp(b) || 1e12) - (xp(a) + add) / (hp(a) || 1e12) || (hp(a) || 1e12) - (hp(b) || 1e12))[0];
+    if (!opt.aoe) return best(ok, 0);                            // одиночные удары — больше EXP на HP (без EXP — самый тонкий)
+    const exMax = Math.max(0, ...ex.map(x => x.maxHp)), seen = ok.filter(r => xp(r) > 0);
+    const exExp = Number.isFinite(opt.exExp) ? opt.exExp : seen.length ? 2 * seen.reduce((a, r) => a + xp(r), 0) / seen.length : 0;
+    const fit = exMax ? ok.filter(r => hp(r) >= exMax) : [];
+    return fit.length ? best(fit, exExp) : ok.slice().sort((a, b) => hp(b) - hp(a))[0];   // соседи не известны или все тоньше их — самый толстый
   }
 
   const fmtLeft = msLeft => { const s = Math.max(0, Math.round(msLeft / 1000)); return s < 90 ? s + ' с' : Math.round(s / 60) + ' мин'; };
@@ -552,7 +644,8 @@
     PROF_KEYS, DEF_PROF, profCfg, profPatch, rtKind, profRt, profSwap,
     noMobWhy, TGL_DOM_ON, toggleOn, toggleDecide, toggleFlap, TGL_FLAP_MS, TGL_HOLD_MS,
     isSpoiler, SPOIL_OK, SPOIL_FAIL, SPOIL_LOOT, newLines, nameLike, festivalParse, spoilResult, spoilLoot, isMassSpoil, isCrush,
-    BLUNT_ONLY, POLE_ONLY, wpnKind, wpnBySkill, spoilPlan, SPOIL_WAIT, SPOIL_WAIT_MAX, SPOIL_RES, spoilRes, spoilChance, spoilMin, spoilSpots };
+    BLUNT_ONLY, POLE_ONLY, wpnKind, wpnBySkill, spoilPlan, SPOIL_WAIT, SPOIL_WAIT_MAX, SPOIL_RES, spoilRes, spoilChance, spoilMin, spoilSpots,
+    isMage, MAGE_ON, aoeGain, AOE_WAIT, ashenPick };
   root.L2Lite = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

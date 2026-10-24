@@ -18,7 +18,7 @@ test('класс: спойлер — Scavenger, Bounty Hunter, Fortune Seeker; �
     { assert.equal(L.isSpoiler(p), true, p); assert.equal(L.clsKind(p), 'spoil', p); }
   for (const p of ['dwarf_artisan', 'dwarf_warsmith', 'dwarf_maestro', 'dwarf_fighter', 'orc_titan', 'dark_elf_phantom_ranger', '', null])
     assert.equal(L.isSpoiler(p), false, String(p));
-  assert.deepEqual(L.KINDS, ['destr', 'archer', 'spoil']);
+  assert.deepEqual(L.KINDS, ['destr', 'archer', 'spoil', 'mage']);   // 1.7: и маг
   assert.equal(L.KIND_RU.spoil, 'Споил');
   const hc = L.heroClass('dwarf_bounty_hunter', [{ slot: 0, prof: 'orc_titan', lvl: 77 }, { slot: 1, prof: 'dwarf_bounty_hunter', lvl: 70 }], 1);
   assert.equal(hc.ok, true); assert.equal(hc.kind, 'spoil'); assert.equal(hc.alt.kind, 'destr');
@@ -199,7 +199,7 @@ test('бот: спойл в начале боя после банок/лимит
 
 test('бот: панель без класса, прочитанная у БХ (память 1.2.1), — не Дестра, хотя спойлер теперь свой профиль', () => {
   assert.match(bot, /const barMine = \(\) => \(rt\.barCls \? L\.clsKind\(rt\.barCls\) === L\.rtKind\(rt\) : !rt\.char\?\.prof \|\| L\.clsKind\(rt\.char\.prof\) === L\.rtKind\(rt\)\);/);
-  assert.match(bot, /Lite ведёт только Дестра\/Титана, лучника и спойлера/);
+  assert.match(bot, /Lite ведёт только Дестра\/Титана, лучника, спойлера и мага/);   // 1.7: и маг
 });
 
 test('меню: вкладка «⛏ Споил», раздел спойла только у его профиля; места — кнопками «охотиться здесь»; сброс счёта — командой', () => {
@@ -210,6 +210,6 @@ test('меню: вкладка «⛏ Споил», раздел спойла т�
   assert.match(pj, /\$\('spoilReset'\)\.onclick = \(\) => save\(\{\}, 'spoilReset'\);/);
   assert.match(pj, /save\(\{ zone: b\.dataset\.id, zoneName: b\.dataset\.name \}\);/);
   assert.match(pj, /L\.spoilSpots\(rt\.locs, res, lvl\)/);
-  assert.match(pj, /Lite ведёт только Дестра\/Титана, лучника и спойлера/);
+  assert.match(pj, /Lite ведёт только Дестра\/Титана, лучника, спойлера и мага/);   // 1.7: и маг
   assert.doesNotMatch(pj, /\.innerHTML\s*=/, 'имена из игры — только через textContent');
 });

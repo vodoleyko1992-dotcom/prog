@@ -12,6 +12,8 @@
 // Lite 1.5 (21.10, John: «есть сабкласс Лука, хотим бота и Луку научить», «отдельный профиль на дестра, отдельный профиль на лука»):
 // ведёт и лучника; у Дестра и лука свои настройки (lite.cfg p.destr / p.archer, L.profCfg) и своя память — место охоты, счётчик,
 // панель (активный профиль в rt, другой в rt.by). Сменили в игре класс Дестр ↔ лук — бот сам переключает профиль (profSync).
+// Lite 1.7 (24.10, John: «изучи мага в бастионе, массухи юзаем… создай доп модуль МАГ… автоопределение Дестр\лук\маг»): маг —
+// четвёртый профиль; массовые удары по соседям из боя (L.aoeGain), охота в Ashen Bastion по странице-списку (ashenStep).
 (() => {
   'use strict';
   if (window.__l2lite) return;
@@ -21,7 +23,8 @@
   const DEF_RT = { k: { kills: 0 }, zone: null, status: '', statusT: 0, log: [], deaths: [], revive: null, goZone: '', tpTry: [], zoneBlockT: 0,
     tvtDone: '', tvtIn: '', tvtSkip: null, tvtRegT: 0, tvtRegN: null, tvtNoBtn: null, tvt: null, abChal: 0, abBlock: 0,
     char: null, bar: [], barCls: '', clsNote: '', locs: [], locsT: 0, cmdDone: '', limitNoted: 0, beatT: 0, by: {}, arrowOut: null, arrowNote: 0, arrowLow: 0,
-    spoil: null, spoilW: {} };                     // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
+    spoil: null, spoilW: {},                       // 1.6: spoil — счёт спойла (spStat), spoilW — тип оружия по принятым приёмам {номер: blunt|other}
+    aoeEx: {} };                                   // 1.7: соседи массового удара по локациям {зона: {list: [{name, maxHp}], t}}
   // RAW — lite.cfg как есть (общее on + профили), cfg — настройки профиля активного класса (L.profCfg).
   let RAW = {}, cfg = L.profCfg(RAW, 'destr'), rt = { ...DEF_RT }, ready = false, owner = false, gen = 1, dead = false;
 
@@ -406,13 +409,13 @@
   }
   function clsWait(hc) {
     const who = CLS.name, alts = (hc.alts || []).map(a => `${a.name} (${L.slotRu(a.slot)})`).join(' или ');
-    const how = alts ? `переключите в игре класс на ${alts}` : 'войдите в игру Дестром/Титаном, лучником или спойлером либо переключите на него сабкласс';
-    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера: ${how}. Пока жду и ничего не жму`);
+    const how = alts ? `переключите в игре класс на ${alts}` : 'войдите в игру Дестром/Титаном, лучником, спойлером или магом либо переключите на него сабкласс';
+    status(`Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника, спойлера и мага: ${how}. Пока жду и ничего не жму`);
     const sig = who + '|' + hc.name;
     if (rt.clsNote === sig) return;
     setRt({ clsNote: sig });
-    log(`активен ${hc.name} (${who}) — Lite только для Дестра, лучника и спойлера: ничего не жму, жду ${alts || 'Дестра, лучника или спойлера'}`);
-    notify('cls', 'L2wap Lite: нужен Дестр, лук или спойлер', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника и спойлера.`);
+    log(`активен ${hc.name} (${who}) — Lite только для Дестра, лучника, спойлера и мага: ничего не жму, жду ${alts || 'Дестра, лучника, спойлера или мага'}`);
+    notify('cls', 'L2wap Lite: нужен Дестр, лук, спойлер или маг', `Сейчас в игре ${who} — ${hc.name}. Lite ведёт только Дестра/Титана, лучника, спойлера и мага (нюкера).`);
   }
 
   // ---------- антибот: решает только человек ----------
@@ -468,6 +471,7 @@
     if (/\/tvt-arena\.html$/i.test(p)) return 'arena';
     if (/\/town-buffer\.html$/i.test(p)) return 'buffer';
     if (/\/city\.html$/i.test(p)) return 'city';
+    if (/\/ashen-bastion\.html$/i.test(p)) return 'ashen';         // 1.7: Ashen Bastion — список мобов вместо карты
     return 'other';
   }
   const loginPage = () => !$('#l2-hud-legacy-name') && $$('input[type="password"]').some(shown);
@@ -562,7 +566,7 @@
       const s = { ...info, b, action: action.toLowerCase(), i, ready: slotReady(b, info.key, action.toLowerCase()) };
       if (s.type === 'buff' || s.type === 'lowhp') s.active = !!(s.id && act.has(s.id));
       if (s.type === 'toggle') s.active = toggleState(s);
-      if (s.type === 'spoil') s.left = s.ready ? 0 : slotLeft(b, info.key, action.toLowerCase());   // 1.6: ждать ли откат спойла
+      if (s.type === 'spoil' || s.type === 'aoe') s.left = s.ready ? 0 : slotLeft(b, info.key, action.toLowerCase());   // 1.6: ждать ли откат спойла; 1.7 — и массового
       if (tvt) {
         const x = tvtSkill(action, name);
         if (x) { s.tvtOk = x.usable !== false && (s.type === 'basic' || !x.targetType || /enemy|enemies|opponent/i.test(x.targetType)); if (+x.mpCost > 0) s.mp = +x.mpCost; if (L.ms(x.readyAt) > tvtNow() + 50) s.ready = false; }
@@ -663,6 +667,7 @@
       return false;
     }
     progress(); lastActOk = Date.now(); quick = true; pressWhy = 'ok';
+    if (s.type === 'aoe' && MB) MB.aoeN++;          // 1.7: массовый принят — соседей после него видно в блоке «Додаткові цілі»
     if (s.id && L.wpnBySkill(s.id)) wpnLearn(L.wpnBySkill(s.id) === 'blunt' ? 'blunt' : 'other', s.name);   // 1.6: приём прошёл — оружие подходит ему
     if (s.action && s.type !== 'basic') {           // 1.5.1: выстрел добил моба — откат держим сами, иначе в новом бою ранний выстрел и отказ
       const w = cdWait(s.action);
@@ -705,7 +710,7 @@
     await flushRt();
     const back = [$('#battle-back-map')].find(shown) || byText(/^(Назад на карту|Назад на мапу)$/i);
     if (back && fire(back, g) && await waitFor(() => pageKind() !== 'battle', 8000, 100, g)) return;
-    if (alive(g)) await go('/map.html');
+    if (alive(g)) await go(inAshen() ? '/ashen-bastion.html' : '/map.html');   // 1.7: из боя Ashen «назад» — к его списку
   }
   async function afterVictory(g) {
     progress();
@@ -714,6 +719,17 @@
     if (!alive(g)) return;
     if (cfg.kind === 'spoil') spoilVictory();
     const why = stopFarm();
+    // 1.7: маг в Ashen — не цепочкой: «Охотиться дальше» даёт моба тоньше соседей (mob_009, 258 718 HP), и массовый удар добивает
+    // только его (kb/lite-mage-study.md). Следующего главного — не тоньше соседей — бот берёт из списка игры (свой GET той страницы,
+    // что видел последней) и открывает его бой сразу, как кнопка «Бій» игры: без загрузки страницы списка (живой прогон 24.10: 6,9 с
+    // между боями через страницу). Нет такого на странице — к списку: там бот листает.
+    if (!why && inAshen() && aoeProf()) {
+      if (!sess.get('l2lite.ashChainLog', 0)) { sess.set('l2lite.ashChainLog', 1); log('Ashen: после победы — следующий главный из списка, не «Охотиться дальше»: цепочка даёт цель тоньше соседей, массовый удар добил бы одну'); }
+      const nx = await ashenNext(g);
+      if (!alive(g)) return;
+      if (nx) { status(`Ashen: следующий — ${nx.name} (HP ${nx.maxHp})`); await go('/battle.html?spawnId=' + encodeURIComponent(nx.id)); return; }
+      status('Ashen: к списку мобов'); await toMap(g); return;
+    }
     if (!why) {
       const hunt = await waitFor(() => { const b = $('#battle-victory-hunt'); return shown(b) && !b.disabled ? b : null; }, 2500, 100, g);
       if (!alive(g)) return;
@@ -758,8 +774,9 @@
     if (arrowsOut()) { arrowWait(); sess.set('l2lite.left', { id: sp?.key || spawnId(), t: Date.now() }); await toMap(g); return; }
     if (!rowsDone) { rowsDone = true; await rowsAll(g); barFromDom(); }
     if (Date.now() - Math.max(lastActOk, pageT0) > 45000) { log('45 с ни одного принятого хода — выхожу на карту'); lastActOk = Date.now(); await toMap(g); return; }
-    const opt = () => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot });
-    const slots = slotsNow(false), plan = L.planTurn(slots, meStats(), mob, opt());
+    // 1.7: маг — обычной атакой не добиваем; соседи массового удара — из блока игры «Додаткові цілі» (aoeView)
+    const opt = m => ({ now: Date.now(), hpPot: cfg.hpPot, mpPot: cfg.mpPot, lastPot, mage: cfg.kind === 'mage', ...(m && m.maxHp > 0 ? aoeView(m) : {}) });
+    const slots = slotsNow(false), plan = L.planTurn(slots, meStats(), mob, opt(mob));
     // 1.6: спойлер — сначала спойл (как основной бот: Crush/Festival/Spoil в начале боя), но банки, лимиты и лечение — раньше него.
     if (cfg.kind === 'spoil') {
       spbFor(mob);
@@ -767,7 +784,7 @@
     }
     // Lite 1.1: всё на откате — ждём ровно до ближайшей готовности по ответу сервера (не дольше 0,1 с), а не круг с паузой.
     if (!plan) { status('Бой: жду отката'); await nap(Math.max(10, Math.min(readyIn(slots) + 5, 100))); quick = true; return; }
-    await press(plan, g, false, () => { const p = L.planTurn(slotsNow(false), meStats(), mobHp(), opt()); return !!p && p.slot.key === plan.slot.key; });
+    await press(plan, g, false, () => { const m = mobHp(), p = L.planTurn(slotsNow(false), meStats(), m, opt(m)); return !!p && p.slot.key === plan.slot.key; });
   }
   // Через сколько мс станет готов ближайший нужный слот — по модели откатов сервера и своим блокировкам (Infinity — не знаем).
   function readyIn(slots) {
@@ -778,6 +795,49 @@
       if (t > 0) w = Math.min(w, t);
     }
     return w;
+  }
+
+  // ---------- массовый удар (1.7): соседи из боя, память боя, чему учимся ----------
+  const ASHEN = 'ashen_bastion';
+  const inAshen = () => pageKind() === 'ashen' || /^ashen_bastion_mob_/i.test(spawnId()) || snapFresh(60000)?.zone === ASHEN;
+  // Соседи под массовым ударом — блок игры «Додаткові цілі» под полоской моба (battle.whirlwindExtras): [{name, hp, maxHp}] или null, пока он скрыт.
+  function exNow() {
+    const box = $('#battle-whirlwind-extras');
+    if (!box || box.hidden) return null;
+    const rows = [...box.querySelectorAll('.l2-battle-whirlwind-extra')].map(r => {
+      const m = (r.querySelector('.l2-battle-bar-innertext')?.textContent || '').match(/(\d[\d\s  ]*)\s*\/\s*(\d[\d\s  ]*)/);
+      const name = (r.querySelector('.l2-battle-whirlwind-extra__name')?.textContent || r.querySelector('img')?.getAttribute('alt') || '').trim();
+      return { name: name.slice(0, 60), hp: m ? num(m[1]) : NaN, maxHp: m ? num(m[2]) : NaN };
+    });
+    return rows.length ? rows : null;
+  }
+  // Память боя: тот же моб (адрес, имя, макс. HP) и HP не выросло — тот же бой. aoeN — принятые массовые удары; два без соседей —
+  // здесь массовый бьёт одну цель (рядом никого), дальше он идёт по силе наравне с одиночными.
+  let MB = null;
+  function mbFor(mob) {
+    const key = [spawnId(), mobNameNow(), mob.maxHp].join('|');
+    if (!MB || MB.key !== key || mob.hp > (MB.hp ?? mob.hp) + mob.maxHp * 0.05) MB = { key, aoeN: 0, hp: mob.hp };
+    MB.hp = mob.hp;
+    return MB;
+  }
+  function aoeView(mob) {
+    const mb = mbFor(mob), ex = exNow();
+    if (ex) exLearn(ex);
+    return { extras: ex || (mb.aoeN >= 2 ? [] : null), aoeTry: !ex && mb.aoeN < 2 };
+  }
+  // Кого задевает массовый удар в этой локации — в rt.aoeEx (Ashen: по ним бот выбирает главного не тоньше соседей).
+  function exLearn(ex) {
+    const zone = SNAP?.zone || rt.zone?.id || '', list = ex.filter(x => x.maxHp > 0 && x.name).map(x => ({ name: x.name, maxHp: x.maxHp }));
+    if (!owner || !zone || !list.length) return;
+    const old = (rt.aoeEx || {})[zone];
+    if (old && JSON.stringify(old.list) === JSON.stringify(list)) return;
+    setRt({ aoeEx: Object.fromEntries(Object.entries({ ...(rt.aoeEx || {}), [zone]: { list, t: Date.now() } }).slice(-10)) });
+    log(`массовый удар задевает ещё ${list.length}: ${list.map(x => `${x.name} (HP ${x.maxHp})`).join(', ')}${zone === ASHEN ? ' — в Ashen беру цель не тоньше их' : ''}`);
+  }
+  // Профиль бьёт массовыми: маг с включённым массовым ударом на панели (панель — из ответа игры, rt.bar).
+  function aoeProf() {
+    if (cfg.kind !== 'mage') return false;
+    return (barMine() ? rt.bar || [] : []).some(x => { const i = L.skillInfo(x.a, x.n), u = L.skillUse(i, (cfg.skills || {})[i.key], cfg.kind); return !!u && u.on && u.type === 'aoe'; });
   }
 
   // ---------- спойл (1.6, порт modules/loot.js основного бота): Spoil Crush / Spoil Festival / Spoil в начале боя, добыча после победы ----------
@@ -919,11 +979,20 @@
   }
   const badSpawn = new Map();
   let restT0 = 0, noMobT0 = 0;
-  async function mapStep(g) {
-    const S = snapFresh(20000), left = sess.get('l2lite.left', null), leftOk = sess.get('l2lite.leftOk', null);
-    // Ушли из боя с боссом/чемпионом: старый снимок «в бою» не возвращает обратно; выход подтверждён — тем более.
+  // Бой на сервере не закончен — вернуться в него. Ушли из боя с боссом/чемпионом: старый снимок «в бою» не возвращает обратно;
+  // выход подтверждён — тем более.
+  async function battleBack(S) {
+    const left = sess.get('l2lite.left', null), leftOk = sess.get('l2lite.leftOk', null);
     const leaving = left && Date.now() - left.t < 60000 && (S?.t <= left.t + 300 || (leftOk && leftOk.t >= left.t));
-    if (S?.inBattle && S.spawn && !leaving) { log('бой на сервере не закончен — возвращаюсь в него'); await go('/battle.html?spawnId=' + encodeURIComponent(S.spawn)); return; }
+    if (!(S?.inBattle && S.spawn && !leaving)) return false;
+    log('бой на сервере не закончен — возвращаюсь в него'); await go('/battle.html?spawnId=' + encodeURIComponent(S.spawn));
+    return true;
+  }
+  async function mapStep(g) {
+    const S = snapFresh(20000);
+    if (await battleBack(S)) return;
+    // 1.7: герой в Ashen Bastion — карты у локации нет, охота и выход в город — со страницы-списка
+    if (S?.zone === ASHEN) { await go('/ashen-bastion.html'); return; }
     if (!rt.zone && S?.locType === 'city') return outskirts(g);
     if (!rt.zone) {
       status(snapFresh() ? 'Запоминаю место охоты' : 'Жду данные героя от игры');
@@ -972,12 +1041,115 @@
     if (!(await waitFor(() => pageKind() === 'battle', 10000, 100, g)) && alive(g)) { badSpawn.set(m.id, Date.now()); log(`${m.name}: бой не начался — пропускаю его 2 мин`); }
   }
 
+  // ---------- Ashen Bastion (1.7): у локации нет карты — список мобов на своей странице ----------
+  // Строка: «Dark Reaper · Lv 85», «HP 267 416 · EXP 54 349», кнопка «Бій» или «⏳ 25с» (возрождается). Номера спавна в строке нет —
+  // моба помним по имени и макс. HP.
+  function ashenRows() {
+    return $$('#ashen-mobs .ashen-mob').map(a => {
+      const nm = (a.querySelector('.ashen-name')?.textContent || '').trim(), m = nm.match(/^(.+?)\s*[·•]\s*(?:Lv|ур|рів)\.?\s*(\d+)/i);
+      const btn = a.querySelector('button.ashen-fight'), w = (btn?.textContent || '').match(/(\d+)\s*(?:с|s)/i);
+      const n = c => num((a.querySelector(c)?.textContent || '').replace(/^\D+/, ''));
+      return { name: m ? m[1].trim() : nm, lvl: m ? +m[2] : 0, maxHp: n('.ashen-meta__hp'), exp: n('.ashen-meta__exp'),
+        btn, ready: !!btn && !btn.disabled && !w, wait: w ? +w[1] : 0 };
+    }).filter(r => r.btn);
+  }
+  async function ashenReady(ms, g) {
+    let prev = '', same = 0;
+    return waitFor(() => {
+      const rows = ashenRows(); if (!rows.length) { same = 0; return null; }
+      const k = ($('#ashen-page-number')?.textContent || '') + '|' + rows.map(r => r.name + r.maxHp + r.ready).join(',');
+      same = k === prev ? same + 1 : 0; prev = k;
+      return same >= 2 ? rows : null;
+    }, ms, 200, g);
+  }
+  const ashKey = r => 'ashen:' + r.name + '|' + r.maxHp;
+  // Страница списка, что бот видел последней («1 / 8» → смещение 0) — с неё берём следующего главного после победы.
+  const ashOffSave = () => { const n = +((($('#ashen-page-number')?.textContent || '').match(/^\s*(\d+)/) || [])[1] || 0); if (n > 0) sess.set('l2lite.ashOff', (n - 1) * 25); };
+  async function ashenNext(g) {
+    const ex = (rt.aoeEx || {})[ASHEN]?.list || [], exMax = Math.max(0, ...ex.map(x => +x.maxHp || 0));
+    if (!exMax) return null;                        // соседи ещё не известны — выбирать не из чего, к списку
+    let j = null;
+    try { const r = await gameGet(`/game/ashen-bastion/mobs?offset=${Math.max(0, +sess.get('l2lite.ashOff', 0) || 0)}&limit=25`, 5000); j = r.ok ? await r.json() : null; } catch (e) {}
+    if (!alive(g) || !Array.isArray(j?.mobs)) return null;
+    const rows = j.mobs.filter(m => m && typeof m.id === 'string' && /^ashen_bastion_mob_\d+$/.test(m.id)).slice(0, 50)
+      .map(m => ({ id: m.id, name: String(m.name || '').slice(0, 60), lvl: +m.level || 0, maxHp: +m.maxHp || 0, exp: +m.exp || 0, ready: !(+m.respawnSeconds > 0) }));
+    const pick = L.ashenPick(rows, { aoe: true, ex, hero: heroLvl(), skip: r => badSpawn.has(ashKey(r)) });
+    return pick && pick.maxHp >= exMax ? pick : null;
+  }
+  // Листаем страницы списка не больше 3 раз за минуту (sessionStorage — переживает перезагрузку страницы).
+  async function ashenFlip(g, why) {
+    const F = sess.get('l2lite.ashFlip', null), now = Date.now(), f = F && now - F.t0 < 60000 ? F : { t0: now, n: 0 };
+    if (f.n >= 3) return false;
+    const next = $('#ashen-next'), prev = $('#ashen-prev'), b = next && !next.disabled ? next : prev && !prev.disabled ? prev : null;
+    if (!b) return false;
+    sess.set('l2lite.ashFlip', { ...f, n: f.n + 1 });
+    const pg0 = ($('#ashen-page-number')?.textContent || '').trim();
+    status(`Ashen: ${why} — ${b === next ? 'следующая' : 'предыдущая'} страница`);
+    if (!fire(b, g)) return false;
+    await waitFor(() => ($('#ashen-page-number')?.textContent || '').trim() !== pg0, 4000, 100, g);
+    progress();
+    return true;
+  }
+  async function ashenStep(g) {
+    const S = snapFresh(20000);
+    if (await battleBack(S)) return;
+    if (S && S.zone && S.zone !== ASHEN && !S.inBattle) { await go('/map.html'); return; }   // герой не в Ashen — место охоты решает карта
+    if (!rt.zone && !cfg.zone) {
+      status(snapFresh() ? 'Запоминаю место охоты' : 'Жду данные героя от игры');
+      await zoneAsk();
+      if (!rt.zone) { if (Date.now() - pageT0 > 10000) zoneWhy(); await sleep(1000); return; }
+    }
+    if (zoneWrong()) {                                // место охоты другое: из Ashen сначала штатный бесплатный выход в город
+      setRt({ goZone: rt.zone.id });
+      log(`герой в Ashen Bastion, место охоты — «${rt.zone.name}»: выхожу в город`);
+      const ex = $('#ashen-exit-city');
+      if (shown(ex) && fire(ex, g)) { await waitFor(() => pageKind() !== 'ashen', 8000, 200, g); return; }
+      await go('/city.html'); return;
+    }
+    if (limitDone()) { status(`Цель выполнена: убито ${rt.k?.kills || 0} из ${cfg.killLimit}${cfg.tvt ? ' · жду TvT' : ''}`); progress(); await sleep(3000); return; }
+    if (arrowsOut()) { arrowWait(); progress(); await sleep(3000); return; }
+    if (abState() === 'blocked') { status('PvE-фарм заблокирован игрой — жду'); progress(); await sleep(5000); return; }
+    const me = meStats(), pct = me.maxHp > 0 ? me.hp * 100 / me.maxHp : 100;
+    if (pct < 30 && (!restT0 || Date.now() - restT0 < 90000)) { restT0 = restT0 || Date.now(); status(`HP ${Math.round(pct)} % — отдыхаю перед боем`); progress(); await sleep(1500); return; }
+    if (pct >= 30) restT0 = 0;
+    const rows = await ashenReady(10000, g);
+    if (!alive(g)) return;
+    ashOffSave();
+    if (!rows) {
+      const err = ($('#ashen-error')?.textContent || '').trim().slice(0, 80);
+      if (Date.now() - (sess.get('l2lite.ashErr', 0) || 0) > 120000) { sess.set('l2lite.ashErr', Date.now()); log(`Ashen: список мобов не загрузился${err ? ' («' + err + '»)' : ''} — обновляю`); }
+      status('Ashen: список мобов не загрузился — обновляю'); await sleep(3000); if (alive(g)) location.reload(); await sleep(3000); return;
+    }
+    for (const [id, t] of badSpawn) if (Date.now() - t > 120000) badSpawn.delete(id);
+    const aoe = aoeProf(), ex = aoe ? ((rt.aoeEx || {})[ASHEN]?.list || []) : [], exMax = Math.max(0, ...ex.map(x => +x.maxHp || 0));
+    const pick = L.ashenPick(rows, { aoe, ex, hero: heroLvl(), skip: r => badSpawn.has(ashKey(r)) });
+    // Массовый удар: на этой странице нет готового главного не тоньше соседей — сначала поищем на других страницах.
+    if (aoe && exMax && (!pick || pick.maxHp < exMax) && await ashenFlip(g, `нет цели не тоньше соседей (HP ≥ ${exMax})`)) return;
+    if (!pick) {
+      if (await ashenFlip(g, 'здесь готовых мобов нет')) return;
+      const high = rows.filter(r => heroLvl() > 0 && r.lvl > heroLvl() + 10).length, wait = Math.min(...rows.filter(r => r.wait > 0).map(r => r.wait), 30);
+      const why = high === rows.length ? `мобы ${rows[0].lvl} ур. — выше героя +10 (герой ${heroLvl()} ур.)` : `все мобы на странице возрождаются (≈${wait} с)`;
+      if (Date.now() - (sess.get('l2lite.noMobLog', 0) || 0) > 120000) { sess.set('l2lite.noMobLog', Date.now()); log(`Ashen: подходящих мобов нет — ${why}`); }
+      status(`Ashen: ${why} — жду`); progress();
+      await sleep(Math.max(2, Math.min(wait, 20)) * 1000);
+      const rl = $('#ashen-reload');
+      if (alive(g)) { if (shown(rl)) fire(rl, g); else location.reload(); }
+      await sleep(1500); return;
+    }
+    if (aoe && exMax && !sess.get('l2lite.ashPickLog', 0)) { sess.set('l2lite.ashPickLog', 1); log(`Ashen: бью главного не тоньше соседей (HP ≥ ${exMax}) — массовый удар добивает троих за бой`); }
+    status(`Ashen: атакую ${pick.name} (HP ${pick.maxHp || '—'})${aoe ? (exMax ? (pick.maxHp >= exMax ? ' — соседи умрут вместе с ним' : ' — тоньше соседей, другой цели нет') : ' — смотрю, кого задевает массовый') : ''}`);
+    await flushRt();
+    if (!fire(pick.btn, g)) return;
+    if (!(await waitFor(() => pageKind() === 'battle', 10000, 100, g)) && alive(g)) { badSpawn.set(ashKey(pick), Date.now()); log(`${pick.name}: бой не начался — пропускаю его 2 мин`); }
+  }
+
   // ---------- телепорт к месту охоты (только адена; Coin of Luck — никогда) ----------
   async function teleportStep(g) {
     const id = rt.goZone || (zoneWrong() ? rt.zone.id : '');
     if (!id) { await go('/map.html'); return; }
     const S = snapFresh(30000), name = rt.zone?.id === id ? rt.zone.name : id;
-    if (S && (S.zone === id || (rt.zone?.id === id && zoneIs(S.zone))) && !S.inBattle) { setRt({ goZone: '' }); await go(S.locType === 'city' ? '/city.html' : '/map.html'); return; }
+    const there = h => (h.city ? '/city.html' : id === ASHEN ? '/ashen-bastion.html' : '/map.html');   // 1.7: Ashen — без карты
+    if (S && (S.zone === id || (rt.zone?.id === id && zoneIs(S.zone))) && !S.inBattle) { setRt({ goZone: '' }); await go(there({ city: S.locType === 'city' })); return; }
     const tries = (rt.tpTry || []).filter(t => Date.now() - t < 15 * 60000);
     const giveUp = async why => { log(`телепорт в «${name}»: ${why} — 15 мин охочусь там, где стою`); setRt({ goZone: '', zoneBlockT: Date.now() }); await go('/map.html'); };
     if (tries.length >= 3) return giveUp('3 попытки за 15 мин не привели на место');
@@ -996,12 +1168,13 @@
     if (!btn) return giveUp('кнопки телепорта нет');
     const row = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row');
     const cost = L.teleportCost(row?.textContent, row?.querySelector('.l2-teleport-miru-price-num')?.textContent ?? null,
-      [row?.querySelector('.l2-teleport-miru-price-currency')?.textContent || '', ...[...(row?.querySelectorAll('.l2-teleport-miru-price-currency img, .l2-teleport-miru-price-currency [title]') || [])].map(i => (i.getAttribute('alt') || '') + ' ' + (i.getAttribute('title') || '') + ' ' + (i.getAttribute('src') || ''))].join(' '));
+      [row?.querySelector('.l2-teleport-miru-price-currency')?.textContent || '', ...[...(row?.querySelectorAll('.l2-teleport-miru-price-currency img, .l2-teleport-miru-price-currency [title]') || [])].map(i => (i.getAttribute('alt') || '') + ' ' + (i.getAttribute('title') || '') + ' ' + (i.getAttribute('src') || ''))].join(' '),
+      (rt.locs || []).find(x => x.id === id)?.cost);  // 1.7: цена из списка игры (Ashen Bastion — 0 адены)
     if (cost.why) return giveUp(cost.why);
     // Перед оплатой — свежий ответ сервера: герой уже на месте (старый снимок) — не платим; адены не хватает — не жмём.
     const now0 = await heroNow();
     if (!alive(g)) return;
-    if (now0 && !now0.inBattle && (now0.zone === id || (rt.zone?.id === id && zoneIs(now0.zone)))) { setRt({ goZone: '' }); await go(now0.city ? '/city.html' : '/map.html'); return; }
+    if (now0 && !now0.inBattle && (now0.zone === id || (rt.zone?.id === id && zoneIs(now0.zone)))) { setRt({ goZone: '' }); await go(there(now0)); return; }
     const adena = now0 ? now0.adena : S?.adena;
     if (Number.isFinite(adena) && cost.price > adena) return giveUp(`не хватает адены (${cost.price} > ${adena})`);
     setRt({ tpTry: [...tries, Date.now()] }); await flushRt();
@@ -1428,6 +1601,7 @@
     if (!alive(g)) return;
     if (pg === 'battle') return battleStep(g);
     if (pg === 'map') return mapStep(g);
+    if (pg === 'ashen') return ashenStep(g);
     if (pg === 'teleport') return teleportStep(g);
     if (pg === 'city') return cityStep(g);
     if (pg === 'buffer') return bufferStep(g);
