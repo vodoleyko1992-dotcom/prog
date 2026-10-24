@@ -700,9 +700,16 @@ function renderLoot(rt) {
 // v5.2: базы «Фарм ресурсов» и «Рецепты» — читаем из хранилища один раз и держим в памяти, перечитываем только когда они
 // поменялись. Раньше меню перечитывало их (мегабайты: у Stem 1044 источника) на КАЖДОМ обновлении — до 3 раз в секунду,
 // и встроенная панель могла упасть от нехватки памяти («грустный листок» вместо меню).
+// 20.62 (вопрос John 24.10, страница ошибок Chrome указала на слушатель farmDb/recipeDb ниже): слушатели хранилища меню —
+// через onStore. Нет chrome.storage (меню открыто не как страница расширения: файлом с диска, после ↻ расширения в старой
+// вкладке) — меню не падает целиком на первой строке; ошибка внутри одного слушателя не попадает в «Ошибки» как необработанная.
+function onStore(fn) {
+  try { chrome.storage?.onChanged?.addListener((ch, area) => { try { fn(ch || {}, area); } catch (e) { console.warn('[l2bot] слушатель хранилища:', e?.message || e); } }); }
+  catch (e) { console.warn('[l2bot] нет chrome.storage:', e?.message || e); }
+}
 const DBC = {}, dlSig = {};
 async function dbGet(k, def) { if (!(k in DBC)) DBC[k] = (await chrome.storage.local.get(k))[k] || def; return DBC[k]; }
-chrome.storage.onChanged.addListener(ch => { for (const k of ['farmDb', 'recipeDb']) if (ch[k]) { if (ch[k].newValue) DBC[k] = ch[k].newValue; else delete DBC[k]; } });
+onStore(ch => { for (const k of ['farmDb', 'recipeDb']) if (ch[k]) { if (ch[k].newValue) DBC[k] = ch[k].newValue; else delete DBC[k]; } });
 // база предметов (items-il.json) — имя по itemId, грузится один раз
 let ITEMS_IL = null;
 const itemsIl = async () => ITEMS_IL || (ITEMS_IL = await fetch(chrome.runtime.getURL('items-il.json')).then(r => r.json()).catch(() => ({}))); 
@@ -2976,7 +2983,7 @@ async function renderLearn() {
     + (ch.length ? `Изменения игры (${ch.length}):\n` + ch.slice(0, 5).map(c => `• ${ago(c.t)} · ${c.kind}: ${c.what}`.slice(0, 160)).join('\n') : 'Изменений игры пока не замечено');
 }
 let learnT = null;
-chrome.storage.onChanged.addListener(ch => { if (ch.learn && !learnT) learnT = setTimeout(() => { learnT = null; if (document.querySelector('#tab-svc.act')) renderLearn(); }, 2000); });
+onStore(ch => { if (ch.learn && !learnT) learnT = setTimeout(() => { learnT = null; if (document.querySelector('#tab-svc.act')) renderLearn(); }, 2000); });
 document.querySelector('nav button[data-tab="svc"]')?.addEventListener('click', () => renderLearn());
 renderLearn();
 $('learnShots').addEventListener('change', async e => {
@@ -3213,7 +3220,7 @@ function loadSoon() {
   if (loadTimer) return;
   loadTimer = setTimeout(() => { loadTimer = null; loadT = Date.now(); load(); }, wait);
 }
-chrome.storage.onChanged.addListener(ch => {
+onStore(ch => {
   if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
   if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon();   // 20.13 (шаг 7): и живой статус live@Ник
   // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
@@ -3459,7 +3466,7 @@ function panelRefresher(el, refresh, delay) {
     if (!el.contains(document.activeElement)) refresh().catch(() => {}); };
   const soon = () => { if (t) return; t = setTimeout(() => { t = null; run(); }, delay); };
   // общий слушатель меню (выше) уже обновил dockMin: раскрытие дока сразу обновляет видимую панель
-  chrome.storage.onChanged.addListener(ch => { if (!(ch.cfg || ch.rt || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
+  chrome.storage.onChanged?.addListener(ch => { if (!(ch.cfg || ch.rt || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
   const wake = () => { if (stale) soon(); };
   document.addEventListener('l2:tabchange', wake); document.addEventListener('l2:cardtoggle', wake); document.addEventListener('visibilitychange', wake);
   return { wake };
