@@ -1075,6 +1075,18 @@ function limitHitsIn(ctx) {                       // удары цели по н
 // (защита на время низкого HP), затем Frenzy, затем Zealot
 const LIMIT_ORD = { 139: 0, 176: 1, 420: 2 };
 const limitDiveFresh = ctx => !!ctx?.limitDiveT && Date.now() - ctx.limitDiveT < 10000;
+// 20.59 (John 24.10: «на эпиках сливайся под френзи и фарми их под френзи»; лог 19:13–19:15 Queen Ant, герой 47, MaxHP 10293:
+// удары 1577–1915, Trance не жался — «HP после Battle Trance не покрывает запас под удары РБ», банки держали HP 80–100 %).
+// На эпике (cfg.epicFrenzy, ВКЛ): слив, если HP после Trance переживёт один замеренный удар до Guts (P.Def +150 %); 90 с после слива
+// HP держим в зоне Frenzy (≤ 30 %): банка только когда до смерти остаётся меньше 1,3 свежего удара, процентный отход эпика не срабатывает
+const epicFrenzyOn = ctx => env.cfg.epicFrenzy !== false && !!ctx?.rb && !!env.epicById?.(ctx.rb.id);
+const FRENZY_HOLD_MS = 90000;
+const epicFrenzyHold = ctx => epicFrenzyOn(ctx) && !!ctx.limitDiveT && Date.now() - ctx.limitDiveT < FRENZY_HOLD_MS;
+function epicFrenzyFloor(ctx, me) {               // HP, ниже которого под Frenzy на эпике пьём банку: 1,3 свежего удара (после слива), не меньше 8 %
+  const all = (ctx.rb?.hits || []).filter(n => Number.isFinite(n) && n > 0), fresh = all.slice(ctx.limitDiveHits ?? 0);
+  const hit = Math.max(0, ...(fresh.length ? fresh : all));
+  return Math.round(Math.max(me.max * 0.08, hit * 1.3));
+}
 function limitPlan(ctx, me, mp, mob) {
   ctx.limitSkip = ''; ctx.limitUnsafe = false;
   const prof = String((env.rt.classCur ? env.rt.classCur.prof : env.rt.prof) || '').replace(/[_-]/g, ' ');
@@ -1095,7 +1107,8 @@ function limitPlan(ctx, me, mp, mob) {
   const low = buffs.find(x => me.pct <= x.il.pc.hp && affordable(x.b, mp, 0));
   if (low) {
     // Ниже20% или перед смертельным ударом сначала обычное аварийное восстановление.
-    if (me.pct < 20 || me.cur - hpCost(low) <= spike + 2 * hit) { ctx.limitUnsafe = true; return null; }
+    // 20.59: на эпике под Frenzy — достаточно пережить один удар (Guts первым режет урон)
+    if (epicFrenzyOn(ctx) ? me.pct < 12 || me.cur - hpCost(low) <= hit : me.pct < 20 || me.cur - hpCost(low) <= spike + 2 * hit) { ctx.limitUnsafe = true; return null; }
     return { kind: 'buff', b: low.b, bn: low.bn };
   }
   // Guts (P.Def +100 %) — только вместе с атакующим лимитом: ради одной защиты HP не сливаем
@@ -1105,6 +1118,11 @@ function limitPlan(ctx, me, mp, mob) {
   const need = actionMp(b) + buffs.reduce((sum,x) => sum + actionMp(x.b), 0);
   if (!mp || mp.cur < need) { ctx.limitSkip = 'не хватает MP на Battle Trance и готовые лимиты'; return null; }
   const after = Math.floor(me.max * .25) - buffs.reduce((sum,x) => sum + hpCost(x), 0);
+  if (epicFrenzyOn(ctx)) {                        // 20.59: эпик — слив, если после Trance переживу один замеренный удар (×1,15)
+    if (!(hit > 0)) { ctx.limitSkip = 'Frenzy на эпике: удары эпика ещё не замерены — HP не сливаю'; return null; }
+    if (after < me.max * .20 || after <= hit * 1.15) { ctx.limitSkip = `Frenzy на эпике: после Battle Trance ${after} HP — удар ${Math.round(hit)} не переживу`; return null; }
+    return { kind: 'trance', b };
+  }
   if (after < me.max * .20 || ctx.rb && (!(hit > 0 || spike > 0) || after <= spike + hit * (buffs.length + 2))) {
     ctx.limitSkip = 'HP после Battle Trance не покрывает запас под удары РБ или замер ударов неизвестен'; return null;
   }
@@ -2106,7 +2124,12 @@ async function battle() {
       // 8.0.3 (лог 11.10 09:15:35: прогноз «РБ ≈0:16, банки: нужно ≈0», РБ 6 %, а бот выпил 5 банок подряд — 7 с без урона): прогноз решил,
       // что РБ умрёт раньше опасного HP без банок (usePots=false) — в полосе не пьём, только аварийно (HP ниже спецудар + 2 удара)
       if (potAt > 0 && ctx.rb.usePots === false && me.cur > emergencyFloor) potAt = -1;
-      if (frenzyDive(ctx, me)) { potAt = -1; if (!ctx.rb.diveNote) { ctx.rb.diveNote = 1; env.rec('B', 'РБ', `слив под Frenzy: банки не пью, пока HP не упадёт до ${env.ilOf(slotsBy('Frenzy')[0])?.pc?.hp || 30} % — там Frenzy`); } }
+      // 20.59: эпик под Frenzy — HP держим в зоне Frenzy, банка только у края (epicFrenzyFloor)
+      if (epicFrenzyHold(ctx)) {
+        const floor = epicFrenzyFloor(ctx, me);
+        potAt = me.cur <= floor ? 100 : -1;
+        if (!ctx.rb.frenzyHoldNote) { ctx.rb.frenzyHoldNote = 1; env.rec('B', 'эпики', `${ctx.name}: бью под Frenzy — HP держу ≤ 30 %, банка только при HP ≤ ${floor}`); }
+      } else if (frenzyDive(ctx, me)) { potAt = -1; if (!ctx.rb.diveNote) { ctx.rb.diveNote = 1; env.rec('B', 'РБ', `слив под Frenzy: банки не пью, пока HP не упадёт до ${env.ilOf(slotsBy('Frenzy')[0])?.pc?.hp || 30} % — там Frenzy`); } }
     }
     const hpPot = me && me.pct <= potAt && me.cur < me.max ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;
     const potLeft = env.qty(hpPot);
@@ -2184,7 +2207,7 @@ async function battle() {
       ? 'Лимиты: Battle Trance — снижаю HP до 25% для Guts/Frenzy/Zealot'
       : `Лимиты (HP ${me.pct | 0}%): ${env.cleanTitle(plan.b.title)}`, false, needed);
     if (actor() !== before || env.canAct?.() === false || !env.on || !env.tabOwner) return AGAIN;
-    if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) { ctx.limitTranceUnverified = true; ctx.limitDiveT = Date.now(); }
+    if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) { ctx.limitTranceUnverified = true; ctx.limitDiveT = Date.now(); if (ctx.rb) { ctx.limitDiveHits = (ctx.rb.hits || []).length; ctx.rb.frenzyHoldNote = 0; } }
     // Не предполагаем25% после клика: следующий круг читает настоящее HP. Неизвестный исход не повторяем сразу.
     ctx.block[key] = result === 'unavail' ? Infinity : Date.now() + (result === true ? (plan.kind === 'trance' ? 30000 : 5000) : result === 'nomp' ? NOMP_MS : 3000);
     if (result === true && plan.kind === 'buff') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [plan.bn]: Date.now() } })?.catch?.(() => {});   // 20.41: без ожидания записи (память вкладки обновлена сразу)
@@ -2272,7 +2295,7 @@ async function battle() {
       // Выходим только штатной кнопкой, подтверждаем 2xx POST /game/battle/leave.
       // Для каждого эпика свой флаг непригодности выхода; глобальный epicLeaveBad больше не используется.
       if (ep && me && !ctx.rb.retreated && !((env.rt.epicDb?.[env.epicById(ctx.rb.id).k]?.leaveBadUntil || 0) > Date.now()) &&
-          env.cfg.epicRetreatHp > 0 && (me.pct <= env.cfg.epicRetreatHp && !limitDiveFresh(ctx) || v.hopeless || v.lethal)) {
+          env.cfg.epicRetreatHp > 0 && (me.pct <= env.cfg.epicRetreatHp && !limitDiveFresh(ctx) && !epicFrenzyHold(ctx) || v.hopeless || v.lethal)) {
         const leave = env.$q('#battle-back-map') || env.$q('#l2-nav-bottom a[data-nav-role="outskirts"]');
         if (!leave) {
           await env.epicDbSet(env.epicById(ctx.rb.id).k, { leaveBadUntil: Date.now() + 3600000 });
@@ -3130,6 +3153,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitDiveFresh, armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
+ return { limitDiveFresh, epicFrenzyOn, epicFrenzyHold, epicFrenzyFloor, armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
  };
 })(globalThis);

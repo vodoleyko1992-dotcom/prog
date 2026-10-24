@@ -2058,14 +2058,17 @@ function rbAssess(ctx, me, mob) {
   // window. Keep raw incoming hits/specials: they remain emergency evidence.
   const changed = S.contextSet ? S.contextKey !== contextKey : !!context?.managed;
   const interrupted = S.last && now - S.last > 10000;
-  if (changed || interrupted) {
+  // 20.59: свой слив Battle Trance (HP → 25 %) — не удар РБ: окно замера HP начинаем заново, иначе «удар на 75 % — смертельно» и отход
+  const dove = ctx.limitDiveT > 0 && S.diveSeen !== ctx.limitDiveT;
+  if (dove) S.diveSeen = ctx.limitDiveT;
+  if (changed || interrupted || dove) {
     S.samples = []; S.last = 0; S.dpsNoteT = 0; S.dpsT = 0; S.lossT = 0;
     S.badSince = 0; S.forecastAt = 0; S.forecastVerdict = null;
-    S.contextMixed = S.contextSet ? true : false;
+    if (changed || interrupted) S.contextMixed = S.contextSet ? true : false;
     S.windowHitBase = S.hitSeen ?? (S.hits || []).length;
     env.rbLive = null;
     env.setRt({ rbForecast: { id: S.id, name: ctx.name, t: now, status: 'measuring',
-      note: interrupted ? 'После перерыва нужен новый замер' : 'Состав изменился — нужен новый замер',
+      note: interrupted ? 'После перерыва нужен новый замер' : dove && !changed ? 'Слив HP под Frenzy — нужен новый замер' : 'Состав изменился — нужен новый замер',
       dps: null, tKill: null, hpPct: Math.round(mob.cur / Math.max(1, mob.max) * 100),
       samples: 0, hits: 0, worstHit: Math.max(0, ...(S.hits || [])), loss: null } });
   }

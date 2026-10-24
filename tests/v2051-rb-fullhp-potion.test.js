@@ -30,7 +30,7 @@ function fixture({hp=22873,max=22873,pct=hp/max*100,sp=1329,p90=13002,hits=[],rb
   pulse:async()=>{global=0;if(change&&stage==='global'){const f=change;change=null;f()}},
   gameFree:async()=>{if(change&&stage==='gameFree'){const f=change;change=null;f()}return{dT:0,gE:0}},
   lockA:0,lockB:0,noticeText:()=>'',fastMark:()=>{},affordable:()=>true,
-  hpReserveBlocked:()=>false,frenzyDive:()=>false,slotsBy:()=>[],
+  hpReserveBlocked:()=>false,frenzyDive:()=>false,epicFrenzyHold:()=>false,epicFrenzyFloor:()=>0,slotsBy:()=>[],
   drainPick:()=>null,mageCombat:()=>false,drainPreferred:()=>false,healPick:()=>null,
   lastHpPot:0,lastAct:0,lastActT:0};
  vm.createContext(box);vm.runInContext(priceSource+'\n'+actSource+'\nthis.actualAct=act;',box);

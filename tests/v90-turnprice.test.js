@@ -32,7 +32,7 @@ const run = ({ pct, potOn = false, price = true, known = true }) => {
   const env = { cfg: { hpPotAt: 50, stopHp: 25, rbBandAuto: true, rbTurnPrice: price, rbPotAt: 75, rbPotTo: 80 },
     rt: { rbDb: { rb1: known ? { sp: 1995, hitP90: 359 } : {} } }, rec: (...a) => recs.push(a.join(' ')) };
   const ctx = { rb: { id: 'rb1', potOn, hits: [] } };
-  const sb = { env, ctx, me, Math, rbTurnHeal, frenzyDive: () => false, slotsBy: () => [] };
+  const sb = { env, ctx, me, Math, rbTurnHeal, frenzyDive: () => false, epicFrenzyHold: () => false, slotsBy: () => [] };
   return { potAt: vm.runInNewContext(`(() => {\n${band}\nreturn potAt; })()`, sb), ctx, recs };
 };
 assert.equal(run({ pct: 80 }).potAt, -1, 'known RB, 80 % → no potion');
