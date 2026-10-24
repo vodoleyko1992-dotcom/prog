@@ -348,6 +348,9 @@ function weaponOf(id, extra = {}) {
   return { id: +id, en: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: Number.isFinite(it.pa) ? it.pa + (extra.pb || 0) : null, ma: Number.isFinite(it.ma) ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, requiredLevel:it.requiredLevel, weaponMode:it.weaponMode, ...extra };
 }
 
+// 20.62 (анонс Rebirth 25.10): оружие/щиты Rebirth — атака/блок на экземпляре, случайные бонусы и заточка до +10 000 за CoL.
+// Каталог показывает только базу, поэтому сила такого экземпляра боту неизвестна: надетое не снимаем, из сумки сами не надеваем
+const isRebirthRow = r => !!r && typeof r === 'object' && (+r.rebirthWeaponAttack > 0 || +r.rebirthShieldPoints > 0 || !!r.rebirthAffixes);
 const GRADE_RANK = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 function rankWeapons(list) {
   const { types, src } = classWeaponTypes(), lv = env.heroLevel() || env.rt.lvl || 99, mage = types[0] === env.MAGE;
@@ -368,6 +371,7 @@ async function readWeaponsPage() {               // текущая страни�
     await resolveWeaponItem(j.itemId);
     const w = weaponOf(j.itemId, { ench: +j.enchant || 0, pb: +j.enchantPAtkBonus || 0, mb: +j.enchantMAtkBonus || 0, where: 'сумка',
       name: env.baseName(r.querySelector('.l2-char-bag-name')?.textContent), inst: j.targetInstanceId || '' });
+    if (w && isRebirthRow(j)) Object.assign(w, { rebirth: true, unknown: true, pa: null, ma: null });
     if (w) out.push(w);
   }
   return out;
@@ -388,6 +392,7 @@ async function equippedWeapon() {                // надетое: иконка
     const ench = snapshot ? +(slot?.enchant || 0) : modalEnchant;
     const pb = slot?.enchantPAtkBonus, mb = slot?.enchantMAtkBonus;
     const known = snapshot ? !ench || Number.isFinite(pb) && Number.isFinite(mb) : ench === 0;
+    if (snapshot && isRebirthRow(slot)) return { ...w, ench: ench || 0, rebirth: true, unknown: true, enchantUnknown: true, pa: null, ma: null, inst: 'eq:l1' };
     return { ...w, ench: ench || 0, enchantUnknown: !known, ...(snapshot ? { inst: 'eq:l1' } : {}),
       pa: known ? w.pa == null ? null : w.pa + (snapshot ? +pb || 0 : 0) : null,
       ma: known ? w.ma == null ? null : w.ma + (snapshot ? +mb || 0 : 0) : null };
@@ -606,6 +611,6 @@ async function invScanStart(back) {
   await env.setRt({ invScan: { step: 'prof', back: back || location.pathname + location.search, t: Date.now() } });
   return invScanStep();
 }
- return { resolveWeaponItem, weaponItem, weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
+ return { isRebirthRow, resolveWeaponItem, weaponItem, weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
  };
 })(globalThis);

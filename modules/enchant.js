@@ -67,7 +67,9 @@ function bagToken(row,slot) {
 function snapshotItems(snap,hints=catalog) {
   if(!snap?.inventory||!hints?.itemSlotHints||!hints?.itemGradeHints)return [];
   const out=[];
+  // 20.62 (анонс Rebirth 25.10): старые свитки на вещи Rebirth не действуют, их заточка — за CoL; такие вещи в выбор не попадают
   const add=(v,eqSlot)=>{const r=rowOf(v);if(!r||!r.qty||r.itemId===910600)return;
+    if(v&&typeof v==='object'&&(+v.rebirthWeaponAttack>0||+v.rebirthShieldPoints>0||v.rebirthAffixes))return;
     const slot=hints.itemSlotHints[r.itemId],grade=hints.itemGradeHints[r.itemId],category=TYPES[slot];if(!category||!['D','C','B','A','S'].includes(grade))return;
     const token=eqSlot?'eq:'+eqSlot:bagToken(r,slot);if(!token)return;
     const item={...r,slot,eqSlot:eqSlot||'',grade,category,targetInstanceId:token,name:hints.itemNamesRu?.[r.itemId]||hints.itemNamesUk?.[r.itemId]||hints.itemNamesEn?.[r.itemId]||'#'+r.itemId};
