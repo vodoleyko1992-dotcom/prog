@@ -67,7 +67,10 @@ assert.equal(G.armorTypeOf({ nameUk: 'Кланова бригандина', slot
   let near = false, rev = 100, conflictOnce = true; const posts = [], recs = [];
   const state = { ch: W };
   const res = (status, j) => ({ ok: status >= 200 && status < 300, status, json: async () => j });
-  const env = { cfg: {}, rt: { char: 'Hero', subGo: { t: Date.now(), slot: 1, kit: 'auto', wt: 'auto', shield: 'auto' } }, on: true, tabOwner: true,
+  // 20.60 (лог 24.10 22:16): в памяти — оружие прежнего класса «надето»; своё надевание идёт мимо hook.js и передаётся обработчику оружия
+  const notes = [];
+  const env = { cfg: {}, rt: { char: 'Hero', subGo: { t: Date.now(), slot: 1, kit: 'auto', wt: 'auto', shield: 'auto' }, weaponsT: 1, weapons: [{ id: 299, where: 'надето' }] }, on: true, tabOwner: true,
+    equipNote: async b => { notes.push(b); env.rt.weapons = [{ id: b.itemId, where: 'надето' }]; },
     isBattle: () => false, sleep: async () => {}, setStatus: () => {}, rec: (...a) => recs.push(a.join(' ')), rtCommit: async () => true,
     setRt: async p => { Object.assign(env.rt, p); return { ok: true }; }, classNote: ch => { env.noted = ch.l2Profession; },
     gameGet: async p => p === '/character' ? res(200, { character: clone(state.ch) }) : p === '/character/catalog-hints' ? res(200, C)
@@ -107,6 +110,8 @@ assert.equal(G.armorTypeOf({ nameUk: 'Кланова бригандина', slot
   assert.equal(id(eq.l1), 164); assert.equal(id(eq.l2), 9002285); assert.equal(id(eq.l3), 7864); assert.equal(id(eq.neck), 8191);
   assert.deepEqual([id(eq.le1), id(eq.le2)].sort(), [6656, 6659]);
   assert.equal(location.href, '/map.html', 'после переодевания страница перечитывается');
+  assert.equal(notes.length, 1, 'надетое оружие передано один раз');
+  assert.deepEqual([notes[0].action, notes[0].itemId], ['equip', 164], 'память оружия — Елізій, не пика прежнего класса');
   // нет класса в слоте — отказ без запросов
   const n0 = posts.length; env.rt.subGo = { t: Date.now(), slot: 3 };
   assert.equal(await M.step(), true); assert.equal(env.rt.subGoSay.ok, false); assert.equal(posts.length, n0);

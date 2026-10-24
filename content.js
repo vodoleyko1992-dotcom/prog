@@ -6825,7 +6825,7 @@ L2V7Modules.crafterkit = L2V7Factories.crafterkit({ get actionWait(){return acti
 // поэтому ответ смены передаём тем же обработчикам, что и сетевой /character/subclasses/switch игры
 L2V7Modules.subgo = L2V7Factories.subgo({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get actionWait(){return actionWait}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get setStatus() { return setStatus; },
   get on() { return on; }, get tabOwner() { return tabOwner; }, get isBattle() { return isBattle; }, get sleep() { return sleep; }, get rtCommit() { return rtCommit; },
-  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get crafterKit() { return L2V7Modules.crafterkit; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get crafterKit() { return L2V7Modules.crafterkit; }, get equipNote() { return weaponEquipNote; },
   get taskNow() { return () => L2EngineCore.selectedTask(cfg, rt) ?? autonomyMode(); },
   get classNote() { return ch => { L2V7Modules.story.charNote(ch); L2V7Modules.subclass.charNote(ch); L2V7Modules.buffs?.vipNote?.(ch); L2V7Modules.warlock?.autoEnableClass?.(ch)?.catch?.(() => {}); }; } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»

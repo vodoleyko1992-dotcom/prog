@@ -84,6 +84,11 @@
  const apow = it => num(it.st.pDef) + num(it.st.mDef) + it.en * 3;
  const jpow = (it, mage) => num(it.st.jewelMdefFlat) + num(it.st.jewelMaxHp) / 10 + num(it.st.pDef) + (mage ? num(it.st.jewelryMAtk) : 0) + (Array.isArray(it.st.epicExtraLinesUk) ? 100 : 0) + it.en * 3;
  const best = (list, pow) => [...list].sort((a, b) => gr(b) - gr(a) || pow(b) - pow(a) || (a.where === 'bag') - (b.where === 'bag'))[0] || null;
+ // 20.60 (лог 24.10 22:10, John: «есть АК кольцо, оно ЛУЧШЕ, не одевает сам»): при смене саба Ring of Queen Ant +12 (B, эпик) снят ради
+ // Кільце фантому A — грейд стоял выше всего. Эпическая бижутерия (свои строки каталога epicExtraLinesUk или известный ID) идёт первой
+ const EPIC_JEWEL = new Set([6656, 6657, 6658, 6659, 6660, 6661, 6662, 8191]);
+ const epicJ = it => Array.isArray(it.st?.epicExtraLinesUk) && it.st.epicExtraLinesUk.length > 0 || EPIC_JEWEL.has(it.id) ? 1 : 0;
+ const jorder = mage => (a, b) => epicJ(b) - epicJ(a) || gr(b) - gr(a) || jpow(b, mage) - jpow(a, mage) || (a.where === 'bag') - (b.where === 'bag');
  /* план комплекта: { slots: { l1: item|null, … }, why: [...] }. opt: { lvl, prof, branch, wt: ['pole'] — вид оружия (порядок — приоритет),
     shield: true|false|null (null — по классу: маг и одноручное — да), armor: 'heavy'|'light'|'magic'|null } */
  function planGear(ch, cat, opt = {}) {
@@ -128,10 +133,10 @@
   // бижутерия: по две серьги/кольца (разные экземпляры: стопка из двух одинаковых — обе)
   for (const [kind, keys] of Object.entries(PAIRS)) {
    const L = all.filter(it => it.slot === kind).flatMap(it => Array.from({ length: Math.min(2, it.n) }, () => it));
-   const s = [...L].sort((a, b) => gr(b) - gr(a) || jpow(b, mage) - jpow(a, mage));
+   const s = [...L].sort(jorder(mage));
    slots[keys[0]] = s[0] || null; slots[keys[1]] = s[1] || null;
   }
-  slots.neck = best(all.filter(it => it.slot === 'neck'), it => jpow(it, mage));
+  slots.neck = [...all.filter(it => it.slot === 'neck')].sort(jorder(mage))[0] || null;
   return { slots, armor: A.T, mage, why };
  }
  // что поменять: надетое ≠ плану. Пары серёг/колец сравниваем как набор (порядок слотов не важен)
@@ -160,7 +165,7 @@
  }
  const body = (op, rev) => op.op === 'unequip' ? { action: 'unequip', slot: op.slot, expectedRevision: rev }
   : { action: 'equip', itemId: op.it.id, enchant: op.it.en, targetInstanceId: op.it.token, ...(op.it.slot === 'rhand' && op.it.row.enchantPAtkBonus != null ? { enchantPAtkBonus: Math.floor(num(op.it.row.enchantPAtkBonus)), enchantMAtkBonus: Math.floor(num(op.it.row.enchantMAtkBonus)) } : {}), expectedRevision: rev };
- const L2SubGear = { planGear, diff, body, pool, bagToken, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
+ const L2SubGear = { planGear, diff, body, pool, bagToken, epicJ, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
  root.L2SubGear = L2SubGear;
  // 20.43 (John 21.10): вкладка «Сабкласс» → «▶ Старт»: rt.subGo {slot, kit, wt, shield, t}. Шаг ядра (loopMenuJobs, вне боя):
  // к Reorin (бесплатный с VIP телепорт — сразу POST, платный — обычный перелёт zoneGo с защитой оплаты) → switch → комплект → страница карты.
@@ -240,8 +245,17 @@
     const f = await hero(); if (!sameJob(J)) return true;
     if (!f) break; cur = f; rev = f.revision;
    }
+   // 20.60 (лог 24.10 22:16, John: «на коте какого фига достал и активировал физические соски»): свой POST надевания идёт мимо hook.js —
+   // после смены Maestro → Arcana Lord в памяти осталось «надето: Клановий штормер» (пика крафтера), и панель боя сменила благословенные
+   // заряды духа S на заряды души S. Надетое оружие из свежего снимка передаём тому же обработчику, что и клик игры
+   const l1 = cur.inventory?.eq?.l1, wId = +(l1 && typeof l1 === 'object' ? l1.itemId : l1) || 0;
+   if (wId && !(env.rt.weaponsT && (env.rt.weapons || []).some(w => w.where === 'надето' && +w.id === wId))) {
+    const wr = typeof l1 === 'object' ? l1 : {};
+    try { await env.equipNote?.({ action: 'equip', itemId: wId, expectedRevision: cur.revision, targetInstanceId: wr.targetInstanceId, enchant: wr.enchant, enchantPAtkBonus: wr.enchantPAtkBonus, enchantMAtkBonus: wr.enchantMAtkBonus }); } catch (_) {}
+    if (!sameJob(J)) return true;
+   }
    const P = planGear(cur, C, opt), left = diff(cur, P).filter(o => o.op === 'equip');
-   const worn = Object.entries(P.slots).filter(([, v]) => v).map(([k, v]) => `${SLOT_RU[k]}: ${v.name}${v.en ? ' +' + v.en : ''}`);
+   const worn =Object.entries(P.slots).filter(([, v]) => v).map(([k, v]) => `${SLOT_RU[k]}: ${v.name}${v.en ? ' +' + v.en : ''}`);
    const head = `${profRu(cur.l2Profession)} ${cur.level}${opt.kind ? ` (сборка ${opt.kind === 'rb' ? 'на РБ' : 'на фарм'})` : ''}`;
    const why = `${head}: надето ${done.length ? done.length + ' вещ.' : 'всё уже было на месте'}${P.why.length ? ' · ' + P.why.join(', ') : ''}${fail.length ? ' · не удалось: ' + fail.slice(0, 4).join('; ') : ''}${left.length ? ' · осталось ' + left.length : ''}`;
    await finish(J, !fail.length && !left.length, why, { worn, changed: done.length > 0, slot: cur.classSlots?.activeSlot });

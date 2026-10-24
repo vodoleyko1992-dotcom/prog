@@ -216,6 +216,11 @@ async function shotSlotAdd() {
 }
 
 const shotSlots = () => [...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
+// 20.60 (лог 24.10 22:16, Warlock): после смены класса сабом в памяти осталась пика крафтера «надето» — бот снял благословенные заряды
+// духа S и включил заряды души S клановому кастеру. Тип зарядов на панели сверяем с сервером так же, как грейд (#373). Подтверждённый
+// ответ помним 60 с — keepShots вызывается каждый ход, а свой GET /character на каждом ходу не нужен
+let shotVer = null;
+const shotLabel = x => String(x?.title || '').replace(/^#\d+\s*[—–-]\s*/, '');
 async function keepShots() {
   if (env.rt.shotMismatchPending || env.shotGrade?.()?.blocked) return;
   const wanted = () => env.rt.weaponsT ? env.shotGrade?.()?.g : null;
@@ -223,8 +228,11 @@ async function keepShots() {
     return (g && shotSlots().find(x => shotGradeOf(x) === g && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) || env.shotSlot(); };
   let b = pick();
   // 23.10 (лог22:41): старый кэш B не должен заменять правильные A на панели. Перед заменой сверяем оружие с сервером.
-  if (b && wanted() && shotGradeOf(b) && wanted() !== shotGradeOf(b) && env.syncShotWeapon) {
+  const sig = () => `${env.rt.weaponsT || 0}|${wanted()}|${env.shotsMage?.() ? 'm' : 'f'}|${shotGradeOf(b)}|${shotLabel(b)}`;
+  if (b && wanted() && shotGradeOf(b) && (wanted() !== shotGradeOf(b) || !(env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE).test(shotLabel(b))) && env.syncShotWeapon
+    && !(shotVer && shotVer.sig === sig() && Date.now() - shotVer.t < 60000)) {
     if (!await env.syncShotWeapon(true) || env.on === false || env.tabOwner === false) return;
+    shotVer = { sig: sig(), t: Date.now() };
     b = pick();
   }
   if (!b) { await shotSlotAdd(); b = pick(); }

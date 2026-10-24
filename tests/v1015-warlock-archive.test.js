@@ -4,12 +4,16 @@ const {fixture}=require('./warlock-fixture.cjs');
 const expected=f=>({char:f.env.rt.char,pendingId:f.env.rt.petFull?.pending?.id,budgetEpoch:f.env.rt.petFull?.budgetEpoch||0});
 async function unknown(opts={}) {const f=fixture({post:()=>{throw Error('timeout')},...opts});await f.step();f.ch.revision++;return f;}
 
-test('off archive preserves uncertain money/history and cannot renew within original default budget',async()=>{
+// 20.60 (John 24.10: «Убери вообще лимит на Бафф суммонов»): общего бюджета нет. Неизвестная попытка держит новую покупку только до конца
+// возможного срока её эффекта (archiveFence.possibleUntil), а не навсегда в пределах бюджета
+test('off archive preserves uncertain money/history and renews only after the possible effect window',async()=>{
  const f=await unknown();const before=structuredClone(f.env.rt.petFull.pending);f.env.on=false;
  assert.equal((await f.api().archiveUnknown(expected(f))).ok,true);
  assert.equal(f.env.on,false);assert.equal(f.api().summary().reserved,10000000);assert.equal(f.env.rt.petFull.spent||0,0);
  assert.equal(f.env.rt.petFull.history[0].id,before.id);assert.equal(f.env.rt.petFull.history[0].outcome,'unknown');
- assert.equal(f.env.rt.petFull.pending,null);f.env.on=true;f.tick(18001000);f.reload();await f.step();assert.equal(f.calls.length,1);
+ assert.equal(f.env.rt.petFull.pending,null);f.env.on=true;await f.step({forceRead:true});assert.equal(f.calls.length,1,'до конца возможного срока — без оплаты');
+ assert.equal(f.env.rt.petFull.status,'archived');
+ f.tick(18001000);f.reload();await f.step();assert.equal(f.calls.length,2,'после возможного срока — новый набор без бюджета');
 });
 
 test('failed durable archive cannot acknowledge success or clear blocking intent',async()=>{
@@ -30,13 +34,14 @@ test('lease loss in archive GET retains pending and no archive credit',async()=>
  assert.equal((await f.api().archiveUnknown(e)).ok,false);assert.equal(f.env.rt.petFull.pending.id,e.pendingId);assert.equal(f.env.rt.petFull.unknownReserved||0,0);
 });
 
-test('archived reserve survives exact budget reset and explicit extra budget pays only new attempt',async()=>{
+test('archived reserve survives counter reset; new attempt pays only after the possible window',async()=>{
  let fail=true;const f=await unknown({char:{adena:'50000000'},post:()=>{if(fail)throw Error('timeout')}});
  assert.equal((await f.api().archiveUnknown(expected(f))).ok,true);
  const S=f.env.rt.petFull;assert.equal(await f.api().resetBudget({char:'hero',budgetEpoch:S.budgetEpoch,spent:S.spent||0}),true);
  assert.equal(f.api().summary().reserved,10000000);await f.step();assert.equal(f.calls.length,1);
- f.env.cfg.petFullBudget=20000000;fail=false;await f.step({forceRead:true});assert.equal(f.calls.length,2);
- assert.equal(f.env.rt.petFull.spent,10000000);assert.equal(f.env.rt.petFull.unknownReserved,10000000);assert.equal(f.api().summary().remaining,0);
+ f.env.cfg.petFullBudget=20000000;fail=false;await f.step({forceRead:true});assert.equal(f.calls.length,1,'старый бюджет больше ничего не открывает');
+ f.tick(18001000);f.reload();await f.step({forceRead:true});assert.equal(f.calls.length,2);
+ assert.equal(f.env.rt.petFull.spent,10000000);assert.equal(f.env.rt.petFull.unknownReserved,10000000);assert.equal(f.api().summary().remaining,null);
 });
 
 test('late exact receipt found on off archive records confirmed payment instead of unknown',async()=>{

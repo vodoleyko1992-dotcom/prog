@@ -1,6 +1,6 @@
 'use strict';
 // 20.43 (разбор 21.10): проверка набора кота у Warlock после победы (свой GET /character + каталог + две записи памяти ≈1–1,3 с)
-// шла раз в минуту при действующем наборе и раз в 10 с, когда купить нельзя (бюджет 10 млн исчерпан первой покупкой, автообновление
+// шла раз в минуту при действующем наборе и раз в 10 с, когда купить нельзя (бюджет 10 млн исчерпан первой покупкой — снят в 20.60, автообновление
 // выключено, цена выше лимита, мало адены, архив), — почти на каждой второй победе цепочки. Теперь «купить нельзя» — раз в 10 мин,
 // early-loss — к концу оплаченного срока, свой оплаченный набор — за 1,5 мин до конца срока. Смена настроек/Старт снимают ожидание.
 // Покупка и сверка оплаты прежние.
@@ -11,18 +11,19 @@ const reads=f=>f.gets.filter(p=>p==='/character').length;
 // Победы цепочки «Охотиться дальше» ≈5 с/моб: проверка после каждой победы
 const wins=async(f,ms,every=5000)=>{for(let t=0;t<ms;t+=every){f.tick(every);await f.step({afterWin:true});}};
 
-test('бюджет исчерпан: после победы не чаще раза в 10 мин; новый бюджет — сразу проверка и покупка',async()=>{
+// 20.60 (John 24.10: «Убери вообще лимит на Бафф суммонов»): общего бюджета нет. Ожидание «бюджет», записанное до обновления, — со старым
+// ключом настроек: снимается сразу, набор покупается на первой победе после конца прежнего
+test('старое ожидание «бюджет» после обновления не держит: набор куплен сразу',async()=>{
  const f=fixture({char:{adena:'50000000'}});await f.step();assert.equal(f.calls.length,1);
- f.tick(PAID+1000);f.ch.revision++;await f.step({afterWin:true});assert.equal(f.status(),'budget');
- const g=reads(f);await wins(f,595000);assert.equal(reads(f),g,'за 10 мин побед — ни одного GET (было бы ≈60 пар GET)');
- await wins(f,10000);assert.equal(reads(f),g+1,'через 10 мин — одна проверка');assert.equal(f.status(),'budget');
- f.env.cfg.petFullBudget=20000000;f.tick(5000);await f.step({afterWin:true});
- assert.equal(f.calls.length,2,'смена настроек снимает ожидание — набор куплен сразу');assert.equal(f.env.rt.petFull.spent,20000000);
+ f.tick(PAID+1000);f.ch.revision++;
+ f.env.rt.petFull={...f.env.rt.petFull,status:'budget',reason:'Бюджет автобафа исчерпан; увеличьте лимит или явно сбросьте расход',nextCheckAt:Date.now()+600000,waitKey:'["old",10000000]'};
+ await f.step({afterWin:true});
+ assert.equal(f.calls.length,2);assert.equal(f.env.rt.petFull.spent,20000000);assert.notEqual(f.status(),'budget');
 });
 
-test('сброс бюджета кнопкой снимает ожидание (nextCheckAt 0)',async()=>{
- const f=fixture({char:{adena:'50000000'}});await f.step();f.tick(PAID+1000);f.ch.revision++;await f.step();assert.equal(f.status(),'budget');
- f.tick(5000);assert.equal(await f.reset(),true);await f.step({afterWin:true});assert.equal(f.calls.length,2);
+test('сброс счётчика кнопкой снимает ожидание (nextCheckAt 0)',async()=>{
+ const f=fixture({cfg:{petFullMaxPrice:9999999}});await f.step();assert.equal(f.status(),'price');const g=reads(f);
+ f.tick(5000);assert.equal(await f.reset(),true);await f.step({afterWin:true});assert.equal(reads(f),g+1);assert.equal(f.calls.length,0);
 });
 
 for(const [name,cfg,code] of [['автообновление выключено',{petFullBudget:30000000,petFullRenew:false},'renew'],['цена выше лимита',{petFullMaxPrice:9999999},'price'],['мало адены',{petFullReserve:15000000},'reserve']])
