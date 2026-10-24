@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.56 — A-плащ Goddard в целях Маммона, TvT после выбывания, подтверждение городского баффа =====
+// ===== L2wap Bot v20.57 — навыки пики Dreadnought (Earthquake, Shock Blast, Eye of Hunter/Slayer, Parry), A-плащ Goddard, TvT после выбывания =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
