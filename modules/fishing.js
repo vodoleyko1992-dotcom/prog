@@ -1035,6 +1035,7 @@ const castRejected=nf=>nf.ok===false&&!(nf.status>=500)&&['revision_conflict','i
 // 18.10, журнал 22:27–22:42: async netStart/PATCH может потеряться при reload. Hook сохраняет точный запрос
 // синхронно до отправки; квитанция принадлежит только одному заранее сохранённому намерению этой вкладки.
 const CAST_REQUEST_KEY='l2bot.fishingCastRequest';
+const LEGACY_CAST_MS=60000;
 function castRequestArm(p) {
   try { root.sessionStorage?.setItem(CAST_REQUEST_KEY,JSON.stringify({char:p.char,at:p.at,armedAt:Date.now()})); } catch (_) {}
 }
@@ -1107,6 +1108,13 @@ async function castReconcile(options={}) {
     // Старый запрос уже не применится: revision ушла вперёд. Исход не выдумываем; лимит забросов учитываем консервативно.
     fishStat({casts:1});await env.setRt(statTake({fishCastPending:null,fishCastActive:false}));
     env.rec('B','рыбалка','Активной рыбы нет, состояние сервера обновилось — старый заброс больше не повторяю');return true;
+  }
+  // 20.60 (лог 24.10 20:44–21:52, Warlock): клик заброса совпал с ручной покупкой времени — игра не отправила cast, revision
+  // в записи не появилась, и бот больше часа писал «выполните один заброс вручную», стоя на рыбалке. Без revision повтор
+  // невозможен, но через 60 с старый запрос уже не в полёте: согласованный снимок без рыбы закрывает запись (лимит — консервативно).
+  if(known&&state.target===null&&!Number.isSafeInteger(R)&&Date.now()-p.at>=LEGACY_CAST_MS){
+    fishStat({casts:1});await env.setRt(statTake({fishCastPending:null,fishCastActive:false}));
+    env.rec('B','рыбалка','Заброс без revision: за минуту сервер не показал рыбы — запись закрываю, продолжаю рыбалку');return true;
   }
   // Лимит мог переключить задачу на фарм: сверяем старый исход независимо, без нового заброса и захвата маршрута.
   if(observeOnly)return true;

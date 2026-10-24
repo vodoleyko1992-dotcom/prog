@@ -518,7 +518,16 @@ function onNet(path, d) {
   // 9.2 (лог 12.10 02:31–02:56, 242 хода): игра отвечает на ход почти всегда `kind:'full'` (225 из 242) — там `battle.log` —
   // ВЕСЬ лог боя с начала (battle-log-session.getActiveLines), а не хвост; `delta.logTail` (17 ответов) — только новые строки.
   // Полный лог режем по уже виденным строкам (наложение хвоста прошлого ответа на начало нового), иначе каждый ход считался бы заново
-  const lines = bt.full || bt.seq == null ? newLines(F, bt.log) : bt.seq > (F.seq ?? -1) ? bt.log : [];
+  // 20.60 (логи 24.10 20:43:47, 21:17:16): на ходе с поражением delta.logTail несёт весь лог боя (seq 21→27, а строк 27) — весь бой
+  // засчитывался урону последнего действия («Атака: 52460»). seq — номер последней строки (как у hook killEvidence): лишние строки
+  // в начале хвоста отрезаем, только если они дословно совпадают с уже виденным хвостом лога
+  const tailLines = () => {
+    const log = bt.log, step = F.seq != null && F.seq >= 0 ? bt.seq - F.seq : Infinity, extra = Array.isArray(log) ? log.length - step : 0;
+    if (!(extra > 0)) return log;
+    const prev = F.logPrev || [], m = Math.min(extra, prev.length);
+    return m > 0 && prev.slice(-m).every((x, i) => x === String(log[extra - m + i] ?? '')) ? log.slice(extra) : log;
+  };
+  const lines = bt.full || bt.seq == null ? newLines(F, bt.log) : bt.seq > (F.seq ?? -1) ? tailLines() : [];
   // 10.0 (аудит боя): хвост delta тоже «виден» — иначе следующий полный лог отдал бы его второй раз (урон в чужой ход, ≈7 % ходов)
   if (!(bt.full || bt.seq == null) && lines.length) F.logPrev = [...(F.logPrev || []), ...lines.map(x => String(x ?? ''))].slice(-40);
   F.actor = bt.actor || F.actor; F.actorId = bt.actorId || F.actorId;

@@ -2950,7 +2950,10 @@ async function battleOpen() {
   // 10.0.10 (игрок 13.10 11:33): «Охотиться дальше» подсовывает чемпиона цвета, который выключен в «Каких чемпионов бить» (или герой ниже
   // порога уровня), — нетронутый бой не начинаем, на карту. ★ квест и чемпион главы — бьём
   if (ctx.champ && !isRb && !ctx.questKill && !(env.campActive() && env.campChampOpen()) && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
-    const off = env.champs?.tierOff?.(ctx) || env.champs?.held?.(ctx);   // и вердикт прошлого отхода («жду роста силы»)
+    const hl = env.heroLvl() || env.rt.lvl || 0;
+    // 20.60 (лог 24.10 20:46: West с HP 29 % сразу шёл к следующему чемпиону): цепочка тоже не начинает чемпиона с полупустым HP
+    const off = env.champs?.tierOff?.(ctx) || env.champs?.held?.(ctx)   // и вердикт прошлого отхода («жду роста силы»)
+      || (!(ctx.lvl > 0 && hl - ctx.lvl >= 20) && env.champs?.hpLow?.(env.meHp?.()));
     if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
   }
   ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm; ctx.okN0 = env.actNet?.()?.okN || 0;   // 10.0.8: принятые ходы на старте замера «не по зубам»

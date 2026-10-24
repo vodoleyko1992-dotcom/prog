@@ -521,7 +521,7 @@ function candidates(rules, sig, types, limitIdx, evidence = {}) {
   // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): пока «Искать чемпионов» выключено (и глава не просит чемпионов),
   // чемпион — обычный моб: без окна до −8 ур. и без особой ценности (бот не тянется к ним сам)
   const champOn = champRuleOn();
-  const hl0 = env.heroLvl() || env.rt.lvl || 0;
+  const hl0 = env.heroLvl() || env.rt.lvl || 0, meNow = env.meHp?.();
   // 10.0.5: «FA с чемпионов» (cfg.champFa, по умолчанию ВКЛ) — оранжевый/красный чемпион не ниже героя −5 (шанс FA 20/60 %) идёт сразу
   // после ★ квеста и источников ресурса, даже при выключенном «Искать чемпионов». Только из списка этой локации: бот никуда не летит
   const pos = rules.filter(x => !x.neg), faRank = pos.findIndex(x => !(x.quest || x.farm));
@@ -575,7 +575,7 @@ function candidates(rules, sig, types, limitIdx, evidence = {}) {
     // 10.0.5 (игрок 13.10: «анализ, кого мы можем убить, а кого нет… проба… отход»): чемпион, которого не успеть убить за его цену в
     // секундах обычного фарма (EXP + FA), или по вердикту прошлых боёв (до роста силы), — не цель; чемпион главы — цель всегда
     if (champ && env.champs?.tierOff) {
-      const off = env.champs.tierOff(r, true);
+      const off = env.champs.tierOff(r, true) || (!(lvl > 0 && hl - lvl >= 20) && env.champs.hpLow?.(meNow));   // 20.60: не с полупустым HP
       if (off) { champSkip(r, off); return; }
     }
     // 14.10, аудит Astra: ресурсный приоритет не обходит запрет, который бой применит на входе.

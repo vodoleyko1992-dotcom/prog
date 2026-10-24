@@ -47,7 +47,7 @@ const load = (file, env) => { const c = { console, Date, Math, JSON, Object, Num
   assert.match(C.held({ tier: 'orange', lvl: 32 }) || '', /жду роста силы/, 'held: тот же чемпион после отхода');
   assert.equal(C.held({ tier: 'blue', lvl: 32 }), null);
   const cmb = read('modules/combat.js');
-  assert.match(cmb, /const off = env\.champs\?\.tierOff\?\.\(ctx\) \|\| env\.champs\?\.held\?\.\(ctx\);/, 'бой цепочкой: выключенный цвет / вердикт → на карту');
+  assert.match(cmb, /const off = env\.champs\?\.tierOff\?\.\(ctx\) \|\| env\.champs\?\.held\?\.\(ctx\)/, 'бой цепочкой: выключенный цвет / вердикт → на карту');
 
   // 3. настройки и меню
   const ct = (read('defaults.js') + '\n' + read('content.js')), pj = (read('defaults.js') + '\n' + read('popup.js')), ph = read('popup.html'), bp = JSON.parse(read('base-profile.json'));
