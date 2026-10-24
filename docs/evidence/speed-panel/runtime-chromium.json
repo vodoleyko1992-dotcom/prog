@@ -4,8 +4,8 @@
     {
       "name": "real fire timing 500ms",
       "intervals": [
-        514,
-        500
+        500,
+        501
       ]
     },
     {
