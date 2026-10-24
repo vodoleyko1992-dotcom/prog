@@ -168,3 +168,13 @@ test('metadata-clear не переносится на другой lease или 
   assert.equal(w.clears.length,0);assert.equal(w.disk.craftShortageNote.notified,true);assert.equal(w.posts.length,0);
  }
 });
+// 24.10 (лог 24.10 18:15: цепочка Crafted Leather крафтила Leather по 1–4 штуки при MP 20, банки 728 лежали в сумке).
+test('цепочка: партию, урезанную маной, сначала добирает МП-банка, потом крафт целиком',async()=>{
+ const w=world({mp:30,queue:[{id:'c',code:'cokes',n:6}]}),a=w.reload();await a.C.step();
+ assert.equal(w.posts[0].url,'/character/consumable/use');assert.equal(w.pots,1);assert.deepEqual(w.crafted,[]);
+ await tick(w,a);assert.deepEqual(w.crafted,[['cokes',6]]);assert.equal(w.disk.craftMade.c,6);
+});
+test('цепочка: без банок урезанная партия идёт сразу на свою ману',async()=>{
+ const w=world({mp:30,queue:[{id:'c',code:'cokes',n:6}],bag:{728:0}}),a=w.reload();await a.C.step();
+ assert.equal(w.pots,0);assert.deepEqual(w.crafted,[['cokes',3]]);
+});
