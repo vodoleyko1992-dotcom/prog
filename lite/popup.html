@@ -38,13 +38,23 @@
     <select id="zone"><option value="">Где стоит герой при Старте</option></select>
   </label>
   <label class="row">Сколько мобов убить <input id="limit" type="number" min="0" max="100000" step="1"> <span class="dim">0 — без лимита</span></label>
+  <p id="zoneAuto" class="hint" hidden></p>
   <p class="hint">Бот бьёт ближайших обычных мобов; РБ, чемпионов и охрану эпиков не трогает. Ушёл с места (TvT, смерть) — вернётся телепортом за адену.</p>
 </section>
 
 <section id="spoilBox" hidden>
   <h2>⛏ Споил <button id="spoilReset" type="button" class="small">Сбросить счёт</button></h2>
-  <label class="chk"><input id="spoilOn" type="checkbox"> <span>Спойлить мобов: дубина — Spoil Crush, иначе Spoil Festival, потом Spoil до попаданий</span></label>
+  <label class="chk"><input id="spoilOn" type="checkbox"> <span>Спойлить мобов</span></label>
+  <label class="col">Режим спойла
+    <select id="spoilMode">
+      <option value="auto">Авто — по оружию: дубина — Spoil Crush, иначе Spoil Festival</option>
+      <option value="mass">Масс — Spoil Festival по всей пачке</option>
+      <option value="solo">Соло — Spoil по одной цели</option>
+    </select>
+  </label>
+  <p id="spoilModeHint" class="hint"></p>
   <label class="row">Попыток Spoil на моба <input id="spoilTries" type="number" min="1" max="10" step="1"> <span class="dim">пока HP моба выше 30 %</span></label>
+  <label class="chk"><input id="spoilAuto" type="checkbox"> <span>🤖 Полностью автономно: место охоты выбираю сам — под ресурс или по уровню героя, переезжаю, когда герой перерос место или там нет мобов</span></label>
   <label class="col">Что спойлить
     <select id="spoilRes"><option value="">Любые ресурсы — бить ближайших</option></select>
   </label>
@@ -72,9 +82,20 @@
   <div id="skills"></div>
 </section>
 
+<section id="speedBox">
+  <h2>⚡ Скорость <button id="spdReset" type="button" class="small">Сбросить замер</button></h2>
+  <label class="col">Пауза между действиями: <output id="delayVal" for="delayMs"></output>
+    <input id="delayMs" type="range" min="0" max="5000" step="100">
+  </label>
+  <p class="hint">0 — без паузы: ход сразу, как его примет игра. Больше — бот медленнее: следующий ход, выбор моба, «Охотиться дальше», телепорт или запись на TvT — не раньше, чем через эту паузу после прошлого действия.</p>
+  <label class="row">Реакция между кругами от <input id="reactMin" type="number" min="0" max="3000" step="10"> до <input id="reactMax" type="number" min="0" max="3000" step="10"> мс</label>
+  <label class="chk"><input id="fastTurn" type="checkbox"> <span>⚡ Быстрый удар — после обычного удара игра не ждёт перечитывания героя (раз в 30 с всё равно перечитывает)</span></label>
+  <div id="spdStat" class="dim"></div>
+  <p class="hint">Пауза и реакция — общие для всех профилей, «Быстрый удар» — у каждого профиля свой.</p>
+</section>
+
 <details>
   <summary>Ещё</summary>
-  <label class="chk"><input id="fastTurn" type="checkbox"> <span>⚡ Быстрый удар — после обычного удара игра не ждёт перечитывания героя (раз в 30 с всё равно перечитывает)</span></label>
   <label class="row">Банка HP при HP ≤ <input id="hpPot" type="number" min="10" max="95" step="5"> %</label>
   <label class="row">Банка MP при MP ≤ <input id="mpPot" type="number" min="5" max="95" step="5"> %</label>
   <label class="row">Остановиться после <input id="maxDeaths" type="number" min="1" max="20" step="1"> смертей за 30 мин</label>

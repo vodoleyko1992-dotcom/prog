@@ -53,7 +53,9 @@ t('запасы клика подстраиваются как в основно
 t('подтверждённый ход и ожидание отката — без «человеческой» паузы круга; ожидание отката — до ближайшей готовности', () => {
   assert.match(bot, /progress\(\); lastActOk = Date\.now\(\); quick = true;/);
   assert.match(bot, /quick = false;\n\s+try \{ await tick\(\); \}/);
-  assert.match(bot, /await sleep\(quick \? 0 : rnd\(60, 140\)\);/);
+  // 1.8: пауза круга — «реакция» раздела «Скорость», по умолчанию прежние 60–140 мс
+  assert.match(bot, /const P = L\.paceCfg\(cfg\);\n\s+await sleep\(quick \? 0 : rnd\(P\.lo, P\.hi\)\);/);
+  assert.deepEqual(require('../lite/logic.js').paceCfg({}), { delay: 0, lo: 60, hi: 140 });
   assert.match(bot, /await nap\(Math\.max\(10, Math\.min\(readyIn\(slots\) \+ 5, 100\)\)\); quick = true; return;/);
   // ожидания просыпаются по концу запроса игры
   assert.match(bot, /wakeAll\(\);\n\s+\}\n\s+window\.addEventListener\('message'/);

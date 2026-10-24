@@ -185,7 +185,7 @@ test('бот: страница Ashen, список вместо цепочки, 
   assert.ok(av.indexOf('inAshen() && aoeProf()') > 0 && av.indexOf('inAshen() && aoeProf()') < av.indexOf("$('#battle-victory-hunt')"), 'список раньше цепочки');
   assert.match(bot, /const pick = L\.ashenPick\(rows, \{ aoe, ex, hero: heroLvl\(\), skip: r => badSpawn\.has\(ashKey\(r\)\) \}\);/);
   // живой прогон 24.10: через страницу списка переход между боями — 6,9 с; теперь свой GET списка и сразу бой, как кнопка «Бій» (1,5–1,8 с)
-  assert.match(bot, /const nx = await ashenNext\(g\);\n\s+if \(!alive\(g\)\) return;\n\s+if \(nx\) \{ status\(`Ashen: следующий — \$\{nx\.name\} \(HP \$\{nx\.maxHp\}\)`\); await go\('\/battle\.html\?spawnId=' \+ encodeURIComponent\(nx\.id\)\); return; \}/);
+  assert.match(bot, /const nx = await ashenNext\(g\);\n\s+if \(!alive\(g\)\) return;\n\s+if \(nx\) \{ status\(`Ashen: следующий — \$\{nx\.name\} \(HP \$\{nx\.maxHp\}\)`\); if \(!\(await pace\(g\)\)\) return; paced\(\); await go\('\/battle\.html\?spawnId=' \+ encodeURIComponent\(nx\.id\)\); return; \}/);   // 1.8: пауза между действиями
   assert.match(bot, /gameGet\(`\/game\/ashen-bastion\/mobs\?offset=\$\{Math\.max\(0, \+sess\.get\('l2lite\.ashOff', 0\) \|\| 0\)\}&limit=25`, 5000\)/);
   assert.match(bot, /\/\^ashen_bastion_mob_\\d\+\$\/\.test\(m\.id\)/);
   assert.match(bot, /ready: !\(\+m\.respawnSeconds > 0\)/);

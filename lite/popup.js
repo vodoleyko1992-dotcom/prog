@@ -6,6 +6,8 @@
 // Lite 1.5 (21.10, John: «отдельный профиль на дестра, отдельный профиль на лука»): вкладки профилей «Дестр» и «Лук» — у каждого
 // свои место, лимит, TvT, скиллы и «Ещё»; открыт профиль активного в игре класса, другой можно настроить заранее.
 // Lite 1.6 (23.10, John: «Сверстай еще в боте сектор "споил"»): третий профиль «Споил» и его раздел — спойл, ресурс, места, счёт.
+// Lite 1.8 (24.10, John: «спойл фестивалем масс или соло спойлом, полностью автономный режим; раздел со скоростью работы бота»):
+// режим спойла и автономный спойлер в разделе «Споил»; раздел «⚡ Скорость» — пауза между действиями, реакция, замер.
 'use strict';
 if (location.hash === '#tab') document.documentElement.classList.add('tab');   // 1.2.1: меню, открытое кнопкой «Lite» со страницы игры
 // 1.4: меню в окне на странице игры (bot.js, кнопка «—» сворачивает его в плавающую «Lite»): во всю ширину окна; странице — «готово»,
@@ -57,7 +59,7 @@ function paintStatus() {
   const arw = $('arw'), atxt = L.arrowsText(rt.char?.arrows), out = kindView() === 'archer' && L.rtKind(rt) === 'archer' && (rt.arrowOut || rt.arrowNote);
   arw.hidden = kindView() !== 'archer' || (!atxt && !out && !(rt.char?.arrows && L.clsKind(rt.char?.prof) === 'archer'));
   arw.textContent = out ? `⚠ Нет стрел — охота стоит${atxt ? ' (в сумке: ' + atxt + ')' : ''}` : atxt ? `Стрелы: ${atxt}` : 'Стрел в сумке нет';
-  $('now').textContent = P.zone ? `Место охоты: ${P.zone.name}` : cfg.zone ? `Место охоты: ${cfg.zoneName || cfg.zone}` : cfg.on && kindView() === L.rtKind(rt) ? '' : 'Место охоты запомнится при Старте';
+  $('now').textContent = P.zone ? `Место охоты: ${P.zone.name}${P.zone.auto ? ' (выбрал сам)' : ''}` : autoView() ? 'Место охоты выберу сам при Старте' : cfg.zone ? `Место охоты: ${cfg.zoneName || cfg.zone}` : cfg.on && kindView() === L.rtKind(rt) ? '' : 'Место охоты запомнится при Старте';
   const V = rt.tvt;
   let tv = '';
   if (cfg.tvt && V) {
@@ -82,7 +84,13 @@ function paintLog() {
   box.dataset.sig = sig;
   box.replaceChildren(...(lg.length ? lg.flatMap((x, i) => [el('b', { textContent: tm(x.t) }), ' ' + x.x + (i < lg.length - 1 ? '\n' : '')]) : ['Пусто']));
 }
+// 1.8: автономный спойлер — место выбирает бот, список места из меню не действует.
+const autoView = () => kindView() === 'spoil' && cfg.spoilAuto === true;
 function paintZone() {
+  const za = $('zoneAuto'), auto = autoView(), P = L.profRt(rt, kindView());
+  za.hidden = !auto;
+  if (auto) za.textContent = `Место выбирает автономный спойлер${P.zone?.auto ? ': сейчас «' + P.zone.name + '»' : ''}. Выбранное здесь не действует, пока режим включён (раздел «Споил»).`;
+  $('zone').disabled = auto;
   const sel = $('zone'), locs = [...(rt.locs || [])].sort((a, b) => (a.lo ?? 999) - (b.lo ?? 999) || String(a.name).localeCompare(String(b.name)));
   const want = cfg.zone || '';
   const opts = [['', 'Где стоит герой при Старте']];
@@ -125,11 +133,19 @@ function spoilLvl() {
   if (L.clsKind(c.prof) === 'spoil') return +c.lvl || 0;
   return +((c.slots || []).find(s => L.clsKind(s.prof) === 'spoil')?.lvl) || 0;
 }
+const MODE_HINT = {
+  auto: 'С дубиной первым Spoil Crush (удар и спойл за один ход), с пикой и другим оружием — Spoil Festival раз за бой; не прошёл — Spoil.',
+  mass: 'Spoil Festival первым, даже с дубиной: в начале боя бот ждёт его откат до 3 с и не бьёт, пока пачка не помечена. Подошли или возродились мобы без метки, которые умрут вместе с целью, — Festival ещё раз (до 3 за бой). Добычу соседей игра даёт, когда они гибнут: с пикой Whirlwind / Wild Sweep бьют всю пачку.',
+  solo: 'Только Spoil по цели (с дубиной — Spoil Crush), Spoil Festival не жмём: его MP и ход уходят на удар. Для мобов, что ходят по одному.' };
 function paintSpoil() {
   const box = $('spoilBox'), on = kindView() === 'spoil';
   box.hidden = !on;
   if (!on) return;
   $('spoilOn').checked = cfg.spoilOn !== false;
+  const mode = L.spoilMode(cfg.spoilMode);
+  $('spoilMode').value = mode;
+  if ($('spoilModeHint').textContent !== MODE_HINT[mode]) $('spoilModeHint').textContent = MODE_HINT[mode];
+  $('spoilAuto').checked = cfg.spoilAuto === true;
   if (document.activeElement !== $('spoilTries')) $('spoilTries').value = cfg.spoilTries;
   const sel = $('spoilRes'), lvl = spoilLvl();
   const opts = [['', 'Любые ресурсы — бить ближайших'], ...L.SPOIL_RES.map(r => [r.name, `${r.name} — мобы ${L.spoilMin(r)}+ ур. (до ${Math.max(...r.bands.map(b => b[2]))} %)`])];
@@ -137,9 +153,18 @@ function paintSpoil() {
   if (sel.dataset.sig !== sig) { sel.replaceChildren(...opts.map(([value, textContent]) => el('option', { value, textContent }))); sel.dataset.sig = sig; }
   sel.value = L.spoilRes(cfg.spoilRes) ? L.spoilRes(cfg.spoilRes).name : '';
   // Места под ресурс: локации телепорта с мобами героя ±5 ур., у которых он спойлится (L.spoilSpots).
-  const res = L.spoilRes(cfg.spoilRes), spots = res ? L.spoilSpots(rt.locs, res, lvl) : [], sp = $('spoilSpots');
-  const ssig = JSON.stringify([res?.name, lvl, cfg.zone, spots]);
-  if (sp.dataset.sig !== ssig) {
+  // 1.8: автономный режим — места, из которых бот выбирает сам (L.spoilAutoSpots: и без ресурса — по уровню), выбранное помечено.
+  const res = L.spoilRes(cfg.spoilRes), auto = cfg.spoilAuto === true, sp = $('spoilSpots');
+  const P = L.profRt(rt, 'spoil'), cur = P.zone?.auto ? P.zone.id : '', bad = Object.entries(rt.spotBad || {}).filter(([, t]) => t > Date.now()).map(([id]) => id);
+  const spots = auto ? L.spoilAutoSpots(rt.locs, res, lvl, 5) : res ? L.spoilSpots(rt.locs, res, lvl) : [];
+  const ssig = JSON.stringify([res?.name, lvl, cfg.zone, auto, cur, bad, spots]);
+  if (sp.dataset.sig !== ssig && auto) {
+    sp.dataset.sig = ssig;
+    sp.replaceChildren(...(!lvl ? [el('p', { className: 'hint', textContent: 'Места подберу, когда бот увидит уровень спойлера.' })]
+      : !spots.length ? [el('p', { className: 'hint', textContent: (rt.locs || []).length ? `Нет мест с мобами ${Math.max(1, lvl - 5)}–${lvl + 5} ур.${res ? ', с которых спойлится ' + res.name : ''} — бот охотится там, где стоит.` : 'Список мест появится, когда бот откроет игру.' })]
+      : [el('span', { className: 'dim', textContent: `Выбираю сам из мест для ${lvl} ур. ±5${res ? ' под ' + res.name : ' по ценности сырья'}:` }),
+        ...spots.map(x => el('div', { className: x.id === cur ? 'cur' : 'dim', textContent: `${x.id === cur ? '✔ ' : bad.includes(x.id) ? '⏸ ' : '· '}${x.name} (${x.lo}–${x.hi ?? '?'})${res ? ' · до ' + x.v + ' %' : ''}${bad.includes(x.id) ? ' — отложено' : ''}` }))]));
+  } else if (sp.dataset.sig !== ssig) {
     sp.dataset.sig = ssig;
     sp.replaceChildren(...(!res ? [] : !lvl ? [el('p', { className: 'hint', textContent: 'Места подберу, когда бот увидит уровень спойлера.' })]
       : !spots.length ? [el('p', { className: 'hint', textContent: (rt.locs || []).length ? `Нет мест с мобами ${Math.max(1, lvl - 5)}–${lvl + 5} ур., с которых спойлится ${res.name}.` : 'Список мест появится, когда бот откроет игру.' })]
@@ -182,8 +207,30 @@ function paintSkills() {
     return row;
   }));
 }
+// 1.8: раздел «Скорость» — пауза между действиями и реакция (общие), замер скорости с Старта (rt.spd, L.speedStats).
+const secTxt = ms => (ms ? `${(ms / 1000).toLocaleString('ru', { maximumFractionDigits: 1 })} с` : 'без паузы');
+function paintSpeed(fresh) {
+  const P = L.paceCfg(cfg);
+  if (fresh || document.activeElement !== $('delayMs')) $('delayMs').value = P.delay;
+  $('delayVal').textContent = secTxt(+$('delayMs').value);
+  if (fresh || document.activeElement !== $('reactMin')) $('reactMin').value = P.lo;
+  if (fresh || document.activeElement !== $('reactMax')) $('reactMax').value = P.hi;
+  const S = L.speedStats(rt.spd, Date.now()), lines = [];
+  if (!rt.spd || !rt.spd.t0) lines.push('Замер начнётся со Старта.');
+  else {
+    lines.push(`Замер с ${hm(rt.spd.t0)} (${S.min < 1 ? 'меньше минуты' : Math.round(S.min) + ' мин'}): ходов ${S.acts}, побед ${S.wins}, мобов ${S.kills}`);
+    const parts = [];
+    if (S.gap != null) parts.push(`ход каждые ${S.gap.toLocaleString('ru', { maximumFractionDigits: 2 })} с`);
+    if (S.apm != null) parts.push(`${S.apm} ходов в минуту`);
+    if (S.cyc != null) parts.push(`моб каждые ${S.cyc.toLocaleString('ru')} с`);
+    if (S.kph != null) parts.push(`≈${S.kph} мобов в час`);
+    if (parts.length) lines.push(parts.join(' · '));
+  }
+  const st = $('spdStat'), sig = lines.join('\n');
+  if (st.dataset.sig !== sig) { st.dataset.sig = sig; st.replaceChildren(...lines.map(t => el('div', { textContent: t }))); }
+}
 let painted = '';                                  // 1.5: чей профиль на экране — сменился, поля перерисовываем и под курсором
-function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills(); paintSpoil(); paintMage();
+function paint() { syncCfg(); paintRun(); paintStatus(); paintLog(); paintZone(); paintSkills(); paintSpoil(); paintMage(); paintSpeed(painted !== cfg.kind);
   const fresh = painted !== cfg.kind; painted = cfg.kind;
   for (const k of ['hpPot', 'mpPot', 'maxDeaths']) if (fresh || document.activeElement !== $(k)) $(k).value = cfg[k];
   if (fresh || document.activeElement !== $('limit')) $('limit').value = cfg.killLimit;
@@ -202,6 +249,13 @@ $('hpPot').onchange = e => save({ hpPot: clampNum(e.target.value, 10, 95, 50) })
 $('mpPot').onchange = e => save({ mpPot: clampNum(e.target.value, 5, 95, 25) });
 $('maxDeaths').onchange = e => save({ maxDeaths: clampNum(e.target.value, 1, 20, 3) });
 $('spoilOn').onchange = e => save({ spoilOn: e.target.checked });
+$('spoilMode').onchange = e => save({ spoilMode: L.spoilMode(e.target.value) });
+$('spoilAuto').onchange = e => save({ spoilAuto: e.target.checked });
+$('delayMs').oninput = e => { $('delayVal').textContent = secTxt(+e.target.value); };
+$('delayMs').onchange = e => save({ delayMs: L.paceCfg({ delayMs: e.target.value }).delay });
+$('reactMin').onchange = e => save({ reactMin: clampNum(e.target.value, 0, 3000, 60) });
+$('reactMax').onchange = e => save({ reactMax: clampNum(e.target.value, 0, 3000, 140) });
+$('spdReset').onclick = () => save({}, 'spdReset');
 $('spoilTries').onchange = e => save({ spoilTries: clampNum(e.target.value, 1, 10, 4) });
 $('spoilRes').onchange = e => save({ spoilRes: e.target.value });
 $('spoilReset').onclick = () => save({}, 'spoilReset');
@@ -238,4 +292,4 @@ chrome.storage.onChanged.addListener((ch, area) => {
   if (ch[K_CFG] || ch[K_RT]) paint();
 });
 chrome.storage.local.get([K_CFG, K_RT]).then(s => { RAW = s[K_CFG] || {}; rt = s[K_RT] || {}; paint(); });
-setInterval(paintStatus, 5000);
+setInterval(() => { paintStatus(); paintSpeed(false); }, 5000);
