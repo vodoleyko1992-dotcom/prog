@@ -13,7 +13,7 @@ function tvtFixture(o = {}) {
  const clicked = [], logs = [], leaves = [], reads = [];
  const button = { id: 'tvt-register-btn' };
  const env = { cfg: { tvtOn: true }, rt: {}, on: true, tabOwner: true,
-  TVT: { phase: 'REGISTRATION', eventId: 'ev1', isRegistered: false, registeredCount: o.count ?? 4, maxPlayers: 20, registrationEndsAt: now + 570000,
+  TVT: { phase: 'REGISTRATION', eventId: 'ev1', isRegistered: false, registeredCount: o.count ?? 4, maxPlayers: 20, registrationEndsAt: now + (o.regLeft ?? 570000),
    schedule: { next: { registrationOpensAt: now, battleStartsAt: now + 600000 } }, t: now },
   $q: s => s === '#tvt-register-btn' && o.button !== false && loc.pathname === '/tvt-arena.html' ? button : s === '#tvt-message' ? { textContent: 'Рівень замалий' } : null,
   shown: e => !!e, isBattle: () => battle, victory: () => false,
@@ -53,16 +53,16 @@ test('TVT-1: кнопка нашлась — счётчик «нет кнопк�
 });
 test('TVT-3: выход ради TvT не подтверждён и бот вернулся в бой — повтор не раньше 30 с, а не каждые 3 с', async () => {
  const ss = storage();
- const a = tvtFixture({ battle: true, ss });
+ const a = tvtFixture({ battle: true, ss, regLeft: 120000 }); // 20.64: бой с боссом бросаем, когда до конца регистрации ≤ 3 мин
  assert.equal(await a.T.tvtStep(), true); assert.equal(a.leaves.length, 2);
  // новая страница боя (leaveCheck вернул в бой): та же вкладка, тот же sessionStorage
- const b = tvtFixture({ battle: true, ss }); b.advance(a.now() - b.now() + 5000);
+ const b = tvtFixture({ battle: true, ss, regLeft: 120000 }); b.advance(a.now() - b.now() + 5000);
  assert.equal(await b.T.tvtStep(), false); assert.equal(b.leaves.length, 0);
  b.advance(26000);
  assert.equal(await b.T.tvtStep(), true); assert.equal(b.leaves[0], 'l2dop_rb_1');
 });
 test('TVT-3: первая попытка в странице и без прошлых меток — сразу, как раньше', async () => {
- const f = tvtFixture({ battle: true }); f.box.sessionStorage = undefined;
+ const f = tvtFixture({ battle: true, regLeft: 120000 }); f.box.sessionStorage = undefined;
  assert.equal(await f.T.tvtStep(), true); assert.equal(f.leaves[0], 'l2dop_rb_1');
 });
 test('TVT-6: фаза ACTIVE из старых данных часами не держит арену и задачи; записанный герой перечитывает статус', async () => {
