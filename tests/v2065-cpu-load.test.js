@@ -1,5 +1,5 @@
 'use strict';
-// 20.64 (John 25.10 после 20.62: «стало лучше, что ещё можем сделать для облегчения нагрузки вообще без потери качества и скорости»).
+// 20.65 (John 25.10 после 20.62: «стало лучше, что ещё можем сделать для облегчения нагрузки вообще без потери качества и скорости»).
 // Замер в настоящем Chromium (стенд с расширением, заглушки игры с размерами из журналов 25.10): каждая запись памяти героя стоит
 // ≈1,5–1,7 мс ЦП на КБ по всем процессам, память героя у игрока 764–928 КБ; встроенное меню с бесконечными анимациями держит
 // перерисовку каждый кадр (GPU 5,6 → 0,5 с/мин без них); журнал на каждый сброс (раз в 1,5 с) считал все 20 000 строк (≈21 мс);
@@ -80,7 +80,7 @@ test('журнал: ошибка записи — пакет возвращае�
   J.c.flush(); await J.c.wait(); assert.equal(J.counts(), 2, 'после ошибки — снова count()'); assert.equal(J.rows.size, 5);
 });
 
-test('ревью 20.64: исключение add у полного журнала — транзакция отменена целиком (ни части пакета, ни удаления старых), повтор цел', async () => {
+test('ревью 20.65: исключение add у полного журнала — транзакция отменена целиком (ни части пакета, ни удаления старых), повтор цел', async () => {
   const J = journal({ max: 10 });
   await J.step(10, 'a'); const before = J.keys();
   J.fail(v => v.tag === 'bad'); J.c.push({ tag: 'b' }); J.c.push({ tag: 'b' }); J.c.push({ tag: 'bad' }); J.c.flush(); await J.c.wait();
@@ -93,7 +93,7 @@ test('ревью 20.64: исключение add у полного журнал�
   assert.equal(J.rows.size, 10); assert.deepEqual([...J.rows.values()].slice(-3).map(e => e.tag), ['b', 'b', 'bad']);
   assert.equal(J.writes.at(-1).reccount, 10);
 });
-test('ревью 20.64: событие, которое база не может сохранить (DataCloneError), выбрасывается — журнал не стоит', async () => {
+test('ревью 20.65: событие, которое база не может сохранить (DataCloneError), выбрасывается — журнал не стоит', async () => {
   const J = journal({ max: 10 });
   await J.step(10, 'a'); const before = J.keys();
   J.c.push({ tag: 'b' }); J.c.push({ tag: 'poison', f() {} }); J.c.push({ tag: 'c' }); J.c.flush(); await J.c.wait();
@@ -102,7 +102,7 @@ test('ревью 20.64: событие, которое база не может 
   J.c.flush(); await J.c.wait();
   assert.deepEqual([...J.rows.values()].slice(-2).map(e => e.tag), ['b', 'c']); assert.equal(J.rows.size, 10);
 });
-test('ревью 20.64: после пересчёта count() reccount пишется всегда — правит запись «0» после очистки и раз в 10 мин', async () => {
+test('ревью 20.65: после пересчёта count() reccount пишется всегда — правит запись «0» после очистки и раз в 10 мин', async () => {
   const J = journal({ max: 10 });
   await J.step(5, 'a'); assert.equal(J.writes.at(-1).reccount, 5);
   J.rows.clear(); J.writes.push({ reccount: 0 });                // очистка из меню, затем бот долго стоял
@@ -188,7 +188,7 @@ function writer({ fresh = false, modules = true, idle = false } = {}) {
     RT_BULKY: ['spawns'], rec() {}, rtSizeTop: () => '', tabIdle: idle, document: {}, Date, JSON, Object, Math, Promise };
   c.FRESH = fresh;
   c.rtWriter = core.createPatchQueue(async b => { sent.push(b); return { ok: true }; }, () => true, () => {}, () => Date.now(), { set: f => { timers.push(f); return timers.length; }, clear() {} });
-  // ревью 20.64: реестр модулей — константа верхнего уровня скрипта, как в content.js (не свойство globalThis)
+  // ревью 20.65: реестр модулей — константа верхнего уровня скрипта, как в content.js (не свойство globalThis)
   vm.runInNewContext((modules ? 'const L2V7Modules = Object.create(null); L2V7Modules.equipment = { weaponCatalogFresh: () => FRESH ? rt.weaponCatalog : null };\n' : '')
     + slice(content, 'function setRt(p) {', 'const RECENT = [];') + ';this.setRt=setRt;', c);
   assert.equal(c.L2V7Modules, undefined, 'реестр не виден как свойство глобального объекта');
@@ -253,7 +253,7 @@ test('память боя: прежняя память с полными стр�
   assert.equal(S.writes.filter(p => p.fightMem).at(-1).fightMem['m:safe mob'].a.blaze.context, 'short-ctx', 'короткий контекст — как был');
 });
 
-test('ревью 20.64: чтение памяти боя не меняет хранилище и не облегчает её заново на каждом вызове', () => {
+test('ревью 20.65: чтение памяти боя не меняет хранилище и не облегчает её заново на каждом вызове', () => {
   const ctx = { v: LONG('A') }, T = lab(ctx);
   const ext = { 'm:safe mob': { nm: 'Safe Mob', k: 'm', n: 1, w: 1, l: 0, t: 99000, a: { blaze: { n: 2, s: [7000, 7000], rolls: [7000, 7000], evidence: 2, context: LONG('A') } } } };
   T.env.rt.fightMem = ext;
@@ -263,7 +263,7 @@ test('ревью 20.64: чтение памяти боя не меняет хр�
   assert.ok(m1['m:safe mob'].a.blaze.context.length <= 64, 'в кэше — отпечаток');
   const slim = T.L.slimMem(ext); assert.notEqual(slim, ext); assert.equal(T.L.slimMem(slim), slim, 'облегчённая память — тот же объект');
 });
-test('ревью 20.64: отказ записи и чужая полная память — после rebase обе строки с отпечатком, замеры целы', async () => {
+test('ревью 20.65: отказ записи и чужая полная память — после rebase обе строки с отпечатком, замеры целы', async () => {
   const ctx = { v: LONG('A') }, T = lab(ctx); let fail = true;
   T.env.setRt = async p => { T.writes.push(p); if (fail) return { ok: false, reason: 'ownership_lost' }; Object.assign(T.env.rt, p); return { ok: true }; };
   T.start(); for (let i = 0; i < 3; i++) T.hit(9000); T.L.finish('left'); T.L.flush(); await new Promise(r => setImmediate(r));
@@ -274,7 +274,7 @@ test('ревью 20.64: отказ записи и чужая полная па�
   assert.ok(Object.values(fm).every(m => m.a.blaze.context.length <= 64));
   assert.deepEqual([...fm['m:other'].a.blaze.rolls], [5000, 5000, 5000]); assert.equal(fm['m:safe mob'].a.blaze.rolls.length, 3);
 });
-test('ревью 20.64: последние составы (отпечаток → полная строка) пишутся рядом в fightCtx — выгрузка памяти их не теряет', async () => {
+test('ревью 20.65: последние составы (отпечаток → полная строка) пишутся рядом в fightCtx — выгрузка памяти их не теряет', async () => {
   const ctx = { v: LONG('A') }, T = lab(ctx);
   T.start(); for (let i = 0; i < 3; i++) T.hit(9000); T.L.finish('left'); T.L.flush(); await new Promise(r => setImmediate(r));
   const w = T.writes.filter(p => p.fightMem).at(-1), h = w.fightMem['m:safe mob'].a.blaze.context;
@@ -291,13 +291,13 @@ test('ревью 20.64: последние составы (отпечаток �
   T.start(); T.hit(9000); T.L.finish('left'); T.L.flush(); await new Promise(r => setImmediate(r));
   assert.equal(Object.values(T.env.rt.fightCtx).at(-1), LONG('Z'));
 });
-test('ревью 20.64: хозяин один раз пишет облегчённую память боя (не ждёт боя), проверка — раз на объект памяти', () => {
+test('ревью 20.65: хозяин один раз пишет облегчённую память боя (не ждёт боя), проверка — раз на объект памяти', () => {
   const lm = slice(content, 'async function loopMigrations() {', '// Сервер/вход/антибот');
   assert.match(lm, /if \(rt\.fightMem && rt\.fightMem !== deferredMigrations\.fightSeen\) \{[^]*?L2V7Modules\.fightlab\?\.slimMem\?\.\(src\)[^]*?deferredMigrations\.fightSeen = src;[^]*?setRt\(\{ fightMem: slim \}\)[^]*?deferredMigrations\.fightSeen = null/);
   assert.match(content, /^let deferredMigrations = \{ cfg: \{\}, rt: \{\}, petSlim: false, fightSeen: null \};/m);
 });
 
-// Ревью 20.64: случайная сверка прокси с прежней ловушкой на состояниях, которые меняют выбранную задачу (рыбалка/рейд/оплаты/квесты)
+// Ревью 20.65: случайная сверка прокси с прежней ловушкой на состояниях, которые меняют выбранную задачу (рыбалка/рейд/оплаты/квесты)
 test('прокси cfg: случайные состояния (рейд ждёт рыбалку, оплаты, передышки, квесты) — те же значения, что у прежней ловушки', () => {
   let seed = 20641025; const rnd = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296, pick = a => a[Math.floor(rnd() * a.length)], coin = (p = .5) => rnd() < p;
   const ALL = ['tvt','mammon','dailies','clan','pvp','resources','petbuff','enchant','craft','epic','raid','quests','fish','cat','auto','farm'];
@@ -328,7 +328,7 @@ test('прокси cfg: случайные состояния (рейд ждёт
 // ---------- 5. Встроенное меню и окно на странице игры без покадровой перерисовки ----------
 test('без бесконечных анимаций в меню и его стилях, без размытия под окном бота', () => {
   const html = read('popup.html');
-  // ревью 20.64: проверяем все стили меню (popup.html и подключённые .css) и окно на странице игры, а не только popup.html
+  // ревью 20.65: проверяем все стили меню (popup.html и подключённые .css) и окно на странице игры, а не только popup.html
   const sheets = [...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g)].map(m => m[1]);
   assert.ok(sheets.includes('ui-game.css') && sheets.includes('ui-v7.css'), 'список стилей меню: ' + sheets);
   const css = slice(content, 'uiCss.textContent = `', '`;');

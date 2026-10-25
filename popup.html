@@ -31,7 +31,7 @@
   #heroLine .state.on{background:var(--okbg);color:var(--ok);border:1px solid rgba(92,194,122,.45)}
   #heroLine .state.off{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid var(--line)}
   #heroLine .state.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px}
-  /* 20.64 (жалоба John 25.10 «бот грузит ЦП и память»): бесконечная анимация мигающей точки заставляла браузер перерисовывать
+  /* 20.65 (жалоба John 25.10 «бот грузит ЦП и память»): бесконечная анимация мигающей точки заставляла браузер перерисовывать
      встроенное меню каждый кадр всё время работы бота — замер: GPU 5,6 → 0,5 с/мин (вместе с размытием окна на странице игры).
      Пульс кнопки «Старт» (runPulse) и так перекрыт ui-game.css/ui-v7.css (animation:none) — убран как мёртвый */
 

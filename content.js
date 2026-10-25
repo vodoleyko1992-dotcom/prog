@@ -22,7 +22,7 @@ const BACK  = /^(Назад на карту|Назад на мапу)$/i;
 const QUEST = /[★☆⭐✩✪✫✭✮✯]/;
 
 let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
-// 20.64: fightSeen — объект памяти боя, уже проверенный хозяином на полные строки состава (loopMigrations)
+// 20.65: fightSeen — объект памяти боя, уже проверенный хозяином на полные строки состава (loopMigrations)
 let deferredMigrations = { cfg: {}, rt: {}, petSlim: false, fightSeen: null }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
@@ -1537,7 +1537,7 @@ function setRt(p) {
   let catNull = false;
   if (Object.keys(p).some(k => RT_BULKY.includes(k)) || Date.now() - rtSizeT > 60000) {
     rtSizeT = Date.now();
-    // 20.64 (жалоба John 25.10 «бот грузит ЦП и память»; журналы 25.10: weaponCatalog 120 КБ — 15 % памяти героя): каталог предметов игры —
+    // 20.65 (жалоба John 25.10 «бот грузит ЦП и память»; журналы 25.10: weaponCatalog 120 КБ — 15 % памяти героя): каталог предметов игры —
     // кэш на 30 мин (equipment.weaponCatalogFresh), устаревший никто не читает, а он ехал в каждой записи памяти. Устаревший — null
     // отложенной записью (вместе с ближайшей обычной или через 8 с); свежий не трогаем, проверка — та же функция модуля
     try { const M = typeof L2V7Modules === 'object' ? L2V7Modules.equipment : null; if (rt.weaponCatalog && typeof M?.weaponCatalogFresh === 'function' && !M.weaponCatalogFresh()) { rt = { ...rt, weaponCatalog: null }; catNull = true; } } catch (e) {}
@@ -3424,7 +3424,7 @@ async function loopMigrations() {
     const slim = L2V7Modules.warlock?.slimCohorts;
     if (slim && petCohortsFat(rt.petCohorts) && !(await setRt({ petCohorts: slim(rt.petCohorts) }))?.ok) deferredMigrations.petSlim = true;
   }
-  // 20.64 (ревью): память боя с полными строками состава (до обновления, после смены класса из тайника, после импорта) — облегчённая
+  // 20.65 (ревью): память боя с полными строками состава (до обновления, после смены класса из тайника, после импорта) — облегчённая
   // копия пишется один раз хозяином. Иначе, пока герой не дерётся (рыбалка весь день), полная память так и лежала бы в хранилище, а меню
   // облегчало бы её копию на каждой отрисовке. Проверка — один раз на объект памяти боя.
   if (rt.fightMem && rt.fightMem !== deferredMigrations.fightSeen) {
@@ -4673,7 +4673,7 @@ const uiCss = document.createElement('style');
 // 8.0.3 (игрок 11.10: «бывает полоска с перемоткой, она раздражает»): крупное окно было overflow:auto — когда 30 строк истории не
 // влезали по высоте, появлялась полоса прокрутки, хотя окно не кликается (pointer-events:none) и прокрутить её нельзя. Теперь окно
 // не прокручивается: сверху статус и бой целиком, история (новые строки сверху) обрезается снизу с плавным затуханием
-// 20.64 (жалоба John 25.10 «бот грузит ЦП»): без backdrop-filter:blur — размытие игры под окном пересчитывалось каждый кадр игры, а фон
+// 20.65 (жалоба John 25.10 «бот грузит ЦП»): без backdrop-filter:blur — размытие игры под окном пересчитывалось каждый кадр игры, а фон
 // окна и так почти непрозрачный (0,88 → 0,93)
 uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.93);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
 #l2bot-ind .h{display:flex;align-items:center;gap:7px;font-weight:700;color:#f0cf86;font-size:11.5px;letter-spacing:.02em}

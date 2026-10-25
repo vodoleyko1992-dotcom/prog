@@ -265,7 +265,7 @@
     }) || 'tasks';
   }
   const baseTask = (c, rt = {}, now = Date.now()) => selectedTask(c, rt, now, true);
-  // 20.64 (жалоба John 25.10 «бот грузит ЦП»; замер боя: прокси cfg ≈160 мс/мин, ≈62 000 чтений cfg.X в минуту): selectedTask
+  // 20.65 (жалоба John 25.10 «бот грузит ЦП»; замер боя: прокси cfg ≈160 мс/мин, ≈62 000 чтений cfg.X в минуту): selectedTask
   // считается только для ключей, которые прокси подменяет (таблицы ниже — общие для набора и для ветвей), остальные ключи — как есть
   const TC_GROUPS = {
     mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
