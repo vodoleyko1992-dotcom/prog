@@ -48,7 +48,7 @@ function actFixture(receipt, toast = NOT_ALLOWED) {
     setStatus: () => {}, setRt: async () => {}, slotCd: () => ({}), meMp: () => ({ cur: 900, max: 900 }), petState: () => null, pause: async () => { pauses.push(now); advance(now + 300); },
     rnd: a => a, rec: () => {}, TAG: 't', cleanTitle: s => s, memLeft: () => 0, FORCE_NEED: RX.FORCE_NEED, UNAVAIL: RX.UNAVAIL, CD_RE: /перезаряд|cooldown/i };
   const box = { console: { info: () => {} }, Date: { now: () => now }, Math, Map, String, env, ctx: { pet: null, block: {} }, LOCK_A: [60, 500, 120], LOCK_B: [30, 200, 50], NOMP_MS: 1500,
-    lostUntil: new Map(), mpUntil: new Map(), pressAt: new Map(), victory: () => false, defeat: () => false, affordable: () => true, healSlot: () => false,
+    lostUntil: new Map(), mpUntil: new Map(), oreKind: () => null, pressAt: new Map(), victory: () => false, defeat: () => false, affordable: () => true, healSlot: () => false,
     noticeText: () => toast, uiReady: () => ready, mobHp: () => ({ cur: 1000 }), rememberCd: async () => {}, slotsBy: () => [], drainBackoff: () => {} };
   vm.runInNewContext(actSource + '\nthis.act=act;this.refuse=()=>ctx.refuseText;', box);
   return { act: () => box.act({ title: 'Wild Sweep', mp: 30 }, 'AoE'), fired, pauses, now: () => now, refuse: () => box.refuse() };

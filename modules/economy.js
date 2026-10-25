@@ -83,6 +83,9 @@ function mmInvKick(now = Date.now()) {
   if (typeof env.invRefresh !== 'function' || now - mmInvKickT < 300000) return false;
   mmInvKickT = now; Promise.resolve().then(() => env.invRefresh()).catch(() => {}); return true;
 }
+// 20.63: бой получил отказ «Недостаточно Spirit/Soul Ore» за последний час — руду нужно хотя бы 1, даже если минимум в настройке 0
+const oreOut = k => Date.now() - (+env.rt.oreOut?.[k] || 0) < 3600000;
+const oreMin = x => (x.key === 'spirit' || x.key === 'soul') && oreOut(x.key) ? Math.max(1, x.mm[0]) : x.mm[0];
 function shopNeedByPanel() {
   if (!env.cfg.shopAuto) return '';
   const low = [];
@@ -100,6 +103,14 @@ function shopNeedByPanel() {
     const id = sp.ids[0], slot = env.shotSlot?.(), slotId = +(String(slot?.title || '').match(/^#(\d+)/)?.[1] || 0);
     const q = env.invQty?.(id) ?? (slotId === id ? env.qty(slot) : 0);
     if (q < sp.mm[0]) low.push(`заряды ${sp.grade} ${q} < ${sp.mm[0]}`);
+  }
+  // 20.63 (лог 25.10 15:16–16:11): Spirit/Soul Ore раньше проверялись только плановым походом раз в час — 55 мин баффы кота упирались в
+  // «Недостаточно Spirit Ore». Теперь руда — по сумке из сети, как заряды; отказ сервера «нет руды» (rt.oreOut от боя, свежее часа) —
+  // закупка даже при минимуме 0 (oreMin)
+  for (const it of shopPlan().filter(x => x.key === 'spirit' || x.key === 'soul')) {
+    const q = env.invQty?.(it.ids[0]), min = oreMin(it);
+    if (q == null) { if (oreOut(it.key)) mmInvKick(); continue; }   // сумка не прочитана — фоном перечитаем, решим на следующей проверке
+    if (q < min) low.push(`${it.label} ${q} < ${min}${oreOut(it.key) ? ' (сервер: недостаточно руды)' : ''}`);
   }
   // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
   // 20.41 (игрок 20.10 «не покупает С кристаллы»): сумка не прочитана/старше 5 мин — сырьё молча пропускалось и сумку никто не перечитывал.
@@ -341,7 +352,7 @@ async function shopStep() {
     const cnt = await bagCounts();
     const have0 = x => x.ids.length ? x.ids.reduce((a, id) => a + (cnt[id] || 0), 0) : Object.entries(cnt).reduce((a, [k, v]) => a + (k.startsWith('n:') && x.name.test(k.slice(2)) ? v : 0), 0);
     const plan0 = shopPlan();
-    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < x.mm[0] || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade, itemId: x.ids?.[0] }; }).filter(x => x.buy > 0);
+    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < oreMin(x) || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade, itemId: x.ids?.[0] }; }).filter(x => x.buy > 0);
     // 7.1.19: какие заряды бот считает «своими» и сколько их в сумке — всегда в журнал (лог 10.10 01:13: заряды D не купились, а почему — не видно)
     const sh = plan0.find(x => x.key === 'shots'), sg = shotGrade(), w = equippedWeapon();
     const shNote = sh ? ` · заряды: ${sh.label} (id ${sh.ids.join(',')}) в сумке ${have0(sh)} из мин. ${sh.mm[0]} — грейд ${sg.g}: ${sg.src}; оружие ${w ? (w.name || w.en) + ' ' + (w.g || '?') : 'не прочитано'}` : '';
