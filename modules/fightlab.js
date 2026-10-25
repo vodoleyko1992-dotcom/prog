@@ -127,9 +127,20 @@ function syncOwner() {
 // (состав героя: экипировка, баффы, заряды — строка 1,2–2,1 КБ) лежал целиком в каждой строке умения каждой цели, а нужен только для
 // сравнения «тот же состав». В память боя пишется его отпечаток (тот же packHash, что у пачек), сравнение сводит к отпечатку обе стороны —
 // старые полные строки (прежняя память, другие классы, импорт) совпадают как раньше. В текущем бою контекст полный, как был.
-const CTX_MAX = 64;
-let ctxIn = null, ctxOut = null;
-const ctxId = s => { if (typeof s !== 'string' || s.length <= CTX_MAX) return s; if (s !== ctxIn) { ctxIn = s; ctxOut = packHash(s); } return ctxOut; };
+// Ревью 20.64: чтобы выгрузка памяти не теряла, при каком составе сняты замеры, последние составы (отпечаток → полная строка, до 6)
+// пишутся рядом в rt.fightCtx той же записью, что и память боя (только при новом составе).
+const CTX_MAX = 64, CTX_KEEP = 6;
+let ctxIn = null, ctxOut = null, ctxNew = false;
+const ctxSeen = new Map();
+const ctxId = s => { if (typeof s !== 'string' || s.length <= CTX_MAX) return s;
+  if (s !== ctxIn) { ctxIn = s; ctxOut = packHash(s); if (!ctxSeen.delete(ctxOut)) ctxNew = true; ctxSeen.set(ctxOut, s);
+    while (ctxSeen.size > CTX_KEEP) ctxSeen.delete(ctxSeen.keys().next().value); }
+  return ctxOut; };
+// словарь для записи: прежние составы из rt.fightCtx, затем увиденные этой вкладкой (новые — последними), не больше CTX_KEEP
+function ctxDict() {
+  const old = env.rt.fightCtx && typeof env.rt.fightCtx === 'object' && !Array.isArray(env.rt.fightCtx) ? env.rt.fightCtx : {};
+  return Object.fromEntries([...Object.entries(old).filter(([h, v]) => typeof v === 'string' && !ctxSeen.has(h)), ...ctxSeen].slice(-CTX_KEEP));
+}
 // Прежняя память с полными строками — облегчённая копия (запишется со следующим сохранением памяти боя); без полных строк — тот же объект
 function slimMem(src) {
   if (!src || typeof src !== 'object') return src;
@@ -703,11 +714,13 @@ function flush() {
   // character_changed — или исключение) возвращает dirty, пока кэш тот же: память боя допишется следующим flush,
   // а не потеряется до следующего боя. Сбой — одна строка в журнал раз в 10 мин.
   const src = cache, failed = e => { if (cache === src && cache.__src === out) dirty = true; if (e !== 'inactive') failNote(e); };   // ревью: неактивная вкладка — не ошибка
+  const ctxW = ctxNew; ctxNew = false;
+  const ctxFail = () => { if (ctxW) ctxNew = true; };   // словарь составов не записан — уйдёт следующей записью памяти боя
   try {
-    const r = env.setRt({ fightMem: out, fightLast: lastFight });   // 9.2: последний бой — в меню «Память боя"
-    if (r?.then) r.then(v => { if (v?.ok === false) failed(v.reason || 'запись отклонена'); }, failed);
-    else if (r?.ok === false) failed(r.reason || 'запись отклонена');
-  } catch (e) { failed(e); }
+    const r = env.setRt({ fightMem: out, fightLast: lastFight, ...(ctxW ? { fightCtx: ctxDict() } : {}) });   // 9.2: последний бой — в меню «Память боя"
+    if (r?.then) r.then(v => { if (v?.ok === false) { ctxFail(); failed(v.reason || 'запись отклонена'); } }, e => { ctxFail(); failed(e); });
+    else if (r?.ok === false) { ctxFail(); failed(r.reason || 'запись отклонена'); }
+  } catch (e) { ctxFail(); failed(e); }
 }
 let failNoteT = -Infinity;
 function failNote(e) {
@@ -760,6 +773,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, raidKillsFor, healOn, groupOn, packAdvice, packReport, packStats, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, raidKillsFor, healOn, groupOn, packAdvice, packReport, packStats, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem, slimMem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

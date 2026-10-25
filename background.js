@@ -885,7 +885,7 @@ let buf = [], timer = null, writing = Promise.resolve();
 // 20.64 (жалоба John 25.10 «бот грузит ЦП»; замер: count() по 20 000 строк — ≈21 мс на каждый сброс раз в 1,5 с): число строк
 // журнала фон помнит сам (logN) и пересчитывает count() только после запуска фона, ошибки/переподключения базы, раз в 200 сбросов или
 // 10 мин. Между пересчётами лишние строки удаляются строго до последнего ключа ДО этого пакета (K0) — новый пакет не тронут; пустой
-// журнал до пакета (K0 нет — «Очистить журнал» в меню чистит базу напрямую) — счёт с нуля. reccount пишется только при изменении.
+// журнал до пакета (K0 нет — «Очистить журнал» в меню чистит базу напрямую) — счёт с нуля. reccount пишется при изменении и после count().
 let logN = null, recSent, flushN = 0, logCntT = 0;
 function flush() {
   timer = null;
@@ -894,9 +894,11 @@ function flush() {
   writing = writing.then(async () => {
     const db = await idb();
     const tx = db.transaction('log', 'readwrite'), st = tx.objectStore('log');
-    let total = 0, rc, cleared = false;
+    let total = 0, rc, cleared = false, counted = false;
+    // Пакет не добавлен (исключение add) — транзакция отменяется целиком: ни части пакета, ни удаления старых строк
+    const addAll = () => { try { chunk.forEach(ev => st.add(ev)); } catch (e) { try { tx.abort(); } catch (_) {} throw e; } };
     if (logN == null || ++flushN % 200 === 0 || Date.now() - logCntT > 600000) {
-      chunk.forEach(ev => st.add(ev));
+      addAll(); counted = true;
       st.count().onsuccess = e => {
         total = e.target.result;
         if (total > MAX_EV) trimOldest(st, total - MAX_EV);
@@ -912,16 +914,19 @@ function flush() {
         const excess = pre + chunk.length - MAX_EV;
         if (excess > 0) cut = trimOldest(st, excess, IDBKeyRange.upperBound(K0));
       };
-      try { chunk.forEach(ev => st.add(ev)); } catch (e) { try { tx.abort(); } catch (_) {} throw e; }   // пакет не добавлен — и старые строки не удаляем
+      addAll();
       await txDone(tx);
       logN = cleared || cut?.exhausted ? chunk.length : pre + chunk.length - (cut?.deleted || 0);
       if (logN > MAX_EV) logN = null;            // пакет больше предела (буфер ≤ 10 000 — не бывает): следующий сброс пересчитает
       rc = Math.min(logN ?? MAX_EV, MAX_EV);
     }
-    if (rc !== recSent || cleared) { await chrome.storage.local.set({ reccount: rc }); recSent = rc; }
+    // Ревью 20.64: после пересчёта count() reccount пишется всегда — правит и внешнюю запись (очистка журнала из меню пишет 0)
+    if (rc !== recSent || cleared || counted) { await chrome.storage.local.set({ reccount: rc }); recSent = rc; }
   }).catch(e => {
     logN = null; recSent = undefined;
-    // Не терять пакет событий, если IndexedDB временно недоступен.
+    // Не терять пакет событий, если IndexedDB временно недоступен. Ревью 20.64: событие, которое база не может сохранить
+    // (DataCloneError), выбрасываем — иначе один такой пакет повторялся бы каждые 3 с и журнал стоял бы целиком.
+    if (e?.name === 'DataCloneError') chunk.splice(0, chunk.length, ...chunk.filter(ev => { try { structuredClone(ev); return true; } catch (_) { return false; } }));
     buf = [...chunk, ...buf].slice(-10000);
     console.warn('[L2bot] журнал: запись отложена, буфер до 10 000 событий', e);
     if (!timer) timer = setTimeout(flush, 3000);

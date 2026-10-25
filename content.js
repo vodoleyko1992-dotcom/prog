@@ -22,7 +22,8 @@ const BACK  = /^(Назад на карту|Назад на мапу)$/i;
 const QUEST = /[★☆⭐✩✪✫✭✮✯]/;
 
 let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
-let deferredMigrations = { cfg: {}, rt: {}, petSlim: false }; // execute only after acquiring ownership
+// 20.64: fightSeen — объект памяти боя, уже проверенный хозяином на полные строки состава (loopMigrations)
+let deferredMigrations = { cfg: {}, rt: {}, petSlim: false, fightSeen: null }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
 // 20.41 (ревью petCohorts: готовый ужатый словарь в deferredMigrations.rt писался после замка поверх свежих строк хозяина и даже
@@ -1526,7 +1527,7 @@ function setRt(p) {
     // 20.64 (жалоба John 25.10 «бот грузит ЦП и память»; журналы 25.10: weaponCatalog 120 КБ — 15 % памяти героя): каталог предметов игры —
     // кэш на 30 мин (equipment.weaponCatalogFresh), устаревший никто не читает, а он ехал в каждой записи памяти. Устаревший — null
     // отложенной записью (вместе с ближайшей обычной или через 8 с); свежий не трогаем, проверка — та же функция модуля
-    try { const M = globalThis.L2V7Modules?.equipment; if (rt.weaponCatalog && typeof M?.weaponCatalogFresh === 'function' && !M.weaponCatalogFresh()) { rt = { ...rt, weaponCatalog: null }; catNull = true; } } catch (e) {}
+    try { const M = typeof L2V7Modules === 'object' ? L2V7Modules.equipment : null; if (rt.weaponCatalog && typeof M?.weaponCatalogFresh === 'function' && !M.weaponCatalogFresh()) { rt = { ...rt, weaponCatalog: null }; catNull = true; } } catch (e) {}
     let size = 0; try { size = JSON.stringify({ ...rt, classStash: undefined }).length; } catch (e) {}   // 20.62: тайник классов — в своём ключе stash, не в rt
     // 7.1.30: до сброса кэшей — срезать устаревшее в растущих без предела словарях (по t: hardMobs 2 ч, hpMin/questSeen/rbSeen 24 ч)
     if (size > 300000) {
@@ -3409,6 +3410,14 @@ async function loopMigrations() {
     deferredMigrations.petSlim = false;
     const slim = L2V7Modules.warlock?.slimCohorts;
     if (slim && petCohortsFat(rt.petCohorts) && !(await setRt({ petCohorts: slim(rt.petCohorts) }))?.ok) deferredMigrations.petSlim = true;
+  }
+  // 20.64 (ревью): память боя с полными строками состава (до обновления, после смены класса из тайника, после импорта) — облегчённая
+  // копия пишется один раз хозяином. Иначе, пока герой не дерётся (рыбалка весь день), полная память так и лежала бы в хранилище, а меню
+  // облегчало бы её копию на каждой отрисовке. Проверка — один раз на объект памяти боя.
+  if (rt.fightMem && rt.fightMem !== deferredMigrations.fightSeen) {
+    const src = rt.fightMem, slim = L2V7Modules.fightlab?.slimMem?.(src);
+    deferredMigrations.fightSeen = src;
+    if (slim && slim !== src && !(await setRt({ fightMem: slim }))?.ok) deferredMigrations.fightSeen = null;
   }
   // 8.0.3 (проверка правок по чемпионам): и для настроек — иначе вкладка, ждавшая замок, позже записывала свой старый пакет
   // разовых миграций вслепую: игрок включил «Искать чемпионов», вкладка перехватила управление — и галочка молча выключилась

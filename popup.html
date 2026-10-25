@@ -31,8 +31,9 @@
   #heroLine .state.on{background:var(--okbg);color:var(--ok);border:1px solid rgba(92,194,122,.45)}
   #heroLine .state.off{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid var(--line)}
   #heroLine .state.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px}
-  /* 20.64 (жалоба John 25.10 «бот грузит ЦП и память»): бесконечные анимации (мигающая точка, пульс кнопки «Старт») заставляли
-     браузер перерисовывать встроенное меню каждый кадр всё время работы бота — замер: GPU 5,6 → 0,5 с/мин; теперь свечение неподвижное */
+  /* 20.64 (жалоба John 25.10 «бот грузит ЦП и память»): бесконечная анимация мигающей точки заставляла браузер перерисовывать
+     встроенное меню каждый кадр всё время работы бота — замер: GPU 5,6 → 0,5 с/мин (вместе с размытием окна на странице игры).
+     Пульс кнопки «Старт» (runPulse) и так перекрыт ui-game.css/ui-v7.css (animation:none) — убран как мёртвый */
 
   #status .st{font-weight:600;font-size:12.5px;color:var(--txt);white-space:pre-line}
   #status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
@@ -70,7 +71,7 @@
   #start{background:linear-gradient(180deg,#2f5233,#244028);border-color:#4f8a55}
   #stop{background:linear-gradient(180deg,#4f302b,#3e2521);border-color:#80504a}
   #reset,#shopNowTop{flex:0 0 40px;font-size:15px;border-radius:var(--r)}
-  #start.running{background:linear-gradient(180deg,#38a24c,#2a7e3a);border-color:#7fe58e;color:#fff;box-shadow:0 0 6px 2px rgba(111,224,127,.5)}
+  #start.running{background:linear-gradient(180deg,#38a24c,#2a7e3a);border-color:#7fe58e;color:#fff}
   #stop.idle{opacity:.5}
   #pause{padding:10px 6px;font-size:14px;border-radius:var(--r)}
   #pause.paused{background:linear-gradient(180deg,#5a4a1f,#463a18);border-color:#a08a3a}
