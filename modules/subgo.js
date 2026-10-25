@@ -10,7 +10,9 @@
      {action:'equip', itemId, enchant, targetInstanceId, enchantPAtkBonus?, enchantMAtkBonus?, expectedRevision}, снять —
      {action:'unequip', slot, expectedRevision}. targetInstanceId — как у игры (L2.mkBagEnchantTargetId в l2-enchant-client.js).
    Слоты inventory.eq: l1 оружие, l2 щит, l3 грудь (или цельная броня), l4 ноги, lh шлем, lg перчатки, lf ботинки, le1/le2 серьги,
-   lr1/lr2 кольца, neck; пояс/плащ/тату (belt/cloak/tattoo) общие на все классы — их не трогаем.
+   lr1/lr2 кольца, neck; пояс/плащ/тату — belt/cloak/tattoo ({itemId, specialGearLevel}, уровень улучшения у Маммона).
+   20.63 (лог 25.10 17:10, смена Arcana Lord → Dreadnought): после Rebirth смена класса снимает в сумку ВСЁ, и плащ/тату/пояс тоже —
+   John надевал их руками. Теперь их подбираем по уровню из catalog-hints.specialGearUpgradeHints.
    Что выбираем: грейд важнее цифр (как equipment.rankWeapons), из того, что лежит в сумке или надето; склад — только подсказка в меню.
    Оружие — вид «в класс» (маг — магическое, спойлер — дубина, Warsmith — булава+щит на РБ / пика на фарм, через crafterKit, если есть),
    щит — если оружие одноручное и сборка его допускает. Броня — тип класса (маг — роба), тяжёлая/лёгкая — что даёт больше с бонусом сета. */
@@ -20,7 +22,8 @@
  const GR = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
  const ARMOR = ['lh', 'lg', 'lf'], PAIRS = { earring: ['le1', 'le2'], ring: ['lr1', 'lr2'] };
  const SLOT_OF = { lh: 'head', lg: 'gloves', lf: 'feet', neck: 'neck' };
- const SLOT_RU = { l1: 'оружие', l2: 'щит', l3: 'броня', l4: 'штаны', lh: 'шлем', lg: 'перчатки', lf: 'ботинки', le1: 'серьга', le2: 'серьга', lr1: 'кольцо', lr2: 'кольцо', neck: 'ожерелье' };
+ const SLOT_RU = { l1: 'оружие', l2: 'щит', l3: 'броня', l4: 'штаны', lh: 'шлем', lg: 'перчатки', lf: 'ботинки', le1: 'серьга', le2: 'серьга', lr1: 'кольцо', lr2: 'кольцо', neck: 'ожерелье', cloak: 'плащ', tattoo: 'тату', belt: 'пояс' };
+ const SPECIAL = ['cloak', 'tattoo', 'belt'], EQ_KEYS = ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'le1', 'le2', 'lr1', 'lr2', 'neck', ...SPECIAL];
  const WT_RU = { blunt: 'дубина/булава', bigblunt: 'двуруч. дубина', pole: 'древковое (пика)', sword: 'меч', bigsword: 'двуруч. меч', dagger: 'кинжал', dual: 'парные мечи', bow: 'лук', fist: 'кастеты', magic: 'магическое' };
  // вид оружия по классу (профессия из /character без расы): первый найденный вид в списке — лучший
  const CLASS_WT = [
@@ -74,7 +77,7 @@
   const eq = ch?.inventory?.eq || {}, plain = r => !r.clanWeaponUid && !r.clanShieldUid && !r.augmentation && !isRebirth(r);
   const bag = (ch?.inventory?.stacks || []).filter(r => +r.qty > 0 && plain(r));
   let need = 0;
-  for (const k of ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'le1', 'le2', 'lr1', 'lr2', 'neck']) {
+  for (const k of EQ_KEYS) {
    const r = eqRow(eq[k]); if (!r || k === 'l2' && r.itemId === eqRow(eq.l1)?.itemId) continue;
    if (plain(r) && bag.some(b => +b.itemId === +r.itemId && Math.floor(num(b.enchant)) === Math.floor(num(r.enchant)))) continue;
    need++;
@@ -82,17 +85,20 @@
   const free = Math.max(0, max - used);
   return { free, need, ok: free >= need };
  }
+ // плащ/тату/пояс: статы по уровню улучшения (у вещи в сумке и надетой — specialGearLevel, без него — Lv.0)
+ const spLv = row => Math.max(0, Math.floor(num(row?.specialGearLevel)));
+ const spStats = (row, cat) => { const L = cat?.specialGearUpgradeHints?.byItemId?.[row.itemId]?.levels; return L ? L[spLv(row)] || null : null; };
  // все вещи героя (надетые и в сумке) с данными каталога; n — сколько экземпляров (стопка одинаковых колец)
  function pool(ch, cat) {
   const G = {}; for (const g of cat?.gearCatalog || []) G[+g.itemId] = g;
   const S = cat?.itemStatsHints || {}, out = [];
   const add = (row, where) => { const g = G[+row.itemId]; if (!g || !g.slot || g.slot === 'consumable') return;
-   const st = { ...(g.stats || {}), ...(S[row.itemId] || {}) };
+   const st = { ...(g.stats || {}), ...(S[row.itemId] || {}), ...(spStats(row, cat) || {}) };
    out.push({ id: +row.itemId, row, g, st, slot: g.slot, grade: String(g.grade || st.grade || 'NG').toUpperCase(), en: Math.max(0, Math.floor(num(row.enchant))), where, n: where === 'bag' ? Math.max(1, Math.floor(num(row.qty) || 1)) : 1,
     req: Math.max(num(g.requiredLevel), num(st.requiredLevel), num(cat?.itemRequiredLevelHints?.[row.itemId])), name: g.nameUk || cat?.itemNamesUk?.[row.itemId] || '#' + row.itemId,
     token: bagToken(row, g.slot) }); };
   const eq = ch?.inventory?.eq || {};
-  for (const k of ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'le1', 'le2', 'lr1', 'lr2', 'neck']) { const r = eqRow(eq[k]); if (r && !(k === 'l2' && r.itemId === eqRow(eq.l1)?.itemId)) add(r, k); }
+  for (const k of EQ_KEYS) { const r = eqRow(eq[k]); if (r && !(k === 'l2' && r.itemId === eqRow(eq.l1)?.itemId)) add(r, k); }
   for (const r of ch?.inventory?.stacks || []) if (+r.qty > 0) add(r, 'bag');
   return out;
  }
@@ -107,7 +113,21 @@
  // Кільце фантому A — грейд стоял выше всего. Эпическая бижутерия (свои строки каталога epicExtraLinesUk или известный ID) идёт первой
  const EPIC_JEWEL = new Set([6656, 6657, 6658, 6659, 6660, 6661, 6662, 8191]);
  const epicJ = it => Array.isArray(it.st?.epicExtraLinesUk) && it.st.epicExtraLinesUk.length > 0 || EPIC_JEWEL.has(it.id) ? 1 : 0;
- const jorder = mage => (a, b) => epicJ(b) - epicJ(a) || gr(b) - gr(a) || jpow(b, mage) - jpow(a, mage) || (a.where === 'bag') - (b.where === 'bag');
+ // 20.63 (лог 25.10 17:10): бот надел Dreadnought'у Намисто Фринтези (HP/M.Def), John сразу сменил на +25 Валакаса (P.Atk +10 %).
+ // Среди эпик-бижутерии сначала урон под класс (строки каталога epicExtraLinesUk), потом грейд и защита. Веса — грубая доля к урону:
+ // процент атаки целиком, сила крита ×0,25 (крит умений ≈ 35 %, ×2,4), откат ×0,5, скорость ×0,3, «шанс криту +60» = 6 % ×0,5
+ const JDPS = { fighter: [[/^P\.Atk$/i, 1], [/^Крит\. шкода$/i, 0.25], [/^(?:Шанс криту|Дод\. крит)$/i, 0.05], [/^Відкат скілів$/i, 0.5], [/^Швидкість атаки$/i, 0.3]],
+  mage: [[/^M\.Atk$/i, 1], [/^(?:Шанс маг\. криту|Маг\. крит)$/i, 0.3], [/^Відкат скілів$/i, 0.5], [/^Швидкість касту$/i, 0.3]] };
+ const jdps = (it, mage) => (Array.isArray(it.st?.epicExtraLinesUk) ? it.st.epicExtraLinesUk : []).reduce((a, x) => {
+  const w = JDPS[mage ? 'mage' : 'fighter'].find(([re]) => re.test(String(x?.labelUk || '').trim()));
+  return a + (w ? Math.abs(parseFloat(String(x.valueUk || '').replace(',', '.')) || 0) * w[1] : 0); }, 0);
+ const jorder = mage => (a, b) => epicJ(b) - epicJ(a) || jdps(b, mage) - jdps(a, mage) || gr(b) - gr(a) || jpow(b, mage) - jpow(a, mage) || (a.where === 'bag') - (b.where === 'bag');
+ // плащ/тату/пояс: атака и сила умений (1 % ≈ 120 атаки при P.Atk героя ≈ 12 тыс.), сила крита, потом HP/защита.
+ // Тату озера Lv.5 (563 + умения +10 %) так выше Тату Душі Lv.0 (850), а Lv.5 Тату Душі (1913 + 10 %) — выше всех
+ const spow = (it, mage) => { const s = it.st;
+  return num(mage ? s.equipFlatMAtk : s.equipFlatPAtk) + 120 * num(mage ? s.equipOutgoingMagicalSkillDamagePct : s.equipOutgoingPhysicalSkillDamagePct)
+   + 30 * num(mage ? s.equipCastSpeedPct : s.equipAttackSpeedPct) + 60 * num(mage ? s.equipMagicCritDamagePct : s.equipPhysicalCritDamagePct)
+   + (num(s.cloakMaxHp) + num(s.equipFlatMaxHp)) / 10 + num(s.cloakPDefFlat) + num(s.cloakMDefFlat) + num(s.equipFlatPDef) + num(s.equipFlatMDef); };
  /* план комплекта: { slots: { l1: item|null, … }, why: [...] }. opt: { lvl, prof, branch, wt: ['pole'] — вид оружия (порядок — приоритет),
     shield: true|false|null (null — по классу: маг и одноручное — да), armor: 'heavy'|'light'|'magic'|null } */
  function planGear(ch, cat, opt = {}) {
@@ -159,15 +179,16 @@
    slots[keys[0]] = s[0] || null; slots[keys[1]] = s[1] || null;
   }
   slots.neck = [...all.filter(it => it.slot === 'neck')].sort(jorder(mage))[0] || null;
+  for (const k of SPECIAL) slots[k] = [...all.filter(it => it.slot === k)].sort((a, b) => spow(b, mage) - spow(a, mage) || (a.where === 'bag') - (b.where === 'bag'))[0] || null;
   return { slots, armor: A.T, mage, why };
  }
  // что поменять: надетое ≠ плану. Пары серёг/колец сравниваем как набор (порядок слотов не важен)
  function diff(ch, plan) {
-  const eq = ch?.inventory?.eq || {}, cur = k => eqRow(eq[k]), same = (r, it) => !!r && !!it && +r.itemId === it.id && Math.floor(num(r.enchant)) === it.en;
+  const eq = ch?.inventory?.eq || {}, cur = k => eqRow(eq[k]), same = (r, it) => !!r && !!it && +r.itemId === it.id && Math.floor(num(r.enchant)) === it.en && (!SPECIAL.includes(it.slot) || spLv(r) === spLv(it.row));
   const ops = [];
   // щит при новом оружии без щита (двуручное или «не надевать») снимаем первым: не надеемся, что игра снимет его сама
   if (!plan.slots.l2 && cur('l2') && cur('l2').itemId !== cur('l1')?.itemId) ops.push({ op: 'unequip', slot: 'l2', was: cur('l2') });
-  for (const k of ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'neck']) {
+  for (const k of ['l1', 'l2', 'l3', 'l4', 'lh', 'lg', 'lf', 'neck', ...SPECIAL]) {
    const it = plan.slots[k];
    if (k === 'l2' && !it) continue;
    if (k === 'l4' && !it) continue;              // цельная броня занимает и ноги — игра снимет штаны сама
@@ -187,7 +208,7 @@
  }
  const body = (op, rev) => op.op === 'unequip' ? { action: 'unequip', slot: op.slot, expectedRevision: rev }
   : { action: 'equip', itemId: op.it.id, enchant: op.it.en, targetInstanceId: op.it.token, ...(op.it.slot === 'rhand' && op.it.row.enchantPAtkBonus != null ? { enchantPAtkBonus: Math.floor(num(op.it.row.enchantPAtkBonus)), enchantMAtkBonus: Math.floor(num(op.it.row.enchantMAtkBonus)) } : {}), expectedRevision: rev };
- const L2SubGear = { planGear, diff, body, pool, bagToken, bagRoom, isRebirth, epicJ, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
+ const L2SubGear = { planGear, diff, body, pool, bagToken, bagRoom, isRebirth, epicJ, jdps, spow, armorTypeOf, isMageProf, classWt, isCrafter, WT_RU, SLOT_RU };
  root.L2SubGear = L2SubGear;
  // 20.43 (John 21.10): вкладка «Сабкласс» → «▶ Старт»: rt.subGo {slot, kit, wt, shield, t}. Шаг ядра (loopMenuJobs, вне боя):
  // к Reorin (бесплатный с VIP телепорт — сразу POST, платный — обычный перелёт zoneGo с защитой оплаты) → switch → комплект → страница карты.
