@@ -140,21 +140,23 @@ function globalResp(T) {
   const lo = med(all.map(o => o[0])), hi = med(all.map(o => o[1]));
   return lo <= hi ? { lo, hi, n: all.length } : { lo: hi, hi: lo, n: all.length };
 }
-function respOf(T, id, def = defH()) {
+// 20.62 (жалоба John 25.10 «бот грузит ЦП»): gg — общий респ, посчитанный один раз на всю таблицу (table); без него —
+// как раньше, свой globalResp на каждого босса (≈200 РБ × проход по всем РБ на каждой перерисовке окна бота)
+function respOf(T, id, def = defH(), gg) {
   const x = T?.b?.[id] || {};
   if (x.rh > 0) return { lo: x.rh * H, hi: x.rh * H, src: 'game' };
   const own = band(x.ob);
   if (own) return { ...own, src: 'own', n: x.ob.length };
   if (EPIC_H[id]) return { lo: EPIC_H[id] * H, hi: EPIC_H[id] * H, src: 'reference' };
-  const g = !x.e && globalResp(T);
+  const g = !x.e && (gg !== undefined ? gg : globalResp(T));
   if (g) return { ...g, src: 'all' };
   return { lo: def * H, hi: def * H, src: 'guess' };
 }
 // таймер босса: жив / мёртв и когда воскреснет (at.lo — 0, если время смерти неизвестно: только «не позже at.hi»)
-function timerOf(T, id, now = Date.now(), def = defH()) {
+function timerOf(T, id, now = Date.now(), def = defH(), gg) {
   const x = T?.b?.[id];
   if (!x || typeof x.al !== 'boolean') return null;
-  const R = respOf(T, id, def);
+  const R = respOf(T, id, def, gg);
   if (x.al) return { id, n: x.n, l: x.l, e: !!x.e, al: true, up: x.pv ? [x.pv, x.ch] : null, ls: x.ls, R };
   const dh = x.dh || x.ch || now, at = { lo: x.dl > 0 ? x.dl + R.lo : 0, hi: dh + R.hi };
   return { id, n: x.n, l: x.l, e: !!x.e, al: false, dl: x.dl || 0, dh, own: !!x.k, at, late: now > at.hi, soon: at.lo > 0 && now >= at.lo && now <= at.hi, R, ls: x.ls };
@@ -193,7 +195,8 @@ const respTxt = R => R ? `${durH(R.lo, R.hi)} · ${SRC[R.src] || R.src}${R.n ? `
 // список для меню: сначала мёртвые по времени воскрешения, потом «уже должен», потом живые
 function table(T, now = Date.now(), opt = {}) {
   const lo = opt.lo ?? -Infinity, hi = opt.hi ?? Infinity, def = opt.def ?? defH();
-  const out = Object.keys(T?.b || {}).map(id => timerOf(T, id, now, def)).filter(t => t && (opt.all || t.e || (t.l >= lo && t.l <= hi)));
+  const gg = globalResp(T);
+  const out = Object.keys(T?.b || {}).map(id => timerOf(T, id, now, def, gg)).filter(t => t && (opt.all || t.e || (t.l >= lo && t.l <= hi)));
   const rank = t => t.al ? 2 : t.late ? 1 : 0;
   return out.sort((a, b) => rank(a) - rank(b) || (rank(a) === 0 ? (a.at.lo || a.at.hi) - (b.at.lo || b.at.hi) : rank(a) === 1 ? a.at.hi - b.at.hi : a.l - b.l));
 }

@@ -66,7 +66,7 @@ test('M1: смена героя состоялась — круг продолж
 function statusBox(opt={}){
  let now=1e12;const sets=[],writes=[],soon=[];
  const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,on:opt.on??true,tabOwner:opt.owner??true,leaseEpoch:opt.owner===false?null:'e1',document:{prerendering:false},Date:{now:()=>now},String,
-  chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},
+  chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},drawSoon(){},
   setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})},setRtSoon:p=>{soon.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true,deferred:true})}};
  vm.createContext(c);vm.runInContext(slice(core,'const RECENT = [];','// Команда остановки сериализуется')+';this.S=setStatus;this.save=statusSave;',c);
  return {c,sets,writes,soon,tick:ms=>{now+=ms}};

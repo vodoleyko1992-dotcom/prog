@@ -24,7 +24,7 @@ function fixture(on = false) {
     TAB_ID: 'page-A', DEF_RT: {}, cfg: {}, automationGeneration: 0, ROLE_KEYS: [],
     Date: { now: () => now }, document: { visibilityState: 'visible' }, window: {},
     L2V7Modules: { lifestone: { interrupt() {} }, mammon: { bagAuto: async () => {} } },
-    enchantModePause: async () => {}, draw() {}, dock() {}, rec: (...args) => notes.push(args), sleep: async () => {},
+    enchantModePause: async () => {}, draw() {}, drawSoon() {}, dock() {}, rec: (...args) => notes.push(args), sleep: async () => {},
     ownCfgChange: () => false, viewOnlyCfgChange: () => false, modeSig: () => '', mergeCfg: x => x,
     heroNick: () => 'HeroB', pageTranslated: () => false,
     chrome: { storage: { onChanged: { addListener: callback => { listener = callback; } } } } };

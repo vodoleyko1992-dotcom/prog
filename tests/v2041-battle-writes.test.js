@@ -76,7 +76,7 @@ test('счёт на моба: слоты + статистика + запасы �
 
 test('статус: живой статус в live@Ник — минутная копия rt.status отложенно; без live — обычной записью',()=>{
  const src=slice(content,'const RECENT = [];','// Команда остановки сериализуется');
- const box=live=>{const reg=[],soon=[],c={rt:{char:'Hero',status:''},tabIdle:false,on:true,tabOwner:live,leaseEpoch:live?'e1':null,document:{prerendering:false},Date,String,chrome:{storage:{local:{set:async()=>{}}}},quietErr(){},recBot(){},draw(){},
+ const box=live=>{const reg=[],soon=[],c={rt:{char:'Hero',status:''},tabIdle:false,on:true,tabOwner:live,leaseEpoch:live?'e1':null,document:{prerendering:false},Date,String,chrome:{storage:{local:{set:async()=>{}}}},quietErr(){},recBot(){},draw(){},drawSoon(){},
   setRt:p=>{reg.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})},setRtSoon:p=>{soon.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})}};vm.runInNewContext(src+';this.S=setStatus;',c);return {c,reg,soon};};
  const a=box(true);a.c.S('Бой: загрузка');assert.equal(a.soon.length,1);assert.equal(a.reg.length,0);assert.equal(a.c.rt.status,'Бой: загрузка');
  const b=box(false);b.c.S('Загрузка');assert.equal(b.reg.length,1,'live не записан — rt.status обычной записью');assert.equal(b.soon.length,0);
@@ -124,7 +124,7 @@ function leaseFixture(){
  const state={on:true,lock:{k:'tab1',tab:1,epoch:'lease',t:now,vis:true},rt:{char:'Hero',exp:100,adena:10},cfg:{}};
  const page={Date:{now:()=>now},on:true,tabOwner:true,tabIdle:false,leaseEpoch:'lease',rt:clone(state.rt),cfg:{},DEF_RT:{},TAB_ID:'test',automationGeneration:0,window:{},lockMine:0,
   enchantCommandBusy:false,warlockCommandBusy:false,lifestoneCommandBusy:false,mammonBagCommandBusy:false,L2EngineCore:core,location:{pathname:'/battle.html'},document:{visibilityState:'visible'},
-  L2V7Modules:{lifestone:{interrupt(){}},mammon:{bagAuto:async()=>{}}},enchantModePause:async()=>{},draw(){},dock(){},rec(){},abBlink(){},main(){},
+  L2V7Modules:{lifestone:{interrupt(){}},mammon:{bagAuto:async()=>{}}},enchantModePause:async()=>{},draw(){},drawSoon(){},dock(){},rec(){},abBlink(){},main(){},
   ownCfgChange:()=>false,viewOnlyCfgChange:()=>false,modeSig:()=>'',mergeCfg:x=>x,quietErr(){},setInterval:fn=>{tick=fn},renewResume:async()=>false,
   chrome:{storage:{onChanged:{addListener:fn=>{listener=fn}}},runtime:{}}};
  page.tabVis=()=>page.document.visibilityState==='visible';

@@ -21,7 +21,7 @@ function fixture() {
     rt: clone(state.rt), cfg: {}, DEF_RT: {}, TAB_ID: 'test', automationGeneration: 0, window: {},
     enchantCommandBusy: false, warlockCommandBusy: false, lifestoneCommandBusy: false, mammonBagCommandBusy: false, craftReadCommandBusy: false, craftReadControl: 0, // 22.10: ручное чтение крафта тоже удерживает временную аренду.
     L2V7Modules: { lifestone: { interrupt() {} }, mammon: { bagAuto: async () => {} } },
-    enchantModePause: async () => {}, draw() {}, dock() {}, rec() {}, abBlink() {}, main() {},
+    enchantModePause: async () => {}, draw() {}, drawSoon() {}, dock() {}, rec() {}, abBlink() {}, main() {},
     ownCfgChange: () => false, viewOnlyCfgChange: () => false, modeSig: () => '', mergeCfg: x => x,
     quietErr: (...args) => errors.push(args), setInterval: fn => { tick = fn; },
     chrome: { storage: { onChanged: { addListener: fn => { listener = fn; } } }, runtime: {} } };

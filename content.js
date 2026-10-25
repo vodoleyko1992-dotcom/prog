@@ -1594,7 +1594,7 @@ function setStatus(s) {
     else rt = { ...rt, status: s };
   }
   else rt = { ...rt, status: s };
-  draw();
+  drawSoon();
 }
 // Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
 // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M6): on=false ставился до ответа фона; таймаут IPC бросал исключение из halt(), а в
@@ -4684,7 +4684,9 @@ function epicRespTxt(wide, now = Date.now()) {
   try {
     const RT = L2V7Modules.rbtimer, T = rt.rbTimer || { b: {} }; if (!RT) return '';
     const nm = n => String(n || '').replace(/^Queen Ant$/, 'АК');
-    const E = RT.table(T, now, { all: true }).filter(t => t.e).map(t => ({ n: nm(t.n), l: t.l, al: t.al, txt: t.al ? '' : RT.upTxt(t, now), at: t.al ? Infinity : t.at.lo || t.at.hi }));
+    // 20.62 (жалоба John 25.10 «бот грузит ЦП»): таблица только по эпикам — раньше считались таймеры всех ≈200 РБ на каждую перерисовку окна
+    const TE = { ...T, b: Object.fromEntries(Object.entries(T.b || {}).filter(([, x]) => x && x.e)) };
+    const E = RT.table(TE, now, { all: true }).filter(t => t.e).map(t => ({ n: nm(t.n), l: t.l, al: t.al, txt: t.al ? '' : RT.upTxt(t, now), at: t.al ? Infinity : t.at.lo || t.at.hi }));
     // 10.0.2 (скрин игрока 13.10 00:14: блока не было — бот на паузе, своих опросов ещё не делал): эпики, которых нет в таймерах, — из
     // rt.epicDb (список эпиков игры, страница «Эпик боссы», раздел «🐉 Эпики»)
     const seen = new Set(E.map(x => x.n.toLowerCase()));
@@ -4774,7 +4776,13 @@ function indPatchKids(el, tpl) {
     indPatchKids(o, n);
   });
 }
+// 20.62 (жалоба John 25.10 «бот грузит ЦП»): статус меняется на каждом действии боя, а память — на каждой записи; окно бота
+// перерисовывается не чаще раза в 150 мс (клики по кнопкам окна, как раньше, рисуют сразу через draw()). Метка — свойство функции:
+// setStatus зовётся и до этой строки верхнего уровня
+function drawSoon() { if (drawSoon.t) return; drawSoon.t = setTimeout(() => { drawSoon.t = 0; try { draw(); } catch (e) {} }, 150); }
 function draw() {
+  // 20.62: окно выключено (indMode off) — без сборки строк (таймеры, сумка, панель боя)
+  if ((cfg.indMode || 'full') === 'off') { if (ui) ui.style.display = 'none'; return; }
   const L = [], now = Date.now();
   const fz = forceNow() || forceMax() ? ` · ⚡${forceNow()}${forceMax() ? '/' + forceMax() : ''}` : '';
   // 8.0 (аудит меню): настоящий текущий режим (как выбирает движок, autonomyMode) — раньше в списке не было «фарма на месте»,
@@ -5116,7 +5124,10 @@ function alignServerSkillCooldowns() {
       changed = true;
     }
   }
-  if (changed) setRt({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): откаты сервера меняются почти на каждом ходе — раньше каждый ход полностью
+  // перезаписывал память героя (rt ≈1–1,4 МБ) и рассылал её копии вкладке и меню. Теперь отложенно, одним пакетом раз в 8 с, как
+  // combat.js (rtSoon cdUntil); память вкладки обновлена сразу, уход со страницы (pagehide) дописывает остаток
+  if (changed) setRtSoon({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
 }
 const netSeen = new Map();
 // 20.10: боевые POST сохраняем каждый; GET — при изменении боевых данных, а не большого character.
@@ -7575,7 +7586,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.cfg && on && tabOwner) L2V7Modules.mammon.bagAuto().catch(() => {});
   if (ch.rt && rt.invScan && !ch.rt.oldValue?.invScan && !running) invScanDrive();   // «Проверить оружие» из меню
   if (ch.cfg) { try { dock(); } catch (e) {} }
-  if (ch.cfg || ch.rt || ch.on) draw();
+  if (ch.cfg || ch.rt || ch.on) drawSoon();
 });
 // v5.5.9: игра заранее загружает следующую страницу (карту) в фоне — Chrome «предзагрузка» (document.prerendering), и наш скрипт
 // запускался и в этой невидимой копии: второй бот в той же вкладке («⏸ работает в другой вкладке», лог 09.10 12:08; вероятно, и
