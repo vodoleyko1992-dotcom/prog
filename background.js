@@ -297,7 +297,7 @@ function stashMigrate(why) {
     const { rt } = await chrome.storage.local.get('rt');
     if (!rt || typeof rt !== 'object' || !Object.hasOwn(rt, 'classStash')) return false;   // повтор безвреден: переносить нечего
     const change = { rt: { ...rt, _src: 'stash-move' } }; await L2EngineCore.stashLegacyMerge(change, { rt }, false, () => chrome.storage.local.get(['stash']));
-    await chrome.storage.local.set(L2EngineCore.stashSplitSet(change, 'stash-move'));
+    await chrome.storage.local.set(await L2EngineCore.stashRehome(L2EngineCore.stashSplitSet(change, 'stash-move'), k => chrome.storage.local.get(k)));
     buf.push({ t: Date.now(), src: 'S', kind: 'память', what: `тайник классов перенесён в отдельный ключ хранилища (${why}): обычная запись памяти героя меньше`, st: '' }); flush();
     return true;
   });
@@ -384,7 +384,7 @@ async function statePatch(m, sender) {
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
     // 20.62: classStash — в ключ stash (stashSplitSet); пакет только с тайником (и rt без старого тайника) большой rt не переписывает
     const stashOnly = change.rt && Object.keys(writePatch).every(k => k === 'classStash') && !Object.hasOwn(state.rt || {}, 'classStash');
-    if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(writePatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, String(m.src || '').slice(0, 60)); }
+    if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(writePatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, String(m.src || '').slice(0, 60)); await L2EngineCore.stashRehome?.(change, k => chrome.storage.local.get(k)); }
     if (stashOnly && change.stash) delete change.rt;
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
@@ -525,7 +525,7 @@ async function menuPatch(m, sender) {
     // значению другими шагами (см. statePatch); копии с прежним содержимым её не получают.
     const menuStat = change.rt ? (globalThis.L2EngineCore?.MENU_STAT_KEYS || []).filter(k => Object.hasOwn(change.rt, k) && (Object.hasOwn(rtPatch, k) || change.rt[k] !== state.rt?.[k] && JSON.stringify(change.rt[k]) !== JSON.stringify(state.rt?.[k]))) : [];
     if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
-    if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(rtPatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, 'menu'); }   // 20.62: старый rt.classStash — в ключ stash той же записью
+    if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(rtPatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, 'menu'); await L2EngineCore.stashRehome?.(change, k => chrome.storage.local.get(k)); }   // 20.62: старый rt.classStash — в ключ stash той же записью
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
     if (m.on === false) await stopAlert(change.stopMeta, state.cfg);   // 20.43: Стоп из меню снимает «!» самоостановки, уведомления нет
@@ -610,7 +610,7 @@ async function switchCharacter(m, sender) {
     // героя, а тайник прежнего лежать в stash@Ник. Ищем обёртку по нику в обоих местах; нечего переносить — stash@Ник не затираем пустой
     const own = (who, ...ws) => ws.find(w => w && typeof w === 'object' && String(w.char || '') === who);
     if (old && old !== nick && String(current.stash?.char || '') !== old) Object.assign(current, await chrome.storage.local.get(['stash@' + old]));
-    const prevStash = stashOf(prev, own(old, current.stash, current['stash@' + old])), withStash = (r, s) => s.has ? { ...strip(r), classStash: s.v } : r;
+    const prevWrap = own(old, current.stash, current['stash@' + old]), prevStash = stashOf(prev, prevWrap), withStash = (r, s) => s.has ? { ...strip(r), classStash: s.v } : r;
     if (old === nick) return { ok: true, rt: withStash(prev, prevStash), cfg: previousCfg, changed: false };
     if (!old) {
       const next = { ...strip(prev), char: nick, campaign: null, campaignUrl: '', lastTeleport: '',
@@ -641,8 +641,12 @@ async function switchCharacter(m, sender) {
     // Таймеры боссов общие для сервера; старый кэш другого героя не отменяет импорт.
     if (prev.rbTimer || nextRt.rbTimer) nextRt.rbTimer = mergeTimerPatch(prev.rbTimer, nextRt.rbTimer);
     // 20.62: тайники меняются местами той же записью (stash всегда с ником нового героя — вкладка получает его в том же onChanged)
-    await chrome.storage.local.set({ ['rt@' + old]: strip(prev), ...(prevStash.has ? wrap('stash@' + old, old, prevStash) : {}), ['cfg@' + old]: previousCfg,
+    // Ревью 20.62 (2): stash@Ник прежнего героя — всегда его зеркало (пустая обёртка после загрузки файла без тайника тоже: иначе
+    // вернулся бы старый тайник); обёртки нет нигде (откат на старую сборку) — stash@Ник не трогаем
+    await chrome.storage.local.set({ ['rt@' + old]: strip(prev), ...(prevStash.has || prevWrap ? wrap('stash@' + old, old, prevStash) : {}), ['cfg@' + old]: previousCfg,
       rt: nextRt, ...wrap('stash', nick, nextStash), cfg: nextCfg });
+    // тайник нового героя теперь в «stash» — его копия в stash@Ник лишняя (600–870 КБ) и после следующего ухода устарела бы
+    if (EC) try { await chrome.storage.local.remove('stash@' + nick); } catch (e) {}
     // 20.13 (ревизия 17.10, шаг 7, core-a/L1): живой статус героя (live@Ник) с прошлой сессии старее «Персонаж: …» — убираем,
     // меню покажет rt.status, пока вкладка не напишет свежий
     try { await chrome.storage.local.remove('live@' + nick); } catch (e) {}

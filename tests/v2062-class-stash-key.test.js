@@ -10,7 +10,7 @@ function background(storage){
  const sets=[],logs=[],ctx={console,Date,URL,Number,JSON,Object,Math,Promise,Set,Array,String,L2EngineCore:core,MAX_PATCH_KEYS:400,LOCK_TTL:90000,lockQueue:Promise.resolve(),
   buf:{push:x=>logs.push(x)},flush(){},
   chrome:{runtime:{getURL:p=>'chrome-extension://x/'+p},storage:{local:{get:async keys=>{const r={};for(const k of [].concat(keys))r[k]=clone(storage[k]);return r},
-   set:async p=>{sets.push(clone(p));Object.assign(storage,clone(p))},remove:async()=>{}}}}};
+   set:async p=>{sets.push(clone(p));Object.assign(storage,clone(p))},remove:async k=>{for(const x of [].concat(k))delete storage[x]}}}}};
  vm.createContext(ctx);vm.runInContext(cut('function serializeLock(fn)','async function lockCommand(')+cut('function mergeTimerPatch(','// Реворк ядра')+cut('async function switchCharacter(','// 8.0.6 (Firefox'),ctx);
  const tab={frameId:0,url:'https://l2wap.com/battle.html',tab:{id:1,active:true}};
  return {ctx,sets,logs,state:(patch,extra={})=>ctx.statePatch({patch,epoch:'e1',src:'tab-1',expectedChar:'Hero',...extra},tab),
@@ -188,4 +188,22 @@ test('вкладка: загрузка при старом rt.classStash и кл
  const env={get rt(){return rt},cfg:{},setRt:p=>Object.assign(rt,p),rec(){},setStatus(){}};
  box.L2V7Factories.story(env).classNote('dwarf_maestro',1,70);
  assert.deepEqual(rt.skills,{crush:{n:900}},'память класса из ключа вернулась');assert.deepEqual(Object.keys(rt.classStash).sort(),['human_arcana_lord','human_warlock','orc_titan']);
+});
+// Финальное ревью 20.62: зеркало прежнего героя и лишняя копия; чужая обёртка в «stash» после отката не теряется
+test('смена героя: stash@Ник прежнего — всегда его зеркало (пустая обёртка после загрузки файла), копия нового героя убрана',async()=>{
+ // Hero активен, его тайник в файле не было — «stash» = пустая обёртка Hero; в stash@Hero лежит старая копия X
+ const X={dwarf_maestro:{t:1}},S={on:false,cfg:{},rt:{char:'Hero',kills:5},stash:{char:'Hero',v:null},'stash@Hero':{char:'Hero',v:clone(X)},'rt@Alt':{char:'Alt'},'stash@Alt':{char:'Alt',v:{orc_titan:{t:2}}}},B=background(S);
+ await B.sw('Alt');assert.deepEqual(S['stash@Hero'],{char:'Hero',v:null,_src:'tab-1'},'старая копия X не осталась');
+ assert.equal('stash@Alt' in S,false,'копия активного героя убрана (тайник Alt — в «stash»)');assert.deepEqual(S.stash.v,{orc_titan:{t:2}});
+ const back=await B.sw('Hero');assert.equal(back.rt.classStash,undefined,'X не вернулся');assert.deepEqual(S['stash@Alt'].v,{orc_titan:{t:2}});
+});
+test('откат на старую сборку: «stash» с тайником другого героя переносится в stash@его ника перед записью своего',async()=>{
+ const Y={orc_titan:{t:3}},S={...store(),stash:{char:'Alt',v:clone(Y)}},B=background(S);
+ await B.state({classCur:{prof:'dwarf_maestro',slot:1,t:2},classStash:{human_warlock:{t:9}}});
+ assert.equal(S.stash.char,'Hero');assert.deepEqual(S['stash@Alt'],{char:'Alt',v:Y},'тайник Alt не стёрт');
+ // stash@Alt уже есть — не трогаем
+ const S2={...store(),stash:{char:'Alt',v:{old:{t:1}}},'stash@Alt':{char:'Alt',v:clone(Y)}},B2=background(S2);
+ await B2.state({classStash:{human_warlock:{t:9}}});assert.deepEqual(S2['stash@Alt'].v,Y);
+ // обычная запись без тайника «stash» не читает
+ const S3={...store(),stash:{char:'Alt',v:clone(Y)}},B3=background(S3);await B3.state({kills:9});assert.equal('stash@Alt' in S3,false);assert.equal(S3.stash.char,'Alt');
 });

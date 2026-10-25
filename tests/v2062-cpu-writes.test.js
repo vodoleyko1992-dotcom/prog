@@ -12,10 +12,9 @@ const H = 3600000, NOW = Date.UTC(2026, 9, 25, 0, 0);
 // 1. Откаты сервера — отложенной записью (как combat.js rtSoon), память вкладки обновляется сразу
 {
   const src = slice(content, 'function alignServerSkillCooldowns() {', 'const netSeen = new Map();');
-  assert.match(src, /setRtSoon\(\{ cdUntil: next \}\)/, 'откаты сервера — setRtSoon');
-  assert.doesNotMatch(src, /[^n]setRt\(\{ cdUntil/, 'без обычной записи всей памяти на каждом ходе');
+  assert.match(src, /\(on \? setRtSoon : setRt\)\(\{ cdUntil: next \}\)/, 'откаты сервера у работающего бота — setRtSoon');
   const writes = [], soon = [], el = { closest: () => el };
-  const ctx = { rt: { cdUntil: {} }, Date: { now: () => NOW }, Object, Math, Number, CSS: { escape: s => s }, console, TAG: 't', SLOT: '.s',
+  const ctx = { on: true, rt: { cdUntil: {} }, Date: { now: () => NOW }, Object, Math, Number, CSS: { escape: s => s }, console, TAG: 't', SLOT: '.s',
     isBattle: () => true, cdSpawn: () => 'sp', skKey: () => 'l2_1220', document: { querySelector: () => el },
     combatCooldown: { snapshot: () => ({ skillUntil: { l2_1220: NOW + 3000 } }), skillKnown: () => true },
     setRt: p => { writes.push(p); return Promise.resolve(); }, setRtSoon: p => { soon.push(p); ctx.rt = { ...ctx.rt, ...p }; return Promise.resolve(); } };
@@ -24,6 +23,20 @@ const H = 3600000, NOW = Date.UTC(2026, 9, 25, 0, 0);
   assert.equal(writes.length, 0, '50 ходов — ни одной обычной записи');
   assert.equal(soon.length, 50, 'каждое изменение — в отложенный пакет');
   assert.equal(ctx.rt.cdUntil.l2_1220, NOW + 3000 + 49 * 1000, 'память вкладки — свежий дедлайн');
+  // бот выключен (игрок бьёт сам, замка нет — pagehide отложенное не дописал бы): обычной записью, как раньше
+  ctx.on = false; ctx.combatCooldown.snapshot = () => ({ skillUntil: { l2_1220: NOW + 90000 } }); ctx.align();
+  assert.equal(writes.length, 1); assert.equal(soon.length, 50);
+}
+// 1b. Прочие записи боя/победы — отложенным пакетом или только при изменении (финальное ревью 20.62)
+{
+  const soonSet = slice(content, 'const RT_STAT_SOON = new Set([', ']);');
+  for (const k of ['force', 'pots', 'potInfo', 'zoneStat', 'tbWatchT']) assert.ok(soonSet.includes(`'${k}'`), 'отложенно: ' + k);
+  assert.match(content, /if \(pi && \(rt\.potInfo\?\.name !== pi\.name/, 'сведения о банке — только новые');
+  assert.match(read('modules/champs.js'), /return \(env\.setRtSoon \|\| env\.setRt\)\(\{champLearn:M\}\);/, 'урон состава после победы — отложенно');
+  assert.match(content, /L2V7Modules\.champs = L2V7Factories\.champs\(\{[^\n]*get setRtSoon\(\) \{ return setRtSoon; \}/, 'геттер setRtSoon у champs');
+  assert.match(read('modules/navigation.js'), /setRt\(\{ zoneStat: S, \.\.\.\(env\.rt\.lvl !== l \? \{ lvl: l \} : \{\}\) \}\)/, 'уровень — только новый');
+  assert.match(read('modules/mobfarm.js'), /if \(qt\.join\('\|'\) !== \(env\.rt\.questTargets \|\| \[\]\)\.join\('\|'\)\) await env\.setRt\(\{ questTargets: qt \}\);/, 'список квестовых целей — только новый');
+  assert.match(read('popup.js'), /finally \{ craftAdding = false; if \(secOpen\('craft'\)\) renderCraftPicker\(\); \}/, 'меню: добавление крафта после ухода из раздела не рисует пустой список');
 }
 
 // 2. Таймеры РБ: общий респ считается один раз на таблицу — результат тот же, что у прежнего расчёта по каждому РБ

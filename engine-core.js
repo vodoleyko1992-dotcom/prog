@@ -533,6 +533,17 @@
     if (own || !stashObj(change?.rt) || !Object.hasOwn(state?.rt || {}, 'classStash') || !Object.hasOwn(change.rt, 'classStash')) return change;
     const w = (await getStash())?.stash; change.rt = { ...change.rt, classStash: stashValue(change.rt, w).v }; return change;
   }
+  // Ревью 20.62 (2): ключ «stash» после отката на старую сборку может держать тайник другого героя (старая сборка меняла героев, не
+  // трогая ключи stash*). Перед заменой «stash» тайником активного героя чужую обёртку переносим в stash@её ника, если там пусто —
+  // иначе память её классов пропала бы. Читает хранилище только когда запись сама пишет «stash» (смена класса, перенос, меню)
+  async function stashRehome(change, get) {
+    const nw = change?.stash; if (!stashObj(nw)) return change;
+    const cur = (await get(['stash']))?.stash, who = stashObj(cur) ? String(cur.char || '') : '';
+    if (!who || who === String(nw.char || '') || !stashObj(cur.v) || Object.hasOwn(change, 'stash@' + who)) return change;
+    const there = (await get(['stash@' + who]))?.['stash@' + who];
+    if (!stashObj(there) || !stashObj(there.v)) change['stash@' + who] = cur;
+    return change;
+  }
   // Вкладка игры: тайник для нового rt из события storage.onChanged (ch). Старое rt.classStash уже в rt; ключ stash в этом же событии
   // (не своё эхо src) важнее; тот же герой — тайник из памяти вкладки (prev); герой сменился без ключа stash в событии — reload: ник,
   // тайник нового героя вкладка дочитывает из хранилища
@@ -570,6 +581,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { stashKeyOf, stashValue, stashLegacyMerge, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1229,7 +1229,8 @@ function observeSlot(b, src) {
     if (hpd > 15) p.heal = Math.max(p.heal, hpd);
     if (buff) p.buffSec = +buff[1];
     const pulse = txt.match(/імпульсами по\s*(\d+)\s*HP\s*кожні\s*(\d+)|импульсами по\s*(\d+)\s*HP\s*каждые\s*(\d+)/i);
-    if (pulse) setRt({ potInfo: { name, pulse: +(pulse[1] || pulse[3]), every: +(pulse[2] || pulse[4]) } });
+    const pi = pulse && { name, pulse: +(pulse[1] || pulse[3]), every: +(pulse[2] || pulse[4]) };
+    if (pi && (rt.potInfo?.name !== pi.name || rt.potInfo?.pulse !== pi.pulse || rt.potInfo?.every !== pi.every)) setRt({ potInfo: pi });   // 20.62: только новое
     if (stun) p.stun++;
     const unav = UNAVAIL.test(noticeText()) && noticeText() !== before.notice;
     if (unav) { p.unavail = (p.unavail || 0) + 1; p.unavailT = Date.now(); }
@@ -1555,7 +1556,10 @@ const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 's
   // 20.43 (лог 21.10 15:47–15:51): статистика кота (petStat/petAdvice, когорты petCohorts) и отметка EXP% (expMark) после каждой
   // победы — тоже отложенно; сброс из меню не воскрешается (те же ключи в L2EngineCore.MENU_STAT_KEYS)
   'petStat', 'petAdvice', 'petCohorts', 'expMark',
-  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT',
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): энергия после каждого заряда/расхода, запасы банок после каждой банки, сведения
+  // о банке, замеры зон после каждой победы, отметка сторожа баффов раз в 15 с — каждая была полной записью памяти героя
+  'force', 'pots', 'potInfo', 'zoneStat', 'tbWatchT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
 // уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
@@ -5128,7 +5132,8 @@ function alignServerSkillCooldowns() {
   // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): откаты сервера меняются почти на каждом ходе — раньше каждый ход полностью
   // перезаписывал память героя (rt ≈1–1,4 МБ) и рассылал её копии вкладке и меню. Теперь отложенно, одним пакетом раз в 8 с, как
   // combat.js (rtSoon cdUntil); память вкладки обновлена сразу, уход со страницы (pagehide) дописывает остаток
-  if (changed) setRtSoon({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
+  // Бот выключен (игрок бьёт сам): у вкладки нет замка, pagehide отложенное не дописывает — обычной записью, как раньше
+  if (changed) (on ? setRtSoon : setRt)({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
 }
 const netSeen = new Map();
 // 20.10: боевые POST сохраняем каждый; GET — при изменении боевых данных, а не большого character.
@@ -6897,7 +6902,7 @@ L2V7Modules.enemies = L2V7Factories.enemies({ get pvpSelf(){return ()=>L2V7Modul
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
 // 10.0.2: таймеры боссов (modules/rbtimer.js): когда убит и когда воскреснет РБ / эпик
 // 10.0.5: чемпионы ради FA — оценка до боя, проба, отход, обучение (rt.champLearn)
-L2V7Modules.champs = L2V7Factories.champs({ get combatContext(){return options=>L2V7Modules.warlock.combatContext(options)}, get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
+L2V7Modules.champs = L2V7Factories.champs({ get combatContext(){return options=>L2V7Modules.warlock.combatContext(options)}, get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get setRtSoon() { return setRtSoon; }, get rec() { return rec; },
   get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); }, get faPaidLeft() { return (...a) => L2V7Modules.buffs.faPaidLeft(...a); } });   // 10.0.8: платные баффы за FA — «Cancel» чемпионов
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });

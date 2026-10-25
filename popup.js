@@ -1907,7 +1907,7 @@ $('craftAdd')?.addEventListener('click', async () => {
   try {
     const ok = await craftEdit({ action:'add',row:{id:'c'+Date.now().toString(36),code,nm:row.name,item:row.item,n} },`⚒ Цель: ${row.name} ×${n}`);
     if (ok && craftRt.char === char && $('craftPick').value === code && +$('craftN').value === n) $('craftN').value = '1';
-  } finally { craftAdding = false; renderCraftPicker(); }
+  } finally { craftAdding = false; if (secOpen('craft')) renderCraftPicker(); }   // 20.62 (ревью): раздел уже закрыт — craftRt пуст, перерисует renderOpen при возврате
 });
 $('craftList')?.addEventListener('click', async e => {
   const id = e.target.closest('[data-craftdel]')?.dataset.craftdel; if (!id) return;

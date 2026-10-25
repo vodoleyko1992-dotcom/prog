@@ -942,7 +942,8 @@ async function map() {
   const zMobs = (env.rt.zoneMobs?.[env.rt.zone] || []).map(n => n.toLowerCase());
   const seenQ = Object.entries(env.rt.questSeen || {}).filter(([k, t]) => Date.now() - t < 6 * 3600000 && (!zMobs.length || zMobs.includes(k)))
     .map(([k]) => Object.values(env.rt.spawns || {}).find(v => v[0].toLowerCase() === k)?.[0] || k);
-  await env.setRt({ questTargets: [...new Set([...sig.quest, ...seenQ])] });
+  const qt = [...new Set([...sig.quest, ...seenQ])];
+  if (qt.join('|') !== (env.rt.questTargets || []).join('|')) await env.setRt({ questTargets: qt });   // 20.62: тот же список — без записи памяти
 
   // цели главы (мобы и чемпионы) ищем по всему списку локации, а не только на первых страницах
   // 7.1.30: и открытые цели квеста профессии (Giant Fungus лежал на 25-й стр. списка из 26)
