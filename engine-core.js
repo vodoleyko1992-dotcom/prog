@@ -495,6 +495,57 @@
     return { wait, note, left, gap };
   }
 
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов rt.classStash (память неактивных сабклассов, 600–870 КБ из
+  // ≈1–1,5 МБ rt) — в своём ключе хранилища: у активного героя «stash» (рядом с «rt»), у остальных «stash@Ник» (рядом с «rt@Ник»).
+  // Значение — обёртка { char, v: classStash | null, _src }. Обычная запись rt и её рассылка storage.onChanged (вкладка игры и окно
+  // бота получают старое+новое значение целиком) больше не тащат тайник. В памяти вкладки/меню по-прежнему rt.classStash: читатели
+  // хранилища складывают его обратно (stashJoin). Старое rt.classStash внутри rt (ещё не перенесено, импорт старого файла) — новее
+  // ключа: оно и видно, фон переносит его в ключ при следующей записи. Обёртка другого героя (char не совпал) не подставляется.
+  const STASH_RE = /^stash(@|$)/;
+  const stashKeyOf = k => k === 'rt' ? 'stash' : typeof k === 'string' && /^rt@./.test(k) ? 'stash@' + k.slice(3) : null;
+  const stashObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  function stashValue(rt, wrap) {
+    if (stashObj(rt) && Object.hasOwn(rt, 'classStash')) return { has: true, legacy: true, v: rt.classStash };
+    if (stashObj(wrap) && String(wrap.char || '') === String(rt?.char || '') && stashObj(wrap.v)) return { has: true, legacy: false, v: wrap.v };
+    return { has: false, legacy: false, v: undefined };
+  }
+  const stashJoin = (rt, wrap) => { const s = stashValue(rt, wrap); return s.has && !s.legacy ? { ...rt, classStash: s.v } : rt; };
+  const stashWrap = (char, v, src) => ({ char: String(char || ''), v: stashObj(v) ? v : null, _src: String(src || '').slice(0, 60) });
+  function stashStrip(rt) { if (!stashObj(rt) || !Object.hasOwn(rt, 'classStash')) return rt; const { classStash: _, ...rest } = rt; return rest; }
+  // Запись в хранилище (объект для chrome.storage.local.set): rt/rt@Ник без classStash, тайник — в парном ключе той же записью
+  function stashSplitSet(change, src) {
+    for (const k of Object.keys(change)) { const sk = stashKeyOf(k), r = change[k]; if (!sk || !stashObj(r) || !Object.hasOwn(r, 'classStash')) continue;
+      change[sk] = stashWrap(r.char || (k === 'rt' ? '' : k.slice(3)), r.classStash, src); change[k] = stashStrip(r); }
+    return change;
+  }
+  // Вкладка игры: тайник для нового rt из события storage.onChanged (ch). Старое rt.classStash уже в rt; ключ stash в этом же событии
+  // (не своё эхо src) важнее; тот же герой — тайник из памяти вкладки (prev); герой сменился без ключа stash в событии — reload: ник,
+  // тайник нового героя вкладка дочитывает из хранилища
+  function stashKeep(prev, ch, src) {
+    const n = ch?.rt?.newValue || {};
+    if (Object.hasOwn(n, 'classStash')) return { part: {} };
+    if (ch.stash && ch.stash.newValue?._src !== src) { const s = stashValue(n, ch.stash.newValue); return { part: s.has ? { classStash: s.v } : {} }; }
+    if (String(n.char || '') === String(prev?.char || '')) return { part: stashObj(prev) && Object.hasOwn(prev, 'classStash') ? { classStash: prev.classStash } : {} };
+    return { part: {}, reload: String(n.char || '') };
+  }
+  // Файл «Памяти бота» — прежнего вида (classStash внутри rt): выгрузка складывает тайник обратно в rt/rt@Ник, ключи stash* не пишет
+  function stashFold(data) {
+    const out = {};
+    for (const [k, v] of Object.entries(data || {})) if (!STASH_RE.test(k)) { const sk = stashKeyOf(k); out[k] = sk && stashObj(v) ? stashJoin(v, data[sk]) : v; }
+    return out;
+  }
+  // Загрузка файла: тайник героя — в его ключ (нет в файле — пустая обёртка, чтобы старый тайник этого слота не подставился),
+  // ключи stash* без пары rt из файла не пишем
+  function stashUnfold(data, src) {
+    const out = {};
+    for (const [k, v] of Object.entries(data || {})) {
+      if (STASH_RE.test(k)) continue;
+      const sk = stashKeyOf(k); if (!sk || !stashObj(v)) { out[k] = v; continue; }
+      const s = stashValue(v, data[sk]); out[k] = stashStrip(v); out[sk] = stashWrap(v.char || (k === 'rt' ? '' : k.slice(3)), s.v, src);
+    }
+    return out;
+  }
+
   // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
   // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
@@ -502,6 +553,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { stashKeyOf, stashValue, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

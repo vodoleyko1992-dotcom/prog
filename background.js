@@ -285,6 +285,20 @@ function reduceLsAttemptsChange(state, edit) {
   const autoLs={...s,maxAttempts:edit.to,configSig:signature(edit.to),reason:`Лимит снижен по доступным AA: ${s.maxAttempts} → ${edit.to}`};
   return {ok:true,autoLs,cfg:{...state.cfg,autoLs:{...c,maxAttempts:edit.to}}};
 }
+// 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов rt.classStash (600–870 КБ) живёт в своём ключе stash/stash@Ник.
+// Пакет вкладки со сменой класса (statePatch) и запись меню кладут classStash в парный ключ той же записью chrome.storage.local.set —
+// атомарно с classCur и прочим (L2EngineCore.stashSplitSet); сам rt тайника больше не держит. Старый rt.classStash (до обновления)
+// переносится разово: при обновлении расширения и запуске браузера (stashMigrate), заодно — при любой записи statePatch/меню.
+// Остальные записи фона пишут rt из хранилища (уже без тайника) и его не касаются.
+function stashMigrate(why) {
+  return serializeLock(async () => {
+    const { rt } = await chrome.storage.local.get('rt');
+    if (!rt || typeof rt !== 'object' || !Object.hasOwn(rt, 'classStash')) return false;   // повтор безвреден: переносить нечего
+    await chrome.storage.local.set(L2EngineCore.stashSplitSet({ rt: { ...rt, _src: 'stash-move' } }, 'stash-move'));
+    buf.push({ t: Date.now(), src: 'S', kind: 'память', what: `тайник классов перенесён в отдельный ключ хранилища (${why}): обычная запись памяти героя меньше`, st: '' }); flush();
+    return true;
+  });
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -365,6 +379,10 @@ async function statePatch(m, sender) {
     // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
     if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: retirement.retired ? 'raid-session-policy' : writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
+    // 20.62: classStash — в ключ stash (stashSplitSet); пакет только с тайником (и rt без старого тайника) большой rt не переписывает
+    const stashOnly = change.rt && Object.keys(writePatch).every(k => k === 'classStash') && !Object.hasOwn(state.rt || {}, 'classStash');
+    if (change.rt) globalThis.L2EngineCore?.stashSplitSet?.(change, String(m.src || '').slice(0, 60));
+    if (stashOnly && change.stash) delete change.rt;
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
   });
@@ -504,6 +522,7 @@ async function menuPatch(m, sender) {
     // значению другими шагами (см. statePatch); копии с прежним содержимым её не получают.
     const menuStat = change.rt ? (globalThis.L2EngineCore?.MENU_STAT_KEYS || []).filter(k => Object.hasOwn(change.rt, k) && (Object.hasOwn(rtPatch, k) || change.rt[k] !== state.rt?.[k] && JSON.stringify(change.rt[k]) !== JSON.stringify(state.rt?.[k]))) : [];
     if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
+    if (change.rt) globalThis.L2EngineCore?.stashSplitSet?.(change, 'menu');   // 20.62: старый rt.classStash — в ключ stash той же записью
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
     if (m.on === false) await stopAlert(change.stopMeta, state.cfg);   // 20.43: Стоп из меню снимает «!» самоостановки, уведомления нет
@@ -575,19 +594,23 @@ async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
   if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
   return serializeLock(async () => {
-    const current = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg', 'rt@' + nick, 'cfg@' + nick]);
+    const current = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg', 'rt@' + nick, 'cfg@' + nick, 'stash', 'stash@' + nick]);
     // Даже если вкладка ещё получает события, только владелец вправе менять
     // глобальные ключи; при выключенном боте разрешена смена через открытую страницу.
     if (current.on && (current.lock?.k !== 'tab' + tab || !m.epoch || current.lock.epoch !== m.epoch || Date.now() - current.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!current.on && (!sender.tab.active || m.vis !== true)) return { ok: false, reason: 'inactive_tab' };
     const prev = current.rt || {}, old = String(prev.char || '').trim(), previousCfg = current.cfg || {};
-    if (old === nick) return { ok: true, rt: prev, cfg: previousCfg, changed: false };
+    // 20.62: тайник классов — в ключах stash (активный герой) / stash@Ник; вкладке возвращаем память вместе с ним (rt.classStash)
+    const EC = globalThis.L2EngineCore?.stashValue ? globalThis.L2EngineCore : null, strip = r => EC ? EC.stashStrip(r) : r;
+    const stashOf = (r, w) => EC ? EC.stashValue(r, w) : { has: false }, wrap = (k, who, s) => EC ? { [k]: EC.stashWrap(who, s.v, m.src) } : {};
+    const prevStash = stashOf(prev, current.stash), withStash = (r, s) => s.has ? { ...strip(r), classStash: s.v } : r;
+    if (old === nick) return { ok: true, rt: withStash(prev, prevStash), cfg: previousCfg, changed: false };
     if (!old) {
-      const next = { ...prev, char: nick, campaign: null, campaignUrl: '', lastTeleport: '',
+      const next = { ...strip(prev), char: nick, campaign: null, campaignUrl: '', lastTeleport: '',
         qAlias: {}, needChamps: false, wrongLoc: 0, campaignDue: !!previousCfg.campaign,
         questTargets: [], quests: {}, _src: m.src };
-      await chrome.storage.local.set({ rt: next });
-      return { ok: true, rt: next, cfg: previousCfg, changed: true, old: '' };
+      await chrome.storage.local.set({ rt: next, ...(prevStash.has ? wrap('stash', nick, prevStash) : {}) });
+      return { ok: true, rt: withStash(next, prevStash), cfg: previousCfg, changed: true, old: '' };
     }
     let nextCfg = current['cfg@' + nick];
     if (!nextCfg) {
@@ -605,16 +628,18 @@ async function switchCharacter(m, sender) {
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
       nextCfg.mmGoalItem = '';
     }
-    const nextRt = { ...(m.defRt || {}), ...(current['rt@' + nick] || {}),
+    const saved = { ...(m.defRt || {}), ...(current['rt@' + nick] || {}) }, nextStash = stashOf(saved, current['stash@' + nick]);
+    const nextRt = { ...strip(saved),
       char: nick, status: `Персонаж: ${nick}`, campaignDue: !!nextCfg.campaign, _src: m.src };
     // Таймеры боссов общие для сервера; старый кэш другого героя не отменяет импорт.
     if (prev.rbTimer || nextRt.rbTimer) nextRt.rbTimer = mergeTimerPatch(prev.rbTimer, nextRt.rbTimer);
-    await chrome.storage.local.set({ ['rt@' + old]: prev, ['cfg@' + old]: previousCfg,
-      rt: nextRt, cfg: nextCfg });
+    // 20.62: тайники меняются местами той же записью (stash всегда с ником нового героя — вкладка получает его в том же onChanged)
+    await chrome.storage.local.set({ ['rt@' + old]: strip(prev), ...wrap('stash@' + old, old, prevStash), ['cfg@' + old]: previousCfg,
+      rt: nextRt, ...wrap('stash', nick, nextStash), cfg: nextCfg });
     // 20.13 (ревизия 17.10, шаг 7, core-a/L1): живой статус героя (live@Ник) с прошлой сессии старее «Персонаж: …» — убираем,
     // меню покажет rt.status, пока вкладка не напишет свежий
     try { await chrome.storage.local.remove('live@' + nick); } catch (e) {}
-    return { ok: true, rt: nextRt, cfg: nextCfg, changed: true, old };
+    return { ok: true, rt: withStash(nextRt, nextStash), cfg: nextCfg, changed: true, old };
   });
 }
 // 8.0.6 (Firefox для Android): значка на панели там нет — вызовы под защитой, иначе фоновый скрипт ловит ошибку
@@ -739,11 +764,13 @@ async function applyBaseProfile(why) {
     }
   } catch (e) { console.warn('[L2bot] base profile:', String(e)); }
 }
-chrome.runtime.onStartup.addListener(() => { void applyBaseProfile('запуск браузера'); });
+chrome.runtime.onStartup.addListener(() => { void applyBaseProfile('запуск браузера'); void stashMigrate('запуск браузера').catch(() => {}); });
 
 chrome.runtime.onInstalled.addListener(async details => {
   await ensureWatchdogAlarm();
   if (details && ['install', 'update'].includes(details.reason)) await applyBaseProfile(details.reason === 'install' ? 'установка' : 'обновление');
+  // 20.62: тайник классов из rt — в свой ключ до перезагрузки вкладок игры (они загрузятся уже с маленьким rt)
+  if (details?.reason === 'update') try { await stashMigrate('обновление'); } catch (e) {}
   // v5.6: только установка/обновление самого расширения (не обновление браузера — оно перезагружало игру посреди боя с РБ);
   // запись журнала включаем только при первой установке — при обновлении настройки игрока не трогаем
   if (details && !['install', 'update'].includes(details.reason)) return;

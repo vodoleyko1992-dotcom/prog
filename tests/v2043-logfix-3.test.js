@@ -316,7 +316,7 @@ test('журнал: «состояние размер …» — раз в 30 м�
   const setRtSrc = csrc.slice(a, b + 2);
   const recs = [];
   const doc = () => {
-    const c = { sessionStorage: store, RT_BIG_SS: key, rt: { char: 'Warlock', classStash: { big: 'x'.repeat(400000) } }, rtSizeT: 0, RT_BULKY: ['spawns'], RT_STAT_SOON: new Set(), tabIdle: false, document: {},
+    const c = { sessionStorage: store, RT_BIG_SS: key, rt: { char: 'Warlock', zoneStat: { big: 'x'.repeat(400000) } }   /* 20.62: classStash в размер rt больше не входит (ключ stash) — наполнитель другой */, rtSizeT: 0, RT_BULKY: ['spawns'], RT_STAT_SOON: new Set(), tabIdle: false, document: {},
       rec: (...x) => recs.push(x.join(' ')), rtSizeTop: () => '', rtWriter: { enqueue: async () => ({ ok: true }), defer: async () => ({ ok: true }) }, Date, JSON, Object, Math, Promise };
     vm.runInNewContext(decl.replace(/^\nlet /, 'var ') + '\n' + setRtSrc + '\nsetRt({ x: 1 });', c); return c;
   };

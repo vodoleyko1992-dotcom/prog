@@ -18,7 +18,7 @@ const content = read('content.js'), bg = read('background.js');
     assert.deepEqual(q.peek(), { kills: 6, exp: 1 });
   }
   // 2. вкладка, получившая замок, сбрасывает накопленное до чтения свежего rt
-  assert.match(content, /rtWriter\.clear\(\);\n\s*const fresh = await chrome\.storage\.local\.get\(\['rt', 'cfg'\]\);/);
+  assert.match(content, /rtWriter\.clear\(\);\n\s*const fresh = await chrome\.storage\.local\.get\(\['rt', 'cfg', 'stash'\]\);/);   // 20.62: и тайник классов (ключ stash)
   // 3. фон сообщает прежнему хозяину, что замок ушёл; вкладка сразу перестаёт управлять
   assert.match(bg, /chrome\.tabs\.sendMessage\(lock\.tab, \{ cmd: 'lockLost' \}\)/);
   assert.match(content, /m\.cmd === 'lockLost'\) \{ if \(tabOwner\) \{ tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter\.clear\(\);/);
