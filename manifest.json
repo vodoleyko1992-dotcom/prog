@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.62",
-  "description": "L2wap Bot 20.62 — меньше нагрузки ЦП и памяти, защиты Rebirth, меню без chrome.storage",
+  "version": "20.63",
+  "description": "L2wap Bot 20.63 — бой за Кота: руда баффов кота, перепризыв по замерам; смена саба; сумка",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.62"
+  "version_name": "20.63"
 }
