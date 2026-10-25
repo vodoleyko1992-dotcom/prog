@@ -332,11 +332,14 @@ async function liveStatusInto(rt) {
 // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов (rt.classStash, память других сабклассов, сотни КБ) — в своём
 // ключе stash. Меню читает его один раз и дальше держит из событий хранилища (меняется только при смене класса/героя), а не вместе
 // с rt на каждом обновлении окна. В показе — rt.classStash, как раньше; тайник другого героя (stash.char) не подставляется.
+// Ревью 20.62: окно бота (dock) живёт на странице игры всю сессию — держим только имена классов тайника ({класс: 1}), не сами
+// замеры (сотни КБ): меню показывает лишь Object.keys(rt.classStash). Файл «Памяти бота» читает хранилище целиком (memSave).
 let STASH_C;   // undefined — ещё не читали; null — ключа нет (события хранилища — в onStore ниже, у баз farmDb/recipeDb)
+const stashNames = w => w && typeof w === 'object' ? { char: String(w.char || ''), v: w.v && typeof w.v === 'object' && !Array.isArray(w.v) ? Object.fromEntries(Object.keys(w.v).map(k => [k, 1])) : null } : null;
 async function stashInto(rt) {
-  if (!rt || typeof rt !== 'object' || Object.hasOwn(rt, 'classStash')) return rt;
-  if (STASH_C === undefined) try { const v = (await chrome.storage.local.get('stash'))?.stash ?? null; if (STASH_C === undefined) STASH_C = v; } catch (e) { return rt; }
-  const s = globalThis.L2EngineCore?.stashValue?.(rt, STASH_C); if (s?.has) rt.classStash = s.v;
+  if (!rt || typeof rt !== 'object') return rt;
+  if (STASH_C === undefined) try { const v = stashNames((await chrome.storage.local.get('stash'))?.stash); if (STASH_C === undefined) STASH_C = v; } catch (e) { return rt; }
+  const s = globalThis.L2EngineCore?.stashValue?.(rt, STASH_C); if (s?.has) rt.classStash = s.v;   // старое rt.classStash — по классам поверх ключа
   return rt;
 }
 async function load() {
@@ -720,7 +723,7 @@ function onStore(fn) {
 const DBC = {}, dlSig = {};
 async function dbGet(k, def) { if (!(k in DBC)) DBC[k] = (await chrome.storage.local.get(k))[k] || def; return DBC[k]; }
 onStore(ch => { for (const k of ['farmDb', 'recipeDb']) if (ch[k]) { if (ch[k].newValue) DBC[k] = ch[k].newValue; else delete DBC[k]; }
-  if (ch.stash) STASH_C = ch.stash.newValue ?? null; });   // 20.62: тайник классов (stashInto)
+  if (ch.stash) STASH_C = stashNames(ch.stash.newValue); });   // 20.62: тайник классов (stashInto) — только имена классов
 // база предметов (items-il.json) — имя по itemId, грузится один раз
 let ITEMS_IL = null;
 const itemsIl = async () => ITEMS_IL || (ITEMS_IL = await fetch(chrome.runtime.getURL('items-il.json')).then(r => r.json()).catch(() => ({}))); 

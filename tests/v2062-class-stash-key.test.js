@@ -87,8 +87,10 @@ test('вкладка: новый rt того же героя сохраняет 
  // неподтверждённая очередь вкладки — поверх
  T=tab({char:'Hero',classStash:STASH},{classStash:{mine:{t:3}}});
  assert.deepEqual(T.on({rt:{newValue:{char:'Hero',_src:'menu'}},stash:{newValue:{char:'Hero',v:{z:{}},_src:'menu'}}}).classStash,{mine:{t:3}});
- // старое rt.classStash в событии (ещё не перенесено) — оно и видно
- T=tab({char:'Hero',classStash:STASH});assert.deepEqual(T.on({rt:{newValue:{char:'Hero',classStash:{leg:{}},_src:'menu'}}}).classStash,{leg:{}});
+ // старое rt.classStash в событии (ещё не перенесено / сборка без ключа) — по классам поверх тайника в памяти (ревью 20.62)
+ T=tab({char:'Hero',classStash:STASH});assert.deepEqual(T.on({rt:{newValue:{char:'Hero',classStash:{leg:{}},_src:'menu'}}}).classStash,{...STASH,leg:{}});
+ T=tab({char:'Hero',classStash:STASH});assert.deepEqual(T.on({rt:{newValue:{char:'Hero',classStash:{leg:{}},_src:'menu'}},stash:{newValue:{char:'Hero',v:{k1:{}},_src:'bg'}}}).classStash,{k1:{},leg:{}},'ключ из события важнее памяти');
+ T=tab({char:'Hero',classStash:STASH});assert.deepEqual(T.on({rt:{newValue:{char:'Alt',classStash:{leg:{}},_src:'bg'}}}).classStash,{leg:{}},'другой герой — тайник прежнего не примешивается');
 });
 test('вкладка: смена героя — тайник нового из события; без ключа stash в событии — дочитывается из хранилища',async()=>{
  let T=tab({char:'Hero',classStash:STASH});
@@ -107,15 +109,23 @@ test('вкладка/меню: загрузка складывает тайни�
  assert.deepEqual(core.stashJoin({char:'Hero',a:1},{char:'Hero',v:STASH}).classStash,STASH);
  assert.equal(core.stashJoin({char:'Hero'},{char:'Alt',v:STASH}).classStash,undefined);
  assert.equal(core.stashJoin({char:'Hero'},{char:'Hero',v:null}).classStash,undefined);
- assert.deepEqual(core.stashJoin({char:'Hero',classStash:{leg:1}},{char:'Hero',v:STASH}).classStash,{leg:1},'старое поле в rt новее ключа');
- const pop=read('popup.js');assert.match(pop,/await liveStatusInto\(rt\); await stashInto\(rt\);/);assert.match(pop,/if \(ch\.stash\) STASH_C = ch\.stash\.newValue \?\? null;/);
+ assert.deepEqual(core.stashJoin({char:'Hero',classStash:{leg:1}},{char:'Hero',v:STASH}).classStash,{...STASH,leg:1},'старое поле в rt новее ключа — по своим классам');
+ assert.deepEqual(core.stashJoin({char:'Hero',classCur:{prof:'dwarf_maestro'},classStash:{leg:1}},{char:'Hero',v:STASH}).classStash,{human_arcana_lord:STASH.human_arcana_lord,leg:1},'активный класс из ключа не берётся');
+ assert.deepEqual(core.stashJoin({char:'Hero',classStash:{leg:1}},{char:'Alt',v:STASH}).classStash,{leg:1});
+ const pop=read('popup.js');assert.match(pop,/await liveStatusInto\(rt\); await stashInto\(rt\);/);assert.match(pop,/if \(ch\.stash\) STASH_C = stashNames\(ch\.stash\.newValue\);/);
 });
-test('меню: stashInto подставляет тайник своего героя один раз прочитанным ключом',async()=>{
- const pop=read('popup.js'),a=pop.indexOf('let STASH_C;'),b=pop.indexOf('async function load()',a);let gets=0;
- const ctx={L2EngineCore:core,Object,chrome:{storage:{local:{get:async k=>{gets++;return {[k]:{char:'Hero',v:STASH}}}}}}};vm.createContext(ctx);
- vm.runInContext(pop.slice(a,b)+';this.into=stashInto;this.set=v=>{STASH_C=v};',ctx);
- assert.deepEqual((await ctx.into({char:'Hero'})).classStash,STASH);await ctx.into({char:'Hero'});assert.equal(gets,1,'ключ читается один раз');
+test('меню: stashInto подставляет имена классов тайника своего героя, ключ читается один раз, замеры в окне не держатся',async()=>{
+ const pop=read('popup.js'),a=pop.indexOf('// Ревью 20.62: окно бота'),b=pop.indexOf('async function load()',a);let gets=0;
+ const ctx={L2EngineCore:core,Object,String,Array,chrome:{storage:{local:{get:async k=>{gets++;return {[k]:{char:'Hero',v:clone(STASH)}}}}}}};vm.createContext(ctx);
+ vm.runInContext(pop.slice(a,b)+';this.into=stashInto;this.set=v=>{STASH_C=v};this.get=()=>STASH_C;this.names=stashNames;',ctx);
+ assert.deepEqual(Object.keys((await ctx.into({char:'Hero'})).classStash),Object.keys(STASH));await ctx.into({char:'Hero'});assert.equal(gets,1,'ключ читается один раз');
+ assert.deepEqual(JSON.parse(JSON.stringify(ctx.get())),{char:'Hero',v:{dwarf_maestro:1,human_arcana_lord:1}},'STASH_C — только имена классов, без замеров');
+ assert.equal(JSON.stringify(ctx.get()).includes('hammer crush'),false);
+ assert.deepEqual(Object.keys((await ctx.into({char:'Hero',classStash:{leg:{n:1}}})).classStash).sort(),['dwarf_maestro','human_arcana_lord','leg'],'старое rt.classStash — по классам поверх ключа');
  assert.equal((await ctx.into({char:'Alt'})).classStash,undefined);ctx.set(null);assert.equal((await ctx.into({char:'Hero'})).classStash,undefined);
+ ctx.set(ctx.names({char:'Hero',v:null}));assert.equal((await ctx.into({char:'Hero'})).classStash,undefined,'пустой тайник');
+ // события хранилища: onStore кладёт в STASH_C только имена
+ assert.match(pop,/onStore\(ch => \{[^\n]*\n  if \(ch\.stash\) STASH_C = stashNames\(ch\.stash\.newValue\);/);
 });
 test('файл «Памяти бота»: прежний вид (classStash внутри rt) — выгрузка и загрузка туда-обратно',()=>{
  const storage={cfg:{a:1},rt:{char:'Hero',kills:5},stash:{char:'Hero',v:STASH,_src:'tab'},'rt@Alt':{char:'Alt',kills:2},'stash@Alt':{char:'Alt',v:{orc_titan:{t:1}}},
@@ -138,4 +148,44 @@ test('смена класса (story.classNote) с тайником из клю�
  const S=box.L2V7Factories.story(env);S.classNote('dwarf_maestro',1,70);
  assert.deepEqual(rt.skills,{crush:{n:9}});assert.deepEqual(Object.keys(rt.classStash),['human_warlock']);
  const ch=core.stashSplitSet({rt:{...rt}},'tab');assert.equal('classStash' in ch.rt,false);assert.deepEqual(Object.keys(ch.stash.v),['human_warlock']);
+});
+// Ревью 20.62: rt.classStash внутри rt снова пишет сборка без ключа stash (откат на старый ZIP в ту же папку) — её тайник начат с {}
+// и держит только класс, с которого ушли. Ключ stash не заменяется им целиком: классы, что есть только в ключе, остаются.
+const AB={dwarf_maestro:{skills:{crush:{n:900}},t:5},human_arcana_lord:{skills:{blaze:{n:77}},t:4}};
+test('откат на старую сборку: ключ {A,B} + старое rt.classStash {C} → после записи фона в ключе {A,B,C}',async()=>{
+ const key=()=>({char:'Hero',v:clone(AB),_src:'tab-1'});
+ // statePatch без своего тайника
+ let S={...store({classStash:{orc_titan:{t:9}}}),stash:key()},B=background(S);await B.state({kills:8});
+ assert.deepEqual(S.stash.v,{...AB,orc_titan:{t:9}});assert.equal('classStash' in S.rt,false);assert.equal(S.rt.kills,8);assert.equal(B.sets.length,1,'одна запись');
+ // stashMigrate (обновление/запуск браузера)
+ S={...store({classStash:{orc_titan:{t:9}}}),stash:key()};B=background(S);assert.equal(await B.ctx.stashMigrate('обновление'),true);
+ assert.deepEqual(S.stash.v,{...AB,orc_titan:{t:9}});assert.equal('classStash' in S.rt,false);
+ // запись меню
+ S={...store({classStash:{orc_titan:{t:9}}}),stash:key()};B=background(S);await B.menu({rbGo:null},{expectedChar:'Hero'});assert.deepEqual(S.stash.v,{...AB,orc_titan:{t:9}});
+ // старое rt.classStash новее по своему классу; запись ключа об активном классе (его память — в rt) не возвращается
+ S={...store({classCur:{prof:'dwarf_maestro',slot:1},classStash:{human_arcana_lord:{skills:{blaze:{n:1}},t:9}}}),stash:key()};B=background(S);await B.state({kills:9});
+ assert.deepEqual(S.stash.v,{human_arcana_lord:{skills:{blaze:{n:1}},t:9}});
+ // ключ другого героя не примешивается
+ S={...store({classStash:{orc_titan:{t:9}}}),stash:{char:'Alt',v:clone(AB)}};B=background(S);await B.state({kills:9});assert.deepEqual(S.stash,{char:'Hero',v:{orc_titan:{t:9}},_src:'tab-1'});
+ // свой тайник вкладки (полный, со снятым классом) заменяет ключ и при старом поле в rt: удаление класса не воскрешается
+ S={...store({classStash:{orc_titan:{t:9}}}),stash:key()};B=background(S);await B.state({classStash:{human_arcana_lord:AB.human_arcana_lord}});
+ assert.deepEqual(S.stash.v,{human_arcana_lord:AB.human_arcana_lord});
+ // без старого поля чтение ключа не нужно (обычная запись не читает сотни КБ тайника)
+ S={...store(),stash:key()};B=background(S);const reads=[];const g=B.ctx.chrome.storage.local.get;B.ctx.chrome.storage.local.get=async k=>{reads.push(k);return g(k)};await B.state({kills:10});
+ assert.equal(reads.flat().includes('stash'),false);
+});
+test('откат на старую сборку: она сменила героя без ключей stash — тайники обоих героев сохраняются',async()=>{
+ // новая сборка: Hero → Alt (stash@Hero — тайник Hero, stash — Alt); старая: Alt → Hero (ключи stash* не тронуты)
+ const S={on:false,cfg:{},rt:{char:'Hero',kills:5},'rt@Alt':{char:'Alt'},stash:{char:'Alt',v:{orc_titan:{t:1}}},'stash@Hero':{char:'Hero',v:clone(AB)}},B=background(S);
+ // новая снова: Hero → Alt
+ const r=await B.sw('Alt');assert.equal(r.ok,true);assert.deepEqual(r.rt.classStash,{orc_titan:{t:1}},'тайник Alt найден в «stash»');
+ assert.deepEqual(S['stash@Hero'].v,AB,'тайник Hero не затёрт пустым');assert.equal(S.stash.char,'Alt');
+ const back=await B.sw('Hero');assert.deepEqual(back.rt.classStash,AB);assert.deepEqual(S['stash@Alt'].v,{orc_titan:{t:1}});
+});
+test('вкладка: загрузка при старом rt.classStash и ключе — тайник по классам (смена класса не теряет классы ключа)',()=>{
+ const box={Date,console,sessionStorage:{setItem(){}}};vm.runInNewContext(read('modules/story.js'),box);
+ const rt=core.stashJoin({char:'Hero',classCur:{prof:'human_warlock',slot:0},skills:{blaze:{n:5}},classStash:{orc_titan:{t:9}}},{char:'Hero',v:clone(AB)});
+ const env={get rt(){return rt},cfg:{},setRt:p=>Object.assign(rt,p),rec(){},setStatus(){}};
+ box.L2V7Factories.story(env).classNote('dwarf_maestro',1,70);
+ assert.deepEqual(rt.skills,{crush:{n:900}},'память класса из ключа вернулась');assert.deepEqual(Object.keys(rt.classStash).sort(),['human_arcana_lord','human_warlock','orc_titan']);
 });
