@@ -265,38 +265,46 @@
     }) || 'tasks';
   }
   const baseTask = (c, rt = {}, now = Date.now()) => selectedTask(c, rt, now, true);
+  // 20.65 (жалоба John 25.10 «бот грузит ЦП»; замер боя: прокси cfg ≈160 мс/мин, ≈62 000 чтений cfg.X в минуту): selectedTask
+  // считается только для ключей, которые прокси подменяет (таблицы ниже — общие для набора и для ветвей), остальные ключи — как есть
+  const TC_GROUPS = {
+    mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
+    quests: ['storyTurnIn','campAuto'], dailies: ['dailyAuto'], clan: ['clanTasks'], // searchQuest — приоритет местных ★ мобов, а не разрешение вести кампанию.
+    pvp: ['enemyHunt','pvpOnSight','pvpAll'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
+  };
+  const TC_SUPPORT = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
+  const TC_PRIMARY = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
+  const TC_SPECIAL = new Set([...Object.keys(TC_PRIMARY), ...Object.values(TC_GROUPS).flat(), ...TC_SUPPORT,
+    'tvtOn','taskOnly','tvtOverRb','tsBuy','chain','farmRes','recipeRes','resQuests','mmGoalItem','mmGoalFarm','campAuto']);
+  const TC_LEGACY = new Set(['fishMode','catMode','zoneAuto','taskOnly']);
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
     if (!Array.isArray(raw?.autoTasks)) {
       if (!Object.keys(dailyKeys).some(k => dailyLimit(raw,k))) return raw;
       const view = new Proxy(raw,{get(target,key){
+        if (!TC_LEGACY.has(key)) return Reflect.get(target,key);
         const rt=runtime(), tasks={fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
         if (Object.hasOwn(tasks,key) && dailyBlocked(target,rt,tasks[key]) && !(key==='fishMode' && rt.fishCastActive)) return false;
         if (key==='taskOnly' && Object.entries(tasks).some(([flag,k])=>target[flag] && dailyBlocked(target,rt,k)) && !['enchantMode','craftMode','epicMode','rbHuntMode','campaign'].some(k=>target[k]) && !Object.entries(tasks).some(([flag,k])=>target[flag] && !dailyBlocked(target,rt,k))) return true;
         return Reflect.get(target,key);
       }}); taskRaw.set(view,raw); return view;
     }
-    const groups = {
-      mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
-      quests: ['storyTurnIn','campAuto'], dailies: ['dailyAuto'], clan: ['clanTasks'], // searchQuest — приоритет местных ★ мобов, а не разрешение вести кампанию.
-      pvp: ['enemyHunt','pvpOnSight','pvpAll'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
-    };
-    const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
+    const groups = TC_GROUPS, support = TC_SUPPORT, primary = TC_PRIMARY;
     const view = new Proxy(raw, { get(target, key) {
-      const active = selectedTask(target, runtime()), allowed = k => taskAllowed(target, k);
-      const primary = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
-      if (Object.hasOwn(primary,key)) return primary[key] === active;
+      if (!TC_SPECIAL.has(key)) return Reflect.get(target,key);
+      let a1; const act = () => a1 === undefined ? (a1 = selectedTask(target, runtime())) : a1, allowed = k => taskAllowed(target, k);
+      if (Object.hasOwn(primary,key)) return primary[key] === act();
       if (key === 'tvtOn') return allowed('tvt');
-      if (key === 'taskOnly') return active === 'tasks';
+      if (key === 'taskOnly') return act() === 'tasks';
       if (key === 'tvtOverRb') return true;
       if (key === 'tsBuy') return false; // Покупка цели TvT — отдельная трата, не участие в событии.
-      if (key === 'chain' && !['farm','auto','quests','cat'].includes(active)) return false;
+      if (key === 'chain' && !['farm','auto','quests','cat'].includes(act())) return false;
       if (['farmRes','recipeRes','resQuests'].includes(key) && !allowed('resources')) return '';
       if (key === 'mmGoalItem' && !allowed('mammon')) return 0;
       if (key === 'mmGoalFarm' && !allowed('resources')) return false;
       for (const [group, keys] of Object.entries(groups)) if (keys.includes(key) && !allowed(group)) return false;
       if (key === 'campAuto') return false; // Кампания запускается только выбранной задачей.
-      if (support.includes(key) && ['tasks','fish','enchant','craft'].includes(active)) return false;
+      if (support.includes(key) && ['tasks','fish','enchant','craft'].includes(act())) return false;
       return Reflect.get(target,key);
     }});
     taskRaw.set(view, raw); return view;
