@@ -180,7 +180,7 @@ async function zoneTrack(exp, dt, pct) {
   e.n++; e.exp += exp; e.sec += dt;
   if (pct != null) { e.pct += pct; e.pn++; }
   z[l] = e; S[id] = z;
-  await env.setRt({ zoneStat: S, lvl: l });
+  await env.setRt({ zoneStat: S, ...(env.rt.lvl !== l ? { lvl: l } : {}) });   // 20.62: без уровня пакет отложенный (RT_STAT_SOON) — не полная запись памяти на каждую победу
 }
 
 // 7.1.30 (симуляция автофарма, 10.10): раньше оценка зоны бралась только с уровня героя (±2, от 5 боёв), а на КАЖДОМ новом уровне

@@ -6,7 +6,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const {flowFixture}=require('./warlock-combat-fixture.cjs');
 function writer(){
- const src=read('content.js'),a=src.indexOf('function setRt(p) {'),b=src.indexOf("'via', 'catInT']);",a)+"'via', 'catInT']);".length;
+ const src=read('content.js'),a=src.indexOf('function setRt(p) {'),b=src.indexOf(']);',src.indexOf('const RT_STAT_SOON',a))+']);'.length;   // 20.62: конец набора RT_STAT_SOON — не по последнему ключу
  const calls=[],c={rt:{char:'Hero'},rtSizeT:Date.now(),rtBigWarnT:0,RT_BULKY:['spawns'],rec(){},rtSizeTop:()=>'',tabIdle:false,document:{},Date,JSON,Object,Math,
   rtWriter:{defer:(p,ms)=>{calls.push(['defer',Object.keys(p).sort().join(','),ms]);return Promise.resolve({ok:true,deferred:true})},enqueue:p=>{calls.push(['enqueue',Object.keys(p).sort().join(',')]);return Promise.resolve({ok:true})}}};
  vm.runInNewContext(src.slice(a,b).replace(/^const RT_STAT_SOON/m,'globalThis.RT_STAT_SOON'),c);return {c,calls};

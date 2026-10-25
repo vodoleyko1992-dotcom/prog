@@ -66,7 +66,7 @@ test('M1: смена героя состоялась — круг продолж
 function statusBox(opt={}){
  let now=1e12;const sets=[],writes=[],soon=[];
  const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,on:opt.on??true,tabOwner:opt.owner??true,leaseEpoch:opt.owner===false?null:'e1',document:{prerendering:false},Date:{now:()=>now},String,
-  chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},
+  chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},drawSoon(){},
   setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})},setRtSoon:p=>{soon.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true,deferred:true})}};
  vm.createContext(c);vm.runInContext(slice(core,'const RECENT = [];','// Команда остановки сериализуется')+';this.S=setStatus;this.save=statusSave;',c);
  return {c,sets,writes,soon,tick:ms=>{now+=ms}};
@@ -98,7 +98,7 @@ test('L1: меню берёт live@Ник своего героя, иначе rt
  assert.equal((await c.F({char:'Nobody',status:'старый'})).status,'старый');
  store['live@Hero']={s:'x',char:'Other'};assert.equal((await c.F({char:'Hero',status:'старый'})).status,'старый','чужой герой в ключе — не верим');
  assert.ok(c.K('live@Hero')&&!c.K('rt@Hero'));
- assert.match(popup,/await liveStatusInto\(rt\);/);assert.match(popup,/Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(\);/);
+ assert.match(popup,/await liveStatusInto\(rt\);/);assert.match(popup,/Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(storeGap\(ch\)\);/);
  assert.equal((popup.match(/!MEM_SKIP\.has\(k\) && !isLiveKey\(k\)/g)||[]).length,2,'сохранение и загрузка памяти без live@');
  assert.match(read('background.js'),/await chrome\.storage\.local\.remove\('live@' \+ nick\)/,'смена героя стирает старый живой статус');
 });

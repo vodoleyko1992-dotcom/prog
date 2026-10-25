@@ -24,6 +24,8 @@ async function until(fn, ms = 10000) { const end = Date.now() + ms; let last; do
     assert.deepEqual(f0, [false, true, '20'], 'умолчания: выключено, для Маммона, запас 20 %');
     // 20.54 (прогон смоуков 23.10): с 20.51 (PR #358, 86cbe91 «Крафт до цели») выбор — отдельная вкладка «Крафт ресурсов»:
     // в списке заглушка + рецепты по имени (RU · EN), а выход/уровень/MP/«закрыт» показывают карточки каталога и строка рецепта.
+    // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): раздел «Крафт» рисуется, только когда открыт — открываем его
+    await p.evaluate(() => showTab('craft'));
     await until(() => p.evaluate(() => document.querySelectorAll('#craftPick option').length === 3));
     assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#craftPick option')].map(o => o.value)), ['', 'steel', 'cord']);
     assert.match(await p.textContent('#craftPick'), /Шнур · Cord/);

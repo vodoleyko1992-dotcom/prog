@@ -9,7 +9,7 @@ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 function fixture(){
  const els={},calls=[],el=id=>els[id]||(els[id]={id,value:id==='craftN'?'1':'',checked:true,innerHTML:'',textContent:'',disabled:false,hidden:false,handlers:{},
   focus(){this.focused=true;},select(){this.selected=true;},addEventListener(k,f){this.handlers[k]=f;},querySelector(){return this.first||null;}});
- const c={console,Date,Math,Number,Object,Array,Set,JSON,globalThis:null,fmt:n=>String(n??0),esc,$:el,taskSel:(d,k)=>d.autoTasks?.includes(k)||false,document:{querySelectorAll:()=>[]},
+ const c={secOpen:()=>true,console,Date,Math,Number,Object,Array,Set,JSON,globalThis:null,fmt:n=>String(n??0),esc,$:el,taskSel:(d,k)=>d.autoTasks?.includes(k)||false,document:{querySelectorAll:()=>[]},
   formChar:'Hero',toast:(...x)=>calls.push(['toast',...x]),load:async()=>calls.push(['load']),gameSend:async(m,o)=>{calls.push(['send',plain(m),plain(o)]);return{ok:true};}};
  c.globalThis=c;vm.createContext(c);vm.runInContext(block,c);
  const book={t:Date.now(),lvl:4,can:true,mp:0,maxMp:1000,list:[['steel','Steel',1880,1,2,10],['synthetic_cokes','Synthetic Cokes',1888,1,2,20]],

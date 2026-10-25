@@ -1229,7 +1229,8 @@ function observeSlot(b, src) {
     if (hpd > 15) p.heal = Math.max(p.heal, hpd);
     if (buff) p.buffSec = +buff[1];
     const pulse = txt.match(/імпульсами по\s*(\d+)\s*HP\s*кожні\s*(\d+)|импульсами по\s*(\d+)\s*HP\s*каждые\s*(\d+)/i);
-    if (pulse) setRt({ potInfo: { name, pulse: +(pulse[1] || pulse[3]), every: +(pulse[2] || pulse[4]) } });
+    const pi = pulse && { name, pulse: +(pulse[1] || pulse[3]), every: +(pulse[2] || pulse[4]) };
+    if (pi && (rt.potInfo?.name !== pi.name || rt.potInfo?.pulse !== pi.pulse || rt.potInfo?.every !== pi.every)) setRt({ potInfo: pi });   // 20.62: только новое
     if (stun) p.stun++;
     const unav = UNAVAIL.test(noticeText()) && noticeText() !== before.notice;
     if (unav) { p.unavail = (p.unavail || 0) + 1; p.unavailT = Date.now(); }
@@ -1474,9 +1475,10 @@ let rtBigWarnT = (() => { try { return +sessionStorage.getItem(RT_BIG_SS) || 0; 
 function rtSizeTop() {
   try {
     const kb = v => Math.round(JSON.stringify(v ?? null).length / 1024);
-    const top = Object.keys(rt).map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
+    // 20.62: тайник классов в rt хранилища не входит (ключ stash) — в «крупные части» не считаем, по классам — отдельно
+    const top = Object.keys(rt).filter(k => k !== 'classStash').map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
     const st = rt.classStash && typeof rt.classStash === 'object' ? Object.entries(rt.classStash).map(([c, v]) => `${c} ${kb(v)}`).join(', ') : '';
-    return top ? `; крупные части (КБ): ${top}${st ? `; classStash: ${st}` : ''}` : '';
+    return top ? `; крупные части (КБ): ${top}${st ? `; classStash (отдельный ключ stash): ${st}` : ''}` : '';
   } catch (e) { return ''; }
 }
 const rtWriter = L2EngineCore.createPatchQueue(
@@ -1515,7 +1517,7 @@ function setRt(p) {
   let patch = { ...p };
   if (Object.keys(p).some(k => RT_BULKY.includes(k)) || Date.now() - rtSizeT > 60000) {
     rtSizeT = Date.now();
-    let size = 0; try { size = JSON.stringify(rt).length; } catch (e) {}
+    let size = 0; try { size = JSON.stringify({ ...rt, classStash: undefined }).length; } catch (e) {}   // 20.62: тайник классов — в своём ключе stash, не в rt
     // 7.1.30: до сброса кэшей — срезать устаревшее в растущих без предела словарях (по t: hardMobs 2 ч, hpMin/questSeen/rbSeen 24 ч)
     if (size > 300000) {
       const age = { hardMobs: 2 * 3600000, questSeen: 24 * 3600000, rbSeen: 24 * 3600000, zoneTried: 24 * 3600000, zoneBad: 24 * 3600000 };   // hpMin — не метки времени, не трогаем
@@ -1554,7 +1556,10 @@ const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 's
   // 20.43 (лог 21.10 15:47–15:51): статистика кота (petStat/petAdvice, когорты petCohorts) и отметка EXP% (expMark) после каждой
   // победы — тоже отложенно; сброс из меню не воскрешается (те же ключи в L2EngineCore.MENU_STAT_KEYS)
   'petStat', 'petAdvice', 'petCohorts', 'expMark',
-  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT',
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): энергия после каждого заряда/расхода, запасы банок после каждой банки, сведения
+  // о банке, замеры зон после каждой победы, отметка сторожа баффов раз в 15 с — каждая была полной записью памяти героя
+  'force', 'pots', 'potInfo', 'zoneStat', 'tbWatchT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
 // уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
@@ -1594,7 +1599,7 @@ function setStatus(s) {
     else rt = { ...rt, status: s };
   }
   else rt = { ...rt, status: s };
-  draw();
+  drawSoon();
 }
 // Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
 // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M6): on=false ставился до ответа фона; таймаут IPC бросал исключение из halt(), а в
@@ -3368,8 +3373,8 @@ async function loopLease() {
       // не продолжаем со снимком состояния вкладки-ожидателя.
       // 10.0 (аудит ядра): накопленное, пока вкладка ждала замок, — устаревшее (хозяином была другая вкладка); очередь чистим
       rtWriter.clear();
-      const fresh = await chrome.storage.local.get(['rt', 'cfg']);
-      rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
+      const fresh = await chrome.storage.local.get(['rt', 'cfg', 'stash']);
+      rt = { ...DEF_RT, ...(fresh.rt || {}) }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, fresh.stash); cfg = mergeCfg(fresh.cfg);   // 20.62: и тайник классов
     }
   }
   if (tabOwner && await stopPendRetry()) return true;   // 20.13 (шаг 5, core-a/M6): остановка прошлой страницы не подтверждена
@@ -4684,7 +4689,9 @@ function epicRespTxt(wide, now = Date.now()) {
   try {
     const RT = L2V7Modules.rbtimer, T = rt.rbTimer || { b: {} }; if (!RT) return '';
     const nm = n => String(n || '').replace(/^Queen Ant$/, 'АК');
-    const E = RT.table(T, now, { all: true }).filter(t => t.e).map(t => ({ n: nm(t.n), l: t.l, al: t.al, txt: t.al ? '' : RT.upTxt(t, now), at: t.al ? Infinity : t.at.lo || t.at.hi }));
+    // 20.62 (жалоба John 25.10 «бот грузит ЦП»): таблица только по эпикам — раньше считались таймеры всех ≈200 РБ на каждую перерисовку окна
+    const TE = { ...T, b: Object.fromEntries(Object.entries(T.b || {}).filter(([, x]) => x && x.e)) };
+    const E = RT.table(TE, now, { all: true }).filter(t => t.e).map(t => ({ n: nm(t.n), l: t.l, al: t.al, txt: t.al ? '' : RT.upTxt(t, now), at: t.al ? Infinity : t.at.lo || t.at.hi }));
     // 10.0.2 (скрин игрока 13.10 00:14: блока не было — бот на паузе, своих опросов ещё не делал): эпики, которых нет в таймерах, — из
     // rt.epicDb (список эпиков игры, страница «Эпик боссы», раздел «🐉 Эпики»)
     const seen = new Set(E.map(x => x.n.toLowerCase()));
@@ -4774,7 +4781,13 @@ function indPatchKids(el, tpl) {
     indPatchKids(o, n);
   });
 }
+// 20.62 (жалоба John 25.10 «бот грузит ЦП»): статус меняется на каждом действии боя, а память — на каждой записи; окно бота
+// перерисовывается не чаще раза в 150 мс (клики по кнопкам окна, как раньше, рисуют сразу через draw()). Метка — свойство функции:
+// setStatus зовётся и до этой строки верхнего уровня
+function drawSoon() { if (drawSoon.t) return; drawSoon.t = setTimeout(() => { drawSoon.t = 0; try { draw(); } catch (e) {} }, 150); }
 function draw() {
+  // 20.62: окно выключено (indMode off) — без сборки строк (таймеры, сумка, панель боя)
+  if ((cfg.indMode || 'full') === 'off') { if (ui) ui.style.display = 'none'; return; }
   const L = [], now = Date.now();
   const fz = forceNow() || forceMax() ? ` · ⚡${forceNow()}${forceMax() ? '/' + forceMax() : ''}` : '';
   // 8.0 (аудит меню): настоящий текущий режим (как выбирает движок, autonomyMode) — раньше в списке не было «фарма на месте»,
@@ -5116,7 +5129,11 @@ function alignServerSkillCooldowns() {
       changed = true;
     }
   }
-  if (changed) setRt({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): откаты сервера меняются почти на каждом ходе — раньше каждый ход полностью
+  // перезаписывал память героя (rt ≈1–1,4 МБ) и рассылал её копии вкладке и меню. Теперь отложенно, одним пакетом раз в 8 с, как
+  // combat.js (rtSoon cdUntil); память вкладки обновлена сразу, уход со страницы (pagehide) дописывает остаток
+  // Бот выключен (игрок бьёт сам): у вкладки нет замка, pagehide отложенное не дописывает — обычной записью, как раньше
+  if (changed) (on ? setRtSoon : setRt)({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
 }
 const netSeen = new Map();
 // 20.10: боевые POST сохраняем каждый; GET — при изменении боевых данных, а не большого character.
@@ -6885,7 +6902,7 @@ L2V7Modules.enemies = L2V7Factories.enemies({ get pvpSelf(){return ()=>L2V7Modul
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
 // 10.0.2: таймеры боссов (modules/rbtimer.js): когда убит и когда воскреснет РБ / эпик
 // 10.0.5: чемпионы ради FA — оценка до боя, проба, отход, обучение (rt.champLearn)
-L2V7Modules.champs = L2V7Factories.champs({ get combatContext(){return options=>L2V7Modules.warlock.combatContext(options)}, get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
+L2V7Modules.champs = L2V7Factories.champs({ get combatContext(){return options=>L2V7Modules.warlock.combatContext(options)}, get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get setRtSoon() { return setRtSoon; }, get rec() { return rec; },
   get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); }, get faPaidLeft() { return (...a) => L2V7Modules.buffs.faPaidLeft(...a); } });   // 10.0.8: платные баффы за FA — «Cancel» чемпионов
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });
@@ -7550,7 +7567,16 @@ chrome.storage.onChanged.addListener(ch => {
     if (keys.length) rtWriter.drop(keys);
   }
   const timerPrevious = rt;
-  if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов rt.classStash в хранилище — в своём ключе stash (rt его не
+  // содержит). Новый rt того же героя сохраняет тайник из памяти вкладки; изменение ключа stash в этом же событии (смена героя, смена
+  // класса другой вкладкой, импорт) — важнее. Своё эхо (_src вкладки) не применяем, неподтверждённая очередь — поверх всего.
+  // Герой сменился, а ключа stash в событии нет (запись без него — базовый профиль, старый импорт): тайник нового героя дочитываем.
+  const EC = globalThis.L2EngineCore; let keep = null;
+  if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...((keep = globalThis.L2EngineCore?.stashKeep?.(timerPrevious, ch, TAB_ID))?.part || {}), ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  else if (ch.stash && ch.stash.newValue?._src !== TAB_ID && !ch.rt && EC?.stashJoin) { const q = rtWriter.peek(); rt = { ...EC.stashJoin(EC.stashStrip(rt), ch.stash.newValue), ...(Object.hasOwn(q, 'classStash') ? { classStash: q.classStash } : {}) }; }
+  if (keep?.reload != null) try { const who = keep.reload; chrome.storage.local.get('stash').then(s => {
+    if (String(rt.char || '') !== who || Object.hasOwn(rt, 'classStash')) return;
+    const v = EC.stashValue(rt, s.stash); if (v.has) rt = { ...rt, classStash: v.v }; }).catch(e => quietErr('память', e)); } catch (e) {}
   if (ch.rt?.newValue?.rbTimer) {
     const saved = ch.rt.newValue, sameChar = String(saved.char || '') === String(timerPrevious.char || ''), pending = rtWriter.peek();
     const timers = L2V7Modules.rbtimer?.merge(saved.rbTimer, sameChar ? (pending.rbTimer || timerPrevious.rbTimer || { b: {} }) : { b: {} });
@@ -7575,7 +7601,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.cfg && on && tabOwner) L2V7Modules.mammon.bagAuto().catch(() => {});
   if (ch.rt && rt.invScan && !ch.rt.oldValue?.invScan && !running) invScanDrive();   // «Проверить оружие» из меню
   if (ch.cfg) { try { dock(); } catch (e) {} }
-  if (ch.cfg || ch.rt || ch.on) draw();
+  if (ch.cfg || ch.rt || ch.on) drawSoon();
 });
 // v5.5.9: игра заранее загружает следующую страницу (карту) в фоне — Chrome «предзагрузка» (document.prerendering), и наш скрипт
 // запускался и в этой невидимой копии: второй бот в той же вкладке («⏸ работает в другой вкладке», лог 09.10 12:08; вероятно, и
@@ -7584,8 +7610,8 @@ const whenActive = fn => document.prerendering ? document.addEventListener('prer
 // 20.43 (разбор 21.10): страница вне охоты (магазин, баффер, Маммон, рыбалка, телепорт, город, TvT, вход…) — метка разрыва во вкладке:
 // время до следующей победы — не время на моба (trackEfficiency). sessionStorage: переживает переходы, запись памяти не нужна
 whenActive(() => { if (!HUNT_PAGE_RE.test(location.pathname)) try { sessionStorage.setItem(HUNT_GAP_SS, String(Date.now())); } catch (e) {} });
-whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
-  cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; on = !!s.on;
+whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on', 'stash']).then(s => {   // 20.62: тайник классов — из своего ключа stash
+  cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, s.stash); on = !!s.on;
   onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
   // v5.6: одноразовые миграции — в ОДНУ запись настроек и одну запись состояния. Раньше каждая делала своё
   // «прочитать cfg → записать cfg» параллельно с остальными: на чистой установке часть терялась (lvlAbove 99 → 15),

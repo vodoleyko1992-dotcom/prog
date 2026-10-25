@@ -76,7 +76,8 @@ function noteDamage(ctx,dealt,sec) {
   ctx.chBaseDone=true;
   const M={...mem()},all={...(M.cohorts||{})},c={...(all[m.key]||{})},old=c.base,dps=dealt/sec,k=(old?.n||0)<20?1/((old?.n||0)+1):.05;
   c.base={dps:Math.round((old?.dps||dps)*(1-k)+dps*k),n:(old?.n||0)+1,t:Date.now()};all[m.key]=c;M.cohorts=all;
-  return env.setRt({champLearn:M});
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП»): средний урон состава пишется после КАЖДОЙ обычной победы — отложенным пакетом (до 8 с)
+  return (env.setRtSoon || env.setRt)({champLearn:M});
 }
 // 10.0.8: цена «Cancel» для этого чемпиона — ожидаемо снятые платные баффы за FA и их стоимость в секундах фарма; sec — ожидаемая длина боя
 function cancelCost(c, sec) {

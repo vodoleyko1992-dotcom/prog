@@ -5,7 +5,7 @@ const helpers=src.slice(src.indexOf('const OWN_CFG = []'),src.indexOf('async fun
 const start=src.lastIndexOf('chrome.storage.onChanged.addListener(ch => {'),listener=src.slice(start,src.indexOf('\n});',start)+4);
 function fixture(){
  const box={console,Date:{now:()=>100000},Math,sessionStorage:{removeItem(){}},window:{},FARM:null,RECIPES:null,LEARN:null,learnDirty:false,TAB_ID:'test',DEF_RT:{},running:false,
- rtWriter:{peek:()=>({}),clear(){}},rec(){},enchantModePause:async()=>{},abBlink(){},heroNick:()=> 'Hero',main(){},dock(){},draw(){},invScanDrive(){},learnLoad:async()=>{},
+ rtWriter:{peek:()=>({}),clear(){}},rec(){},enchantModePause:async()=>{},abBlink(){},heroNick:()=> 'Hero',main(){},dock(){},draw(){},drawSoon(){},invScanDrive(){},learnLoad:async()=>{},
  modeSig:c=>JSON.stringify(c.autoTasks||[]),mergeCfg:c=>({...c}),L2V7Modules:{mammon:{bagAuto:async()=>{}},enchant:{command:async()=>{}}},chrome:{storage:{onChanged:{addListener:fn=>box.event=fn}}}};
  box.window=box;vm.createContext(box);vm.runInContext("let cfg={autoLs:{targets:['prominence'],maxAttempts:3}},rt={char:'Hero',manualKickAt:1},on=true,tabOwner=true,tabIdle=false,leaseEpoch='lease',automationGeneration=4;\n"+helpers+"\nthis.runtime={cfg:()=>cfg,rt:()=>rt,on:()=>on,gen:()=>automationGeneration,own:()=>OWN_CFG,view:viewOnlyCfgChange,match:ownCfgChange};",box);
  for(const f of ['augment.js','modules/lifestone.js'])vm.runInContext(read(f),box);
