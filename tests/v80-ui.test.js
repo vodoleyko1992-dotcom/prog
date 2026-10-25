@@ -124,9 +124,9 @@ assert.match(css, /#toast\{white-space:normal;width:max-content;max-width:calc\(
 assert.ok(!/\$\('status'\)\.textContent = on \?/.test(js), 'hints after buttons are toasts, not #status text erased by the next redraw');
 
 // ---------- 7. экономная перерисовка встроенного меню ----------
-const lst = js.slice(js.indexOf('function loadSoon()'), js.indexOf("document.addEventListener('visibilitychange'"));
+const lst = js.slice(js.indexOf('function loadSoon('), js.indexOf("document.addEventListener('visibilitychange'"));
 assert.match(lst, /if \(document\.hidden \|\| dockMin\) \{ loadPending = true; return; \}/, 'collapsed dock is not redrawn');
-assert.match(lst, /if \(ch\.cfg \|\| ch\.rt \|\| ch\.on \|\| ch\.paused \|\| ch\.wdog \|\| Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(\);/);
+assert.match(lst, /if \(ch\.cfg \|\| ch\.rt \|\| ch\.on \|\| ch\.paused \|\| ch\.wdog \|\| Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(storeGap\(ch\)\);/);   // 20.62: пауза зависит от источника записи
 assert.match(lst, /if \(ch\.reccount \|\| ch\.snapcount\) \{[\s\S]*showCounts\(recN, snapN\);/, 'journal counters only');
 assert.ok(!/ch\.reccount \|\| ch\.snapcount \|\| ch\.wdog\) loadSoon/.test(js));
 assert.match(js, /if \(dlSig\.mob !== sig\) \{ dlSig\.mob = sig; \$\('mobNames'\)\.innerHTML/, 'mob names list rebuilt only when spawns changed');

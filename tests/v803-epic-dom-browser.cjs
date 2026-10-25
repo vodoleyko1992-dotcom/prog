@@ -51,6 +51,8 @@ let mock = py.slice(py.indexOf('mock=r"""') + 9); mock = mock.slice(0, mock.inde
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
     for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
+    // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): раздел «Эпики» рисуется, только когда открыт
+    await page.waitForTimeout(300); await page.evaluate(() => showTab('epic'));
     await page.waitForTimeout(900);
     const t = await page.$eval('#epicTable', e => e.innerText), sum = await page.$eval('#epicSum', e => e.textContent);
     await page.evaluate(() => document.querySelector('#epicScan').click()); await page.waitForTimeout(300);
