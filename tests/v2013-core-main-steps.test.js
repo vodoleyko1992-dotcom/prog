@@ -98,7 +98,7 @@ test('L1: меню берёт live@Ник своего героя, иначе rt
  assert.equal((await c.F({char:'Nobody',status:'старый'})).status,'старый');
  store['live@Hero']={s:'x',char:'Other'};assert.equal((await c.F({char:'Hero',status:'старый'})).status,'старый','чужой герой в ключе — не верим');
  assert.ok(c.K('live@Hero')&&!c.K('rt@Hero'));
- assert.match(popup,/await liveStatusInto\(rt\);/);assert.match(popup,/Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(\);/);
+ assert.match(popup,/await liveStatusInto\(rt\);/);assert.match(popup,/Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(storeGap\(ch\)\);/);
  assert.equal((popup.match(/!MEM_SKIP\.has\(k\) && !isLiveKey\(k\)/g)||[]).length,2,'сохранение и загрузка памяти без live@');
  assert.match(read('background.js'),/await chrome\.storage\.local\.remove\('live@' \+ nick\)/,'смена героя стирает старый живой статус');
 });

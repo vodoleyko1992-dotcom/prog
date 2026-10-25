@@ -306,6 +306,32 @@ function confirmClick(id, fn) {
 // 8.0 (аудит меню): состояние для экономной перерисовки встроенного меню (см. loadSoon)
 const DOCKED = /dock=1/.test(location.search);
 let dockMin = false, recN = 0, snapN = 0;
+// перерисовка меню — не чаще 3 раз в секунду и только когда его видно (loadSoon ниже). 20.62 (жалоба John 25.10 «бот грузит ЦП и память»):
+// состояние объявлено здесь, до первого вызова load()/showTab() (иначе let в TDZ). loadAt — когда сработает отложенный load(),
+// loadDone — стартовый load() завершён, lastPaint — rt/cfg последней отрисовки (живой статус live@ без полной перерисовки),
+// userT — последнее действие игрока в меню (запись фона после клика рисуем быстро, даже если она не помечена _src: 'menu')
+let loadT = 0, loadTimer = null, loadPending = false, loadAt = 0, loadDone = false, lastPaint = null, userT = 0;
+const LOAD_GAP = 350, LOAD_GAP_BOT = 1500;
+// 20.62: тяжёлые разделы (эпики, РБ и таймеры, Маммон, крафт, зоны «Охоты») рисуются, только когда раздел открыт — как huntOpen()
+const secOpen = t => !!document.getElementById('tab-' + t)?.classList.contains('act');
+// 20.62 (ревью): эти разделы при переходе в них рисуются сразу (renderOpen по rt/cfg прошлой отрисовки, без чтения хранилища)
+const GATED_TABS = ['epic', 'rb', 'mammon', 'craft', 'hunt'];
+function renderOpen(rt, d) {
+  if (secOpen('epic')) renderEpics(rt, d);
+  if (secOpen('rb')) { renderRbTimer(rt, d); renderHunt(rt, d); renderRb(rt); }
+  if (secOpen('mammon')) renderMammon(rt, d);
+  if (secOpen('craft')) renderCraft(rt, d);
+  if (huntOpen()) renderZones(rt, d);   // таблица зон и маршрут кача — в «Охоте»
+}
+// 20.62 (ревью): признаки движка (шапка, «чем занят») — общие для load() и paintLive: там они считаются заново по текущему времени
+// и свежим lock/hbBg (их записи load() не зовут). sig — что видно в шапке; сменился — нужна полная перерисовка
+function engineState(on, lock, hbBg, rt) {
+  const heartbeatValid = !!on && !!lock?.tab && !!hbBg?.tab && lock.tab === hbBg.tab && Date.now() - (+lock.t || 0) < 85000 && Date.now() - (+hbBg.t || 0) < 70000;
+  const booting = !!on && Date.now() - (+rt.manualKickAt || 0) < 15000;
+  const failing = !!on && ['retry','reload','cooldown'].includes(rt.health?.action) && Date.now() - (+rt.health.updatedAt || 0) < 45000;
+  const wake = !!on && !heartbeatValid && !booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000;   // строка «движок молчит»
+  return { heartbeatValid, booting, failing, sig: [heartbeatValid, booting, failing, wake].join() };
+}
 if (DOCKED) {
   document.documentElement.classList.add('docked');
   // v5.2: «я жива» для страницы игры раз в 3 с — если панель упадёт (грустный листок), бот перезапустит её сам
@@ -344,6 +370,7 @@ async function stashInto(rt) {
 }
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
+  const statusRaw = rt.status;
   await liveStatusInto(rt); await stashInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
@@ -361,10 +388,7 @@ async function load() {
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
   const ver = chrome.runtime.getManifest().version, hl = healthLine(rt, wdog).trim(), S = sessInfo(rt);
   const chip = (ic, v, t) => `<span class="chip" title="${t}">${ic} <b>${v}</b></span>`;
-  const heartbeatValid = !!on && !!lock?.tab && !!hbBg?.tab && lock.tab === hbBg.tab && Date.now() - (+lock.t || 0) < 85000 && Date.now() - (+hbBg.t || 0) < 70000;
-  const booting = !!on && Date.now() - (+rt.manualKickAt || 0) < 15000;
-  const failing = !!on && ['retry','reload','cooldown'].includes(rt.health?.action) &&
-    Date.now() - (+rt.health.updatedAt || 0) < 45000;
+  const { heartbeatValid, booting, failing, sig: engSig } = engineState(on, lock, hbBg, rt);   // 20.62 (ревью): общий расчёт с paintLive
   const runningLabel = !on && paused ? '⏸ Пауза' : !on ? '○ Остановлен' : failing ? 'Ошибка · восстановление' :
     heartbeatValid ? 'Движок активен' : booting ? 'Запускается' : 'Нет сигнала движка';
   // 8.0 (аудит меню): бот включён, а движок молчит — постоянная строка (причина от запуска, если была)
@@ -408,13 +432,12 @@ async function load() {
   paintTaskOwned(d);   // 20.12 (UI-3): переключатели, которыми в режиме задач владеет список задач
   paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
-  renderEpics(rt, d);
-  renderRbTimer(rt, d);
-  renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
-  renderStory(rt); renderSub(rt, d); renderSubGo(rt); renderCraft(rt, d);
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): скрытые разделы (эпики, РБ, Маммон, крафт, зоны «Охоты») не перерисовываем;
+  // при переходе в раздел он рисуется сразу по этой же отрисовке (l2:tabchange → renderOpen)
+  renderOpen(rt, d);
+  renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
+  renderStory(rt); renderSub(rt, d); renderSubGo(rt);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
-  renderHunt(rt, d);
-  renderRb(rt);
   const forecast=$('rbForecastBox'), RF=rt.rbForecast;
   if (forecast) {
     const age=RF?.t ? Math.round((Date.now()-RF.t)/1000) : null;
@@ -457,10 +480,10 @@ async function load() {
   paintRbOne(rt, on, paused);
   renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
   renderWorkspace(rt, d, { on, paused, heartbeatValid, booting, failing });
+  lastPaint = { rt, d, st: { on, paused, heartbeatValid, booting, failing }, statusRaw, lock, hbBg, sig: engSig };   // 20.62: для paintLive — строка «чем занят» по live@ без полной перерисовки
   paintSettingsFeedback();
   renderEff(rt);
   renderFa(rt, d); renderPots(rt, d); renderRbSess(rt, d);
-  renderZones(rt, d);
   renderLoot(rt);
   // 🩺 v5.2: самопроверка баффов (пишет бот в бою раз в 15 с)
   if ($('buffAudit')) { const A = rt.buffAudit, ic = { ok: '✅', info: 'ℹ️', wait: '⏳', miss: '⚠️', bad: '❌' };
@@ -954,8 +977,9 @@ const huntOpen = () => !!document.getElementById('tab-hunt')?.classList.contains
 function renderHuntDb(rt, d) { renderRes(rt, d); renderFarm(rt, d); renderRecipes(rt, d); renderTree('farm', rt, d); renderTree('recipe', rt, d); }
 document.addEventListener('l2:tabchange', async e => {
   if (e.detail?.tab !== 'hunt') return;
-  const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']);
-  renderHuntDb(rt, { ...DEF, ...cfg });
+  // 20.62 (ревью): после первой отрисовки — по её rt/cfg, без чтения rt (≈1–1,5 МБ); базы дорисовываются асинхронно — затем прокрутка
+  const { rt = {}, cfg = {} } = lastPaint ? { rt: lastPaint.rt, cfg: lastPaint.d } : await chrome.storage.local.get(['rt', 'cfg']);
+  renderHuntDb(rt, { ...DEF, ...cfg }); setTimeout(restoreTabScroll, 400);
 });
 async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
 for (const kind of Object.keys(TREE)) {
@@ -1945,6 +1969,8 @@ const tabScroll = new Map(Object.entries(dockUi.scroll).filter(([k, v]) => /^tab
 let scrollSaveT = null;
 document.querySelectorAll('section[id^="tab-"]').forEach(sec => sec.addEventListener('scroll', () => {
   if (!sec.classList.contains('act')) return;
+  // 20.62 (ревью): раздел ещё не дорисован — браузер урезал позицию до низа короткого содержимого; это не прокрутка игрока, сохранённую не затираем
+  if (scrollClamped(sec)) return;
   tabScroll.set(sec.id, sec.scrollTop);
   if (scrollSaveT) return;
   scrollSaveT = setTimeout(() => { scrollSaveT = null; dockUi.scroll = Object.fromEntries([...tabScroll].filter(([, v]) => v > 0)); dockUiSave(); }, 300);
@@ -1952,15 +1978,17 @@ document.querySelectorAll('section[id^="tab-"]').forEach(sec => sec.addEventList
 // содержимое раздела дорисовывает load() — после первой отрисовки возвращаем сохранённую позицию
 function restoreTabScroll() {
   const sec = document.querySelector('section.act'), top = sec && tabScroll.get(sec.id);
-  if (sec && top > 0 && sec.scrollTop === 0) sec.scrollTop = top;
+  if (sec && top > 0 && (sec.scrollTop === 0 || scrollClamped(sec))) sec.scrollTop = top;
 }
+// 20.62 (ревью): позиция упёрлась в низ, а сохранена глубже — содержимое раздела короче, чем было (ещё не нарисовано)
+function scrollClamped(sec) { const top = tabScroll.get(sec.id); return top > sec.scrollTop && sec.scrollTop + sec.clientHeight >= sec.scrollHeight - 2; }
 function showTab(t) {
   if (t === 'enchant' && globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED) t = 'overview';
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
   if (!document.querySelector('section#tab-' + t)) t = 'overview';
   const previous = document.querySelector('section.act');
-  if (previous) tabScroll.set(previous.id, previous.scrollTop);
+  if (previous && !scrollClamped(previous)) tabScroll.set(previous.id, previous.scrollTop);   // 20.62 (ревью): урезанную позицию не запоминаем
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('act', b.dataset.tab === t); b.setAttribute('aria-current', b.dataset.tab === t ? 'page' : 'false'); });
   document.querySelectorAll('section').forEach(sec => sec.classList.toggle('act', sec.id === 'tab-' + t));
   try { localStorage.setItem('tab', t); } catch (e) {}
@@ -3227,18 +3255,60 @@ function paintRbOne(rt, on, paused) {
 }
 // перерисовка меню — не чаще 3 раз в секунду и только когда его видно: бот пишет состояние часто,
 // а полная перерисовка панели на каждую запись тормозила вкладку игры
-let loadT = 0, loadTimer = null, loadPending = false;
-function loadSoon() {
+// (состояние loadT/loadTimer/loadPending — вверху файла, у DOCKED)
+// 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): gap — наименьшая пауза от прошлой перерисовки. Запись бота (rt ≈1–1,5 МБ, wdog) —
+// не чаще раза в 1,5 с; настройки, Старт/Пауза, запись меню и всё сразу после действия игрока — через 350 мс, как раньше.
+// Короткий запрос заменяет уже взведённый длинный таймер (клик не ждёт 1,5 с из-за предыдущей записи бота).
+function loadSoon(gap = LOAD_GAP) {
   // 8.0 (аудит меню): свёрнутое встроенное меню (◀, cfg.dockMin) тоже не перерисовываем — его не видно, а бот пишет rt часто
   if (document.hidden || dockMin) { loadPending = true; return; }   // перерисуем, когда меню снова покажут
   loadPending = false;
-  const wait = Math.max(0, 350 - (Date.now() - loadT));
-  if (loadTimer) return;
-  loadTimer = setTimeout(() => { loadTimer = null; loadT = Date.now(); load(); }, wait);
+  const at = Math.max(Date.now(), loadT + gap);
+  if (loadTimer) { if (at >= loadAt) return; clearTimeout(loadTimer); }
+  loadAt = at;
+  loadTimer = setTimeout(() => { loadTimer = null; loadT = Date.now(); load(); }, at - Date.now());
 }
+// 20.62: чья запись — бот (длинная пауза) или меню/игрок (короткая)
+function storeGap(ch, now = Date.now()) {
+  return ch.cfg || ch.on || ch.paused || ch.rt?.newValue?._src === 'menu' || now - userT < 3000 ? LOAD_GAP : LOAD_GAP_BOT;
+}
+for (const t of ['pointerdown', 'keydown', 'input', 'change']) document.addEventListener(t, () => { userT = Date.now(); }, true);
+// 20.62: вкладка игры пишет live@Ник на каждый шаг, а в меню из него — только строка «чем занят» (rt.status в renderWorkspace).
+// Раньше каждая такая запись перечитывала весь rt и перерисовывала ~45 блоков. Теперь — одна панель по rt/cfg прошлой отрисовки.
+// false — прошлой отрисовки ещё нет (нужен полный load()).
+function paintLive(ch) {
+  if (document.hidden || dockMin) { loadPending = true; return true; }
+  const P = lastPaint; if (!P?.rt?.char) return false;
+  const c = ch['live@' + P.rt.char]; if (!c) return true;   // статус другого героя — не наш показ
+  const live = c.newValue;
+  // 20.62 (ревью): «Запуск»/«Нет сигнала»/«Активен» — по текущему времени и свежим lock/hbBg; сменилось то, что видно в шапке, — полный load()
+  const E = engineState(P.st.on, P.lock, P.hbBg, P.rt); if (E.sig !== P.sig) return false;
+  P.rt.status = live && live.char === P.rt.char && typeof live.s === 'string' && live.s ? live.s : P.statusRaw;
+  renderWorkspace(P.rt, P.d, P.st);
+  return true;
+}
+// 20.62: тяжёлые разделы рисуются только открытыми — при переходе в раздел рисуем его сразу и синхронно (renderOpen по rt/cfg
+// прошлой отрисовки — те же данные, что раньше уже стояли в скрытом разделе), ещё до того, как showTab вернёт прокрутку раздела и
+// прокрутит к подразделу/результату поиска. 20.62 (ревью): без полного load() — без чтения rt и ~40 блоков на каждый клик; повтор
+// того же раздела (Alt+цифра с автоповтором, «Обзор» из списка задач) ничего не делает. Крафт отпускает свой снимок rt, когда раздел закрыт.
+let shownTab = document.querySelector('section.act')?.id.slice(4) || null;
+document.addEventListener('l2:tabchange', e => {
+  const t = e.detail?.tab; if (t === shownTab) return;
+  shownTab = t;
+  if (t !== 'craft') craftRt = {};
+  if (!GATED_TABS.includes(t)) return;   // базы «Охоты» — свой слушатель выше
+  if (lastPaint) renderOpen(lastPaint.rt, lastPaint.d); else if (loadDone) loadSoon(0);   // первый load() ещё идёт — он нарисует открытый раздел сам
+});
 onStore(ch => {
   if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
-  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon();   // 20.13 (шаг 7): и живой статус live@Ник
+  // 20.62 (ревью): lock/hbBg (продление замка, пульс фона) load() не зовут — запоминаем для paintLive; сменилась шапка («Запуск» → «Активен») — перерисовка
+  if ((ch.lock || ch.hbBg) && lastPaint) {
+    if (ch.lock) lastPaint.lock = ch.lock.newValue ?? null; if (ch.hbBg) lastPaint.hbBg = ch.hbBg.newValue ?? null;
+    if (engineState(lastPaint.st.on, lastPaint.lock, lastPaint.hbBg, lastPaint.rt).sig !== lastPaint.sig) loadSoon();
+  }
+  // 20.62: только живой статус — без полной перерисовки
+  if (Object.keys(ch).some(isLiveKey) && paintLive(ch) && Object.keys(ch).every(isLiveKey)) return;
+  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon(storeGap(ch));   // 20.13 (шаг 7): и живой статус live@Ник
   // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
   if (ch.reccount || ch.snapcount) {
     if (ch.reccount) recN = ch.reccount.newValue || 0;
@@ -3247,7 +3317,7 @@ onStore(ch => {
   }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && loadPending) loadSoon(); });
-load().catch(() => {}).finally(() => { restoreTabScroll(); setTimeout(restoreTabScroll, 400); });   // 20.12 (UI-7)
+load().catch(() => {}).finally(() => { restoreTabScroll(); loadDone = true; setTimeout(restoreTabScroll, 400); });   // 20.12 (UI-7)
 if ($('reloadBot')) $('reloadBot').onclick = reloadBotUpdate;
 void checkExtensionUpdate();
 window.addEventListener('focus', () => { void checkExtensionUpdate(); });
