@@ -12,6 +12,11 @@
 - Меню (popup.js): live@ — только строка «чем занят» (`paintLive`), фоновые записи бота — не чаще 1,5 с, клики/cfg/on/paused — 350 мс; тяжёлые разделы (РБ, таймеры, эпики, Маммон, крафт, зоны) рисуются только открытыми (`renderOpen`), при переходе — сразу, с сохранением прокрутки.
 - Проверки: Node 658 PASS/0 FAIL, `node --check`, envcheck PASS; новые v2062-cpu-writes, v2062-dock-render, v2062-class-stash-key (+ браузерные v2062-class-stash-browser, v2062-dock-scroll-browser в smokes.sh); полный smokes.sh — см. PR. Живую игру и реальный замер ЦП/памяти в Chrome не проверяли. ZIP не собирался.
 
+## 25.10.2026, 10:15 UTC+10 — Claude — Rebirth: защиты (тред «Подготовить бота к Rebirth»)
+
+- Анонс Rebirth от John: факты и найденные ещё 16.10 страницы/поля API — `kb/rebirth.md`. Перерождение бот не делает.
+- `subgo`: до телепорта к Reorin проверка места в сумке под снимаемое при смене класса (`L2SubGear.bagRoom`, `inventoryCapacity`), подсказка при отказе игры; надетое оружие/щит Rebirth `planGear` держит. `equipment`: вещи Rebirth — сила неизвестна, надетое не снимается, из сумки само не надевается. `enchant`: вещи Rebirth не в выборе. Тест v2062-rebirth-guards; Node 656/0 FAIL, браузерные subgo/enchant PASS (v206-enchant-quick не запускается и на базе — нет модуля). ZIP не собирался.
+
 ## 25.10.2026, 09:35 UTC+10 — Claude — сборка Chrome 20.61 без проверок
 
 - John: «Сборка без проверок». 20.61 = 20.60 + исправление Ashen Bastion (запись ниже). ZIP 68 файлов по списку 20.60, 1 687 682 байт, SHA256 bafdd5e9…a29f — `builds/SHA256SUMS-20.61.txt`, архив в `/mnt/project-files/builds/`. Node 654 PASS/0 FAIL; смоуки и zipload не запускались по команде.
