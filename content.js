@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.63 — бой за Кота, смена саба (плащ/тату/пояс), сверка сумки =====
+// ===== L2wap Bot v20.64 — эпики за Дестра под Frenzy, TvT не бросает босса, рыбалка =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -1118,17 +1118,22 @@ function dmgFromLog(name, lines, allowAlt = true) {
 const cdWatch = new Set();
 // урон в ЭТОМ бою: против моба +30 ур. атака даёт 1–3 вместо 900, скиллы — вдвое меньше. Средние «за всё время»
 // тут врут, поэтому план боя смотрит сначала на замеры текущего боя (от 2 ударов)
+// 20.64 (лог 25.10 22:46–22:49, Destroyer, Queen Ant → Core): под Frenzy атака по эпику 4 000–12 000 вместо ≈400, Power Smash 14 000
+// вместо 2 300. Среднее «за бой» смешивало оба состояния: после конца Frenzy атака ещё 100 с считалась ≈6 000, а правило РБ «скилл
+// слабее 1,6 атаки — не жмём» выкидывало Power Smash/Fatal Strike (Core ≈230 HP/с вместо ≈1 500). Теперь замер помнит, висел ли
+// урон-лимит (Frenzy 176, Zealot 420), а оценка берёт последние замеры того же состояния
 let fightLearn = { id: '', d: {} };
-function fightNote(key, dmg) {
+const FIGHT_DMG_LAST = 12;
+function fightNote(key, dmg, tag = dmgBoostTag()) {
   const id = location.search;
   const owner = observeOwner();
   if (fightLearn.id !== id || fightLearn.owner !== owner) fightLearn = { id, owner, d: {} };
-  (fightLearn.d[key] ||= []).push(dmg);
+  (fightLearn.d[key] ||= []).push({ v: dmg, g: tag });
 }
 function fightDmg(key) {
   if (fightLearn.id !== location.search || fightLearn.owner !== observeOwner()) return null;
-  const a = fightLearn.d[key];
-  return a && a.length >= 2 ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const tag = dmgBoostTag(), a = (fightLearn.d[key] || []).filter(x => x.g === tag).slice(-FIGHT_DMG_LAST);
+  return a.length >= 2 ? a.reduce((x, y) => x + y.v, 0) / a.length : null;
 }
 // КД скилла — по последним замерам (медиана), со сверкой по справочнику Interlude: выброс не портит расчёт
 async function learnCd(key, name, sec, b) {
@@ -1144,6 +1149,12 @@ async function learnCd(key, name, sec, b) {
   await setRtSoon({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
 }
 function observeOwner() { return JSON.stringify([rt.char || '', rt.classCur?.prof || '', rt.classCur?.slot ?? '', rt.classSwT || rt.classCur?.t || 0, typeof leaseEpoch === 'undefined' ? null : leaseEpoch]); }
+// 20.64: метка урон-лимитов (Frenzy/Zealot) для замеров урона — см. fightNote
+const DMG_BOOST_IDS = new Set([176, 420]);
+function dmgBoostTag() {
+  try { const now = Date.now(); return activeBuffs().filter(x => DMG_BOOST_IDS.has(x.id) && (!x.exp || x.exp > now)).map(x => x.id).sort((a, b) => a - b).join(','); }
+  catch (e) { return ''; }
+}
 function damageSample(p, dmg, known, splash) {
   const e = p.damageEvidence?.v === 1 ? { ...p.damageEvidence } : { v: 1, dmg: 0, dmgN: 0, uses: 0, unknown: 0, spl: 0, splN: 0 };
   e.uses++; if (!known) e.unknown++;
@@ -1220,13 +1231,15 @@ function observeSlot(b, src) {
     const stun = /оглуш|приголомш|stun/i.test(txt);
     const p = { name, uses: 0, usesU: 0, dmg: 0, dmgN: 0, mp: 0, mpN: 0, heal: 0, mpGain: 0, buffSec: 0, stun: 0,
                 ...(rt.skills?.[key] || {}) };
-    p.uses++; if (!damageKnown) p.unknown = (p.unknown || 0) + 1; if (src === 'U') p.usesU++;
-    if (dmg > 0) { p.dmg += dmg; p.dmgN++; }
+    // 20.64: урон под Frenzy/Zealot в общее среднее не идёт (там ×4–×25 по эпику) — только в замер этого боя с меткой состояния
+    const boost = dmgBoostTag(), learnDmg = boost ? 0 : dmg;
+    p.uses++; if (!damageKnown || boost && dmg > 0) p.unknown = (p.unknown || 0) + 1; if (src === 'U') p.usesU++;
+    if (learnDmg > 0) { p.dmg += learnDmg; p.dmgN++; }
     // 7.2.1 (лог 10.10 21:08): Sprite's Staff (B) вместо Demon's Staff (C) — Blaze бьёт ≈1800, а среднее из 5 373 старых замеров
     // показывало ≈900 (по нему считаются добивание, окупаемость дебаффов, ДПС-план). Среднее — по последним ≈40–60 замерам
     if (p.dmgN > 60) { p.dmg = Math.round(p.dmg / p.dmgN * 40); p.dmgN = 40; }
     if (dmg > 0 && slotKind(b) === 'скилл' && BUFF_CTX) try { L2V7Modules.combat.spellSample(BUFF_CTX, key, dmg); } catch (e) {}   // 7.2.1: выгода дебаффов
-    if (damageKnown && (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0)) fightNote(key, dmg);   // промахи атаки тоже считаем
+    if (damageKnown && (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0)) fightNote(key, dmg, boost);   // промахи атаки тоже считаем
     // массовые удары: урон по соседям («… поруч: Моб −N») — отдельно, для выбора удара, когда рядом 2–3 моба
     if (slotKind(b) === 'скилл' && dmg > 0) { const spl = splashDmg(added); p.spl = (p.spl || 0) + spl; p.splN = (p.splN || 0) + 1; if (spl) p.aoe = 1; }
     if ((solo || ex) && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
@@ -1241,7 +1254,7 @@ function observeSlot(b, src) {
     if (unav) { p.unavail = (p.unavail || 0) + 1; p.unavailT = Date.now(); }
     p.kind = slotKind(b); p.img = (b.querySelector('img')?.getAttribute('src') || '').split('/').pop();
     p.last = txt.slice(0, 160);
-    damageSample(p, dmg, damageKnown, slotKind(b) === 'скилл' && dmg > 0 ? splashDmg(added) : null);
+    damageSample(p, learnDmg, damageKnown && !(boost && dmg > 0), slotKind(b) === 'скилл' && learnDmg > 0 ? splashDmg(added) : null);
     await setRtSoon({ skills: { ...(rt.skills || {}), [key]: p } });
     rec(src, 'скилл', `«${name}»: урон ${damageKnown ? dmg : 'не измерен'} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
       + `${hpd > 15 ? ' · HP +' + hpd : ''}${buff ? ' · бафф ' + buff[1] + ' с' : ''}${stun ? ' · стан' : ''}`
@@ -6865,7 +6878,7 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // как «l2_1181», модель группы Flame Strike писалась под чужим ключом и не находилась: проба АОЕ (+950 мс) в каждом бою.
   // Имя — из снимка панели на момент отправки хода (actNameSnap в netStart)
   return b ? cleanTitle(b.title || '').toLowerCase() : ACT_NAMES_OWNER === observeOwner() && ACT_NAMES.get(a) || a; };
-L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get routeLocation(){return actionLocation},
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get dmgBoostTag(){return dmgBoostTag}, get routeLocation(){return actionLocation},
   get cfg() { return cfg; },
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; },

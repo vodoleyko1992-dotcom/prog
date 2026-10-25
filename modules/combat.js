@@ -1109,8 +1109,19 @@ const limitDiveFresh = ctx => !!ctx?.limitDiveT && Date.now() - ctx.limitDiveT <
 // На эпике (cfg.epicFrenzy, ВКЛ): слив, если HP после Trance переживёт один замеренный удар до Guts (P.Def +150 %); 90 с после слива
 // HP держим в зоне Frenzy (≤ 30 %): банка только когда до смерти остаётся меньше 1,3 свежего удара, процентный отход эпика не срабатывает
 const epicFrenzyOn = ctx => env.cfg.epicFrenzy !== false && !!ctx?.rb && !!env.epicById?.(ctx.rb.id);
-const FRENZY_HOLD_MS = 90000;
-const epicFrenzyHold = ctx => epicFrenzyOn(ctx) && !!ctx.limitDiveT && Date.now() - ctx.limitDiveT < FRENZY_HOLD_MS;
+// 20.64 (лог 25.10 22:46–22:48, Destroyer): Frenzy после нажатия держит урон и при полном HP — на Core банки подняли HP до 10785/10785,
+// а атака била 10 756 (без Frenzy ≈400) все 90 с. HP ≤ 30 % нужен только для нажатия: держим его низким, пока выбранные лимиты
+// (Guts/Frenzy/Zealot) не нажаты, но не дольше 15 с от слива; дальше обычные банки (QA за ход бьёт до 5 раз по 1 600–2 000)
+const FRENZY_HOLD_MS = 15000;
+function limitBuffs(ctx) {                        // выбранные лимиты на панели: готовы и ещё не висят
+  const selected = [...new Set([...env.names(env.cfg.nKeyBuffs), ...env.names(env.cfg.nBuffs)])];
+  return selected.map(bn => ({ bn, b: slotsBy(bn)[0] })).filter(x => x.b)
+    .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [139,176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
+    .filter(x => !env.buffActive(x.bn, x.b) && ready(x.b) && (ctx.block?.['buff:' + x.bn] || 0) <= Date.now())
+    .sort((a,b) => LIMIT_ORD[a.il.id] - LIMIT_ORD[b.il.id]);
+}
+const epicFrenzyHold = ctx => epicFrenzyOn(ctx) && !!ctx.limitDiveT && Date.now() - ctx.limitDiveT < FRENZY_HOLD_MS
+  && limitBuffs(ctx).some(x => x.il.id !== 139);
 function epicFrenzyFloor(ctx, me) {               // HP, ниже которого под Frenzy на эпике пьём банку: 1,3 свежего удара (после слива), не меньше 8 %
   const all = (ctx.rb?.hits || []).filter(n => Number.isFinite(n) && n > 0), fresh = all.slice(ctx.limitDiveHits ?? 0);
   const hit = Math.max(0, ...(fresh.length ? fresh : all));
@@ -1122,11 +1133,7 @@ function limitPlan(ctx, me, mp, mob) {
   const destr = env.cfg.destroyerLimits !== false && /^(?:orc )?(?:destroyer|titan)$/i.test(prof), big = limitBigTarget(ctx, mob);
   if (!(big || destr && !ctx.champ) || !me || ![me.cur,me.max,me.pct,mp?.cur].every(Number.isFinite) || !(me.cur > 0 && me.max > 0)
     || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.pvpPending?.() || ctx.rb?.retreated || ctx.chOut || env.rt.epic?.step === 'retreatVerify') return null;
-  const selected = [...new Set([...env.names(env.cfg.nKeyBuffs), ...env.names(env.cfg.nBuffs)])];
-  const buffs = selected.map(bn => ({ bn, b: slotsBy(bn)[0] })).filter(x => x.b)
-    .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [139,176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
-    .filter(x => !env.buffActive(x.bn, x.b) && ready(x.b) && (ctx.block?.['buff:' + x.bn] || 0) <= Date.now())
-    .sort((a,b) => LIMIT_ORD[a.il.id] - LIMIT_ORD[b.il.id]);
+  const buffs = limitBuffs(ctx);
   if (!buffs.length) return null;
   const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {}, hits = limitHitsIn(ctx);
   const sorted = [...hits].sort((a, b) => a - b), champHit = !ctx.rb && sorted.length ? sorted[Math.floor(sorted.length * 0.9)] : 0;
@@ -2165,7 +2172,7 @@ async function battle() {
       if (epicFrenzyHold(ctx)) {
         const floor = epicFrenzyFloor(ctx, me);
         potAt = me.cur <= floor ? 100 : -1;
-        if (!ctx.rb.frenzyHoldNote) { ctx.rb.frenzyHoldNote = 1; env.rec('B', 'эпики', `${ctx.name}: бью под Frenzy — HP держу ≤ 30 %, банка только при HP ≤ ${floor}`); }
+        if (!ctx.rb.frenzyHoldNote) { ctx.rb.frenzyHoldNote = 1; env.rec('B', 'эпики', `${ctx.name}: слив под Frenzy — до нажатия лимитов банка только при HP ≤ ${floor}, после Frenzy лечусь как обычно`); }
       } else if (frenzyDive(ctx, me)) { potAt = -1; if (!ctx.rb.diveNote) { ctx.rb.diveNote = 1; env.rec('B', 'РБ', `слив под Frenzy: банки не пью, пока HP не упадёт до ${env.ilOf(slotsBy('Frenzy')[0])?.pc?.hp || 30} % — там Frenzy`); } }
     }
     const hpPot = me && me.pct <= potAt && me.cur < me.max ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;

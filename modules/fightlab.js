@@ -569,7 +569,7 @@ function onNet(path, d) {
       if (recovery && L.selfHeal > 0) { (a.heals ||= []).push({hp:L.selfHeal,t:now}); if (a.heals.length > SAMPLES) a.heals.shift(); }
       // 15.10, аудит: промах — наблюдаемый ноль, неизвестный ответ не входит в вероятность добивания.
       if (own > 0 || L.miss) {
-        const context = env.recoveryContext?.() || null;
+        const context = rollContext();
         if (a.context !== context) { a.context = context; a.rolls = []; }
         (a.rolls ||= []).push(own); if (a.rolls.length > SAMPLES) a.rolls.shift();
       }
@@ -698,12 +698,17 @@ function failNote(e) {
 }
 
 // ---------- подсказки бою ----------
+// 20.64 (лог 25.10 22:46–22:49): урон под Frenzy/Zealot по эпику в разы выше — такие замеры отдельная выборка (без лимита ключ прежний)
+function rollContext() {
+  const c = env.recoveryContext?.() || null, g = env.dmgBoostTag?.() || '';
+  return c && g ? `${c}|boost:${g}` : c;
+}
 function samplesOn(name) {
   if (!ensure()) return null;
   const k = low(name), m = mem()[F.key]?.a?.[k], f = F.a[k];
   // Старый точный замер другой силы/баффов не перекрывает новый общий прогноз.
   // Положительные s и счётчики остаются общей аналитикой, rolls — последняя однородная выборка.
-  const context = env.recoveryContext?.() || null, managed = typeof env.recoveryContext === 'function';
+  const context = rollContext(), managed = typeof env.recoveryContext === 'function';
   if (managed && !context) return null;
   const compatible = a => !managed || a?.context === context;
   const s = [...(m?.evidence === EVIDENCE && compatible(m) ? (m.rolls || []) : []), ...(compatible(f) ? (f?.rolls || []) : [])].slice(-SAMPLES);
