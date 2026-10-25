@@ -495,6 +495,74 @@
     return { wait, note, left, gap };
   }
 
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов rt.classStash (память неактивных сабклассов, 600–870 КБ из
+  // ≈1–1,5 МБ rt) — в своём ключе хранилища: у активного героя «stash» (рядом с «rt»), у остальных «stash@Ник» (рядом с «rt@Ник»).
+  // Значение — обёртка { char, v: classStash | null, _src }. Обычная запись rt и её рассылка storage.onChanged (вкладка игры и окно
+  // бота получают старое+новое значение целиком) больше не тащат тайник. В памяти вкладки/меню по-прежнему rt.classStash: читатели
+  // хранилища складывают его обратно (stashJoin). Обёртка другого героя (char не совпал) не подставляется.
+  // Старое rt.classStash внутри rt (ещё не перенесено; или его снова написала сборка без ключа stash — откат на старый ZIP в ту же
+  // папку) новее ключа только по своим классам: ревью 20.62 — тайник старой сборки начинается с {} и держит лишь класс, с которого
+  // ушли, поэтому замена ключа целиком стёрла бы память остальных классов. Складываем по классам { ...ключ, ...старое }; запись
+  // ключа об активном классе (rt.classCur.prof) не берём — активный класс в тайнике не лежит, его память в самом rt.
+  const STASH_RE = /^stash(@|$)/;
+  const stashKeyOf = k => k === 'rt' ? 'stash' : typeof k === 'string' && /^rt@./.test(k) ? 'stash@' + k.slice(3) : null;
+  const stashObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  function stashValue(rt, wrap) {
+    const own = stashObj(wrap) && String(wrap.char || '') === String(rt?.char || '') && stashObj(wrap.v);
+    if (stashObj(rt) && Object.hasOwn(rt, 'classStash')) {
+      const L = rt.classStash; if (!own) return { has: true, legacy: true, v: L };
+      const act = String(rt.classCur?.prof || ''), v = {};
+      for (const [k, x] of Object.entries(wrap.v)) if (k !== act) v[k] = x;
+      return { has: true, legacy: true, v: { ...v, ...(stashObj(L) ? L : {}) } };
+    }
+    if (own) return { has: true, legacy: false, v: wrap.v };
+    return { has: false, legacy: false, v: undefined };
+  }
+  const stashJoin = (rt, wrap) => { const s = stashValue(rt, wrap); return s.has && (!s.legacy || s.v !== rt.classStash) ? { ...rt, classStash: s.v } : rt; };
+  const stashWrap = (char, v, src) => ({ char: String(char || ''), v: stashObj(v) ? v : null, _src: String(src || '').slice(0, 60) });
+  function stashStrip(rt) { if (!stashObj(rt) || !Object.hasOwn(rt, 'classStash')) return rt; const { classStash: _, ...rest } = rt; return rest; }
+  // Запись в хранилище (объект для chrome.storage.local.set): rt/rt@Ник без classStash, тайник — в парном ключе той же записью
+  function stashSplitSet(change, src) {
+    for (const k of Object.keys(change)) { const sk = stashKeyOf(k), r = change[k]; if (!sk || !stashObj(r) || !Object.hasOwn(r, 'classStash')) continue;
+      change[sk] = stashWrap(r.char || (k === 'rt' ? '' : k.slice(3)), r.classStash, src); change[k] = stashStrip(r); }
+    return change;
+  }
+  // Фон (statePatch/menuPatch/stashMigrate): запись несёт старое rt.classStash из хранилища (не свой тайник пакета own — он полный, с
+  // удалениями, и пишется как есть) — складываем его с ключом stash по классам; ключ читается только в этом редком случае
+  async function stashLegacyMerge(change, state, own, getStash) {
+    if (own || !stashObj(change?.rt) || !Object.hasOwn(state?.rt || {}, 'classStash') || !Object.hasOwn(change.rt, 'classStash')) return change;
+    const w = (await getStash())?.stash; change.rt = { ...change.rt, classStash: stashValue(change.rt, w).v }; return change;
+  }
+  // Вкладка игры: тайник для нового rt из события storage.onChanged (ch). Старое rt.classStash уже в rt; ключ stash в этом же событии
+  // (не своё эхо src) важнее; тот же герой — тайник из памяти вкладки (prev); герой сменился без ключа stash в событии — reload: ник,
+  // тайник нового героя вкладка дочитывает из хранилища
+  function stashKeep(prev, ch, src) {
+    const n = ch?.rt?.newValue || {}, same = String(n.char || '') === String(prev?.char || '');
+    // старое rt.classStash в событии (сборка без ключа stash) — по классам поверх ключа из события или тайника в памяти вкладки
+    if (Object.hasOwn(n, 'classStash')) { const w = ch.stash ? ch.stash.newValue : same && stashObj(prev) && stashObj(prev.classStash) ? { char: n.char, v: prev.classStash } : null;
+      const s = stashValue(n, w); return { part: s.v !== n.classStash ? { classStash: s.v } : {} }; }
+    if (ch.stash && ch.stash.newValue?._src !== src) { const s = stashValue(n, ch.stash.newValue); return { part: s.has ? { classStash: s.v } : {} }; }
+    if (same) return { part: stashObj(prev) && Object.hasOwn(prev, 'classStash') ? { classStash: prev.classStash } : {} };
+    return { part: {}, reload: String(n.char || '') };
+  }
+  // Файл «Памяти бота» — прежнего вида (classStash внутри rt): выгрузка складывает тайник обратно в rt/rt@Ник, ключи stash* не пишет
+  function stashFold(data) {
+    const out = {};
+    for (const [k, v] of Object.entries(data || {})) if (!STASH_RE.test(k)) { const sk = stashKeyOf(k); out[k] = sk && stashObj(v) ? stashJoin(v, data[sk]) : v; }
+    return out;
+  }
+  // Загрузка файла: тайник героя — в его ключ (нет в файле — пустая обёртка, чтобы старый тайник этого слота не подставился),
+  // ключи stash* без пары rt из файла не пишем
+  function stashUnfold(data, src) {
+    const out = {};
+    for (const [k, v] of Object.entries(data || {})) {
+      if (STASH_RE.test(k)) continue;
+      const sk = stashKeyOf(k); if (!sk || !stashObj(v)) { out[k] = v; continue; }
+      const s = stashValue(v, data[sk]); out[k] = stashStrip(v); out[sk] = stashWrap(v.char || (k === 'rt' ? '' : k.slice(3)), s.v, src);
+    }
+    return out;
+  }
+
   // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
   // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
@@ -502,6 +570,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { stashKeyOf, stashValue, stashLegacyMerge, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1474,9 +1474,10 @@ let rtBigWarnT = (() => { try { return +sessionStorage.getItem(RT_BIG_SS) || 0; 
 function rtSizeTop() {
   try {
     const kb = v => Math.round(JSON.stringify(v ?? null).length / 1024);
-    const top = Object.keys(rt).map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
+    // 20.62: тайник классов в rt хранилища не входит (ключ stash) — в «крупные части» не считаем, по классам — отдельно
+    const top = Object.keys(rt).filter(k => k !== 'classStash').map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
     const st = rt.classStash && typeof rt.classStash === 'object' ? Object.entries(rt.classStash).map(([c, v]) => `${c} ${kb(v)}`).join(', ') : '';
-    return top ? `; крупные части (КБ): ${top}${st ? `; classStash: ${st}` : ''}` : '';
+    return top ? `; крупные части (КБ): ${top}${st ? `; classStash (отдельный ключ stash): ${st}` : ''}` : '';
   } catch (e) { return ''; }
 }
 const rtWriter = L2EngineCore.createPatchQueue(
@@ -1515,7 +1516,7 @@ function setRt(p) {
   let patch = { ...p };
   if (Object.keys(p).some(k => RT_BULKY.includes(k)) || Date.now() - rtSizeT > 60000) {
     rtSizeT = Date.now();
-    let size = 0; try { size = JSON.stringify(rt).length; } catch (e) {}
+    let size = 0; try { size = JSON.stringify({ ...rt, classStash: undefined }).length; } catch (e) {}   // 20.62: тайник классов — в своём ключе stash, не в rt
     // 7.1.30: до сброса кэшей — срезать устаревшее в растущих без предела словарях (по t: hardMobs 2 ч, hpMin/questSeen/rbSeen 24 ч)
     if (size > 300000) {
       const age = { hardMobs: 2 * 3600000, questSeen: 24 * 3600000, rbSeen: 24 * 3600000, zoneTried: 24 * 3600000, zoneBad: 24 * 3600000 };   // hpMin — не метки времени, не трогаем
@@ -3368,8 +3369,8 @@ async function loopLease() {
       // не продолжаем со снимком состояния вкладки-ожидателя.
       // 10.0 (аудит ядра): накопленное, пока вкладка ждала замок, — устаревшее (хозяином была другая вкладка); очередь чистим
       rtWriter.clear();
-      const fresh = await chrome.storage.local.get(['rt', 'cfg']);
-      rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
+      const fresh = await chrome.storage.local.get(['rt', 'cfg', 'stash']);
+      rt = { ...DEF_RT, ...(fresh.rt || {}) }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, fresh.stash); cfg = mergeCfg(fresh.cfg);   // 20.62: и тайник классов
     }
   }
   if (tabOwner && await stopPendRetry()) return true;   // 20.13 (шаг 5, core-a/M6): остановка прошлой страницы не подтверждена
@@ -7561,7 +7562,16 @@ chrome.storage.onChanged.addListener(ch => {
     if (keys.length) rtWriter.drop(keys);
   }
   const timerPrevious = rt;
-  if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  // 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов rt.classStash в хранилище — в своём ключе stash (rt его не
+  // содержит). Новый rt того же героя сохраняет тайник из памяти вкладки; изменение ключа stash в этом же событии (смена героя, смена
+  // класса другой вкладкой, импорт) — важнее. Своё эхо (_src вкладки) не применяем, неподтверждённая очередь — поверх всего.
+  // Герой сменился, а ключа stash в событии нет (запись без него — базовый профиль, старый импорт): тайник нового героя дочитываем.
+  const EC = globalThis.L2EngineCore; let keep = null;
+  if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...((keep = globalThis.L2EngineCore?.stashKeep?.(timerPrevious, ch, TAB_ID))?.part || {}), ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  else if (ch.stash && ch.stash.newValue?._src !== TAB_ID && !ch.rt && EC?.stashJoin) { const q = rtWriter.peek(); rt = { ...EC.stashJoin(EC.stashStrip(rt), ch.stash.newValue), ...(Object.hasOwn(q, 'classStash') ? { classStash: q.classStash } : {}) }; }
+  if (keep?.reload != null) try { const who = keep.reload; chrome.storage.local.get('stash').then(s => {
+    if (String(rt.char || '') !== who || Object.hasOwn(rt, 'classStash')) return;
+    const v = EC.stashValue(rt, s.stash); if (v.has) rt = { ...rt, classStash: v.v }; }).catch(e => quietErr('память', e)); } catch (e) {}
   if (ch.rt?.newValue?.rbTimer) {
     const saved = ch.rt.newValue, sameChar = String(saved.char || '') === String(timerPrevious.char || ''), pending = rtWriter.peek();
     const timers = L2V7Modules.rbtimer?.merge(saved.rbTimer, sameChar ? (pending.rbTimer || timerPrevious.rbTimer || { b: {} }) : { b: {} });
@@ -7595,8 +7605,8 @@ const whenActive = fn => document.prerendering ? document.addEventListener('prer
 // 20.43 (разбор 21.10): страница вне охоты (магазин, баффер, Маммон, рыбалка, телепорт, город, TvT, вход…) — метка разрыва во вкладке:
 // время до следующей победы — не время на моба (trackEfficiency). sessionStorage: переживает переходы, запись памяти не нужна
 whenActive(() => { if (!HUNT_PAGE_RE.test(location.pathname)) try { sessionStorage.setItem(HUNT_GAP_SS, String(Date.now())); } catch (e) {} });
-whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
-  cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; on = !!s.on;
+whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on', 'stash']).then(s => {   // 20.62: тайник классов — из своего ключа stash
+  cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, s.stash); on = !!s.on;
   onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
   // v5.6: одноразовые миграции — в ОДНУ запись настроек и одну запись состояния. Раньше каждая делала своё
   // «прочитать cfg → записать cfg» параллельно с остальными: на чистой установке часть терялась (lvlAbove 99 → 15),

@@ -329,9 +329,22 @@ async function liveStatusInto(rt) {
   } catch (e) {}
   return rt;
 }
+// 20.62 (жалоба John 25.10 «бот грузит ЦП и память»): тайник классов (rt.classStash, память других сабклассов, сотни КБ) — в своём
+// ключе stash. Меню читает его один раз и дальше держит из событий хранилища (меняется только при смене класса/героя), а не вместе
+// с rt на каждом обновлении окна. В показе — rt.classStash, как раньше; тайник другого героя (stash.char) не подставляется.
+// Ревью 20.62: окно бота (dock) живёт на странице игры всю сессию — держим только имена классов тайника ({класс: 1}), не сами
+// замеры (сотни КБ): меню показывает лишь Object.keys(rt.classStash). Файл «Памяти бота» читает хранилище целиком (memSave).
+let STASH_C;   // undefined — ещё не читали; null — ключа нет (события хранилища — в onStore ниже, у баз farmDb/recipeDb)
+const stashNames = w => w && typeof w === 'object' ? { char: String(w.char || ''), v: w.v && typeof w.v === 'object' && !Array.isArray(w.v) ? Object.fromEntries(Object.keys(w.v).map(k => [k, 1])) : null } : null;
+async function stashInto(rt) {
+  if (!rt || typeof rt !== 'object') return rt;
+  if (STASH_C === undefined) try { const v = stashNames((await chrome.storage.local.get('stash'))?.stash); if (STASH_C === undefined) STASH_C = v; } catch (e) { return rt; }
+  const s = globalThis.L2EngineCore?.stashValue?.(rt, STASH_C); if (s?.has) rt.classStash = s.v;   // старое rt.classStash — по классам поверх ключа
+  return rt;
+}
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
-  await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
+  await liveStatusInto(rt); await stashInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
     // Черновик относится к герою, а не к DOM: после переключения профилей чужое значение не остаётся в поле.
@@ -709,7 +722,8 @@ function onStore(fn) {
 }
 const DBC = {}, dlSig = {};
 async function dbGet(k, def) { if (!(k in DBC)) DBC[k] = (await chrome.storage.local.get(k))[k] || def; return DBC[k]; }
-onStore(ch => { for (const k of ['farmDb', 'recipeDb']) if (ch[k]) { if (ch[k].newValue) DBC[k] = ch[k].newValue; else delete DBC[k]; } });
+onStore(ch => { for (const k of ['farmDb', 'recipeDb']) if (ch[k]) { if (ch[k].newValue) DBC[k] = ch[k].newValue; else delete DBC[k]; }
+  if (ch.stash) STASH_C = stashNames(ch.stash.newValue); });   // 20.62: тайник классов (stashInto) — только имена классов
 // база предметов (items-il.json) — имя по itemId, грузится один раз
 let ITEMS_IL = null;
 const itemsIl = async () => ITEMS_IL || (ITEMS_IL = await fetch(chrome.runtime.getURL('items-il.json')).then(r => r.json()).catch(() => ({}))); 
@@ -2570,7 +2584,7 @@ confirmClick('fightMemReset', async () => {
 });
 $('showAllCls').onclick = async () => {
   showAllCls = !showAllCls; try { localStorage.setItem('showAllCls', showAllCls ? '1' : '0'); } catch (e) {}
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, rt);
+  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, await stashInto(rt));
 };
 // выбор режима запускает бота (как и прежние кнопки) и выключает остальные режимы; дополнения не трогаем
 const MODES_OFF = { craftMode: false, enchantMode: false, epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false };
@@ -2964,7 +2978,8 @@ $('recDom').onclick = async () => {
 const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'wdSilent', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
-  const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память
+  // 20.62: файл прежнего вида — тайник классов (ключи stash/stash@Ник) складывается обратно в rt.classStash / rt@Ник.classStash
+  const data = L2EngineCore.stashFold(Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k))));   // 20.13 (шаг 7): живой статус — не память
   const rt = data.rt || {};
   download(`l2bot-memory-${rt.char || 'hero'}-${stamp()}.json`, JSON.stringify({ l2bot: 1, v: chrome.runtime.getManifest().version, t: Date.now(), data }), 'application/json');
   $('memNote').textContent = `✅ Сохранено: РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}, зон ${Object.keys(rt.zoneStat || {}).length}. Файл — в «Загрузках».`;
@@ -3128,7 +3143,8 @@ $('memFile').onchange = async e => {
   try {
     const j = JSON.parse(await f.text());
     if (!j?.l2bot || !j.data?.cfg) throw new Error('это не файл памяти L2wap Bot');
-    const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));
+    // 20.62: rt.classStash из файла — в ключ stash/stash@Ник (нет в файле — пустой тайник этого героя, старый не подставляется)
+    const data = L2EngineCore.stashUnfold(Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k))), 'menu');
     { const all0 = await chrome.storage.local.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
       for (const [k, v] of Object.entries(all0)) if ((k === 'rt' || /^rt@/.test(k)) && v && typeof v === 'object') byChar[v.char || k.slice(3)] = v;
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
