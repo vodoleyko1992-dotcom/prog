@@ -123,11 +123,30 @@ function syncOwner() {
   const current = groupOwner(); if (owner === current) return;
   ownerAwaiting = !!owner; owner = current; F = null; last = null; cache = null; cacheCls = ''; dirty = false; lastFight = null; flushT = 0;
 }
+// 20.64 (жалоба John 25.10 «бот грузит ЦП и память»; журналы 25.10: fightMem 273–318 КБ — больше трети памяти героя): контекст замера
+// (состав героя: экипировка, баффы, заряды — строка 1,2–2,1 КБ) лежал целиком в каждой строке умения каждой цели, а нужен только для
+// сравнения «тот же состав». В память боя пишется его отпечаток (тот же packHash, что у пачек), сравнение сводит к отпечатку обе стороны —
+// старые полные строки (прежняя память, другие классы, импорт) совпадают как раньше. В текущем бою контекст полный, как был.
+const CTX_MAX = 64;
+let ctxIn = null, ctxOut = null;
+const ctxId = s => { if (typeof s !== 'string' || s.length <= CTX_MAX) return s; if (s !== ctxIn) { ctxIn = s; ctxOut = packHash(s); } return ctxOut; };
+// Прежняя память с полными строками — облегчённая копия (запишется со следующим сохранением памяти боя); без полных строк — тот же объект
+function slimMem(src) {
+  if (!src || typeof src !== 'object') return src;
+  let out = null;
+  for (const [k, m] of Object.entries(src)) {
+    const a = m?.a; if (!a || typeof a !== 'object') continue;
+    let na = null;
+    for (const [n, o] of Object.entries(a)) if (typeof o?.context === 'string' && o.context.length > CTX_MAX) (na ||= { ...a })[n] = { ...o, context: ctxId(o.context) };
+    if (na) (out ||= { ...src })[k] = { ...m, a: na };
+  }
+  return out || src;
+}
 function mem() {
   syncOwner(); menuReset();
   const cls = env.rt.classCur?.prof || '';
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
-    cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
+    cache = { ...(slimMem(env.rt.fightMem) || {}) }; cacheCls = cls;
     Object.defineProperty(cache, '__src', { value: env.rt.fightMem, enumerable: false, writable: true });
   } else rebase();
   return cache;
@@ -138,7 +157,7 @@ function mem() {
 function rebase() {
   const ext = env.rt.fightMem;
   if (!dirty || !cache || cache.__src === ext || !ext || typeof ext !== 'object') return;
-  const merged = { ...ext };
+  const merged = { ...slimMem(ext) };
   for (const [k, v] of Object.entries(cache)) if (!ext[k] || (v?.t || 0) > (ext[k]?.t || 0)) merged[k] = v;
   cache = merged;
   Object.defineProperty(cache, '__src', { value: ext, enumerable: false, writable: true });
@@ -647,9 +666,9 @@ function finish(outcome, now = Date.now()) {
     const o = { ...(m.a[k] || { n: 0, s: [] }) };
     if (a.rolls?.length) {
       if (o.evidence !== EVIDENCE && o.rolls) o.legacyRolls = o.rolls;
-      o.rolls = [...(o.evidence === EVIDENCE && (o.context ?? null) === a.context ? (o.rolls || []) : []), ...a.rolls].slice(-SAMPLES);
+      o.rolls = [...(o.evidence === EVIDENCE && ctxId(o.context ?? null) === ctxId(a.context) ? (o.rolls || []) : []), ...a.rolls].slice(-SAMPLES);
       o.evidence = EVIDENCE;
-      o.context = a.context;
+      o.context = ctxId(a.context);
     }
     o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z; o.unknown = (o.unknown || 0) + (a.unknown || 0);
     m.a[k] = o;
@@ -705,7 +724,7 @@ function samplesOn(name) {
   // Положительные s и счётчики остаются общей аналитикой, rolls — последняя однородная выборка.
   const context = env.recoveryContext?.() || null, managed = typeof env.recoveryContext === 'function';
   if (managed && !context) return null;
-  const compatible = a => !managed || a?.context === context;
+  const compatible = a => !managed || ctxId(a?.context) === ctxId(context);
   const s = [...(m?.evidence === EVIDENCE && compatible(m) ? (m.rolls || []) : []), ...(compatible(f) ? (f?.rolls || []) : [])].slice(-SAMPLES);
   return s.length ? s : null;
 }

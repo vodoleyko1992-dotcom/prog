@@ -611,6 +611,6 @@ async function invScanStart(back) {
   await env.setRt({ invScan: { step: 'prof', back: back || location.pathname + location.search, t: Date.now() } });
   return invScanStep();
 }
- return { isRebirthRow, resolveWeaponItem, weaponItem, weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
+ return { isRebirthRow, resolveWeaponItem, weaponItem, weaponCatalogFresh, weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
  };
 })(globalThis);

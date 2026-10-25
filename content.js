@@ -1520,8 +1520,13 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && !pa
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };
+  let catNull = false;
   if (Object.keys(p).some(k => RT_BULKY.includes(k)) || Date.now() - rtSizeT > 60000) {
     rtSizeT = Date.now();
+    // 20.64 (жалоба John 25.10 «бот грузит ЦП и память»; журналы 25.10: weaponCatalog 120 КБ — 15 % памяти героя): каталог предметов игры —
+    // кэш на 30 мин (equipment.weaponCatalogFresh), устаревший никто не читает, а он ехал в каждой записи памяти. Устаревший — null
+    // отложенной записью (вместе с ближайшей обычной или через 8 с); свежий не трогаем, проверка — та же функция модуля
+    try { const M = globalThis.L2V7Modules?.equipment; if (rt.weaponCatalog && typeof M?.weaponCatalogFresh === 'function' && !M.weaponCatalogFresh()) { rt = { ...rt, weaponCatalog: null }; catNull = true; } } catch (e) {}
     let size = 0; try { size = JSON.stringify({ ...rt, classStash: undefined }).length; } catch (e) {}   // 20.62: тайник классов — в своём ключе stash, не в rt
     // 7.1.30: до сброса кэшей — срезать устаревшее в растущих без предела словарях (по t: hardMobs 2 ч, hpMin/questSeen/rbSeen 24 ч)
     if (size > 300000) {
@@ -1550,6 +1555,7 @@ function setRt(p) {
     }
   }
   if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
+  if (catNull && !Object.hasOwn(patch, 'weaponCatalog')) rtWriter.defer({ weaponCatalog: null }, 8000);
   if (Object.keys(patch).every(k => RT_STAT_SOON.has(k))) return rtWriter.defer(patch, 8000);
   return rtWriter.enqueue(patch);
 }
@@ -4645,7 +4651,9 @@ const uiCss = document.createElement('style');
 // 8.0.3 (игрок 11.10: «бывает полоска с перемоткой, она раздражает»): крупное окно было overflow:auto — когда 30 строк истории не
 // влезали по высоте, появлялась полоса прокрутки, хотя окно не кликается (pointer-events:none) и прокрутить её нельзя. Теперь окно
 // не прокручивается: сверху статус и бой целиком, история (новые строки сверху) обрезается снизу с плавным затуханием
-uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
+// 20.64 (жалоба John 25.10 «бот грузит ЦП»): без backdrop-filter:blur — размытие игры под окном пересчитывалось каждый кадр игры, а фон
+// окна и так почти непрозрачный (0,88 → 0,93)
+uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.93);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
 #l2bot-ind .h{display:flex;align-items:center;gap:7px;font-weight:700;color:#f0cf86;font-size:11.5px;letter-spacing:.02em}
 #l2bot-ind .h i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 6px currentColor}
 #l2bot-ind .s{font-weight:600;font-size:13px;margin:4px 0 3px;color:#fff}
