@@ -992,11 +992,16 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   1401: { ls: 1, L: 'Life Stone · L2WAP: сильное лечение HP' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
+// 20.64 (файлы John 25.10: страница «Ошибки» Chrome показала предупреждение справочника предметов ниже): после ↻ расширения
+// старый content.js на открытой вкладке игры жив, но chrome.runtime у него «отключён» (id нет, getURL бросает «Extension context
+// invalidated») — каждые 30 с новое предупреждение в «Ошибках». Такой вкладке поможет только обновление страницы игры.
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
+const extAlive = () => { try { return !!chrome.runtime?.id; } catch (e) { return false; } };
 async function itemsDb() {
   if (ITEMS) return ITEMS;
   if (itemsLoading) return itemsLoading; // несколько вызовов — один запрос и один разбор базы
   if (Date.now() < itemsRetryAt) return null;
+  if (!extAlive()) return null;   // 20.64: бот перезагружен (↻), а вкладка игры осталась со старым запуском — справочник не прочитать
   itemsLoading = (async () => {
     try {
       const r = await fetch(chrome.runtime.getURL('items-il.json'));
@@ -1014,7 +1019,7 @@ async function itemsDb() {
     } catch (e) {
       // Не закреплять {} навсегда: ошибка чтения расширения может быть временной.
       itemsRetryAt = Date.now() + 30000;
-      console.warn(TAG, 'справочник предметов: повторная попытка через 30 с', e);
+      if (extAlive()) console.warn(TAG, 'справочник предметов: повторная попытка через 30 с', e);
       return null;
     } finally { itemsLoading = null; }
   })();
