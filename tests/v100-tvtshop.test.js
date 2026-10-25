@@ -68,6 +68,6 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
   assert.match(content, /if \(tabOwner\) try \{ L2V7Modules\.tvtshop\.shilNote\(\); \} catch \(er\) \{\}/);
   assert.match(mobfarm, /env\.tsChainWant\?\.\(\)/);
   assert.match(html, /<select id="tsGoalItem"/); assert.match(html, /<input id="tsBuy" type="checkbox">/);
-  assert.match(popup, /const NUM  = \['enemyLvlAbove', 'tsGoalItem',/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy',/); assert.match(popup, /renderMammon\(rt, d\); renderTvtShop\(rt, d\);/);
+  assert.match(popup, /const NUM  = \['enemyLvlAbove', 'tsGoalItem',/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy',/); assert.match(popup, /renderOpen\(rt, d\);\n\s*renderTvtShop\(rt, d\);/);   /* 20.62: Маммон — в renderOpen (только открытым), магазин TvT — сразу за ним в load() */
   console.log('PASS: 10.0 TvT shop — catalog from the game (13 items, ids/prices as snapped 12.10), Shil by the bag with +N in the log, goal plan (wins to go, level 70), buy only with the checkbox / enough coins / level / once, page flow «Купити» → «Придбано», menu wired');
 })().catch(e => { console.error(e); process.exit(1); });
