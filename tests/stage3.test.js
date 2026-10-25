@@ -15,7 +15,7 @@ function chunk(t, begin, end) {
 async function testItems() {
   let n = 0, now = 200000, fail = false;
   const c = vm.createContext({ TAG: '[test]', console: { warn() {} }, Date: { now: () => now },
-    chrome: { runtime: { getURL: n => 'moz-extension:///'.concat(n) } },
+    chrome: { runtime: { id: 'test', getURL: n => 'moz-extension:///'.concat(n) } },
     async fetch(url) {
       n++;
       assert(url.endsWith('items-il.json'));

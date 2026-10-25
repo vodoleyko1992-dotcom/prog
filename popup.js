@@ -368,7 +368,18 @@ async function stashInto(rt) {
   const s = globalThis.L2EngineCore?.stashValue?.(rt, STASH_C); if (s?.has) rt.classStash = s.v;   // старое rt.classStash — по классам поверх ключа
   return rt;
 }
+// 20.64 (файлы John 25.10: страница «Ошибки» Chrome указала на первое чтение хранилища в load()): load() зовут таймеры,
+// слушатели и кнопки без .catch — отказ chrome.storage (бот перезагружен ↻, а окно открыто со старого запуска; меню открыто
+// не как страница расширения) становился необработанной ошибкой на каждом обновлении. Нет расширения/хранилища — молча ждём
+// (новое окно откроется после обновления вкладки игры); иная ошибка — одно предупреждение, меню рисуется на следующем обновлении.
 async function load() {
+  try { return await loadNow(); }
+  catch (e) {
+    let alive = false; try { alive = !!chrome.runtime?.id && !!chrome.storage?.local; } catch (_) {}
+    if (alive) console.warn('[l2bot] меню: перерисовка не удалась', e?.message || e);
+  }
+}
+async function loadNow() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
   const statusRaw = rt.status;
   await liveStatusInto(rt); await stashInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
