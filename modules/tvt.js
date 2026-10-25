@@ -135,6 +135,8 @@ function tvtHold() {
 // 20.13 (ревизия 17.10, шаг 7, pvp-misc/TVT-8): метка «уже написали про это окно» — в замыкании модуля, а не прямой записью в env.rt мимо setRt
 // (та тоже жила только до перезагрузки вкладки, так что поведение прежнее)
 let holdNote = '';
+const REG_BOSS_MS = 3 * 60000, REG_BOSS_FREE = 5;
+let regBossNote = '';
 async function tvtWait() {                          // окно TvT, дел на арене ещё нет — стоим на месте, задачи отложены
   const S = tvtState() || {}, left = S.start ? Math.max(0, Math.round((S.start - S.now) / 1000)) : 0;
   env.setStatus(`TvT через ${left} с — задачи отложены, жду на месте`);
@@ -161,6 +163,17 @@ async function tvtStep() {                          // true — шаг TvT сд�
     if (!registration && !tvtSoon()) return false;
     if (env.victory?.()) { location.href = '/tvt-arena.html'; return true; }
     const rbFight = /l2dop_(rb|eg)_/i.test(location.search) || env.rt.rbHunt?.step === 'fight' || !!(env.rt.epic?.step && env.rt.epic.step !== 'pick');
+    // 20.64 (лог 25.10 22:50:02/22:50:32, Core 51 %): регистрация открылась за 9,5 мин до конца — бот дважды бросил эпика ради записи,
+    // потом ходил лечиться и возвращался (−1,5 мин боя). Записаться из боя нельзя (POST /game/tvt/register → 400), поэтому бой
+    // с боссом добиваем, пока до конца регистрации больше REG_BOSS_MS и места есть; потом — на арену, как раньше
+    if (registration && /l2dop_(rb|eg)_/i.test(location.search) && !tvtSoon()) {
+      const R = tvtState() || {}, left = R.regEnd ? R.regEnd - R.now : 0;
+      if (left > REG_BOSS_MS && R.max - R.count > REG_BOSS_FREE) {
+        const k = R.id || String(R.regEnd);
+        if (regBossNote !== k) { regBossNote = k; env.rec('B', 'TvT', `регистрация открыта (${R.count}/${R.max}), до конца ${Math.round(left / 60000)} мин — сначала добиваю босса, запишусь не позже чем за ${REG_BOSS_MS / 60000} мин`); }
+        return false;
+      }
+    }
     // 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-3): метка прошлого выхода переживает перезагрузку (sessionStorage). Раньше она жила
     // только в странице: выход не подтверждён → leaveCheck вернул в бой → новая страница сразу снова уходила (пинг-понг каждые 3 с,
     // по РБ почти без ударов). Вернулись в бой после своего же выхода — следующая попытка не раньше чем через 30 с.

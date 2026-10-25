@@ -1045,6 +1045,14 @@ function castRequestReceipt(p) {
     return r?.char===p.char&&r.at===p.at&&Number.isSafeInteger(r.requestRevision)&&r.requestRevision>=0&&Number.isSafeInteger(r.armedAt)&&r.armedAt>=p.at&&Number.isSafeInteger(r.requestAt)&&r.requestAt>=r.armedAt&&r.requestAt-r.armedAt<=15000&&r.requestAt<=Date.now()?r:null;
   } catch (_) { return null; }
 }
+// 20.64 (лог 25.10 23:20:51): клик заброса пришёлся на ручные покупки времени — игра cast не отправила, страница перезагрузилась.
+// Hook пишет квитанцию синхронно до отправки и только 15 с после метки: метка этой попытки без квитанции дольше 15 с = запроса не было.
+function castRequestMissing(p) {
+  try {
+    const r=JSON.parse(root.sessionStorage?.getItem(CAST_REQUEST_KEY)||'null');
+    return r?.char===p.char&&r.at===p.at&&Number.isSafeInteger(r.armedAt)&&r.armedAt>=p.at&&r.armedAt-p.at<=15000&&!Number.isSafeInteger(r.requestRevision)&&Date.now()-r.armedAt>15000;
+  } catch (_) { return false; }
+}
 // 16.10, журнал 03:11: abort заброса оставлял вечный pending. Повтор только с исходной revision.
 function castRequestNote(d,at=Date.now()) {
   const p=env.rt.fishCastPending;
@@ -1112,6 +1120,11 @@ async function castReconcile(options={}) {
   // 20.60 (лог 24.10 20:44–21:52, Warlock): клик заброса совпал с ручной покупкой времени — игра не отправила cast, revision
   // в записи не появилась, и бот больше часа писал «выполните один заброс вручную», стоя на рыбалке. Без revision повтор
   // невозможен, но через 60 с старый запрос уже не в полёте: согласованный снимок без рыбы закрывает запись (лимит — консервативно).
+  if(known&&state.target===null&&!Number.isSafeInteger(R)&&castRequestMissing(p)){
+    // Запрос не уходил: наживка не тратилась, заброс не считаем. Поздний клик игры защищён revision сервера.
+    await env.setRt({fishCastPending:null,fishCastActive:false});
+    env.rec('B','рыбалка','Заброс не был отправлен игрой (совпал с другим действием) — запись закрываю, продолжаю рыбалку');return true;
+  }
   if(known&&state.target===null&&!Number.isSafeInteger(R)&&Date.now()-p.at>=LEGACY_CAST_MS){
     fishStat({casts:1});await env.setRt(statTake({fishCastPending:null,fishCastActive:false}));
     env.rec('B','рыбалка','Заброс без revision: за минуту сервер не показал рыбы — запись закрываю, продолжаю рыбалку');return true;
@@ -1133,7 +1146,7 @@ async function castReconcile(options={}) {
   if(state&&!p.refreshed){await reload();return true;}
   // Несогласованный снимок/ошибка GET тоже оставляют исход неизвестным: без паузы здесь было два GET каждую секунду.
   await env.setRt({fishCastPending:{...env.rt.fishCastPending,probeAfter:Date.now()+15000}});if(!valid())return true;
-  env.setStatus(Number.isSafeInteger(R)?'Рыбалка: исход заброса неизвестен — жду согласованный снимок сервера':'Рыбалка: исход заброса неизвестен (старая запись без revision) — откройте рыбалку и выполните один заброс вручную');
+  env.setStatus(Number.isSafeInteger(R)?'Рыбалка: исход заброса неизвестен — жду согласованный снимок сервера':'Рыбалка: исход заброса неизвестен (запись без revision) — сверяю с сервером, не дольше минуты, потом продолжу сам');
   await env.sleep(1000);return true;
 }
 async function fishSetup() {
