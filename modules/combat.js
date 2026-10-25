@@ -233,7 +233,26 @@ function cdBusy(b) {
 // считала заклинание на откате, а бот после потерянного клика жал его же снова. Потерянный клик — заклинание «занято» 0,7 с, бьём другим
 const lostUntil = new Map();
 const NOMP_MS = 1500;   // 20.12 (ревизия 17.10): сколько держим слот после отказа act() «не хватает MP»
+const PET_RESUMMON_GAP = 60000;   // 20.63: перепризыв не раньше чем через 60 с после прошлого призыва (лог 25.10 16:12: два за 4 с)
+let petHealSkipT = 0;
 const mpUntil = new Map(); // 20.36: нехватка MP — отдельная причина, свежая банка снимает только её.
+// 20.63 (лог 25.10 15:16–16:11, Warlock + Feline King в Ashen Bastion): Warrior Servitor / Final Servitor тратят Spirit Ore. Руда кончилась —
+// сервер 55 мин отвечал 400 battle_no_spirit_ore «Недостаточно Spirit Ore.» на оба баффа в начале КАЖДОГО боя (981 отказ, ≈1,5 с на бой
+// до первого удара, кот без баффов), закупка ждала плановой проверки раз в час. Теперь отказ «нет руды» держит слот, пока руды в сумке
+// (ответы сервера) не станет больше, чем было при отказе (не дольше 30 мин), и пишет rt.oreOut — закупка берёт руду на ближайшей проверке
+const ORE_IDS = { spirit: 3031, soul: 1785 }, ORE_MS = 1800000;
+const oreUntil = new Map();
+function oreKind(r) {
+  const e = `${r?.error || ''} ${r?.code || ''}`, m = String(r?.message || '');
+  const k = e.match(/no_(spirit|soul)_ore/i)?.[1] || m.match(/(?:недостат|не вистача|не хвата|not enough)[^.|]{0,20}\b(spirit|soul) ore/i)?.[1];
+  return k ? k.toLowerCase() : null;
+}
+function oreBlocked(b) {
+  const k = env.skKey(b), h = k && oreUntil.get(k); if (!h) return false;
+  const q = env.invQty?.(ORE_IDS[h.kind]);
+  if (Date.now() > h.until || (q != null && q > h.q)) { oreUntil.delete(k); return false; }
+  return true;
+}
 const pressAt = new Map();                         // 8.0.3: skKey → время клика (откат сервера, полученный раньше, об этом нажатии не знает)
 const ownLeft = b => {
   const k = env.skKey(b), lost = Math.max(Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000, mpLeft(b));
@@ -278,7 +297,7 @@ const potionSlot = b => !!b && env.slotKind(b) === 'предмет' &&
 const ready = (b, allowToggle = false) => {
   allowToggle = allowToggle === true; // Array.find/filter передают сюда числовой index, это не разрешение тоггла.
   const il = b && env.ilOf?.(b), toggle = [312,317].includes(il?.id), spawn = (env.cdSpawn || env.battleSpawn)();
-  return (!toggle || allowToggle) && (il?.autoUse !== false || allowToggle && il?.managedToggle === true) && uiReady(b)
+  return (!toggle || allowToggle) && (il?.autoUse !== false || allowToggle && il?.managedToggle === true) && uiReady(b) && !oreBlocked(b)
     && (potionSlot(b) || localCdLeft(b) <= 0) && (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), spawn) <= 0)
     && (!toggle || env.combatCooldown.skillWait('l2_' + il.id, spawn) <= 0);
 };
@@ -461,6 +480,16 @@ function petExpect(ctx) {
   const avg = c.hits >= 2 ? (c.hitDmg || 0) / c.hits : sum('hitDmg') / hits;
   return avg > 0 ? avg * 0.85 : 0;
 }
+// 20.63 (лог 25.10, Feline King): кот бьёт не на каждое действие, а по своему таймеру ≈2,5 с — на первый атакующий ход хозяина после него
+// (Curse Chaos первым ходом боя — удар кота в 97 %, Blaze через 0,5–1,5 с после удара кота — 0–3 %). petExpect (для добивания) тогда 0,
+// и дебафф считал, что весь урон — заклинания героя (доля 100 % вместо ≈25 %): Curse Chaos/Surrender шли первым ходом в 40 % боёв на
+// мобах, которых кот убивал за 1–2 удара. Для доли урона берём средний урон кота (с критами) на принятое действие хозяина
+function petPerAct(ctx) {
+  if (!petAlive()) return 0;
+  const k = env.petState?.()?.key || ctx?.pet?.key || '', S = env.rt.petStat?.[k] || {}, c = ctx?.pet || {};
+  const dmg = (+S.dmg || 0) + (+c.dmg || 0), acts = (+S.acts || 0) + (+c.acts || 0);
+  return acts >= 10 && dmg > 0 ? dmg / acts : 0;
+}
 // рекомендация «какого кота держать»: урон кота за действие хозяина с поправкой на ходы, потраченные на призыв/перепризыв.
 // Сравниваем только котов с ≥ 30 боями; разница < 10 % — «почти равны». Уровни героя показываем: кот сильнее с M.Atk хозяина
 function petAdvice(S) {
@@ -632,7 +661,7 @@ function debuffPlan(ctx, mp, me) {
   if (dbfImmune(ctx)) return null;   // 7.2.1: «має імунітет до негативних ефектів»; 20.43: мобы/чемпионы — по виду и со сроком
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
   const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto', g = debuffGain();
-  const pet = petExpect(ctx), actsLeft = mob.cur / Math.max(1, avg + pet);
+  const pet = Math.max(petExpect(ctx), petPerAct(ctx)), actsLeft = mob.cur / Math.max(1, avg + pet);   // 20.63: и средний удар кота на ход
   // 10.0.7 (игрок 13.10 03:11: «бот стал усиленно дебафать мобов — на сколько это даёт прирост?»; лог 13.10 12:25–13:12: на чемпионах
   // 35 ходов на дебаффы, Ghost of Rebellion Soldier — 6 из 18 ходов, 12 из 44 дебаффов не прошли, «замер выгоды» ни разу — дебафф шёл
   // первым ходом, сравнивать было не с чем). Цена хода на дебафф против выигрыша теперь по той же модели, что и баффы:
@@ -1896,7 +1925,8 @@ async function battle() {
     // подряд (Wild Sweep после Whirlwind) давал тот же тост, ожидание «новый текст» молчало — 3 с паузы вместо запрета, и в
     // следующем бою снова 400. Текст сервера проверяем тем же UNAVAIL, что и тост; «боя нет» (battle_none/not_in_battle) — не «недоступно»
     const code=receipt?.code||'',refuseMsg=String(receipt?.message||''),fightGone=receipt?.error==='battle_none'||receipt?.reason==='not_in_battle';
-    const serverAnswer=matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp'
+    const ore=matched&&!receipt.ok?oreKind(receipt):null;   // 20.63: «Недостаточно Spirit Ore» — не «недоступно до конца боя», а до пополнения руды
+    const serverAnswer=ore?'noore':matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp'
       :!fightGone&&(/unavail|weapon|not_learned/i.test(code)||!env.FORCE_NEED?.test(refuseMsg)&&env.UNAVAIL?.test(refuseMsg))?'unavail':null):null;
     // 20.43: текст отказа сервера «недоступно» — в строки журнала боя, баффов, спойла (loot) и тогглов (content) через ctx
     ctx.refuseText=serverAnswer==='unavail'?refuseMsg:'';
@@ -1907,6 +1937,12 @@ async function battle() {
       rtSoon({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }   // 20.41: отложенно
     if (ans) done = ans;
     if(done==='nomp'&&env.skKey(b))mpUntil.set(env.skKey(b),{until:Date.now()+NOMP_MS,server:true,mp:env.meMp?.()?.cur});
+    if(done==='noore'&&env.skKey(b)){
+      oreUntil.set(env.skKey(b),{until:Date.now()+ORE_MS,kind:ore,q:env.invQty?.(ORE_IDS[ore])??0});
+      const O=env.rt.oreOut||{},lbl=ore==='spirit'?'Spirit Ore':'Soul Ore';
+      if(Date.now()-(+O[ore]||0)>600000)env.rec('B','закупка',`«${env.cleanTitle(b.title)}»: сервер — недостаточно ${lbl}; не жму, пока руда не пополнится, докуплю на ближайшей проверке запасов`);
+      env.rt.oreOut={...O,[ore]:Date.now()};rtSoon({oreOut:env.rt.oreOut});
+    }
     if (env.combatCooldown.recentlyGlobalRejected(firedAt)) done = 'cd';
     if (petActAlive && !ctx.petActsKnown && (netOk || (!env.actNet && done === true))) ctx.pet.acts++;
     if (done === true) await rememberCd(b, 'used');
@@ -2460,8 +2496,22 @@ async function battle() {
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || slots.find(b => /^summon\b/i.test(env.cleanTitle(b.title)) && want && env.cleanTitle(b.title).toLowerCase().includes(want));
         const hb = slots.find(b => /^(?:servitor heal|heal servitor)/i.test(env.cleanTitle(b.title)) || (env.ilOf(b)?.target === 'PET' && env.ilOf(b)?.c === 'Лечение'));
         const mpOk = b => !mp || mp.cur >= (env.skillMp(env.cleanTitle(b.title)) || 0) + 10 && affordable(b, mp, 10);   // 20.12: и цена act()
-        const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb);
-        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.(!!ctx.rb);
+        // 20.63 (лог 25.10 15:16–16:16, Feline King 17 618/25 370 HP): кот бьёт только на атакующий ход хозяина, а призыв, лечение и баффы
+        // кота — ходы без его удара. Новый King приходит с ≈10 268 HP без баффов (призыв + 3 баффа = 4 хода), Servitor Heal даёт +1 200 HP
+        // за ход, а перепризыв при 25 % заменял ещё живого кота (5 982/25 370 → 10 268/17 618, +4 286) и тут же требовал те же 3 баффа:
+        // 46 перепризывов за час, в бою 16:12:01 — два подряд за 4 с (11 с на моба вместо ≈3). Теперь по замерам: перепризыв не раньше 60 с
+        // после прошлого призыва и только если новый кот (rt.petSummonHp) даст ≥ 30 % макс. HP сверх текущего; лечение вне РБ — только
+        // если оно за ход даёт не меньше HP, чем новый кот за свои ходы (призыв + баффы кота); иначе кот добивает, пока жив
+        const now = Date.now(), sumHp = +env.rt.petSummonHp?.[P.key] || 0;
+        const lastSum = Math.max(+env.rt.petSummonOkT || 0, +env.rt.petResummonT || 0);
+        const nPB = env.names(env.cfg.nPetBuffs || '').filter(n => slotsBy(n).length).length;
+        const HG = env.rt.petHealGain || [], healAvg = HG.length >= 3 ? HG.reduce((a, x) => a + x, 0) / HG.length : 0;
+        const healWeak = !ctx.rb && sumHp > 0 && healAvg > 0 && healAvg < sumHp / (1 + nPB);
+        const reSoon = now - lastSum < PET_RESUMMON_GAP, reLow = sumHp > 0 && sumHp - P.hp < 0.3 * P.maxHp;
+        if (healWeak && petPct <= healAt && hb && now - petHealSkipT > 1800000) { petHealSkipT = now;
+          env.rec('B', 'питомец', `лечение слуги ≈+${Math.round(healAvg)} HP за ход меньше, чем новый кот (≈${sumHp} HP за ${1 + nPB} ход.) — вне РБ не лечу, кот бьёт, пока жив`); }
+        const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb) && !healWeak;
+        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.(!!ctx.rb) && !reSoon && !reLow;
         const useSummon = !!canSummon && (env.cfg.petHealPrefer === 'resummon' || !canHeal);
         const pick = useSummon ? sb : canHeal ? hb : null;
         if (pick) {
@@ -2482,7 +2532,7 @@ async function battle() {
           if (pr === 'lock') { ctx.block['petheal'] = 0; return AGAIN; }
           if (pr === 'nomp') { ctx.block['petheal'] = Date.now() + NOMP_MS; return AGAIN; }   // 20.12: не хватило MP — пауза, не повтор сразу
           if (pr !== true) return AGAIN; // Непринятое действие не даёт измерения лечения или запрета перепризыва.
-          if (useSummon) { if (ctx.pet) ctx.pet.resummons++; env.setRt({ petBornT: Date.now() })?.catch?.(() => {}); }
+          if (useSummon) { if (ctx.pet) ctx.pet.resummons++; env.rt.petResummonT = Date.now(); env.setRt({ petBornT: Date.now(), petResummonT: env.rt.petResummonT })?.catch?.(() => {}); }
           const P2 = await env.waitFor(() => { const q = env.petState?.(); return q && q.t > t0 && q.has && q.key === key0 && q.maxHp > 0 ? q : null; }, 2500, 150);
           if (!P2) ctx.block['petheal'] = Date.now() + 20000;
           if (P2) {
@@ -2490,6 +2540,7 @@ async function battle() {
             if (useSummon) {
               // Один ранний снимок без роста HP не доказывает, что перепризыв больше никогда не лечит.
               if (gain > 0 && re[key0] == null) await env.setRt({ petResummon: { ...re, [key0]: true } });
+              env.rt.petSummonHp = { ...(env.rt.petSummonHp || {}), [key0]: P2.hp }; rtSoon({ petSummonHp: env.rt.petSummonHp });   // 20.63: HP нового кота
               env.rec('B', 'питомец', 'перепризыв ' + name + ': HP слуги ' + hp0 + '/' + max0 + ' → ' + P2.hp + '/' + P2.maxHp + ' — ' + (gain > 0 ? 'наблюдаемый прирост +' + gain : 'прирост HP не подтверждён'));
             } else if (gain > 0) {
               const h = env.rt.petHealGain || [];

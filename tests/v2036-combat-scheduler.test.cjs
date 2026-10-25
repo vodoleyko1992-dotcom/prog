@@ -20,7 +20,7 @@ function fixture(opt={}){
    if(opt.onFire)opt.onFire(f,request);else f.ack(request,opt.ackMs??120);return true;},
   setStatus:()=>{},setRt:async()=>{},slotCd:()=>({}),meMp:()=>({cur:mp,max:500}),petState:()=>null,pause:async()=>{pauses.push(now);advance(now+300)},rnd:a=>a,rec:()=>{},TAG:'test',cleanTitle:s=>s,memLeft:()=>opt.memLeft||0,FORCE_NEED:/x^/,UNAVAIL:/x^/,CD_RE:/x^/
  };
- const box={console:{info:()=>{}},Date:{now:()=>now},Math,Map,env,ctx,LOCK_A:[60,500,120],LOCK_B:[30,200,50],NOMP_MS:1500,lostUntil:new Map(),mpUntil:new Map(),pressAt:new Map(),
+ const box={console:{info:()=>{}},Date:{now:()=>now},Math,Map,env,ctx,LOCK_A:[60,500,120],LOCK_B:[30,200,50],NOMP_MS:1500,lostUntil:new Map(),mpUntil:new Map(),oreKind:()=>null,pressAt:new Map(),
   victory:()=>won,defeat:()=>false,affordable:(b,m)=>m.cur>=b.mp,healSlot:()=>false,noticeText:()=>'',uiReady:()=>ready,mobHp:()=>({cur:won?0:1000}),rememberCd:async(b,why)=>learned.push(why),slotsBy:()=>[],drainBackoff:()=>{}};
  vm.runInNewContext(actSource+'\nthis.act=act;',box);
  const f={env,ctx,box,b,net,fired,receipts,learned,pauses,at,now:()=>now,advance:ms=>advance(now+ms),setMp:v=>mp=v,setOwner:v=>owner=v,setWon:v=>won=v,setBusy:ms=>busyUntil=now+ms,setGlobal:ms=>globalUntil=now+ms,setSkill:ms=>skillUntil=now+ms,setReady:v=>ready=v,
