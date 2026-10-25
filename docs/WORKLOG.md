@@ -1856,3 +1856,8 @@
 
 - Сделано: по анонсу игры прочитан `GET /game/farm-guide` (данные страницы форума). Новые разделы `rareResources` и `gradePieces` теперь попадают в базу фарма бота (content.farmGuideMerge), в меню — свои разделы после «Ресурсы». Рецепты и цены магазина совпали с MM_RECIPES/MM_SHOP. В игре спойл базовых ресурсов теперь со всех мобов, с 40+ на 5 % выше. kb: `game-farm-guide.json`, `raw/farm-guide.json`, раздел «Обновление 21.10» в `kb/game-live.md`.
 - Проверки: 590 Node-файлов PASS (новый v2045-farm-guide-sections), node --check, envcheck PASS. ZIP не собирался; в игре только один GET.
+
+### 25.10.2026 17:30 (UTC+10) — Claude — сборка и бафф на пику (Dreadnought 79)
+
+- Сделано: по логам 25.10 17:10–17:14 смена саба Arcana Lord → Dreadnought оставляла плащ/тату/пояс в сумке (после Rebirth смена класса снимает всё) и брала Намисто Фринтези вместо +25 Валакаса — John надевал руками. `modules/subgo.js`: плащ/тату/пояс (`eq.cloak/tattoo/belt`) по уровню из `catalog-hints.specialGearUpgradeHints`, токен `bag:id:0:uN`; у эпик-бижутерии сначала урон под класс (`jdps` по строкам `epicExtraLinesUk`). Рекомендации по сборке и баффу — `kb/dreadnought-pole-build.md`.
+- Проверки: 661 Node-файл PASS (новый v2063-subgo-special), envcheck PASS, v2043-subgo-browser и v2032-subclass-bag-startup-browser PASS. В живой игре не проверено; ZIP не собирался.

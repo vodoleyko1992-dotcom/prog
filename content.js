@@ -5352,7 +5352,10 @@ async function invRefresh(active = () => true, ms = 6000, diagnostic = null) {
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
     if(!current())return null;
     reason='ok';return m;
-  } catch (e) { reason=['TimeoutError','AbortError'].includes(e?.name)?'таймаут':e?.name==='SyntaxError'?'некорректный JSON':'ошибка чтения';return null; }
+  } catch (e) {
+    // 25.10 (лог 17:11/17:12, 20.62): игра сама уводит с /map.html в Ashen Bastion — браузер обрывает наш GET (TypeError, 0 с).
+    reason=['TimeoutError','AbortError'].includes(e?.name)?'таймаут':e?.name==='SyntaxError'?'некорректный JSON':(typeof pageLeaving!=='undefined'&&pageLeaving||typeof pageGone!=='undefined'&&pageGone)?'страница сменилась':'ошибка чтения';return null;
+  }
   finally { try { diagnostic?.({phase,reason,elapsedMs:Date.now()-at}); } catch (_) {} }
 }
 // 23.10 (лог10:36,20.51): повторы сумки подавались сторожу как живое ожидание; ручное обновление карты сняло простой.
@@ -5392,6 +5395,9 @@ async function inventoryReady() {
     const m=await read;
     if (!current()) return false;
     if (m) { INV_RETRY={key,n:0,at:0}; return INV_READY===key; }
+    // 25.10 (лог 17:11/17:12, 20.62): обрыв запроса уходом со страницы — не ошибка сервера: без строки «ошибка чтения»
+    // в статусе и без счёта попыток (иначе переход копил бы повторы до перезагрузки карты); пауза 2 с от частых GET.
+    if (detail?.reason==='страница сменилась') { INV_RETRY={key,run,n:sameRetry?INV_RETRY.n:0,since,at:Date.now()+2000}; return false; }
     const n=sameRetry?INV_RETRY.n+1:1;
     const wait=Math.min(30000,2000*2**Math.min(4,n-1));
     INV_RETRY={key,run,n,since,at:Date.now()+wait};
