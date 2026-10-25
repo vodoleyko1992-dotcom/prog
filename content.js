@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.61 — Ashen Bastion без предела «до героя +5» =====
+// ===== L2wap Bot v20.62 — меньше нагрузки ЦП и памяти, защиты Rebirth, меню без chrome.storage =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
