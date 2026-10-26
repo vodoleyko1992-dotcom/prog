@@ -1,0 +1,35 @@
+{
+  "version": "20.65",
+  "source_base": "74f86d861260d7816ddef4e4e94becc01fc73469",
+  "phase": "browser_checks_in_progress",
+  "node": {
+    "pass": 667,
+    "fail": 0
+  },
+  "syntax": {
+    "pass": 58,
+    "fail": 0
+  },
+  "module_env": {
+    "pass": 34,
+    "fail": 0
+  },
+  "chrome_zipload": {
+    "browser": "Chrome for Testing 156.0.8078.4",
+    "version": "20.65",
+    "cfg_keys": 209,
+    "errors": 0
+  },
+  "firefox_native": {
+    "version": "153.5.1esr",
+    "desktop": "PASS",
+    "android_api_simulation": "PASS",
+    "lint_errors": 0,
+    "lint_warnings": 51
+  },
+  "live_game": "NOT_RUN",
+  "physical_android": "NOT_RUN",
+  "firefox_signed": false,
+  "browser_suite": "IN_PROGRESS",
+  "old_archives": "Kept available Chrome20.51 rollback because20.64 ZIPs were never committed; project-files unavailable."
+}
