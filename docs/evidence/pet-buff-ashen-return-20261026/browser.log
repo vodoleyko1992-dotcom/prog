@@ -1,0 +1,3 @@
+PASS actual MV3 saved summon-buff Ashen return {"case":"confirmed","starts":1,"job":null,"owner":null,"posts":["/game/battle/start"]}
+PASS actual MV3 saved summon-buff Ashen return {"case":"wrong-city","starts":0,"job":"returnSent","owner":"petBufferTrip","posts":[]}
+PASS actual MV3 saved summon-buff Ashen return {"case":"stop","starts":0,"job":"returnSent","owner":"petBufferTrip","posts":[]}

@@ -1,0 +1,45 @@
+{
+  "base": "296855e818907ecb1ad4088bca195ba6250064b4",
+  "source_sha256": "c041e1c8a7ac80f1ed15fd45f9d823f73929f699789a98a0f52207cb615d1738",
+  "scope": "Restore persisted summon-buff returnSent on Ashen only; no version or ZIP change",
+  "checks": {
+    "node_all": {
+      "files_pass": 669,
+      "files_fail": 0,
+      "log_sha256": "a930914543492c68b2c66ec1ebb100a803ce4d04b6d6230a7fd67c175067b256"
+    },
+    "new_regression": {
+      "groups_pass": 13,
+      "groups_fail": 0,
+      "old_code_expected_fail": 4
+    },
+    "targeted": {
+      "pass": 51,
+      "fail": 0
+    },
+    "syntax": {
+      "js_cjs": 4,
+      "status": "PASS"
+    },
+    "envcheck": {
+      "modules": 34,
+      "status": "PASS"
+    },
+    "shell_syntax": "PASS",
+    "diff_check": "PASS",
+    "review": "independent review: no blocking findings",
+    "browser": {
+      "engine": "Chrome 156 MV3",
+      "pass": 3,
+      "fail": 0,
+      "boundary": "Restored persisted returnSent; accepted purchase and teleport seeded; all requests mocked locally"
+    }
+  },
+  "not_checked": [
+    "Live game",
+    "Firefox runtime in this task",
+    "Full historical browser suite",
+    "Native purchase and teleport end-to-end in new browser regression"
+  ],
+  "artifacts": "Published 20.65 ZIP unchanged; fixes from PR422 and this task require a separately requested build."
+}

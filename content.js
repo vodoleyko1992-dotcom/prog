@@ -7275,10 +7275,39 @@ function petReturnPrice(T,b) {
   if(/аден|adena/i.test(unit)&&/\d/.test(text)){const amount=+(text.replace(/[^\d]/g,''));return Number.isSafeInteger(amount)?amount:null;}
   return /безкоштовно|бесплатно|free/i.test(label)?0:null;
 }
+// 20.65 (лог 26.10 13:50: возврат после бафа завершился на Ashen, а подтверждение ждало только /map.html).
+let petAshenReturnPoll = null;
+async function petReturnAshen(J,T) {
+  const Q=J.returnQuote;
+  if(location.pathname!=='/ashen-bastion.html'||T?.kind!=='zone'||T.id!=='ashen_bastion'||Q?.kind!=='zone'||Q.id!==T.id
+    ||!Number.isSafeInteger(Q.revision)||Q.revision<0)return false;
+  const stamp=automationSnapshot(),epoch=leaseEpoch,page=location.href,prof=rt.classCur?.prof,slot=rt.classCur?.slot;
+  const norm=p=>String(p||'').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/,'');
+  const keyOf=x=>JSON.stringify([x?.id,x?.t,x?.revision,x?.price,x?.kick,x?.char,x?.home,x?.returnQuote,x?.entry]);
+  const job=keyOf(J),key=job+'|'+stamp;
+  const live=()=>automationCurrent(stamp)&&leaseEpoch===epoch&&location.href===page&&rt.char===J.char&&heroNick()===J.char
+    &&rt.classCur?.prof===prof&&rt.classCur?.slot===slot&&!antibotState()&&!abHold();
+  const current=(phase='returnSent')=>live()&&petTripFree(J)&&rt.petBufferTrip?.phase===phase&&keyOf(rt.petBufferTrip)===job;
+  if(!current()||!norm(prof)||!Number.isInteger(slot)||slot<0)return false;
+  setStatus('Автобаф суммона: Жду подтверждение возврата; повторный платный телепорт запрещён');
+  const now=Date.now();if(petAshenReturnPoll?.key===key&&now>=petAshenReturnPoll.at&&now-petAshenReturnPoll.at<3000)return false;
+  petAshenReturnPoll={key,at:now};
+  try {
+    const saved=await rtCommit();if(!current()||!saved)return false;
+    const response=await gameGet('/character',4000);if(!current()||!response.ok)return false;
+    const data=await response.json();if(!current())return false;const ch=data?.character;
+    if(data?.error||data?.ok===false||ch?.name!==J.char||ch.cityId!==Q.id||!Number.isSafeInteger(ch.revision)||ch.revision<=Q.revision
+      ||norm(ch.l2Profession)!==norm(prof)||ch.classSlots?.activeSlot!==slot||ch.inBattle!==false)return false;
+    if(!await petTripSave(J,{})||!current())return false;
+    const cleared=await setRt({petBufferTrip:null});if(!live()||cleared?.ok!==true)return true;
+    await rtCommit();return live();
+  }catch(_){return false;}
+}
 async function warlockTripReturn(J) {
   if(!petTripFree(J))return false;
   const T=petReturnTarget(J);
   if(J.phase==='returnSent') {
+    if(location.pathname==='/ashen-bastion.html'&&T?.kind==='zone'&&T.id==='ashen_bastion') {await petReturnAshen(J,T);return true;}
     if(location.pathname==='/map.html') {
       if(T?.kind==='cat') {
         const a=$q('#map-dungeon-enter-link');

@@ -1,0 +1,151 @@
+{
+  "boundary": "real Chrome MV3; restored returnSent only; purchase and accepted teleport seeded; all HTTPS local",
+  "proof": [
+    {
+      "case": "confirmed",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/battle.html?spawnId=ashen_bastion_mob_001"
+      ],
+      "calls": [
+        {
+          "path": "/game/time",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/battle.html",
+          "method": "GET",
+          "query": "?spawnId=ashen_bastion_mob_001",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/game/battle/start",
+          "method": "POST",
+          "query": "",
+          "body": {
+            "spawnId": "ashen_bastion_mob_001",
+            "expectedRevision": 501
+          }
+        }
+      ],
+      "starts": 1,
+      "clearedAtStart": {
+        "job": null,
+        "owner": null
+      },
+      "job": null,
+      "owner": null,
+      "errors": []
+    },
+    {
+      "case": "wrong-city",
+      "browser": "156.0.8078.4",
+      "paths": [],
+      "calls": [
+        {
+          "path": "/game/time",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        }
+      ],
+      "starts": 0,
+      "clearedAtStart": null,
+      "job": "returnSent",
+      "owner": "petBufferTrip",
+      "errors": []
+    },
+    {
+      "case": "stop",
+      "browser": "156.0.8078.4",
+      "paths": [],
+      "calls": [
+        {
+          "path": "/game/time",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null
+        }
+      ],
+      "starts": 0,
+      "clearedAtStart": null,
+      "job": "returnSent",
+      "owner": "petBufferTrip",
+      "errors": []
+    }
+  ]
+}
