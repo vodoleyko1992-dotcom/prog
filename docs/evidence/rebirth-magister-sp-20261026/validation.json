@@ -32,7 +32,8 @@
       "pass": 670,
       "fail": 0,
       "log_sha256": "2c41881c249d77f656b76a7dad86ac1ec666549e3dd50b5d24234ee151281fcf",
-      "initial_run": "665PASS/5FAIL: changed source extraction marker; original marker restored, all five targeted and full rerun PASS"
+      "initial_run": "665PASS/5FAIL: changed source extraction marker; original marker restored, all five targeted and full rerun PASS",
+      "second_successful_run_log_sha256": "95360712fb0fd9345e06b3db3c5dcb917e201410e742993b50e8995d2221a29b"
     },
     "syntax_js_cjs": 4,
     "env_modules": 34,
@@ -46,5 +47,7 @@
     "Physical device",
     "Fish-limit handoff from user log: absent"
   ],
-  "builds": "Chrome20.66/Firefox20.65 unchanged"
+  "builds": "Chrome20.66/Firefox20.65 unchanged",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/425",
+  "implementation_commit": "4aa6f450a6ed410d0fb3484cb2c9a6d731bf2104"
 }
