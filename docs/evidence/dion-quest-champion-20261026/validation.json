@@ -1,0 +1,68 @@
+{
+  "source_base": "ec88212a9f29c7b7f239ba9444f9fa6f6221bfd0",
+  "scope": "Fresh own battle evidence for HP-only champion ambiguity; no version or ZIP change",
+  "sha256": {
+    "content.js": "345b083b69df3b3ea454b9f026a19c9d7baa9ab754dc4587b6b1b40d6ab4cd7e",
+    "modules/combat.js": "c11ce90a0a715fcd77af56d8c9b862d0fa303c12bfc6dfd1193823b03f2d20cf"
+  },
+  "checks": {
+    "node": {
+      "pass": 671,
+      "fail": 0,
+      "new_groups": 19,
+      "final_source": true
+    },
+    "old_code": {
+      "pass": 5,
+      "expected_fail": 14,
+      "ordinary_positive_failed": true
+    },
+    "proof_transfer_mutant": {
+      "expected_fail": 1
+    },
+    "legacy_guard_tests": {
+      "pass": 26,
+      "fail": 0
+    },
+    "initial_full_run": {
+      "pass": 669,
+      "fail": 2,
+      "cause": "Old extracted loop omitted ctx; source regex required previous guard shape. Both adapted with preserved assertions."
+    },
+    "browser": {
+      "engine": "Chrome 156.0.8078.4 MV3",
+      "pass": 3,
+      "fail": 0,
+      "runtime_sha_before_after_equal": true,
+      "scope": [
+        "ordinary map -> new document -> native attack without leave",
+        "explicit orange blocked without proof GET",
+        "fresh proof reveals orange behind dense URL; no attack"
+      ]
+    },
+    "review": {
+      "blocking_findings": 0,
+      "additional_negative_probes": 5,
+      "closed_findings": [
+        "contradictory hero/mob levels",
+        "late title/target/color changes before first attack"
+      ]
+    },
+    "syntax_js": {
+      "pass": 7
+    },
+    "envcheck": {
+      "modules": 34,
+      "result": "PASS"
+    },
+    "bash_n": "PASS",
+    "diff_check": "PASS"
+  },
+  "limits": [
+    "All game APIs and HTML reconstructed locally; no user scripts executed",
+    "No live game, Firefox, or full historical browser run",
+    "hpMin=3000 is fixture data; user export omits actual hpMin",
+    "New 11:53 Rebirth routing/name defects are a separate follow-up",
+    "Published ZIP20.66 excludes this fix and PR425"
+  ]
+}

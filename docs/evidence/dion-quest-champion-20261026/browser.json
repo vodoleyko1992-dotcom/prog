@@ -1,0 +1,395 @@
+{
+  "boundary": "actual Chrome MV3; safe reconstructed Tumran DOM and local native handlers; client never GETs battle in new document; no live game or user scripts",
+  "proof": [
+    {
+      "case": "HP-ambiguous ordinary gets fresh exact proof",
+      "browser": "156.0.8078.4",
+      "before": {
+        "meta": null,
+        "hpMin": 3000,
+        "url": "/battle.html?spawnId=dense_5598"
+      },
+      "paths": [
+        "/map.html",
+        "/battle.html?spawnId=dense_5598"
+      ],
+      "calls": [
+        {
+          "path": "/map.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "dense_5598",
+            "expectedRevision": 100
+          },
+          "battleDocs": 0
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=dense_5598",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=quest-kind-hero&spawnId=dense_5598",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "dense_5598",
+            "expectedRevision": 101
+          },
+          "battleDocs": 1
+        }
+      ],
+      "result": {
+        "starts": 1,
+        "attacks": 1,
+        "leaves": 0,
+        "conditionalReads": 1,
+        "mobHp": 4073,
+        "hpMin": 3000
+      },
+      "errors": []
+    },
+    {
+      "case": "real orange remains forbidden",
+      "browser": "156.0.8078.4",
+      "before": null,
+      "paths": [
+        "/map.html",
+        "/battle.html?spawnId=champ_o_plains_of_dion_4",
+        "/map.html"
+      ],
+      "calls": [
+        {
+          "path": "/map.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "champ_o_plains_of_dion_4",
+            "expectedRevision": 100
+          },
+          "battleDocs": 0
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=champ_o_plains_of_dion_4",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/battle/leave",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "battleSpawnId": "champ_o_plains_of_dion_4",
+            "expectedRevision": 101
+          },
+          "battleDocs": 1
+        },
+        {
+          "path": "/map.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        }
+      ],
+      "result": {
+        "starts": 1,
+        "attacks": 0,
+        "leaves": 1,
+        "conditionalReads": 0,
+        "mobHp": 86284,
+        "hpMin": 3000
+      },
+      "errors": []
+    },
+    {
+      "case": "fresh proof reveals forbidden orange behind dense URL",
+      "browser": "156.0.8078.4",
+      "before": {
+        "meta": null,
+        "hpMin": 3000,
+        "url": "/battle.html?spawnId=dense_5598"
+      },
+      "paths": [
+        "/map.html",
+        "/battle.html?spawnId=dense_5598",
+        "/map.html"
+      ],
+      "calls": [
+        {
+          "path": "/map.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "dense_5598",
+            "expectedRevision": 100
+          },
+          "battleDocs": 0
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=dense_5598",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 0
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=quest-kind-hero&spawnId=dense_5598",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/game/battle/leave",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "battleSpawnId": "dense_5598",
+            "expectedRevision": 101
+          },
+          "battleDocs": 1
+        },
+        {
+          "path": "/map.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "battleDocs": 1
+        }
+      ],
+      "result": {
+        "starts": 1,
+        "attacks": 0,
+        "leaves": 1,
+        "conditionalReads": 1,
+        "mobHp": 5073,
+        "hpMin": 3000
+      },
+      "errors": []
+    }
+  ]
+}

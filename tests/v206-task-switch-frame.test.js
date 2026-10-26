@@ -38,7 +38,12 @@ test('main доводит активную рыбу без нового забр
 });
 test('боевой цикл тоже возвращает устаревший frame до тактики и кликов',async()=>{
  const src=read('modules/combat.js'),start=src.indexOf('  while (env.on && env.tabOwner) {'),end=src.indexOf('    strengthReliable(',start);assert.ok(start>=0&&end>start);
- for(const allowed of [true,false]){let tactics=0;await vm.runInNewContext('(async()=>{'+src.slice(start,end)+'tactics();break;}})()',{env:{on:true,tabOwner:true,canAct:()=>allowed},actionContext:()=> 'same',battleOwner:'same',tactics:()=>tactics++});assert.equal(tactics,allowed?1:0);}
+ // 20.66: перед observe стоит также сверка API-доказательства типа цели; прежний canAct/frame остаётся обязательным.
+ for(const allowed of [true,false])for(const proof of [undefined,true,false]){let tactics=0;
+  const ctx=proof===undefined?{}:{hpProofCurrent:()=>proof};
+  await vm.runInNewContext('(async()=>{'+src.slice(start,end)+'tactics();break;}})()',{env:{on:true,tabOwner:true,canAct:()=>allowed},ctx,actionContext:()=> 'same',battleOwner:'same',tactics:()=>tactics++});
+  assert.equal(tactics,allowed&&proof!==false?1:0);
+ }
 });
 
 test('ожидание карты отдаёт новый выбор до ожидания DOM и счётчика ошибок',async()=>{

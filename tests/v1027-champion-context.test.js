@@ -53,7 +53,8 @@ test('legacy history is preserved on first scoped champion measurement',async()=
 test('runtime wires real context and combat capture before initial action loop',()=>{
  const content=fs.readFileSync(__dirname+'/../content.js','utf8'),combat=fs.readFileSync(__dirname+'/../modules/combat.js','utf8');
  assert.match(content,/Factories\.champs\(\{ get combatContext\(\)\{return options=>L2V7Modules\.warlock\.combatContext\(options\)\}/);
- assert.match(combat,/champs\?\.observe\?\.\(ctx\);\n  const t0 = Date\.now\(\)/);assert.match(combat,/while \(env\.on && env\.tabOwner\) \{\n(?:    if\(actionContext\(\)!==battleOwner\)return;\n)?    env\.champs\?\.observe/);assert.match(combat,/champs\?\.noteDamage\?\.\(ctx,base,ttk\)/);
+ // 20.66: дополнительный hpProofCurrent отменяет старое API-доказательство до observe; захват состава и учёт урона прежние.
+ assert.match(combat,/champs\?\.observe\?\.\(ctx\);\n  const t0 = Date\.now\(\)/);assert.match(combat,/while \(env\.on && env\.tabOwner\) \{\n(?:    if\(actionContext\(\)!==battleOwner(?:\|\|ctx\.hpProofCurrent&&!ctx\.hpProofCurrent\(\))?\)return;\n)?    env\.champs\?\.observe/);assert.match(combat,/champs\?\.noteDamage\?\.\(ctx,base,ttk\)/);
 });
 test('hook -> map preflight -> battle -> learned DPS -> map: planned shots remain only a probe and hold survives',async()=>{
  const f=fixture();let battle=true;f.e.isBattle=()=>battle;f.ch.inBattle=true;
