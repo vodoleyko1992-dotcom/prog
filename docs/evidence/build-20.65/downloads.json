@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/1da6a1bdfed25f3aab1d2e7fa58117320a03b0f7/builds/l2wap-bot-v20.65.zip",
+    "http_status": 200,
+    "size": 1703694,
+    "sha256": "2b4894c85bc1fe244a967d8ca638257dc5d5bd91d73307a5b68f0b5578078f3c",
+    "matches_local": true
+  },
+  {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/1da6a1bdfed25f3aab1d2e7fa58117320a03b0f7/builds/l2wap-bot-v20.65-firefox.zip",
+    "http_status": 200,
+    "size": 1714205,
+    "sha256": "e31d483da4100a8d44d66236283c9c7fe5f10e920af4dfaaadc2e402394061c2",
+    "matches_local": true
+  }
+]

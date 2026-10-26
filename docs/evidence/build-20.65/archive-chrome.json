@@ -1,0 +1,162 @@
+{
+  "archive": "/workspace/prog/builds/l2wap-bot-v20.65.zip",
+  "version": "20.65",
+  "flavor": "chrome",
+  "checks": {
+    "crc": {
+      "pass": true
+    },
+    "unique_entries": {
+      "pass": true
+    },
+    "safe_paths": {
+      "pass": true,
+      "details": []
+    },
+    "not_encrypted": {
+      "pass": true
+    },
+    "allowlist_68": {
+      "pass": true,
+      "details": {
+        "extra": [],
+        "missing": []
+      }
+    },
+    "excluded_development_files": {
+      "pass": true,
+      "details": []
+    },
+    "source_zip_sha_all_runtime_files": {
+      "pass": true,
+      "details": {
+        "files": 68,
+        "different": []
+      }
+    },
+    "zip_extract_sha_all_files": {
+      "pass": true,
+      "details": []
+    },
+    "manifest_mv3": {
+      "pass": true
+    },
+    "manifest_version": {
+      "pass": true
+    },
+    "chrome_worker": {
+      "pass": true
+    },
+    "content_version_header": {
+      "pass": true
+    },
+    "manifest_resource_closure": {
+      "pass": true,
+      "details": []
+    },
+    "html_resource_closure": {
+      "pass": true,
+      "details": {
+        "references": 25,
+        "missing": []
+      }
+    },
+    "css_resource_closure": {
+      "pass": true,
+      "details": []
+    },
+    "static_getURL_closure": {
+      "pass": true,
+      "details": {
+        "references": 14,
+        "missing": []
+      }
+    },
+    "base_profile_privacy": {
+      "pass": true
+    },
+    "retained_archives_unchanged": {
+      "pass": true,
+      "details": {
+        "builds/l2wap-bot-v20.51.zip": true,
+        "builds/l2wap-lite-v1.8.1-firefox.zip": true,
+        "builds/l2wap-lite-v1.8.1.zip": true
+      }
+    }
+  },
+  "errors": [],
+  "files": 68,
+  "bytes": 1703694,
+  "sha256": "2b4894c85bc1fe244a967d8ca638257dc5d5bd91d73307a5b68f0b5578078f3c",
+  "file_sha256": {
+    "README-CHROME.txt": "f8085ff5d6fdcccaa2587a1b6aea4866f3ebb3d911252a9505b1e156c84b2782",
+    "README-FIREFOX.txt": "6b306a8ead127553a34bd0416a141a66b7efe5e9026899456c69ea9d858b2090",
+    "augment.js": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+    "background.js": "1347f47d591c302416eec29542556dfbcd4d840953a1b7cc286c1d78c8d7f183",
+    "base-profile.json": "bcbf592f50de0b4b7ad4d82b6473f3e10f2bf16df5ba910c6ab5609b6b3b5fdb",
+    "battle-cooldown.js": "39afe64aa78d7b10c17860cd3162420b6314b70d308651263cea37a9e78fd71c",
+    "buff-value.js": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+    "content.js": "e448bb77a6a9ae61ba98b668616a0b79037ff9fb65aee1fbc9704db8da7b60a5",
+    "craft-plan.js": "8ec5f40d2267e98d3c22bed6414732c23b451d88bf7267f10605c19c1d4ac417",
+    "defaults.js": "b9374b42df9e503d703dbfc9a65c67176888a11cc87fad7236e4a98fb5a8e9e3",
+    "enchant-ui.css": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+    "enchant-ui.js": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+    "engine-core.js": "a1d12e0f25e4cd85bdc7ea3e51014965a0af2a58bb4b90ac5f4f144b776ae4fb",
+    "fa-full.js": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+    "hook.js": "65b13737c09e4c72b2c82b272216deecd90154f1e3869890b4268202c40bc5e3",
+    "icons/128.png": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+    "icons/16.png": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+    "icons/48.png": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+    "items-il.json": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+    "mammon-gear.json": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+    "manifest.json": "d698b1825a3cbd3517587c4f9e6040ebe93ccef8e92365d4570d3d155eb51d19",
+    "modules/actions.js": "66c2a45790dee5ad719b6ddda7b8fc9ec9a658071704271f9f23c56ca59b71cb",
+    "modules/buffs.js": "90d2321efdb83a9e4a0698f38d81551ccbb0251f3f0f49a7e9a45acee71a9573",
+    "modules/champs.js": "a90a43d4241dbf53d27984a60bc655501a70c40f9ddccae23b9b242a4b52a211",
+    "modules/combat.js": "299e1633d42fec6ca097821a1d049a56e73a059ae7bfa88e887f18d0d9df3ea7",
+    "modules/craft.js": "58f0c6a9a976c5b0f5dd6a036e7b1000dab22b51ec47504060460e7d74927013",
+    "modules/crafterkit.js": "5abdf99604b7c8bd177bb00c7a2e47455ba89bb762254f41ee88d2a817ea6895",
+    "modules/dailies.js": "f4fa839824526af1609e3a94459530e4a3ec4f864d76b4a1946802cc11c72291",
+    "modules/dungeons.js": "cffcf4563b70dc75f16f97ef8cebddd2cbc64204772f7eb6242d9b6c099e6867",
+    "modules/economy.js": "39f80f2fa0ba494ece1fb98797a46384bb8750d0b54a81076e88b29593a5dfb4",
+    "modules/enchant.js": "c10f2cd9ef469862db39b0f593dda263f62b5066a23e2964afc92bb9ae2833a9",
+    "modules/enemies.js": "8795731d7d028650a275383914ff8d6bee5245a0d74681b5e1b1b9dcc59d2821",
+    "modules/epics.js": "a78963286f46d5ca455a9018e9324c3c953ab5b9a3d0b6364a3d517f88b7e356",
+    "modules/equipment.js": "60a3495f5633d03a8a3a41f1a7452d78aa9e105adb2117652f539e5faf87f34c",
+    "modules/fightlab.js": "6a1a4dfab6428ce11a6a995c6c6f6da6b4ba7517dc576809aac2091fc9f9561d",
+    "modules/fishing.js": "0c53b4ef61df2305bffca331b65cbed2115106eb95f3442bcc6fe5e6c366cadd",
+    "modules/lifestone.js": "9502acddc48ac9a2ccf699ed09c415b908294241bdca4df72acbd2aaa37f7cd6",
+    "modules/loot.js": "2ab6c08598a45ca9618a1645bb2f52fa419716e7af5f75cd2eaa6d4cb79e8b61",
+    "modules/mammon.js": "3333ba9b4faab41049ce1472732ff16abf82d05a57428bc45b2cd0152450851e",
+    "modules/mobfarm.js": "fdbfb6b5c0a16044baade366899a37e76fe84572ed7e810f5cbd83fe657427f9",
+    "modules/navigation.js": "af5704b89313048ba0fde7d6a2b7785c27e521665a997392e6ad21a34d303918",
+    "modules/payments.js": "72accad43a230e3dae65245771158d893ba19b94a5ba627fb16953f38a3bf03c",
+    "modules/pvp.js": "13813e214439d247a0474401a8aca9bcc48f803cda2d1233b4cdf9528b1cb25e",
+    "modules/quests.js": "b8f28b168d2133a525ee3fc69d7c06650aafd70d2cabf532da3a138f7f0e80fc",
+    "modules/raid.js": "ea8b5611477da2b1eb25eb6fb53850d4401e5096b2d86651f59b9992e0af37eb",
+    "modules/rbrun.js": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+    "modules/rbtimer.js": "a708330aea098b4c8c2e103f9753f225033b80b561a1ee6a8c13390dd36f53ab",
+    "modules/resources.js": "30e4ba240c921029db9c21de4afdff9eab244dcb7d7b4fbe9cc1656bb82eedf1",
+    "modules/story.js": "dc37f27c337aa53d76f1804e867481c2471cff252d1b6a208cd81baf12608f34",
+    "modules/subclass.js": "eec6e5ef95c6ae4a1896bea1c9c5cb52d61bc028ca59245c44b82096cb421c65",
+    "modules/subgo.js": "1d901ffdc5e48cf00c534780103ed293674b59e7e02203b16b2766d959dc8996",
+    "modules/survival.js": "2be70d29ae56177d7373d9f163723358e0d3cddadba3fe0914574d5569ad397e",
+    "modules/tvt.js": "44aa5d380ceeac84e688aee45384fbe91b86e4c3581d5846b6bb597760f2225c",
+    "modules/tvtshop.js": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+    "modules/warlock.js": "344da9452486a67176f504c210c19c912bec36f0e50ea842355dcf1ddca245f0",
+    "notranslate.js": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+    "popup.html": "2c49054569bf35dd34157bf28e25d21da5195e36cd86b333d9c206495e21345e",
+    "popup.js": "5a118f60009543a38e057351017afcf7b33714e16197cca17ed43ade2bda5d69",
+    "pvp-ui.css": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+    "pvp-ui.js": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+    "skills-il.js": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+    "ui-game.css": "8795e8bf2cddc8aa931df8ecf649cb1f4fa5fac179467a5c4b7319cb0bc05872",
+    "ui-v7.css": "9986920305bd8ada81b4e0578b29539af5060a73018b75a5e9c0444c18118305",
+    "ui-v7.js": "9401783caf5d9914c8ade58a83c37d4399a3497b0420d4e7acaeabf6c203c275",
+    "warlock-ui.css": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+    "warlock-ui.js": "d4110fd55f1f0722192f81d9cfd517d5301f9ec9d660f9949304653cb3ddea70",
+    "zone-db.js": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+    "zone-kpd.js": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515"
+  },
+  "pass": true
+}

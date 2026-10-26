@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.64",
-  "description": "L2wap Bot 20.64 — эпики за Дестра под Frenzy, TvT не бросает босса, рыбалка",
+  "version": "20.65",
+  "description": "L2wap Bot 20.65 — меньше нагрузка ЦП и памяти в бою и на рыбалке",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.64"
+  "version_name": "20.65"
 }

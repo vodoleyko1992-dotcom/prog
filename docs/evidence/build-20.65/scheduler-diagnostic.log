@@ -1,0 +1,4 @@
+STOP_REQUEST 1792981642162 [{"action":"attack","at":1792981641932,"afterNative":false}]
+STOP_CLICK_DONE 1792981643442 [{"action":"attack","at":1792981641932,"afterNative":false}]
+STOP_LOOP_DONE 1792981643547 [{"action":"attack","at":1792981641932,"afterNative":false}]
+PASS actual MV3 scheduler: Stop during native GET (one POST, no follow-up action)

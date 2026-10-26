@@ -1,0 +1,5 @@
+PASS actual MV3 scheduler: server GCD {"actions":["attack","attack"],"responseToNextMs":564,"afterGcdMs":3,"afterNativeGetMs":439,"receiptOk":true}
+PASS actual MV3 scheduler: native GET {"actions":["attack","attack"],"responseToNextMs":761,"afterGcdMs":599,"afterNativeGetMs":52,"receiptOk":true}
+PASS actual MV3 scheduler: MP changed during wait {"actions":["whirlwind","attack"],"responseToNextMs":974,"afterGcdMs":481,"afterNativeGetMs":770,"receiptOk":true}
+PASS actual MV3 scheduler: global refusal {"actions":["attack","attack"],"responseToNextMs":422,"afterGcdMs":1,"afterNativeGetMs":317,"receiptOk":false}
+PASS actual MV3 scheduler: Stop during native GET (one POST, no follow-up action)

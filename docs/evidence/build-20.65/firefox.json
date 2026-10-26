@@ -1,0 +1,79 @@
+{
+  "version": "20.65",
+  "firefox": "153.5.1esr",
+  "geckodriver": "0.36.0",
+  "zip": "work/build-20.65/firefox/l2wap-bot-v20.65-firefox.zip",
+  "bytes": 1714205,
+  "sha256": "e31d483da4100a8d44d66236283c9c7fe5f10e920af4dfaaadc2e402394061c2",
+  "files": 68,
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "native": {
+    "desktop": {
+      "result": "PASS",
+      "details": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 258,
+        "epicCoin": 0,
+        "popupText": 1303,
+        "sim": "",
+        "ver": "20.65",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.65"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    },
+    "android-sim": {
+      "result": "PASS",
+      "details": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 258,
+        "epicCoin": 0,
+        "popupText": 1303,
+        "sim": "undefined,undefined,undefined",
+        "ver": "20.65",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.65"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Unsigned Firefox add-on",
+    "Android API simulation in desktop Firefox; physical Android not tested",
+    "Live game not opened; native tests map l2wap.com DNS to loopback HTTPS127.0.0.1"
+  ]
+}
