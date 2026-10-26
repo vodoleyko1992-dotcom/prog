@@ -1,0 +1,93 @@
+{
+  "version": "20.67",
+  "zip": "builds/l2wap-bot-v20.67-firefox.zip",
+  "files": 68,
+  "bytes": 1711818,
+  "sha256": "04cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231",
+  "firefox": "153.5.1esr",
+  "geckodriver": "0.36.0",
+  "native": {
+    "desktop": {
+      "result": "PASS",
+      "details": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 258,
+        "epicCoin": 0,
+        "popupText": 1303,
+        "sim": "",
+        "ver": "20.67",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.67"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    },
+    "android-sim": {
+      "result": "PASS",
+      "details": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 258,
+        "epicCoin": 0,
+        "popupText": 1303,
+        "sim": "undefined,undefined,undefined",
+        "ver": "20.67",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.67"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "packaging": {
+    "allowlist": "work/build-20.65/audit/allowlist.json",
+    "report": "work/build-20.67-firefox/pack-validation.json",
+    "crc": "PASS",
+    "source_files_same_except_manifest": 67,
+    "physical_extracted_files_sha256": "68 PASS",
+    "manifest": "Firefox128+, background scripts engine-core.js/background.js, stable gecko ID l2wap-bot@local"
+  },
+  "limitations": [
+    "Unsigned add-on",
+    "Physical Android not tested; Android API simulation ran in desktop Firefox",
+    "Live game not opened; native mock HTTPS resolves l2wap.com only to loopback127.0.0.1"
+  ],
+  "logs": {
+    "desktop": "work/build-20.67-firefox/smoke-desktop.log",
+    "android_sim": "work/build-20.67-firefox/smoke-android-sim.log",
+    "lint": "work/build-20.67-firefox/lint.json"
+  },
+  "report_restoration": "Restored from completed logs and pack-validation.json; no checks rerun and ZIP unchanged"
+}
