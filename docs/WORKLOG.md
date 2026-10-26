@@ -4,6 +4,13 @@
 
 
 
+## 26.10.2026, 22:04 UTC+10 — Codex — Rebirth: продолжение существующего run ([PR #427](https://github.com/vodoleyko1992-dotcom/prog/pull/427))
+
+- Latest11:53 выявил отдельную гонку победа19→ручноймоб20→старыйnextFight/mapDue50/leave; все186HTTP200, входEasyи27боевыхнажатийдоStartручные. Платныйвхододин,20→18ключей. dungeonBattleнельзяглобальнорасширятьнаRebirthиз-заsdmsplanner. mobNameошибочносводитразные«Rebirth · вид»кодномуимени.
+- Реализованузкийпутьсуществующегоrun+полноеимя: owncharacter/class/slot/runmembership, точнаяпобеда, guardsпослеawait/передTvTиin-placeсменойцели, нативнаяhunt-кнопкабезпрямогоentry/ключей/выбораРБ. Receiptнеповторяетunknownпослерелоада. РевьювыявилоизлишнийholdпоЛюбомуNET_CONTEXT: nativePendingсужендоRebirthnextиbattle start/hunt/action; backgroundchatнеблокирует.
+- Проверки: Node672 PASS/0FAIL, новые19группPASS/13expectedFAILнабазе+receiptmutantFAIL, targeted67PASS; Chrome156MV3 2Rebirth+3Dion PASS наfinalSHA, pendingchat/manualrace/fullname/0entry/leave. Syntax7/env34/bash-n/diff/independentreviewPASS. Первоначальный1FAILsuite — старыйVMбезURLSearchParams, добавлен с сохранениемassertions/targetPASS. НовыхпроверокпослефинальныхPASSнепланируетсябезизменений/находок.
+- Версия/ZIP20.66 прежние, живуюигру/Firefoxнеоткрывали. Отчётdocs/REBIRTH-PAID-RUN-2026-10-26.md, evidence/rebirth-paid-run-20261026. Дальше — отдельнозапрошеннаясборка/контрольrun; фазычемпиона/РБ/завершенияданнымине подтверждены,не автоматизировались.
+
 ## 26.10.2026, 21:50 UTC+10 — Codex — Dion: обычный моб и старый минимум HP ([PR #426](https://github.com/vodoleyko1992-dotcom/prog/pull/426))
 
 - Логи/pages/learn 11:35–11:38: первая глава «Тени над Дионом» успешно принята/сдана вручную; у второй главы девять ложных отказов от ordinary Tumran Bugbear, HTTP ошибок нет. KB дополнена подтверждёнными главами/материалами/охотой/наградами; автоматическое принятие/сдача не добавлены. Удары по настоящим orange после 21:35:55 относятся к игроку после Stop.

@@ -199,6 +199,85 @@ function rank(r, rules) {
 // A remembered catIn is only a return hint. It does not prove the current battle
 // is inside a dungeon: Ashen Bastion and other zones have their own spawn IDs.
 const dungeonBattle = () => /^sdms_/i.test(new URLSearchParams(location.search).get('spawnId') || '');
+// 20.66 (лог 26.10 21:52): оплаченный Rebirth-поход не уводим в обычную карту/планировщик катакомб.
+const rebirthBattle = () => /^rebirth_raid_/i.test(new URLSearchParams(location.search).get('spawnId') || '');
+let rebirthAttempt = null;
+async function rebirthNext(ctx) {
+  if (!env.victory()) return; // старое продолжение победы не трогает уже начатый игроком бой
+  const char = env.rt.char, prof = env.rt.classCur?.prof, slot = env.rt.classCur?.slot, page = location.href;
+  const owner = env.evidenceOwner?.(), scan = env.scanContext?.(), generation = env.actionGeneration?.(), mode = env.autonomyMode(), level = env.heroLvl();
+  const info = env.battleInfo?.(), infoSig = JSON.stringify(info || null), title = env.$q('#battle-mob-title')?.textContent || '';
+  const name = title.replace(/\s*[·•]\s*ур\.?\s*\d+[\s\S]*$/i, '').trim();
+  const fresh = info && Date.now() - info.t >= 0 && Date.now() - info.t < 60000 && String(info.name || '').toLowerCase() === name.toLowerCase();
+  const after = fresh && info.spawn || ctx?.name === name && ctx.spawnId || '';
+  const victory = env.$q('#battle-victory-inline'), hunt = env.$q('#battle-victory-hunt'), ctxSpawn = ctx?.spawnId;
+  const active = () => env.on && env.tabOwner === true && env.canAct?.() !== false && env.heroNick?.() === char
+    && env.rt.char === char && env.rt.classCur?.prof === prof && env.rt.classCur?.slot === slot && location.href === page
+    && env.evidenceOwner?.() === owner && env.scanContext?.() === scan && env.actionGeneration?.() === generation
+    && env.autonomyMode() === mode && env.heroLvl() === level && !env.pvpPending?.() && !env.antibotState?.() && !env.tvtSoon();
+  const current = () => active() && env.victory() && env.cfg.chain !== false && ctx?.spawnId === ctxSpawn
+    && env.$q('#battle-victory-inline') === victory && env.$q('#battle-victory-hunt') === hunt && env.shown(hunt) && !hunt.disabled
+    && (env.$q('#battle-mob-title')?.textContent || '') === title && JSON.stringify(env.battleInfo?.() || null) === infoSig;
+  const hold = async why => { if (active()) { env.setStatus('Rebirth: ' + why); await env.sleep(1000); } };
+  if (!active()) return;
+  if (env.cfg.chain === false) return hold('цепочка выключена — жду вашего продолжения');
+  if (!['farm', 'auto', 'campaign', 'cat', 'raid', 'epic'].includes(mode)) return hold('выбранная задача не продолжает поход');
+  if (!current() || !/^rebirth_raid_/i.test(after) || !owner || !scan || !Number.isFinite(generation)
+      || !prof || !Number.isInteger(slot) || slot < 0 || fresh && ctxSpawn && ctxSpawn !== after)
+    return hold('текущая победа не подтверждена — жду вашего продолжения');
+  const key = JSON.stringify([char, prof, slot, after]), receiptKey = 'l2bot.rebirth-next';
+  const receipt = () => JSON.parse(sessionStorage.getItem(receiptKey) || 'null');
+  const clear = () => { try { if (receipt()?.key === key) sessionStorage.setItem(receiptKey, 'null'); } catch (_) {} };
+  try { if (receipt()?.key === key) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю'); }
+  catch (_) { return hold('не удалось прочитать отметку продолжения'); }
+  if (rebirthAttempt?.key === key && (rebirthAttempt.busy || Date.now() < rebirthAttempt.until)) return hold('жду повторной серверной сверки');
+  const attempt = rebirthAttempt = { key, busy: true, until: Date.now() + 15000 };
+  try {
+    if (await env.tvtHoldWait?.() || !current()) return;
+    const ready = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
+    if (!current()) return;
+    if (!ready) return hold('лимит охоты проверяется или достигнут');
+    if (env.actionWait && !await env.actionWait(current) || !current()) return;
+    if (typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return hold('не удалось подтвердить память перед продолжением');
+    const response = await env.gameGet('/character', 4000);
+    if (!current()) return;
+    if (!response.ok) { attempt.until = Date.now() + 60000; return hold('персонаж не подтверждён сервером'); }
+    const data = await response.json();
+    if (!current()) return;
+    const ch = data?.character || data;
+    if (data?.error || data?.ok === false || ch?.name !== char || typeof ch.id !== 'string' || !ch.id || ch.l2Profession !== prof
+        || ch.classSlots?.activeSlot !== slot || ch.level !== level || !Number.isSafeInteger(ch.revision) || ch.revision < 0 || ch.inBattle !== false || !(ch.rebirthStage > 0))
+      return hold('свой персонаж вне боя не подтверждён');
+    const result = await env.gameGet('/game/rebirth-raids?view=instance', 4000);
+    if (!current()) return;
+    if (!result.ok) { attempt.until = Date.now() + 60000; return hold('оплаченный поход не подтверждён сервером'); }
+    const instance = await result.json();
+    if (!current()) return;
+    const run = instance?.activeRun;
+    if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0)
+        || typeof run?.id !== 'string' || !run.id || !after.startsWith('rebirth_raid_' + run.id + '_')
+        || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id))
+      return hold('принадлежность текущего оплаченного похода не подтверждена');
+    if (run.phase !== 'mobs' || !Number.isSafeInteger(run.mobKillTarget) || run.mobKillTarget <= 0
+        || !Number.isSafeInteger(run.mobKills) || run.mobKills < 0 || run.mobKills >= run.mobKillTarget)
+      return hold('этап требует вашего выбора — новый вход и логово не открываю');
+    const stillReady = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
+    if (!current()) return;
+    if (!stillReady) return hold('лимит охоты проверяется или достигнут');
+    const saved = await env.setRt({ via: 'chain' });
+    if (saved?.ok !== true || !current() || !await env.rtCommit?.() || !current()) return;
+    if (env.nativePending?.()) return hold('жду завершения запроса игры перед продолжением');
+    // Синхронная отметка переживает reload: неизвестный native next/start не разрешает второй клик.
+    try { sessionStorage.setItem(receiptKey, JSON.stringify({ key, t: Date.now() })); }
+    catch (_) { return hold('не удалось сохранить отметку продолжения'); }
+    if (!current()) { clear(); return; }
+    env.setStatus('Rebirth: продолжаю оплаченный поход');
+    if (!env.fire(hunt)) { clear(); return hold('кнопка продолжения не сработала'); }
+    await env.waitFor(() => !active() || !env.victory() || JSON.stringify(env.battleInfo?.() || null) !== infoSig, 8000, 50);
+    if (current()) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю');
+  } catch (_) { attempt.until = Date.now() + 60000; return hold('серверная сверка не ответила — жду без повторного входа'); }
+  finally { attempt.busy = false; }
+}
 
 // 20.6: случайное «Охотиться дальше» обходит фильтр catPick и снова даёт снявший баффы вид.
 function dungeonCancelBlocked() {
@@ -208,16 +287,23 @@ function dungeonCancelBlocked() {
 }
 
 async function nextFight(ctx) {
+  const rebirthFrame = () => JSON.stringify([location.href, env.scanContext?.(), env.evidenceOwner?.(), env.actionGeneration?.(),
+    env.battleInfo?.(), ctx?.spawnId, env.$q('#battle-mob-title')?.textContent || '']);
+  const source = rebirthBattle() ? { stamp: rebirthFrame(), victory: env.$q('#battle-victory-inline'), hunt: env.$q('#battle-victory-hunt') } : null;
+  const sameFrame = () => !source || source.stamp === rebirthFrame() && source.victory === env.$q('#battle-victory-inline') && source.hunt === env.$q('#battle-victory-hunt');
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (await env.tvtStep?.()) return;
+  if (!sameFrame()) return;
   if (env.tvtSoon() && !ctx?.rb) { env.rec('B', 'TvT', 'бой TvT скоро — после этого моба на арену'); location.href = '/tvt-arena.html'; await env.sleep(4000); return; }
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   // 15.10: начатый бой доводим до конца, после него отдельная заточка не начинает новую охоту/обслуживание.
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.victory() && await env.pvpStep?.()) return;
+  if (!sameFrame()) return;
   if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
+  if (rebirthBattle()) return rebirthNext(ctx);
   // 10.0.19: ручная смена оружия до запуска бота не даёт POST-события расширению.
   // Сверка по GET один раз в 10 мин не уводит катакомбы на карту.
   if (env.cfg.shopAuto) await env.syncShotWeapon?.();

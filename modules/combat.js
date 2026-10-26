@@ -170,7 +170,11 @@ const noticeText = () => ['#battle-toast', '#l2-hud-notice'].map(x => env.$q(x))
 
 const mobTitle = () => env.$q('#battle-mob-title')?.textContent.trim() || '';
 
-const mobName  = () => mobTitle().split('·')[0].trim();
+// 20.66 (лог 26.10 21:52): «Rebirth · Имя» — полное имя API, разделитель метаданных начинается перед уровнем.
+const mobName = () => {
+  const title = mobTitle(), m = title.match(/^(.*?)\s*[·•]\s*ур\.?\s*\d+(?:\b|$)/i);
+  return m ? m[1].trim() : /^Rebirth\s*[·•]\s*/i.test(title) ? title : title.split(/[·•]/)[0].trim();
+};
 
 const victory  = () => env.shown(env.$q('#battle-victory-inline'));
 

@@ -8,7 +8,8 @@ const read = f => fs.readFileSync(path.join(root, f), 'utf8');
 let finished = false;
 process.on('exit', () => { if (!finished) { console.error('FAIL: v80-farm не дошёл до конца'); process.exitCode = 1; } });
 const loadMod = name => {
-  const sb = { console, Date, Math, JSON, location: { pathname: '/map.html', search: '', href: '' }, CSS: { escape: s => s } };
+  // 20.66: nextFight проверяет тип текущего боя до обычного обслуживания; VM получает браузерный URLSearchParams.
+  const sb = { console, Date, Math, JSON, URLSearchParams, location: { pathname: '/map.html', search: '', href: '' }, CSS: { escape: s => s } };
   sb.globalThis = sb;
   vm.runInNewContext(read(`modules/${name}.js`), sb);
   return sb;
