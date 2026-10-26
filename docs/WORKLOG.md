@@ -4,7 +4,7 @@
 
 
 
-## 26.10.2026, 14:05 UTC+10 — Codex — возврат в Ashen после бафа кота (PR в подготовке)
+## 26.10.2026, 14:05 UTC+10 — Codex — возврат в Ashen после бафа кота ([PR #423](https://github.com/vodoleyko1992-dotcom/prog/pull/423))
 
 - John: «просто замер» + журнал/learn03:57. Подтверждён возврат из баффера в Ashen, но фаза returnSent признавала только map.html и удерживала фарм6мин22с. Отдельная проблема от PR #422; ошибка руды13:33 к остановке13:50 не относится.
 - Узкая ветка content.petReturnAshen: fresh own character/cityId/class/slot/revision и точная сохранённая квитанция; guards после await, durable save без промежуточной returned, polling3с. Платежи и прежние map/cat не менялись. Новые Node/MV3-регрессы, новый smoke в общем списке; отчёт docs/PET-BUFF-ASHEN-RETURN-2026-10-26.md.
