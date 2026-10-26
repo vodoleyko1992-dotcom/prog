@@ -1,0 +1,1614 @@
+{
+  "main": [
+    {
+      "index": 0,
+      "file": "tests/browser-smoke.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.47
+    },
+    {
+      "index": 1,
+      "file": "tests/v7-chromium-runtime.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.17
+    },
+    {
+      "index": 2,
+      "file": "tests/v715-ui-browser.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.58
+    },
+    {
+      "index": 3,
+      "file": "tests/v718-ui-browser.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.01
+    },
+    {
+      "index": 4,
+      "file": "tests/v719-fishing-toggle-browser.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.52
+    },
+    {
+      "index": 5,
+      "file": "tests/v715-mage-dom-browser.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.15
+    },
+    {
+      "index": 6,
+      "file": "tests/battle-dom-smoke.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.31
+    },
+    {
+      "index": 7,
+      "file": "tests/v1012-map-pagination-browser.py",
+      "kind": "python",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.57
+    },
+    {
+      "index": 8,
+      "file": "tests/v2054-rb-epic-split-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.09
+    },
+    {
+      "index": 9,
+      "file": "tests/v2054-pvp-all-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.9
+    },
+    {
+      "index": 10,
+      "file": "tests/v2050-detect-owned-start-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 51.66
+    },
+    {
+      "index": 11,
+      "file": "tests/craft-goals-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 12.6
+    },
+    {
+      "index": 12,
+      "file": "tests/v2050-detect-outside-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 13,
+      "file": "tests/v2049-warlord-metrics-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.63
+    },
+    {
+      "index": 14,
+      "file": "tests/craft-mode-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.3
+    },
+    {
+      "index": 15,
+      "file": "tests/v2047-farm-fishing-resume-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.77
+    },
+    {
+      "index": 16,
+      "file": "tests/v2046-slow-api-recovery-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 36.83
+    },
+    {
+      "index": 17,
+      "file": "tests/v2046-crafter-spoil-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 9.85
+    },
+    {
+      "index": 18,
+      "file": "tests/v2046-golem-farm-keep-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.76
+    },
+    {
+      "index": 19,
+      "file": "tests/v2046-craft-reload-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.71
+    },
+    {
+      "index": 20,
+      "file": "tests/v2046-warlord-live-weapon-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 14.16
+    },
+    {
+      "index": 21,
+      "file": "tests/v2048-warlord-support-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.32
+    },
+    {
+      "index": 22,
+      "file": "tests/v2049-warlord-always-toggles-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 38.64
+    },
+    {
+      "index": 23,
+      "file": "tests/lite-arrows-recovery-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 26.0
+    },
+    {
+      "index": 24,
+      "file": "tests/v2043-menu-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.29
+    },
+    {
+      "index": 25,
+      "file": "tests/v2043-notify-stop-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.15
+    },
+    {
+      "index": 26,
+      "file": "tests/v2043-au-breather-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.64
+    },
+    {
+      "index": 27,
+      "file": "tests/v2043-learn-reset-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.59
+    },
+    {
+      "index": 28,
+      "file": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 12.99
+    },
+    {
+      "index": 29,
+      "file": "tests/v2043-au-travel-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 86.24
+    },
+    {
+      "index": 30,
+      "file": "tests/v2043-fx-travel-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 27.03
+    },
+    {
+      "index": 31,
+      "file": "tests/v2043-fx-travel-stop-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 49.01
+    },
+    {
+      "index": 32,
+      "file": "tests/v2041-cat-native-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.76
+    },
+    {
+      "index": 33,
+      "file": "tests/v2039-combat-storage-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 16.58
+    },
+    {
+      "index": 34,
+      "file": "tests/v2038-cat-navigation-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 9.23
+    },
+    {
+      "index": 35,
+      "file": "tests/v2035-mammon-dock-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.24
+    },
+    {
+      "index": 36,
+      "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.83
+    },
+    {
+      "index": 37,
+      "file": "tests/v2029-raid-native-quote-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 24.98
+    },
+    {
+      "index": 38,
+      "file": "tests/v2029-raid-fresh-start-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 32.83
+    },
+    {
+      "index": 39,
+      "file": "tests/v2029-vip-no-fa-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.98
+    },
+    {
+      "index": 40,
+      "file": "tests/v2029-fish-overview-limit-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.73
+    },
+    {
+      "index": 41,
+      "file": "tests/v2028-mammon-payment-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.2
+    },
+    {
+      "index": 42,
+      "file": "tests/v2025-auto-enchant-disabled-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.4
+    },
+    {
+      "index": 43,
+      "file": "tests/v2024-seal-aa-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 9.82
+    },
+    {
+      "index": 44,
+      "file": "tests/v2024-vip-free-buff-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.83
+    },
+    {
+      "index": 45,
+      "file": "tests/v2023-mammon-bag-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.3
+    },
+    {
+      "index": 46,
+      "file": "tests/v2021-overview-daily-mobs-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.5
+    },
+    {
+      "index": 47,
+      "file": "tests/v2020-base-limits-raid-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.08
+    },
+    {
+      "index": 48,
+      "file": "tests/v2020-supply-section-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.24
+    },
+    {
+      "index": 49,
+      "file": "tests/v2019-raid-mob-counter-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.61
+    },
+    {
+      "index": 50,
+      "file": "tests/v2018-limits-logs-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.45
+    },
+    {
+      "index": 51,
+      "file": "tests/v2017-autofarm-group-counter-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.12
+    },
+    {
+      "index": 52,
+      "file": "tests/v2017-fishing-reload-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 23.63
+    },
+    {
+      "index": 53,
+      "file": "tests/v2014-quick-start-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.89
+    },
+    {
+      "index": 54,
+      "file": "tests/v2012-panel-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 10.31
+    },
+    {
+      "index": 55,
+      "file": "tests/v2012-nav-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.3
+    },
+    {
+      "index": 56,
+      "file": "tests/v2017-sidebar-sections-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.29
+    },
+    {
+      "index": 57,
+      "file": "tests/v2017-lifestone-auto-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 12.63
+    },
+    {
+      "index": 58,
+      "file": "tests/v2023-mammon-retired-raid-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.08
+    },
+    {
+      "index": 59,
+      "file": "tests/v2022-native-cooldown-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.98
+    },
+    {
+      "index": 60,
+      "file": "tests/v209-core-control-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.17
+    },
+    {
+      "index": 61,
+      "file": "tests/v209-control-workspace-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.04
+    },
+    {
+      "index": 62,
+      "file": "tests/v209-ui-controls-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.07
+    },
+    {
+      "index": 63,
+      "file": "tests/v209-combat-contract-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.55
+    },
+    {
+      "index": 64,
+      "file": "tests/v208-captcha-hold-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.83
+    },
+    {
+      "index": 65,
+      "file": "tests/v208-tyrant-weapon-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.64
+    },
+    {
+      "index": 66,
+      "file": "tests/v208-account-login-block-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.67
+    },
+    {
+      "index": 67,
+      "file": "tests/v207-no-crafter-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.68
+    },
+    {
+      "index": 68,
+      "file": "tests/v207-warlord-weapon-proof-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 28.95
+    },
+    {
+      "index": 69,
+      "file": "tests/v206-raid-arrival-payment-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.46
+    },
+    {
+      "index": 70,
+      "file": "tests/v206-enchant-quick-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.7
+    },
+    {
+      "index": 71,
+      "file": "tests/v204-extension-update-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.54
+    },
+    {
+      "index": 72,
+      "file": "tests/v206-warlord-two-pulls-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 18.94
+    },
+    {
+      "index": 73,
+      "file": "tests/v206-task-switch-frame-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 10.49
+    },
+    {
+      "index": 74,
+      "file": "tests/v2037-vip-icon-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 37.38
+    },
+    {
+      "index": 75,
+      "file": "tests/v2031-vip-greater-buff-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.93
+    },
+    {
+      "index": 76,
+      "file": "tests/v2036-combat-scheduler-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 20.21
+    },
+    {
+      "index": 77,
+      "file": "tests/v205-warlord-provoke-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 20.67
+    },
+    {
+      "index": 78,
+      "file": "tests/v204-dock-layout-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.86
+    },
+    {
+      "index": 79,
+      "file": "tests/v204-fa-buff-receipt-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.59
+    },
+    {
+      "index": 80,
+      "file": "tests/v204-fishing-shop-repaint-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 81,
+      "file": "tests/v203-warlord-native-skills-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.24
+    },
+    {
+      "index": 82,
+      "file": "tests/v202-farm-local-quests-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.49
+    },
+    {
+      "index": 83,
+      "file": "tests/v202-enchant-diagnostics-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.81
+    },
+    {
+      "index": 84,
+      "file": "tests/v202-enchant-user-flow-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.28
+    },
+    {
+      "index": 85,
+      "file": "tests/v202-popup-task-selection-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.54
+    },
+    {
+      "index": 86,
+      "file": "tests/v202-raid-fishing-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 87,
+      "file": "tests/v101-fishing-cast-recovery-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 88,
+      "file": "tests/v101-champion-all-pages-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 52.99
+    },
+    {
+      "index": 89,
+      "file": "tests/v1029-quest-champion-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 47.93
+    },
+    {
+      "index": 90,
+      "file": "tests/v1029-raid-live-targets-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 50.34
+    },
+    {
+      "index": 91,
+      "file": "tests/v1028-buff-interruption-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 57.24
+    },
+    {
+      "index": 92,
+      "file": "tests/v1028-probe-exit-navigation-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.42
+    },
+    {
+      "index": 93,
+      "file": "tests/v1027-enchant-selected-task-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.83
+    },
+    {
+      "index": 94,
+      "file": "tests/v1027-auto-task-policy-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 22.32
+    },
+    {
+      "index": 95,
+      "file": "tests/v1027-auto-task-selection-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.75
+    },
+    {
+      "index": 96,
+      "file": "tests/v1027-enchant-simple-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.74
+    },
+    {
+      "index": 97,
+      "file": "tests/v721-tree-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.02
+    },
+    {
+      "index": 98,
+      "file": "tests/v803-epic-dom-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.2
+    },
+    {
+      "index": 99,
+      "file": "tests/v807-tablet-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 28.11
+    },
+    {
+      "index": 100,
+      "file": "tests/v90-mammon-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 14.58
+    },
+    {
+      "index": 101,
+      "file": "tests/v90-catacombs-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 102,
+      "file": "tests/v90-autofarm-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.42
+    },
+    {
+      "index": 103,
+      "file": "tests/v90-story-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.32
+    },
+    {
+      "index": 104,
+      "file": "tests/v92-fightlab-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.41
+    },
+    {
+      "index": 105,
+      "file": "tests/v1027-polearm-damage-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.97
+    },
+    {
+      "index": 106,
+      "file": "tests/v92-combat-menu-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 12.88
+    },
+    {
+      "index": 107,
+      "file": "tests/v92-enemies-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.42
+    },
+    {
+      "index": 108,
+      "file": "tests/v925-crafter-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 109,
+      "file": "tests/v100-tvtshop-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.74
+    },
+    {
+      "index": 110,
+      "file": "tests/v1002-antibot-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 111,
+      "file": "tests/v1002-rbtimer-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.18
+    },
+    {
+      "index": 112,
+      "file": "tests/v1002-crafter-note-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 113,
+      "file": "tests/v1005-ind-fit-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.89
+    },
+    {
+      "index": 114,
+      "file": "tests/v1006-rbrun-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 9.64
+    },
+    {
+      "index": 115,
+      "file": "tests/v1009-mammon-visit-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 12.25
+    },
+    {
+      "index": 116,
+      "file": "tests/v1014-combat-public-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 117,
+      "file": "tests/v1014-core-character-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.64
+    },
+    {
+      "index": 118,
+      "file": "tests/v1014-core-inventory-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.34
+    },
+    {
+      "index": 119,
+      "file": "tests/v1014-core-lifecycle-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 19.09
+    },
+    {
+      "index": 120,
+      "file": "tests/v1014-core-modes-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.92
+    },
+    {
+      "index": 121,
+      "file": "tests/v1014-core-off-controls-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.26
+    },
+    {
+      "index": 122,
+      "file": "tests/v1014-core-settings-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.36
+    },
+    {
+      "index": 123,
+      "file": "tests/v1014-fishing-public-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 124,
+      "file": "tests/v209-fishing-bait-auto-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 125,
+      "file": "tests/v1027-fishing-payments-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 126,
+      "file": "tests/v1027-enchant-native-balance-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 127,
+      "file": "tests/v1015-magister-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 128,
+      "file": "tests/v1015-magister-mv3-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 29.81
+    },
+    {
+      "index": 129,
+      "file": "tests/v1025-magister-max-rank-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 17.09
+    },
+    {
+      "index": 130,
+      "file": "tests/v1026-attack-deadline-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.88
+    },
+    {
+      "index": 131,
+      "file": "tests/v1027-campaign-transition-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.32
+    },
+    {
+      "index": 132,
+      "file": "tests/v1027-campaign-location-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.42
+    },
+    {
+      "index": 133,
+      "file": "tests/v1027-daily-campaign-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.1
+    },
+    {
+      "index": 134,
+      "file": "tests/v1027-resource-teleport-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.23
+    },
+    {
+      "index": 135,
+      "file": "tests/v1016-enchant-public-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 136,
+      "file": "tests/v1016-enchant-public-independent.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 137,
+      "file": "tests/v1015-pvp-mv3-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 53.52
+    },
+    {
+      "index": 138,
+      "file": "tests/v1015-pvp-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.27
+    },
+    {
+      "index": 139,
+      "file": "tests/v1015-clan-caster-mv3-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 29.3
+    },
+    {
+      "index": 140,
+      "file": "tests/v1015-warlock-mv3-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 73.42
+    },
+    {
+      "index": 141,
+      "file": "tests/v1015-warlock-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.84
+    },
+    {
+      "index": 142,
+      "file": "tests/v1023-panther-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.53
+    },
+    {
+      "index": 143,
+      "file": "tests/v1024-journey-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 248.09
+    },
+    {
+      "index": 144,
+      "file": "tests/v1024-raid-ashen-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 31.04
+    },
+    {
+      "index": 145,
+      "file": "tests/v1024-raid-idle-refresh-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 152.74
+    },
+    {
+      "index": 146,
+      "file": "tests/v1016-enchant-core-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.84
+    },
+    {
+      "index": 147,
+      "file": "tests/v1016-enchant-core-public-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 148,
+      "file": "tests/v1016-enchant-core-recovery-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 149,
+      "file": "tests/v1016-enchant-ui-analytics-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.72
+    },
+    {
+      "index": 150,
+      "file": "tests/v1016-raid-tour-ui-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.65
+    },
+    {
+      "index": 151,
+      "file": "tests/v1016-enchant-mode-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 14.18
+    },
+    {
+      "index": 152,
+      "file": "tests/battle-load-error-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.38
+    },
+    {
+      "index": 153,
+      "file": "tests/lite-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 473.75
+    },
+    {
+      "index": 154,
+      "file": "tests/v2013-nav-names-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.96
+    },
+    {
+      "index": 155,
+      "file": "tests/v2014-tour-toggle-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.08
+    },
+    {
+      "index": 156,
+      "file": "tests/v2024-lifestone-weapon-choice-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.38
+    },
+    {
+      "index": 157,
+      "file": "tests/v2026-autonomy-daily-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 18.9
+    },
+    {
+      "index": 158,
+      "file": "tests/v2026-autonomy-service-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 9.16
+    },
+    {
+      "index": 159,
+      "file": "tests/v2026-autonomy-settings-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.25
+    },
+    {
+      "index": 160,
+      "file": "tests/v2026-autonomy-snapshot-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.69
+    },
+    {
+      "index": 161,
+      "file": "tests/v2026-server-day-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.89
+    },
+    {
+      "index": 162,
+      "file": "tests/v2026-start-battle-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 5.28
+    },
+    {
+      "index": 163,
+      "file": "tests/v2026-start-daily-server-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.21
+    },
+    {
+      "index": 164,
+      "file": "tests/v2030-destroyer-limits-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.07
+    },
+    {
+      "index": 165,
+      "file": "tests/v2031-lifestone-scan-focus-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.75
+    },
+    {
+      "index": 166,
+      "file": "tests/v2031-pet-raid-prep-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.65
+    },
+    {
+      "index": 167,
+      "file": "tests/v2032-cat-higher-level-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.07
+    },
+    {
+      "index": 168,
+      "file": "tests/v2032-subclass-bag-startup-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.81
+    },
+    {
+      "index": 169,
+      "file": "tests/v2033-lifestone-dock-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.8
+    },
+    {
+      "index": 170,
+      "file": "tests/v2033-lifestone-feedback-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.08
+    },
+    {
+      "index": 171,
+      "file": "tests/v2033-lifestone-multi-tab-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.98
+    },
+    {
+      "index": 172,
+      "file": "tests/v2033-lifestone-real-catalog-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.42
+    },
+    {
+      "index": 173,
+      "file": "tests/v2034-battle-evidence-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.93
+    },
+    {
+      "index": 174,
+      "file": "tests/v2034-lifestone-materials-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 77.47
+    },
+    {
+      "index": 175,
+      "file": "tests/v2034-pack-efficiency-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 10.92
+    },
+    {
+      "index": 176,
+      "file": "tests/v2041-battle-writes-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 30.69
+    },
+    {
+      "index": 177,
+      "file": "tests/v2041-sw-badge-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.81
+    },
+    {
+      "index": 178,
+      "file": "tests/v2042-fast-turn-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 44.86
+    },
+    {
+      "index": 179,
+      "file": "tests/v2043-own-craft-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.22
+    },
+    {
+      "index": 180,
+      "file": "tests/v2043-subgo-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.82
+    },
+    {
+      "index": 181,
+      "file": "tests/v2051-action-pace-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.02
+    },
+    {
+      "index": 182,
+      "file": "tests/v2051-noblesse-quest-loop-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 3.84
+    },
+    {
+      "index": 183,
+      "file": "tests/v2051-speed-default-off-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 4.23
+    },
+    {
+      "index": 184,
+      "file": "tests/v2051-speed-panel-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 2.68
+    },
+    {
+      "index": 185,
+      "file": "tests/v207-catacomb-direct-next-browser.cjs",
+      "kind": "node",
+      "status": "UNAVAILABLE",
+      "seconds": 0,
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed."
+    },
+    {
+      "index": 186,
+      "file": "tests/v208-daily-limits-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.79
+    },
+    {
+      "index": 187,
+      "file": "tests/v208-farm-kill-quota-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 14.33
+    },
+    {
+      "index": 188,
+      "file": "tests/v208-fishing-completed-goal-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.64
+    },
+    {
+      "index": 189,
+      "file": "tests/v208-random-limit-ranges-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 15.08
+    },
+    {
+      "index": 190,
+      "file": "tests/v208-rotation-report-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 0.55
+    },
+    {
+      "index": 191,
+      "file": "tests/v2143-activity-wrap-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.3
+    },
+    {
+      "index": 192,
+      "file": "tests/v2143-taskboard-fold-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 1.61
+    },
+    {
+      "index": 193,
+      "file": "tests/v2062-class-stash-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.74
+    },
+    {
+      "index": 194,
+      "file": "tests/v2062-dock-scroll-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 6.63
+    },
+    {
+      "index": 195,
+      "file": "tests/v2065-hot-key-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.69
+    },
+    {
+      "index": 196,
+      "file": "tests/v2065-pet-buff-ashen-return-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 11.41
+    },
+    {
+      "index": 197,
+      "file": "tests/v2066-magister-sp-retry-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 7.86
+    },
+    {
+      "index": 198,
+      "file": "tests/v2066-quest-champion-kind-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 13.95
+    },
+    {
+      "index": 199,
+      "file": "tests/v2066-rebirth-paid-run-browser.cjs",
+      "kind": "node",
+      "status": "PASS",
+      "exit": 0,
+      "seconds": 8.9
+    }
+  ],
+  "supplemental": {
+    "file": "tests/v2065-start-active-battle-browser.cjs",
+    "status": "PASS",
+    "actualExitCode": 0,
+    "browserCases": 2,
+    "runtimeAndTestHashesUnchanged": true,
+    "mainQueueNotModified": true,
+    "log": "work/build-20.67-firefox/smokes/supplemental-browser.log",
+    "proof": "work/build-20.67-firefox/smokes/supplemental-proof.json"
+  }
+}

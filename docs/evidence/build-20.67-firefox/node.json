@@ -1,0 +1,29 @@
+{
+  "at_utc": "2026-10-26T22:49:45.291990+00:00",
+  "kind": "first_full_run",
+  "node": {
+    "pass": 672,
+    "fail": 0,
+    "exit": 0,
+    "log": "node.log"
+  },
+  "syntax": {
+    "pass": 53,
+    "fail": 0,
+    "exit": 0,
+    "log": "syntax.log"
+  },
+  "env": {
+    "ok": 34,
+    "exit": 0,
+    "log": "env.log"
+  },
+  "safe_validation": {
+    "pass": true,
+    "exit": 0,
+    "log": "safe-validation.json"
+  },
+  "source_stable": true,
+  "changes_made_by_this_agent": "scratch evidence only",
+  "pass": true
+}

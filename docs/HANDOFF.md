@@ -1,5 +1,11 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 27.10.2026 — Firefox20.67 по просьбе John (Codex, [PR #428](https://github.com/vodoleyko1992-dotcom/prog/pull/428))
+
+- John: «сборка на фаерфокс». Собран толькоFirefox20.67 из990f076; вошли #422/#423 (Start/почта, возвратAshen) и #425/#426/#427 (повторSP, ordinaryTumran, оплаченныйRebirth/имена). ChromeZIP20.66, rollbackChrome20.65 и Lite1.8.1 прежние. Логика при упаковке не менялась; подняты manifest/header/5versionassertions и README-FIREFOX.
+- ZIP builds/l2wap-bot-v20.67-firefox.zip:68файлов/1711818байт/SHA25604cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231. GeckoID l2wap-bot@local/128+ сохранён. NativeFirefox153.5.1esr desktop+AndroidAPI simulationPASS, lint0errors/51oldwarnings. CRC/source/extract/closure/privacy PASS. Node672 PASS/0FAIL, syntax53/env34 PASS; полныйbrowserнабор201файл:182 PASS/0FAIL/19 UNAVAILABLE (нетстарыхnativeJS). Все997runtime/testbodySHA неизменны; Start/mail дополнительно зарегистрирован иPASS;5PNG/2historicalJSON восстановлены. ПубличныйZIPскачан, SHAсовпал.
+- СтарыйFF20.65ZIP заменяется новым, SHA65сохранён; внешняяпапканедоступна, точнаякопиястарогоZIPвscratch+gitистории. Упаковка строго68-fileallowlist: штатныйfirefox-build на полномcheckout захватилбыwork/builds, его напрямуюнеиспользовали. Пакетнеподписан, живуюигру/физическийAndroidнеоткрывали. Отчётdocs/evidence/build-20.67-firefox/validation.json. Послеустановки — лог20.67 существующегоRebirthmobs-run/магистрапослеSP/обычногоTumran. НеизвестныефазыРБ/общийfish→next остаютсяотдельно, невыдаютсязаисправленные.
+
 ## 26.10.2026 — Rebirth: оплаченный run и полное имя моба (Codex, [PR #427](https://github.com/vodoleyko1992-dotcom/prog/pull/427))
 
 - По последним файлам11:53 подтверждён race: Start на победе19→ручное продолжение уже открыло моба20→старыйnextFight по обычному mapDue50 делаетleave. dungeonBattle распознаёт лишьsdms; расширять его нельзя из-заcatNext/catGo. Второй дефект — mobName сокращает «Rebirth · вид» до одного «Rebirth».

@@ -4,6 +4,12 @@
 
 
 
+## 27.10.2026, 08:47 UTC+10 — Codex — сборка только Firefox20.67 ([PR #428](https://github.com/vodoleyko1992-dotcom/prog/pull/428))
+
+- ПросьбаJohn «сборка на фаерфокс». База990f076, толькоFirefox20.67, всеисправленияпослеFF20.65: #422/#423/#425/#426/#427. Rootверсия/header/5assertions/доки/ветка; отдельныеисполнителиупаковка/nativeFF, независимыйZIPаудит, Node+syntax+env иполныйдоступныйbrowserнабор. Runtimeлогикаприупаковкене менялась.
+- ZIP68files/1711818B/SHA04cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231. NativeFirefox153.5.1esr desktop/AndroidAPI-simulationPASS,lint0errors/51warnings. НезависимыйCRC/source/extract/manifest/closure/privacyPASS;Node672 PASS/0FAIL,syntax53/env34PASS; browser201=182PASS/0FAIL/19UNAVAILABLE (старыеnativeJS отсутствуют). Добавлен пропущенныйStart-active-battle вregistry, supplemental2casesPASS. Все997runtime/testbodySHAнеизменны,5PNG/2historicalJSONвосстановлены; публичныйZIPскачан/SHAсовпал. СтарыйFF20.65заменяется,всеSHAфайлысохранены;Chrome20.66+rollback20.65/Lite1.8.1непересобирались.
+- Живаяигра/физическийAndroidнепроверялись,ZIPнеподписан. Послеустановки—контрольныйлог20.67, невыдаватьнеподтверждённыеRebirthbossфазыилиfish→nextзаисправленные. Отчётdocs/evidence/build-20.67-firefox/validation.json, changelog20.67.
+
 ## 26.10.2026, 22:04 UTC+10 — Codex — Rebirth: продолжение существующего run ([PR #427](https://github.com/vodoleyko1992-dotcom/prog/pull/427))
 
 - Latest11:53 выявил отдельную гонку победа19→ручноймоб20→старыйnextFight/mapDue50/leave; все186HTTP200, входEasyи27боевыхнажатийдоStartручные. Платныйвхододин,20→18ключей. dungeonBattleнельзяглобальнорасширятьнаRebirthиз-заsdmsplanner. mobNameошибочносводитразные«Rebirth · вид»кодномуимени.

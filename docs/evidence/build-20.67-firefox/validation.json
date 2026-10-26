@@ -1,0 +1,72 @@
+{
+  "version": "20.67",
+  "target": "Firefox only",
+  "source_base": "990f076817a69d29abc160775cf7b46d93f66ba6",
+  "artifact": {
+    "path": "builds/l2wap-bot-v20.67-firefox.zip",
+    "files": 68,
+    "bytes": 1711818,
+    "sha256": "04cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231"
+  },
+  "checks": {
+    "node": {
+      "pass": 672,
+      "fail": 0,
+      "final_tree_repeat": "672 PASS / 0 FAIL"
+    },
+    "syntax": {
+      "pass": 53,
+      "fail": 0
+    },
+    "envcheck": {
+      "modules": 34,
+      "result": "PASS"
+    },
+    "profile_credentials_fields": 0,
+    "runtime_logic_unchanged": true,
+    "native_firefox": {
+      "version": "153.5.1esr",
+      "desktop": "PASS",
+      "android_api_simulation": "PASS",
+      "lint_errors": 0,
+      "lint_notices": 0,
+      "lint_warnings": 51
+    },
+    "independent_archive_audit": {
+      "pass": 29,
+      "fail": 0
+    },
+    "browser_smokes": {
+      "state": "COMPLETED",
+      "registry_files": 201,
+      "main_files": 200,
+      "main_pass": 181,
+      "supplemental_files": 1,
+      "supplemental_pass": 1,
+      "pass": 182,
+      "fail": 0,
+      "unavailable": 19,
+      "runtime_and_test_body_hashes_unchanged": 997,
+      "expected_registry_added": "tests/v2065-start-active-battle-browser.cjs",
+      "all_game_api_responses_local": true,
+      "real_game_requests": 0,
+      "generated_artifacts_restored": {
+        "tracked_png": 5,
+        "historical_json": 2
+      }
+    }
+  },
+  "limits": [
+    "No live game accessed",
+    "No physical Android; ZIP unsigned",
+    "No Chrome/Lite rebuild",
+    "19 historical cases unavailable: native public JS assets absent; no live site requests to fetch them. Two DOM-only cases use inert saved battle bodies, not live game scripts."
+  ],
+  "public_download": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/cc77fabd2c0bd2201d57944e77e3211ca066ea7e/builds/l2wap-bot-v20.67-firefox.zip",
+    "sha256": "04cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231",
+    "verified": true
+  },
+  "client_build_date": "2026-10-27",
+  "client_timezone": "Asia/Vladivostok"
+}

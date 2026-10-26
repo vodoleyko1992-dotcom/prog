@@ -1,0 +1,35 @@
+{
+  "base": "990f076817a69d29abc160775cf7b46d93f66ba6",
+  "branch": "codex/firefox-20.67",
+  "profile": {
+    "counts": {
+      "cfg": 209,
+      "chars": 1,
+      "learn": 8,
+      "farmDb": 2
+    },
+    "credential_named_fields": 0,
+    "nonempty_credential_named_fields": 0,
+    "unchanged_from_base": true
+  },
+  "source_files_checked": 53,
+  "source_changes": [
+    {
+      "file": "content.js",
+      "header_only": true,
+      "sha256": "29b84737da685aa8bc64c8a9b2edf890d81cca728a54c9baaa25e641cba64a4b"
+    }
+  ],
+  "unexpected_runtime_changes": [],
+  "manifest_changed_fields": [
+    "description",
+    "version",
+    "version_name"
+  ],
+  "manifest_expected": true,
+  "git_diff_check_exit": 0,
+  "pass": true,
+  "runtime_assets_checked": 65,
+  "unexpected_asset_changes": [],
+  "header_check": "First comment line may change version and description; all remaining bytes must match base."
+}

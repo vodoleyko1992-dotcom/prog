@@ -1,0 +1,9 @@
+{
+  "change": "One existing browser scenario registered at root request; no runtime or test-body edits",
+  "added": "tests/v2065-start-active-battle-browser.cjs",
+  "mainManifestUnchanged": 200,
+  "registeredTotalNow": 201,
+  "registryBeforeSha256": "73458aec6ee71b33ad50757fb05774f341eed8526f1b68024e034d5b186a2fb5",
+  "registryAfterSha256": "b4672ee0eacb2de158719827b7f17dc846be1429dc18eb540f3d3630a8ea1900",
+  "bashSyntax": "PASS"
+}
