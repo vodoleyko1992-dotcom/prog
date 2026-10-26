@@ -1,0 +1,20 @@
+{
+  "test": "tests/v2041-battle-writes-browser.cjs",
+  "initial_result": "FAIL: standalone subInfo UI summary entered the post-warmup measurement window. All8/8/8 counters and total write limits passed.",
+  "unmodified_full_retry": "FAIL on the same startup UI summary; not represented as PASS.",
+  "diagnostic_spread_only": "PASS; subInfo was persisted2643ms before the measurement window.",
+  "fixture_change": "Seed slots/role/unlock from mock character, run actual subclass.tick and rtCommit before Start, verify canonical persisted state and zero wins. No runtime/archive changes.",
+  "assertions": "Original measurement and all assertions unchanged byte-for-byte, independently reviewed: WARM2/MOBS8, NEED/DEFER, regular/deferred limits, quotas, deduplication and1.3MB padding.",
+  "prepared_full_run1": {
+    "exit": 0,
+    "native": "PASS",
+    "spread": "PASS",
+    "saved_counters": "8/8/8"
+  },
+  "prepared_full_run2": {
+    "exit": 0,
+    "native": "PASS",
+    "spread": "PASS",
+    "saved_counters": "8/8/8"
+  }
+}

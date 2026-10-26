@@ -1,0 +1,14 @@
+MEASURE actual MV3 battle writes {"kind":"native","mobs":8,"steadyMobs":6,"steadyMs":9302,"statePatch":13,"perMob":2.17,"regular":0,"regularPerMob":0,"regularKeys":[],"quota":12,"deferred":1,"deferredKeys":["6455:via,catInT,packLab,lastBattle,buffAudit,dps,lastWinT,mobVal,eff,kills,sinceDeep,target,adena,exp,sp,lootStat,mobKills,lootStatT0,faDrop,faRate"],"empty":0,"saved":{"kills":8,"daily":8,"task":8}}
+PASS actual MV3 native: 0 обычных записей вкладки на моба, квота фона 2.0 на моба
+MEASURE actual MV3 battle writes {"kind":"spread","mobs":8,"steadyMobs":6,"steadyMs":9384,"statePatch":18,"perMob":3,"regular":6,"regularPerMob":1,"regularKeys":["via,catInT,packLab,lastBattle,buffAudit,dps,lastWinT,mobVal,eff,kills,sinceDeep,target,adena,exp,sp,lootStat,mobKills,lootStatT0,faDrop,faRate,mobClickAt,fightMem,fightLast","subInfo","lastBattle,bounce,mobClickAt,buffAudit,packLab,status,fightMem,fightLast","dps,lastWinT,mobVal,eff,kills,sinceDeep,target,adena,exp,sp,mobClickAt,via,catInT,lootStat,mobKills,lootStatT0,faDrop,faRate","status,lastBattle,bounce,mobClickAt,buffAudit,packLab,fightMem,fightLast","dps,lastWinT,mobVal,eff,kills,sinceDeep,target,adena,exp,sp,mobClickAt,via,catInT,lootStat,mobKills,lootStatT0,faDrop,faRate"],"quota":12,"deferred":0,"deferredKeys":[],"empty":0,"saved":{"kills":8,"daily":8,"task":8}}
+DIAG spread {"error":"обычная запись вкладки — только ради ключей следующей страницы\n+ actual - expected\n\n+ [\n+   'subInfo'\n+ ]\n- []\n","wins":8,"cur":"sdms_necropolis_of_martyrdom_146","url":"https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_martyrdom_146","routeErrors":[],"core":{"on":false,"running":true,"tabOwner":true,"status":"Бой: атака · моб 100% · урон ≈600","recent":[{"t":1792981760983,"s":"Бой: атака · моб 100% · урон ≈600"},{"t":1792981760924,"s":"Бой: загрузка"}]}}
+FAIL AssertionError [ERR_ASSERTION]: обычная запись вкладки — только ради ключей следующей страницы
++ actual - expected
+
++ [
++   'subInfo'
++ ]
+- []
+
+    at scenario (/workspace/prog/tests/v2041-battle-writes-browser.cjs:67:10)
+    at async /workspace/prog/tests/v2041-battle-writes-browser.cjs:81:81

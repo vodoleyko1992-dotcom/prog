@@ -1,13 +1,13 @@
 {
   "version": "20.65",
   "source_base": "74f86d861260d7816ddef4e4e94becc01fc73469",
-  "phase": "browser_checks_in_progress",
+  "phase": "complete",
   "node": {
     "pass": 667,
     "fail": 0
   },
   "syntax": {
-    "pass": 58,
+    "pass": 59,
     "fail": 0
   },
   "module_env": {
@@ -30,6 +30,24 @@
   "live_game": "NOT_RUN",
   "physical_android": "NOT_RUN",
   "firefox_signed": false,
-  "browser_suite": "IN_PROGRESS",
-  "old_archives": "Kept available Chrome20.51 rollback because20.64 ZIPs were never committed; project-files unavailable."
+  "browser_suite": {
+    "expected": 196,
+    "pass": 175,
+    "fail": 0,
+    "unavailable": 21,
+    "all_available_checks_passed": true,
+    "all_expected_checks_executed": false,
+    "details": "browser-suite.json",
+    "scheduler_flaky_retry": "scheduler-retry.json",
+    "fixture_isolation": "fixture-isolation.json",
+    "node_pass": 169,
+    "python_pass": 6,
+    "unavailable_public_native_assets": 19,
+    "unavailable_player_html": 2
+  },
+  "old_archives": "Kept available Chrome20.51 rollback because20.64 ZIPs were never committed; project-files unavailable.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/421",
+  "archive_commit": "1da6a1bdfed25f3aab1d2e7fa58117320a03b0f7",
+  "downloads": "downloads.json",
+  "runtime_and_archives_unchanged_after_packaging": true
 }

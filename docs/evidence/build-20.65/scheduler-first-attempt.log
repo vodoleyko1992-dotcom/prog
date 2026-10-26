@@ -1,0 +1,27 @@
+PASS actual MV3 scheduler: server GCD {"actions":["attack","attack"],"responseToNextMs":563,"afterGcdMs":2,"afterNativeGetMs":439,"receiptOk":true}
+PASS actual MV3 scheduler: native GET {"actions":["attack","attack"],"responseToNextMs":755,"afterGcdMs":593,"afterNativeGetMs":52,"receiptOk":true}
+PASS actual MV3 scheduler: MP changed during wait {"actions":["whirlwind","attack"],"responseToNextMs":981,"afterGcdMs":488,"afterNativeGetMs":778,"receiptOk":true}
+PASS actual MV3 scheduler: global refusal {"actions":["attack","attack"],"responseToNextMs":425,"afterGcdMs":2,"afterNativeGetMs":320,"receiptOk":false}
+DIAG Stop during native GET [
+  { action: 'attack', at: 1792981519568, afterNative: false },
+  { action: 'attack', at: 1792981521601, afterNative: false }
+] {"on":false,"tabOwner":false,"status":"Проверяю серверное время и лимиты дня","net":{"start":2,"done":2,"t":1792981521601,"startRid":6,"startOwner":"[\"AuditHero\",\"human_warlord\",0,0,\"mvomwibh-1-0775c43c-9124-4695-9002-83b86f345606\"]","doneT":1792981521604,"ok":true,"action":"attack","rid":6,"okN":2,"gone":null},"busy":{"busy":false,"end":1792981522203},"cd":{"spawn":"fixture","globalWait":0,"skillUntil":{}},"receipts":[{"rid":4,"owner":"[\"AuditHero\",\"human_warlord\",0,0,\"mvomwibh-1-0775c43c-9124-4695-9002-83b86f345606\"]","action":"attack","expectedRevision":null,"revision":101,"requestStartedAt":1792981519568,"monsterToken":"","ok":true,"t":1792981519696,"code":"","blockedBy":"","transportError":false,"error":"","reason":"","message":""},{"rid":6,"owner":"[\"AuditHero\",\"human_warlord\",0,0,\"mvomwibh-1-0775c43c-9124-4695-9002-83b86f345606\"]","action":"attack","expectedRevision":null,"revision":102,"requestStartedAt":1792981521601,"monsterToken":"","ok":true,"t":1792981521605,"code":"","blockedBy":"","transportError":false,"error":"","reason":"","message":""}]} [
+  {
+    action: 'attack',
+    click: 1792981519564,
+    answer: 1792981519694,
+    getStart: 1792981519694,
+    getEnd: 1792981522203
+  },
+  { action: 'attack', click: 1792981521600, answer: 1792981521603 }
+]
+AssertionError [ERR_ASSERTION]: Stop cancels the waiting next turn
++ actual - expected
+
+  [
+    'attack',
++   'attack'
+  ]
+
+    at scenario (/workspace/prog/tests/v2036-combat-scheduler-browser.cjs:92:11)
+    at async /workspace/prog/tests/v2036-combat-scheduler-browser.cjs:115:36

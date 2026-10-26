@@ -1,0 +1,8 @@
+{
+  "test": "tests/v2036-combat-scheduler-browser.cjs",
+  "initial_attempt": "FAIL in Stop during native GET under parallel workload",
+  "unmodified_full_file_retry": "PASS: 5/5 scenarios",
+  "diagnostic_stop_case": "PASS: one POST; Stop request 230ms after attack, locator.click completed1280ms later, loop stopped105ms later",
+  "historical_boundary": "modules/combat.js gameFree waits at most1500ms, unchanged from20.64; testcase delays native GET2500ms",
+  "original_log_limitation": "No timestamp for actual on:false delivery, so exact cause of the initial failure is not proven. No runtime change made for this result."
+}

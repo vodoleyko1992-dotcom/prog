@@ -1,0 +1,828 @@
+{
+  "expected": 196,
+  "counts": {
+    "PASS": 175,
+    "UNAVAILABLE": 21
+  },
+  "all_available_checks_passed": true,
+  "all_expected_checks_executed": false,
+  "browser": "Chrome for Testing156.0.8078.4",
+  "no_live_game_access": true,
+  "initial_environment_issue": "System Chromium154 did not load the MV3 worker; replaced with bundled Chrome for Testing156 and retried affected tests.",
+  "scheduler_retry": "scheduler-retry.json",
+  "results": [
+    {
+      "test": "tests/browser-smoke.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v7-chromium-runtime.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v715-ui-browser.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v718-ui-browser.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v719-fishing-toggle-browser.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v715-mage-dom-browser.py",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved player battle HTML absent"
+    },
+    {
+      "test": "tests/battle-dom-smoke.py",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved player battle HTML absent"
+    },
+    {
+      "test": "tests/v1012-map-pagination-browser.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2054-rb-epic-split-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2054-pvp-all-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2050-detect-owned-start-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/craft-goals-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2050-detect-outside-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native game HTML/JS is absent; no live game access was performed."
+    },
+    {
+      "test": "tests/v2049-warlord-metrics-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/craft-mode-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2047-farm-fishing-resume-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2046-slow-api-recovery-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2046-crafter-spoil-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2046-golem-farm-keep-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2046-craft-reload-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2046-warlord-live-weapon-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2048-warlord-support-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2049-warlord-always-toggles-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/lite-arrows-recovery-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-menu-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-notify-stop-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-au-breather-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-learn-reset-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-au-travel-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-fx-travel-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-fx-travel-stop-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2041-cat-native-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2039-combat-storage-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2038-cat-navigation-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2035-mammon-dock-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-firefox-dock-commands-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2029-raid-native-quote-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2029-raid-fresh-start-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2029-vip-no-fa-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2029-fish-overview-limit-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2028-mammon-payment-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2025-auto-enchant-disabled-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2024-seal-aa-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2024-vip-free-buff-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2023-mammon-bag-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2021-overview-daily-mobs-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2020-base-limits-raid-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2020-supply-section-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2019-raid-mob-counter-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2018-limits-logs-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2017-autofarm-group-counter-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2017-fishing-reload-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2014-quick-start-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2012-panel-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2012-nav-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2017-sidebar-sections-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2017-lifestone-auto-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2023-mammon-retired-raid-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2022-native-cooldown-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v209-core-control-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v209-control-workspace-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v209-ui-controls-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v209-combat-contract-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-captcha-hold-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-tyrant-weapon-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-account-login-block-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v207-no-crafter-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v207-warlord-weapon-proof-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v206-raid-arrival-payment-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v206-enchant-quick-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v204-extension-update-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v206-warlord-two-pulls-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v206-task-switch-frame-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2037-vip-icon-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2031-vip-greater-buff-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2036-combat-scheduler-browser.cjs",
+      "status": "PASS",
+      "retried_or_reclassified": true,
+      "retry_details": "scheduler-retry.json",
+      "initial_attempt": "FAIL",
+      "unmodified_full_file_retry": "PASS:5/5"
+    },
+    {
+      "test": "tests/v205-warlord-provoke-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v204-dock-layout-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v204-fa-buff-receipt-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v204-fishing-shop-repaint-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native game HTML/JS is absent; no live game access was performed."
+    },
+    {
+      "test": "tests/v203-warlord-native-skills-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v202-farm-local-quests-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v202-enchant-diagnostics-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v202-enchant-user-flow-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v202-popup-task-selection-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v202-raid-fishing-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Missing L2_FISHING_PUBLIC native fishing HTML/JS cache; test fails before browser launch, no runtime scenario executed.",
+      "retried_or_reclassified": true
+    },
+    {
+      "test": "tests/v101-fishing-cast-recovery-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Missing L2_FISHING_PUBLIC native fishing HTML/JS cache; test fails before browser launch, no runtime scenario executed.",
+      "retried_or_reclassified": true
+    },
+    {
+      "test": "tests/v101-champion-all-pages-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1029-quest-champion-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1029-raid-live-targets-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1028-buff-interruption-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1028-probe-exit-navigation-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-enchant-selected-task-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-auto-task-policy-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-auto-task-selection-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-enchant-simple-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v721-tree-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v803-epic-dom-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v807-tablet-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v90-mammon-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v90-catacombs-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native game HTML/JS is absent; no live game access was performed."
+    },
+    {
+      "test": "tests/v90-autofarm-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v90-story-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v92-fightlab-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-polearm-damage-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v92-combat-menu-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v92-enemies-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v925-crafter-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v100-tvtshop-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1002-antibot-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1002-rbtimer-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1002-crafter-note-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1005-ind-fit-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1006-rbrun-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1009-mammon-visit-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-combat-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1014-core-character-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-core-inventory-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-core-lifecycle-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-core-modes-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-core-off-controls-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-core-settings-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1014-fishing-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v209-fishing-bait-auto-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1027-fishing-payments-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1027-enchant-native-balance-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1015-magister-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1015-magister-mv3-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1025-magister-max-rank-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1026-attack-deadline-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-campaign-transition-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-campaign-location-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-daily-campaign-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1027-resource-teleport-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1016-enchant-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1016-enchant-public-independent.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1015-pvp-mv3-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1015-pvp-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1015-clan-caster-mv3-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1015-warlock-mv3-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1015-warlock-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1023-panther-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1024-journey-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1024-raid-ashen-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1024-raid-idle-refresh-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1016-enchant-core-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1016-enchant-core-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v1016-enchant-core-recovery-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Indirect native public enchant source dependency absent; Node guard rejected fetch before any external request"
+    },
+    {
+      "test": "tests/v1016-enchant-ui-analytics-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1016-raid-tour-ui-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v1016-enchant-mode-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/battle-load-error-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/lite-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2013-nav-names-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2014-tour-toggle-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2024-lifestone-weapon-choice-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-autonomy-daily-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-autonomy-service-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-autonomy-settings-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-autonomy-snapshot-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-server-day-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-start-battle-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2026-start-daily-server-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2030-destroyer-limits-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2031-lifestone-scan-focus-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2031-pet-raid-prep-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2032-cat-higher-level-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2032-subclass-bag-startup-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2033-lifestone-dock-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2033-lifestone-feedback-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2033-lifestone-multi-tab-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2033-lifestone-real-catalog-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2034-battle-evidence-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2034-lifestone-materials-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2034-pack-efficiency-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2041-battle-writes-browser.cjs",
+      "status": "PASS",
+      "fixture_fix": "fixture-isolation.json",
+      "prepared_full_runs": 2
+    },
+    {
+      "test": "tests/v2041-sw-badge-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2042-fast-turn-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-own-craft-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2043-subgo-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2051-action-pace-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2051-noblesse-quest-loop-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2051-speed-default-off-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2051-speed-panel-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v207-catacomb-direct-next-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Saved native public source files absent; live requests forbidden"
+    },
+    {
+      "test": "tests/v208-daily-limits-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-farm-kill-quota-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-fishing-completed-goal-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-random-limit-ranges-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v208-rotation-report-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2143-activity-wrap-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2143-taskboard-fold-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2062-class-stash-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2062-dock-scroll-browser.cjs",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/v2065-hot-key-browser.cjs",
+      "status": "PASS"
+    }
+  ]
+}
