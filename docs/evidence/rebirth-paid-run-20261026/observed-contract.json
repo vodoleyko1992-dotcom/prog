@@ -1,0 +1,50 @@
+{
+  "source_files": [
+    "l2bot-log-2026-10-26-11-53.txt",
+    "l2bot-learn-2026-10-26-11-53.html",
+    "l2wap-pages-2026-10-26-11-53.html"
+  ],
+  "method": "Static parsing only; no user scripts executed and no live game requests",
+  "installed_version": "20.66",
+  "http": { "200": 186 },
+  "paid_entry": {
+    "actor": "manual",
+    "at": "21:51:22.199",
+    "path": "/game/rebirth-raids/start",
+    "difficulty": 1,
+    "keys_before": 20,
+    "keys_after": 18,
+    "response_keys": ["run", "nextSpawnId"]
+  },
+  "run": {
+    "phase": "mobs",
+    "mobKillTarget": 300,
+    "mobKills_at_instance_snapshot": 22,
+    "participants": 1,
+    "own_character_membership_confirmed": true,
+    "explicit_owner_field": false,
+    "spawn_family": "rebirth_raid_<run.id>_..."
+  },
+  "native_continuation": {
+    "control": "#battle-victory-hunt",
+    "read": "GET /game/rebirth-raids/next?after=<completedSpawn>",
+    "response_keys": ["phase", "spawnId"],
+    "following_action": "POST /game/battle/start",
+    "observed_skips_after_aoe": [[16, 19], [21, 23]],
+    "repeated_paid_entry_observed": false
+  },
+  "race": {
+    "bot_start_on_victory19": "21:52:04.675",
+    "manual_continue": "21:52:05.691",
+    "next_battle20_started": "21:52:06.328",
+    "bot_map_due": "21:52:06.679",
+    "leave_200": "21:52:06.985",
+    "active_hp_at_exit": [2546, 7128]
+  },
+  "limits": [
+    "Only mobs phase is captured; champion, boss and terminal contracts are absent",
+    "Instance fight controls have no retained spawn/href/data attributes",
+    "mobTargets payload is truncated; do not invent target-to-row bindings",
+    "Dungeon key item ID is absent; browser wallet assertions use a fixture model"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "source_base": "cabb44e33437288d67f974b171043fc4463a5f7a",
+  "scope": "Existing paid Rebirth mobs run only; preserve full mob names; no new entry, keys, boss selection, version or ZIP changes",
+  "sha256": {
+    "content.js": "4df358d77ed867c7550c9b1c9184509954498a46df043f8ebb3f8ca697b351ab",
+    "modules/combat.js": "0fb67c755d2de725b61b97e8ae9dea60d391c9362c7f975554c345496644abbb",
+    "modules/mobfarm.js": "02206e81506fdb18482eab0b4747d5214e0df200b1dc4ce6dc877d057abcfb46"
+  },
+  "checks": {
+    "node": {
+      "pass": 672,
+      "fail": 0
+    },
+    "new_unit_groups": {
+      "pass": 19,
+      "fail": 0
+    },
+    "baseline": {
+      "pass": 6,
+      "expected_fail": 13
+    },
+    "receipt_mutant": {
+      "expected_fail": 1
+    },
+    "targeted": {
+      "pass": 67,
+      "fail": 0
+    },
+    "chrome_mv3": {
+      "rebirth_pass": 2,
+      "dion_cross_pass": 3,
+      "fail": 0,
+      "exact_runtime_sha_before_after_equal": true,
+      "scope": [
+        "native continuation with real pending chat under current lease",
+        "victory19 -> manual20 while run GET pending -> one bot21",
+        "ordinary Tumran and explicit/revealed forbidden orange"
+      ]
+    },
+    "syntax_js": {
+      "pass": 7
+    },
+    "envcheck": {
+      "modules": 34,
+      "result": "PASS"
+    },
+    "bash_n": "PASS",
+    "diff_check": "PASS",
+    "independent_review": "PASS; narrowed nativePending after background chat hold finding",
+    "initial_full": {
+      "pass": 671,
+      "fail": 1,
+      "cause": "Legacy v80 VM lacked URLSearchParams; added browser global without changing assertions"
+    }
+  },
+  "limits": [
+    "All APIs/HTML mocked locally; no live game or user scripts",
+    "Key balance18 is a fixture wallet; real key itemId absent in export",
+    "Only mobs phase is evidenced; no automatic new entry/boss portal/instance target selection",
+    "Firefox and full historical browser suite not repeated",
+    "Published ZIP20.66 excludes PR425/426 and this fix"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "unit-before": {
+    "exit": 1,
+    "summary": [
+      "ℹ tests 19",
+      "ℹ pass 6",
+      "ℹ fail 13",
+      "ℹ cancelled 0"
+    ]
+  },
+  "unit-after": {
+    "exit": 0,
+    "summary": [
+      "ℹ tests 19",
+      "ℹ pass 19",
+      "ℹ fail 0",
+      "ℹ cancelled 0"
+    ]
+  },
+  "unit-receipt-mutant": {
+    "exit": 1,
+    "summary": [
+      "ℹ tests 1",
+      "ℹ pass 0",
+      "ℹ fail 1",
+      "ℹ cancelled 0"
+    ]
+  },
+  "sha256": {
+    "content.js": "4df358d77ed867c7550c9b1c9184509954498a46df043f8ebb3f8ca697b351ab",
+    "modules/combat.js": "0fb67c755d2de725b61b97e8ae9dea60d391c9362c7f975554c345496644abbb",
+    "modules/mobfarm.js": "02206e81506fdb18482eab0b4747d5214e0df200b1dc4ce6dc877d057abcfb46",
+    "tests/v2066-rebirth-paid-run.test.js": "814035169c9d9dd7d8ee630988e2ffcebe06acd495a39c839c5e643b671fce6b"
+  }
+}

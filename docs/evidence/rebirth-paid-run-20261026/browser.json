@@ -1,0 +1,347 @@
+{
+  "boundary": "actual Chrome MV3; already-paid own run seeded at18keys; local native battle handlers; no entry purchase or user script execution; only mobs phase",
+  "proof": [
+    {
+      "case": "Start existing active mob20 + native mob21 despite pending background chat",
+      "browser": "156.0.8078.4",
+      "before": {
+        "name": "Rebirth · Akaste Succubus Turen",
+        "victory": false,
+        "due": true,
+        "sinceDeep": 999
+      },
+      "raceCheckpoint": null,
+      "chatCheckpoint": {
+        "pending": true,
+        "on": true
+      },
+      "native": {
+        "actors": [
+          "bot"
+        ],
+        "continues": 1,
+        "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_21",
+        "title": "Rebirth · Akaste Succubus Turen · ур.21 · агрессивный"
+      },
+      "paths": [
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20"
+      ],
+      "calls": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+            "expectedRevision": 100
+          },
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/chat/replies/unread-count",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_21",
+            "expectedRevision": 101
+          },
+          "index": 20,
+          "keys": 18
+        }
+      ],
+      "result": {
+        "attacks": 1,
+        "nativeStarts": [
+          21
+        ],
+        "nextReads": [
+          20
+        ],
+        "runReads": 1,
+        "extraEntries": 0,
+        "keys": 18,
+        "chatPendingAtContinuation": true
+      },
+      "errors": []
+    },
+    {
+      "case": "Start victory + manual next while run GET pending",
+      "browser": "156.0.8078.4",
+      "before": {
+        "name": "Rebirth · Akaste Succubus Turen",
+        "victory": true,
+        "due": true,
+        "sinceDeep": 999
+      },
+      "raceCheckpoint": {
+        "victory": false,
+        "name": "Rebirth · Akaste Succubus Turen",
+        "hp": {
+          "cur": 2546,
+          "max": 7128,
+          "pct": 35.71829405162738
+        },
+        "href": "https://l2wap.com/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20"
+      },
+      "chatCheckpoint": null,
+      "native": {
+        "actors": [
+          "manual",
+          "bot"
+        ],
+        "continues": 2,
+        "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_21",
+        "title": "Rebirth · Akaste Succubus Turen · ур.21 · агрессивный"
+      },
+      "paths": [
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_19"
+      ],
+      "calls": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_19",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_19",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_19",
+          "method": "GET",
+          "body": null,
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+            "expectedRevision": 100
+          },
+          "index": 19,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+            "expectedRevision": 101
+          },
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_20",
+          "method": "GET",
+          "body": null,
+          "index": 20,
+          "keys": 18
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25146_mob_21",
+            "expectedRevision": 102
+          },
+          "index": 20,
+          "keys": 18
+        }
+      ],
+      "result": {
+        "attacks": 1,
+        "nativeStarts": [
+          20,
+          21
+        ],
+        "nextReads": [
+          19,
+          20
+        ],
+        "runReads": 2,
+        "extraEntries": 0,
+        "keys": 18,
+        "chatPendingAtContinuation": false
+      },
+      "errors": []
+    }
+  ]
+}
