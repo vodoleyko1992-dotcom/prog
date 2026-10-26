@@ -1,0 +1,39 @@
+{
+  "source_base": "917964ffd41a1bfed958a1ecf4411d77e846ebf6",
+  "installed_version": "20.65",
+  "new_zip_created": false,
+  "published_zips_changed": false,
+  "node": {
+    "pass": 668,
+    "fail": 0
+  },
+  "new_node_regression_groups": 10,
+  "old_preparation_scenarios": 64,
+  "old_code_positive_regression": "FAIL as expected",
+  "syntax_changed_files": [
+    "content.js",
+    "modules/warlock.js",
+    "tests/run-all.cjs",
+    "tests/v2065-start-active-battle.test.js",
+    "tests/v2065-start-active-battle-browser.cjs"
+  ],
+  "syntax_failures": 0,
+  "module_env": {
+    "pass": 34,
+    "fail": 0
+  },
+  "independent_review": "PASS",
+  "chrome_mv3": {
+    "browser": "Chrome for Testing156.0.8078.4",
+    "pass": 2,
+    "fail": 0,
+    "cases": [
+      "mail to exact confirmed192; stale001 unused; zeroPOST before return; battleGET192 rendered",
+      "Stop during delayedfreshGET: zero nav andPOST"
+    ]
+  },
+  "live_game": "NOT_RUN",
+  "notes": "Read-only server confirmation before navigation; no direct POST start/hunt in resume helper; test browser does not claim a complete game combat simulation.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/422",
+  "runtime_commit": "0f19780a09886414f72ac6a10a288bceaeb71979"
+}

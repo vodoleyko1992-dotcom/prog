@@ -3812,6 +3812,37 @@ async function sealQueue() {
 // и задачам с боем: катакомбы/автофарм/фарм/квесты. Рыбалка, заточка, «Только задачи», TvT и эпики — без неё; тур РБ готовит кота сам.
 // Повтор — по Старту (rt.dailyStart), задаче, классу и герою: правка лимитов (manualKickAt) подготовку не повторяет.
 // Каждый этап ≤ 2 мин: задача не может застрять, кот и баффы тогда — в бою.
+// 20.65 (лог 26.10 12:55–12:58): Пауза пришла после отправки «Охотиться дальше», затем игрок ушёл в почту.
+// Возвращаем только уже открытый сервером бой: память/URL старой цели не доказывают ни цель, ни право на новый заход.
+async function resumeStartBattle(ch, valid = () => true) {
+  const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,kick=+rt.manualKickAt||0,page=location.href;
+  const id=ch?.id,sid=ch?.battleSpawnId,revision=ch?.revision,key=startPrepProf();
+  const current=()=>valid()&&on&&tabOwner&&leaseEpoch===epoch&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who
+    &&rt.classCur?.prof===prof&&rt.classCur?.slot===slot&&(+rt.manualKickAt||0)===kick&&location.href===page&&!isBattle()
+    &&!antibotState()&&!abHold()&&!tvtSoon()&&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+  const special=x=>!!x&&(['pvp','isPvp','inPvp','tvt','isTvt','inTvt'].some(k=>x[k]===true)
+    ||['battleMode','battleType','mode','kind','type'].some(k=>/^(?:pvp|tvt)(?:_|-|:|$)/i.test(String(x[k]||''))));
+  const own=(c,min)=>c?.name===who&&c.id===id&&Number.isSafeInteger(c.revision)&&c.revision>=min
+    &&String(c.l2Profession||'').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/,'')===key&&c.classSlots?.activeSlot===slot;
+  const unconfirmed=()=>{if(current())setStatus('Старт: незавершённый бой не подтверждён — повторю сверку');return false;};
+  if(!current())return false;
+  if(!Number.isInteger(slot)||slot<0||typeof id!=='string'||!id||typeof sid!=='string'||!/^[a-z0-9][a-z0-9_.:-]{0,199}$/i.test(sid)
+    ||/^(?:pvp|tvt)(?:_|-|:|$)/i.test(sid)||!Number.isSafeInteger(revision)||revision<0||!own(ch,revision)||ch.inBattle!==true||special(ch))return unconfirmed();
+  try {
+    const saved=await rtCommit();if(!current())return false;if(!saved)return unconfirmed();
+    const response=await gameGet('/game/battle?characterId='+encodeURIComponent(id)+'&spawnId='+encodeURIComponent(sid),4000);
+    if(!current())return false;if(!response.ok)return unconfirmed();
+    const data=await response.json();if(!current())return false;
+    const c=data?.character,b=data?.battle;
+    if(data?.error||data?.ok===false||!own(c,revision)||c.inBattle!==true||c.battleSpawnId!=null&&c.battleSpawnId!==''&&c.battleSpawnId!==sid||!b||b.spawnId!==sid||b.ended===true||b.finished===true
+      ||data.victory||data.defeat||/^(?:ended|finished|victory|defeat)$/i.test(String(b.status||b.state||''))
+      ||Number.isFinite(b.mobHp)&&b.mobHp<=0||special(data)||special(c)||special(b))return unconfirmed();
+    if(!current())return false;
+    rec('B','старт','сервер подтвердил незавершённый бой — возвращаюсь закончить его');
+    setStatus('Старт: возвращаюсь в незавершённый бой');
+    location.href='/battle.html?spawnId='+encodeURIComponent(sid);return true;
+  } catch (_) { return unconfirmed(); }
+}
 const START_PREP_MS = 120000;
 const START_PREP_TASK = { cat: 'катакомбы', auto: 'автофарм', farm: 'фарм', quests: 'квесты' };
 function startPrepTask() { const t = L2EngineCore.selectedTask(cfg, rt); if (t != null) return t; const m = autonomyMode(); return m === 'campaign' ? 'quests' : m; }
@@ -7382,7 +7413,7 @@ function warlockPetBuffGuess() {
 }
 L2V7Modules.warlock = L2V7Factories.warlock({ get actionWait(){return actionWait}, get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
   get setCfg(){return setCfg}, get setStatus(){return setStatus}, get classNote(){return ch=>{L2V7Modules.story.charNote(ch);L2V7Modules.subclass.charNote(ch)}},
-  get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get startPrepWanted(){return startPrepWanted}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
+  get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get startPrepWanted(){return startPrepWanted}, get resumeStartBattle(){return resumeStartBattle}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
   get nativePanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()}, get nativePanelPath(){return ()=>location.pathname},
   get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character|dungeon|fishing)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},   // 20.43: и подземелье/рыбалка
   get nativeNavigate(){return path=>{if(on&&tabOwner&&L2V7Modules.actions?.canAct?.()!==false&&/^\/[a-z-]+\.html(?:\?[^#]*)?$/.test(path))location.href=path}}, get nativeFire(){return fire},

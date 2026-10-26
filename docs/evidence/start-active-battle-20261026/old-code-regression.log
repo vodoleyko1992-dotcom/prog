@@ -1,0 +1,6 @@
+{"result":true,"resumed":0,"reads":["/character"],"casts":0}
+AssertionError [ERR_ASSERTION]: Старт вне страницы боя должен возобновить подтверждённый активный бой
+
+0 !== 1
+
+    at /workspace/prog/work/recovery-error-20261026/start-active-battle-baseline.cjs:8:193
