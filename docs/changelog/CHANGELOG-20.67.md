@@ -12,7 +12,7 @@
 
 Архив:68 runtime-файлов,1 711 818байт, SHA256 `04cf1d0990cfe162ad412d1b7a7aee06edb6bd35ae3441c4abd949ce7b1bc231`. Независимый CRC/source/extract/manifest/closure/privacy аудит PASS.
 
-Настоящий Firefox153.5.1esr: desktop PASS и Android API simulation PASS. Проверены загрузка hook MAIN/content, меню, встроенное окно, передача команд и сохранение настроек; lint0ошибок/0notices/51 прежнее предупреждение. Физический Android и живая игра не проверялись. Node672 PASS/0FAIL, синтаксис53JS и envcheck34 PASS. Общий browser-проход завершается; итог будет внесён до слияния.
+Настоящий Firefox153.5.1esr: desktop PASS и Android API simulation PASS. Проверены загрузка hook MAIN/content, меню, встроенное окно, передача команд и сохранение настроек; lint0ошибок/0notices/51 прежнее предупреждение. Физический Android и живая игра не проверялись. Node672 PASS/0FAIL, синтаксис53JS и envcheck34 PASS. Полный browser-набор:201файл,182PASS/0FAIL/19UNAVAILABLE из-за отсутствующих старых nativeJS. Включён дополнительный Start/mail (два сценария), ранее пропущенный в реестре.997хешей runtime/test bodies неизменны,5PNG и2 историческихJSON восстановлены. Два DOM-теста прошли на инертных сохранённых страницах без выполнения скриптов игрока. Публичная ссылка проверена скачиванием, SHA совпал.
 
 Полные результаты — `docs/evidence/build-20.67-firefox/validation.json`.
 

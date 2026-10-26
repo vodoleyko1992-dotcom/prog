@@ -1,0 +1,100 @@
+{
+  "version": "20.67",
+  "browser": "Chromium156.0.8078.4",
+  "main": {
+    "completed": 200,
+    "total": 200,
+    "counts": {
+      "PASS": 181,
+      "UNAVAILABLE": 19
+    },
+    "seconds": 1065.77,
+    "allGameAPIResponsesLocal": true,
+    "realGameRequests": 0,
+    "parallelJobs": 3,
+    "browser": "Chromium156.0.8078.4",
+    "sourceChanged": []
+  },
+  "supplemental": {
+    "file": "tests/v2065-start-active-battle-browser.cjs",
+    "status": "PASS",
+    "actualExitCode": 0,
+    "browserCases": 2,
+    "runtimeAndTestHashesUnchanged": true,
+    "mainQueueNotModified": true,
+    "log": "work/build-20.67-firefox/smokes/supplemental-browser.log",
+    "proof": "work/build-20.67-firefox/smokes/supplemental-proof.json"
+  },
+  "combined": {
+    "uniqueFiles": 201,
+    "PASS": 182,
+    "UNAVAILABLE": 19,
+    "FAIL": 0
+  },
+  "registeredTestsNow": 201,
+  "expectedRegistryChange": {
+    "change": "One existing browser scenario registered at root request; no runtime or test-body edits",
+    "added": "tests/v2065-start-active-battle-browser.cjs",
+    "mainManifestUnchanged": 200,
+    "registeredTotalNow": 201,
+    "registryBeforeSha256": "73458aec6ee71b33ad50757fb05774f341eed8526f1b68024e034d5b186a2fb5",
+    "registryAfterSha256": "b4672ee0eacb2de158719827b7f17dc846be1429dc18eb540f3d3630a8ea1900",
+    "bashSyntax": "PASS"
+  },
+  "runtimeAndTestBodiesUnchanged": true,
+  "cleanup": {
+    "trackedPng": [
+      {
+        "file": "work/dock-x2.png",
+        "generatedCopy": "work/build-20.67-firefox/smokes/generated/tracked-png/dock-x2.png",
+        "generatedSha256": "9ddb5a3dfdf42a611f3cb65adc6a56c36bd11b3752d5117eca8f2a57b5344693",
+        "restoredHeadSha256": "0bf275ebe29224c56ec557de8be93fae9e3db6169ff1e5b0214112b4b8a5186c",
+        "restoredExactly": true
+      },
+      {
+        "file": "work/rework-ui-compact-errors.png",
+        "generatedCopy": "work/build-20.67-firefox/smokes/generated/tracked-png/rework-ui-compact-errors.png",
+        "generatedSha256": "c6a53b5a22aa4b2df6b72ddb6d630b06090aba2152f57559bb5ab6e1e26ef0e1",
+        "restoredHeadSha256": "3b1b3bdb93b2be912a103c83d3c8387713c588398664357aaff77f6c8c9a4f02",
+        "restoredExactly": true
+      },
+      {
+        "file": "work/rework-ui-compact.png",
+        "generatedCopy": "work/build-20.67-firefox/smokes/generated/tracked-png/rework-ui-compact.png",
+        "generatedSha256": "c6f3dd4556bb8eac28d14144123ff7d911fd27ecb205bc051d93a2ffb1382f87",
+        "restoredHeadSha256": "b4670353ef20a5b657f101ccb9cbf3fbaeae419ca7265709e699f5883e9fb877",
+        "restoredExactly": true
+      },
+      {
+        "file": "work/rework-ui-narrow.png",
+        "generatedCopy": "work/build-20.67-firefox/smokes/generated/tracked-png/rework-ui-narrow.png",
+        "generatedSha256": "3c664bf0e4c9fd265c6f6baf6639ce35708e02d1eb6d6b9832d25270de04196f",
+        "restoredHeadSha256": "1246281848c1e8aef99ef045f9089b386c28d9bebe28b3f2cc06c2f05e624bd5",
+        "restoredExactly": true
+      },
+      {
+        "file": "work/rework-ui-wide.png",
+        "generatedCopy": "work/build-20.67-firefox/smokes/generated/tracked-png/rework-ui-wide.png",
+        "generatedSha256": "1f13c663bf203905d0bc1d3ad038ccdc6b54e9b5b180e8eca9b73a7a417ae906",
+        "restoredHeadSha256": "9d3643564fe20dcaf4a399b01e59e657b356cd7845d7ca6ce28bf24f4c8010f6",
+        "restoredExactly": true
+      }
+    ],
+    "unexpectedPng": [],
+    "historicalSpeedEvidenceRestoredExactly": true,
+    "historicalSpeedEvidenceSha256": "e4081aff11963e36150c4dc0a88e0ae9145921283338dc31ce4b2e7c0af0b1cf",
+    "runtimePaceEvidence": {
+      "file": "docs/evidence/speed-panel/runtime-chromium.json",
+      "generatedCopy": "work/build-20.67-firefox/smokes/generated/runtime-chromium.json",
+      "restoredExactlyFromHead": true,
+      "headSha256": "890698d18c0b9f6cf574f29924523de16ade6f3d40dbb528001254dee4d0d605",
+      "rootApprovedTargetedRestore": true
+    }
+  },
+  "limits": [
+    "19 native-public-source tests unavailable: saved JS/HTML caches absent; no live fetch attempted.",
+    "Two old DOM tests ran on statically verified inert saved battle bodies from user11:35 snapshot.",
+    "Native Firefox package validation is owned separately by firefox_build."
+  ],
+  "cleanupVerdict": "PASS: only generated tracked5PNG+2historicalspeedJSON restored; root docs/runtime/test bodies/ZIP untouched"
+}

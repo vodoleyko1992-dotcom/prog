@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-**Firefox20.67 (27.10, по просьбе John «сборка на фаерфокс», PR в подготовке):** база990f076, включает #422/#423/#425/#426/#427. ТолькоFirefox, ChromeZIP20.66/Lite1.8.1 прежние. NativeFirefox153.5.1esr desktop/AndroidAPI-simulationPASS, lint0errors/51oldwarnings; независимый68fileCRC/source/extract/closure/privacyPASS. Node672/syntax53/env34PASS; доступныйполныйbrowserнаборзавершается. Пакетнеподписан, живуюигрунеоткрывать. Дальше—установкавпрежнююпапку/перезагрузкадополнения/контроль20.67; отчётdocs/evidence/build-20.67-firefox/validation.json.
+**Firefox20.67 (27.10, по просьбе John «сборка на фаерфокс», [PR #428](https://github.com/vodoleyko1992-dotcom/prog/pull/428)):** база990f076, включает #422/#423/#425/#426/#427. ТолькоFirefox, ChromeZIP20.66/Lite1.8.1 прежние. NativeFirefox153.5.1esr desktop/AndroidAPI-simulationPASS, lint0errors/51oldwarnings; независимый68fileCRC/source/extract/closure/privacyPASS. Node672/syntax53/env34PASS; browser201:182PASS/0FAIL/19UNAVAILABLE (нетnativeJS). Runtime/testbodySHA997unchanged, Start/mail добавленвregistry/PASS, generatedPNG/JSON restored. ПубличныйdownloadSHAсовпал. Пакетнеподписан, живуюигрунеоткрывать. Дальше—установкавпрежнююпапку/перезагрузкадополнения/контроль20.67; отчётdocs/evidence/build-20.67-firefox/validation.json.
 
 **Исходники после20.66 (26.10, Rebirth-run, [PR #427](https://github.com/vodoleyko1992-dotcom/prog/pull/427)):** исправлены гонка Start на победе→ручной новый моб→старый mapDue выводит из оплаченного run и обрезание имени «Rebirth · вид». Отдельный путь существующего run/ownparticipant/nativehunt/receipt+guards; sdms не расширен, backgroundchat не блокирует. Node672/новые19групп/Chrome156MV3 2Rebirth+3Dion/syntax7/env34/review PASS. Автоматический новый вход/ключи/выборРБ не добавлены; следующиефазы неизвестны. ZIP20.66 прежний. Отчётdocs/REBIRTH-PAID-RUN-2026-10-26.md.
 
@@ -254,7 +254,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **20.67 Firefox (27.10):** #422/#423/#425/#426/#427, толькоFirefox; nativeDesktop/AndroidAPI simulation и ZIPаудит PASS, Node672/syntax53/env34PASS; полныйbrowserнаборзавершается. ChromeZIP20.66/Lite1.8.1 прежние; changelog20.67.
+- **20.67 Firefox (27.10):** #422/#423/#425/#426/#427, толькоFirefox; nativeDesktop/AndroidAPI simulation и ZIPаудит PASS, Node672/syntax53/env34PASS; browser201:182PASS/0FAIL/19UNAVAILABLE (нетnativeJS), безправокruntime. ChromeZIP20.66/Lite1.8.1 прежние; changelog20.67.
 
 - **20.66 Chrome (26.10, «без проверок»):** Start из почты возвращается в существующий бой (#422), возврат после бафа в Ashen освобождает фарм (#423). Проверки сборки пропущены по прямой просьбе John; Firefox20.65 и Lite1.8.1 прежние.
 
