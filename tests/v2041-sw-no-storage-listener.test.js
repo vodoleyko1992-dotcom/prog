@@ -211,6 +211,6 @@ test('писатели on:false вне фона зовут badgeSync; «Очис
   // Других прямых записей «on» мимо фона нет: остальные идут через menuPatch/botControl/горячую клавишу/сторожа.
   const direct = [];
   for (const file of ['content.js', 'popup.js', 'ui-v7.js', ...fs.readdirSync(path.join(root, 'modules')).map(x => 'modules/' + x)])
-    for (const line of read(file).split('\n')) if (/storage\.local\.set\(\{[^}]*\bon: ?(false|true)\b/.test(line)) direct.push(file);
+    for (const line of read(file).split('\n')) if (/(storage\.local|\bST)\.set\(\{(?:[^{}]|\{[^{}]*\})*?\bon: ?(false|true)\b/.test(line)) direct.push(file);   // 20.65: импорт памяти — через обёртку rt+hot (ST), с hot:null
   assert.deepEqual(direct.sort(), ['modules/dungeons.js', 'modules/fishing.js', 'popup.js']);
 });

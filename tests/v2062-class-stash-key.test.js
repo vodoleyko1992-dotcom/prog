@@ -104,7 +104,7 @@ test('вкладка: смена героя — тайник нового из �
 test('вкладка/меню: загрузка складывает тайник в rt; ключ другого героя — нет; размер rt считается без тайника',()=>{
  const src=read('content.js');
  assert.match(src,/get\(\['cfg', 'rt', 'on', 'stash'\]\)\.then\(s => \{[^\n]*\n  cfg = mergeCfg\(s\.cfg\); rt = \{ \.\.\.DEF_RT, \.\.\.s\.rt \}; if \(L2EngineCore\.stashJoin\) rt = L2EngineCore\.stashJoin\(rt, s\.stash\);/);
- assert.match(src,/const fresh = await chrome\.storage\.local\.get\(\['rt', 'cfg', 'stash'\]\);\n\s*rt = \{ \.\.\.DEF_RT, \.\.\.\(fresh\.rt \|\| \{\}\) \}; if \(L2EngineCore\.stashJoin\) rt = L2EngineCore\.stashJoin\(rt, fresh\.stash\);/);
+ assert.match(src,/const fresh = await \(globalThis\.L2EngineCore\?\.hotStore\?\.\(\(\) => chrome\.storage\.local\) \?\? chrome\.storage\.local\)\.get\(\['rt', 'cfg', 'stash'\]\);[^\n]*\n\s*rt = \{ \.\.\.DEF_RT, \.\.\.\(fresh\.rt \|\| \{\}\) \}; if \(L2EngineCore\.stashJoin\) rt = L2EngineCore\.stashJoin\(rt, fresh\.stash\);/);
  assert.match(src,/size = JSON\.stringify\(\{ \.\.\.rt, classStash: undefined \}\)\.length/);
  assert.deepEqual(core.stashJoin({char:'Hero',a:1},{char:'Hero',v:STASH}).classStash,STASH);
  assert.equal(core.stashJoin({char:'Hero'},{char:'Alt',v:STASH}).classStash,undefined);

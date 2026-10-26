@@ -102,7 +102,7 @@ async function menuPatch(rtPatch, extra = {}) {
 }
 async function retrySettings() {
   if (settingsPending) return;
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   for (const [key, failure] of [...settingsFailed]) {
     if (!failure.retryable) continue;
     if (failure.char !== (rt.char || '')) {
@@ -380,7 +380,7 @@ async function load() {
   }
 }
 async function loadNow() {
-  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
+  const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null, stopMeta = null } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock', 'stopMeta']);
   const statusRaw = rt.status;
   await liveStatusInto(rt); await stashInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
@@ -634,7 +634,7 @@ $('fishTgtSet').onclick = async () => {
 };
 $('fishTgtN').addEventListener('keydown', e => { if (e.key === 'Enter') $('fishTgtSet').click(); });
 $('fishTgtClear').onclick = async () => {
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ fishTgt: null });
 };
 
@@ -696,7 +696,7 @@ function renderGoals(rt) {
 async function setGoals(list) {
   $('fishGoal').value = list.join(', ');
   await saveKeys(['fishGoal']);
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   renderGoals(rt);
 }
 // сессия рыбалки: темп, откат Pumping/Reeling (учится по отказам), урон, расход аден на рыбу (наживка 100, заряд 100)
@@ -989,10 +989,10 @@ function renderHuntDb(rt, d) { renderRes(rt, d); renderFarm(rt, d); renderRecipe
 document.addEventListener('l2:tabchange', async e => {
   if (e.detail?.tab !== 'hunt') return;
   // 20.62 (ревью): после первой отрисовки — по её rt/cfg, без чтения rt (≈1–1,5 МБ); базы дорисовываются асинхронно — затем прокрутка
-  const { rt = {}, cfg = {} } = lastPaint ? { rt: lastPaint.rt, cfg: lastPaint.d } : await chrome.storage.local.get(['rt', 'cfg']);
+  const { rt = {}, cfg = {} } = lastPaint ? { rt: lastPaint.rt, cfg: lastPaint.d } : await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg']);
   renderHuntDb(rt, { ...DEF, ...cfg }); setTimeout(restoreTabScroll, 400);
 });
-async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
+async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
 for (const kind of Object.keys(TREE)) {
   const T = TREE[kind], box = $(T.box); if (!box) continue;
   // 8.0.5: картинки нет на сервере игры — пустое место той же ширины (строки не прыгают); inline onerror запрещён CSP
@@ -1036,12 +1036,12 @@ async function renderRecipes(rt, d) {
   $('recipeBox').textContent = txt;
 }
 $('recipeScan').onclick = async () => {
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ recipeScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   $('recipeBox').textContent = on ? '⏳ Бот откроет «Охоту на рецепты» после текущего боя' : '⏳ База обновится после ▶ Старт (или откройте форум «Охота на рецепты» сами)';
 };
 $('recipeReset').onclick = async () => {
-  const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']);
+  const { rt = {}, cfg = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg']);
   const k = String(cfg.recipeRes || '').toLowerCase().replace(/\s*\(\d+%\)\s*$/, '').trim();
   await menuPatch({ recipeGot: { ...(rt.recipeGot || {}), [k]: 0 } });
   toast?.('↺ Счётчик рецепта обнулён');
@@ -1247,7 +1247,7 @@ $('faList').addEventListener('click', async e => {
   await faSet(ids);
 });
 $('faScanBtn').onclick = async () => {
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ faScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   $('faNote').textContent = on ? '⏳ Бот откроет баффер Fast Aden после текущего боя' : '⏳ Список обновится после ▶ Старт (или откройте баффер Fast Aden сами — бот перепишет его)';
 };
@@ -1423,13 +1423,13 @@ function renderLifeStone(rt) {
   box.textContent = `По последнему осмотру: ${weapon?.name || 'оружие #' + a.w}${a.e ? ' +' + a.e : ''}` + augLine(rt);
 }
 async function weapScan() {
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ invScan: { step: 'prof', back: '', t: Date.now(), manual: true } });   // 14.10: только явная команда продолжает чтение при выключенном боте.
   $('weapBox').textContent = '⏳ Проверяю: Персонаж → профессия, Инвентарь → оружие… (вкладка игры перейдёт и вернётся)';
 }
 $('weapScan').onclick = weapScan;
 $('weapClass').onclick = async () => {
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']);
   const R = rt.weaponRec || {};
   if (!R.main && !rt.weaponsT) return weapScan();
   await menuPatch({}, { cfgPatch: { ...(R.main ? { nWeaponMain: R.main } : {}), weaponManual: false, weaponClassEquip: true } });
@@ -1632,7 +1632,7 @@ async function analyzeMammonBag() {
   let timer;
   try {
     if (!expectedChar) throw Error('Дождитесь загрузки персонажа');
-    const { rt = {}, cfg = {}, on = false, lock = null } = await chrome.storage.local.get(['rt', 'cfg', 'on', 'lock']);
+    const { rt = {}, cfg = {}, on = false, lock = null } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'on', 'lock']);
     if (rt.char !== expectedChar) throw Error('Персонаж изменился — обновите меню');
     mmBagUi.context = mammonBagContext(rt, { mmGoalItem: goalItem, mmGoalLvl: goalLvl });
     if ((+cfg.mmGoalItem || 0) !== goalItem || (+cfg.mmGoalLvl || 5) !== goalLvl) throw Error('Дождитесь сохранения выбранной цели');
@@ -2189,7 +2189,7 @@ function renderHunt(rt, d) {
       + `\nОценка до боя: удар РБ ≈ ${rt.rbK || 0.109} × P.Atk${rt.rbK ? ' (выучено)' : ' (старт)'} · наш ДПС по РБ ≈${rt.rbDps || 1150}${rt.rbDps ? ' (общая статистика, не гарантия)' : ' (ориентир по умолчанию)'} · учитываются спецудар, длительность боя и доступные банки с резервом`;
 }
 confirmClick('rbReset', async () => {                 // сбросить вердикты по всем РБ и проверить заново
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ rbDb: {}, rb: {}, rbPending: true, sinceRb: 999 });
 });
 
@@ -2509,7 +2509,7 @@ function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампан
 };
 $('rbSessAuto').onclick = async () => { $('rbSessBuffs').value = 'auto'; await saveKeys(['rbSessBuffs']); toast('⚡ Фулл бафф под класс: список подставлен'); };
 $('rbSessStop').onclick = async () => {
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ rbSess: { ...(rt.rbSess || {}), on: false, end: Date.now(), sum: rt.rbSess?.sum || null } });
   const { cfg: current = {} } = await chrome.storage.local.get('cfg');
   if (Array.isArray(current.autoTasks)) { await editAutoTask('raid', false); toast('РБ-сессия остановлена — только оставшиеся выбранные задачи'); }
@@ -2610,10 +2610,10 @@ function renderEnemies(rt) {
     const e = E[k], item = document.createElement('div'), row = document.createElement('div'); row.className = 'row'; item.style.margin = '4px 0 8px';
     const t = document.createElement('div'); t.textContent = '☠ ' + (EN ? EN.brief(e) : `${e.name}: убил нас ${e.kills || 0}×`);
     const ig = document.createElement('button'); ig.textContent = e.ignore ? '⚔ Нападать' : '🚫 Не трогать'; ig.title = e.ignore ? 'Снова нападать на этого врага' : 'Оставить в листе, но не нападать';
-    ig.onclick = async () => { const { rt: r = {} } = await chrome.storage.local.get('rt'); if (r.char!==char) { toast('Персонаж изменился — обновите меню'); return; } const X = { ...(r.enemies || {}) }; if (!X[k]) return;
+    ig.onclick = async () => { const { rt: r = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt'); if (r.char!==char) { toast('Персонаж изменился — обновите меню'); return; } const X = { ...(r.enemies || {}) }; if (!X[k]) return;
       X[k] = { ...X[k], ignore: !X[k].ignore, blockLvl: 0, skipT: 0, skipWhy: '' }; await menuPatch({ enemies: X }, {expectedChar:char}); toast(X[k].ignore ? `${e.name}: не трогать` : `${e.name}: снова враг`); };
     const rm = document.createElement('button'); rm.textContent = '🗑'; rm.title = 'Убрать из листа врагов';
-    rm.onclick = async () => { const { rt: r = {} } = await chrome.storage.local.get('rt'); if (r.char!==char) { toast('Персонаж изменился — обновите меню'); return; } const X = { ...(r.enemies || {}) }; delete X[k]; await menuPatch({ enemies: X }, {expectedChar:char}); toast(`${e.name} убран из листа`); };
+    rm.onclick = async () => { const { rt: r = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt'); if (r.char!==char) { toast('Персонаж изменился — обновите меню'); return; } const X = { ...(r.enemies || {}) }; delete X[k]; await menuPatch({ enemies: X }, {expectedChar:char}); toast(`${e.name} убран из листа`); };
     row.append(ig, rm); item.append(t, row); box.append(item);
   }
 }
@@ -2623,7 +2623,7 @@ confirmClick('fightMemReset', async () => {
 });
 $('showAllCls').onclick = async () => {
   showAllCls = !showAllCls; try { localStorage.setItem('showAllCls', showAllCls ? '1' : '0'); } catch (e) {}
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, await stashInto(rt));
+  const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, await stashInto(rt));
 };
 // выбор режима запускает бота (как и прежние кнопки) и выключает остальные режимы; дополнения не трогаем
 const MODES_OFF = { craftMode: false, enchantMode: false, epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false };
@@ -2643,10 +2643,10 @@ async function setMode(m, enabled) {
   await save();
   // 14.10: ручной режим отменяет возврат из старого дейлика; выполненный прогресс dailyDone сохраняем.
   await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() });
-  { const { rt = {} } = await chrome.storage.local.get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
+  { const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
     if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } });
     if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } }); }   // 8.0.3: режим выбран руками — «🎯 по одному РБ» выключен (тур — без остановок)
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']);
   const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
   const leave = { ...leaveEpic, ...leaveHunt };
@@ -2674,7 +2674,7 @@ $('enchantModeToggle').onclick = async () => {
 };
 document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.onchange = () => editAutoTask(el.dataset.autoTask, el.checked).catch(e => { toast(String(e?.message || e)); load(); }); });
 $('goalProof').onclick = () => { goalItemsMode = false; setGoals([]); };
-$('goalItems').onclick = async () => { goalItemsMode = true; const { rt = {} } = await chrome.storage.local.get('rt'); renderGoals(rt); };
+$('goalItems').onclick = async () => { goalItemsMode = true; const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt'); renderGoals(rt); };
 $('goalGrid').onclick = e => {
   const b = e.target.closest('[data-goal]');
   if (!b) return;
@@ -2683,21 +2683,21 @@ $('goalGrid').onclick = e => {
 };
 $('bagCheck').onclick = async () => {
   await save();
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ bagCheck: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? '🎒 Бот пересчитает сумку после боя' : '🎒 Пересчёт после ▶ Старт');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 confirmClick('lootReset', async () => {               // обнулить статистику добычи
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ lootStat: {}, mobKills: {}, lootStatT0: Date.now() });
 });
 $('farmScan').onclick = async () => {
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ farmScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? 'База ресурсов: бот откроет форум после боя' : 'База обновится после ▶ Старт (или раскройте строки на странице «Фарм ресурсов» сами — они сохранятся)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('farmReset').onclick = async () => {
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ farmGot: {} });
 };
 // 8.0: confirm() во встроенном меню Chrome молча блокирует — подтверждение вторым нажатием
@@ -2712,14 +2712,14 @@ confirmClick('petStatReset', async () => {
   toast('🐱 Статистика котов сброшена');   // 8.0: в #status текст стирала ближайшая перерисовка
 });
 $('zoneScan').onclick = async () => {
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ zoneScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? 'Список зон: бот откроет «Телепорт» после боя' : 'Список зон обновится после ▶ Старт (или откройте «Телепорт» — зоны читаются сами)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('zoneBox').onclick = async e => {
   const b = e.target.closest('[data-zone]');
   if (!b) return;
-  const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
+  const { rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
   await menuPatch({ zoneGo: { id: b.dataset.zone, t: Date.now(), why: 'вручную' }, zoneGoT: 0 });
   toast(on ? `✈ Лечу: ${rt.zoneCat?.[b.dataset.zone]?.name || b.dataset.zone}` : '✈ Полёт начнётся после ▶ Старт');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
@@ -2731,13 +2731,13 @@ $('fishBest').onclick = async () => {
   load();
 };
 $('fishReset').onclick = async () => {
-  const { rt = {} } = await chrome.storage.local.get('rt');
+  const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
   await menuPatch({ fish: null, fishSess: null, fishDmg: null, fishCdStat: null });
 };
 // «🛒 Закупить сейчас» — бот бросает текущее дело (моба, РБ, рыбу, ожидание) и сразу идёт в магазин; потом возвращается
 async function shopNowGo() {
   await save();
-  const { rt = {}, cfg = {}, on = false } = await chrome.storage.local.get(['rt', 'cfg', 'on']);
+  const { rt = {}, cfg = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'on']);
   // 20.43 (разбор 21.10): рыбалка из «Задач бота» не ставит fishMode — «Закупить сейчас» возвращал на карту; теперь по текущей задаче
   await menuPatch({ shop: { step: 'count', back: taskNow({ ...DEF, ...cfg }, rt, 'fish') ? '/fishing.html' : '/map.html', t: Date.now(), force: true, urgent: true, why: 'вручную' } });
   $('shopBox').textContent = on ? '🛒 Иду в магазин прямо сейчас (текущий бой брошен)' : '⏳ Закупка начнётся после ▶ Старт';
@@ -2746,7 +2746,7 @@ async function shopNowGo() {
 $('shopNow').onclick = shopNowGo;
 if ($('shopNowTop')) confirmClick('shopNowTop', shopNowGo);   // 8.0: бросает моба/РБ/рыбалку — вторым нажатием
 $('campNow').onclick = async () => {
-  const { rt = {}, cfg = {}, on = false } = await chrome.storage.local.get(['rt', 'cfg', 'on']);
+  const { rt = {}, cfg = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'on']);
   // Кампания выключена — разовая проверка (campOnce): бот прочитает главу и вернётся к охоте, без телепортов
   await menuPatch({ campaignDue: true, campOnce: !cfg.campaign });
   $('campBox').textContent = (on ? '⏳ Проверю кампанию после текущего боя' : '⏳ Проверю кампанию после ▶ Старт')
@@ -2921,7 +2921,7 @@ async function showCounts0(reccount, snapcount) {
 
 async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, если файл скачан (для «📤 Логи для разбора»)
   if (!rows.length) { $('recCount').textContent = `${title}: событий нет`; return false; }
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']);
   const head = `# L2wap Bot v${chrome.runtime.getManifest().version} — журнал: ${title} · ${rows.length} событий · ${new Date(rows[0][1].t).toLocaleString('ru')} — ${new Date(rows.at(-1)[1].t).toLocaleString('ru')}\n`
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
     + `# | бой: JSON — безопасные поля сервера, rid запроса, цели, HP/MP, КД, исход и награда. log/finalLog: хвост до 200 строк / 32К знаков, строка до 2048; omitted/shortened/cut явно отмечают сокращения.\n`
@@ -3014,9 +3014,9 @@ $('recDom').onclick = async () => {
   } catch (e) { toast('⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com')); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'wdSilent', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
+const MEM_SKIP = new Set(['hot', 'auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'wdSilent', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
-  const all = await chrome.storage.local.get(null);
+  const all = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(null);
   // 20.62: файл прежнего вида — тайник классов (ключи stash/stash@Ник) складывается обратно в rt.classStash / rt@Ник.classStash
   const data = L2EngineCore.stashFold(Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k))));   // 20.13 (шаг 7): живой статус — не память
   const rt = data.rt || {};
@@ -3052,7 +3052,7 @@ const readShots = async () => {
     c.onsuccess = e => { const cur = e.target.result; if (!cur || out.length >= 60) return res(out); out.push(cur.value); cur.continue(); }; c.onerror = () => res(out); }); } catch (e) { return []; }
 };
 async function learnReportDl() {
-  const { learn = {}, cfg = {}, rt = {} } = await chrome.storage.local.get(['learn', 'cfg', 'rt']);
+  const { learn = {}, cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['learn', 'cfg', 'rt']);
   const shots = await readShots();
   const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const dt = t => t ? new Date(t).toLocaleString('ru') : '—';
@@ -3099,7 +3099,7 @@ async function exportAll() {
 if ($('logsAll')) $('logsAll').onclick = exportAll;
 // ⚙ экспорт / импорт только настроек (cfg и настройки по персонажам cfg@ник)
 $('cfgExport').onclick = async () => {
-  const all = await chrome.storage.local.get(null);
+  const all = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(null);
   const data = Object.fromEntries(Object.entries(all).filter(([k]) => k === 'cfg' || /^cfg@/.test(k)));
   const n = Object.keys(data.cfg || {}).length;
   download(`l2bot-settings-${all.rt?.char || 'hero'}-${stamp()}.json`, JSON.stringify({ l2botCfg: 1, v: chrome.runtime.getManifest().version, t: Date.now(), data }, null, 1), 'application/json');
@@ -3113,7 +3113,7 @@ $('rbtFile').onchange = async e => {
   try {
     const RT = L2V7Factories.rbtimer({ rt: {}, cfg: {} }), T2 = RT.parseFile(await f.text());
     if (!T2 || !Object.keys(T2.b || {}).length) throw new Error('в файле нет таймеров боссов');
-    const { rt = {} } = await chrome.storage.local.get('rt'), M = RT.merge(rt.rbTimer || { b: {} }, T2);
+    const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt'), M = RT.merge(rt.rbTimer || { b: {} }, T2);
     await menuPatch({ rbTimer: M });
     const n = Object.keys(T2.b).length, ob = Object.values(T2.b).reduce((a, x) => a + (x.ob?.length || 0), 0);
     toast(`Таймеры загружены: ${n} боссов${ob ? `, замеров респа ${ob}` : ''}`);
@@ -3184,11 +3184,15 @@ $('memFile').onchange = async e => {
     if (!j?.l2bot || !j.data?.cfg) throw new Error('это не файл памяти L2wap Bot');
     // 20.62: rt.classStash из файла — в ключ stash/stash@Ник (нет в файле — пустой тайник этого героя, старый не подставляется)
     const data = L2EngineCore.stashUnfold(Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k))), 'menu');
-    { const all0 = await chrome.storage.local.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
+    // 20.65: rt хранилища — вместе с ключом hot; полная запись импорта той же записью сбрасывает hot (ST.set)
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;
+    { const all0 = await ST.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
       for (const [k, v] of Object.entries(all0)) if ((k === 'rt' || /^rt@/.test(k)) && v && typeof v === 'object') byChar[v.char || k.slice(3)] = v;
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
     if (data.rt) data.rt = { ...data.rt, _src: 'menu' };
-    await chrome.storage.local.set({ ...data, on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
+    // 20.65 (ревью части 3): hot:null — всегда, даже если get выше hot не видел: импорт идёт мимо очереди фона, и hot, записанный фоном
+    // между get и set, иначе лёг бы поверх загруженной памяти
+    await ST.set({ ...data, ...(data.rt ? { hot: null } : {}), on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
     try { chrome.runtime.sendMessage({ cmd: 'badgeSync' })?.catch?.(() => {}); } catch (_) {}   // 20.41 (лог 20.10 21:09): у фона нет слушателя storage.onChanged — значок по факту
     const rt = data.rt || {};
     $('memNote').textContent = `✅ Загружено (v${j.v}, ${new Date(j.t).toLocaleString('ru')}): РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}. Бот остановлен — нажмите ▶ Старт.`;
@@ -3202,7 +3206,7 @@ confirmClick('recClear', async () => {                // удалить весь
   tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков
 });
 async function huntToggle() {
-  const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  const { cfg = {}, rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on']);
   if (Array.isArray(cfg.autoTasks)) {   // 18.10: выключение тура снимает и «один РБ» — иначе его кнопка оставалась включённой
     const v = !cfg.autoTasks.includes('raid');
     if (!v && rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } });
@@ -3215,7 +3219,7 @@ async function huntToggle() {
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
 async function epicToggle() {
-  const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  const { cfg = {}, rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on']);
   if (Array.isArray(cfg.autoTasks)) return editAutoTask('epic', !cfg.autoTasks.includes('epic'));
   const v = !cfg.epicMode;
   const patch = { epic: { step: 'pick', t: Date.now(), last: v ? 'режим запущен' : 'режим выключен' }, epicListT: 0, rbWant: null };
@@ -3235,7 +3239,7 @@ $('huntToggle2').onclick = huntToggle;
 // (или «▶ Продолжить») — ещё один РБ. Тур уже шёл — список РБ не перечитываем заново (≈14 страниц), продолжаем с выбора
 $('rbOneBtn').onclick = async () => {
   await save();
-  const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  const { cfg = {}, rt = {}, on = false } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on']);
   if (on && cfg.rbHuntMode && rt.rbOne?.on) return toast('🎯 Уже иду за РБ — после убийства встану на паузу и буду ждать команды');
   const now = Date.now(), tour = !!cfg.rbHuntMode;
   const leaveEpic = cfg.epicMode ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
@@ -3248,7 +3252,7 @@ $('rbOneBtn').onclick = async () => {
 // 18.10 (игрок: «Ещё один РБ» не выключается): нажатие этой кнопки — всегда «ещё один РБ», поэтому выключение — отдельной кнопкой.
 // Снимает «один РБ» и сам тур (в режиме задач — галку «Тур по РБ»), остальные задачи остаются.
 $('rbOneOff').onclick = async () => {
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']);
   const tour = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes('raid') : !!cfg.rbHuntMode;
   if (tour) await huntToggle(); else if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } });
   toast('🎯 «Один РБ» выключен');
@@ -3319,7 +3323,7 @@ onStore(ch => {
   }
   // 20.62: только живой статус — без полной перерисовки
   if (Object.keys(ch).some(isLiveKey) && paintLive(ch) && Object.keys(ch).every(isLiveKey)) return;
-  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon(storeGap(ch));   // 20.13 (шаг 7): и живой статус live@Ник
+  if (ch.cfg || ch.rt || ch.hot || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon(storeGap(ch));   // 20.13 (шаг 7): и живой статус live@Ник; 20.65: и hot (частые мелкие поля rt)
   // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
   if (ch.reccount || ch.snapcount) {
     if (ch.reccount) recN = ch.reccount.newValue || 0;
@@ -3525,7 +3529,7 @@ foldHints();
 // Настройки отдельного режима сохраняют только свой вложенный cfg; открытие раздела не запускает бота.
 async function enchantMenuCommand(action, context = {}) {
   if (globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED) throw new Error('Автозаточка временно убрана');
-  const { cfg = {}, rt = {}, on = false, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'lock']);
+  const { cfg = {}, rt = {}, on = false, lock = null } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on', 'lock']);
   if (['start', 'resume'].includes(action) && !(Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes('enchant') : cfg.enchantMode === true)) throw new Error('Сначала выберите режим «Автозаточка»');
   const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
   if (!tab?.id || !rt.char) throw new Error('Откройте вкладку игры и дождитесь загрузки персонажа');
@@ -3537,7 +3541,7 @@ async function enchantMenuCommand(action, context = {}) {
 }
 const enchantUI = L2Defaults.AUTO_ENCHANT_DISABLED ? { refresh: async () => {} } : L2EnchantUI.mount($('enchantPanel'), {
   getState: async () => {
-    const state = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+    const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on']);
     const model = L2V7Factories.enchant({ cfg: state.cfg || {}, rt: state.rt || {} });
     state.analytics = model.analytics();
     if (state.analytics) state.analytics.rates = state.analytics.rates.map(r => { const s = model.SCROLLS[r.scrollId]; return { ...r,
@@ -3563,7 +3567,7 @@ function panelRefresher(el, refresh, delay) {
     if (!el.contains(document.activeElement)) refresh().catch(() => {}); };
   const soon = () => { if (t) return; t = setTimeout(() => { t = null; run(); }, delay); };
   // общий слушатель меню (выше) уже обновил dockMin: раскрытие дока сразу обновляет видимую панель
-  chrome.storage.onChanged?.addListener(ch => { if (!(ch.cfg || ch.rt || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
+  chrome.storage.onChanged?.addListener(ch => { if (!(ch.cfg || ch.rt || ch.hot || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
   const wake = () => { if (stale) soon(); };
   document.addEventListener('l2:tabchange', wake); document.addEventListener('l2:cardtoggle', wake); document.addEventListener('visibilitychange', wake);
   return { wake };
@@ -3572,7 +3576,7 @@ panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);
 
 // Новые платные настройки сохраняются отдельно, с привязкой к показанному персонажу.
 async function warlockMenuCommand(action,context={}) {
-  const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
+  const {rt={},on=false,lock=null}=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on','lock']);
   if (!context.char || rt.char!==context.char) throw Error('Персонаж изменился — обновите меню');
   // 20.43 (разбор 21.10): без chrome.tabs (встроенное меню Firefox) — через фон в родительскую вкладку меню: «Проверить цену»,
   // «Сбросить бюджет» и «Завершить неопределённую попытку» кота раньше падали там на chrome.tabs; с tabs — как раньше.
@@ -3583,7 +3587,7 @@ async function warlockMenuCommand(action,context={}) {
   if (!answer?.ok) throw Error(answer?.reason||'Команда не выполнена');
 }
 const warlockUI=L2WarlockUI.mount($('warlockPanel'),$('petFullToggle'),{
-  getState:async()=>{const s=await chrome.storage.local.get(['cfg','rt','on']);s.summary=L2V7Factories.warlock({cfg:s.cfg||{},rt:s.rt||{}}).summary();return s;},
+  getState:async()=>{const s=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt','on']);s.summary=L2V7Factories.warlock({cfg:s.cfg||{},rt:s.rt||{}}).summary();return s;},
   saveConfig:async(patch,context)=>{ const {cfg={}}=await chrome.storage.local.get('cfg'); return menuPatch({manualKickAt:Date.now()},{cfgPatch:{...patch,...(Array.isArray(cfg.autoTasks)&&Object.hasOwn(patch,'petFullAuto')?autoTaskPatch(cfg,'petbuff',patch.petFullAuto):{})},expectedChar:context.char}); },
   command:warlockMenuCommand
 });
@@ -3591,7 +3595,7 @@ panelRefresher($('warlockPanel'), () => warlockUI.refresh(), 350);   // 20.12 (U
 
 // Отдельный список PvP: все изменения привязаны к персонажу показанного меню.
 const pvpUI=L2PvpUI.mount($('pvpTargetsPanel'),{
-  getState:()=>chrome.storage.local.get(['cfg','rt','on']),
+  getState:()=>(globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt','on']),
   saveConfig:(patch,context)=>menuPatch({},{cfgPatch:patch,expectedChar:context.char}),
   editTarget:(edit,context)=>menuPatch({},{pvpTargetEdit:edit,expectedChar:context.char})
 });
@@ -3649,7 +3653,7 @@ function lsScanFeedbackView(who){
 function lsScanFeedbackSet(who,phase,message){lsScanFeedback={char:who,phase,message};lsScanFeedbackView(who);}
 chrome.storage.onChanged?.addListener(ch=>{if(ch.rt&&String(ch.rt.oldValue?.char||'')!==String(ch.rt.newValue?.char||''))lsScanFeedbackView(ch.rt.newValue?.char);});
 async function lsRefreshWeapons(who){
-  const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);
+  const {cfg={},rt={}}=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt']);
   lsScanFeedbackView(rt.char);
   if(!who||who!==rt.char||lsRenderedChar!==rt.char)return;
   lsRenderWeapons(rt,cfg.autoLs||{},lsEditing||document.activeElement?.id==='lsWeapon');
@@ -3657,7 +3661,7 @@ async function lsRefreshWeapons(who){
 }
 async function lsRefresh(){
   if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts','lsBuyMaterials','lsAaBudget','lsAdenaBudget','lsAaReserve'].includes(document.activeElement?.id))return;
-  const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
+  const {cfg={},rt={},on=false}=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
   lsRenderWeapons(rt,c);
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
@@ -3670,7 +3674,7 @@ async function lsRefresh(){
 }
 async function lsSave(){
   lsEditing=true;
-  try{const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const c=cfg.autoLs||{},autoLs={...c,weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value),...lsMaterialDraft(c)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
+  try{const {cfg={},rt={}}=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt']);if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const c=cfg.autoLs||{},autoLs={...c,weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value),...lsMaterialDraft(c)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
   finally{lsEditing=false;}
 }
 $('lsWeapon').onchange=()=>lsSave().then(()=>lsRefresh()).catch(e=>toast(String(e.message||e)));
@@ -3681,7 +3685,7 @@ for(const id of ['lsBuyMaterials',...Object.values(LS_MATERIAL_FIELDS).map(([id]
 async function lsScanTab(who,started,generation){
   const first=await activeTab(), all=await chrome.tabs.query({url:['https://l2wap.com/*','https://*.l2wap.com/*']}).catch(()=>[]);
   const ids=[...(started.on&&Number.isInteger(started.lock?.tab)&&Date.now()-(+started.lock.t||0)<85000?[started.lock.tab]:[]),first?.id,...all.map(t=>t.id)];
-  const unchanged=async()=>{const fresh=await chrome.storage.local.get(['rt','on']);if(controlGeneration!==generation||fresh.rt?.char!==who||!!fresh.on!==!!started.on||(+fresh.rt?.manualKickAt||0)!==(+started.rt.manualKickAt||0))throw Error('Персонаж или управление изменились — обновите список оружия');};
+  const unchanged=async()=>{const fresh=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on']);if(controlGeneration!==generation||fresh.rt?.char!==who||!!fresh.on!==!!started.on||(+fresh.rt?.manualKickAt||0)!==(+started.rt.manualKickAt||0))throw Error('Персонаж или управление изменились — обновите список оружия');};
   const deadline=Date.now()+6000;
   for(const id of [...new Set(ids.filter(Number.isInteger))]){
     await unchanged();if(Date.now()>=deadline)break;let target=null,timer;
@@ -3691,7 +3695,7 @@ async function lsScanTab(who,started,generation){
   throw Error('Не найдена готовая вкладка этого героя. Откройте игру и обновите её вкладку');
 }
 async function lsCommand(action,expectedChar,expectedStart=null){
-  const generation=controlGeneration,started=await chrome.storage.local.get(['rt','on','lock']),{rt={},on=false,lock=null}=started;
+  const generation=controlGeneration,started=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on','lock']),{rt={},on=false,lock=null}=started;
   if(!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
   if(expectedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');
   if(expectedStart&&(!on||expectedStart.on!==true||expectedStart.kick!==(+(rt.manualKickAt)||0)||generation!==controlGeneration))throw Error('Запуск ЛС изменился — повторите команду');

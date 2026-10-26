@@ -28,7 +28,7 @@ async function lockCommand(m, sender) {
     const valid = mine && lock?.epoch && m.epoch === lock.epoch && now - lock.t < LOCK_TTL;
     if (m.cmd === 'lockRelease') {
       if (m.onlyStopped) {
-        const state = await chrome.storage.local.get(['on', 'rt']);
+        const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['on', 'rt']);
         if (state.on || String(state.rt?.char || '') !== String(m.expectedChar || '') || (+state.rt?.manualKickAt || 0) !== (+m.expectedKick || 0))
           return { ok: false, reason: 'session_changed' };
       }
@@ -294,10 +294,11 @@ function reduceLsAttemptsChange(state, edit) {
 // складывается с ним по классам (L2EngineCore.stashLegacyMerge) — классы, что есть только в ключе, остаются.
 function stashMigrate(why) {
   return serializeLock(async () => {
-    const { rt } = await chrome.storage.local.get('rt');
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
+    const { rt } = await ST.get('rt');
     if (!rt || typeof rt !== 'object' || !Object.hasOwn(rt, 'classStash')) return false;   // повтор безвреден: переносить нечего
     const change = { rt: { ...rt, _src: 'stash-move' } }; await L2EngineCore.stashLegacyMerge(change, { rt }, false, () => chrome.storage.local.get(['stash']));
-    await chrome.storage.local.set(await L2EngineCore.stashRehome(L2EngineCore.stashSplitSet(change, 'stash-move'), k => chrome.storage.local.get(k)));
+    await ST.set(await L2EngineCore.stashRehome(L2EngineCore.stashSplitSet(change, 'stash-move'), k => chrome.storage.local.get(k)));
     buf.push({ t: Date.now(), src: 'S', kind: 'память', what: `тайник классов перенесён в отдельный ключ хранилища (${why}): обычная запись памяти героя меньше`, st: '' }); flush();
     return true;
   });
@@ -315,7 +316,11 @@ async function statePatch(m, sender) {
   if (!gamePage) return { ok: false, reason: 'not_game_page' };
   return serializeLock(async () => {
     const now = Date.now();
-    const state = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg']);
+    // 20.65 (John 25.10: «что ещё можем сделать для облегчения нагрузки»): rt — вместе с маленьким ключом hot; запись, в которой
+    // поменялись только частые мелкие поля (счёт лимита мобов, рыбалка — L2EngineCore.HOT_KEYS), пишет hot вместо всего rt (put).
+    // Бот выключен — запись, как раньше, целиком (и сложит висящий hot): после Стопа hot не появляется, записей при OFF мало.
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;
+    const state = await ST.get(['lock', 'on', 'rt', 'cfg'], true), put = c => ST.put && state.on ? ST.put(state, c, now) : ST.set(c);
     // Поздний ответ со старой страницы не вправе дописать задания/покупки в профиль нового героя.
     if (String(m.expectedChar || '') !== String(state.rt?.char || '')) return { ok: false, reason: 'character_changed' };
     if (state.on && (state.lock?.k !== 'tab' + tab || !m.epoch || state.lock.epoch !== m.epoch ||
@@ -325,17 +330,17 @@ async function statePatch(m, sender) {
       return { ok: false, reason: 'ownership_lost' };
     if(m.reduceLsAttempts) {
       const result=reduceLsAttemptsChange(state,m.reduceLsAttempts);if(!result.ok)return result;
-      await chrome.storage.local.set({cfg:result.cfg,rt:{...state.rt,autoLs:result.autoLs,_src:String(m.src||'').slice(0,60)}});
+      await put({cfg:result.cfg,rt:{...state.rt,autoLs:result.autoLs,_src:String(m.src||'').slice(0,60)}});
       return result;
     }
     if(m.dailyServer) {
       const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
-      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock,fishTgt:r.rt.fishTgt??null};
+      await put({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock,fishTgt:r.rt.fishTgt??null};
     }
     if(m.resolveLimitRanges) {
       if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
       const r=limitRangeChange(state,now);if(!r.ok)return r;
-      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,dailyQuota:r.rt.dailyQuota,farmQuota:r.rt.farmQuota,dropped:r.dropped};
+      await put({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,dailyQuota:r.rt.dailyQuota,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
       let r = farmQuotaChange(state, m.farmQuota, now);
@@ -344,13 +349,13 @@ async function statePatch(m, sender) {
       if (!r.ok && m.farmQuota.op === 'win' && m.farmQuota.fallback === true) { const a = farmQuotaChange(state, { ...m.farmQuota, op: 'approx', n: m.farmQuota.seen, close: true }, now); if (a.ok) r = { ...a, approx: true }; }
       if (!r.ok) return r;
       // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
-      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark,...(r.approx?{approx:true}:{}) };
+      await put(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark,...(r.approx?{approx:true}:{}) };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;
-      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.dailyQuota,dailyFishMark:r.dailyFishMark};
+      await put({rt:r.rt});return {ok:true,dailyQuota:r.dailyQuota,dailyFishMark:r.dailyFishMark};
     }
-    if(m.raidMobs){const r=raidMobChange(state,m.raidMobs,now);if(!r.ok)return r;await chrome.storage.local.set({rt:r.rt});const {rt:_,...reply}=r;return reply;}
+    if(m.raidMobs){const r=raidMobChange(state,m.raidMobs,now);if(!r.ok)return r;await put({rt:r.rt});const {rt:_,...reply}=r;return reply;}
     // 17.10: завершение цели и снятие только рыбалки — одной записью, по свежему списку задач.
     if (m.finishFishGoal) {
       const T = state.rt?.fishTgt, E = m.finishFishGoal;
@@ -363,7 +368,7 @@ async function statePatch(m, sender) {
       const day = globalThis.L2EngineCore?.dailyDay?.(now, state.rt || {}) || null;
       const fishTgt = T.done ? { ...T, day: T.day || day } : { ...T, done: true, doneT: now, day: T.day || day };
       const cfg = { ...(state.cfg || {}), fishMode: false };
-      await chrome.storage.local.set({ rt: { ...state.rt, fishTgt, fishService: null, _src: String(m.src || '').slice(0, 60) }, cfg });
+      await put({ rt: { ...state.rt, fishTgt, fishService: null, _src: String(m.src || '').slice(0, 60) }, cfg });
       return { ok: true, fishTgt, cfg };
     }
     const change = {};
@@ -386,7 +391,7 @@ async function statePatch(m, sender) {
     const stashOnly = change.rt && Object.keys(writePatch).every(k => k === 'classStash') && !Object.hasOwn(state.rt || {}, 'classStash');
     if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(writePatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, String(m.src || '').slice(0, 60)); await L2EngineCore.stashRehome?.(change, k => chrome.storage.local.get(k)); }
     if (stashOnly && change.stash) delete change.rt;
-    if (Object.keys(change).length) await chrome.storage.local.set(change);
+    if (Object.keys(change).length) await put(change);
     return { ok: true };
   });
 }
@@ -453,7 +458,8 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   if (typeof m.on === 'boolean' || Object.hasOwn(rtPatch, 'manualKickAt')) serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['rt', 'cfg', 'on']);   // 20.41: «on» — для afterOnWrite (новый отсчёт сторожа только при off→on)
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot; полная запись rt сбрасывает hot (уже сложен в rt)
+    const state = await ST.get(['rt', 'cfg', 'on']);   // 20.41: «on» — для afterOnWrite (новый отсчёт сторожа только при off→on)
     if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (m.pvpTargetEdit) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
@@ -526,7 +532,7 @@ async function menuPatch(m, sender) {
     const menuStat = change.rt ? (globalThis.L2EngineCore?.MENU_STAT_KEYS || []).filter(k => Object.hasOwn(change.rt, k) && (Object.hasOwn(rtPatch, k) || change.rt[k] !== state.rt?.[k] && JSON.stringify(change.rt[k]) !== JSON.stringify(state.rt?.[k]))) : [];
     if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
     if (change.rt && globalThis.L2EngineCore?.stashSplitSet) { await L2EngineCore.stashLegacyMerge?.(change, state, Object.hasOwn(rtPatch, 'classStash'), () => chrome.storage.local.get(['stash'])); L2EngineCore.stashSplitSet(change, 'menu'); await L2EngineCore.stashRehome?.(change, k => chrome.storage.local.get(k)); }   // 20.62: старый rt.classStash — в ключ stash той же записью
-    if (Object.keys(change).length) await chrome.storage.local.set(change);
+    if (Object.keys(change).length) await ST.set(change);
     if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
     if (m.on === false) await stopAlert(change.stopMeta, state.cfg);   // 20.43: Стоп из меню снимает «!» самоостановки, уведомления нет
     return { ok: true };
@@ -545,7 +551,8 @@ async function botControl(m, sender) {
   if ((!popup && !game) || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['on', 'lock', 'rt', 'cfg']);
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;
+    const state = await ST.get(['on', 'lock', 'rt', 'cfg'], true);
     // 20.13 (ревизия 17.10, шаг 5, core-b/F3): (а) Esc ×2 — настоящая клавиша игрока (content проверил isTrusted) на любой вкладке игры:
     // это та же ручная остановка, что из меню; раньше вкладка без замка получала ownership_lost и бот продолжал работать в другой вкладке.
     // (б) «жёсткий» стоп самого бота (ошибка программы повторилась, 3 восстановления, аккаунт заблокирован) больше не отклоняется из-за нового
@@ -565,6 +572,12 @@ async function botControl(m, sender) {
     await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null, stopMeta });
     await afterOnWrite(state.on, false);
     await stopAlert(stopMeta, state.cfg);            // 20.43: после afterOnWrite — иначе пустой значок затёр бы «!»
+    // 20.65 (ревью части 3): после Стопа/Паузы действующий hot складывается в rt — память героя целиком в rt (иначе последние
+    // изменения лимита мобов/рыбалки ждали бы следующей записи, а сборка без hot их бы не увидела). Отдельной записью после «on»:
+    // большая запись rt не задерживает остановку вкладки; другие записи фона между ними не встанут (serializeLock). Метка 'hot-fold':
+    // вкладки этого героя уже видят эти значения (события hot, чтение rt вместе с hot) и свою память не пересобирают — как и раньше,
+    // Стоп не трогает значения, которые вкладка держит только в памяти (откат атаки, статистика заброса до записи).
+    if (globalThis.L2EngineCore?.hotOwn?.(state.hot, state.rtRaw)) await ST.set({ rt: { ...state.rt, _src: 'hot-fold' }, hot: null });
     return { ok: true };
   });
 }
@@ -585,9 +598,10 @@ async function paymentDismiss(m, sender) {
   try { const url = new URL(sender?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); popup = url.origin === expected.origin && url.pathname === expected.pathname; } catch (_) {}
   if (!popup || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['rt']), now = Date.now(), r = paymentDismissChange(state.rt || {}, m, now);
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
+    const state = await ST.get(['rt']), now = Date.now(), r = paymentDismissChange(state.rt || {}, m, now);
     if (!r.ok) return r;
-    await chrome.storage.local.set({ rt: r.rt });
+    await ST.set({ rt: r.rt });
     buf.push({ t: now, src: 'U', kind: 'оплата', what: `игрок нажал «Считать оплату не прошедшей»: ${r.note.kind} ${r.note.amount ?? '?'} ${r.note.currency} — ожидание снято по решению игрока, повтор снова разрешён`, sid: 'bg' });
     if (!timer) timer = setTimeout(flush, 1500);
     return { ok: true };
@@ -597,7 +611,8 @@ async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
   if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
   return serializeLock(async () => {
-    const current = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg', 'rt@' + nick, 'cfg@' + nick, 'stash', 'stash@' + nick]);
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot — память прежнего героя уходит в rt@Ник целиком, hot той же записью сбрасывается
+    const current = await ST.get(['lock', 'on', 'rt', 'cfg', 'rt@' + nick, 'cfg@' + nick, 'stash', 'stash@' + nick]);
     // Даже если вкладка ещё получает события, только владелец вправе менять
     // глобальные ключи; при выключенном боте разрешена смена через открытую страницу.
     if (current.on && (current.lock?.k !== 'tab' + tab || !m.epoch || current.lock.epoch !== m.epoch || Date.now() - current.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
@@ -616,7 +631,7 @@ async function switchCharacter(m, sender) {
       const next = { ...strip(prev), char: nick, campaign: null, campaignUrl: '', lastTeleport: '',
         qAlias: {}, needChamps: false, wrongLoc: 0, campaignDue: !!previousCfg.campaign,
         questTargets: [], quests: {}, _src: m.src };
-      await chrome.storage.local.set({ rt: next, ...(prevStash.has ? wrap('stash', nick, prevStash) : {}) });
+      await ST.set({ rt: next, ...(prevStash.has ? wrap('stash', nick, prevStash) : {}) });
       return { ok: true, rt: withStash(next, prevStash), cfg: previousCfg, changed: true, old: '' };
     }
     let nextCfg = current['cfg@' + nick];
@@ -643,7 +658,7 @@ async function switchCharacter(m, sender) {
     // 20.62: тайники меняются местами той же записью (stash всегда с ником нового героя — вкладка получает его в том же onChanged)
     // Ревью 20.62 (2): stash@Ник прежнего героя — всегда его зеркало (пустая обёртка после загрузки файла без тайника тоже: иначе
     // вернулся бы старый тайник); обёртки нет нигде (откат на старую сборку) — stash@Ник не трогаем
-    await chrome.storage.local.set({ ['rt@' + old]: strip(prev), ...(prevStash.has || prevWrap ? wrap('stash@' + old, old, prevStash) : {}), ['cfg@' + old]: previousCfg,
+    await ST.set({ ['rt@' + old]: strip(prev), ...(prevStash.has || prevWrap ? wrap('stash@' + old, old, prevStash) : {}), ['cfg@' + old]: previousCfg,
       rt: nextRt, ...wrap('stash', nick, nextStash), cfg: nextCfg });
     // тайник нового героя теперь в «stash» — его копия в stash@Ник лишняя (600–870 КБ) и после следующего ухода устарела бы
     if (EC) try { await chrome.storage.local.remove('stash@' + nick); } catch (e) {}
@@ -746,7 +761,8 @@ async function applyBaseProfile(why) {
     const base = await r.json();
     if (!base?.l2botBase || !base.cfg) return;
     const nicks = Object.keys(base.chars || {});
-    const cur = await chrome.storage.local.get(['cfg', 'rt', 'learn', ...nicks.flatMap(n => ['rt@' + n, 'cfg@' + n])]);
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
+    const cur = await ST.get(['cfg', 'rt', 'learn', ...nicks.flatMap(n => ['rt@' + n, 'cfg@' + n])]);
     const set = {}, done = [];
     const empty = o => !o || typeof o !== 'object' || !Object.keys(o).length;
     // 20.12 (ревизия 17.10): режимы («Тур РБ» и др.) и ручное оружие из профиля не переносим — чистая установка стоит, где оставили.
@@ -770,7 +786,7 @@ async function applyBaseProfile(why) {
     if (empty(cur.learn) && base.learn) { set.learn = base.learn; done.push('автообучение'); }
     if (base.farmDb) { const { farmDb } = await chrome.storage.local.get('farmDb'); if (empty(farmDb)) { set.farmDb = base.farmDb; done.push('база ресурсов'); } }
     if (Object.keys(set).length) {
-      await chrome.storage.local.set(set);
+      await ST.set(set);
       buf.push({ t: Date.now(), src: 'S', kind: 'профиль', what: `базовый профиль применён (${why}): ${done.join(', ')}`, st: '' }); flush();
     }
   } catch (e) { console.warn('[L2bot] base profile:', String(e)); }
@@ -794,7 +810,7 @@ chrome.runtime.onInstalled.addListener(async details => {
   if (details?.reason === 'update') try {
     const migrationKey = 'v715FishingDefaultsApplied';
     const oldGoal = 'tattoo_d, cloak_d, belt_d';
-    const current = await chrome.storage.local.get(['cfg', 'rt', migrationKey]);
+    const current = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', migrationKey]);
     if (!current[migrationKey]) {
       const nick = String(current.rt?.char || '').trim();
       const characterKey = nick ? 'cfg@' + nick : null;
@@ -822,7 +838,8 @@ chrome.commands?.onCommand.addListener(async c => {
   if (c !== 'toggle-bot') return;
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   await serializeLock(async () => {
-    const { on = false, rt = {}, cfg = {} } = await chrome.storage.local.get(['on', 'rt', 'cfg']), now = Date.now();
+    const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
+    const { on = false, rt = {}, cfg = {} } = await ST.get(['on', 'rt', 'cfg']), now = Date.now();
     const change = { on: !on };
     if (!on) {
       // 19.10.2026: новый запуск отменяет старые release/ответы и требует сверки суточных лимитов, как Start в меню.
@@ -831,7 +848,7 @@ chrome.commands?.onCommand.addListener(async c => {
       change.rt = next;
       if (next.char) change['rt@' + next.char] = next;
     } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };
-    await chrome.storage.local.set(change);
+    await ST.set(change);
     await afterOnWrite(on, !on);
     if (on) await stopAlert(change.stopMeta, cfg);    // 20.43: ручной стоп клавишей — без уведомления, прежний «!» снят
   });
@@ -1163,7 +1180,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
   const generation = serializeLock.controlSeq || 0;
   try {
     const before = await serializeLock(async () => {
-      const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']);
+      const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']);   // 20.65: rt вместе с hot
       if (!!state.on !== paintedOn) paintOn(state.on);   // 20.41: страховка значка раз в минуту; совпадает — не трогаем ('!' капчи остаётся)
       void payAlert(state.rt, state.cfg).catch(() => {});   // 20.43: оплата без сверки дольше 15 мин — и при остановленном боте; очередь не ждёт
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
@@ -1196,7 +1213,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
         if ((serializeLock.controlSeq || 0) !== generation) return false;
         let latestTab; try { latestTab = await chrome.tabs.get(tab.id); } catch (_) { return false; }
         if ((latestTab.pendingUrl || latestTab.url) !== (tab.pendingUrl || tab.url)) return false;
-        const state = await chrome.storage.local.get(['on', 'lock', 'rt', 'hbBg']);
+        const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['on', 'lock', 'rt', 'hbBg']);
         const h = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
         return (serializeLock.controlSeq || 0) === generation && !!state.on && state.lock?.k === lock?.k && state.lock?.epoch === lock?.epoch && h?.tab === hb.tab && h.t === hbMem?.t
           && state.rt?.char === rt.char && (state.rt?.manualKickAt || 0) === (rt.manualKickAt || 0);
@@ -1206,7 +1223,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
         hbMem = nextHb; hbPersistedAt = Date.now();
       };
       // 15.10: сетевой probe может занять 8 с. Stop, новый хозяин или свежий heartbeat отменяют прежнее решение.
-      ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {}, wdSilent = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']));
+      ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {}, wdSilent = null } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt', 'wdSilent']));
       hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
       if ((serializeLock.controlSeq || 0) !== generation || !on || lock?.k !== before.lock?.k || lock?.epoch !== before.lock?.epoch || lock?.k !== 'tab' + tab.id || hb?.tab !== tab.id || rt.char !== before.rt?.char || (rt.manualKickAt || 0) !== (before.rt?.manualKickAt || 0)) return;
       let currentTab; try { currentTab = await chrome.tabs.get(tab.id); } catch (_) { return; }
@@ -1306,7 +1323,7 @@ async function mammonBagDockAnalyze(m, sender) {
     const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
     if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl)
       return denied('Вкладка игры закрыта или загружается — повторите анализ');
-    const { rt = {}, cfg = {}, lock = null } = await chrome.storage.local.get(['rt', 'cfg', 'lock']);
+    const { rt = {}, cfg = {}, lock = null } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'lock']);
     if (rt.char !== m.expectedChar) return denied('Персонаж изменился — обновите меню');
     if ((+cfg.mmGoalItem || 0) !== m.goalItem || (+cfg.mmGoalLvl || 5) !== m.goalLvl) return denied('Цель изменилась — обновите меню');
     if (Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < LOCK_TTL && lock.tab !== sender.tab.id)
@@ -1331,7 +1348,7 @@ async function lifestoneDockCommand(m, sender) {
     if(!['scan','prepare','resume','pause','reconcile','acknowledge','close','wake'].includes(m.action)||typeof m.char!=='string'||!m.char)return denied('Некорректная команда ЛС');
     const tab=await chrome.tabs.get(sender.tab.id),url=new URL(tab.url||'');
     if(url.protocol!=='https:'||!/(^|\.)l2wap\.com$/i.test(url.hostname)||tab.pendingUrl)return denied('Вкладка игры закрыта или загружается — повторите команду ЛС');
-    const state=await chrome.storage.local.get(['rt','on']);
+    const state=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on']);
     if(state.rt?.char!==m.char)return denied('Персонаж изменился — обновите раздел ЛС');
     const command={cmd:'lifestoneCommand',action:m.action,char:m.char};
     if(m.action==='wake'||m.startContext){
@@ -1396,7 +1413,7 @@ async function dockGameCommand(m, sender) {
     }
     const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
     if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl) return fail('Вкладка игры закрыта или загружается — повторите после загрузки', true);
-    const { rt = {} } = await chrome.storage.local.get('rt');
+    const { rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt');
     if ((rt.char || '') !== m.char) return fail('Персонаж изменился — обновите меню');
     const late = {}; let timer;
     try {
@@ -1443,10 +1460,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const T = m.rbTimer;
     if (!game || !T || typeof T !== 'object' || Array.isArray(T) || !T.b || typeof T.b !== 'object') { reply({ ok: false, reason: 'invalid' }); return true; }
-    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt');
+    serializeLock(async () => { const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local, { rt = {} } = await ST.get('rt');
       if (m.expectedChar != null && String(rt.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — повторите импорт' };
       const rbTimer = mergeTimerPatch(rt.rbTimer, T);
-      await chrome.storage.local.set({ rt: { ...rt, rbTimer, _src: 'menu' } }); return { ok: true, rbTimer }; })
+      await ST.set({ rt: { ...rt, rbTimer, _src: 'menu' } }); return { ok: true, rbTimer }; })
       .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
@@ -1457,7 +1474,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const R = m.mmGoReq;
     if (!game || !R || typeof R !== 'object' || Array.isArray(R) || R.kind !== 'visit' || !['order', 'smith'].includes(R.npc) || !(+R.t > 0)) { reply({ ok: false, reason: 'invalid' }); return true; }
-    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, mmGoReq: { kind: 'visit', npc: R.npc, t: +R.t }, mmGoSay: null, _src: 'menu' } }); return { ok: true }; })
+    serializeLock(async () => { const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local, { rt = {} } = await ST.get('rt'); await ST.set({ rt: { ...rt, mmGoReq: { kind: 'visit', npc: R.npc, t: +R.t }, mmGoSay: null, _src: 'menu' } }); return { ok: true }; })
       .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
@@ -1489,7 +1506,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const R = m.rbRun;
     if (!game || !R || typeof R !== 'object' || Array.isArray(R) || !(+R.t0 > 0) || Object.keys(R).length > 20) { reply({ ok: false, reason: 'invalid' }); return true; }
-    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, rbRun: R, _src: 'menu' } }); return { ok: true }; })
+    serializeLock(async () => { const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local, { rt = {} } = await ST.get('rt'); await ST.set({ rt: { ...rt, rbRun: R, _src: 'menu' } }); return { ok: true }; })
       .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
