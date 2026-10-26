@@ -1,0 +1,127 @@
+{
+  "boundary": "actual Chrome MV3; all HTTPS mocked locally; no live game",
+  "proof": [
+    {
+      "case": "mail Start resumes and reads active192",
+      "browser": "156.0.8078.4",
+      "paths": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=ashen_bastion_mob_192",
+          "phase": "resume"
+        }
+      ],
+      "calls": [
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=start-active-hero&spawnId=ashen_bastion_mob_192",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=ashen_bastion_mob_192",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "phase": "battle",
+          "body": null
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=start-active-hero&spawnId=ashen_bastion_mob_192",
+          "method": "GET",
+          "phase": "battle",
+          "body": null
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "phase": "battle",
+          "body": null
+        }
+      ],
+      "actions": 0,
+      "errors": []
+    },
+    {
+      "case": "Stop during active-battle GET",
+      "browser": "156.0.8078.4",
+      "paths": [],
+      "calls": [
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=start-active-hero&spawnId=ashen_bastion_mob_192",
+          "method": "GET",
+          "phase": "resume",
+          "body": null
+        }
+      ],
+      "actions": 0,
+      "errors": []
+    }
+  ]
+}

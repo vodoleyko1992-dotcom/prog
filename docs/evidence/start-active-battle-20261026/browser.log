@@ -1,0 +1,2 @@
+PASS actual MV3 Start from mail {"case":"mail Start resumes and reads active192","navigations":1,"returnPosts":0,"combatActions":0}
+PASS actual MV3 Start from mail {"case":"Stop during active-battle GET","navigations":0,"returnPosts":0,"combatActions":0}

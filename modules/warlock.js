@@ -144,8 +144,8 @@ async function petPrepare(o = {}) {
   }
   raidBusy = true;
   const who=charName(),epoch=env.leaseEpoch,kick=+env.rt.manualKickAt||0,key=raidClass(),settings=raidSettings();
-  const gen=start?startGen():undefined;
-  const valid=()=>prepSafe(wanted)&&charName()===who&&env.heroNick()===who&&env.leaseEpoch===epoch&&(+env.rt.manualKickAt||0)===kick&&raidClass()===key&&raidSettings()===settings&&(!start||startGen()===gen);
+  const gen=start?startGen():undefined,prepPage=env.nativePanelPath?.();
+  const valid=()=>prepSafe(wanted)&&charName()===who&&env.heroNick()===who&&env.leaseEpoch===epoch&&(+env.rt.manualKickAt||0)===kick&&raidClass()===key&&raidSettings()===settings&&(!start||startGen()===gen&&env.nativePanelPath?.()===prepPage);
   const save=async j=>valid()&&(await env.setRt({[jobKey]:j}))?.ok===true&&await env.rtCommit()&&valid();
   const proof=(phase,failed)=>{const P={char:who,classKey:key,settings,kick,gen,phase,failed:!!failed,until:Date.now()+(failed?120000:30000)};if(start)startProof=P;else if(phase==='pet')raidProof=P;else raidSummonProof=P;};
   // Старт: задача идёт без кота (касты бесплатные), призыв и баффы — в бою
@@ -180,7 +180,15 @@ async function petPrepare(o = {}) {
     if (!valid()) return true;
     const data=await read('/character'),ch=data.character||data;
     if(!valid())return true;
-    if(ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return failLater();
+    if(ch.name!==who||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return failLater();
+    // 20.65 (лог 26.10 12:57: Старт на почте после паузы между боями): сервер ещё ведёт прежний бой, хотя страница уже вне боя.
+    // Сначала возвращаемся в подтверждённый бой; живой кот не разрешает пропустить сверку и начать новую задачу.
+    if(start&&ch.inBattle===true){
+      if(typeof env.resumeStartBattle==='function'&&await env.resumeStartBattle(ch,valid))return true;
+      if(!valid())return true;
+      env.setStatus?.('Старт: незавершённый бой не подтверждён — повторю сверку');return failLater();
+    }
+    if(ch.inBattle!==false)return failLater();
     if(start){startFailMs=0;if(startReadAt?.fail)startReadAt=null;}else{raidFailMs=0;if(raidReadAt?.fail)raidReadAt=null;}
     noteSnapshot(ch);
     let J=env.rt[jobKey];

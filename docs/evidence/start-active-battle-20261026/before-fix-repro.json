@@ -1,0 +1,18 @@
+{
+  "stuck": {
+    "elapsedMs": 24000,
+    "ownGets": 6,
+    "petAlive": true,
+    "petPrepCreated": false,
+    "startReady": false,
+    "navigations": [],
+    "casts": [],
+    "statuses": []
+  },
+  "recovered": {
+    "result": false,
+    "startReady": true,
+    "navigations": [],
+    "casts": []
+  }
+}
