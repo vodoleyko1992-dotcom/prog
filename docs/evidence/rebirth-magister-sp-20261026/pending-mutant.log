@@ -1,0 +1,28 @@
+✖ accepted rank с потерянным ответом восстанавливается в новом экземпляре без повторного POST (9.189637ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51.312574
+
+✖ failing tests:
+
+test at tests/v2066-magister-sp-retry.test.js:187:1
+✖ accepted rank с потерянным ответом восстанавливается в новом экземпляре без повторного POST (9.189637ms)
+  AssertionError [ERR_ASSERTION]: receipt того же класса проходит к сверке несмотря на checked20
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2066-magister-sp-retry.test.js:193:72)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

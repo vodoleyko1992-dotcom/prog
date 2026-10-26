@@ -1,0 +1,50 @@
+{
+  "source_base": "72147b63f9092292bb027c9985f163b673f1dd70",
+  "content_sha256": "8ba99640fc13cde56105206bf3fbd022ec612ada1785412d456fc9a8e9c12879",
+  "scope": "Repeat only known SP-deficient permitted ranks after victory and fresh own server balance; no version/ZIP change",
+  "checks": {
+    "new_node": {
+      "groups": 15,
+      "pass": 15,
+      "fail": 0
+    },
+    "legacy_magister": {
+      "pass": 111,
+      "fail": 0
+    },
+    "old_code": {
+      "expected_fail": 12,
+      "pass": 3,
+      "positive_failed": true
+    },
+    "pending_recovery_mutant": {
+      "expected_fail": 1
+    },
+    "browser": {
+      "engine": "Chrome156 MV3",
+      "pass": 1,
+      "fail": 0,
+      "scope": "Initial SP0 → native battle +356 SP → same level20 → one native magister learn240SP, reserve100, pending/job clear; all game responses mocked",
+      "final_source_repeat": "PASS"
+    },
+    "review": "Independent review found lost-ACK recovery blocker; fixed and independently verified; no remaining blocking findings",
+    "full_node": {
+      "pass": 670,
+      "fail": 0,
+      "log_sha256": "2c41881c249d77f656b76a7dad86ac1ec666549e3dd50b5d24234ee151281fcf",
+      "initial_run": "665PASS/5FAIL: changed source extraction marker; original marker restored, all five targeted and full rerun PASS"
+    },
+    "syntax_js_cjs": 4,
+    "env_modules": 34,
+    "bash_syntax": "PASS",
+    "diff_check": "PASS"
+  },
+  "not_checked": [
+    "Live game",
+    "Firefox runtime",
+    "Rebirth equipment craft/enchant API and item fields",
+    "Physical device",
+    "Fish-limit handoff from user log: absent"
+  ],
+  "builds": "Chrome20.66/Firefox20.65 unchanged"
+}

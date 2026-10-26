@@ -1,0 +1,80 @@
+{
+  "source": "72147b6 / current worktree content.js",
+  "initial": {
+    "SP": 0,
+    "cost": 240,
+    "checked": {
+      "lvl": 20,
+      "t": 1000000
+    },
+    "job": null,
+    "paidRequests": 0
+  },
+  "afterWins": [
+    {
+      "SP": 32,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 356,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 724,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 1052,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 1420,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 1780,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 2148,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    },
+    {
+      "SP": 2576,
+      "level": 20,
+      "scheduled": false,
+      "newGET": 0,
+      "job": null
+    }
+  ],
+  "afterRestartAnd10m": {
+    "scheduled": false,
+    "SP": 2576
+  },
+  "afterLevelUp": {
+    "scheduled": true,
+    "SP": 2576,
+    "key": "0:human_wizard"
+  }
+}

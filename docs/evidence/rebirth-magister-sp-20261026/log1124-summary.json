@@ -1,0 +1,123 @@
+{
+  "version": "20.66",
+  "log_file": "l2bot-log-2026-10-26-11-24.txt",
+  "bytes": 126569,
+  "events": 277,
+  "first": "21:20:28.742",
+  "last": "21:24:50.464",
+  "http_hook_statuses": {
+    "200": 92
+  },
+  "document_502": {
+    "page": "/teleport.html",
+    "first": "21:20:30.520",
+    "retry": "21:20:41.933",
+    "recovered": "21:21:04.292",
+    "snapshot": "Cloudflare Bad gateway/Error code502; no private page metadata retained"
+  },
+  "auto_farm": {
+    "catalog_zones": 99,
+    "levels_known": 75,
+    "selected": "Dark Elven Forest",
+    "teleport_id": "dark_elven_forest",
+    "cost_adena": 0,
+    "server_arrival_confirmed": "21:21:22.111"
+  },
+  "manual_learning": {
+    "at": "21:22:18.590",
+    "path": "/character/skills/learn",
+    "battle_id": "l2_1225",
+    "skill": "Summon Mew the Cat",
+    "status": 200,
+    "observed_balance_after": 48,
+    "wind_strike_rank_before": 1,
+    "wind_strike_rank_after": 1,
+    "wind_strike_can_learn_before": true,
+    "wind_strike_can_learn_after": false,
+    "sp_cost_directly_visible": false
+  },
+  "manual_summon_buff": {
+    "at": "21:24:15.704",
+    "path": "/character/town/buffer",
+    "set": "summon",
+    "expected_fee_adena": "10000000",
+    "expected_fee_col": 0,
+    "status": 200
+  },
+  "wins": [
+    {
+      "at": "21:21:47.889",
+      "name": "Arachnid Predator",
+      "sp": 280,
+      "exp": 100
+    },
+    {
+      "at": "21:21:50.904",
+      "name": "Hook Spider",
+      "sp": 92,
+      "exp": 20
+    },
+    {
+      "at": "21:24:37.402",
+      "name": "Arachnid Predator",
+      "sp": 280,
+      "exp": 100
+    },
+    {
+      "at": "21:24:39.365",
+      "name": "Venomous Spider",
+      "sp": 124,
+      "exp": 40
+    },
+    {
+      "at": "21:24:41.236",
+      "name": "Dryad",
+      "sp": 144,
+      "exp": 60
+    },
+    {
+      "at": "21:24:43.273",
+      "name": "Dryad",
+      "sp": 144,
+      "exp": 60
+    },
+    {
+      "at": "21:24:45.205",
+      "name": "Werewolf",
+      "sp": 44,
+      "exp": 20
+    },
+    {
+      "at": "21:24:47.102",
+      "name": "Werewolf",
+      "sp": 44,
+      "exp": 20
+    },
+    {
+      "at": "21:24:49.009",
+      "name": "Imp Elder",
+      "sp": 96,
+      "exp": 40
+    }
+  ],
+  "observed_sp_rewards": 1248,
+  "observed_exp_rewards": 460,
+  "deaths": 0,
+  "pages": [
+    "/teleport.html · 26.10.2026, 21:20:33 · 2386fb",
+    "/map.html [map-list-mode-mobs, 1, Окрестности] · 26.10.2026, 21:21:23 · 1wz9ik3",
+    "/town-buffer.html {l2-body, town-buffer-confirm-overlay} · 26.10.2026, 21:24:14 · k1mmhy",
+    "/town-buffer.html {l2-body, town-buffer-result-overlay} · 26.10.2026, 21:24:17 · 11jq37v",
+    "/battle.html · 26.10.2026, 21:24:37 · tukjtr",
+    "/battle.html · 26.10.2026, 21:24:37 · kjival"
+  ],
+  "new_rebirth_item_json_found": false,
+  "rebirth_item_flag_tokens": {
+    "rebirthWeaponAttack": 0,
+    "rebirthShieldPoints": 0,
+    "rebirthAffixes": 0,
+    "isRebirth": 0,
+    "rebirthStage": 0
+  },
+  "scope": "Read-only analysis. No live game access, no attached scripts executed, no runtime changes."
+}
