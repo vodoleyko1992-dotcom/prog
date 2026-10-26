@@ -45,7 +45,7 @@ assert.doesNotMatch(content, /setRt\(\{ status: `Сервер игры недо�
 
 // 3. меню: переключатель не переписывает весь rt; служебные ключи не попадают в экспорт/импорт памяти
 assert.match(bg, /const change = Object\.keys\(rtPatch\)\.length \? \{ rt: \{ \.\.\.\(state\.rt \|\| \{\}\), \.\.\.rtPatch, _src: 'menu' \} \} : \{\};/);
-assert.match(bg, /if \(Object\.keys\(change\)\.length\) await chrome\.storage\.local\.set\(change\);/);
+assert.match(bg, /if \(Object\.keys\(change\)\.length\) await ST\.set\(change\);/);   // 20.65: та же запись — через обёртку rt+hot
 for (const k of ['lock', 'wdDown', 'stopMeta', 'paused', 'auth']) assert.ok(new RegExp(`MEM_SKIP = new Set\\([^)]*'${k}'`).test(popup), `MEM_SKIP has ${k}`);
 
 // 4. замок: сравнение только по эпохе; сигнал «жив» продлевает замок; вкладку бота не выгружать; старт сбрасывает метку простоя

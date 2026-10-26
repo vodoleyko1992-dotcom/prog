@@ -582,6 +582,103 @@
     return out;
   }
 
+  // 20.65 (John 25.10: «что ещё можем сделать для облегчения нагрузки вообще без потери качества и скорости»; замер в Chromium: запись
+  // памяти героя — ≈1,5–1,7 мс ЦП на КБ по всем процессам, у игрока 0,5–0,9 МБ): частые мелкие поля rt — счёт лимита мобов (begin/win
+  // на каждого моба, 2/3 записей боя) и рыбалка (4–5 записей на заброс) — пишутся в маленький ключ «hot» рядом с rt, а не переписывают
+  // весь rt. Значение — { char, v: {поле: значение}, was: {поле: каким оно было в rt}, gone: [удалённые], t0, t, _src }.
+  // Любая полная запись rt (фон, меню, импорт, смена героя) несёт уже сложенные значения и очищает hot (hotStore.set: hot:null той же
+  // записью); hot старше минуты (HOT_FOLD_MS) следующая запись фона складывает в полный rt, Стоп/Пауза — сразу (botControl): откат на
+  // старую сборку теряет не больше минуты изменений этих полей. Убрать или переименовать поле в HOT_KEYS — только вместе с разовой
+  // свёрткой hot: hotOwn не примет hot с незнакомым полем, и пропадёт весь hot, не одно поле.
+  // Маленький rt (до HOT_MIN_RT символов: новый герой, после сброса) пишется целиком, как раньше: его запись и так дешёвая.
+  // Чтение rt (фон, меню, вкладка) — всегда вместе с hot (hotJoin). Защита: hot действует, только пока ВСЕ его поля в rt такие же, какими
+  // были при первой записи (was; порядок ключей не важен — хранилище Chrome возвращает объекты с ключами по алфавиту). Хоть одно поле
+  // изменено мимо hot (старая сборка после отката, внешняя запись) — весь hot устарел и не применяется.
+  const HOT_KEYS = Object.freeze(['kills','farmQuota','farmKillMark','dailyQuota','dailyFishMark','raidMobMarks',
+    'fishCastPending','fishCastActive','fish','fishBaitStat','fishCdStat','fishCdLen','fishDmg','fishLag','fishSess','fishSinceProc','fishSinceProcN',
+    'fishSrvMargin','fishSrvOff','fishSoftN','fishSoftT','fishTgt','fishService']);
+  const HOT = new Set(HOT_KEYS), HOT_FOLD_MS = 60000, HOT_MIN_RT = 32768;
+  const hotObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  // строка значения без зависимости от порядка ключей; '' — поля нет (undefined хранилище не сохраняет)
+  function hotStr(v) {
+    if (v === undefined || typeof v === 'function') return '';
+    if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? '';
+    if (Array.isArray(v)) return '[' + v.map(x => x === undefined || typeof x === 'function' ? 'null' : hotStr(x)).join(',') + ']';
+    return '{' + Object.keys(v).filter(k => v[k] !== undefined && typeof v[k] !== 'function').sort().map(k => JSON.stringify(k) + ':' + hotStr(v[k])).join(',') + '}';
+  }
+  // hot того же героя, у которого все поля rt не менялись мимо него; иначе null
+  function hotOwn(hot, rt) {
+    if (!hotObj(hot) || !hotObj(hot.v) || !hotObj(hot.was) || !hotObj(rt) || String(hot.char ?? '') !== String(rt.char ?? '')) return null;
+    const gone = Array.isArray(hot.gone) ? hot.gone : [], keys = Object.keys(hot.was);
+    if (!keys.length || Object.keys(hot.v).some(k => !Object.hasOwn(hot.was, k)) || gone.some(k => !Object.hasOwn(hot.was, k))) return null;
+    return keys.every(k => HOT.has(k) && typeof hot.was[k] === 'string' && hotStr(rt[k]) === hot.was[k]) ? hot : null;
+  }
+  // rt из хранилища + действующий hot того же героя; без него — тот же объект
+  function hotJoin(rt, hot) {
+    const h = hotOwn(hot, rt); if (!h) return rt;
+    const out = { ...rt, ...h.v };
+    if (Array.isArray(h.gone)) for (const k of h.gone) delete out[k];
+    return out;
+  }
+  // новое значение hot: действующий прежний hot + fields (undefined — удаление поля); raw — rt из хранилища
+  function hotNext(raw, old, fields, src, now = Date.now()) {
+    const h = hotOwn(old, raw), v = h ? { ...h.v } : {}, was = h ? { ...h.was } : {}, gone = new Set(h && Array.isArray(h.gone) ? h.gone : []);
+    for (const [k, x] of Object.entries(fields)) {
+      if (!HOT.has(k)) continue;
+      if (!Object.hasOwn(was, k)) was[k] = hotStr(raw[k]);
+      if (x === undefined) { delete v[k]; gone.add(k); } else { v[k] = x; gone.delete(k); }
+    }
+    return { char: String(raw.char ?? ''), v, was, ...(gone.size ? { gone: [...gone] } : {}), t0: h && +h.t0 > 0 ? +h.t0 : now, t: now, _src: String(src || '').slice(0, 60) };
+  }
+  // Запись фона: next — новый rt (из state.rt — rt уже вместе с hot). Только поля HOT_KEYS изменились — значение hot; ничего не
+  // изменилось — 'same'; иначе (hot старше HOT_FOLD_MS, маленький rt, другой герой) — null: полная запись rt.
+  function hotPlan(state, next, now = Date.now()) {
+    const cur = state?.rt, raw = state?.rtRaw;
+    if (!hotObj(cur) || !hotObj(raw) || !hotObj(next) || String(next.char ?? '') !== String(raw.char ?? '') || String(cur.char ?? '') !== String(raw.char ?? '')) return null;
+    const old = hotOwn(state.hot, raw);
+    if (old && now - (+old.t0 || 0) >= HOT_FOLD_MS) return null;
+    const fields = {}; let n = 0;
+    for (const k of new Set([...Object.keys(cur), ...Object.keys(next)])) {
+      if (k === '_src' || next[k] === cur[k]) continue;
+      if (!HOT.has(k)) return null;
+      fields[k] = next[k]; n++;
+    }
+    if (!n) return 'same';
+    if (!old) { let size = 0; try { size = JSON.stringify(raw).length; } catch (_) {} if (size < HOT_MIN_RT) return null; }   // раз в минуту, не на каждую запись
+    return hotNext(raw, old, fields, next._src, now);
+  }
+  // Обёртка chrome.storage.local для фона, меню и вкладки: get с 'rt' (или null — всё) отдаёт rt вместе с hot, сам hot — только по
+  // запросу; withRaw — ещё rtRaw (rt хранилища) и hot для записи фона. set с rt без hot — полная запись: hot:null той же записью
+  // (если get этой обёртки hot не видел — не нужно). put(state, change) — запись фона: поменялись только частые мелкие поля —
+  // пишется один маленький ключ hot вместо rt.
+  function hotStore(area) {
+    const A = () => area();
+    let seen;   // undefined — get ещё не было, null — hot в хранилище не было
+    async function get(keys, withRaw = false) {
+      const all = keys == null, list = all ? null : Array.isArray(keys) ? keys : [keys];
+      if (!all && !list.includes('rt')) return A().get(keys);
+      const askHot = !all && list.includes('hot');
+      const s = { ...(await A().get(all || askHot ? keys : [...list, 'hot'])) };   // копия: ответ хранилища не меняем
+      const raw = s.rt, hot = s.hot ?? null;
+      seen = hot;
+      if (Object.hasOwn(s, 'rt')) s.rt = hotJoin(raw, hot);
+      if (!askHot) delete s.hot;
+      if (withRaw) { s.rtRaw = raw; s.hot = hot; }
+      return s;
+    }
+    const set = items => A().set(hotObj(items) && Object.hasOwn(items, 'rt') && !Object.hasOwn(items, 'hot') && seen !== null ? { ...items, hot: null } : items);
+    async function put(state, change, now = Date.now()) {
+      let c = change;
+      if (hotObj(c) && Object.hasOwn(c, 'rt') && !Object.hasOwn(c, 'hot') && state && Object.hasOwn(state, 'rtRaw')) {
+        const h = hotPlan(state, c.rt, now), { rt: _, ...rest } = c;
+        if (h === 'same') c = rest; else if (h) c = { ...rest, hot: h };
+      }
+      if (!Object.keys(c).length) return;
+      return set(c);
+    }
+    return { get, set, put };
+  }
+
   // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
   // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
@@ -589,6 +686,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { HOT_KEYS, HOT_FOLD_MS, HOT_MIN_RT, hotStr, hotOwn, hotJoin, hotNext, hotPlan, hotStore, stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

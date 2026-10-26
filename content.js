@@ -3398,7 +3398,7 @@ async function loopLease() {
       // не продолжаем со снимком состояния вкладки-ожидателя.
       // 10.0 (аудит ядра): накопленное, пока вкладка ждала замок, — устаревшее (хозяином была другая вкладка); очередь чистим
       rtWriter.clear();
-      const fresh = await chrome.storage.local.get(['rt', 'cfg', 'stash']);
+      const fresh = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'stash']);   // 20.65: rt вместе с hot
       rt = { ...DEF_RT, ...(fresh.rt || {}) }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, fresh.stash); cfg = mergeCfg(fresh.cfg);   // 20.62: и тайник классов
     }
   }
@@ -4919,7 +4919,7 @@ function rbtSay(t, bad) {
 async function rbtImportText(txt) {
   const RT = L2V7Modules.rbtimer, T2 = RT?.parseFile(txt);
   if (!T2 || !Object.keys(T2.b || {}).length) throw new Error('в файле нет таймеров боссов');
-  const { rt: s = {} } = await chrome.storage.local.get('rt'), M = RT.merge(s.rbTimer || rt.rbTimer || { b: {} }, T2);
+  const { rt: s = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get('rt'), M = RT.merge(s.rbTimer || rt.rbTimer || { b: {} }, T2);
   const r = await chrome.runtime.sendMessage({ cmd: 'rbtImport', rbTimer: M, expectedChar: String(s.char || '') });
   if (!r?.ok) throw new Error(r?.reason || 'фон недоступен');
   if (String(rt.char || '') !== String(s.char || '')) throw new Error('Персонаж изменился — повторите импорт');
@@ -6996,7 +6996,7 @@ L2V7Modules.lifestone = L2V7Factories.lifestone({ get actionWait(){return action
 });
 // Только проверка адресата: ни замка, ни сетевого запроса, ни изменения героя/памяти.
 async function lifestoneTarget(m) {
-  const saved=await chrome.storage.local.get(['rt','on']);
+  const saved=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on']);
   if(!m.char||m.char!==rt.char||m.char!==saved.rt?.char||m.char!==heroNick())return {ok:false};
   if(!!m.on!==!!saved.on||!!m.on!==!!on||saved.on&&(!tabOwner||!leaseEpoch))return {ok:false};
   return {ok:true};
@@ -7007,7 +7007,7 @@ async function lifestoneCommand(m) {
   if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return reject('Неизвестная команда ЛС');
   lifestoneCommandBusy=true;let manualEpoch=null;
   try {
-    const saved=await chrome.storage.local.get(['rt','cfg','on']);
+    const saved=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','cfg','on']);
     if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return reject('Персонаж изменился — обновите меню');
     if(m.startContext&&(m.startContext.on!==true||!saved.on||m.startContext.kick!==(+(saved.rt?.manualKickAt)||0)))return reject('Запуск ЛС изменился — повторите команду');
     if (m.action==='scan'&&m.scanContext&&(!!m.scanContext.on!==!!saved.on||m.scanContext.kick!==(+saved.rt?.manualKickAt||0))) return reject('Управление изменилось — обновите список оружия');
@@ -7061,7 +7061,7 @@ async function enchantCommand(m) {
   enchantCommandBusy = true;
   let manualEpoch = null;
   try {
-    const state = await chrome.storage.local.get(['rt', 'cfg', 'on']);
+    const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'cfg', 'on']);
     if (!m.char || state.rt?.char !== m.char || heroNick() !== m.char || rt.char !== m.char)
       return { ok: false, reason: 'Персонаж изменился или ещё не загрузился — обновите меню' };
     if (state.on && (!on || !tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки игры' };
@@ -7401,7 +7401,7 @@ async function warlockCommand(m) {
   if (!['preview','resetBudget','archiveUnknown'].includes(m.action) || !m.id || typeof m.id !== 'string' || m.id.length>80) return {ok:false,reason:'Неизвестная команда'};
   warlockCommandBusy=true;let manualEpoch=null;
   try {
-    const state=await chrome.storage.local.get(['cfg','rt','on']);
+    const state=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg','rt','on']);
     if (!m.char || m.char!==state.rt?.char || m.char!==rt.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился — обновите меню'};
     if (state.on && (!on || !tabOwner || !leaseEpoch)) return {ok:false,reason:'Управление у другой вкладки'};
     if (state.rt.warlockCommandAck?.id===m.id) return state.rt.warlockCommandAck;
@@ -7447,7 +7447,7 @@ async function craftReadCommand(m) {
   const current = () => readControl === craftReadControl && generation === automationGeneration && rt.char === start.char && heroNick() === start.char
     && JSON.stringify(rt.classCur || {}) === start.cls && (rt.manualKickAt || 0) === start.kick && tabOwner && !!readEpoch && leaseEpoch === readEpoch;
   try {
-    const state = await chrome.storage.local.get(['rt', 'on']);
+    const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt', 'on']);
     if (!m.char || m.char !== state.rt?.char || m.char !== rt.char || heroNick() !== m.char) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (!!state.on !== !!on || generation !== automationGeneration) return { ok: false, reason: 'Состояние запуска изменилось' };
     if (state.on && (!tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки' };
@@ -7491,7 +7491,7 @@ async function mammonBagCommand(m) {
   mammonBagCommandBusy = true; let manualEpoch = null;
   const generation = automationGeneration;
   try {
-    const state = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+    const state = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on']);
     if (generation !== automationGeneration) return { ok: false, reason: 'Состояние изменилось — повторите анализ' };
     if (!m.expectedChar || m.expectedChar !== state.rt?.char || m.expectedChar !== rt.char || heroNick() !== rt.char)
       return { ok: false, reason: 'Персонаж изменился — обновите меню' };
@@ -7532,14 +7532,14 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     // A stored on=true is not proof that a single game action can be performed.
     (async () => {
       // Запуск ЛС из iframe подтверждается только для героя и явного Старта, выбравших эту команду.
-      if(m.expectedChar){const saved=await chrome.storage.local.get(['rt','on']);if(!saved.on||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
+      if(m.expectedChar){const saved=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on']);if(!saved.on||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
       // 17.10.2026: запись on/cfg самим Стартом (save → menuPatch) меняет поколение почти одновременно с kick.
       // Прочитанное до неё состояние устарело — перечитываем хранилище, а не отказываем запуску; отказ только если
       // поколение не успокоилось за три чтения (идёт настоящая серия Stop/Start или смена героя).
       let generation = automationGeneration, state = null;
       for (let attempt = 0; attempt < 3 && !state; attempt++) {
         generation = automationGeneration;
-        const read = await chrome.storage.local.get(m.expectedChar?['on','cfg','rt']:['on', 'cfg']);
+        const read = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(m.expectedChar?['on','cfg','rt']:['on', 'cfg']);
         if (generation === automationGeneration) state = read;
       }
       const v = chrome.runtime.getManifest().version;
@@ -7554,7 +7554,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
       if (generation !== automationGeneration || !on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
       if (!running) return reply({ ok: false, v, running: false, owner: tabOwner, reason: 'loop_not_running' });
       if (!tabOwner || !leaseEpoch) return reply({ ok: false, v, running: true, owner: false, reason: 'another_tab_or_lock_unavailable' });
-      if(m.expectedChar){const saved=await chrome.storage.local.get(['rt','on']);if(!saved.on||generation!==automationGeneration||!on||!tabOwner||!leaseEpoch||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
+      if(m.expectedChar){const saved=await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['rt','on']);if(!saved.on||generation!==automationGeneration||!on||!tabOwner||!leaseEpoch||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
       heartbeat();
       reply({ ok: true, v, running: true, owner: true, reason: '' });
     })().catch(e => reply({ ok: false, reason: 'kick_error: ' + String(e?.message || e) }));
@@ -7602,7 +7602,9 @@ chrome.storage.onChanged.addListener(ch => {
     // пишутся последней записью — их отмена из-за постороннего изменения меню потеряла бы подтверждённое намерение перед действием.
     // Повторный сброс тех же нулей значение не меняет — признак сброса тогда новая метка menuKeyRev. Смена класса в очереди (classCur
     // с памятью боя нового класса из classStash) — замена набора, а не старая статистика: её не трогаем.
-    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], rev = k => +(n.menuKeyRev?.[k] || 0) !== +(o.menuKeyRev?.[k] || 0);
+    // 20.65: rt хранилища — вместе с ключом hot той же записи (полная запись rt сбрасывает hot, его прежние поля — в oldValue hot)
+    const hj = (r, h) => globalThis.L2EngineCore?.hotJoin?.(r, h) ?? r;
+    const q = rtWriter.peek(), o = hj(ch.rt.oldValue, ch.hot?.oldValue), n = hj(ch.rt.newValue, ch.hot?.newValue), stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], rev = k => +(n.menuKeyRev?.[k] || 0) !== +(o.menuKeyRev?.[k] || 0);
     const swap = q.classCur && JSON.stringify([q.classCur.prof, q.classCur.slot]) !== JSON.stringify([n.classCur?.prof, n.classCur?.slot]);
     const keys = swap ? [] : Object.keys(q).filter(k => stat.includes(k) && (rev(k) || JSON.stringify(o[k]) !== JSON.stringify(n[k])));
     if (keys.length) rtWriter.drop(keys);
@@ -7613,8 +7615,19 @@ chrome.storage.onChanged.addListener(ch => {
   // класса другой вкладкой, импорт) — важнее. Своё эхо (_src вкладки) не применяем, неподтверждённая очередь — поверх всего.
   // Герой сменился, а ключа stash в событии нет (запись без него — базовый профиль, старый импорт): тайник нового героя дочитываем.
   const EC = globalThis.L2EngineCore; let keep = null;
-  if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...((keep = globalThis.L2EngineCore?.stashKeep?.(timerPrevious, ch, TAB_ID))?.part || {}), ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
-  else if (ch.stash && ch.stash.newValue?._src !== TAB_ID && !ch.rt && EC?.stashJoin) { const q = rtWriter.peek(); rt = { ...EC.stashJoin(EC.stashStrip(rt), ch.stash.newValue), ...(Object.hasOwn(q, 'classStash') ? { classStash: q.classStash } : {}) }; }
+  // 20.65: свёртка hot при Стопе/Паузе (метка 'hot-fold') того же героя — те же значения, что вкладка уже видит; память не пересобираем
+  const hotFold = ch.rt?.newValue?._src === 'hot-fold' && String(ch.rt.newValue.char ?? '') === String(rt.char ?? '');
+  if (!hotFold) {
+    if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...(globalThis.L2EngineCore?.hotJoin?.(ch.rt.newValue, ch.hot?.newValue) ?? ch.rt.newValue), ...((keep = globalThis.L2EngineCore?.stashKeep?.(timerPrevious, ch, TAB_ID))?.part || {}), ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+    else if (ch.stash && ch.stash.newValue?._src !== TAB_ID && !ch.rt && EC?.stashJoin) { const q = rtWriter.peek(); rt = { ...EC.stashJoin(EC.stashStrip(rt), ch.stash.newValue), ...(Object.hasOwn(q, 'classStash') ? { classStash: q.classStash } : {}) }; }
+  }
+  // 20.65 (John 25.10, нагрузка): фон записал только частые мелкие поля (ключ hot: счёт лимита мобов, рыбалка) — те же поля поверх
+  // памяти вкладки, как свежий rt хранилища выше; наши неподтверждённые записи — поверх всего. Своё эхо не применяем.
+  if (ch.hot && !ch.rt && ch.hot.newValue && typeof ch.hot.newValue.v === 'object' && ch.hot.newValue._src !== TAB_ID && String(ch.hot.newValue.char ?? '') === String(rt.char ?? '')) {
+    const h = ch.hot.newValue, next = { ...rt, ...h.v };
+    for (const k of Array.isArray(h.gone) ? h.gone : []) { if (Object.hasOwn(DEF_RT, k)) next[k] = DEF_RT[k]; else delete next[k]; }
+    rt = { ...next, ...rtWriter.peek() };
+  }
   if (keep?.reload != null) try { const who = keep.reload; chrome.storage.local.get('stash').then(s => {
     if (String(rt.char || '') !== who || Object.hasOwn(rt, 'classStash')) return;
     const v = EC.stashValue(rt, s.stash); if (v.has) rt = { ...rt, classStash: v.v }; }).catch(e => quietErr('память', e)); } catch (e) {}
@@ -7642,7 +7655,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.cfg && on && tabOwner) L2V7Modules.mammon.bagAuto().catch(() => {});
   if (ch.rt && rt.invScan && !ch.rt.oldValue?.invScan && !running) invScanDrive();   // «Проверить оружие» из меню
   if (ch.cfg) { try { dock(); } catch (e) {} }
-  if (ch.cfg || ch.rt || ch.on) drawSoon();
+  if (ch.cfg || ch.rt || ch.hot || ch.on) drawSoon();
 });
 // v5.5.9: игра заранее загружает следующую страницу (карту) в фоне — Chrome «предзагрузка» (document.prerendering), и наш скрипт
 // запускался и в этой невидимой копии: второй бот в той же вкладке («⏸ работает в другой вкладке», лог 09.10 12:08; вероятно, и
@@ -7651,7 +7664,7 @@ const whenActive = fn => document.prerendering ? document.addEventListener('prer
 // 20.43 (разбор 21.10): страница вне охоты (магазин, баффер, Маммон, рыбалка, телепорт, город, TvT, вход…) — метка разрыва во вкладке:
 // время до следующей победы — не время на моба (trackEfficiency). sessionStorage: переживает переходы, запись памяти не нужна
 whenActive(() => { if (!HUNT_PAGE_RE.test(location.pathname)) try { sessionStorage.setItem(HUNT_GAP_SS, String(Date.now())); } catch (e) {} });
-whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on', 'stash']).then(s => {   // 20.62: тайник классов — из своего ключа stash
+whenActive(() => (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt', 'on', 'stash']).then(s => {   // 20.62: тайник классов — из своего ключа stash; 20.65: rt вместе с hot
   cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; if (L2EngineCore.stashJoin) rt = L2EngineCore.stashJoin(rt, s.stash); on = !!s.on;
   onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
   // v5.6: одноразовые миграции — в ОДНУ запись настроек и одну запись состояния. Раньше каждая делала своё

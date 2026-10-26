@@ -15,7 +15,8 @@ async function harness({cleanInstall=false,withPopup=true}={}){
  // Новая установка сначала завершает запись базового профиля; иначе onInstalled затирает синтетические данные теста.
  await until(()=>sw.evaluate(async()=>{const s=await chrome.storage.local.get(['cfg','rt']);return !!s.cfg&&!!s.rt;}));await delay(200);
  if(!cleanInstall)await sw.evaluate(({flags})=>chrome.storage.local.set({on:false,cfg:{...flags,dock:false,taskOnly:true,weaponScanAuto:false,tvtOn:false,enemyHunt:false,rbTimers:false,clanTasks:false,dailyAuto:false,mmOrders:false,mmUpgrade:false,mmMailClaim:false,mmGoalFarm:false,mmCraftSend:false,mmFarmGuide:false,storyTurnIn:false,campAuto:false,campaign:false,shopAuto:false,autoMagister:false,rec:false,autoSnap:false},rt:{...flags,char:'AuditHero',lvl:75,prof:'Human Warlock',weaponsT:Date.now(),engineRecoveryEpoch:'7.1.13'}}),{flags});
- const get=keys=>sw.evaluate(keys=>chrome.storage.local.get(keys),keys);
+ // 20.65: память героя — rt вместе с ключом hot (частые мелкие поля: лимит мобов, рыбалка), как её читают фон, вкладка и меню
+ const get=keys=>sw.evaluate(keys=>(globalThis.L2EngineCore?.hotStore?.(()=>chrome.storage.local)??chrome.storage.local).get(keys),keys);
  // Если popup не нужен, первую игру открываем в имеющемся about:blank, без лишнего renderer.
  let firstGame=true;
  async function game(){const p=!withPopup&&firstGame&&ctx.pages()[0]||await ctx.newPage();firstGame=false;p.on('pageerror',e=>errors.push(e.message));const cdp=await ctx.newCDPSession(p),worlds=new Map();cdp.on('Runtime.executionContextCreated',e=>worlds.set(e.context.id,e.context));cdp.on('Runtime.executionContextDestroyed',e=>worlds.delete(e.executionContextId));cdp.on('Runtime.executionContextsCleared',()=>worlds.clear());await cdp.send('Runtime.enable');

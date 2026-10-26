@@ -66,7 +66,7 @@ const H = 3600000, NOW = Date.UTC(2026, 9, 25, 0, 0);
   const st = slice(content, 'function setStatus(', '// Команда остановки сериализуется');
   assert.match(st, /drawSoon\(\);\n\}/, 'setStatus — drawSoon');
   const li = slice(content, "if (ch.cfg && on && tabOwner) L2V7Modules.mammon.bagAuto()", '// v5.5.9: игра заранее');
-  assert.match(li, /if \(ch\.cfg \|\| ch\.rt \|\| ch\.on\) drawSoon\(\);/, 'запись памяти — drawSoon');
+  assert.match(li, /if \(ch\.cfg \|\| ch\.rt \|\| ch\.hot \|\| ch\.on\) drawSoon\(\);/, 'запись памяти — drawSoon');   // 20.65: и hot
   const ds = slice(content, 'function drawSoon() {', 'function draw() {');
   const timers = []; let draws = 0;
   const ctx = { setTimeout: (f, ms) => { timers.push([f, ms]); return timers.length; }, draw: () => draws++ };

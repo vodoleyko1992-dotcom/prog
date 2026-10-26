@@ -142,7 +142,7 @@ function loadBox(active) {
   const base = { console, Object, Array, String, Number, Boolean, Math, Date, JSON, Set, Map, Promise, RegExp, Error, Symbol, parseInt, isFinite, undefined, Infinity, NaN,
     document: { activeElement: null, getElementById: id => ({ classList: { contains: c => c === 'act' && sec[id] === active } }), querySelectorAll: () => [] },
     chrome: { storage: { local: { get: async () => ({ cfg: {}, rt: { char: 'Hero', status: 's' }, on: false }) } }, runtime: { getManifest: () => ({ version: '0' }) } },
-    L2Defaults: undefined, DEF: {}, settingsFailed: new Map(), TXT: [], NUM: [], BOOL: [], dlSig: {}, DOCKED: false, showAllCls: false };
+    L2Defaults: undefined, L2EngineCore: undefined, DEF: {}, settingsFailed: new Map(), TXT: [], NUM: [], BOOL: [], dlSig: {}, DOCKED: false, showAllCls: false };
   const ctx = new Proxy(base, { has: () => true, get: (t, k) => k in t ? t[k] : typeof k === 'string' ? rec(k) : undefined, set: (t, k, v) => { t[k] = v; return true; } });
   base.globalThis = ctx; vm.createContext(ctx);
   vm.runInContext(cut('let loadT = 0', '\n') + '\n' + cut('const secOpen', '\n') + '\n' + cut('const huntOpen', '\n') + '\n'
