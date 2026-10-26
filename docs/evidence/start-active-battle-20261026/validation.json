@@ -33,5 +33,7 @@
     ]
   },
   "live_game": "NOT_RUN",
-  "notes": "Read-only server confirmation before navigation; no direct POST start/hunt in resume helper; test browser does not claim a complete game combat simulation."
+  "notes": "Read-only server confirmation before navigation; no direct POST start/hunt in resume helper; test browser does not claim a complete game combat simulation.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/422",
+  "runtime_commit": "0f19780a09886414f72ac6a10a288bceaeb71979"
 }
