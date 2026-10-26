@@ -4,7 +4,7 @@
 
 
 
-## 26.10.2026, 22:04 UTC+10 — Codex — Rebirth: продолжение существующего run (PR в подготовке)
+## 26.10.2026, 22:04 UTC+10 — Codex — Rebirth: продолжение существующего run ([PR #427](https://github.com/vodoleyko1992-dotcom/prog/pull/427))
 
 - Latest11:53 выявил отдельную гонку победа19→ручноймоб20→старыйnextFight/mapDue50/leave; все186HTTP200, входEasyи27боевыхнажатийдоStartручные. Платныйвхододин,20→18ключей. dungeonBattleнельзяглобальнорасширятьнаRebirthиз-заsdmsplanner. mobNameошибочносводитразные«Rebirth · вид»кодномуимени.
 - Реализованузкийпутьсуществующегоrun+полноеимя: owncharacter/class/slot/runmembership, точнаяпобеда, guardsпослеawait/передTvTиin-placeсменойцели, нативнаяhunt-кнопкабезпрямогоentry/ключей/выбораРБ. Receiptнеповторяетunknownпослерелоада. РевьювыявилоизлишнийholdпоЛюбомуNET_CONTEXT: nativePendingсужендоRebirthnextиbattle start/hunt/action; backgroundchatнеблокирует.
