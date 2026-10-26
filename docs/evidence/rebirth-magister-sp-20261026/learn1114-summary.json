@@ -1,0 +1,21 @@
+{
+  "report": "21:14:07",
+  "changes": 242,
+  "rebirth_api": {
+    "method": "POST",
+    "path": "/game/achievements/rebirth",
+    "at": "21:02:48",
+    "status": 200,
+    "scope": "Aggregate learning history; request/response body absent"
+  },
+  "scripts": 0,
+  "final_config_changed_keys": [
+    "autoTasks",
+    "champBlue",
+    "champOrange",
+    "champRed",
+    "dailyKillLimit",
+    "lvlAbove",
+    "nPower"
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "version": "20.66",
+  "log": "l2bot-log-2026-10-26-11-20.txt",
+  "bytes": 262570,
+  "events": 522,
+  "first_event": "21:14:02.670",
+  "last_event": "21:20:25.932",
+  "header_cropped": false,
+  "http_statuses": {
+    "200": 209
+  },
+  "battle_wins": [
+    {
+      "at": "21:16:22.194",
+      "target": "Orc Grunt",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 32,
+      "exp": 0,
+      "sp_observed_cumulative": 32
+    },
+    {
+      "at": "21:17:17.823",
+      "target": "Marsh Stakato",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 324,
+      "exp": 100,
+      "sp_observed_cumulative": 356
+    },
+    {
+      "at": "21:17:32.662",
+      "target": "Marsh Stakato Worker",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 368,
+      "exp": 100,
+      "sp_observed_cumulative": 724
+    },
+    {
+      "at": "21:17:56.052",
+      "target": "Batur Orc Shaman",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 328,
+      "exp": 80,
+      "sp_observed_cumulative": 1052
+    },
+    {
+      "at": "21:18:17.131",
+      "target": "Marsh Stakato Worker",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 368,
+      "exp": 100,
+      "sp_observed_cumulative": 1420
+    },
+    {
+      "at": "21:18:27.664",
+      "target": "Batur Orc Archer",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 360,
+      "exp": 100,
+      "sp_observed_cumulative": 1780
+    },
+    {
+      "at": "21:18:43.462",
+      "target": "Marsh Stakato Worker",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 368,
+      "exp": 100,
+      "sp_observed_cumulative": 2148
+    },
+    {
+      "at": "21:19:02.068",
+      "target": "Batur Orc Overlord",
+      "profession": "human_wizard",
+      "slot": 0,
+      "sp": 428,
+      "exp": 120,
+      "sp_observed_cumulative": 2576
+    }
+  ],
+  "total_observed_sp": 2576,
+  "total_observed_exp": 700,
+  "deaths_in_window": 0,
+  "fish_events_in_window": 0,
+  "header_error_text": "—",
+  "final_config": {
+    "autoTasks": [
+      "tvt",
+      "pvp",
+      "petbuff",
+      "dailies",
+      "resources",
+      "clan",
+      "mammon",
+      "auto"
+    ],
+    "dailyFishLimit": 1823,
+    "dailyKillLimit": 36000,
+    "autoMagister": true,
+    "magisterEvery": null,
+    "magisterSpReserve": null,
+    "weaponClassEquip": false,
+    "weaponManual": true,
+    "nWeaponMain": "Клановий кастер",
+    "nPower": "Wind Strike",
+    "lvlAbove": 3,
+    "farmLvlAbove": 10
+  },
+  "rebirth": {
+    "stage": 1,
+    "level": 20,
+    "profession": "Wizard",
+    "battle_profession": "human_wizard",
+    "active_slot": 0,
+    "source": "character.html snapshot21:14:29 and battle JSON"
+  },
+  "magister": {
+    "at": "21:15:23.022",
+    "skill": "Wind Strike",
+    "rank": 1,
+    "max_rank": 5,
+    "sp_cost": 240,
+    "server_sp": 0,
+    "reason": "Недостатньо SP (потрібно 240, є 0).",
+    "next_visit_in_window": false
+  },
+  "limits": "No fish completion in this window; old pending investigation stays open."
+}

@@ -4040,6 +4040,7 @@ async function loopActivity() {
 }
 
 // Магистр: актуальный серверный каталог, каждый новый уровень и сразу после включения.
+// 20.66 (Rebirth, лог26.10 21:15): известная нехватка SP повторно проверяется после победы без нового уровня.
 const MAG_SKIP_DEF = 'Curse Weakness, Poisonous Cloud';
 // После GET магистра проверка активности или TvT могли прервать обучение: новую охоту не начинаем.
 function magisterHold() { return abHold() || !!antibotState() || !!L2V7Modules.tvt?.tvtHold?.(); }
@@ -4083,6 +4084,63 @@ function magChar(ch) {
   L2V7Modules.story.charNote(ch); L2V7Modules.subclass.charNote(ch);
   return { prof, slot, lvl: +ch.level, key: `${slot}:${prof}`, revision: ch.revision };
 }
+function magSpBasis() { return { sessT0: rt.sessT0 ?? null, kick: +rt.manualKickAt || 0, sp: Number.isFinite(rt.sp) && rt.sp >= 0 ? rt.sp : null }; }
+function magSpWait(catalog, who, revision) {
+  const reserve = Math.max(0, +cfg.magisterSpReserve || 0);
+  const skills = catalog.skills.filter(s => !s.learnedMax && Number.isFinite(s.skillLevel) && Number.isFinite(s.maxSkillLevel)
+    && s.skillLevel < s.maxSkillLevel && Number.isFinite(s.spCost) && s.spCost >= 0
+    && Number.isFinite(s.minLevel) && s.minLevel <= who.lvl
+    && (s.canLearn === true && s.spCost > catalog.characterSp - reserve
+      || s.canLearn === false && s.spCost > catalog.characterSp
+        && /^(?:недостатньо|недостаточно|insufficient|not enough)\s+SP\b/i.test(String(s.canLearnBlockReasonUk || s.canLearnBlockReasonRu || '').trim())))
+    .map(s => ({ battleId: s.battleId, name: String(s.nameUk || ''), spCost: s.spCost, passive: s.kind === 'passive' }))
+    .filter(s => s.battleId && s.name && magScore(s) >= 0);
+  return skills.length ? { revision, balance: catalog.characterSp, skills, basis: magSpBasis() } : null;
+}
+async function magSpReady(who, checked) {
+  const W = checked.spWait, basis = magSpBasis();
+  if (!W || !Number.isFinite(W.revision) || !Number.isFinite(W.balance) || W.balance < 0 || !Array.isArray(W.skills) || basis.sp === null
+      || !Number.isInteger(who.slot) || who.slot < 0 || rt.magPending?.[who.key]) return null;
+  const need = () => Math.min(...W.skills.filter(s => typeof s?.battleId === 'string' && s.battleId && typeof s.name === 'string' && s.name
+      && Number.isFinite(s.spCost) && s.spCost >= 0 && magScore(s) >= 0)
+    .map(s => s.spCost + Math.max(0, +cfg.magisterSpReserve || 0)));
+  if (!Number.isFinite(need())) return null;
+  // rt.sp — накопленные награды, не кошелёк. Дельта только будит свежую серверную сверку.
+  const sameBasis = W.basis?.sessT0 === basis.sessT0 && W.basis?.kick === basis.kick
+    && Number.isFinite(W.basis?.sp) && basis.sp !== null && basis.sp >= W.basis.sp;
+  if (sameBasis && W.balance + basis.sp - W.basis.sp < need()) return null;
+  const checks = magSpReady.checks || (magSpReady.checks = new Map());
+  const key = `${rt.char}:${who.key}`, previous = checks.get(key), now = Date.now();
+  if (previous && (previous.busy || now - previous.at < previous.delay)) return null;
+  const probe = { at: now, delay: 15000, busy: true }; checks.set(key, probe);
+  const stamp = automationSnapshot(), epoch = leaseEpoch, page = location.href, char = rt.char;
+  let signature = JSON.stringify(W);
+  const current = () => magActive() && automationCurrent(stamp) && !!epoch && leaseEpoch === epoch && location.href === page
+    && rt.char === char && magIdentity()?.key === who.key && magIdentity()?.lvl === who.lvl
+    && (rt.sessT0 ?? null) === basis.sessT0 && (+rt.manualKickAt || 0) === basis.kick
+    && rt.magChecked?.[who.key]?.lvl === checked.lvl && JSON.stringify(rt.magChecked?.[who.key]?.spWait) === signature
+    && !magisterHold() && !rt.shop && !rt.rbGo && !rt.zoneGo && !rt.travelCheck && !L2V7Modules.payments?.blocked?.();
+  try {
+    if (!current() || rt.magister || !(await rtCommit()) || !current() || rt.magister) return null;
+    const data = await magRead('/character');
+    if (!current() || rt.magister) return null;
+    const ch = data.character || data, slot = ch?.classSlots?.activeSlot;
+    const prof = ch?.l2Profession || ch?.classSlots?.slots?.find(x => x.slot === slot)?.profession;
+    if (ch?.name !== char || prof !== who.prof || slot !== who.slot || ch.level !== who.lvl || ch.inBattle !== false
+        || !Number.isFinite(ch.revision) || ch.revision < W.revision || !Number.isFinite(ch.sp) || ch.sp < 0) {
+      probe.delay = 60000; return null;
+    }
+    if (ch.sp >= need()) return () => current() && ch.sp >= need();
+    // Ручная трата SP/сброс сессии: новый базис, без GET на каждую победу с нулевым доходом.
+    const next = { ...W, revision: ch.revision, balance: ch.sp, basis: magSpBasis() };
+    signature = JSON.stringify(next);
+    const saved = await setRt({ magChecked: { ...rt.magChecked, [who.key]: { ...checked, spWait: next } } });
+    if (saved?.ok !== true || !current()) return null;
+    if (!(await rtCommit()) || !current()) return null;
+    return null;
+  } catch (_) { probe.delay = 60000; return null; }
+  finally { probe.busy = false; }
+}
 async function magisterStart(afterWin = false) {
   if (L2V7Modules.payments?.blocked?.()) return false;   // 20.12 (ревизия 17.10): обучение платное — ждёт сверки оплаты
   if (rt.travelCheck) return false;   // 20.43 (ревью au/travel): и сверки перелёта (квитанция телепорта открыта — платное ждёт вывода)
@@ -4100,18 +4158,25 @@ async function magisterStart(afterWin = false) {
   }
   if (!magActive() || !who || magisterHold()) return false;
   const checked = rt.magChecked?.[who.key], retry = rt.magRetry;
-  if (!rt.magister && checked?.lvl >= who.lvl) return false;
   if (retry?.key === who.key && retry.lvl === who.lvl && retry.until > Date.now()) return false;
+  let spCurrent = null;
+  // Сохранённый неопределённый POST сначала сверяет прежний magConfirm/CAS, независимо от дохода SP.
+  if (!rt.magister && checked?.lvl >= who.lvl && !rt.magPending?.[who.key]) {
+    if (!afterWin || checked.lvl !== who.lvl || !checked.spWait) return false;
+    spCurrent = await magSpReady(who, checked);
+    if (!spCurrent?.() || rt.magister) return false;
+  }
   if (!rt.magister || rt.magister.key !== who.key || rt.magister.kick !== (+rt.manualKickAt || 0)) {
     const home = { zone: rt.zone || null, catIn: rt.catIn || null, catDungeon: cfg.catDungeon || null,
       mode: autonomyMode(), path: location.pathname === '/dungeon.html' ? location.pathname + location.search : '/map.html' };
-    await setRt({ magister: { t: Date.now(), char: rt.char, key: who.key, prof: who.prof, slot: who.slot, lvl: who.lvl,
+    const saved = await setRt({ magister: { t: Date.now(), char: rt.char, key: who.key, prof: who.prof, slot: who.slot, lvl: who.lvl,
       kick: +rt.manualKickAt || 0, home } });
+    if (spCurrent && saved?.ok !== true) return false;
   }
   const M = rt.magister;
-  if (!magSame(M)) return false;
+  if (!magSame(M) || spCurrent && !spCurrent()) return false;
   rec('B', 'магистр', `${who.lvl} ур.: проверяю доступные ранги`);
-  if (afterWin) { if (!(await rtCommit())) return true; if (!magSame(M) || magisterHold()) return false; await toMap(); }
+  if (afterWin) { if (!(await rtCommit())) return true; if (!magSame(M) || magisterHold() || spCurrent && !spCurrent()) return false; await toMap(); }
   return true;
 }
 async function magisterDisable() {
@@ -4253,7 +4318,8 @@ async function magisterStep() {
       const c = replay ? candidates.find(s => s.battleId === replay.id && s.skillLevel === replay.rank) : candidates[0];
       if (replay && !c) return magPause(M, 'повтор исходного запроса сейчас запрещён резервом SP или условиями навыка');
       if (!c) {
-        await setRt({ magChecked: { ...rt.magChecked, [M.key]: { lvl: who.lvl, t: Date.now() } }, magRetry: null });
+        const spWait = magSpWait(catalog, who, live.revision);
+        await setRt({ magChecked: { ...rt.magChecked, [M.key]: { lvl: who.lvl, t: Date.now(), ...(spWait ? { spWait } : {}) } }, magRetry: null });
         if (magSame(M)) await magBack(M);
         return;
       }

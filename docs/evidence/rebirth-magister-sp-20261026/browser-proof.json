@@ -1,0 +1,491 @@
+{
+  "boundary": "actual Chrome MV3; local native battle win and fresh catalog; all HTTPS mocked; no live account",
+  "proof": [
+    {
+      "browser": "156.0.8078.4",
+      "initialChecked": {
+        "lvl": 20,
+        "spWait": {
+          "balance": 0,
+          "basis": {
+            "kick": 1793014579859,
+            "sessT0": null,
+            "sp": 0
+          },
+          "revision": 100,
+          "skills": [
+            {
+              "battleId": "l2_1177",
+              "name": "Wind Strike",
+              "passive": false,
+              "spCost": 240
+            }
+          ]
+        },
+        "t": 1793014580941
+      },
+      "finalChecked": {
+        "lvl": 20,
+        "spWait": {
+          "balance": 116,
+          "basis": {
+            "kick": 1793014579859,
+            "sessT0": null,
+            "sp": 356
+          },
+          "revision": 102,
+          "skills": [
+            {
+              "battleId": "l2_1177",
+              "name": "Wind Strike",
+              "passive": false,
+              "spCost": 600
+            }
+          ]
+        },
+        "t": 1793014584347
+      },
+      "paths": [
+        "/map.html",
+        "/magister.html?npcId=30344",
+        "/map.html",
+        "/battle.html?spawnId=magister_sp_mob",
+        "/map.html",
+        "/magister.html?npcId=30344",
+        "/map.html"
+      ],
+      "calls": [
+        {
+          "path": "/map.html",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/game/time",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/magister.html",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/map.html",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/battle.html",
+          "method": "GET",
+          "query": "?spawnId=magister_sp_mob",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "method": "POST",
+          "query": "",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "magister_sp_mob",
+            "expectedRevision": 100
+          },
+          "sp": 0,
+          "rank": 1,
+          "revision": 100
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/map.html",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/magister.html",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 356,
+          "rank": 1,
+          "revision": 101
+        },
+        {
+          "path": "/character/skills/learn",
+          "method": "POST",
+          "query": "",
+          "body": {
+            "battleId": "l2_1177",
+            "expectedRevision": 101
+          },
+          "sp": 356,
+          "rank": 1,
+          "revision": 101,
+          "pending": {
+            "id": "l2_1177",
+            "rank": 1,
+            "revision": 101,
+            "sp": 356,
+            "phase": "sent"
+          }
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/character/magister",
+          "method": "GET",
+          "query": "?npcId=30344",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/map.html",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "query": "",
+          "body": null,
+          "sp": 116,
+          "rank": 2,
+          "revision": 102
+        }
+      ],
+      "result": {
+        "level": 20,
+        "kills": 1,
+        "sp": 116,
+        "rank": 2,
+        "learns": 1,
+        "on": true,
+        "magister": null,
+        "pending": null
+      },
+      "errors": []
+    }
+  ]
+}
