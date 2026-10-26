@@ -1,0 +1,19 @@
+{
+  "version": "20.66",
+  "browser": "Chrome",
+  "source_base": "9518850207ab90fa9ea4db2514ccbc4ae2e35175",
+  "file": "builds/l2wap-bot-v20.66.zip",
+  "bytes": 1705778,
+  "packaging_file_list_count": 68,
+  "sha256": "eaa2d96e8f4bcafe9077f24b3f04565de345e14a660db16882e76f4761e87431",
+  "included_fixes": [
+    "PR422: Start resumes confirmed active battle",
+    "PR423: Return to Ashen after summon buff releases farm"
+  ],
+  "checks": "NOT RUN: explicit user request «Сборка на хром без проверок»",
+  "firefox": "unchanged20.65",
+  "lite": "unchanged1.8.1",
+  "note": "SHA256 identifies the output; no archive audit, tests or browser load performed.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/424",
+  "artifact_commit": "42a6851e97cbd1b5e7a0644b17194ba3fff5537c"
+}

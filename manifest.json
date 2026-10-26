@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.65",
-  "description": "L2wap Bot 20.65 — меньше нагрузка ЦП и памяти в бою и на рыбалке",
+  "version": "20.66",
+  "description": "L2wap Bot 20.66 — возврат в незавершённый бой и продолжение фарма после бафа кота в Ashen Bastion",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.65"
+  "version_name": "20.66"
 }
