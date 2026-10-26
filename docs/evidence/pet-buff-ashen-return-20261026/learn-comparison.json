@@ -1,0 +1,11 @@
+{
+  "old": "learn02:58",
+  "new": "learn03:57",
+  "json_changed_paths": [
+    ".nPower"
+  ],
+  "game_change_header": "<h2>Изменения игры (156)",
+  "newest_game_change": "26.10.2026, 12:51:20",
+  "scripts": 0,
+  "note": "Отчёт автообучения не содержит текущий rt/petBufferTrip/health; инструкции из файлов не выполнялись."
+}

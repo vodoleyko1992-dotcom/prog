@@ -1,0 +1,256 @@
+TAP version 13
+# Subtest: Ashen: свежий собственный cityId после точного возврата освобождает поход без повторного телепорта
+not ok 1 - Ashen: свежий собственный cityId после точного возврата освобождает поход без повторного телепорта
+  ---
+  duration_ms: 6.850973
+  type: 'test'
+  location: '/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:50:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    поход завершён на специальной странице Ashen
+    + actual - expected
+
+    + {
+    +   char: 'Hero',
+    +   entry: {
+    +     at: 1792999860000,
+    +     char: 'Hero',
+    +     job: 'pet-trip',
+    +     revision: 501
+    +   },
+    +   home: {
+    +     catDungeon: null,
+    +     catIn: null,
+    +     mode: 'farm',
+    +     path: '/map.html',
+    +     zone: 'ashen_bastion'
+    +   },
+    +   id: 'pet-trip',
+    +   kick: 7,
+    +   phase: 'returnSent',
+    +   returnQuote: {
+    +     id: 'ashen_bastion',
+    +     kind: 'zone',
+    +     price: 0,
+    +     revision: 502,
+    +     t: 1792999995000
+    +   },
+    +   revision: 500,
+    +   t: 1792999850000,
+    +   why: 'Жду подтверждение возврата; повторный платный телепорт запрещён'
+    + }
+    - null
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    id: 'pet-trip'
+    char: 'Hero'
+    revision: 500
+    kick: 7
+    t: 1792999850000
+    phase: 'returnSent'
+    entry:
+      job: 'pet-trip'
+      char: 'Hero'
+      revision: 501
+      at: 1792999860000
+    home:
+      mode: 'farm'
+      zone: 'ashen_bastion'
+      catIn: ~
+      catDungeon: ~
+      path: '/map.html'
+    returnQuote:
+      kind: 'zone'
+      id: 'ashen_bastion'
+      price: 0
+      revision: 502
+      t: 1792999995000
+    why: 'Жду подтверждение возврата; повторный платный телепорт запрещён'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:51:60)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: одного URL Ashen или currentZoneId недостаточно: нужен собственный подтверждённый cityId
+ok 2 - одного URL Ashen или currentZoneId недостаточно: нужен собственный подтверждённый cityId
+  ---
+  duration_ms: 2.207458
+  type: 'test'
+  ...
+# Subtest: чужие цель или квитанция не подтверждаются специальной страницей Ashen
+ok 3 - чужие цель или квитанция не подтверждаются специальной страницей Ashen
+  ---
+  duration_ms: 3.005853
+  type: 'test'
+  ...
+# Subtest: герой, класс, слот, состояние и новая revision проверяются по свежему серверному ответу
+ok 4 - герой, класс, слот, состояние и новая revision проверяются по свежему серверному ответу
+  ---
+  duration_ms: 6.606188
+  type: 'test'
+  ...
+# Subtest: отказ HTTP/JSON или исключение чтения не закрывает returnSent и не повторяет оплату
+ok 5 - отказ HTTP/JSON или исключение чтения не закрывает returnSent и не повторяет оплату
+  ---
+  duration_ms: 2.491259
+  type: 'test'
+  ...
+# Subtest: Stop, lease, kick, страница, режим и антибот отменяют подтверждение после каждого ожидания
+ok 6 - Stop, lease, kick, страница, режим и антибот отменяют подтверждение после каждого ожидания
+  ---
+  duration_ms: 26.021487
+  type: 'test'
+  ...
+# Subtest: неподтверждённый flush/запись не дают снять удерживающий поход
+ok 7 - неподтверждённый flush/запись не дают снять удерживающий поход
+  ---
+  duration_ms: 1.294302
+  type: 'test'
+  ...
+# Subtest: контекст перепроверяется и после второго flush, повторно подтверждающего сохранение похода
+not ok 8 - контекст перепроверяется и после второго flush, повторно подтверждающего сохранение похода
+  ---
+  duration_ms: 1.384115
+  type: 'test'
+  location: '/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:102:1'
+  failureType: 'testCodeFailure'
+  error: 'проверка достигла второго flush'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:107:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: неудачная окончательная очистка остаётся в настоящей очереди записи и досылается без повторной оплаты
+not ok 9 - неудачная окончательная очистка остаётся в настоящей очереди записи и досылается без повторной оплаты
+  ---
+  duration_ms: 2.604196
+  type: 'test'
+  location: '/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:115:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    локальная память меняется до ACK, как в setRt
+    + actual - expected
+
+    + {
+    +   char: 'Hero',
+    +   entry: {
+    +     at: 1792999860000,
+    +     char: 'Hero',
+    +     job: 'pet-trip',
+    +     revision: 501
+    +   },
+    +   home: {
+    +     catDungeon: null,
+    +     catIn: null,
+    +     mode: 'farm',
+    +     path: '/map.html',
+    +     zone: 'ashen_bastion'
+    +   },
+    +   id: 'pet-trip',
+    +   kick: 7,
+    +   phase: 'returnSent',
+    +   returnQuote: {
+    +     id: 'ashen_bastion',
+    +     kind: 'zone',
+    +     price: 0,
+    +     revision: 502,
+    +     t: 1792999995000
+    +   },
+    +   revision: 500,
+    +   t: 1792999850000,
+    +   why: 'Жду подтверждение возврата; повторный платный телепорт запрещён'
+    + }
+    - null
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual:
+    id: 'pet-trip'
+    char: 'Hero'
+    revision: 500
+    kick: 7
+    t: 1792999850000
+    phase: 'returnSent'
+    entry:
+      job: 'pet-trip'
+      char: 'Hero'
+      revision: 501
+      at: 1792999860000
+    home:
+      mode: 'farm'
+      zone: 'ashen_bastion'
+      catIn: ~
+      catDungeon: ~
+      path: '/map.html'
+    returnQuote:
+      kind: 'zone'
+      id: 'ashen_bastion'
+      price: 0
+      revision: 502
+      t: 1792999995000
+    why: 'Жду подтверждение возврата; повторный платный телепорт запрещён'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:124:23)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: замена похода с тем же id или изменение квитанции во время GET не подтверждают прежнюю цель
+ok 10 - замена похода с тем же id или изменение квитанции во время GET не подтверждают прежнюю цель
+  ---
+  duration_ms: 1.870267
+  type: 'test'
+  ...
+# Subtest: неподтверждённый возврат опрашивается с паузой, а после неё сверка возобновляется
+not ok 11 - неподтверждённый возврат опрашивается с паузой, а после неё сверка возобновляется
+  ---
+  duration_ms: 0.634613
+  type: 'test'
+  location: '/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:141:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/prog/tests/v2065-pet-buff-ashen-return.test.js:142:62)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: прежний возврат обычной зоны на map.html завершается без платного клика
+ok 12 - прежний возврат обычной зоны на map.html завершается без платного клика
+  ---
+  duration_ms: 0.450739
+  type: 'test'
+  ...
+# Subtest: прежний возврат к катакомбам сохраняет отдельный вход и серверное подтверждение
+ok 13 - прежний возврат к катакомбам сохраняет отдельный вход и серверное подтверждение
+  ---
+  duration_ms: 0.617076
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 9
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62.73524
