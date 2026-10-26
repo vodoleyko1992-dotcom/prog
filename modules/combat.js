@@ -1734,6 +1734,7 @@ async function battle() {
   const open = await battleOpen();
   if (!open?.[BATTLE_OPEN]) return open;
   const { ctx, spawnId, manualRb } = open;
+  if (ctx.hpProofCurrent && !ctx.hpProofCurrent()) return;
 
   // Сравниваем сами строки, а не число маркеров: хвост журнала ограничен,
   // и новый сосед мог заменить старого при неизменном количестве строк.
@@ -1836,7 +1837,7 @@ async function battle() {
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
   // mpFree: выключение тоггла бесплатно либо цену включения уже перепроверяет отдельный ON-plan, без старой IL-цены.
   const act = async (b, status, hpGuard = false, stillNeeded = null, mpFree = false) => {
-    const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.(),canSend=()=>valid()&&!victory()&&!defeat();
+    const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.()&&(!ctx.hpProofCurrent||ctx.hpProofCurrent()),canSend=()=>valid()&&!victory()&&!defeat();
     if(pendingTurn&&!turnAnswered(pendingTurn)){
       await waitNet(()=>turnAnswered(pendingTurn)||!canSend(),1000,40);
       if(!canSend())return false;if(!turnAnswered(pendingTurn))return 'lock';
@@ -1884,6 +1885,7 @@ async function battle() {
     if(stillNeeded?.monsterIntent&&(!canSend()||!stillNeeded()||!armMonsterRequest(stillNeeded.monsterIntent)))return 'lock';
     let fired;try{fired=env.fire(b);}finally{if(stillNeeded?.monsterIntent)clearMonsterMarker();}
     if (!fired) { try { delete document.documentElement.dataset.l2botFast; } catch (_) {} return false; }
+    if (ctx.hpProofCurrent && fastHit(b, exact)) ctx.hpProofCurrent = null; // первый разрешённый боевой клик; дальше обычные guards круга
     lastAct = Date.now();
     if (env.skKey(b)) pressAt.set(env.skKey(b), firedAt);
     const petActAlive = ctx.pet && env.petState?.()?.has !== false;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
@@ -1983,7 +1985,7 @@ async function battle() {
   // висит), выход от РБ (rbFlee), «мало HP», полоса банок HP на РБ и сама банка HP — тесты выполняют эти куски как тело цикла
   let s;
   while (env.on && env.tabOwner) {
-    if(actionContext()!==battleOwner)return;
+    if(actionContext()!==battleOwner||ctx.hpProofCurrent&&!ctx.hpProofCurrent())return;
     env.champs?.observe?.(ctx);
     // 20.6: смена задач запрещает клики старого frame — продолжаем бой со следующего тика main.
     if (env.canAct?.() === false) return;
@@ -2852,6 +2854,68 @@ async function battle() {
 // 20.13 (шаг 7): ответы шагов круга боя и признак «бой открыт» (см. battle)
 const NEXT = Symbol('дальше'), AGAIN = Symbol('новый круг'), END = Symbol('итог боя'), BATTLE_OPEN = Symbol('бой открыт');
 
+// После map → battle краткая сетевая метка остаётся в прежнем документе. Старый минимум HP вида
+// (например, до Rebirth) сам по себе не доказывает чемпиона: сначала сверяем текущий собственный бой.
+let hpProofWait = null;
+async function hpChampionProof(name, urlSpawn, max, cameVia) {
+  const char = env.rt.char, prof = env.rt.classCur?.prof, slot = env.rt.classCur?.slot, page = location.href;
+  const title = mobTitle(), level = env.heroLvl?.() || env.rt.lvl || 0, mobLevel = +(title.match(/ур\.?\s*(\d+)/i)?.[1] || 0);
+  const target = () => JSON.stringify([env.rt.target?.id, env.rt.target?.spawnId, env.rt.target?.name, !!env.rt.target?.champ, env.rt.target?.tier]);
+  const target0 = target(), tier = () => cameVia === 'chain' ? '' : env.champTier?.(urlSpawn, null, '') || '';
+  const owner = env.evidenceOwner?.(), exit = env.battleExitContext?.(), generation = env.actionGeneration?.();
+  const meta = JSON.stringify(env.battleInfo?.() || null), key = JSON.stringify([char, prof, slot, owner, exit, generation, page, name, max]);
+  const current = (clearedTarget = false) => env.on && env.tabOwner === true && env.canAct?.() !== false && env.heroNick?.() === char
+    && env.rt.char === char && env.rt.classCur?.prof === prof && env.rt.classCur?.slot === slot && location.href === page
+    && env.evidenceOwner?.() === owner && env.battleExitContext?.() === exit && env.actionGeneration?.() === generation
+    && !env.antibotState?.() && !env.pvpPending?.() && !victory() && !defeat()
+    && (env.heroLvl?.() || env.rt.lvl || 0) === level && mobTitle() === title && !env.isChamp(mobTitle()) && !tier()
+    && (target() === target0 || clearedTarget && !env.rt.target)
+    && mobName().toLowerCase() === name && mobHp()?.max === max && JSON.stringify(env.battleInfo?.() || null) === meta;
+  const wait = async () => {
+    if (current()) { env.setStatus('Бой: тип цели по HP не подтверждён — жду серверную сверку'); await env.sleep(1000); }
+    return null;
+  };
+  if (!current()) return null;
+  if (hpProofWait?.key === key && (hpProofWait.busy || Date.now() < hpProofWait.until)) return wait();
+  const probe = hpProofWait = { key, until: Date.now() + 15000, busy: true };
+  const special = x => !!x && (['pvp', 'isPvp', 'inPvp', 'tvt', 'isTvt', 'inTvt'].some(k => x[k] === true)
+    || ['battleMode', 'battleType', 'mode', 'kind', 'type'].some(k => /^(?:pvp|tvt)(?:_|-|:|$)/i.test(String(x[k] || ''))));
+  const own = (c, min, id) => c?.name === char && (!id || c.id === id) && c.l2Profession === prof && c.classSlots?.activeSlot === slot && c.level === level
+    && Number.isSafeInteger(c.revision) && c.revision >= min && c.inBattle === true && !special(c);
+  try {
+    if (!char || !prof || !Number.isInteger(slot) || slot < 0 || !(level > 0 && mobLevel > 0) || !owner || !exit || !Number.isFinite(generation)
+        || typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return wait();
+    const first = await env.gameGet('/character', 4000);
+    if (!current()) return null;
+    if (!first.ok) { probe.until = Date.now() + 60000; return wait(); }
+    const snapshot = await first.json();
+    if (!current()) return null;
+    const ch = snapshot?.character || snapshot, sid = ch?.battleSpawnId, id = ch?.id;
+    if (snapshot?.error || snapshot?.ok === false || special(snapshot) || !own(ch, 0) || typeof id !== 'string' || !id
+        || typeof sid !== 'string' || !/^[a-z0-9][a-z0-9_.:-]{0,199}$/i.test(sid)
+        || /^(?:pvp|tvt)(?:_|-|:|$)/i.test(sid) || cameVia !== 'chain' && sid !== urlSpawn) return wait();
+    const response = await env.gameGet('/game/battle?characterId=' + encodeURIComponent(id) + '&spawnId=' + encodeURIComponent(sid), 4000);
+    if (!current()) return null;
+    if (!response.ok) { probe.until = Date.now() + 60000; return wait(); }
+    const data = await response.json();
+    if (!current()) return null;
+    const c = data?.character, b = data?.battle;
+    if (data?.error || data?.ok === false || !own(c, ch.revision, id) || c.battleSpawnId != null && c.battleSpawnId !== '' && c.battleSpawnId !== sid
+        || !b || b.spawnId !== sid || String(b.mobName || '').trim().toLowerCase() !== name || b.mobMaxHp !== max || b.mobLevel !== mobLevel
+        || !Number.isFinite(b.mobHp) || b.mobHp <= 0 || b.mobHp > max || b.ended === true || b.finished === true
+        || data.victory || data.defeat || /^(?:ended|finished|victory|defeat)$/i.test(String(b.status || b.state || ''))
+        || special(data) || special(b)) return wait();
+    const ordinary = /^(?:normal|passive|neutral|aggressive)$/.test(b.kind || '');
+    if (!ordinary && b.kind !== 'champion') return wait();
+    const raw = String(b.championTier || '').toLowerCase(), tier = ({ green: 'blue', yellow: 'orange' })[raw] || raw
+      || (/^champ_o_/i.test(sid) ? 'orange' : /^champ_r_/i.test(sid) ? 'red' : '');
+    const champ = b.kind === 'champion' || !!tier || /^champ_[or]_/i.test(sid);
+    if (champ && !['blue', 'orange', 'red'].includes(tier)) return wait();
+    return { spawn: sid, tier, ordinary: ordinary && !champ, lvl: b.mobLevel, champ, current };
+  } catch (_) { probe.until = Date.now() + 60000; return wait(); }
+  finally { probe.busy = false; }
+}
+
 // 20.13 (шаг 7): начало боя — загрузка страницы, панель, слуга/банки на панели, проверки входа (РБ вне окна, цвета и предел чемпиона,
 // «не по зубам», выше героя), ctx и заход к РБ/эпику. Ранний выход — значение для battle (как прежний return); иначе { [BATTLE_OPEN] }
 async function battleOpen() {
@@ -2953,12 +3017,17 @@ async function battleOpen() {
   const known = env.rt.hpMin?.[nm];
   const t = env.rt.target;
   const same = !!t && nm === t.name.toLowerCase();
-  const color = battleColor(nm, spawnId, mob0?.max, cameVia, t, same);
+  let color = battleColor(nm, spawnId, mob0?.max, cameVia, t, same);
   const hpChamp = !!known && !!mob0 && mob0.max >= known * env.cfg.champHpMult;
+  if (!isRb && hpChamp && !color.ordinary && !color.champ && !color.tier && !(same && (t.champ || t.tier)) && !env.isChamp(title)) {
+    color = await hpChampionProof(nm, spawnId, mob0.max, cameVia);
+    if (!color || !color.current()) return;
+  }
   const blockW = weaponBlocks();
   const ctx = { lastStun: 0, block: blockW, weaponContext: weaponContext(), weaponBlocked: Object.keys(blockW), killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
                 name: mobName(), killOwner:killOwner(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
+  if (color.current) ctx.hpProofCurrent = color.current;
   if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // замер слуги, включая пантеру воина
   // 20.41: минимальное HP вида пишем только при новом минимуме (раньше — полная запись памяти на каждом бою, ≈0,5 с при 1,3 МБ)
   if (nm && mob0 && !(same && t.champ) && !(known <= mob0.max))
@@ -2978,7 +3047,7 @@ async function battleOpen() {
     const unknownStarted = !env.champs?.TIER_RU?.[({ green: 'blue', yellow: 'orange' })[String(ctx.tier || '').toLowerCase()] || String(ctx.tier || '').toLowerCase()]
       && mob0?.max > 0 && mob0.cur < mob0.max * 0.98;
     const off = !unknownStarted && env.champs?.tierOff?.(ctx, true);
-    if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
+    if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); if (ctx.hpProofCurrent && !ctx.hpProofCurrent(true)) return; return env.toMap(); }
   }
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
   if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0; ctx.heroLvl0 = env.heroLvl() || env.rt.lvl || 0;   // 10.0.10: уровень героя на входе — для вердикта (champs.learn)

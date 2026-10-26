@@ -69,6 +69,9 @@
 - Строки вещей: `rebirthWeaponAttack`, `rebirthShieldPoints`, `rebirthAffixes` (по клиентскому коду игры; живых строк нет).
 - Кандидаты API из JS игры: `/character/rebirth-blessing`, `/character/rebirth-blessing/catalog`,
   `/character/rebirth-forge/smelt`, `/character/rebirth-forge/upgrade-shield`. Подземелий Rebirth в обходе 16.10 нет.
+- Дополнение из присланного лога26.10 11:49: игрок вручную нажал `forge-smelt`; `POST /character/rebirth-forge/smelt`
+  в21:47:59 вернулHTTP200, `itemCount=4`, `dustEarned=1200`. Это подтверждённая ручная переплавка, не действие бота;
+  автоматическое уничтожение вещей или расход CoL не добавлены.
 
 ## Что бот делает с 20.62 (исходники, PR «Rebirth: защиты»)
 
