@@ -13,5 +13,7 @@
   "checks": "NOT RUN: explicit user request «Сборка на хром без проверок»",
   "firefox": "unchanged20.65",
   "lite": "unchanged1.8.1",
-  "note": "SHA256 identifies the output; no archive audit, tests or browser load performed."
+  "note": "SHA256 identifies the output; no archive audit, tests or browser load performed.",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/424",
+  "artifact_commit": "42a6851e97cbd1b5e7a0644b17194ba3fff5537c"
 }
