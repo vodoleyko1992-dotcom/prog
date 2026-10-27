@@ -2931,7 +2931,12 @@ async function hpChampionProof(name, urlSpawn, max, cameVia) {
         || !Number.isFinite(b.mobHp) || b.mobHp <= 0 || b.mobHp > max) return reject('battle-target', 'цель, уровень или HP в снимке боя не совпали');
     if (b.ended === true || b.finished === true || data.victory || data.defeat || /^(?:ended|finished|victory|defeat)$/i.test(String(b.status || b.state || ''))
         || special(data) || special(b)) return reject('battle-state', 'живой PvE-бой не подтверждён');
-    const ordinary = /^(?:normal|passive|neutral|aggressive)$/.test(b.kind || '');
+    // 20.69 (лог 27.10 14:16): Rebirth Wyrm16740HP против старого минимума11160 — это dungeon, не новый чемпион.
+    // Только точный обычный моб своего свежего Rebirth-боя; произвольные dungeon, champion/raid и неизвестный цвет не разрешаем.
+    const rebirthMob = sid.match(/^rebirth_raid_[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}_[1-9]\d*_[1-9]\d*_[1-9]\d*_lv([1-9]\d*)_mob_[1-9]\d*$/i);
+    const rebirthOrdinary = b.kind === 'dungeon' && !!rebirthMob && +rebirthMob[1] === b.mobLevel && /^rebirth\s*[·•]\s*\S/i.test(name)
+      && Number.isSafeInteger(ch.rebirthStage) && ch.rebirthStage > 0 && c.rebirthStage === ch.rebirthStage && c.battleSpawnId === sid;
+    const ordinary = /^(?:normal|passive|neutral|aggressive)$/.test(b.kind || '') || rebirthOrdinary;
     if (!ordinary && b.kind !== 'champion') return reject('battle-kind', 'серверный тип цели неизвестен');
     const raw = String(b.championTier || '').toLowerCase(), tier = ({ green: 'blue', yellow: 'orange' })[raw] || raw
       || (/^champ_o_/i.test(sid) ? 'orange' : /^champ_r_/i.test(sid) ? 'red' : '');
