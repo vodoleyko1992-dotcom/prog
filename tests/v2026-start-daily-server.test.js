@@ -44,7 +44,8 @@ test('ожидание проверки передаёт круг срочном
   // 22.10: loopCraft без выбранного крафта пропускает круг, как прежний loopEnchant.
  // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
   // 20.43 (автономность): новый шаг передышки loopSelfHold (после срочных) — здесь без передышки; 20.43 (ревью au/breather): + loopSelfHoldWait
-  for(const k of ['loopLease','loopMigrations','loopWatchdog','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])ctx[k]=async()=>false;
+  // 20.68: Rebirth в этом стенде выключен; новый шаг, как прочие невыбранные задачи, пропускает круг.
+  for(const k of ['loopLease','loopMigrations','loopWatchdog','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopRebirth','loopStartPrep','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])ctx[k]=async()=>false;
   ctx.loopSideJobs=async()=>{services++;return true};vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),ctx);await ctx.mainTick();assert.equal(calls,1);assert.equal(services,urgent?0:1);
  }
 });

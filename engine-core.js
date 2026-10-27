@@ -105,11 +105,12 @@
 
   // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
   // combat remain higher-priority interrupts in the content-script dispatcher.
-  function chooseMode({ enchant = false, craft = false, epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
+  function chooseMode({ enchant = false, craft = false, epic = false, raid = false, rebirth = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
     if (enchant) return 'enchant'; // 15.10: отдельный режим сильнее старых флагов импортированного профиля.
     if (craft) return 'craft'; // 22.10: отдельный режим использует очередь материалов и МП-банки.
     if (epic) return 'epic';
     if (raid) return 'raid';
+    if (rebirth) return 'rebirth';
     if (fish) return 'fish';
     if (cat && !campaign) return 'cat';
     if (campaign) return 'campaign';
@@ -118,14 +119,14 @@
   }
 
   // 15.10: явный список задач ограничивает и старые флаги импортированных профилей.
-  const TASK_KEYS = ['tvt','quests','fish','cat','raid','epic','farm','auto','enchant','craft','mammon','dailies','clan','pvp','petbuff','resources'];
+  const TASK_KEYS = ['tvt','quests','fish','cat','raid','epic','rebirth','farm','auto','enchant','craft','mammon','dailies','clan','pvp','petbuff','resources'];
   const taskRaw = new WeakMap();
   const rawTaskConfig = c => taskRaw.get(c) || c;
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
   const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
   // 19.10: дневные квоты сбрасываются в полночь сервера; /game/time задаёт часы и зону (с учётом DST).
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие!»): один дневной лимит мобов на обе охоты, счётчики auto/cat складываются.
-  const dailyKeys = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'};
+  const dailyKeys = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit',rebirth:'dailyKillLimit'};
   const dayFormats = new Map();
   const serverDay = (now,zone='Europe/Kyiv') => {
     if(!dayFormats.has(zone))dayFormats.set(zone,new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}));
@@ -251,7 +252,7 @@
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
     // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится. Доводка 21.10: передышек может быть несколько
     const held = base ? [] : selfHoldList(rt, now).map(h => h.task).filter(Boolean);
-    return ['enchant','craft','epic','raid','quests','fish','cat','auto','farm'].find(k => {
+    return ['enchant','craft','epic','raid','rebirth','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
       if (held.includes(k) && k !== 'enchant' && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
@@ -273,17 +274,17 @@
     pvp: ['enemyHunt','pvpOnSight','pvpAll'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
   };
   const TC_SUPPORT = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
-  const TC_PRIMARY = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
+  const TC_PRIMARY = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',rebirthMode:'rebirth',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
   const TC_SPECIAL = new Set([...Object.keys(TC_PRIMARY), ...Object.values(TC_GROUPS).flat(), ...TC_SUPPORT,
     'tvtOn','taskOnly','tvtOverRb','tsBuy','chain','farmRes','recipeRes','resQuests','mmGoalItem','mmGoalFarm','campAuto']);
-  const TC_LEGACY = new Set(['fishMode','catMode','zoneAuto','taskOnly']);
+  const TC_LEGACY = new Set(['rebirthMode','fishMode','catMode','zoneAuto','taskOnly']);
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
     if (!Array.isArray(raw?.autoTasks)) {
       if (!Object.keys(dailyKeys).some(k => dailyLimit(raw,k))) return raw;
       const view = new Proxy(raw,{get(target,key){
         if (!TC_LEGACY.has(key)) return Reflect.get(target,key);
-        const rt=runtime(), tasks={fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
+        const rt=runtime(), tasks={rebirthMode:'rebirth',fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
         if (Object.hasOwn(tasks,key) && dailyBlocked(target,rt,tasks[key]) && !(key==='fishMode' && rt.fishCastActive)) return false;
         if (key==='taskOnly' && Object.entries(tasks).some(([flag,k])=>target[flag] && dailyBlocked(target,rt,k)) && !['enchantMode','craftMode','epicMode','rbHuntMode','campaign'].some(k=>target[k]) && !Object.entries(tasks).some(([flag,k])=>target[flag] && !dailyBlocked(target,rt,k))) return true;
         return Reflect.get(target,key);
@@ -298,7 +299,7 @@
       if (key === 'taskOnly') return act() === 'tasks';
       if (key === 'tvtOverRb') return true;
       if (key === 'tsBuy') return false; // Покупка цели TvT — отдельная трата, не участие в событии.
-      if (key === 'chain' && !['farm','auto','quests','cat'].includes(act())) return false;
+      if (key === 'chain' && !['farm','auto','quests','cat','rebirth'].includes(act())) return false;
       if (['farmRes','recipeRes','resQuests'].includes(key) && !allowed('resources')) return '';
       if (key === 'mmGoalItem' && !allowed('mammon')) return 0;
       if (key === 'mmGoalFarm' && !allowed('resources')) return false;
@@ -311,16 +312,16 @@
   }
   // 20.12 (ревизия 17.10): режимы и платные разрешения — в одном месте. Базовый профиль не включает режимы
   // (чистая установка = «стоять, где оставили»), новый герой (ещё нет cfg@Ник) не наследует платные режимы предыдущего.
-  const MODE_KEYS = ['craftMode','enchantMode','epicMode','rbHuntMode','rbMode','rbBetween','fishMode','catMode','zoneAuto','campaign','autoTasks','taskOnly'];
+  const MODE_KEYS = ['craftMode','enchantMode','epicMode','rbHuntMode','rbMode','rbBetween','rebirthMode','fishMode','catMode','zoneAuto','campaign','autoTasks','taskOnly'];
   const BASE_CFG_SKIP = [...MODE_KEYS, 'weaponManual', 'nWeaponMain'];  // ручной выбор оружия из профиля устаревает вместе со снаряжением
   const BASE_RT_SKIP = ['weapons','weaponRec','weaponEq','weaponNow','weaponsT','panel','panelSig','skills','rbK','rbDps','rbStats','hardMobs','zoneBad','lvl'];
-  const NEW_HERO_PAID = {epicMode:false, epicCoinDailyMax:0, epicAdenaDailyMax:0, rbHuntMode:false, rbMode:false, rbFaFull:false, epicFaFull:false, fishTimeAuto:false, mmUpgrade:false};
+  const NEW_HERO_PAID = {epicMode:false, epicCoinDailyMax:0, epicAdenaDailyMax:0, rbHuntMode:false, rbMode:false, rebirthMode:false, rebirthAutoEnter:false, rebirthBossChoice:'manual', rbFaFull:false, epicFaFull:false, fishTimeAuto:false, mmUpgrade:false};
   const baseProfileCfg = c => Object.fromEntries(Object.entries(c || {}).filter(([k]) => !BASE_CFG_SKIP.includes(k)));
   const baseProfileRt = r => Object.fromEntries(Object.entries(r || {}).filter(([k]) => !BASE_RT_SKIP.includes(k)));
   function newHeroCfg(prev) {
     const next = { ...(prev || {}), ...NEW_HERO_PAID, craftMode: false };
     // Явный список задач тоже выбирает режим: тур РБ, эпики и отдельный крафт новый герой включает сам.
-    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== 'raid' && k !== 'epic' && k !== 'craft');
+    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== 'raid' && k !== 'epic' && k !== 'rebirth' && k !== 'craft');
     return next;
   }
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
@@ -337,7 +338,7 @@
     const job = rt[key];
     if (key === 'sealEx') return !!job && (job.auto !== true || c.sealAuto === true);
     if (MANUAL_JOBS.includes(key) && job && typeof job === 'object' && (job.urgent === true || job.manual === true)) return true;
-    const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
+    const primary = {rbGo:'raid',rbHunt:'raid',rebirthJob:'rebirth',fishSvc:'fish',fishService:'fish'}[key];
     // Ожидающий тур сохраняет место возврата после выбранной рыбалки; боевые маршруты не переносятся.
     if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && (selectedTask(c,rt) === 'fish' || fishTaskWait(c,rt))) return true;
     if (primary) return selectedTask(c,rt) === primary;

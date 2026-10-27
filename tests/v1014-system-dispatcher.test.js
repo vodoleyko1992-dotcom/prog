@@ -36,6 +36,8 @@ function make(mode='auto'){
  // Новый PvP executor без явных целей выполняет настоящий guard и не меняет старые цепочки.
  Object.assign(sb.L2V7Modules,{pvp:sb.L2V7Factories.pvp(sb),tvt:T,dailies:D,story:S,mammon:{mmTick:noop,mmStep:noop},raid:{rbOneStep:noop},enemies:{tick:noop,step:noop},rbtimer:{tick:noop},subclass:{tick:noop},tvtshop:{shopStep:noop},epics:{epicPollTick:noop},equipment:{weaponRescanWhy:()=>null}});
  // 14.10: новая задача заточки выключена/без серии; исполняем её настоящий dispatcher guard.
+ // 20.68: фабрика Rebirth зарегистрирована тем же фрагментом; в старых сценариях режим выключен.
+ sb.L2V7Factories.rebirth=()=>({step:noop});
  const enchantStart=src.indexOf('// Автозаточка: команды меню'),enchantEnd=src.indexOf('chrome.runtime.onMessage.addListener',enchantStart);
  vm.runInNewContext(src.slice(enchantStart,enchantEnd),sb);
  Object.assign(sb,{serverDown:()=>false,loginPage:()=>false,leaveCheck:async()=>false});

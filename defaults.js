@@ -17,6 +17,8 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
   autoLs: { targets: [], maxAttempts: 10, buyMaterials: true, aaBudget: 2000000, adenaBudget: 2000000, aaReserve: 0 },
   craftChain: true, craftNotify: true,
+  // 27.10: отдельный режим Rebirth включается явно; новые заходы — только по отдельной галочке.
+  rebirthMode: false, rebirthDifficulty: 1, rebirthAutoEnter: false, rebirthKeyReserve: 0, rebirthBossChoice: 'manual',
   enchantMode: false,
   enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
   priority: '[квест]\n[чемп]\n[все]',

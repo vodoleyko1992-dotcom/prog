@@ -82,7 +82,7 @@ function mergeTimerPatch(current, incoming) {
   return { ...(current || {}), ...incoming, b };
 }
 // 20.8: лимиты фарма — свой прогресс, атомарное завершение только одной задачи.
-const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 'catMode'] };
+const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 'catMode'], rebirth: [null, 'rebirthMode'] };
 const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
 const dailyQuotaDay = (now,rt) => L2EngineCore.dailyDay(now,rt);
 const dailyQuotaToday = (rt,now) => L2EngineCore.dailyQuotaToday(rt,now);
@@ -155,7 +155,9 @@ function dailyFishChange(state,E,now) {
 function farmQuotaChange(state, E, now) {
   const keys = FARM_QUOTA[E?.task], cfg = state.cfg || {}, rt = state.rt || {};
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
-  const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
+  const limit = E.task === 'rebirth' ? 0 : farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
+  // Rebirth использует общий дневной счёт мобов без отдельной сессионной цели автофарма.
+  const dailyBucket = E.task === 'rebirth' ? 'auto' : E.task;
   // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
   const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0)+(q.raid||0)+(q.server||0);   // 20.12: нет ключа — значение вкладки
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
@@ -187,7 +189,7 @@ function farmQuotaChange(state, E, now) {
     // При обнулении серверной статистики прежний прогресс квоты сохраняется, старая шкала больше неприменима.
     mark = {counter:E.counter,revision:E.revision,floor:reset?Math.max(E.counter,observed):Math.max(floor+delta,E.counter)};
     session(p.sessionKills,p.sessionT0 ?? null,delta);
-    if(dailyLimit)dailyQuota[E.task]=(dailyQuota[E.task]||0)+delta;
+    if(dailyLimit)dailyQuota[dailyBucket]=(dailyQuota[dailyBucket]||0)+delta;
     row = { ...row, got, pending: null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
   } else if (E.op === 'approx') {
     // Счётчик сервера недоступен: подтверждённые убийства не теряем, а поздний ответ не зачтёт их повторно.
@@ -204,7 +206,7 @@ function farmQuotaChange(state, E, now) {
       if(mark || p)mark={counter:mark?.counter??p.counter,revision:mark?.revision??p.revision,floor:floor+E.n};
       session(p ? p.sessionKills : E.sessionKills,p ? p.sessionT0 ?? null : E.sessionT0 ?? null,E.n);
       const got = row.got + E.n;
-      if (dailyLimit) dailyQuota[E.task] = (dailyQuota[E.task] || 0) + E.n;
+      if (dailyLimit) dailyQuota[dailyBucket] = (dailyQuota[dailyBucket] || 0) + E.n;
       row = { ...row, got, approx:(row.approx||0)+E.n, ...(typeof E.approxId==='string'?{approxIds:[...(row.approxIds||[]),E.approxId].slice(-20)}:{}), pending:E.close||p?null:row.pending||null, done:limit>0&&got>=limit, ...(limit>0&&got>=limit?{doneT:now}:{}) };
     }
   } else return { ok: false, reason: 'quota_operation' };
@@ -517,7 +519,7 @@ async function menuPatch(m, sender) {
       const rt={...state.rt,...change.rt,_src:'menu'};
       if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat','raid','server'])rt.dailyQuota[k]=0;}
       if(task==='fish')rt.dailyFishMark={t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0};
-      else for(const k of ['auto','cat']){const row=rt.farmQuota?.[k];if(row)rt.farmQuota={...rt.farmQuota,[k]:{...row,run:(row.run||0)+1,pending:null}};}
+      else for(const k of ['auto','cat','rebirth']){const row=rt.farmQuota?.[k];if(row)rt.farmQuota={...rt.farmQuota,[k]:{...row,run:(row.run||0)+1,pending:null}};}
       change.rt=rt;
     }
     // 15.10: выбор режима не продолжает старую серию; выход сразу запрещает новые попытки.

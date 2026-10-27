@@ -1,0 +1,366 @@
+{
+  "boundary": "Read-only uploaded logs. No live game. Identifiers omitted; native actions distinguished from bot status.",
+  "sources": [
+    {
+      "file": "l2bot-log-2026-10-27-02-58.txt",
+      "installedVersion": "20.68",
+      "events": [
+        {
+          "line": 2263,
+          "time": "12:57:33.904",
+          "action": "native dungeon entry",
+          "status": 409,
+          "error": "rebirth_raid_in_battle"
+        },
+        {
+          "line": 2310,
+          "time": "12:57:53.917",
+          "action": "native dungeon entry",
+          "status": 200,
+          "difficulty": 1,
+          "phase": "mobs",
+          "mobKillTarget": 300,
+          "mobKills": 0,
+          "partyId": null,
+          "referenceBossSpawnId": "l2dop_rb_25041",
+          "referenceBossLevel": 35,
+          "mobLevel": 35,
+          "participants": 1
+        },
+        {
+          "line": 2321,
+          "time": "12:58:01.797",
+          "message": "[S] режим без режима: жду задачи (заказ Маммона, почта, TvT) — мобов не бью"
+        },
+        {
+          "line": 2322,
+          "time": "12:58:04.771",
+          "message": "[U] меню режим: выбрано: tvt, mammon, dailies, clan, pvp, petbuff, resources → выбрано: tvt, farm, mammon, dailies, clan, pvp, petbuff, resources"
+        },
+        {
+          "line": 2419,
+          "time": "12:58:42.584",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 2
+        },
+        {
+          "line": 2441,
+          "time": "12:58:48.804",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 3
+        }
+      ]
+    },
+    {
+      "file": "l2bot-log-2026-10-27-03-00.txt",
+      "installedVersion": "20.68",
+      "events": [
+        {
+          "line": 77,
+          "time": "13:00:19.387",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 79,
+          "time": "13:00:19.946",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 5
+        },
+        {
+          "line": 87,
+          "time": "13:00:21.024",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 93,
+          "time": "13:00:22.069",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 108,
+          "time": "13:00:24.990",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 110,
+          "time": "13:00:25.468",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 7
+        },
+        {
+          "line": 123,
+          "time": "13:00:27.834",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 127,
+          "time": "13:00:28.880",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 129,
+          "time": "13:00:29.924",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 131,
+          "time": "13:00:31.193",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 133,
+          "time": "13:00:32.239",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 135,
+          "time": "13:00:33.284",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 137,
+          "time": "13:00:34.331",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 140,
+          "time": "13:00:35.385",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 141,
+          "time": "13:00:35.503",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 8
+        },
+        {
+          "line": 151,
+          "time": "13:00:37.473",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 153,
+          "time": "13:00:38.524",
+          "message": "[B] бот Rebirth: цепочка выключена — жду вашего продолжения"
+        },
+        {
+          "line": 154,
+          "time": "13:00:39.272",
+          "message": "[U] меню режим: выбрано: tvt, mammon, dailies, clan, pvp, petbuff, resources → выбрано: tvt, farm, mammon, dailies, clan, pvp, petbuff, resources"
+        },
+        {
+          "line": 157,
+          "time": "13:00:40.340",
+          "message": "[B] бот Rebirth: продолжаю оплаченный поход"
+        },
+        {
+          "line": 158,
+          "time": "13:00:40.549",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 9
+        },
+        {
+          "line": 167,
+          "time": "13:00:42.226",
+          "message": "[B] бот Rebirth: продолжаю оплаченный поход"
+        },
+        {
+          "line": 179,
+          "time": "13:00:44.965",
+          "message": "[B] бот Rebirth: продолжаю оплаченный поход"
+        },
+        {
+          "line": 180,
+          "time": "13:00:45.181",
+          "action": "native continuation",
+          "phase": "mobs",
+          "targetOrdinal": 11
+        },
+        {
+          "line": 188,
+          "time": "13:00:46.155",
+          "message": "[B] бот Rebirth: жду повторной серверной сверки"
+        },
+        {
+          "line": 192,
+          "time": "13:00:47.203",
+          "message": "[B] бот Rebirth: жду повторной серверной сверки"
+        }
+      ]
+    },
+    {
+      "file": "l2bot-log-2026-10-27-03-10.txt",
+      "installedVersion": "20.68",
+      "observedWindow": "13:00:48–13:10:13 UTC+10",
+      "nativeHttpStatuses": {
+        "200": 601
+      },
+      "nativeNextPhases": {
+        "mobs": 78
+      },
+      "fullVictoryResponses": 137,
+      "victoryOrdinals": [
+        12,
+        148
+      ],
+      "endState": "Paused; native Fight opened mob149 from instance page10. No champion/boss or new paid entry observed.",
+      "events": [
+        {
+          "line": 35,
+          "time": "# События: [",
+          "message": "# События: [B] бот 899 · [N] сеть 601 · [B] скилл 140 · [B] пачка 137 · [B] итог боя 136 · [U] клик 8 · [B] ожидание навыков 4 · [B] автороли 3 · [B] питомец 3 · [S] страница 2 · [S] сессия 1 · [U] скилл 1 · [U] итог 1"
+        },
+        {
+          "line": 67,
+          "time": "13:01:00.442",
+          "message": "13:01:00.442 [B] бот Rebirth: текущая победа не подтверждена — жду вашего продолжения"
+        },
+        {
+          "line": 76,
+          "time": "13:01:02.432",
+          "message": "13:01:02.432 [B] бот Rebirth: не удалось подтвердить память перед продолжением"
+        },
+        {
+          "line": 179,
+          "time": "13:01:31.102",
+          "message": "13:01:31.102 [B] бот Rebirth: текущая победа не подтверждена — жду вашего продолжения"
+        },
+        {
+          "line": 764,
+          "time": "13:04:16.211",
+          "message": "13:04:16.211 [B] бот Rebirth: не удалось подтвердить память перед продолжением"
+        },
+        {
+          "line": 1953,
+          "time": "13:09:54.426",
+          "message": "13:09:54.426 [S] сессия ⏸ пауза (состояние сохранено)"
+        },
+        {
+          "line": 1962,
+          "time": "13:09:59.618",
+          "message": "13:09:59.618 [U] клик button#battle-victory-continue.l2-battle-victory-link.l2-battle-victory-link--primary «К подземелью» в [Победа]"
+        },
+        {
+          "line": 1969,
+          "time": "13:10:06.026",
+          "message": "13:10:06.026 [U] клик button.l2-rraid-pager-btn «9» в [Страницы мобов]"
+        },
+        {
+          "line": 1971,
+          "time": "13:10:07.882",
+          "message": "13:10:07.882 [U] клик button.l2-rraid-pager-btn «10» в [Страницы мобов]"
+        },
+        {
+          "line": 1974,
+          "time": "13:10:12.193",
+          "message": "13:10:12.193 [U] клик button.l2-rraid-fight «Бой» в [#rebirth-instance-content]"
+        }
+      ]
+    },
+    {
+      "file": "l2bot-log-2026-10-27-03-20.txt",
+      "installedVersion": "20.68",
+      "observedWindow": "13:10:15–13:20:05 UTC+10",
+      "events": [
+        {
+          "line": 2033,
+          "time": "13:19:05.550",
+          "action": "native continuation",
+          "phase": "champion",
+          "targetKind": "champion_1"
+        },
+        {
+          "line": 2109,
+          "time": "13:19:27.441",
+          "action": "instance gate UI",
+          "message": "Champion defeated; choose one of 16 raid bosses"
+        },
+        {
+          "line": 2135,
+          "time": "13:19:39.780",
+          "action": "instance gate UI",
+          "message": "Champion defeated; choose one of 16 raid bosses"
+        },
+        {
+          "line": 2140,
+          "time": "13:19:47.819",
+          "action": "native gate click",
+          "selector": ".l2-rraid-main-button.l2-rraid-gate__enter",
+          "text": "Войти"
+        },
+        {
+          "line": 2142,
+          "time": "13:19:48.107",
+          "action": "native boss gate entry",
+          "request": {
+            "bossSlot": 3
+          },
+          "status": 200,
+          "observedRun": {
+            "phase": "rb_active",
+            "difficulty": 1,
+            "mobKillTarget": 300,
+            "mobKills": 300,
+            "selectedBossSlot": 3,
+            "selectedBossSlotEncoded": true,
+            "selectedBossSpawnId": "l2dop_rb_25098"
+          },
+          "responseTruncated": true,
+          "selectionMeaning": "one handed staff per user explanation; item drop not observed"
+        },
+        {
+          "line": 2144,
+          "time": "13:19:50.587",
+          "action": "native fight click",
+          "page": "/rebirth-raid-lair.html",
+          "selector": ".l2-rraid-fight",
+          "container": "#rebirth-instance-content"
+        },
+        {
+          "line": 2151,
+          "time": "13:19:53.425",
+          "action": "manual boss victory",
+          "bossName": "Rebirth Sejarr's Servitor",
+          "level": 35,
+          "maxHp": 12276,
+          "bossId": "l2dop_rb_25098",
+          "spawnSuffix": "raid_3",
+          "exp": 360,
+          "itemDropObserved": false
+        },
+        {
+          "line": 2158,
+          "time": "13:19:55.114",
+          "action": "native continuation",
+          "phase": "none",
+          "targetKind": null
+        },
+        {
+          "line": 2163,
+          "time": "13:20:02.280",
+          "action": "native new Easy run after completion",
+          "request": {
+            "difficulty": 1
+          },
+          "status": 200,
+          "newRunDifferent": true,
+          "phase": "mobs",
+          "mobKills": 0,
+          "target": 300,
+          "level": 35
+        }
+      ]
+    }
+  ],
+  "unknown": [
+    "Pre-boss gate run.phase exact enum not visible; UI confirms 16-choice gate.",
+    "Full 16-boss catalog, native gate data attributes, selected boss level field and weapon drop IDs absent.",
+    "Current successful entry responses do not expose charged keys; old 26.10 evidence supplies Easy2/Medium4/Hard6 prices."
+  ]
+}
