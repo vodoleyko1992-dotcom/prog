@@ -11,7 +11,7 @@ ORDER.push('v2067-wizard-pet-buff.test.js');
 ORDER.push('v2067-vip-greater-memory.test.cjs');
 ORDER.push('v2068-hp-proof-retry.test.js','v2068-campaign-completion-wait.test.cjs','v2068-campaign-wait-core.test.cjs');
 ORDER.push('v2069-rebirth-hp-proof.test.js');
-ORDER.push('v2071-rebirth-route-isolation.test.cjs','v2071-rebirth-combat-isolation.test.js','v2071-rebirth-isolation-policy.test.cjs','v2071-rebirth-isolation-ui.test.cjs','v2071-rebirth-core-loop.test.cjs');
+ORDER.push('v2071-rebirth-route-isolation.test.cjs','v2071-rebirth-combat-isolation.test.js','v2071-rebirth-isolation-policy.test.cjs','v2071-rebirth-isolation-ui.test.cjs','v2071-rebirth-core-loop.test.cjs','v2071-rebirth-pet-preflight.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){

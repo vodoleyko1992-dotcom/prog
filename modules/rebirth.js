@@ -178,7 +178,15 @@ async function nextFight(ctx) {
   try { if (receipt()?.key === key) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю'); }
   catch (_) { return hold('не удалось прочитать отметку продолжения'); }
   if (rebirthAttempt?.key === key && (rebirthAttempt.busy || Date.now() < rebirthAttempt.until)) return hold('жду повторной серверной сверки');
-  const attempt = rebirthAttempt = { key, busy: true, until: Date.now() + 15000 };
+  // 20.71 (лог27.10 05:49): отменённый до клика await не является отказом сервера и не оставляет паузу15с.
+  // Параллельный вызов удерживает busy; задержка появляется только после фактического отказа сверки.
+  const attempt = rebirthAttempt = { key, busy: true, until: 0 };
+  const retry = async (why, ms = 15000) => {
+    if (rebirthAttempt !== attempt || !current()) return;
+    attempt.until = Date.now() + ms;
+    return hold(why);
+  };
+  let reading = false;
   try {
     if (await env.tvtHoldWait?.() || !current()) return;
     const ready = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
@@ -186,31 +194,35 @@ async function nextFight(ctx) {
     if (!ready) return hold('лимит охоты проверяется или достигнут');
     if (env.actionWait && !await env.actionWait(current) || !current()) return;
     if (typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return hold('не удалось подтвердить память перед продолжением');
+    reading = true;
     const response = await env.gameGet('/character', 4000);
     if (!current()) return;
-    if (!response.ok) { attempt.until = Date.now() + 60000; return hold('персонаж не подтверждён сервером'); }
+    if (!response.ok) return retry('персонаж не подтверждён сервером', 60000);
     const data = await response.json();
     if (!current()) return;
+    reading = false;
     const ch = data?.character || data;
     if (data?.error || data?.ok === false || ch?.name !== char || typeof ch.id !== 'string' || !ch.id || ch.l2Profession !== prof
         || ch.classSlots?.activeSlot !== slot || ch.level !== level || !Number.isSafeInteger(ch.revision) || ch.revision < 0 || ch.inBattle !== false
         || !Number.isSafeInteger(ch.rebirthStage) || ch.rebirthStage <= 0 || !(ch.hp > 0) || special(data) || special(ch))
-      return hold('свой персонаж вне боя не подтверждён');
+      return retry('свой персонаж вне боя не подтверждён');
+    reading = true;
     const result = await env.gameGet('/game/rebirth-raids?view=instance', 4000);
     if (!current()) return;
-    if (!result.ok) { attempt.until = Date.now() + 60000; return hold('оплаченный поход не подтверждён сервером'); }
+    if (!result.ok) return retry('оплаченный поход не подтверждён сервером', 60000);
     const instance = await result.json();
     if (!current()) return;
+    reading = false;
     const run = instance?.activeRun;
     if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0))
-      return hold('принадлежность текущего оплаченного похода не подтверждена');
+      return retry('принадлежность текущего оплаченного похода не подтверждена');
     // 20.68 (лог27.10 13:20): после РБ native next возвращает none; известная победа своего похода доводится до каталога.
     const previous=env.rt.rebirth,closed=mode==='rebirth'&&run===null&&previous?.char===char&&previous.actor===ch.id
       &&previous.prof===prof&&previous.slot===slot&&typeof previous.runId==='string'&&after.startsWith('rebirth_raid_'+previous.runId+'_')&&/_raid_\d+$/i.test(after);
     if (!closed && (typeof run?.id !== 'string' || !run.id || !after.startsWith('rebirth_raid_' + run.id + '_')
         || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id)
         || mode==='rebirth' && (run.partyId!==null || run.participantCharacterIds.length!==1 || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(run.id))))
-      return hold('принадлежность текущего оплаченного похода не подтверждена');
+      return retry('принадлежность текущего оплаченного похода не подтверждена');
     const progress=run&&Number.isSafeInteger(run.mobKillTarget)&&run.mobKillTarget>0&&Number.isSafeInteger(run.mobKills)&&run.mobKills>=0;
     const nextStage=progress&&(run.phase==='mobs'&&(run.mobKills<run.mobKillTarget||mode==='rebirth'&&run.mobKills===run.mobKillTarget)
       ||mode==='rebirth'&&['champion','rb_active'].includes(run.phase)&&run.mobKills>=run.mobKillTarget);
@@ -219,6 +231,10 @@ async function nextFight(ctx) {
       return hold('этап требует вашего выбора — новый вход и логово не открываю');
     }
     if (env.nativePending?.()) return hold('жду завершения запроса игры перед продолжением');
+    // Новый большой этап проходит свою подготовку в каталоге; победу над самим РБ доводим до native next:none.
+    const completedRole=after.match(/_(mob|champion|raid)_\d+$/i)?.[1].toLowerCase();
+    if (!closed && (run.phase==='champion' && completedRole!=='champion' || run.phase==='rb_active' && completedRole!=='raid'
+        || run.phase==='mobs' && env.needsPetPreparation?.())) return env.rebirthReturn?.(current);
     if (!huntReady()) return env.rebirthReturn?.(current);
     const stillReady = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
     if (!current()) return;
@@ -234,7 +250,10 @@ async function nextFight(ctx) {
     if (!env.fire(hunt)) { clear(); return hold('кнопка продолжения не сработала'); }
     await env.waitFor(() => !active() || !env.victory() || JSON.stringify(env.battleInfo?.() || null) !== infoSig, 8000, 50);
     if (current()) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю');
-  } catch (_) { attempt.until = Date.now() + 60000; return hold('серверная сверка не ответила — жду без повторного входа'); }
+  } catch (_) {
+    return reading ? retry('серверная сверка не ответила — жду без повторного входа', 60000)
+      : hold('продолжение прервано до подтверждения — сверю состояние без нового входа');
+  }
   finally { attempt.busy = false; }
 }
 
@@ -352,6 +371,10 @@ async function nextFight(ctx) {
      return status(T,'manual','этап требует вашего выбора; выберите цель в подземелье вручную',info);
     }
     if(!await quota(T))return current(T)?status(T,'quota','лимит охоты проверяется или достигнут',info):true;
+    if(typeof env.prepareRun==='function'){
+     const preparing=await env.prepareRun();if(!current(T))return true;
+     if(preparing){await status(T,'prepare','готовлю героя и суммона перед боем текущего похода',info);return true;}
+    }
     const wantedPage=run.phase==='rb_active'?'/rebirth-raid-lair.html':'/rebirth-raid-dungeon.html';
     if(path()!==wantedPage){
      await status(T,'resume','продолжаю существующий оплаченный поход',info);

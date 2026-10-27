@@ -3952,6 +3952,19 @@ async function paymentReconcileOnly(P) {
   if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();
   if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');
 }
+function rebirthNeedsPet() {
+  const pet=petState();
+  return rebirthModeSelected() && L2EngineCore.rawTaskConfig(cfg).petAuto !== false && pet?.has === false && Date.now()-(pet.t||0)<600000;
+}
+async function rebirthPreparePet() {
+  if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
+  const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,kick=rt.manualKickAt||0;
+  const wanted=()=>on&&tabOwner&&rebirthModeSelected()&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who&&rt.classCur?.prof===prof
+    &&rt.classCur?.slot===slot&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&!isBattle()&&!antibotState()&&!abHold()&&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+  if(rebirthPetTrip(rt.petBufferTrip)){await warlockTripStep();return true;}
+  const preparing=await L2V7Modules.warlock.rebirthPrepare({wanted,returnPath:'/rebirth-raids.html'});
+  return !wanted()||preparing===true||rebirthPetTrip(rt.petBufferTrip);
+}
 // Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати; первым — набор крафтера.
 async function loopTownJobs() {
   if (loopStale()) return true;
@@ -7312,7 +7325,11 @@ async function enchantDispatch() {
 // Поход за платным бафом: нативный вход в город, подтверждённый ответ, баффер, возврат.
 const petTripUnstored = new Set();
 const petMoney = v => typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:typeof v==='string'&&/^\d+$/.test(v)&&Number.isSafeInteger(+v)?+v:null;
-const petTripSame = J => !!J && on && tabOwner && cfg.petFullAuto === true && J.char === rt.char && heroNick() === J.char
+const rebirthPetSettings = () => { if(!rebirthModeSelected())return null;const raw=L2EngineCore.rawTaskConfig(cfg);return {petFullAuto:raw.petFullAuto,petFullBudget:raw.petFullBudget,petFullMaxPrice:raw.petFullMaxPrice,petFullReserve:raw.petFullReserve,petFullRenew:raw.petFullRenew,shopReserve:raw.shopReserve}; };
+const rebirthPetTrip = J => !!J && J.rebirth === true && J.home?.mode === 'rebirth' && J.home.path === '/rebirth-raids.html'
+  && rebirthModeSelected() && J.char === rt.char && J.prof === rt.classCur?.prof && J.slot === rt.classCur?.slot && J.kick === (+rt.manualKickAt || 0);
+const petFullAllowed = J => J?.rebirth === true ? rebirthPetTrip(J) && rebirthPetSettings()?.petFullAuto === true : cfg.petFullAuto === true;
+const petTripSame = J => !!J && on && tabOwner && petFullAllowed(J) && J.char === rt.char && heroNick() === J.char
   && rt.petBufferTrip?.id === J.id && J.kick === (+rt.manualKickAt || 0) && J.home.mode === autonomyMode()
   && (J.home.mode !== 'cat' || J.home.catDungeon === (cfg.catDungeon || null));
 const petTripFree = (J, afterWin = false) => petTripSame(J) && warlockCanRun() && !antibotState() && !abHold()
@@ -7331,11 +7348,12 @@ async function petTripSave(J, patch) {
   petTripUnstored.delete(J.id);return true;
 }
 async function warlockTownStart({char,revision,price}) {
-  if (rt.petBufferTrip || !on || !tabOwner || cfg.petFullAuto!==true || char!==rt.char || heroNick()!==char
+  if (rt.petBufferTrip || !on || !tabOwner || !(cfg.petFullAuto===true || rebirthPetSettings()?.petFullAuto===true) || char!==rt.char || heroNick()!==char
       || !Number.isSafeInteger(revision) || !Number.isSafeInteger(price) || price<0) return false;
   const J={id:crypto.randomUUID(),char,revision,price,kick:+rt.manualKickAt||0,t:Date.now(),phase:'city',cityAt:Date.now(),cityReload:0,
-    home:{mode:autonomyMode(),zone:rt.zone||null,catIn:rt.catIn||null,catDungeon:cfg.catDungeon||null,
-      path:location.pathname==='/dungeon.html'?location.pathname+location.search:fishNow()?'/fishing.html':'/map.html'}};
+    ...(rebirthModeSelected()?{rebirth:true,prof:rt.classCur?.prof,slot:rt.classCur?.slot}:{}),
+    home:{mode:autonomyMode(),zone:rebirthModeSelected()?null:rt.zone||null,catIn:rebirthModeSelected()?null:rt.catIn||null,catDungeon:cfg.catDungeon||null,
+      path:rebirthModeSelected()?'/rebirth-raids.html':location.pathname==='/dungeon.html'?location.pathname+location.search:fishNow()?'/fishing.html':'/map.html'}};
   // Завершённый бой разрешает только начать поездку; незавершённый не покидаем.
   if (!warlockCanRun() || antibotState() || abHold() || (cfg.tvtOn&&L2V7Modules.tvt.tvtHold()) || rt.shop || rt.revive
       || (isBattle()&&!victory()) || (isFishing()&&fishState())) return false;
@@ -7373,7 +7391,7 @@ async function warlockTownNote(d,path) {
 async function warlockTripStep() {
   const J=rt.petBufferTrip;if(!J)return false;
   if (!on || !tabOwner || J.char!==rt.char || heroNick()!==J.char) return false;
-  if (cfg.petFullAuto!==true || J.kick!==( +rt.manualKickAt||0) || J.home.mode!==autonomyMode()
+  if (!petFullAllowed(J) || J.kick!==( +rt.manualKickAt||0) || J.home.mode!==autonomyMode()
       || (J.home.mode==='cat' && J.home.catDungeon!==(cfg.catDungeon||null))) {
     await setRt({petBufferTrip:null});return false; // Новая команда игрока не возвращается к старой цели.
   }
@@ -7472,6 +7490,13 @@ async function petReturnAshen(J,T) {
 }
 async function warlockTripReturn(J) {
   if(!petTripFree(J))return false;
+  // Своя подготовка Rebirth возвращается в каталог похода, без обычных телепортов зоны/катакомб.
+  if(J.rebirth===true){
+    if(!rebirthPetTrip(J))return false;
+    if(location.pathname==='/rebirth-raids.html'){await setRt({petBufferTrip:null});return true;}
+    if(await petTripSave(J,{phase:'returned'})&&petTripFree(J))location.href='/rebirth-raids.html';
+    return true;
+  }
   const T=petReturnTarget(J);
   if(J.phase==='returnSent') {
     if(location.pathname==='/ashen-bastion.html'&&T?.kind==='zone'&&T.id==='ashen_bastion') {await petReturnAshen(J,T);return true;}
@@ -7585,7 +7610,7 @@ if (typeof addEventListener==='function') addEventListener('message',e=>{
     || path==='/game/battle/action' && /^(?:battle_)?(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error||'')) L2V7Modules.warlock?.invalidateSnapshot?.();
 });
 // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo (поход к бафферу платный)
-const warlockCanRun = () => !rt.autoLs?.hold && !rt.autoLs?.pending && cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.() && (L2V7Modules.actions?.owns?.('petBufferTrip') || (!rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
+const warlockCanRun = () => (!rt.autoLs?.hold || rebirthModeSelected()) && !rt.autoLs?.pending && cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.() && (L2V7Modules.actions?.owns?.('petBufferTrip') || (!rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
   && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.travelCheck && !rt.tbuff)) && !rt.enchant?.pending && rt.enchant?.status !== 'running';
 // Вне боя используем ту же родную панель и распознанные метаданные, что и в бою.
 function warlockNativePanel() {
@@ -7607,11 +7632,11 @@ function warlockPetBuffGuess() {
   for (const n of names(cfg.nPetBuffs || '')) { const il = ilOf(n); if (!il || il.target !== 'PET' || !Number.isSafeInteger(il.id)) return null; out.push({ effectId: il.id === 1331 ? 4699 : il.id, name: n }); }
   return out;
 }
-L2V7Modules.warlock = L2V7Factories.warlock({ get actionWait(){return actionWait}, get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
+L2V7Modules.warlock = L2V7Factories.warlock({ get rebirthCfg(){return rebirthPetSettings}, get actionWait(){return actionWait}, get leaseEpoch(){return leaseEpoch}, get petBuffGuess(){return warlockPetBuffGuess},
   get setCfg(){return setCfg}, get setStatus(){return setStatus}, get classNote(){return ch=>{L2V7Modules.story.charNote(ch);L2V7Modules.subclass.charNote(ch)}},
   get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get startPrepWanted(){return startPrepWanted}, get resumeStartBattle(){return resumeStartBattle}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
   get nativePanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()}, get nativePanelPath(){return ()=>location.pathname},
-  get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character|dungeon|fishing)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},   // 20.43: и подземелье/рыбалка
+  get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character|dungeon|fishing|rebirth-raids|rebirth-raid-dungeon|rebirth-raid-lair)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},   // 20.43: и подземелье/рыбалка
   get nativeNavigate(){return path=>{if(on&&tabOwner&&L2V7Modules.actions?.canAct?.()!==false&&/^\/[a-z-]+\.html(?:\?[^#]*)?$/.test(path))location.href=path}}, get nativeFire(){return fire},
   get townBufferReady() { return warlockTownReady; }, get townBufferStart() { return warlockTownStart; },
   get shotContext() { return warlockShotContext; }, get canRun() { return warlockCanRun; }, get cfg() { return cfg; }, get rt() { return rt; }, get on() { return on; }, get tabOwner() { return tabOwner; },
@@ -7632,7 +7657,7 @@ L2V7Modules.rebirth = L2V7Factories.rebirth({
   get canRun(){return ()=>!loopStale()&&autonomyMode()==='rebirth'&&!tvtSoon()&&!abHold()&&((isBattle()&&!victory())||!selfHoldMain()&&!L2V7Modules.payments?.blocked?.())&&!/tvt|pvp/i.test(location.pathname)},
   get heroNick(){return heroNick},get heroLvl(){return heroLvl},get routeLocation(){return actionLocation},get gameGet(){return gameGet},get gamePost(){return gamePost},
   get setRt(){return setRt},get rtCommit(){return rtCommit},get fire(){return fire},get pause(){return pause},get sleep(){return sleep},get shown(){return shown},get $q(){return $q},
-  get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return ()=>false}, // 20.71: городская подготовка не уводит самостоятельный поход; кот и лечение работают в бою.
+  get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return rebirthPreparePet},get prepareRun(){return rebirthPreparePet},get needsPetPreparation(){return rebirthNeedsPet}, // Свой preflight кота возвращается к своему походу.
   get nativePending(){return ()=>[...NET_CONTEXT.values()].some(c=>c.char===rt.char&&c.lease===leaseEpoch&&/^\/game\/(?:rebirth-raids\/(?:start|next|enter-boss)|battle\/(?:start|hunt-continue|action))$/.test(c.path))}
 });
 let warlockCommandBusy = false;

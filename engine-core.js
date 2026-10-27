@@ -343,7 +343,12 @@
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
   function taskJobAllowed(c, key, rt = {}) {
     // Чужие сохранённые маршруты и даже urgent-закупка не уводят отдельный поход; квитанции оплат здесь не меняются.
-    if (rebirthSelected(c)) return key === 'rebirthJob' || key === 'revive';
+    if (rebirthSelected(c)) {
+      const J=rt.petBufferTrip;
+      if(key==='petBufferTrip')return rawTaskConfig(c)?.petFullAuto===true&&J?.rebirth===true&&J.home?.mode==='rebirth'&&J.home.path==='/rebirth-raids.html'
+        &&J.char===rt.char&&J.prof===rt.classCur?.prof&&J.slot===rt.classCur?.slot&&J.kick===(+rt.manualKickAt||0);
+      return key === 'rebirthJob' || key === 'revive';
+    }
     // 22.10: выделенный крафт не возобновляет старые автоматические походы, даже если их службы остались в списке.
     // Разовые команды меню сохраняются; квитанции оплат хранятся отдельно от маршрутов.
     const craftOnly = taskList(c) === null ? rawTaskConfig(c)?.craftMode === true : selectedTask(c,rt) === 'craft';
