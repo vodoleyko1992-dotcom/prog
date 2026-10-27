@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.69",
-  "description": "L2wap Bot 20.69 — Firefox: режим Rebirth, бафф кота Wizard и восстановление охоты",
+  "version": "20.70",
+  "description": "L2wap Bot 20.70 — Firefox: исправлено ожидание HP-сверки мобов Rebirth",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -143,5 +143,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.69"
+  "version_name": "20.70"
 }

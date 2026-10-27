@@ -1,0 +1,31 @@
+{
+  "version": "20.70",
+  "format": "Firefox",
+  "sourceCommit": "777ebf666282bbbf22d55559fd77404c87db62b0",
+  "includedFix": "https://github.com/vodoleyko1992-dotcom/prog/pull/435",
+  "userRequest": "сборка без проверок",
+  "artifact": "builds/l2wap-bot-v20.70-firefox.zip",
+  "bytes": 1729044,
+  "sha256": "3d7c381de616ee9aa09f5be2228adc34447cc1c39e133e9ffeae5de679e63166",
+  "packagedFiles": 69,
+  "checksRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax checks",
+    "module getter checks",
+    "privacy tests",
+    "browser tests",
+    "lint",
+    "archive audit"
+  ],
+  "archiveEntriesSource": "previous Firefox20.69 package allowlist",
+  "oldArchiveRetainedIn": "git history and work/build-20.70-firefox/",
+  "externalBuildDirectoryAvailable": false,
+  "chromeRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "signed": false,
+  "nextStep": "Install in the same folder, reload extension and game tab, then collect a Rebirth run log",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/436",
+  "download": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/d326bbb3a8e75adc27f00c12b238854ae2fdfe17/builds/l2wap-bot-v20.70-firefox.zip"
+}
