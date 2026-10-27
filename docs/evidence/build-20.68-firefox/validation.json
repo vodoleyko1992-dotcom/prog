@@ -11,10 +11,11 @@
   "checks": {
     "node": {
       "pass": 673,
-      "fail": 0
+      "fail": 0,
+      "before_final_commit_repeat": "673 PASS / 0 FAIL"
     },
     "syntax": {
-      "pass": 58,
+      "pass": 59,
       "fail": 0
     },
     "envcheck": {
@@ -42,14 +43,45 @@
       "chromium_major": 156
     },
     "browser_smokes": {
-      "state": "RUNNING"
+      "state": "COMPLETED",
+      "registry_files": 201,
+      "pass": 179,
+      "fail": 0,
+      "unavailable": 21,
+      "skipped_out_of_scope_unchanged_lite": 1,
+      "supplemental_compaction_probe": "PASS",
+      "original_failures_preserved": true,
+      "final_warlock_cases": 12
+    },
+    "browser_targeted": {
+      "files": 7,
+      "pass": 7,
+      "fail": 0,
+      "supplemental_compaction_probe": "PASS"
+    },
+    "browser_fixture_fix": {
+      "file": "tests/v1015-warlock-mv3-browser.cjs",
+      "changed_lines_added": 2,
+      "assertions_unchanged": 49,
+      "full_cases_passed": 12,
+      "runtime_unchanged": true,
+      "description": "Delegate clock/daily GET to existing local harness instead of returning empty JSON; first reload and cityFail failures retained.",
+      "independent_static_review": "PASS",
+      "sha256": "1687dbe7e8fdd3509f13e86253e55b4b476cf9682c3c32da09d952b90e1fde6d"
     }
   },
   "limits": [
     "No live game accessed",
     "No physical Android; ZIP unsigned",
-    "No Chrome/Lite rebuild"
+    "No Chrome/Lite rebuild",
+    "21 historical browser cases lack saved native JavaScript or DOM snapshots; unchanged Lite long test excluded from Firefox main scope after A-G passed."
   ],
   "client_build_date": "2026-10-27",
-  "client_timezone": "Asia/Vladivostok"
+  "client_timezone": "Asia/Vladivostok",
+  "public_download": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/915ab4fcfbeae005a1adee79e05594dc310d893b/builds/l2wap-bot-v20.68-firefox.zip",
+    "sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba",
+    "bytes": 1712876,
+    "verified": true
+  }
 }

@@ -36,6 +36,8 @@ async function test(opt={}){
  await h.ctx.addInitScript(()=>{window.cityDebug=[];window.addEventListener('message',e=>{const d=e.data;if(d?.__l2bot==='net'&&d.path==='/game/world/enter-city')window.cityDebug.push({t:Date.now(),status:d.status,req:d.req,resRevision:d.res?.character?.revision,name:d.res?.character?.name})})});
  await h.sw.evaluate(()=>{globalThis.leaseDebug=[];chrome.storage.onChanged.addListener((d,a)=>{if(a==='local'&&d.lock)globalThis.leaseDebug.push({t:Date.now(),lock:d.lock.newValue})})});
  await h.ctx.route('https://l2wap.com/**',async r=>{const u=new URL(r.request().url()),p=u.pathname;let data=null;try{data=r.request().postDataJSON()}catch(_){}calls.push({p,method:r.request().method(),data});const json=(j,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(j)});
+  // 20.68 (сборка27.10): общий catch-all не подменяет локальные часы и дейлики harness пустым JSON.
+  if(p==='/game/time'||p==='/game/daily-quests')return r.fallback();
   if(p.endsWith('.html')){paths.push(p+u.search);return r.fulfill({contentType:'text/html; charset=utf-8',body:html(p)})}
   if(p==='/character')return json({character:char()});
   if(p==='/game/world/enter-city'){S.cityPosts++;assert.deepEqual(data,{expectedRevision:S.revision});if(opt.stopCity&&!held){held=true;await gate}if(opt.cityFail)return json({error:'city_unavailable'},409);S.entered=true;S.dungeon=null;S.revision++;return json({character:char()});}

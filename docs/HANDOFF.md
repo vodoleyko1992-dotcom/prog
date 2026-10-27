@@ -1,9 +1,10 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 27.10.2026 — Firefox20.68 по просьбе John (Codex, PR в подготовке)
+## 27.10.2026 — Firefox20.68 по просьбе John (Codex, [PR #430](https://github.com/vodoleyko1992-dotcom/prog/pull/430))
 
 - John: «сборка», затем «на фаерфокс». Собран толькоFirefox20.68 из62d07d8 после#429: устранены дубли успешных КД в журнале, все исправления20.67 включены. При упаковке runtime не менялся, настройка задержки500мс прежняя. Версия/header/пятьassertions/README-FIREFOX/история обновлены. Chrome20.66+rollback20.65/Lite1.8.1 прежние.
-- ZIP68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba, строгий прежнийallowlist. NativeFirefox153.5.1esr desktop+AndroidAPI simulationPASS; lint0errors/0notices/51warnings. НезависимыйZIPаудит29PASS. Node673/syntax58/env34/privacy0 PASS; полныйbrowser выполняется.
+- ZIP68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba, строгий прежнийallowlist. NativeFirefox153.5.1esr desktop+AndroidAPI simulationPASS; lint0errors/0notices/51warnings. НезависимыйZIPаудит29PASS. Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS.
+- В старом Warlock-browser catch-all отвечал {} на часы/дейлики и давал недетерминированные отказы reload/cityFail; передача этих двух GET существующей локальной заглушке исправляет только setup. Все49assertions/таймауты/оплаты прежние; полный12casesPASS, независимое ревьюPASS. Исходные сбои сохранены, baseline reloadPASS. Nodeвходы/runtime/ZIP не менялись; повтор673/0 перед финальнымкоммитомPASS. 21UNAVAILABLE — нетnativeJS/DOM, LiteA–G прошли, полный Lite-прогон не заявляется.
 - СтарыйFirefox20.67ZIP заменён новым, точнаякопия вwork/build-20.68-firefox иgitистории; SHA67сохранён. Внешняяпапканедоступна. GeckoID/минимум128сохранены, пакетнеподписан. Живаяигра/физическийAndroidнепроверялись. Следующийшаг — установитьвпрежнююпапку, перезагрузитьдополнение/вкладку иприслатьконтрольныйжурнал20.68. НеподтверждённыеRebirthbossфазы/fish→next не объявляются исправленными.
 
 ## 27.10.2026 — журнал 20.67: дубли успешных КД (Codex, [PR #429](https://github.com/vodoleyko1992-dotcom/prog/pull/429))

@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-**Firefox20.68 (27.10, John «сборка», «на фаерфокс», PR в подготовке):** база62d07d8 после#429, успешные КД без дублирующей строки при полном покрытии battle evidence. Архив68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba. NativeFirefox153.5.1esr desktop/AndroidAPI simulationPASS, lint0errors/51warnings, независимыйZIPаудит29PASS. Node673/syntax58/env34/privacy0 PASS; полныйbrowser выполняется. GeckoID/настройки сохранены, runtime при упаковке не менялся. ТолькоFirefox; Chrome20.66/Lite1.8.1 прежние. Живаяигра/физическийAndroidне проверялись; пакет неподписан.
+**Firefox20.68 (27.10, John «сборка», «на фаерфокс», [PR #430](https://github.com/vodoleyko1992-dotcom/prog/pull/430)):** база62d07d8 после#429, успешные КД без дублирующей строки при полном покрытии battle evidence. Архив68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba. NativeFirefox153.5.1esr desktop/AndroidAPI simulationPASS, lint0errors/51warnings, независимыйZIPаудит29PASS. Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS. GeckoID/настройки сохранены, runtime при упаковке не менялся. ТолькоFirefox; Chrome20.66/Lite1.8.1 прежние. Живаяигра/физическийAndroidне проверялись; пакет неподписан.
 
 **Исходники после20.67 (27.10, журнал):** по TXT/learn00:41 найдены 860 дублирующих успешных CD-событий за34мин (477692байта/7,594% TXT). Отдельная строка убирается только у POST action с включённым netLog и полным совпадением всех полей с безопасным battle evidence; ошибки/неизвестные/обрезанные формы и GET сохраняются. Запросы игры/настройка задержки500мс не меняются. Node673/новые48/syntax3/env34/независимое ревью PASS, replay860/860; версия иZIP20.67 прежние, живаяигра ибраузерныйпрогон не запускались. Отчёт docs/LOG-OPTIMIZATION-2026-10-27.md.
 
@@ -258,7 +258,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **20.68 Firefox (27.10):** #429 — успешные КД без дублей, отказы и неполные формы сохранены. ТолькоFirefox, Chrome20.66/Lite1.8.1 прежние; changelog20.68. NativeFirefox/AndroidAPI simulation/lint/ZIPаудит PASS, Node673/syntax58/env34/privacy0 PASS; полныйbrowser выполняется.
+- **20.68 Firefox (27.10):** #429 — успешные КД без дублей, отказы и неполные формы сохранены. ТолькоFirefox, Chrome20.66/Lite1.8.1 прежние; changelog20.68. NativeFirefox/AndroidAPI simulation/lint/ZIPаудит PASS, Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS.
 
 - **20.67 Firefox (27.10):** #422/#423/#425/#426/#427, толькоFirefox; nativeDesktop/AndroidAPI simulation и ZIPаудит PASS, Node672/syntax53/env34PASS; browser201:182PASS/0FAIL/19UNAVAILABLE (нетnativeJS), безправокruntime. ChromeZIP20.66/Lite1.8.1 прежние; changelog20.67.
 
