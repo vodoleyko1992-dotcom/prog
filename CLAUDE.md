@@ -1,5 +1,7 @@
 # L2wap Bot — контекст для работы в Claude Code
 
+**Firefox20.70 (27.10, John «сборка без проверок»):** база777ebf6 после PR#435. Включено исправление HP-сверки обычного Rebirth-mob при11160→16740HP. Только упаковка: версия/header/5versionassertions/README и история; проверок сборки нет по прямой просьбе. Прежние683Node/40целевых/ChromeMV3 3PASS относятся к исправлению ДО упаковки, не к20.70. GeckoID/профили сохранены; Chrome20.66/Lite1.8.1 прежние. Changelog20.70. Живуюигру не открывать.
+
 **Firefox20.69 (27.10, по просьбе John, [PR #434](https://github.com/vodoleyko1992-dotcom/prog/pull/434)):** включает отдельный режим Rebirth из [PR #433](https://github.com/vodoleyko1992-dotcom/prog/pull/433), Wizard/Greater из#431 и HP/Dion из#432. Easy/ручной вход/ручной выборРБ по умолчанию; автоматический следующий вход и повтор подтверждённого РБ с одноручным посохом включаются отдельно. Исходная проверка режима:682Node PASS/0FAIL, env35, Chrome156MV3 Rebirth3/3;35модулей/54runtimeJS. Итог:Node682/0FAIL,syntax66+Python2/env35;browser203:181PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope,97повторовPASS. NativeFirefox153.5.1esr desktop/AndroidAPIsimPASS,lint0errors/51warnings;ZIP69/1728508B/SHA4ddfaba…506fed4d,аудит35PASS. Две мобильныеCSSправки устраняют переполнение/обрезание; JSприупаковке прежний,кромеversionheader. Chrome20.66/Lite1.8.1 прежние, GeckoID/профили сохранены; живуюигру не открывать. Описание — docs/changelog/CHANGELOG-20.69.md.
 
 **Firefox20.68 (27.10, John «сборка», «на фаерфокс», [PR #430](https://github.com/vodoleyko1992-dotcom/prog/pull/430)):** база62d07d8 после#429, успешные КД без дублирующей строки при полном покрытии battle evidence. Архив68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba. NativeFirefox153.5.1esr desktop/AndroidAPI simulationPASS, lint0errors/51warnings, независимыйZIPаудит29PASS. Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS. GeckoID/настройки сохранены, runtime при упаковке не менялся. ТолькоFirefox; Chrome20.66/Lite1.8.1 прежние. Живаяигра/физическийAndroidне проверялись; пакет неподписан.
@@ -260,6 +262,8 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
+- **20.70 Firefox (27.10, без проверок):** #435, обычные мобы Rebirth с выросшим HP подтверждаются свежим серверным снимком. Проверки упаковки пропущены по прямой просьбе; предыдущие683Node не являются проверкой сборки20.70. Chrome20.66/Lite1.8.1 прежние; changelog20.70.
+
 - **20.69 Firefox (27.10, подготовка):** #431/#432/#433 — бафф кота Wizard/сохранение Greater, восстановление HP-сверки и местная охота при ожидании Dion, отдельный Rebirth с Easy, галочкой следующего входа и ручным либо подтверждённым staff-выборомРБ. Исходники:682Node PASS/0FAIL,35модулей/54runtimeJS; финальная сборочная проверка выполняется. ТолькоFirefox; Chrome20.66/Lite1.8.1 прежние. Changelog20.69.
 
 - **20.68 Firefox (27.10):** #429 — успешные КД без дублей, отказы и неполные формы сохранены. ТолькоFirefox, Chrome20.66/Lite1.8.1 прежние; changelog20.68. NativeFirefox/AndroidAPI simulation/lint/ZIPаудит PASS, Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS.
@@ -466,6 +470,8 @@ Firefox ставится как временное дополнение (`about:
 - 7.1.31: раздел «🐱 Слуга» (`tab-pet`), статистика котов `rt.petStat` (hits/hitDmg/crits/misses/acts/deaths/summons) + `rt.petAdvice` (после 30 боёв), добивание с учётом удара кота (`petExpect` в magePlan; только при MP < petFinishMp 80 %), баффы кота (`nPetBuffs`, `rt.petBuffAt`, `rt.petBornT`), `noEffect` по `rt.skillDb[..].desc` (Body To Mind больше не жмётся), Corpse Life Drain не удар; по логу 10.10: zoneForLevel → сразу лучшая замеренная зона, дебаффы по окупаемости, спам «Обнаружен питомец», тотем воина у мага.
 
 ## Известные ограничения / что дальше
+
+- **Firefox20.70:** сборка без проверок по прямой просьбе. После установки нужен журнал следующего Rebirth-похода с ростом HP; ранние500invalid_spawn и общий fish→next этим выпуском не закрыты. Живаяигра/Firefox/Android при упаковке не запускались.
 
 - **Firefox20.69:** завершить проверки итоговой версии и неподписанного FirefoxZIP, затем получить журнал установленной20.69: Wizard/кот и восстановление Magnus, HP-сверка/Dion, Easy300мобов→чемпион→выборРБ→логово→новый вход по галочке. ВыборРБ изначально ручной; автоматизирован только подтверждённый вариант одноручного посоха, остальные15не восстановлены. Живаяигра/физическийAndroidне проверяются при сборке. Общий fish→next остаётся отдельной темой.
 

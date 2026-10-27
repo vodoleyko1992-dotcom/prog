@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.69 — Firefox: режим Rebirth, бафф кота Wizard и восстановление охоты =====
+// ===== L2wap Bot v20.70 — Firefox: исправлено ожидание HP-сверки мобов Rebirth =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
