@@ -38,7 +38,8 @@ async function run(kind){const h=await harness();const visits=[],posts=[];try{
  if(kind==='raid+farm'){
   await until(()=>visits.length>0,40000);
   assert.ok(rows.some(r=>r.id===visits[0]),'бой с мобом этой точки');
-  const st=await h.g.core('({idle:rt.rbHuntIdle,next:rt.rbHunt?.next,sel:L2EngineCore.selectedTask(cfg,rt)})');
+  // 20.69: visits отмечает начало запроса, когда прежний документ уже исчезает. Читаем состояние после загрузки нового мира и настроек.
+  const st=await until(()=>h.g.core('location.pathname==="/battle.html" && rt.char==="AuditHero" && JSON.stringify(cfg.autoTasks)==='+JSON.stringify(JSON.stringify(tasks))+' ? ({idle:rt.rbHuntIdle,next:rt.rbHunt?.next,sel:L2EngineCore.selectedTask(cfg,rt)}) : null'));
   assert.equal(st.sel,'raid');assert.match(st.next||'',/фарм на месте при наличии мобов/);
  }else{
   await delay(6000);

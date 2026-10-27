@@ -14,7 +14,7 @@ assert.equal(n, 6, 'шесть кнопок быстрого запуска, в�
 const wide = css.match(/^\.quick-start\{[^}]*grid-template-columns:auto repeat\((\d+),minmax\(0,1fr\)\)/m);
 assert.ok(wide, 'общая сетка: подпись + колонки кнопок');
 assert.equal(+wide[1], n, 'на широкой панели каждая кнопка — в своей колонке одной строки');
-const narrowAt = css.indexOf('@media (max-width:420px){.quick-start{'), narrow = css.slice(narrowAt).match(/^@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\((\d+),auto\)\}/);
+const narrowAt = css.indexOf('@media (max-width:420px){.quick-start{'), narrow = css.slice(narrowAt).match(/^@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\((\d+),auto\)(?:;[^}]*)?\}/);
 assert.ok(narrowAt >= 0 && narrow, 'узкая панель: колонки по ширине надписи');
 assert.equal(+narrow[1], n, 'на узкой панели все кнопки в одну строку');
 const baseBtn = css.search(/^\.quick-start button\{/m);

@@ -13,6 +13,8 @@ with sync_playwright() as p:
  VISIBLE=[t for t in NAV if t!='enchant']
  for width,height,mode in [(760,680,'wide'),(375,740,'dock')]:
   page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+  # Локальный DOM-стенд: любой случайный сетевой запрос блокируется до загрузки меню.
+  page.route('**/*',lambda route:route.abort())
   errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.evaluate(mock)
@@ -64,13 +66,15 @@ with sync_playwright() as p:
   assert page.locator('#quickModeGrid').is_visible()
   assert page.locator('#quickModeGrid button[data-mode]').count()==0
   tasks=page.locator('#autoTaskSelection input[data-auto-task]')
-  # 20.54 (прогон смоуков 23.10): 16-я задача «Крафт» (22.10, 337c33b — отдельный режим craft); «Автозаточка» осталась в разметке,
-  # но скрыта и выключена (решение игрока 19.10) — видимых галок 15
-  assert tasks.count()==16
-  assert set(tasks.evaluate_all('(els)=>els.map(e=>e.dataset.autoTask)'))=={'tvt','enchant','craft','epic','raid','quests','fish','cat','auto','farm','mammon','dailies','clan','pvp','petbuff','resources'}
+  # 27.10: Rebirth — 17-я задача, настройки внутри «Охоты»; число верхних вкладок прежнее.
+  # «Автозаточка» остаётся скрытой и выключенной (решение игрока 19.10), видимых галок16.
+  expected_tasks={'tvt','enchant','craft','epic','raid','rebirth','quests','fish','cat','auto','farm','mammon','dailies','clan','pvp','petbuff','resources'}
+  assert tasks.count()==17
+  assert set(tasks.evaluate_all('(els)=>els.map(e=>e.dataset.autoTask)'))==expected_tasks
+  assert set(tasks.evaluate_all('(els)=>els.filter(e=>e.offsetParent).map(e=>e.dataset.autoTask)'))==expected_tasks-{'enchant'}
   assert tasks.evaluate_all('(els)=>els.filter(e=>e.offsetParent).map(e=>e.dataset.autoTask)').count('enchant')==0
   assert page.locator('#autoTaskSelection input[data-auto-task="enchant"]').is_disabled()
   assert page.locator('#autoTaskSelection').is_visible()
   page.close()
  browser.close()
-print('PASS: Classic in-game layout, 14 visible sections (enchant hidden), 16 allowed tasks (enchant hidden/disabled), 375px dock, +10 setting, zero console errors')
+print('PASS: Classic in-game layout, 16 visible sections (enchant hidden), 17 allowed tasks including Rebirth (enchant hidden/disabled), 375px dock, +10 setting, zero console errors')

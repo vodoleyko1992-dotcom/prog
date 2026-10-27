@@ -59,6 +59,8 @@ with sync_playwright() as p:
   VISIBLE=[t for t in NAV if t!='enchant']
   for width,height,label in [(760,720,'wide'),(375,720,'dock')]:
     page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+    # Локальный DOM-стенд: любой случайный сетевой запрос блокируется до загрузки меню.
+    page.route('**/*',lambda route:route.abort())
     page.evaluate(mock)
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
