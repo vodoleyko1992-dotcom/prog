@@ -1,0 +1,28 @@
+{
+  "version": "20.71",
+  "format": "Chrome",
+  "sourceBase": "a3541eb45b91a066a62d209432d437a281786027",
+  "userRequest": "Сборка на Хром; прежняя просьба без проверок сохраняется",
+  "artifact": "builds/l2wap-bot-v20.71.zip",
+  "bytes": 1736587,
+  "sha256": "1df8b96e40ade42a7f04b8b0c9da61ebe3b02976212984d488020e91a83a78ef",
+  "packagedFiles": 69,
+  "checksRun": false,
+  "testsRun": false,
+  "browserRun": false,
+  "archiveAuditRun": false,
+  "liveGameOpened": false,
+  "runtimeChanged": false,
+  "packagingOnlyChanges": [
+    "browser-neutral manifest description and content header",
+    "Chrome README"
+  ],
+  "retainedChromeRollback": "builds/l2wap-bot-v20.66.zip",
+  "removedOldChromeBackup": "work/build-20.71-chrome/l2wap-bot-v20.65.zip and git history",
+  "externalBackupDirectoryAvailable": false,
+  "firefoxRebuilt": false,
+  "liteRebuilt": false,
+  "delivery": "immutable GitHub raw URL",
+  "pullRequest": "PR в подготовке",
+  "nextStep": "Распаковать поверх, перезагрузить расширение и вкладку игры; полный журнал чемпион→РБ→завершение"
+}

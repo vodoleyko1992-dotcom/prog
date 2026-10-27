@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "L2wap Bot",
   "version": "20.71",
-  "description": "L2wap Bot 20.71 — Firefox: отдельные подземелья Rebirth, чемпион и РБ похода",
+  "description": "L2wap Bot 20.71 — отдельные подземелья Rebirth, чемпион и РБ похода",
   "permissions": [
     "storage",
     "unlimitedStorage",
