@@ -26,7 +26,8 @@ test('mainTick: шаги в прежнем порядке',()=>{
  // 20.43 (ревью au/breather): loopSelfHold только завершает истёкшую передышку, а ждёт loopSelfHoldWait — после всех служб, перед туром и
  // основной работой (Маммон, квесты, дейлики, команды меню и сверка оплаты на передышке идут)
  // 20.43 (слияние au/travel + au/breather): loopSelfHold (круг не держит) → loopTravel (сверка перелёта идёт и на передышке) → список задач
- assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
+ // 20.68: Rebirth владеет внебоевым маршрутом после команд меню, до подготовки и обычных служб.
+ assert.deepEqual(order,['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopCraft','loopPriority','loopMenuJobs','loopRebirth','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity']);
  for(const f of order)assert.match(steps,new RegExp('async function '+f+'\\(\\) \\{'),f);
  // прежний порядок ключевых веток по тексту
  const at=s=>{const i=steps.indexOf(s);assert.ok(i>0,s);return i;};

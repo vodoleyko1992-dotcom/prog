@@ -1204,5 +1204,42 @@
       "victory",
       "waitX"
     ]
+  },
+  "rebirth": {
+    "exports": [
+      "on",
+      "step",
+      "note",
+      "summary"
+    ],
+    "dependencies": [
+      "$q",
+      "actionGeneration",
+      "browserTabKey",
+      "canAct",
+      "canRun",
+      "cfg",
+      "completedBoss",
+      "dailyWorkReady",
+      "fire",
+      "gameGet",
+      "gamePost",
+      "heroLvl",
+      "heroNick",
+      "leaseEpoch",
+      "nativePending",
+      "on",
+      "pause",
+      "prepareEntry",
+      "rec",
+      "routeLocation",
+      "rt",
+      "rtCommit",
+      "setRt",
+      "setStatus",
+      "shown",
+      "sleep",
+      "tabOwner"
+    ]
   }
 }

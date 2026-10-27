@@ -8,8 +8,8 @@ const html = R('popup.html'), js = R('popup.js'), css = R('ui-game.css');
 const box = html.match(/<div id="quickStart"[^]*?<\/div>/)?.[0] || '';
 assert.ok(box, 'блок #quickStart есть');
 assert.ok(html.indexOf('id="quickStart"') > html.indexOf('id="activityPanel"') && html.indexOf('id="quickStart"') < html.indexOf('</header>'), 'кнопки в шапке, на первом экране');
-// 22.10: к прежним четырём режимам добавлен быстрый запуск крафта.
-assert.deepEqual([...box.matchAll(/data-quick-task="(\w+)"/g)].map(m => m[1]), ['farm', 'auto', 'fish', 'cat', 'craft']);
+// 22.10: к четырём режимам добавлен крафт; 27.10: отдельный Rebirth перед крафтом.
+assert.deepEqual([...box.matchAll(/data-quick-task="(\w+)"/g)].map(m => m[1]), ['farm', 'auto', 'fish', 'cat', 'rebirth', 'craft']);
 assert.match(box, /\shidden>/, 'по умолчанию скрыт до первой отрисовки');
 // только основные дела, фоновые задачи сохраняются, кампания выключается вместе с квестами, затем обычный «Старт»
 const fn = js.match(/async function quickStart\(key\) \{[^]*?\n\}/)?.[0] || '';
@@ -20,6 +20,6 @@ assert.match(fn, /\+\+controlGeneration/, 'Стоп во время записи
 // видимость: только когда бот остановлен и не на паузе
 assert.match(js, /quick:!st\.paused \};/);
 assert.match(js, /\$\('quickStart'\)\.hidden = !activity\.quick;/);
-// узкая панель: без значков и подписи, без горизонтальной прокрутки; 20.54: пять кнопок (с «Крафт» 22.10) в одну строку по ширине надписи
-assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(5,auto\)\}/);
+// узкая панель: без значков и подписи, без горизонтальной прокрутки; с Rebirth шесть кнопок остаются в одну строку по ширине надписи
+assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(6,auto\)\}/);
 console.log('v2014-quick-start PASS');

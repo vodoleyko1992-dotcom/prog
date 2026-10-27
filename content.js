@@ -220,12 +220,13 @@ async function finishFishGoal(T) {
 // 20.8: считаем мобов по серверному mobsKilled, а не бои; массовые убийства не теряются в коротком логе.
 function farmQuotaTask() {
   const raw = L2EngineCore.rawTaskConfig(cfg), chosen = L2EngineCore.selectedTask(cfg, rt);
+  if (chosen === 'rebirth') return 'rebirth';
   if (chosen === 'auto' || chosen === 'cat') return chosen;
   if (chosen) return '';
-  return autonomyMode() === 'cat' ? 'cat' : autonomyMode() === 'farm' && raw.zoneAuto ? 'auto' : '';
+  return autonomyMode() === 'rebirth' ? 'rebirth' : autonomyMode() === 'cat' ? 'cat' : autonomyMode() === 'farm' && raw.zoneAuto ? 'auto' : '';
 }
 const farmQuotaKey = task => task === 'auto' ? 'autoKillLimit' : 'catKillLimit';
-const farmQuotaLimit = task => { const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
+const farmQuotaLimit = task => { if(task === 'rebirth')return 0; const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
 const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
 // 20.12 (ревизия 17.10, аудит H1/F1/F9/Q-2/Q-3/M4): дневной лимит включён у всех, а на каждого моба бот делал свой GET /character
 // до и после боя; при сбое счётчика герой стоял в открытом бою без ударов, на экране победы GET шёл каждый круг. Теперь счётчик —
@@ -309,8 +310,8 @@ const quotaWaitOver = W => W.n >= 5 || Date.now() - W.t0 >= 30000;
 // 17.10.2026: после смены суток/reload владелец уже начатого боя важнее нового приоритета задач.
 function farmQuotaPending(spawn) {
   const raw = L2EngineCore.rawTaskConfig(cfg), enabled = task => L2EngineCore.taskList(cfg) !== null
-    ? L2EngineCore.taskAllowed(cfg, task) : task === 'cat' ? raw.catMode : raw.zoneAuto;
-  return ['auto','cat'].map(task => ({ task, row: rt.farmQuota?.[task] })).filter(({task,row}) => enabled(task)
+    ? L2EngineCore.taskAllowed(cfg, task) : task === 'rebirth' ? raw.rebirthMode : task === 'cat' ? raw.catMode : raw.zoneAuto;
+  return ['auto','cat','rebirth'].map(task => ({ task, row: rt.farmQuota?.[task] })).filter(({task,row}) => enabled(task)
     && row?.pending && !row.done && row.pending.spawn === spawn && row.limit === farmQuotaLimit(task) && (farmQuotaLimit(task) || farmDailyLimit(task)));
 }
 async function beginFarmQuota(spawn, onBase = null) {
@@ -495,7 +496,7 @@ async function dailyWorkReady(kind) {
   // Исторически дневной cap снимает auto/cat, но не явно выбранные farm/raid/quests.
   // Когда cap уже сменил auto на tasks, поздний прямой путь боя тоже закрыт.
   const mode=autonomyMode();
-  if(kind==='mobs' && !['farm','cat','campaign','raid','epic'].includes(mode) && !(mode==='tasks' && L2EngineCore.taskAllowed(cfg,'resources') && lootGoal()))return false;
+  if(kind==='mobs' && !['farm','cat','campaign','raid','epic','rebirth'].includes(mode) && !(mode==='tasks' && L2EngineCore.taskAllowed(cfg,'resources') && lootGoal()))return false;
   if(!quotaTask || !L2EngineCore.dailyLimit(cfg,task))return true;
   if(!dailyServerCurrent()) {
     let parkedFish=false;
@@ -2990,7 +2991,7 @@ function tasksGoalNote(g) {
   rec('S', 'режим', `только задачи: цель ${g.kind === 'farm' ? 'фарма' : 'охоты на рецепт'} «${g.name}» — бью мобов-источники на её точке (снимите ✓ у «${g.name}» в «${g.kind === 'farm' ? 'Фарм ресурсов' : 'Охота на рецепты'}», чтобы бот не бил мобов)`);
 }
 const autonomyMode = () => L2EngineCore.selectedTask(cfg, rt) === 'quests' ? 'campaign' : L2EngineCore.selectedTask(cfg, rt) === 'auto' ? 'farm' : L2EngineCore.selectedTask(cfg, rt) || L2EngineCore.chooseMode({
-  enchant: cfg.enchantMode === true, craft: cfg.craftMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
+  enchant: cfg.enchantMode === true, craft: cfg.craftMode === true, epic: epicOn(), raid: huntOn(), rebirth: cfg.rebirthMode === true, fish: !!cfg.fishMode,
   cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
 // 20.43 (автономность, ревью 21.10): «режим маршрута» — выбор игрока без автоматических пропусков (передышка rt.selfHold, ожидание тура
@@ -3194,7 +3195,8 @@ async function pveFishingStep() {
 let TAB_KEY = (() => { try { let k = sessionStorage.getItem('l2botTab'); if (!k) { k = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('l2botTab', k); } return k; } catch (e) { return Math.random().toString(36).slice(2, 10); } })();
 // v5.6: ключ — номер вкладки в браузере (у дубликата вкладки он свой; sessionStorage дубликат копирует → два бота с одним ключом).
 // Номер не узнали (старый браузер, ошибка) — остаётся ключ из sessionStorage
-const TAB_KEY_READY = chrome.runtime.sendMessage({ cmd: 'tabId' }).then(id => { if (Number.isInteger(id) && id >= 0) TAB_KEY = 'tab' + id; }).catch(() => {});
+let BROWSER_TAB_KEY = '';
+const TAB_KEY_READY = chrome.runtime.sendMessage({ cmd: 'tabId' }).then(id => { if (Number.isInteger(id) && id >= 0) TAB_KEY = BROWSER_TAB_KEY = 'tab' + id; }).catch(() => {});
 let tabOwner = false;
 var tabIdle = false;
 var ATK_NET = null;
@@ -3385,7 +3387,7 @@ const loopStale = () => !on || !tabOwner || ['enchant','craft'].includes(autonom
 // перелёта loopTravel — сразу за ним, раньше списка задач и диспетчера (идёт и на передышке: бесплатный GET); ожидание передышки — loopSelfHoldWait
 async function mainTick() {
   return await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent() || await loopSelfHold()
-    || await loopTravel() || await loopTaskList() || await loopEnchant() || await loopCraft() || await loopPriority() || await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()
+    || await loopTravel() || await loopTaskList() || await loopEnchant() || await loopCraft() || await loopPriority() || await loopMenuJobs() || await loopRebirth() || await loopStartPrep() || await loopTownJobs()
     || await loopSideJobs() || await loopSelfHoldWait() || await loopRaid() || await loopActivity();
 }
 // Замок вкладки: «один бот на все вкладки»; новая выдача замка перечитывает хранилище.
@@ -3846,7 +3848,7 @@ async function resumeStartBattle(ch, valid = () => true) {
   } catch (_) { return unconfirmed(); }
 }
 const START_PREP_MS = 120000;
-const START_PREP_TASK = { cat: 'катакомбы', auto: 'автофарм', farm: 'фарм', quests: 'квесты' };
+const START_PREP_TASK = { cat: 'катакомбы', auto: 'автофарм', farm: 'фарм', quests: 'квесты', rebirth: 'подземелья Rebirth' };
 function startPrepTask() { const t = L2EngineCore.selectedTask(cfg, rt); if (t != null) return t; const m = autonomyMode(); return m === 'campaign' ? 'quests' : m; }
 function startPrepProf() { return String(rt.classCur?.prof || rt.prof || '').trim().toLowerCase().replace(/[ -]+/g, '_').replace(/^human_/, ''); }
 function startPrepEligible() { return cfg.petAuto !== false && /^(wizard|warlock|arcana_lord|dark_avenger|hell_knight)$/.test(startPrepProf()) && Object.hasOwn(START_PREP_TASK, startPrepTask()); }
@@ -3909,6 +3911,23 @@ async function loopStartPrep() {
     return next('done', 'кот призван и забафан — начинаю задачу');
   }
   return false;
+}
+// Rebirth владеет своим маршрутом; обычные службы не уводят уже оплаченный поход в Окрестности.
+async function loopRebirth() {
+  if (autonomyMode() !== 'rebirth' || !cfg.rebirthMode || isBattle()) return false;
+  await L2V7Modules.rebirth.step();
+  if (on && tabOwner && autonomyMode() === 'rebirth') { await sleep(200); return true; }
+  return false;
+}
+async function rebirthReturn(valid = () => true) {
+  const who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,generation=automationGeneration,page=location.href;
+  const title=$q('#battle-mob-title')?.textContent,info=JSON.stringify(BATTLE_NET||null);
+  const current=()=>on&&tabOwner&&cfg.rebirthMode===true&&autonomyMode()==='rebirth'&&heroNick()===who&&rt.char===who
+    &&rt.classCur?.prof===prof&&rt.classCur?.slot===slot&&leaseEpoch===epoch&&automationGeneration===generation&&location.href===page
+    &&victory()&&$q('#battle-mob-title')?.textContent===title&&JSON.stringify(BATTLE_NET||null)===info
+    &&L2V7Modules.actions?.canAct?.()!==false&&!antibotState()&&!L2V7Modules.pvp?.pending()&&valid();
+  if (!current() || !await rtCommit() || !current()) return;
+  actionLocation.href='/rebirth-raids.html';
 }
 // Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати; первым — набор крафтера.
 async function loopTownJobs() {
@@ -5624,6 +5643,22 @@ const combatWait=(...args)=>combatSignal.wait(...args),combatPulse=ms=>combatSig
 // 15.10, ревизия: ответ без имени героя (TvT/карта/дейлики) принадлежит контексту начала запроса.
 // Отдельно от трёхсекундного busy: поздний ответ не становится ответом нового персонажа.
 const NET_CONTEXT = new Map();
+// Итог похода подтверждает только native next из победы над выбранным РБ своего похода.
+// Снимок берём при отправке: к приходу ответа игра уже может открыть каталог.
+function rebirthBossProof() {
+  const s=rt.rebirth,spawn=battleSpawn(),boss=/^l2dop_rb_(\d+)$/.exec(s?.selectedBossSpawnId||'')?.[1];
+  if(!on||!tabOwner||!cfg.rebirthMode||autonomyMode()!=='rebirth'||!victory()||!boss||s?.runPhase!=='rb_active'
+    ||s.char!==rt.char||heroNick()!==rt.char||s.prof!==rt.classCur?.prof||s.slot!==rt.classCur?.slot
+    ||!spawn.startsWith('rebirth_raid_'+s.runId+'_')||!spawn.includes('_'+boss+'_')||!/_raid_\d+$/.test(spawn)
+    ||BATTLE_NET?.spawn!==spawn||BATTLE_NET?.kind&&BATTLE_NET.kind!=='dungeon')return null;
+  return {spawn,char:rt.char,prof:s.prof,slot:s.slot,runId:s.runId,actor:s.actor,lease:leaseEpoch,generation:automationGeneration};
+}
+function rebirthCompletedBoss(after,c) {
+  const p=c?.rebirthBoss,s=rt.rebirth;
+  return !!p&&p.spawn===after&&p.char===rt.char&&p.char===heroNick()&&p.prof===rt.classCur?.prof&&p.slot===rt.classCur?.slot
+    &&p.lease===leaseEpoch&&p.generation===automationGeneration&&p.runId===s?.runId&&p.actor===s?.actor&&on&&tabOwner
+    &&cfg.rebirthMode===true&&autonomyMode()==='rebirth';
+}
 // 23.10 (лог 13:17, 23:15:58): ручной «Телепорт» игрока к другому РБ ушёл раньше клика бота — игра свой клик проглотила
 // (teleportInFlight), а оплата бота осталась «отправленной» без запроса. Последний старт телепорта РБ в этом документе — для raid.rbTeleportFire
 let RAID_TP_START = null;
@@ -5633,6 +5668,7 @@ function netContextStart(d) {
   // 20.43 (ревью au/travel): метка своего телепорта (nativeNonce) — только первые 30 с после клика бота (navigation.nativeNonce):
   // квитанция открыта до 30 мин сверки, и ручной клик игрока раньше засчитывался клику бота
   NET_CONTEXT.set(d.rid,{path:d.path||'',char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:L2V7Modules.navigation?.nativeNonce?.()||'',at:Date.now(),monsterToken:L2V7Modules.combat?.monsterRequestToken?.(d)||''});
+  if(d.path==='/game/rebirth-raids/next'&&d.method==='GET')NET_CONTEXT.get(d.rid).rebirthBoss=rebirthBossProof();
   if (d.path === '/game/raid-boss/teleport' && d.method === 'POST') RAID_TP_START = { t: Date.now(), id: String(d.req?.spawnId || ''), paymentId: NET_CONTEXT.get(d.rid)?.paymentId || '' };
   if (d.path === '/game/battle/action' && d.method === 'POST') L2V7Modules.combat?.noteToggleBattle?.(d,Date.now());
   if (d.path === '/character/skills/cast' && d.method === 'POST') L2V7Modules.buffs?.detectOutsideRequest?.(d,Date.now())?.catch?.(e=>quietErr('Detect request',e));
@@ -5766,6 +5802,7 @@ addEventListener('message', e => {
   const d = e.data, path = apiPath(String(d.url || ''));
   if (d.rid != null && GAME_REQ.delete(d.rid)) { GAME_END = Date.now(); combatSignal.notify(); }
   const netContext=netContextTake(d);if(netContext===false)return;
+  if (/^\/game\/rebirth-raids(?:\/|$)/.test(path)) L2V7Modules.rebirth?.note(path,d,netContext)?.catch(e=>modErr('Rebirth: результат',e,true));
   // 18.10, журнал 22:27: точный запрос из позднего ответа дополняет потерянный netStart только в прежнем контексте.
   try { L2V7Modules.fishing?.castResponseNote?.(path,d,netContext); } catch (_) {}
   try { L2V7Modules.raid?.listPriceNote?.(path,d,netContext); } catch (_) {}
@@ -6627,6 +6664,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get actionWait(){return actionWait}, get r
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get crafterKit(){return L2V7Modules.crafterkit}, get selfHold(){return selfHoldStart}, get selfHoldOn(){return selfHoldOn}, get selfHoldOf(){return selfHoldOf}, get selfHoldText(){return selfHoldText}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+  get rebirthReturn(){return rebirthReturn},
   get syncShotWeapon() { return syncShotWeapon; },
   get gameGet() { return gameGet; }, get rtCommit() { return rtCommit; }, get actionWait() { return actionWait; }, get heroNick() { return heroNick; },
   get battleInfo() { return () => BATTLE_NET; }, get evidenceOwner() { return observeOwner; }, get actionGeneration() { return () => automationGeneration; },
@@ -7561,6 +7599,16 @@ L2V7Modules.warlock = L2V7Factories.warlock({ get actionWait(){return actionWait
 });
 const warlockService = L2V7Modules.warlock;
 L2V7Modules.warlock = { ...warlockService, step: async options => { if (!warlockCanRun()) return false; await warlockService.classAutoTick(); return warlockCanRun() ? warlockService.step(options) : false; } };
+L2V7Modules.rebirth = L2V7Factories.rebirth({
+  get cfg(){return cfg},get rt(){return rt},get on(){return on},get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch},get actionGeneration(){return ()=>automationGeneration},
+  get browserTabKey(){return BROWSER_TAB_KEY},get completedBoss(){return rebirthCompletedBoss},
+  get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false&&!antibotState()&&!L2V7Modules.pvp?.pending()},
+  get canRun(){return ()=>!loopStale()&&autonomyMode()==='rebirth'&&!tvtSoon()&&!abHold()&&!L2V7Modules.payments?.blocked?.()&&!/tvt|pvp/i.test(location.pathname)},
+  get heroNick(){return heroNick},get heroLvl(){return heroLvl},get routeLocation(){return actionLocation},get gameGet(){return gameGet},get gamePost(){return gamePost},
+  get setRt(){return setRt},get rtCommit(){return rtCommit},get fire(){return fire},get pause(){return pause},get sleep(){return sleep},get shown(){return shown},get $q(){return $q},
+  get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return loopStartPrep},
+  get nativePending(){return ()=>[...NET_CONTEXT.values()].some(c=>c.char===rt.char&&c.lease===leaseEpoch&&/^\/game\/(?:rebirth-raids\/(?:start|next|enter-boss)|battle\/(?:start|hunt-continue|action))$/.test(c.path))}
+});
 let warlockCommandBusy = false;
 async function warlockCommand(m) {
   if (warlockCommandBusy) return {ok:false,reason:'Предыдущая команда кота ещё выполняется'};

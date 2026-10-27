@@ -221,7 +221,7 @@ async function rebirthNext(ctx) {
   const hold = async why => { if (active()) { env.setStatus('Rebirth: ' + why); await env.sleep(1000); } };
   if (!active()) return;
   if (env.cfg.chain === false) return hold('цепочка выключена — жду вашего продолжения');
-  if (!['farm', 'auto', 'campaign', 'cat', 'raid', 'epic'].includes(mode)) return hold('выбранная задача не продолжает поход');
+  if (!['farm', 'auto', 'campaign', 'cat', 'raid', 'epic', 'rebirth'].includes(mode)) return hold('выбранная задача не продолжает поход');
   if (!current() || !/^rebirth_raid_/i.test(after) || !owner || !scan || !Number.isFinite(generation)
       || !prof || !Number.isInteger(slot) || slot < 0 || fresh && ctxSpawn && ctxSpawn !== after)
     return hold('текущая победа не подтверждена — жду вашего продолжения');
@@ -254,13 +254,22 @@ async function rebirthNext(ctx) {
     const instance = await result.json();
     if (!current()) return;
     const run = instance?.activeRun;
-    if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0)
-        || typeof run?.id !== 'string' || !run.id || !after.startsWith('rebirth_raid_' + run.id + '_')
-        || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id))
+    if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0))
       return hold('принадлежность текущего оплаченного похода не подтверждена');
-    if (run.phase !== 'mobs' || !Number.isSafeInteger(run.mobKillTarget) || run.mobKillTarget <= 0
-        || !Number.isSafeInteger(run.mobKills) || run.mobKills < 0 || run.mobKills >= run.mobKillTarget)
+    // 20.68 (лог27.10 13:20): после РБ native next возвращает none; известная победа своего похода доводится до каталога.
+    const previous=env.rt.rebirth,closed=mode==='rebirth'&&run===null&&previous?.char===char&&previous.actor===ch.id
+      &&previous.prof===prof&&previous.slot===slot&&typeof previous.runId==='string'&&after.startsWith('rebirth_raid_'+previous.runId+'_')&&/_raid_\d+$/i.test(after);
+    if (!closed && (typeof run?.id !== 'string' || !run.id || !after.startsWith('rebirth_raid_' + run.id + '_')
+        || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id)
+        || mode==='rebirth' && (run.partyId!==null || run.participantCharacterIds.length!==1 || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(run.id))))
+      return hold('принадлежность текущего оплаченного похода не подтверждена');
+    const progress=run&&Number.isSafeInteger(run.mobKillTarget)&&run.mobKillTarget>0&&Number.isSafeInteger(run.mobKills)&&run.mobKills>=0;
+    const nextStage=progress&&(run.phase==='mobs'&&(run.mobKills<run.mobKillTarget||mode==='rebirth'&&run.mobKills===run.mobKillTarget)
+      ||mode==='rebirth'&&['champion','rb_active'].includes(run.phase)&&run.mobKills>=run.mobKillTarget);
+    if (!closed&&!nextStage) {
+      if(mode==='rebirth'&&typeof env.rebirthReturn==='function')return env.rebirthReturn(current);
       return hold('этап требует вашего выбора — новый вход и логово не открываю');
+    }
     const stillReady = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
     if (!current()) return;
     if (!stillReady) return hold('лимит охоты проверяется или достигнут');
@@ -304,6 +313,7 @@ async function nextFight(ctx) {
   if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (rebirthBattle()) return rebirthNext(ctx);
+  if (env.autonomyMode() === 'rebirth') return env.rebirthReturn?.();
   // 10.0.19: ручная смена оружия до запуска бота не даёт POST-события расширению.
   // Сверка по GET один раз в 10 мин не уводит катакомбы на карту.
   if (env.cfg.shopAuto) await env.syncShotWeapon?.();

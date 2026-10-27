@@ -99,6 +99,7 @@
         "modules/enchant.js",
         "modules/lifestone.js",
         "modules/warlock.js",
+        "modules/rebirth.js",
         "modules/actions.js",
         "modules/payments.js",
         "content.js"

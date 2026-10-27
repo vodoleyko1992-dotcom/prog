@@ -10,7 +10,8 @@ function fixture(opts){const f=fixtureBox.fixture(opts);f.env.cfg.enchantMode=tr
 function coreFixture(){
  const calls=[],c=vm.createContext({actionWait:async()=>true,console,URL,Date,Promise,Math,L2EngineCore:require('../engine-core.js'),taskPolicyNote(){},location:{origin:'https://fixture.invalid',pathname:'/map.html',search:'',href:''},
   on:true,tabOwner:true,cfg:{enchantMode:true,enchant:{enabled:true},tvtOn:true},rt:{char:'Hero'},hero:'Hero',battleNow:false,fishCaught:false,nearTvt:false,ab:false,calls,
-  L2V7Factories:{enchant:env=>({step:async()=>{calls.push('enchant');return true},command:async cmd=>{calls.push(cmd);if(cmd==='pause')c.rt.enchant={...c.rt.enchant,status:'paused'};return true}}),warlock:()=>({})},L2V7Modules:{}});
+  // 20.68: общий фрагмент регистрирует Rebirth; режим выключен, прежние приоритеты проверяются без его действий.
+  L2V7Factories:{enchant:env=>({step:async()=>{calls.push('enchant');return true},command:async cmd=>{calls.push(cmd);if(cmd==='pause')c.rt.enchant={...c.rt.enchant,status:'paused'};return true}}),warlock:()=>({}),rebirth:()=>({step:async()=>false})},L2V7Modules:{}});
  vm.runInContext(`const heroNick=()=>hero,antibotState=()=>ab,autonomyMode=()=>cfg.enchantMode===true?'enchant':'farm';
  const awayFree=()=>!battleNow&&!fishCaught&&!nearTvt&&!rt.shop&&!rt.rbGo&&!rt.zoneGo&&!rt.revive&&!rt.tbuff&&!rt.magister&&!rt.invScan&&!rt.fishSvc;
  L2V7Modules.mammon={modeFree:awayFree};

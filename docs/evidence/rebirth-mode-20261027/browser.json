@@ -1,0 +1,1551 @@
+{
+  "boundary": "actual Chrome MV3/main with local native handlers; mob299 seeded to test final mob300, champion, observed staff boss3, completion and one2key entry; gate phase enum synthetic because upload omits it; new-run mob buttons withheld during first DOM render so entry receipt can be measured before further fighting; no live game or user scripts",
+  "proof": [
+    {
+      "case": "auto-full-cycle",
+      "browser": "156.0.8078.4",
+      "browserIdentity": {
+        "key": "tab341374086",
+        "id": 341374086
+      },
+      "finalBrowserIdentity": {
+        "key": "tab341374086",
+        "id": 341374086
+      },
+      "paths": [
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html",
+        "/rebirth-raid-dungeon.html?page=20",
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html",
+        "/rebirth-raid-lair.html",
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "?page=20",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+            "expectedRevision": 100
+          },
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+            "expectedRevision": 101
+          },
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+            "expectedRevision": 102
+          },
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+            "expectedRevision": 103
+          },
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/enter-boss",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "bossSlot": 3
+          },
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-lair.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+            "expectedRevision": 104
+          },
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+            "expectedRevision": 105
+          },
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "difficulty": 1
+          },
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        }
+      ],
+      "result": {
+        "revision": 107,
+        "keys": 98,
+        "phase": "mobs",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "mobKills": 0,
+        "inBattle": false,
+        "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+        "won": true,
+        "starts": [
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3"
+        ],
+        "attacks": [
+          "mob",
+          "champion",
+          "boss"
+        ],
+        "next": [
+          "mob",
+          "boss"
+        ],
+        "bossChoices": [
+          3
+        ],
+        "entries": 1,
+        "entryHeld": false,
+        "pagers": [
+          20
+        ],
+        "continues": 0,
+        "newRun": true,
+        "bossVictoryMeta": {
+          "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "kind": "",
+          "victory": true
+        }
+      },
+      "runtime": {
+        "actor": "00000000-0000-4000-8000-000000000002",
+        "bossPending": null,
+        "char": "AuditHero",
+        "checkedAt": 1793073153855,
+        "completed": {
+          "actor": "00000000-0000-4000-8000-000000000002",
+          "at": 1793073152761,
+          "char": "AuditHero",
+          "prof": "human_wizard",
+          "runId": "00000000-0000-4000-8000-000000000001",
+          "slot": 0
+        },
+        "difficulty": 1,
+        "fightPending": null,
+        "lastBossChoice": {
+          "bossSlot": 3,
+          "choice": "staff1h",
+          "confirmation": "fresh-own-run",
+          "runId": "00000000-0000-4000-8000-000000000001",
+          "spawnId": "l2dop_rb_25098"
+        },
+        "lastEntry": {
+          "at": 1793073153855,
+          "confirmation": "native-ack",
+          "cost": 2,
+          "difficulty": 1,
+          "runId": "00000000-0000-4000-8000-000000000003"
+        },
+        "mobKillTarget": 300,
+        "mobKills": 0,
+        "observedRun": {
+          "actor": "00000000-0000-4000-8000-000000000002",
+          "at": 1793073153855,
+          "char": "AuditHero",
+          "id": "00000000-0000-4000-8000-000000000003",
+          "kick": 1793073143180,
+          "phase": "mobs",
+          "prof": "human_wizard",
+          "slot": 0
+        },
+        "pending": null,
+        "phase": "wait",
+        "prof": "human_wizard",
+        "reason": "жду доступную нативную кнопку «Бой» на текущей странице",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "runPhase": "mobs",
+        "selectedBossSlot": null,
+        "selectedBossSlotEncoded": false,
+        "selectedBossSpawnId": null,
+        "slot": 0
+      },
+      "errors": []
+    },
+    {
+      "case": "manual",
+      "browser": "156.0.8078.4",
+      "browserIdentity": {
+        "key": "tab224303350",
+        "id": 224303350
+      },
+      "finalBrowserIdentity": {
+        "key": "tab224303350",
+        "id": 224303350
+      },
+      "paths": [
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html",
+        "/rebirth-raid-dungeon.html?page=20",
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html",
+        "/rebirth-raid-lair.html",
+        "/battle.html?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "?page=20",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+            "expectedRevision": 100
+          },
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/story-quests/goddard-ocean-flame",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+            "expectedRevision": 101
+          },
+          "phase": "mobs",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "method": "GET",
+          "body": null,
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+            "expectedRevision": 102
+          },
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+            "expectedRevision": 103
+          },
+          "phase": "champion",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/enter-boss",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "bossSlot": 3
+          },
+          "phase": "synthetic_gate_phase",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-lair.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "spawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+            "expectedRevision": 104
+          },
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle",
+          "query": "?characterId=00000000-0000-4000-8000-000000000002&spawnId=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "action": "attack",
+            "battleSpawnId": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+            "expectedRevision": 105
+          },
+          "phase": "rb_active",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/next",
+          "query": "?after=rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "difficulty": 1
+          },
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        }
+      ],
+      "result": {
+        "revision": 107,
+        "keys": 98,
+        "phase": "mobs",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "mobKills": 0,
+        "inBattle": false,
+        "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+        "won": true,
+        "starts": [
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_mob_300",
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25041_lv35_champion_1",
+          "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3"
+        ],
+        "attacks": [
+          "mob",
+          "champion",
+          "boss"
+        ],
+        "next": [
+          "mob",
+          "boss"
+        ],
+        "bossChoices": [
+          3
+        ],
+        "entries": 1,
+        "entryHeld": false,
+        "pagers": [
+          20
+        ],
+        "continues": 0,
+        "newRun": true,
+        "bossVictoryMeta": {
+          "spawn": "rebirth_raid_00000000-0000-4000-8000-000000000001_1_1_25098_lv35_raid_3",
+          "kind": "",
+          "victory": true
+        }
+      },
+      "runtime": {
+        "actor": "00000000-0000-4000-8000-000000000002",
+        "char": "AuditHero",
+        "checkedAt": 1793073166927,
+        "completed": {
+          "actor": "00000000-0000-4000-8000-000000000002",
+          "at": 1793073164515,
+          "char": "AuditHero",
+          "prof": "human_wizard",
+          "runId": "00000000-0000-4000-8000-000000000001",
+          "slot": 0
+        },
+        "difficulty": 1,
+        "fightPending": null,
+        "mobKillTarget": 300,
+        "mobKills": 0,
+        "observedRun": {
+          "actor": "00000000-0000-4000-8000-000000000002",
+          "at": 1793073166927,
+          "char": "AuditHero",
+          "id": "00000000-0000-4000-8000-000000000003",
+          "kick": 1793073157360,
+          "phase": "mobs",
+          "prof": "human_wizard",
+          "slot": 0
+        },
+        "phase": "wait",
+        "prof": "human_wizard",
+        "reason": "жду доступную нативную кнопку «Бой» на текущей странице",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "runPhase": "mobs",
+        "selectedBossSlot": null,
+        "selectedBossSlotEncoded": false,
+        "selectedBossSpawnId": null,
+        "slot": 0
+      },
+      "errors": []
+    },
+    {
+      "case": "lost-entry-reload",
+      "browser": "156.0.8078.4",
+      "browserIdentity": {
+        "key": "tab1943892242",
+        "id": 1943892242
+      },
+      "finalBrowserIdentity": {
+        "key": "tab1943892242",
+        "id": 1943892242
+      },
+      "paths": [
+        "/rebirth-raids.html",
+        "/rebirth-raids.html",
+        "/rebirth-raid-dungeon.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/game/rebirth-raids/start",
+          "query": "",
+          "method": "POST",
+          "body": {
+            "difficulty": 1
+          },
+          "phase": "none",
+          "keys": 100
+        },
+        {
+          "path": "/rebirth-raids.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "query": "?view=instance",
+          "method": "GET",
+          "body": null,
+          "phase": "mobs",
+          "keys": 98
+        }
+      ],
+      "result": {
+        "revision": 101,
+        "keys": 98,
+        "phase": "mobs",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "mobKills": 0,
+        "inBattle": false,
+        "spawn": null,
+        "won": false,
+        "starts": [],
+        "attacks": [],
+        "next": [],
+        "bossChoices": [],
+        "entries": 1,
+        "entryHeld": true,
+        "pagers": [],
+        "continues": 0,
+        "newRun": true
+      },
+      "runtime": {
+        "actor": "00000000-0000-4000-8000-000000000002",
+        "char": "AuditHero",
+        "checkedAt": 1793073171799,
+        "difficulty": 1,
+        "lastEntry": {
+          "at": 1793073171257,
+          "confirmation": "fresh-own-run",
+          "cost": 2,
+          "difficulty": 1,
+          "runId": "00000000-0000-4000-8000-000000000003"
+        },
+        "mobKillTarget": 300,
+        "mobKills": 0,
+        "observedRun": {
+          "actor": "00000000-0000-4000-8000-000000000002",
+          "at": 1793073171799,
+          "char": "AuditHero",
+          "id": "00000000-0000-4000-8000-000000000003",
+          "kick": 1793073170126,
+          "phase": "mobs",
+          "prof": "human_wizard",
+          "slot": 0
+        },
+        "pending": null,
+        "phase": "wait",
+        "prof": "human_wizard",
+        "reason": "жду доступную нативную кнопку «Бой» на текущей странице",
+        "runId": "00000000-0000-4000-8000-000000000003",
+        "runPhase": "mobs",
+        "selectedBossSlot": null,
+        "selectedBossSlotEncoded": false,
+        "selectedBossSpawnId": null,
+        "slot": 0
+      },
+      "errors": []
+    }
+  ]
+}

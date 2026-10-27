@@ -251,11 +251,11 @@ async function showWakeResult() {
 async function activateMode(rtPatch, cfgPatch) {
   await chrome.storage.local.set({ paused: null });   // 8.0: выбран режим — пауза снята (иначе после остановки меню предлагало «Продолжить»)
   // 14.10: отдельные кнопки тура/эпиков/кампании тоже заменяют режим. Разовая разделка/обмен без смены cfg сохраняют возврат из дейлика.
-  const modeChanged = ['craftMode', 'enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto', 'taskOnly'].some(k => Object.hasOwn(cfgPatch || {}, k));
+  const modeChanged = ['craftMode', 'enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'rebirthMode', 'campaign', 'zoneAuto', 'taskOnly'].some(k => Object.hasOwn(cfgPatch || {}, k));
   if (modeChanged) {
     const { cfg = {} } = await chrome.storage.local.get('cfg');
     if (Array.isArray(cfg.autoTasks) && !Object.hasOwn(cfgPatch, 'autoTasks')) {
-      const map = { craftMode: 'craft', enchantMode: 'enchant', epicMode: 'epic', rbHuntMode: 'raid', campaign: 'quests', fishMode: 'fish', catMode: 'cat', zoneAuto: 'auto' };
+      const map = { craftMode: 'craft', enchantMode: 'enchant', epicMode: 'epic', rbHuntMode: 'raid', rebirthMode: 'rebirth', campaign: 'quests', fishMode: 'fish', catMode: 'cat', zoneAuto: 'auto' };
       const selected = new Set(cfg.autoTasks);
       for (const [flag, key] of Object.entries(map)) if (cfgPatch[flag] === true) selected.add(key);
       cfgPatch = { ...cfgPatch, autoTasks: [...selected] };
@@ -270,11 +270,11 @@ async function activateMode(rtPatch, cfgPatch) {
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'champMinHp', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax', 'craftMpKeep',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed', 'actionDelayMs'];
-NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
-const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
+NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit', 'rebirthDifficulty', 'rebirthKeyReserve');
+const TXT  = ['petHealPrefer', 'rebirthBossChoice', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 TXT.push('pvpSpare');
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'limitBig', 'epicFrenzy', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'goddardQuest', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'vipResists', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'pvpAll', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'craftAuto', 'craftMpPots', 'craftNotify', 'craftChain', 'craftMammon', 'crafterKit', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'destroyerLimits', 'limitBig', 'epicFrenzy', 'fastTurn', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'goddardQuest', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'notifyStops', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'rebirthMode', 'rebirthAutoEnter', 'keyBuffBoss', 'spoilRb', 'rbNearMobs', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'cancelFreeOk', 'catNoFa', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'rbScrollFirst', 'vipBuffAuto', 'vipResists', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'pvpAll', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'craftAuto', 'craftMpPots', 'craftNotify', 'craftChain', 'craftMammon', 'crafterKit', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
 // перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
 const DEF = L2Defaults.CFG;
@@ -500,7 +500,7 @@ async function loadNow() {
   if ($('buffAudit')) { const A = rt.buffAudit, ic = { ok: '✅', info: 'ℹ️', wait: '⏳', miss: '⚠️', bad: '❌' };
     $('buffAudit').textContent = A?.list?.length ? `🔍 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
       + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🔍 Проверка баффов — появится в первом бою' : ''); }
-  renderCat(rt, d);
+  renderCat(rt, d); renderRebirth(rt, d);
   renderFarmQuotas(rt, d);
   renderLimitRanges(rt,d);
   renderDailyLimits(rt,d);
@@ -911,6 +911,28 @@ function renderCat(rt, d) {
   // включена ли задача — по тому же источнику, что галка и ядро (taskSel: список autoTasks, без него прежний catMode)
   $('catBox').textContent = (taskSel(d, 'cat') ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
     + (seen.length ? `\nУвиденные подземелья: ${seen.map(id => `${CAT_NM[id][0]} ${lv(id).replace(/ \(.*\)/, '')}${now - (rt.catBad?.[id] || 0) < 3600000 ? ' (пропускаю)' : ''}`).join(' · ')}` : '');
+}
+// 27.10: текущий заход Rebirth показываем отдельно от обычных катакомб.
+function rebirthView(rt = {}, d = {}) {
+  const enabled=taskSel(d,'rebirth'),raw=rt.rebirth,own=raw&&typeof raw==='object'&&!Array.isArray(raw)&&(!raw.char||raw.char===rt.char),S=own?raw:{};
+  const run=S.run&&typeof S.run==='object'&&!Array.isArray(S.run)?S.run:S;
+  const phases={mobs:'Мобы',champion:'Чемпион',boss:'Рейдовый босс',rb_active:'Рейдовый босс',battle:'Незавершённый бой',
+    manual:'Выбор РБ в игре','manual-entry':'Ожидание ручного входа',quota:'Дневной лимит охоты',keys:'Недостаточно ключей',
+    price:'Проверка стоимости входа',wait:'Ожидание подтверждения',unknown:'Исход действия не подтверждён',read:'Ожидание ответа сервера',rejected:'Вход отклонён',
+    prepare:'Подготовка к походу',catalog:'Каталог подземелий',entry:'Вход в подземелье',resume:'Возвращение в поход',page:'Следующая страница мобов',
+    'boss-choice':'Выбор РБ','boss-selected':'Сверка выбранного РБ',completed:'Поход завершён',done:'Поход завершён'};
+  const phaseKey=typeof S.phase==='string'&&S.phase?S.phase:run.phase,phase=phases[phaseKey]||'',got=run.mobKills,total=run.mobKillTarget;
+  const counted=Number.isSafeInteger(got)&&got>=0&&Number.isSafeInteger(total)&&total>0;
+  const receipt=S.pending?'Подтверждение входа':S.fightPending?'Подтверждение боя':S.bossPending?'Подтверждение выбора РБ':'';
+  const progress=[phase,receipt,counted?`${got} / ${total} мобов`:''].filter(Boolean).join(' · ');
+  const reason=typeof S.reason==='string'?S.reason.slice(0,300):typeof S.text==='string'?S.text.slice(0,300):'';
+  const waiting=!!receipt||['manual','manual-entry','quota','keys','price','wait','unknown','read','rejected','boss-selected'].includes(phaseKey)
+    ||!!phaseKey&&!Object.hasOwn(phases,phaseKey)||['waiting','blocked','unknown','choice','manual','no-run','unavailable'].includes(S.status);
+  return { enabled,progress,percent:counted?Math.min(100,Math.round(got/total*100)):null,waiting,
+    text:[enabled?'Выбрано: Rebirth-подземелья':'Выключено',progress,reason||enabled&&'Проверю открытое подземелье после запуска'].filter(Boolean).join('\n') };
+}
+function renderRebirth(rt, d) {
+  const box=$('rebirthBox');if(box)box.textContent=rebirthView(rt,d).text;
 }
 // ---------- 7.2.1 (просьба игрока): список «что фармить» как на форуме — разделы раскрываются, предмет раскрывается
 // в источники (дроп / спойл / РБ), «🌾 Фармить» ставит цель одним нажатием, поиск по названию ----------
@@ -1484,12 +1506,14 @@ async function saveFields(e) {
   catch (error) { settingsReadFailed(expectedChar, readSerial, one, error); throw error; }
   const { cfg = {} } = stored;
   if (formChar !== expectedChar) throw new Error('Персонаж изменился — измените настройку в его меню');
-  if (['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
+  if (['catMode', 'rebirthMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
   // 20.12 (ревизия 17.10, UI-3): в режиме «Задачи бота» TvT/Катакомбы/Автофарм в разделах ведут тот же список задач,
   // а не только старый флаг, который движок в этом режиме не читает (раньше галка «Участвовать в TvT» молча не действовала).
   const taskOf = TASK_FLAG_OF[id];
   if (taskOf && Array.isArray(cfg.autoTasks) && typeof n[id] === 'boolean') Object.assign(n, autoTaskPatch({ ...DEF, ...cfg }, taskOf, n[id]), { [id]: n[id] });
-  for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
+  for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit','rebirthKeyReserve']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
+  if (n.rebirthDifficulty != null && ![1,2,3].includes(n.rebirthDifficulty)) n.rebirthDifficulty = DEF.rebirthDifficulty;
+  if (n.rebirthBossChoice != null && !['manual','staff1h'].includes(n.rebirthBossChoice)) n.rebirthBossChoice = DEF.rebirthBossChoice;
   if (n.rodEnchantTo != null) n.rodEnchantTo = Math.min(10, n.rodEnchantTo);
   if (n.maxPages < 1) n.maxPages = 1;
   if (n.champHpMult < 1.1) n.champHpMult = 1.1;
@@ -1510,7 +1534,7 @@ async function saveFields(e) {
   return true;
 }
 // 20.12 (ревизия 17.10, UI-3): переключатели в разделах, которые в режиме «Задачи бота» ведут сам список задач
-const TASK_FLAG_OF = { tvtOn: 'tvt', catMode: 'cat', zoneAuto: 'auto' };
+const TASK_FLAG_OF = { tvtOn: 'tvt', catMode: 'cat', rebirthMode: 'rebirth', zoneAuto: 'auto' };
 // 20.12 (UI-2): счётчик начатых сохранений — change срабатывает на blur раньше click, а menuPatch ещё не вызван (ждёт чтения cfg)
 var saveRunning = 0;
 // 20.12 (ревизия 17.10, UI-2): программная запись конкретных полей формы (цели рыбалки, квесты на ресурсы, «Фулл бафф»).
@@ -1939,7 +1963,7 @@ $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: 
 // 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
 // «TvT/PvP и сервис»); 20.17: Маммон, заточка, ЛС и сервис выделены отдельно (10 разделов); 19.10 лимиты и снабжение вынесены отдельно (12 разделов). Тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
 // #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', rebirth: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
   seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 // 23.10 (John: «Раздели режим РБ и ЭПИКИ, для удобства»): эпики — свой раздел #tab-epic, не подраздел «РБ»; старые ссылки на epic ведут туда же.
@@ -2268,8 +2292,8 @@ $('apply').onclick = async () => {
 };
 // Выбранные задачи и текущая задача по общей политике движка.
 // Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
-const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', craft: 'Крафт', epic: 'Эпики', raid: 'Тур по РБ', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
-const AUTO_MAIN_TASKS = ['enchant', 'craft', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
+const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', craft: 'Крафт', epic: 'Эпики', raid: 'Тур по РБ', rebirth: 'Rebirth-подземелья', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
+const AUTO_MAIN_TASKS = ['enchant', 'craft', 'epic', 'raid', 'rebirth', 'quests', 'fish', 'cat', 'auto', 'farm'];
 // …и те, что в этом режиме не действуют (движок их подменяет, engine-core taskConfig): показаны выключенными с пояснением
 const TASK_OWNED = { tsBuy: 'В режиме «Задачи бота» автопокупка в TvT-магазине не выполняется — покупайте вручную или верните прежние настройки', campAuto: 'Управляется задачами: сюжетные квесты ведёт задача «Квесты и кампания» в «Задачах бота»' };
 function paintTaskOwned(d) {
@@ -2289,7 +2313,7 @@ function taskHint(el, text) {
   label.classList.add('task-owned-row'); if (h.textContent !== text) h.textContent = text;
 }
 // 17.10: UI показывает подтверждённые причины ожидания и очередь отдельно от последнего действия.
-const TASK_TABS = { tvt:'tvt', enchant:'enchant', craft:'craft', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
+const TASK_TABS = { tvt:'tvt', enchant:'enchant', craft:'craft', epic:'epic', raid:'rb', rebirth:'rebirth', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
 // 20.12 (ревизия 17.10, аудит PAY-1): что именно ждёт сверки — вид, сумма, давность; кнопка ручного выхода только для неё.
 const PAY_KIND_LABELS = { shop:'закупка в магазине', fishing:'покупка на рыбалке', 'cat-teleport':'телепорт в катакомбы', 'raid-teleport':'телепорт к РБ', mammon:'Маммон', 'fa-buff':'бафф за FA', 'town-buff':'городской бафф', 'tvt-shop':'магазин TvT', 'story-teleport':'телепорт квеста' };
 function paymentPendingView(rt, now = Date.now()) {
@@ -2338,7 +2362,7 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     const hold = holds.find(h => h.key === key);   // 20.43 (доводка 21.10): у каждой задачи — своя передышка
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
-    const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
+    const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit',rebirth:'dailyKillLimit'}[key];
     const dailyLimit = +d[dailyKey] || 0, q = L2EngineCore.dailyQuotaToday(rt,now), dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0) + (+q.raid || 0) + (+q.server || 0);
     const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
     // 20.10: диапазон до запуска и нулевой лимит не скрывают счётчик рыбы и переход к настройкам.
@@ -2368,6 +2392,10 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
       else if (rt.craftPending || rt.craftMpPending) { label = rt.craftMpPending ? 'Сверяю МП-банку' : 'Сверяю результат крафта'; state = 'waiting'; }
       else if (rt.craftPlan?.goals?.some(g=>g.status === 'missing')) { label = 'Нужно сырьё для цепочки'; state = 'waiting'; }
       if (rt.craftSay?.why) progress.push(rt.craftSay.why);
+    }
+    if (key === 'rebirth') {
+      const R=rebirthView(rt,d);if(R.progress)progress.push(R.progress);if(percent==null)percent=R.percent;
+      if(st.on&&R.waiting){label='Ожидание Rebirth';state='waiting';}
     }
     if (key === 'enchant') {
       const phase = {done:'Завершено',completed:'Завершено',paused:'Серия на паузе',unknown:'Проверка результата',running:st.on && st.heartbeatValid ? 'Серия запущена' : 'Серия ожидает работы'}[rt.enchant?.status];
@@ -2451,7 +2479,7 @@ function renderWorkspace(rt, d, st) {
 function selectedAutoTasks(d) {
   if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
   if (Array.isArray(d.autoTasks)) return d.autoTasks.filter(k => Object.hasOwn(AUTO_TASK_LABELS, k));
-  const flags = { tvt: d.tvtOn, enchant: d.enchantMode, craft: d.craftMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.craftMode && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
+  const flags = { tvt: d.tvtOn, enchant: d.enchantMode, craft: d.craftMode, epic: d.epicMode, raid: d.rbHuntMode, rebirth: d.rebirthMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.craftMode && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.rebirthMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
   return Object.keys(AUTO_TASK_LABELS).filter(k => flags[k]);
 }
 // 18.10: задача выбрана так же, как её видит ядро — список autoTasks, без него прежние плоские флаги
@@ -2464,7 +2492,7 @@ function taskNow(d, rt, key) {
 }
 function autoTaskPatch(d, key, enabled) {
   const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
-  const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto' };
+  const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto', rebirth: 'rebirthMode' };
   return { autoTasks: [...tasks], ...(flags[key] ? { [flags[key]]: enabled } : {}), ...(key === 'quests' ? { storyTurnIn: enabled } : {}) };
 }
 let autoTaskEditQueue = Promise.resolve();
@@ -2491,9 +2519,9 @@ function editAutoTask(key, enabled, extraRt = {}) {
 }
 function currentMode(d) {
   if (Array.isArray(d.autoTasks)) { const k = AUTO_MAIN_TASKS.find(k => d.autoTasks.includes(k)); return k === 'raid' ? 'rb' : k === 'quests' ? 'quests' : k || 'tasks'; }
-  return d.enchantMode === true ? 'enchant' : d.craftMode === true ? 'craft' : d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
+  return d.enchantMode === true ? 'enchant' : d.craftMode === true ? 'craft' : d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.rebirthMode ? 'rebirth' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
 }
-const MODE_NAME = { craft: '⚒ Крафт', quests: '📜 Квесты и кампания', tasks: 'Ожидание выбранных задач', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
+const MODE_NAME = { craft: '⚒ Крафт', quests: '📜 Квесты и кампания', tasks: 'Ожидание выбранных задач', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', rebirth: '♻ Rebirth-подземелья', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
 function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампания (авто)»
   const strict = Array.isArray(d.autoTasks), selected = selectedAutoTasks(d), active = strict && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) : null, m = active ? (active === 'raid' ? 'rb' : active) : currentMode(d);
   if (!(typeof autoTaskPending === 'number' && autoTaskPending)) document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.checked = selected.includes(el.dataset.autoTask); });
@@ -2626,7 +2654,7 @@ $('showAllCls').onclick = async () => {
   const { cfg = {}, rt = {} } = await (globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local).get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, await stashInto(rt));
 };
 // выбор режима запускает бота (как и прежние кнопки) и выключает остальные режимы; дополнения не трогаем
-const MODES_OFF = { craftMode: false, enchantMode: false, epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false };
+const MODES_OFF = { craftMode: false, enchantMode: false, epicMode: false, rbHuntMode: false, rebirthMode: false, fishMode: false, catMode: false, taskOnly: false };
 function rbTourRestart(rt) {
   // 14.10: ручной запуск отменяет ожидание пустого списка, но не защиту после двух отказов на месте.
   const now = Date.now(), protective = rt.rbHuntIdle > now && rt.rbRefuse?.n >= 2 && now - (rt.rbRefuse.t || 0) < 10 * 60000;
@@ -2658,6 +2686,7 @@ async function setMode(m, enabled) {
   else if (m === 'rb') await activateMode({ ...leaveEpic, ...rbTourRestart(rt), rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   else if (m === 'epic') await activateMode({ ...leaveHunt, rbRun: { t0: now, mode: 'epic' }, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
   else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
+  else if (m === 'rebirth') await activateMode({ ...leave }, { ...MODES_OFF, rebirthMode: true, chain: true, campaign: false, rbMode: false });
   else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: false });
   else if (m === 'craft') await activateMode({ ...leave, zoneGo: null, zoneAutoKick: null }, { ...MODES_OFF, craftMode: true, zoneAuto: false, rbMode: false, campaign: false });
   else if (m === 'enchant') {
@@ -3506,6 +3535,7 @@ if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings(
 if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); settingsReadFailures.clear(); paintSettingsFeedback(); void load(); };
 document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => { b.onclick = () => quickStart(b.dataset.quickTask); });
 $('craftStart')?.addEventListener('click', () => quickStart('craft'));
+$('rebirthStart')?.addEventListener('click', () => quickStart('rebirth'));
 if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { const was = !$('quickModeGrid').hidden; taskListToggle(); if (!was) document.querySelector('#autoTaskSelection input')?.focus({ preventScroll: true }); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
 // 20.12 (ревизия 17.10): ручной выход только по решению игрока — второе нажатие в течение 6 с, через фон (как Stop/пауза).

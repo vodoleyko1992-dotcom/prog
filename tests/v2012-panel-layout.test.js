@@ -21,7 +21,7 @@ for (const t of SECS) assert.match(html, new RegExp(`<button data-tab="${t}" dat
 // 2. старые имена разделов → новый раздел, метка на месте и лежит внутри него
 const tg = js.match(/const TAB_GROUP = \{([\s\S]*?)\};/)[1];
 const map = Object.fromEntries([...tg.matchAll(/(\w+): '(\w+)'/g)].map(m => [m[1], m[2]]));
-const OLD = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
+const OLD = { autofarm: 'hunt', dungeon: 'hunt', rebirth: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
   seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 assert.deepEqual(map, OLD);
@@ -51,7 +51,7 @@ assert.match(html, /<div id="quickModeGrid" hidden>/, 'список задач �
 const grid = html.slice(html.indexOf('<div id="quickModeGrid"'), html.indexOf('</fieldset>', html.indexOf('<div id="quickModeGrid"')));
 const g1 = grid.indexOf('Основная работа'), g2 = grid.indexOf('Фоновые и по расписанию');
 assert.ok(g1 > 0 && g2 > g1);
-for (const k of ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm']) { const i = grid.indexOf(`data-auto-task="${k}"`); assert.ok(i > g1 && i < g2, 'основная ' + k); }
+for (const k of ['enchant', 'epic', 'raid', 'rebirth', 'quests', 'fish', 'cat', 'auto', 'farm']) { const i = grid.indexOf(`data-auto-task="${k}"`); assert.ok(i > g1 && i < g2, 'основная ' + k); }
 for (const k of ['tvt', 'mammon', 'dailies', 'clan', 'pvp', 'petbuff', 'resources']) assert.ok(grid.indexOf(`data-auto-task="${k}"`) > g2, 'фоновая ' + k);
 assert.match(ui, /modeToggle\?\.addEventListener\('click', \(\) => \{ if \(typeof taskListToggle === 'function'\) taskListToggle\(\); \}\);/);
 

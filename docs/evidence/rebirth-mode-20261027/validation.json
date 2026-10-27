@@ -1,0 +1,33 @@
+{
+  "source_base": "7ad6ad6e4eacbd6e76af5972f43d865e560137f8",
+  "node": {
+    "pass": 682,
+    "fail": 0,
+    "new_scenarios": 149
+  },
+  "syntax": {
+    "files": 26,
+    "result": "PASS"
+  },
+  "envcheck": {
+    "modules": 35,
+    "result": "PASS"
+  },
+  "browser": {
+    "chrome": "156.0.8078.4",
+    "pass": 3,
+    "fail": 0,
+    "game_network": "fully local mocked",
+    "source_sha256": "e252a7b3247e62e289e386477bd5fb619c57de37e8678d2052ef627161985377",
+    "module_sha256": "a5b0bcaf1c9d9fd19adb5be9467b817951324cd25355956141b93ffac9ab1d88",
+    "test_sha256": "cf30c084d82147df97320e6680dfbe579885693d77bf2e5416c286e07dbd2227"
+  },
+  "independent_review": "no blockers; 7 receipt/proof probes PASS, 5 UI/quota probes PASS",
+  "known_limits": [
+    "pre-selection server phase enum missing from export; test enum synthetic with observed DOM gate guards",
+    "only selected encoded bossSlot3 weapon association known from user; other15 not invented",
+    "no live game; nativeFirefox not run in mode PR; requested Firefox build next",
+    "priority services intentionally precede Rebirth; ordinary farm cannot replace route"
+  ],
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/433"
+}
