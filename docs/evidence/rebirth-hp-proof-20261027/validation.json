@@ -1,0 +1,128 @@
+{
+  "baselineCommit": "6e366a4e140119e151b5483fad4daf2733125168",
+  "browser": "156.0.8078.4",
+  "boundary": "actual Chrome MV3; safe reconstructed Wyrm35 DOM; local native handlers; own fresh character+battle GET; no live game or user scripts; no paid entry",
+  "fixedCases": [
+    {
+      "case": "dungeon",
+      "attacks": 1,
+      "leaves": 0,
+      "proofReads": 1,
+      "mobHp": 15740,
+      "hpMin": 11160,
+      "errors": []
+    },
+    {
+      "case": "unknown-kind",
+      "attacks": 0,
+      "leaves": 0,
+      "proofReads": 1,
+      "mobHp": 16740,
+      "hpMin": 11160,
+      "errors": []
+    },
+    {
+      "case": "forbidden-orange",
+      "attacks": 0,
+      "leaves": 1,
+      "proofReads": 1,
+      "mobHp": 16740,
+      "hpMin": 11160,
+      "errors": []
+    }
+  ],
+  "baseline": {
+    "expectedFailure": true,
+    "failure": "timeout waiting for first native action after successful HP proof GET",
+    "attacks": 0,
+    "leaves": 0,
+    "proofReads": 1,
+    "routeErrors": [],
+    "pageErrors": [],
+    "status": "Бой: загрузка"
+  },
+  "files": {
+    "modules/combat.js": "9defe82dc5c2281ca2f2fbeb8d4c2164c18ba24a23be1c1f5aed5bdaad138523",
+    "tests/v2069-rebirth-hp-proof.test.js": "30906c18def71f8e33d316c04e9cb942c40007ba7d76d82dfe60de1cf0d71977",
+    "tests/v2069-rebirth-hp-proof-browser.cjs": "9a6580ff2740275f63b7f07431ed55c1735ee213a645e3e848464130ee6485b0",
+    "tests/run-all.cjs": "b3e396130197713f95fb973458a077428394c812488d87c4f305c179352a6699",
+    "tests/tools/smokes.sh": "0d91e1abf284d84139939969a6c26032ee30e320190e46cc7cc6eaa48557fa67"
+  },
+  "incident": {
+    "source_sha256": "609292d3ecfe729d292826111d867dd04c9981a77d8029d5e56b5e9b2e4b14f9",
+    "source_lines": 8938,
+    "hp_waits": 403,
+    "hp_wait_first": "14:16:02.296",
+    "hp_wait_last": "14:23:43.416",
+    "single_target_waits": 382,
+    "single_target_first": "14:16:15.006",
+    "single_target_last": "14:23:17.055",
+    "first_wyrm_hp": 11160,
+    "later_wyrm_hp": 16740,
+    "ratio": 1.5,
+    "hp_threshold": 1.5,
+    "server_type": "dungeon",
+    "early_invalid_spawn_errors": 4
+  },
+  "node": {
+    "newGroupsPass": 7,
+    "baselineGroupsPass": 2,
+    "baselineGroupsExpectedFail": 5,
+    "targetedGroupsPass": 40,
+    "allFilesPass": 683,
+    "allFilesFail": 0,
+    "finalSuite": "PASS",
+    "fullSuitePasses": 2
+  },
+  "independentReview": {
+    "probesPass": 18,
+    "probesFail": 0,
+    "blockers": 0,
+    "stageConsistencyHardened": true
+  },
+  "checks": {
+    "javascriptSyntaxPass": 4,
+    "moduleGettersPass": 35,
+    "shellSyntaxPass": true,
+    "gitDiffCheckPass": true
+  },
+  "liveGameRequests": 0,
+  "firefoxTested": false,
+  "versionChanged": false,
+  "archivesBuilt": false,
+  "validationDate": "2026-10-27",
+  "victoryHypothesisReview": {
+    "passed": 4,
+    "failed": 0,
+    "cases": [
+      {
+        "case": "manual-victory-empty-GET",
+        "passed": true,
+        "emptyGetPreservesMetadata": true,
+        "nativeClicks": 1,
+        "proofGets": 2
+      },
+      {
+        "case": "manual-hunt-disabled",
+        "passed": true,
+        "emptyGetPreservesMetadata": true,
+        "nativeClicks": 0,
+        "proofGets": 0
+      },
+      {
+        "case": "expired-without-context",
+        "passed": true,
+        "emptyGetPreservesMetadata": true,
+        "nativeClicks": 0,
+        "proofGets": 0
+      },
+      {
+        "case": "expired-with-context",
+        "passed": true,
+        "emptyGetPreservesMetadata": true,
+        "nativeClicks": 1,
+        "proofGets": 2
+      }
+    ]
+  }
+}
