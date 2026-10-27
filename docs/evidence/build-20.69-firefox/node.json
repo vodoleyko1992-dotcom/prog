@@ -4,5 +4,6 @@
   "fail": 0,
   "initial_version_run": "682/0",
   "intermediate_css_test_shape_run": "681/1; strict-six-column regex now accepts additional gap declaration",
-  "final_pre_commit": "682/0"
+  "final_pre_commit": "682/0",
+  "before_final_commit_repeat": "682 PASS / 0 FAIL"
 }

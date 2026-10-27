@@ -16,7 +16,8 @@
   "checks": {
     "node": {
       "pass": 682,
-      "fail": 0
+      "fail": 0,
+      "before_final_commit_repeat": "682 PASS / 0 FAIL"
     },
     "syntax": {
       "javascript": 66,
@@ -82,5 +83,11 @@
     "21unavailable=2userDOMsnapshots+19nativepublicsourcecaches",
     "other15automaticbosschoicesnotinvented",
     "fish-nextseparatetask"
-  ]
+  ],
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/434",
+  "source_build_commit": "4450c13",
+  "public_download": {
+    "http_status": 200,
+    "matches_local_sha256": true
+  }
 }
