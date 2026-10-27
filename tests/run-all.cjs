@@ -9,6 +9,7 @@ const ORDER=['v2066-rebirth-paid-run.test.js','v2066-quest-champion-kind.test.js
 ORDER.push('v2067-cooldown-log-compact.test.cjs');
 ORDER.push('v2067-wizard-pet-buff.test.js');
 ORDER.push('v2067-vip-greater-memory.test.cjs');
+ORDER.push('v2068-hp-proof-retry.test.js','v2068-campaign-completion-wait.test.cjs','v2068-campaign-wait-core.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){

@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-27",
+  "base": "f8f6327",
+  "log": {
+    "version": "20.67",
+    "range": [
+      "11:57:04",
+      "12:46:41"
+    ],
+    "excluded_events": 2938,
+    "hp_hold_messages": 43,
+    "campaign_ready_loops": 266,
+    "campaign_gets": 267,
+    "campaign_level": 35,
+    "campaign_min_level": 36
+  },
+  "validation": {
+    "node_files": {
+      "pass": 678,
+      "fail": 0
+    },
+    "new_scenarios": 48,
+    "targeted_scenarios": 72,
+    "chrome_mv3": {
+      "hp_kind": 5,
+      "campaign_level_up": 1,
+      "page_errors": 0,
+      "network": "all HTTPS mocked"
+    },
+    "syntax_files": 10,
+    "env_modules": 34,
+    "bash_syntax": "pass",
+    "independent_review": "pass",
+    "additional_hp_probes": 4,
+    "class_switch_regressions": 2
+  },
+  "runtime_sha256": {
+    "content.js": "ff6a090197ddd529c44de2114be89ef7b229a293256147e23741e410e5e14994",
+    "modules/combat.js": "2dff5da0bd7b47d7203eedc77a11d3debcdfc28a92294f7b7111502ce4ea75bb",
+    "modules/quests.js": "8078232b0ed824f1054ceabbb0c4f015d797ace422a8fc659d9c8f86d949169b"
+  },
+  "limits": [
+    "actual hidden own-GET failure absent from log",
+    "no live game requests",
+    "Firefox not run",
+    "version/ZIP unchanged",
+    "Rebirth dedicated mode separate ongoing task"
+  ]
+}

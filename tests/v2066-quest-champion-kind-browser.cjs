@@ -7,6 +7,7 @@ const HERO='quest-kind-hero',ORDINARY='dense_5598',ORANGE='champ_o_plains_of_dio
 
 async function scenario(kind){
  const orange=kind==='orange',revealed=kind==='revealed-orange',forbidden=orange||revealed;
+ const transient=/^transient-/.test(kind),expectedReads=transient?2:1,proofTimes=[];
  const h=await harness(),calls=[],paths=[],routeErrors=[];
  const active=orange?ORANGE:ORDINARY,max=orange?86284:5073;
  const S={revision:100,inBattle:false,starts:0,leaves:0,attacks:0,hp:max,proofReads:0,proofHeld:false,attackHeld:false,battleDocs:0};
@@ -46,11 +47,14 @@ async function scenario(kind){
     assert.equal(req.method(),'GET');assert.equal(orange,false,'явный orange не требует нового proof GET');
     assert.equal(S.battleDocs,1,'условный proof принадлежит новому документу боя');
     assert.equal(u.searchParams.get('characterId'),HERO);assert.equal(u.searchParams.get('spawnId'),ORDINARY);
-    S.proofReads++;assert.equal(S.proofReads,1,'одной свежей сверки достаточно до первого удара');S.proofHeld=true;await proofGate;
+    S.proofReads++;proofTimes.push(Date.now());
+    // 20.68 (лог27.10 12:46): единственный временный сбой не должен держать бой целую минуту.
+    if(transient&&S.proofReads===1){if(kind==='transient-read')return route.abort('timedout');return route.fulfill({status:503,json:{error:'temporary_fixture_failure'}});}
+    assert.equal(S.proofReads,expectedReads,'одна успешная свежая сверка до первого удара');S.proofHeld=true;await proofGate;
     return json(response());
    }
    if(p==='/game/battle/action'){
-    assert.equal(forbidden,false,'запрещённый настоящий orange не атакуется');assert.equal(S.proofReads,1,'атака только после условной свежей сверки');
+    assert.equal(forbidden,false,'запрещённый настоящий orange не атакуется');assert.equal(S.proofReads,expectedReads,'атака только после успешной свежей сверки');
     assert.equal(S.leaves,0);assert.equal(data.battleSpawnId,ORDINARY);assert.equal(data.action,'attack');assert.equal(data.expectedRevision,101);
     S.attacks++;assert.equal(S.attacks,1);S.hp-=1000;S.revision++;S.attackHeld=true;await attackGate;return json(response());
    }
@@ -61,7 +65,7 @@ async function scenario(kind){
    assert.equal(req.method(),'GET','неожиданный POST '+p);return route.fallback();
   }catch(e){routeErrors.push(e.message);return route.fulfill({status:500,json:{error:'fixture_assertion',message:e.message}}).catch(()=>{})}});
   await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']),now=Date.now();await chrome.storage.local.set({on:false,
-   cfg:{...cfg,autoTasks:['farm'],taskOnly:false,zoneAuto:false,combatProfile:'fighter',autoRoles:false,autoMagister:false,autoLearn:false,weaponScanAuto:false,weaponClassEquip:false,shopAuto:false,
+   cfg:{...cfg,autoTasks:['farm','petbuff'],taskOnly:false,zoneAuto:false,combatProfile:'fighter',autoRoles:false,autoMagister:false,autoLearn:false,weaponScanAuto:false,weaponClassEquip:false,shopAuto:false,
     chain:false,petAuto:false,petBuffAuto:false,petFullAuto:false,townBuffSet:'off',faBuffs:'',tvtOn:false,enemyHunt:false,clanTasks:false,dailyAuto:false,mmOrders:false,mmUpgrade:false,mmMailClaim:false,
     rbMode:false,rbHuntMode:false,epicMode:false,catMode:false,fishMode:false,campaign:false,campAuto:false,storyTurnIn:false,
     searchChamp:true,searchQuest:true,champFa:false,champBlue:true,champOrange:false,champRed:false,champHpMult:1.5,champMinLvl:20,priority:'[квест]\n[чемп]\n[все]',
@@ -79,29 +83,30 @@ async function scenario(kind){
   let before=null;
   if(!orange){
    await until(()=>S.proofHeld,20000);
+   if(transient){const retryMs=proofTimes[1]-proofTimes[0];assert.ok(retryMs>=2500&&retryMs<15000,'короткая ограниченная пауза после сбоя: '+retryMs+' мс');}
    before=await h.g.core('({meta:BATTLE_NET,hpMin:rt.hpMin["tumran bugbear"],url:location.pathname+location.search})');
    assert.deepEqual(before,{meta:null,hpMin:3000,url:'/battle.html?spawnId='+ORDINARY},'новый документ потерял start-meta; HP5073 превышает исторический порог4500');
    assert.equal(S.attacks,0);assert.equal(S.leaves,0);releaseProof();
    if(revealed){
     await until(()=>S.leaves===1,15000);await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await delay(300);
-    assert.equal(S.starts,1);assert.equal(S.attacks,0);assert.equal(S.leaves,1);assert.equal(S.proofReads,1,'свежий proof champion/orange передан старому цветовому запрету');
+    assert.equal(S.starts,1);assert.equal(S.attacks,0);assert.equal(S.leaves,1);assert.equal(S.proofReads,expectedReads,'свежий proof champion/orange передан старому цветовому запрету');
    }else{
     await until(()=>S.attackHeld,15000);
     await h.click('stop');await until(async()=>!(await h.get(['on'])).on);releaseAttack();
     await until(()=>h.g.p.evaluate(()=>window.nativeAttack?.battle?.mobHp===4073),5000);
-    assert.equal(S.starts,1);assert.equal(S.attacks,1);assert.equal(S.leaves,0);assert.equal(S.proofReads,1);
+    assert.equal(S.starts,1);assert.equal(S.attacks,1);assert.equal(S.leaves,0);assert.equal(S.proofReads,expectedReads);
     assert.deepEqual(paths,['/map.html','/battle.html?spawnId='+ORDINARY]);
    }
   }else{
    await until(()=>S.leaves===1,15000);await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await delay(300);
    assert.equal(S.starts,1);assert.equal(S.attacks,0);assert.equal(S.proofReads,0);assert.equal(S.leaves,1);
   }
-  const state=await h.get(['rt','cfg']);assert.equal(state.cfg.champOrange,false);assert.equal(state.cfg.champRed,false);assert.deepEqual(state.cfg.autoTasks,['farm']);
+  const state=await h.get(['rt','cfg']);assert.equal(state.cfg.champOrange,false);assert.equal(state.cfg.champRed,false);assert.deepEqual(state.cfg.autoTasks,['farm','petbuff']);
   assert.deepEqual(routeErrors,[]);assert.deepEqual(h.errors,[]);
   proof.push({case:orange?'real orange remains forbidden':revealed?'fresh proof reveals forbidden orange behind dense URL':'HP-ambiguous ordinary gets fresh exact proof',browser:h.ctx.browser().version(),before,paths,calls,
-   result:{starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads,mobHp:S.hp,hpMin:state.rt.hpMin['tumran bugbear']},errors:[...routeErrors,...h.errors]});
+   result:{starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads,retryMs:transient?proofTimes[1]-proofTimes[0]:null,mobHp:S.hp,hpMin:state.rt.hpMin['tumran bugbear']},errors:[...routeErrors,...h.errors]});
   console.log('PASS actual MV3 quest champion kind',JSON.stringify({case:kind,starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads}));
  }catch(e){console.error('DIAG quest-champion-kind',JSON.stringify({kind,S,paths,calls,routeErrors,state:await h.get(['on','rt']).then(x=>({on:x.on,status:x.rt.status,target:x.rt.target,hpMin:x.rt.hpMin,errs:x.rt.errs})).catch(String)}));throw e;}
  finally{releaseProof();releaseAttack();await h.ctx.close();}
 }
-(async()=>{try{for(const kind of ['ordinary','orange','revealed-orange'])await scenario(kind)}finally{if(process.env.QUEST_CHAMPION_KIND_PROOF)fs.writeFileSync(process.env.QUEST_CHAMPION_KIND_PROOF,JSON.stringify({boundary:'actual Chrome MV3; safe reconstructed Tumran DOM and local native handlers; client never GETs battle in new document; no live game or user scripts',proof},null,2)+'\n')}})().catch(e=>{console.error(e.stack);process.exitCode=1});
+(async()=>{try{for(const kind of process.env.QUEST_CHAMPION_KIND_CASES?JSON.parse(process.env.QUEST_CHAMPION_KIND_CASES):['ordinary','orange','revealed-orange','transient-http','transient-read'])await scenario(kind)}finally{if(process.env.QUEST_CHAMPION_KIND_PROOF)fs.writeFileSync(process.env.QUEST_CHAMPION_KIND_PROOF,JSON.stringify({boundary:'actual Chrome MV3; safe reconstructed Tumran DOM and local native handlers; client never GETs battle in new document; no live game or user scripts',proof},null,2)+'\n')}})().catch(e=>{console.error(e.stack);process.exitCode=1});

@@ -169,7 +169,8 @@ test('неполная сверка и HTTP-отказ имеют backoff; от�
  f.state.now+=14999;await f.combat.battle();assert.equal(f.state.gets.length,2);f.state.now++;
  f.state.reply.battle.kind='aggressive';await f.combat.battle();assert.equal(f.state.gets.length,4);assert.equal(f.events.filter(x=>x==='Атака').length,1);
  const http=fixture();http.state.httpOk=false;await http.combat.battle();assert.equal(http.state.gets.length,1);
- http.state.now+=15000;await http.combat.battle();assert.equal(http.state.gets.length,1);http.state.now+=45000;http.state.httpOk=true;
+ // 20.68: временный HTTP-отказ повторяется через 3/6/12 с; неполная схема выше по-прежнему ждёт 15 с.
+ http.state.now+=2999;await http.combat.battle();assert.equal(http.state.gets.length,1);http.state.now++;http.state.httpOk=true;
  await http.combat.battle();assert.equal(http.state.gets.length,3);assert.equal(http.events.filter(x=>x==='Атака').length,1);
  for(const minimum of [undefined,5000]){const ordinary=fixture();ordinary.env.rt.hpMin={'tumran bugbear':minimum};await ordinary.combat.battle();
   assert.equal(ordinary.state.gets.length,0);assert.equal(ordinary.events.filter(x=>x==='Атака').length,1)}
