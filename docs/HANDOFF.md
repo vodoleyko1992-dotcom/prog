@@ -1,6 +1,6 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 27.10.2026 — Chrome20.71 без проверок (Codex, PR в подготовке)
+## 27.10.2026 — Chrome20.71 без проверок (Codex, [PR #438](https://github.com/vodoleyko1992-dotcom/prog/pull/438))
 
 - John: «Сборка на Хром». Продолжена прежняя явная просьба «без проверок»; версия20.71 сохранена, функциональный runtime из a3541eb/#437. В Chrome входят отдельные подземелья Rebirth, роли champion/raid, исправление лишних15с ожиданий и собственный preflight кота. Описание manifest/header сделаны общими для браузеров; исходный Chrome MV3/service_worker/minimum116 сохранён, README-CHROME обновлён.
 - ZIP69файлов/1736587байт/SHA256 `1df8b96e40ade42a7f04b8b0c9da61ebe3b02976212984d488020e91a83a78ef`; квитанция `docs/evidence/build-20.71-chrome/receipt.json`, файл `builds/l2wap-bot-v20.71.zip`. Никакие тесты/синтаксис/env/browser/lint/аудитZIP не запускались; новых PASS нет. Живая игра не открывалась.

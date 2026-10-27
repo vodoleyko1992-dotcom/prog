@@ -23,6 +23,7 @@
   "firefoxRebuilt": false,
   "liteRebuilt": false,
   "delivery": "immutable GitHub raw URL",
-  "pullRequest": "PR в подготовке",
-  "nextStep": "Распаковать поверх, перезагрузить расширение и вкладку игры; полный журнал чемпион→РБ→завершение"
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/438",
+  "nextStep": "Распаковать поверх, перезагрузить расширение и вкладку игры; полный журнал чемпион→РБ→завершение",
+  "downloadUrl": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/312ed0accae92c624730756f70cba89a94160b51/builds/l2wap-bot-v20.71.zip"
 }
