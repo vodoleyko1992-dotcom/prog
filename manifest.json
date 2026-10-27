@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.67",
-  "description": "L2wap Bot 20.67 — Firefox: обучение по SP, обычные квестовые мобы и продолжение оплаченного Rebirth",
+  "version": "20.68",
+  "description": "L2wap Bot 20.68 — Firefox: журнал без дублирующих успешных таймеров КД",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -142,5 +142,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.67"
+  "version_name": "20.68"
 }

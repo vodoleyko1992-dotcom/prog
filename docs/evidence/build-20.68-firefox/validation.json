@@ -1,0 +1,55 @@
+{
+  "version": "20.68",
+  "target": "Firefox only",
+  "source_base": "62d07d88dc3d262622e5baf217c9a7789ac485f0",
+  "artifact": {
+    "path": "builds/l2wap-bot-v20.68-firefox.zip",
+    "files": 68,
+    "bytes": 1712876,
+    "sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba"
+  },
+  "checks": {
+    "node": {
+      "pass": 673,
+      "fail": 0
+    },
+    "syntax": {
+      "pass": 58,
+      "fail": 0
+    },
+    "envcheck": {
+      "modules": 34,
+      "result": "PASS"
+    },
+    "profile_credentials_fields": 0,
+    "runtime_logic_unchanged_during_packaging": true,
+    "native_firefox": {
+      "version": "153.5.1esr",
+      "desktop": "PASS",
+      "android_api_simulation": "PASS",
+      "lint_errors": 0,
+      "lint_notices": 0,
+      "lint_warnings": 51
+    },
+    "independent_archive_audit": {
+      "pass": 29,
+      "fail": 0
+    },
+    "chromium_package_load": {
+      "version": "20.68",
+      "errors": 0,
+      "result": "PASS",
+      "chromium_major": 156
+    },
+    "browser_smokes": {
+      "state": "RUNNING"
+    }
+  },
+  "limits": [
+    "No live game accessed",
+    "No physical Android; ZIP unsigned",
+    "No Chrome/Lite rebuild"
+  ],
+  "client_build_date": "2026-10-27",
+  "client_timezone": "Asia/Vladivostok"
+}

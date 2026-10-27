@@ -1,0 +1,35 @@
+{
+  "state": "PASS",
+  "version": "20.68",
+  "node": {
+    "pass": 673,
+    "fail": 0,
+    "log": "run-all-final.log"
+  },
+  "syntax": {
+    "runtime_js": 53,
+    "changed_version_test_js": 5,
+    "checked": 58,
+    "pass": 58,
+    "fail": 0
+  },
+  "envcheck": {
+    "modules": 34,
+    "exit_code": 0,
+    "result": "PASS"
+  },
+  "base_profile": {
+    "json_valid": true,
+    "credential_text_matches": 0,
+    "credential_field_count": 0
+  },
+  "source_hashes_unchanged_during_suite": true,
+  "source_hash_count": 58,
+  "initial_run": {
+    "pass": 672,
+    "fail": 1,
+    "failed_file": "v1007-changelog-layout.test.js",
+    "reason": "The suite began before the root had added CHANGELOG20.68 to the index; after the document was completed, targeted and entire suite passed. No test changed."
+  },
+  "live_game_requests": 0
+}

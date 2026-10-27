@@ -1,0 +1,81 @@
+{
+  "version": "20.68",
+  "artifact": {
+    "path": "builds/l2wap-bot-v20.68-firefox.zip",
+    "bytes": 1712876,
+    "sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba"
+  },
+  "firefox_version": "153.5.1esr",
+  "geckodriver_version": "0.37.1",
+  "selenium_webdriver_version": "4.51.0",
+  "web_ext_version": "10.8.0",
+  "desktop": {
+    "result": "PASS",
+    "details": {
+      "hook": true,
+      "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+      "bgReply": {
+        "ok": false
+      },
+      "cfgKeys": 258,
+      "epicCoin": 0,
+      "popupText": 1303,
+      "sim": "",
+      "ver": "20.68",
+      "dock": {
+        "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+        "foreign": true,
+        "kick": {
+          "ok": false,
+          "owner": false,
+          "reason": "stopped",
+          "running": false,
+          "v": "20.68"
+        },
+        "on": false,
+        "slots": true,
+        "tabs": "undefined"
+      }
+    }
+  },
+  "android_api_simulation": {
+    "result": "PASS",
+    "details": {
+      "hook": true,
+      "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+      "bgReply": {
+        "ok": false
+      },
+      "cfgKeys": 258,
+      "epicCoin": 0,
+      "popupText": 1303,
+      "sim": "undefined,undefined,undefined",
+      "ver": "20.68",
+      "dock": {
+        "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+        "foreign": true,
+        "kick": {
+          "ok": false,
+          "owner": false,
+          "reason": "stopped",
+          "running": false,
+          "v": "20.68"
+        },
+        "on": false,
+        "slots": true,
+        "tabs": "undefined"
+      }
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "limits": [
+    "Local HTTPS game fixture and browser-local DNS only; live game not accessed.",
+    "Android API removal simulated on desktop Firefox; no physical Android checked.",
+    "ZIP unsigned."
+  ],
+  "runtime_or_tests_modified": false
+}
