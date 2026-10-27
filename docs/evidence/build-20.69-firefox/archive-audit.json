@@ -1,0 +1,202 @@
+{
+  "artifact": "/workspace/work/firefox-20.69/builds/l2wap-bot-v20.69-firefox.zip",
+  "version": "20.69",
+  "reviewed_base": "4015aa1edf320d7c5c20096ee4c8780b84e94c36",
+  "sha256": "4ddfaba080cb279477e8dd8f506f0db59f2d7726b997783fbee60cee506fed4d",
+  "bytes": 1728508,
+  "files": 69,
+  "passed": 35,
+  "failed": 0,
+  "checks": [
+    {
+      "check": "CRC",
+      "pass": true
+    },
+    {
+      "check": "69 files / no directory entries",
+      "pass": true,
+      "detail": 69
+    },
+    {
+      "check": "no duplicate names",
+      "pass": true
+    },
+    {
+      "check": "safe member paths",
+      "pass": true
+    },
+    {
+      "check": "exact previous68 plus Rebirth allowlist",
+      "pass": true,
+      "detail": {
+        "extra": [],
+        "missing": []
+      }
+    },
+    {
+      "check": "no encrypted files or symlinks",
+      "pass": true
+    },
+    {
+      "check": "no development or credential filenames",
+      "pass": true
+    },
+    {
+      "check": "all68 nonmanifest files byte-match source",
+      "pass": true,
+      "detail": {
+        "mismatches": []
+      }
+    },
+    {
+      "check": "canonical Firefox manifest transformation",
+      "pass": true
+    },
+    {
+      "check": "source and Firefox version20.69",
+      "pass": true
+    },
+    {
+      "check": "Firefox background dependency order",
+      "pass": true
+    },
+    {
+      "check": "stable GeckoID / desktop+Android128 / no collection",
+      "pass": true
+    },
+    {
+      "check": "no Chrome-only manifest fields",
+      "pass": true
+    },
+    {
+      "check": "permissions unchanged from reviewed Rebirth source",
+      "pass": true
+    },
+    {
+      "check": "source manifest changes version metadata only",
+      "pass": true
+    },
+    {
+      "check": "manifest resource closure",
+      "pass": true,
+      "detail": {
+        "references": 70,
+        "missing": []
+      }
+    },
+    {
+      "check": "HTML resource closure",
+      "pass": true,
+      "detail": {
+        "references": 25,
+        "missing": []
+      }
+    },
+    {
+      "check": "relative CSS resource closure",
+      "pass": true,
+      "detail": {
+        "references": 0,
+        "missing": []
+      }
+    },
+    {
+      "check": "icons are valid PNG with expected dimensions",
+      "pass": true
+    },
+    {
+      "check": "Rebirth factory loaded once before core",
+      "pass": true
+    },
+    {
+      "check": "base profile has no credential fields",
+      "pass": true,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "check": "base profile no password/auth text matches",
+      "pass": true
+    },
+    {
+      "check": "base profile Easy/manual/no autoentry/zero reserve",
+      "pass": true
+    },
+    {
+      "check": "archived executable defaults Easy/manual/mode-off/no autoentry",
+      "pass": true,
+      "detail": {
+        "rebirthMode": false,
+        "rebirthDifficulty": 1,
+        "rebirthAutoEnter": false,
+        "rebirthKeyReserve": 0,
+        "rebirthBossChoice": "manual"
+      }
+    },
+    {
+      "check": "CSS changes exactly mobile nav6to5 and six-button narrow spacing; original nav5 restored",
+      "pass": true
+    },
+    {
+      "check": "runtime equals reviewed4015aa1 except content version header and exact two mobile CSS corrections",
+      "pass": true,
+      "detail": {
+        "compared_files": 66,
+        "changed": []
+      }
+    },
+    {
+      "check": "content header20.69",
+      "pass": true
+    },
+    {
+      "check": "current Firefox readme and description20.69",
+      "pass": true
+    },
+    {
+      "check": "Chrome readme unchanged intentionally",
+      "pass": true
+    },
+    {
+      "check": "previous Firefox backup exact",
+      "pass": true,
+      "detail": {
+        "backup": "/workspace/work/firefox-20.69-scratch/previous-firefox-20.68.zip",
+        "sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba"
+      }
+    },
+    {
+      "check": "all historical checksum files preserved unchanged",
+      "pass": true,
+      "detail": {
+        "files": 60,
+        "changed": []
+      }
+    },
+    {
+      "check": "kept Chrome current+rollback and Lite archives unchanged",
+      "pass": true,
+      "detail": {
+        "archives": 4,
+        "changed": []
+      }
+    },
+    {
+      "check": "builds contains only retained archive set",
+      "pass": true
+    },
+    {
+      "check": "new SHA256SUMS matches final archive",
+      "pass": true
+    },
+    {
+      "check": "reported version/filecount/SHA/size match final archive",
+      "pass": true
+    }
+  ],
+  "limits": [
+    "Independent static archive audit; native Firefox runtime checks are separate.",
+    "No live game or network requests performed."
+  ]
+}

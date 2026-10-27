@@ -9,6 +9,7 @@ async function scenario(kind){
  const orange=kind==='orange',revealed=kind==='revealed-orange',forbidden=orange||revealed;
  const transient=/^transient-/.test(kind),expectedReads=transient?2:1,proofTimes=[];
  const h=await harness(),calls=[],paths=[],routeErrors=[];
+ let stopRequestedAt=0,stopClickAt=0;
  const active=orange?ORANGE:ORDINARY,max=orange?86284:5073;
  const S={revision:100,inBattle:false,starts:0,leaves:0,attacks:0,hp:max,proofReads:0,proofHeld:false,attackHeld:false,battleDocs:0};
  let releaseProof,releaseAttack;
@@ -75,6 +76,11 @@ async function scenario(kind){
     storyJob:null,mmJob:null,tsJob:null,actionOwner:null,skills:{},farmQuota:{},dailyQuota:null}});});
   await h.g.p.goto('https://l2wap.com/map.html');await until(()=>h.g.core('rt.char==="AuditHero" && !!L2V7Modules.combat'));
   await h.popup.reload();await h.g.p.bringToFront();
+  if(forbidden)await h.popup.evaluate(()=>{window.questKindStopClickAt=0;document.getElementById('stop').addEventListener('click',()=>{window.questKindStopClickAt=Date.now();},{capture:true,once:true});});
+  // 20.69: фоновый popup задерживал обычный Playwright-клик на1,25с; повторный вход происходил ещё до настоящего Stop.
+  // Стабильность RAF здесь не проверяем: настоящий быстрый клик останавливает сценарий сразу после подтверждённого выхода.
+  const stopForbidden=async()=>{stopRequestedAt=Date.now();await h.popup.locator('#stop').click({force:true});stopClickAt=await h.popup.evaluate(()=>window.questKindStopClickAt);
+   assert.ok(Number.isFinite(stopClickAt)&&stopClickAt>=stopRequestedAt,'настоящий Stop-клик зафиксирован после запроса стенда');await until(async()=>!(await h.get(['on'])).on);};
   if(orange){
    // Контроль боевого фильтра: пользователь открыл реального orange до запуска бота.
    await h.g.p.locator('.l2-map-mob-link').click();await until(()=>h.g.core('location.pathname==="/battle.html" && BATTLE_NET===null'));
@@ -88,7 +94,7 @@ async function scenario(kind){
    assert.deepEqual(before,{meta:null,hpMin:3000,url:'/battle.html?spawnId='+ORDINARY},'новый документ потерял start-meta; HP5073 превышает исторический порог4500');
    assert.equal(S.attacks,0);assert.equal(S.leaves,0);releaseProof();
    if(revealed){
-    await until(()=>S.leaves===1,15000);await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await delay(300);
+    await until(()=>S.leaves===1,15000);await stopForbidden();await delay(300);
     assert.equal(S.starts,1);assert.equal(S.attacks,0);assert.equal(S.leaves,1);assert.equal(S.proofReads,expectedReads,'свежий proof champion/orange передан старому цветовому запрету');
    }else{
     await until(()=>S.attackHeld,15000);
@@ -98,14 +104,14 @@ async function scenario(kind){
     assert.deepEqual(paths,['/map.html','/battle.html?spawnId='+ORDINARY]);
    }
   }else{
-   await until(()=>S.leaves===1,15000);await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await delay(300);
+   await until(()=>S.leaves===1,15000);await stopForbidden();await delay(300);
    assert.equal(S.starts,1);assert.equal(S.attacks,0);assert.equal(S.proofReads,0);assert.equal(S.leaves,1);
   }
   const state=await h.get(['rt','cfg']);assert.equal(state.cfg.champOrange,false);assert.equal(state.cfg.champRed,false);assert.deepEqual(state.cfg.autoTasks,['farm','petbuff']);
   assert.deepEqual(routeErrors,[]);assert.deepEqual(h.errors,[]);
   proof.push({case:orange?'real orange remains forbidden':revealed?'fresh proof reveals forbidden orange behind dense URL':'HP-ambiguous ordinary gets fresh exact proof',browser:h.ctx.browser().version(),before,paths,calls,
-   result:{starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads,retryMs:transient?proofTimes[1]-proofTimes[0]:null,mobHp:S.hp,hpMin:state.rt.hpMin['tumran bugbear']},errors:[...routeErrors,...h.errors]});
-  console.log('PASS actual MV3 quest champion kind',JSON.stringify({case:kind,starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads}));
+   result:{starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads,retryMs:transient?proofTimes[1]-proofTimes[0]:null,mobHp:S.hp,hpMin:state.rt.hpMin['tumran bugbear'],stopTiming:forbidden?{requestedAt:stopRequestedAt,clickedAt:stopClickAt,latencyMs:stopClickAt-stopRequestedAt}:null},errors:[...routeErrors,...h.errors]});
+  console.log('PASS actual MV3 quest champion kind',JSON.stringify({case:kind,starts:S.starts,attacks:S.attacks,leaves:S.leaves,conditionalReads:S.proofReads,...(forbidden?{stopClickMs:stopClickAt-stopRequestedAt}:{})}));
  }catch(e){console.error('DIAG quest-champion-kind',JSON.stringify({kind,S,paths,calls,routeErrors,state:await h.get(['on','rt']).then(x=>({on:x.on,status:x.rt.status,target:x.rt.target,hpMin:x.rt.hpMin,errs:x.rt.errs})).catch(String)}));throw e;}
  finally{releaseProof();releaseAttack();await h.ctx.close();}
 }

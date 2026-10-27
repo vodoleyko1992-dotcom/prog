@@ -1,0 +1,99 @@
+{
+  "version": "20.69",
+  "artifact": {
+    "path": "builds/l2wap-bot-v20.69-firefox.zip",
+    "absolute_path": "/workspace/work/firefox-20.69/builds/l2wap-bot-v20.69-firefox.zip",
+    "bytes": 1728508,
+    "files": 69,
+    "sha256": "4ddfaba080cb279477e8dd8f506f0db59f2d7726b997783fbee60cee506fed4d",
+    "frozen_validation_copy": "/workspace/work/firefox-20.69-scratch/final-4ddf/l2wap-bot-v20.69-firefox.zip"
+  },
+  "firefox_version": "153.5.1esr",
+  "geckodriver_version": "0.37.1",
+  "selenium_webdriver_version": "4.51.0",
+  "web_ext_version": "10.8.0",
+  "desktop": {
+    "result": "PASS",
+    "exit_code": 0,
+    "details": {
+      "hook": true,
+      "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+      "bgReply": {
+        "ok": false
+      },
+      "cfgKeys": 262,
+      "epicCoin": 0,
+      "popupText": 1313,
+      "sim": "",
+      "ver": "20.69",
+      "dock": {
+        "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+        "foreign": true,
+        "kick": {
+          "ok": false,
+          "owner": false,
+          "reason": "stopped",
+          "running": false,
+          "v": "20.69"
+        },
+        "on": false,
+        "slots": true,
+        "tabs": "undefined"
+      }
+    },
+    "log": "/workspace/work/firefox-20.69-scratch/final-4ddf/desktop.log"
+  },
+  "android_api_simulation": {
+    "result": "PASS",
+    "exit_code": 0,
+    "details": {
+      "hook": true,
+      "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+      "bgReply": {
+        "ok": false
+      },
+      "cfgKeys": 262,
+      "epicCoin": 0,
+      "popupText": 1313,
+      "sim": "undefined,undefined,undefined",
+      "ver": "20.69",
+      "dock": {
+        "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+        "foreign": true,
+        "kick": {
+          "ok": false,
+          "owner": false,
+          "reason": "stopped",
+          "running": false,
+          "v": "20.69"
+        },
+        "on": false,
+        "slots": true,
+        "tabs": "undefined"
+      }
+    },
+    "log": "/workspace/work/firefox-20.69-scratch/final-4ddf/android.log"
+  },
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51,
+    "result": "PASS",
+    "exit_code": 0,
+    "log": "/workspace/work/firefox-20.69-scratch/final-4ddf/lint.json"
+  },
+  "sequential_port_443": true,
+  "runtime_or_tests_modified": false,
+  "live_game_requests": 0,
+  "limits": [
+    "Local HTTPS game fixture and browser-local DNS only; live game not accessed.",
+    "Android API removal simulated on desktop Firefox; no physical Android checked.",
+    "ZIP unsigned."
+  ],
+  "artifact_stage": "FINAL_FINAL",
+  "revalidation_reason": "Final ZIP after mobile navigation and quick-start CSS fixes",
+  "previous_validations": [
+    "/workspace/work/firefox-20.69-scratch/before-nav-fix/native.json",
+    "/workspace/work/firefox-20.69-scratch/407a-intermediate/native.json"
+  ]
+}

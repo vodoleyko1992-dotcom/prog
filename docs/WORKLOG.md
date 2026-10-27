@@ -2,6 +2,13 @@
 
 **Ведущий: ChatGPT/Codex (с 26.10.2026, 09:48 UTC+10, John «я пока перейду в ГПТ, доделывай задачу и вливай»).** Claude по этой просьбе доделал и влил только начатую часть 3 нагрузки (запись ниже); дальше Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`. До этого с 23.10.2026, 23:00 UTC+10 вёл Claude.
 
+## 27.10.2026, 14:16 UTC+10 — Codex — Firefox20.69 после Rebirth (PR в подготовке)
+
+- Прямая просьба John «сборка на фаерфокс следом». База02d61a2/#433, включает#431/#432. Версия/header/5assertions/README-Firefox/CLAUDE/история20.69; Chrome/Lite не пересобраны.
+- ZIP69/1728508B/SHA4ddfaba080cb279477e8dd8f506f0db59f2d7726b997783fbee60cee506fed4d, строгий allowlist. NativeFirefox153.5.1esr desktop/AndroidAPIsimPASS, lint0errors/0notices/51warnings, независимыйаудит35PASS. Node682PASS/0FAIL; syntax66/Python2/env35/privacy0; Chromemirror0errors. Browser203:181PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope,97финальныхповторовPASS.
+- В мобильнойвёрстке устранены nav6→5 и обрезание6быстрыхкнопок на360px;360/375/420 все подписи/переполнение0, шапка≤196px. JSне менялся, кромеversionheader. Фикстуры задач/Wizard/новогоcontentworld/точногоStopклика согласованы с реальнымипроверками без ослабления запретов действий/расходов.
+- FF20.68 сохранён точнойкопией иисторией; gitдержитновыйFF/дваChrome/Lite, SHAисторияпрежняя. Живойигры/физическогоAndroidнет; пакетнеподписан. Дальше — публикация/контрольныйлог20.69. fish→nextне закрывается.
+
 ## 27.10.2026, 14:00 UTC+10 — Codex — отдельный режим подземелий Rebirth ([PR #433](https://github.com/vodoleyko1992-dotcom/prog/pull/433))
 
 - John: создать режим, Easy default, автоповтор переключать галкой. Полный03:20:300мобов→champion→16РБ→encodedslot3→rb_active/l2dop_rb_25098→nextnone. Одноручный посох — пояснение John, дроп не объявлен выпавшим; неизвестный prebossenum/остальные15слотов не придумываются.

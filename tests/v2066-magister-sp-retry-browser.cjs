@@ -59,8 +59,9 @@ async function scenario(){
    assert.equal(req.method(),'GET','неожиданный платный/боевой POST: '+p);
    return route.fallback();
   }catch(e){routeErrors.push(e.message);return route.fulfill({status:500,json:{error:'fixture_assertion',message:e.message}}).catch(()=>{})}});
+  // 27.10 (#431): Wizard разрешает задачу petbuff независимо от autoRoles; стенд начинает с этого штатного набора.
   await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']),now=Date.now();await chrome.storage.local.set({on:false,
-   cfg:{...cfg,autoTasks:['farm'],autoMagister:true,magisterEvery:1,magisterSkip:'',magisterSpReserve:100,taskOnly:false,zoneAuto:false,
+   cfg:{...cfg,autoTasks:['farm','petbuff'],autoMagister:true,magisterEvery:1,magisterSkip:'',magisterSpReserve:100,taskOnly:false,zoneAuto:false,
     combatProfile:'fighter',chain:true,autoRoles:false,autoShots:false,potSlotAuto:false,nAttack:'Атака',nPower:'',nBuffs:'',nKeyBuffs:'',nDebuff:'',nToggles:'',
     petAuto:false,petBuffAuto:false,petFullAuto:false,debuffAuto:false,shopAuto:false,townBuffSet:'off',faBuffs:'',tvtOn:false,enemyHunt:false,clanTasks:false,dailyAuto:false,
     rbMode:false,rbHuntMode:false,epicMode:false,catMode:false,fishMode:false,campaign:false,mmOrders:false,mmUpgrade:false,mmMailClaim:false,
@@ -83,7 +84,7 @@ async function scenario(){
   const final=await h.get(['on','rt','cfg']);
   assert.equal(final.on,true,'нет Stop/Start между первой проверкой и повторным обучением');assert.equal(final.rt.lvl,20);assert.equal(final.rt.kills,1);
   assert.equal(S.learns,1);assert.equal(S.sp,116);assert.equal(S.rank,2);assert.equal(final.rt.magPending?.[KEY],undefined);assert.equal(final.rt.magister,null);
-  assert.equal(final.cfg.magisterSpReserve,100);assert.deepEqual(final.cfg.autoTasks,['farm']);
+  assert.equal(final.cfg.magisterSpReserve,100);assert.deepEqual(final.cfg.autoTasks,['farm','petbuff']);
   assert.equal(calls.filter(x=>x.path==='/game/battle/hunt-continue').length,0,'обучение прерывает новую охоту сразу после победы');
   assert.deepEqual(calls.filter(x=>x.method==='POST').map(x=>x.path),['/game/battle/action','/character/skills/learn']);
   assert.ok(calls.some(x=>x.path==='/character'&&x.sp===356),'кошелёк SP подтверждён свежим character');

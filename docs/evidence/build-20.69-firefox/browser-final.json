@@ -1,0 +1,3686 @@
+{
+  "version": "20.69",
+  "registryFiles": 203,
+  "parallelJobs": 6,
+  "allGameAPIResponsesLocal": true,
+  "nodeLiveGameFence": "external http(s) fetch/request/get forbidden except loopback; NODE_OPTIONS preload",
+  "browserLiveGameDnsFence": "Chromium all external DNS blocked and proxy disabled; fixtures use local fulfill",
+  "cacheAvailability": "browser-cache-availability.json",
+  "startedUtc": "2026-10-27T04:01:14Z",
+  "browser": "Chromium 156.0.8078.4, real MV3 where specified by each registered test",
+  "counts": {
+    "PASS": 181,
+    "UNAVAILABLE": 21,
+    "SKIPPED_OUT_OF_SCOPE_UNCHANGED_LITE": 1
+  },
+  "completed": 203,
+  "rawRegistryCounts": {
+    "PASS": 174,
+    "FAIL": 7,
+    "UNAVAILABLE": 21,
+    "SKIPPED_OUT_OF_SCOPE_UNCHANGED_LITE": 1
+  },
+  "rawRegistryResults": "browser-raw-registry.json",
+  "finalCssReplay": "browser-final-css.json",
+  "lateFixtureReplay": "browser-late-fixtures.json",
+  "secondsRegistryAndReplays": 923.28,
+  "results": [
+    {
+      "file": "tests/browser-smoke.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.0,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/browser-smoke.py.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/browser-smoke.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.44,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/browser-smoke.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/browser-smoke.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.0,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/browser-smoke.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v7-chromium-runtime.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.01,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v7-chromium-runtime.py.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v7-chromium-runtime.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.29,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v7-chromium-runtime.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v7-chromium-runtime.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.01,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v7-chromium-runtime.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v715-ui-browser.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.05,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v715-ui-browser.py.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v715-ui-browser.py",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 10.67,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v715-ui-browser.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v715-ui-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.05,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v715-ui-browser.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v718-ui-browser.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.75,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v718-ui-browser.py.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v718-ui-browser.py",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 7.01,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v718-ui-browser.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v718-ui-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.75,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v718-ui-browser.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v719-fishing-toggle-browser.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v719-fishing-toggle-browser.py.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v719-fishing-toggle-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 15.71,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v719-fishing-toggle-browser.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v719-fishing-toggle-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.74,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v719-fishing-toggle-browser.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v715-mage-dom-browser.py",
+      "status": "UNAVAILABLE",
+      "reason": "Required user page snapshot absent; no synthetic replacement or live page requested.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/battle-dom-smoke.py",
+      "status": "UNAVAILABLE",
+      "reason": "Required user page snapshot absent; no synthetic replacement or live page requested.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1012-map-pagination-browser.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.97,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1012-map-pagination-browser.py.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1012-map-pagination-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.09,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1012-map-pagination-browser.py.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1012-map-pagination-browser.py",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.97,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1012-map-pagination-browser.py.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2068-campaign-completion-wait-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.32,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2068-campaign-completion-wait-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2068-campaign-completion-wait-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.28,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2068-campaign-completion-wait-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2068-campaign-completion-wait-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.32,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2068-campaign-completion-wait-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2054-rb-epic-split-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.28,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2054-rb-epic-split-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2054-rb-epic-split-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.35,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2054-rb-epic-split-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2054-rb-epic-split-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.28,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2054-rb-epic-split-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2054-pvp-all-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.27,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2054-pvp-all-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2054-pvp-all-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.94,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2054-pvp-all-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2054-pvp-all-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.27,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2054-pvp-all-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2050-detect-owned-start-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 70.16,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2050-detect-owned-start-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2050-detect-owned-start-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 77.34,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2050-detect-owned-start-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2050-detect-owned-start-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 70.16,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2050-detect-owned-start-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/craft-goals-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 18.33,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/craft-goals-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/craft-goals-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 22.46,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/craft-goals-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/craft-goals-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 18.33,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/craft-goals-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2050-detect-outside-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v2049-warlord-metrics-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.06,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2049-warlord-metrics-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2049-warlord-metrics-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.16,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2049-warlord-metrics-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2049-warlord-metrics-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.06,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2049-warlord-metrics-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/craft-mode-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.69,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/craft-mode-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/craft-mode-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 12.82,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/craft-mode-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/craft-mode-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.69,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/craft-mode-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2047-farm-fishing-resume-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.44,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2047-farm-fishing-resume-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2047-farm-fishing-resume-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.43,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2047-farm-fishing-resume-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2047-farm-fishing-resume-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.44,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2047-farm-fishing-resume-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2046-slow-api-recovery-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 37.73,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2046-slow-api-recovery-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2046-slow-api-recovery-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 39.59,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2046-slow-api-recovery-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2046-slow-api-recovery-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 37.73,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2046-slow-api-recovery-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2046-crafter-spoil-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.77,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2046-crafter-spoil-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2046-crafter-spoil-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 17.05,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2046-crafter-spoil-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2046-crafter-spoil-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.77,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2046-crafter-spoil-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2046-golem-farm-keep-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.08,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2046-golem-farm-keep-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2046-golem-farm-keep-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.09,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2046-golem-farm-keep-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2046-golem-farm-keep-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.08,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2046-golem-farm-keep-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2046-craft-reload-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.12,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2046-craft-reload-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2046-craft-reload-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.56,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2046-craft-reload-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2046-craft-reload-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.12,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2046-craft-reload-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2046-warlord-live-weapon-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 19.05,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2046-warlord-live-weapon-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2046-warlord-live-weapon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 23.54,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2046-warlord-live-weapon-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2046-warlord-live-weapon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 19.05,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2046-warlord-live-weapon-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2048-warlord-support-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.26,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2048-warlord-support-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2048-warlord-support-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.84,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2048-warlord-support-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2048-warlord-support-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.26,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2048-warlord-support-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2049-warlord-always-toggles-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 50.14,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2049-warlord-always-toggles-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2049-warlord-always-toggles-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 50.23,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2049-warlord-always-toggles-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2049-warlord-always-toggles-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 50.14,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2049-warlord-always-toggles-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/lite-arrows-recovery-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 32.9,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/lite-arrows-recovery-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/lite-arrows-recovery-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 30.13,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/lite-arrows-recovery-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/lite-arrows-recovery-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 32.9,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/lite-arrows-recovery-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-menu-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.65,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-menu-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-menu-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.61,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-menu-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-menu-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.65,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-menu-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-notify-stop-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.84,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-notify-stop-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-notify-stop-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.92,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-notify-stop-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-notify-stop-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.84,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-notify-stop-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-au-breather-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.97,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-au-breather-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-au-breather-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.43,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-au-breather-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-au-breather-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.97,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-au-breather-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-learn-reset-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.99,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-learn-reset-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-learn-reset-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.41,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-learn-reset-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-learn-reset-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.99,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-learn-reset-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.81,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-raidmisc-idle-farm-browser.cjs.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 4.71,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-raidmisc-idle-farm-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-raidmisc-idle-farm-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 14.81,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-raidmisc-idle-farm-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-au-travel-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 125.32,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-au-travel-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-au-travel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 115.51,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-au-travel-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-au-travel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 125.32,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-au-travel-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-fx-travel-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 27.97,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-fx-travel-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-fx-travel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 28.41,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-fx-travel-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-fx-travel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 27.97,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-fx-travel-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-fx-travel-stop-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 50.24,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-fx-travel-stop-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-fx-travel-stop-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 50.57,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-fx-travel-stop-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-fx-travel-stop-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 50.24,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-fx-travel-stop-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2041-cat-native-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.72,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2041-cat-native-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2041-cat-native-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.56,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2041-cat-native-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2041-cat-native-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.72,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2041-cat-native-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2039-combat-storage-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 22.34,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2039-combat-storage-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2039-combat-storage-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 20.88,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2039-combat-storage-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2039-combat-storage-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 22.34,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2039-combat-storage-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2038-cat-navigation-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.72,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2038-cat-navigation-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2038-cat-navigation-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.64,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2038-cat-navigation-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2038-cat-navigation-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.72,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2038-cat-navigation-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2035-mammon-dock-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.7,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2035-mammon-dock-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2035-mammon-dock-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.65,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2035-mammon-dock-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2035-mammon-dock-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.7,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2035-mammon-dock-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.18,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2043-firefox-dock-commands-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.7,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2043-firefox-dock-commands-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.18,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2043-firefox-dock-commands-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2029-raid-native-quote-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 27.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2029-raid-native-quote-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2029-raid-native-quote-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.71,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2029-raid-native-quote-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2029-raid-native-quote-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 27.74,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2029-raid-native-quote-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2029-raid-fresh-start-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 41.09,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2029-raid-fresh-start-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2029-raid-fresh-start-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 38.17,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2029-raid-fresh-start-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2029-raid-fresh-start-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 41.09,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2029-raid-fresh-start-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2029-vip-no-fa-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.11,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2029-vip-no-fa-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2029-vip-no-fa-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.51,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2029-vip-no-fa-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2029-vip-no-fa-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.11,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2029-vip-no-fa-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2029-fish-overview-limit-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.52,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2029-fish-overview-limit-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2029-fish-overview-limit-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.54,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2029-fish-overview-limit-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2029-fish-overview-limit-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.52,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2029-fish-overview-limit-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2028-mammon-payment-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 12.87,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2028-mammon-payment-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2028-mammon-payment-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.16,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2028-mammon-payment-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2028-mammon-payment-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 12.87,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2028-mammon-payment-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2025-auto-enchant-disabled-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.64,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2025-auto-enchant-disabled-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2025-auto-enchant-disabled-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.96,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2025-auto-enchant-disabled-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2025-auto-enchant-disabled-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.64,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2025-auto-enchant-disabled-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2024-seal-aa-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.13,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2024-seal-aa-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2024-seal-aa-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.9,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2024-seal-aa-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2024-seal-aa-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 14.13,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2024-seal-aa-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2024-vip-free-buff-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.95,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2024-vip-free-buff-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2024-vip-free-buff-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.88,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2024-vip-free-buff-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2024-vip-free-buff-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.95,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2024-vip-free-buff-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2023-mammon-bag-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.36,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2023-mammon-bag-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2023-mammon-bag-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.3,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2023-mammon-bag-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2023-mammon-bag-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.36,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2023-mammon-bag-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2021-overview-daily-mobs-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.33,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2021-overview-daily-mobs-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2021-overview-daily-mobs-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.93,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2021-overview-daily-mobs-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2021-overview-daily-mobs-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.33,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2021-overview-daily-mobs-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2020-base-limits-raid-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.79,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2020-base-limits-raid-ui-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2020-base-limits-raid-ui-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.18,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2020-base-limits-raid-ui-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2020-base-limits-raid-ui-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.79,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2020-base-limits-raid-ui-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2020-supply-section-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.59,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2020-supply-section-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2020-supply-section-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.35,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2020-supply-section-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2020-supply-section-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.59,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2020-supply-section-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2019-raid-mob-counter-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.1,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2019-raid-mob-counter-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2019-raid-mob-counter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 13.87,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2019-raid-mob-counter-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2019-raid-mob-counter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 14.1,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2019-raid-mob-counter-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2018-limits-logs-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.9,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2018-limits-logs-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2018-limits-logs-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.41,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2018-limits-logs-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2018-limits-logs-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.9,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2018-limits-logs-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2017-autofarm-group-counter-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.56,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2017-autofarm-group-counter-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2017-autofarm-group-counter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 16.57,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2017-autofarm-group-counter-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2017-autofarm-group-counter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 14.56,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2017-autofarm-group-counter-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2017-fishing-reload-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 28.49,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2017-fishing-reload-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2017-fishing-reload-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 31.74,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2017-fishing-reload-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2017-fishing-reload-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 28.49,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2017-fishing-reload-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2014-quick-start-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.38,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2014-quick-start-browser.cjs.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v2014-quick-start-browser.cjs",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 4.03,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2014-quick-start-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2014-quick-start-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.38,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2014-quick-start-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2012-panel-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.15,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2012-panel-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2012-panel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 15.2,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2012-panel-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2012-panel-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 13.15,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2012-panel-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2012-nav-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.25,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2012-nav-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2012-nav-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 11.78,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2012-nav-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2012-nav-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.25,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2012-nav-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2017-sidebar-sections-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.86,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2017-sidebar-sections-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2017-sidebar-sections-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.71,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2017-sidebar-sections-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2017-sidebar-sections-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.86,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2017-sidebar-sections-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2017-lifestone-auto-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.91,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2017-lifestone-auto-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2017-lifestone-auto-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 17.24,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2017-lifestone-auto-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2017-lifestone-auto-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 13.91,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2017-lifestone-auto-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2023-mammon-retired-raid-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.43,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2023-mammon-retired-raid-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2023-mammon-retired-raid-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.88,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2023-mammon-retired-raid-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2023-mammon-retired-raid-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.43,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2023-mammon-retired-raid-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2022-native-cooldown-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.21,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2022-native-cooldown-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2022-native-cooldown-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.32,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2022-native-cooldown-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2022-native-cooldown-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.21,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2022-native-cooldown-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v209-core-control-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.17,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v209-core-control-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v209-core-control-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.16,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v209-core-control-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v209-core-control-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.17,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v209-core-control-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v209-control-workspace-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.0,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v209-control-workspace-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v209-control-workspace-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.03,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v209-control-workspace-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v209-control-workspace-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.0,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v209-control-workspace-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v209-ui-controls-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.15,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v209-ui-controls-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v209-ui-controls-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.17,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v209-ui-controls-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v209-ui-controls-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.15,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v209-ui-controls-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v209-combat-contract-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.97,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v209-combat-contract-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v209-combat-contract-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.38,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v209-combat-contract-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v209-combat-contract-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 0.97,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v209-combat-contract-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v208-captcha-hold-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.96,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v208-captcha-hold-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v208-captcha-hold-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.36,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v208-captcha-hold-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v208-captcha-hold-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.96,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v208-captcha-hold-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v208-tyrant-weapon-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 15.89,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v208-tyrant-weapon-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v208-tyrant-weapon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 18.77,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v208-tyrant-weapon-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v208-tyrant-weapon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 15.89,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v208-tyrant-weapon-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v208-account-login-block-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.8,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v208-account-login-block-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v208-account-login-block-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.15,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v208-account-login-block-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v208-account-login-block-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.8,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v208-account-login-block-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v207-no-crafter-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.57,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v207-no-crafter-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v207-no-crafter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.31,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v207-no-crafter-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v207-no-crafter-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.57,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v207-no-crafter-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v207-warlord-weapon-proof-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 37.01,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v207-warlord-weapon-proof-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v207-warlord-weapon-proof-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 37.66,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v207-warlord-weapon-proof-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v207-warlord-weapon-proof-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 37.01,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v207-warlord-weapon-proof-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v206-raid-arrival-payment-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.02,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v206-raid-arrival-payment-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v206-raid-arrival-payment-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.14,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v206-raid-arrival-payment-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v206-raid-arrival-payment-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.02,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v206-raid-arrival-payment-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v206-enchant-quick-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.21,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v206-enchant-quick-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v206-enchant-quick-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.68,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v206-enchant-quick-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v206-enchant-quick-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.21,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v206-enchant-quick-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v204-extension-update-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.55,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v204-extension-update-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v204-extension-update-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.63,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v204-extension-update-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v204-extension-update-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.55,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v204-extension-update-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v206-warlord-two-pulls-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 26.51,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v206-warlord-two-pulls-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v206-warlord-two-pulls-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 30.76,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v206-warlord-two-pulls-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v206-warlord-two-pulls-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.51,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v206-warlord-two-pulls-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v206-task-switch-frame-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 15.38,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v206-task-switch-frame-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v206-task-switch-frame-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 14.43,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v206-task-switch-frame-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v206-task-switch-frame-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 15.38,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v206-task-switch-frame-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2037-vip-icon-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 51.15,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2037-vip-icon-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2037-vip-icon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 56.72,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2037-vip-icon-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2037-vip-icon-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 51.15,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2037-vip-icon-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2031-vip-greater-buff-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.47,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2031-vip-greater-buff-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v2031-vip-greater-buff-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 8.3,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2031-vip-greater-buff-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2031-vip-greater-buff-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.47,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2031-vip-greater-buff-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2036-combat-scheduler-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 26.6,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v2036-combat-scheduler-browser.cjs.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v2036-combat-scheduler-browser.cjs",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 32.04,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2036-combat-scheduler-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2036-combat-scheduler-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.6,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v2036-combat-scheduler-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v205-warlord-provoke-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 26.51,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v205-warlord-provoke-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v205-warlord-provoke-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 28.06,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v205-warlord-provoke-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v205-warlord-provoke-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.51,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v205-warlord-provoke-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v204-dock-layout-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.71,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v204-dock-layout-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v204-dock-layout-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.16,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v204-dock-layout-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v204-dock-layout-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.71,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v204-dock-layout-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v204-fa-buff-receipt-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.91,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v204-fa-buff-receipt-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v204-fa-buff-receipt-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.1,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v204-fa-buff-receipt-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v204-fa-buff-receipt-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.91,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v204-fa-buff-receipt-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v204-fishing-shop-repaint-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v203-warlord-native-skills-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.92,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v203-warlord-native-skills-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v203-warlord-native-skills-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.67,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v203-warlord-native-skills-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v203-warlord-native-skills-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.92,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v203-warlord-native-skills-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v202-farm-local-quests-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 20.7,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v202-farm-local-quests-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v202-farm-local-quests-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 16.56,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v202-farm-local-quests-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v202-farm-local-quests-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 20.7,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v202-farm-local-quests-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v202-enchant-diagnostics-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.39,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v202-enchant-diagnostics-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v202-enchant-diagnostics-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 5.83,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v202-enchant-diagnostics-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v202-enchant-diagnostics-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.39,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v202-enchant-diagnostics-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v202-enchant-user-flow-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 19.51,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v202-enchant-user-flow-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v202-enchant-user-flow-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 17.53,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v202-enchant-user-flow-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v202-enchant-user-flow-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 19.51,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v202-enchant-user-flow-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v202-popup-task-selection-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v202-popup-task-selection-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v202-popup-task-selection-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.35,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v202-popup-task-selection-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v202-popup-task-selection-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 9.74,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v202-popup-task-selection-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v202-raid-fishing-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v101-fishing-cast-recovery-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v101-champion-all-pages-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 66.18,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v101-champion-all-pages-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v101-champion-all-pages-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 68.75,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v101-champion-all-pages-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v101-champion-all-pages-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 66.18,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v101-champion-all-pages-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1029-quest-champion-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 60.06,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1029-quest-champion-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1029-quest-champion-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 66.39,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1029-quest-champion-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1029-quest-champion-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 60.06,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1029-quest-champion-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1029-raid-live-targets-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 61.98,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1029-raid-live-targets-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1029-raid-live-targets-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 65.94,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1029-raid-live-targets-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1029-raid-live-targets-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 61.98,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1029-raid-live-targets-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1028-buff-interruption-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 63.96,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1028-buff-interruption-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1028-buff-interruption-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 68.66,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1028-buff-interruption-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1028-buff-interruption-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 63.96,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1028-buff-interruption-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1028-probe-exit-navigation-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.2,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1028-probe-exit-navigation-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1028-probe-exit-navigation-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.44,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1028-probe-exit-navigation-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1028-probe-exit-navigation-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.2,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1028-probe-exit-navigation-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1027-enchant-selected-task-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1027-enchant-selected-task-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1027-enchant-selected-task-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.7,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1027-enchant-selected-task-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1027-enchant-selected-task-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.74,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1027-enchant-selected-task-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1027-auto-task-policy-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 26.89,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1027-auto-task-policy-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1027-auto-task-policy-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.01,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1027-auto-task-policy-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1027-auto-task-policy-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 26.89,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1027-auto-task-policy-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1027-auto-task-selection-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.5,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1027-auto-task-selection-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1027-auto-task-selection-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 4.96,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1027-auto-task-selection-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1027-auto-task-selection-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 3.5,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1027-auto-task-selection-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v1027-enchant-simple-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.55,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v1027-enchant-simple-ui-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v1027-enchant-simple-ui-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 2.09,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v1027-enchant-simple-ui-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v1027-enchant-simple-ui-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 1.55,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v1027-enchant-simple-ui-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v721-tree-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.85,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v721-tree-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v721-tree-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 13.81,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v721-tree-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v721-tree-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 13.85,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v721-tree-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v803-epic-dom-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.12,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v803-epic-dom-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v803-epic-dom-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 10.28,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v803-epic-dom-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v803-epic-dom-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 6.12,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v803-epic-dom-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v807-tablet-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 28.79,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-final-css/v807-tablet-browser.cjs.log",
+      "initialStatus": "PASS",
+      "attempts": [
+        {
+          "file": "tests/v807-tablet-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 33.21,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v807-tablet-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v807-tablet-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 28.79,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-final-css/v807-tablet-browser.cjs.log",
+          "phase": "final CSS replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v90-mammon-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 18.02,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v90-mammon-browser.cjs.log"
+    },
+    {
+      "file": "tests/v90-catacombs-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v90-autofarm-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.8,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v90-autofarm-browser.cjs.log"
+    },
+    {
+      "file": "tests/v90-story-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 19.0,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v90-story-browser.cjs.log"
+    },
+    {
+      "file": "tests/v92-fightlab-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.95,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v92-fightlab-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1027-polearm-damage-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.77,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1027-polearm-damage-browser.cjs.log"
+    },
+    {
+      "file": "tests/v92-combat-menu-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 18.88,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v92-combat-menu-browser.cjs.log"
+    },
+    {
+      "file": "tests/v92-enemies-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.22,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v92-enemies-browser.cjs.log"
+    },
+    {
+      "file": "tests/v925-crafter-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v100-tvtshop-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.45,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v100-tvtshop-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1002-antibot-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1002-rbtimer-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.16,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1002-rbtimer-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1002-crafter-note-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1005-ind-fit-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.34,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1005-ind-fit-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1006-rbrun-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.26,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1006-rbrun-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1009-mammon-visit-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.39,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1009-mammon-visit-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-combat-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1014-core-character-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.75,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-character-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-core-inventory-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.47,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-inventory-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-core-lifecycle-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 20.11,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-lifecycle-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-core-modes-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.75,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-modes-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-core-off-controls-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.81,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-off-controls-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-core-settings-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.05,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1014-core-settings-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1014-fishing-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v209-fishing-bait-auto-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1027-fishing-payments-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1027-enchant-native-balance-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1015-magister-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1015-magister-mv3-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 44.19,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-magister-mv3-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1025-magister-max-rank-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 25.03,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1025-magister-max-rank-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1026-attack-deadline-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 20.17,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1026-attack-deadline-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1027-campaign-transition-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.19,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1027-campaign-transition-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1027-campaign-location-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.77,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1027-campaign-location-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1027-daily-campaign-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.39,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1027-daily-campaign-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1027-resource-teleport-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.45,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1027-resource-teleport-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1016-enchant-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1016-enchant-public-independent.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1015-pvp-mv3-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 67.68,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-pvp-mv3-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1015-pvp-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.12,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-pvp-ui-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1015-clan-caster-mv3-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 54.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-clan-caster-mv3-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1015-warlock-mv3-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 128.66,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-warlock-mv3-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1015-warlock-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.12,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1015-warlock-ui-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1023-panther-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.87,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1023-panther-ui-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1024-journey-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 290.44,
+      "timeoutSeconds": 900,
+      "log": "browser-logs/v1024-journey-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1024-raid-ashen-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 41.8,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1024-raid-ashen-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1024-raid-idle-refresh-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 172.03,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1024-raid-idle-refresh-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1016-enchant-core-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.31,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1016-enchant-core-ui-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1016-enchant-core-public-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1016-enchant-core-recovery-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v1016-enchant-ui-analytics-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.76,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1016-enchant-ui-analytics-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1016-raid-tour-ui-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 17.25,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1016-raid-tour-ui-browser.cjs.log"
+    },
+    {
+      "file": "tests/v1016-enchant-mode-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 20.85,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v1016-enchant-mode-browser.cjs.log"
+    },
+    {
+      "file": "tests/battle-load-error-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.28,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/battle-load-error-browser.cjs.log"
+    },
+    {
+      "file": "tests/lite-browser.cjs",
+      "status": "SKIPPED_OUT_OF_SCOPE_UNCHANGED_LITE",
+      "reason": "Main Firefox build only; Lite sources unchanged and excluded from package."
+    },
+    {
+      "file": "tests/v2013-nav-names-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.29,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2013-nav-names-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2014-tour-toggle-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.74,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2014-tour-toggle-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2024-lifestone-weapon-choice-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.52,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2024-lifestone-weapon-choice-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-autonomy-daily-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 20.05,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-autonomy-daily-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-autonomy-service-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 11.23,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-autonomy-service-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-autonomy-settings-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.57,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-autonomy-settings-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-autonomy-snapshot-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.42,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-autonomy-snapshot-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-server-day-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.62,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-server-day-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-start-battle-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.14,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-start-battle-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2026-start-daily-server-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.06,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2026-start-daily-server-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2030-destroyer-limits-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 18.75,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2030-destroyer-limits-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2031-lifestone-scan-focus-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.88,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2031-lifestone-scan-focus-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2031-pet-raid-prep-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.54,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2031-pet-raid-prep-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2032-cat-higher-level-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.15,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2032-cat-higher-level-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2032-subclass-bag-startup-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.26,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2032-subclass-bag-startup-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2033-lifestone-dock-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.25,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2033-lifestone-dock-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2033-lifestone-feedback-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.9,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2033-lifestone-feedback-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2033-lifestone-multi-tab-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.22,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2033-lifestone-multi-tab-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2033-lifestone-real-catalog-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.28,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2033-lifestone-real-catalog-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2034-battle-evidence-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.44,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2034-battle-evidence-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2034-lifestone-materials-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 112.1,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2034-lifestone-materials-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2034-pack-efficiency-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 12.56,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2034-pack-efficiency-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2041-battle-writes-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 35.73,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2041-battle-writes-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2041-sw-badge-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.76,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2041-sw-badge-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2042-fast-turn-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 49.92,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2042-fast-turn-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2043-own-craft-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.38,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2043-own-craft-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2043-subgo-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.22,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2043-subgo-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2051-action-pace-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 9.99,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2051-action-pace-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2051-noblesse-quest-loop-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.65,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2051-noblesse-quest-loop-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2051-speed-default-off-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.66,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2051-speed-default-off-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2051-speed-panel-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.99,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2051-speed-panel-browser.cjs.log"
+    },
+    {
+      "file": "tests/v207-catacomb-direct-next-browser.cjs",
+      "status": "UNAVAILABLE",
+      "reason": "Required saved native public source cache absent; live l2wap requests forbidden. No runtime scenario executed.",
+      "availabilityEvidence": "browser-cache-availability.json"
+    },
+    {
+      "file": "tests/v208-daily-limits-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 15.82,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v208-daily-limits-browser.cjs.log"
+    },
+    {
+      "file": "tests/v208-farm-kill-quota-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 12.76,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v208-farm-kill-quota-browser.cjs.log"
+    },
+    {
+      "file": "tests/v208-fishing-completed-goal-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.46,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v208-fishing-completed-goal-browser.cjs.log"
+    },
+    {
+      "file": "tests/v208-random-limit-ranges-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 24.37,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v208-random-limit-ranges-browser.cjs.log"
+    },
+    {
+      "file": "tests/v208-rotation-report-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.55,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v208-rotation-report-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2143-activity-wrap-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.49,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2143-activity-wrap-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2143-taskboard-fold-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.71,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2143-taskboard-fold-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2062-class-stash-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.76,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2062-class-stash-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2062-dock-scroll-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.8,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2062-dock-scroll-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2065-hot-key-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 16.09,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2065-hot-key-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2065-pet-buff-ashen-return-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 18.54,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2065-pet-buff-ashen-return-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2066-magister-sp-retry-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.78,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-late-fixtures/v2066-magister-sp-retry-browser.cjs.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v2066-magister-sp-retry-browser.cjs",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 10.42,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2066-magister-sp-retry-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2066-magister-sp-retry-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 7.78,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-late-fixtures/v2066-magister-sp-retry-browser.cjs.log",
+          "phase": "late approved fixtures replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2066-quest-champion-kind-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 28.02,
+      "timeoutSeconds": 300,
+      "log": "browser-logs-late-fixtures/v2066-quest-champion-kind-browser.cjs.log",
+      "initialStatus": "FAIL",
+      "attempts": [
+        {
+          "file": "tests/v2066-quest-champion-kind-browser.cjs",
+          "status": "FAIL",
+          "exitCode": 1,
+          "seconds": 20.23,
+          "timeoutSeconds": 300,
+          "log": "browser-logs/v2066-quest-champion-kind-browser.cjs.log",
+          "phase": "initial registry"
+        },
+        {
+          "file": "tests/v2066-quest-champion-kind-browser.cjs",
+          "status": "PASS",
+          "exitCode": 0,
+          "seconds": 28.02,
+          "timeoutSeconds": 300,
+          "log": "browser-logs-late-fixtures/v2066-quest-champion-kind-browser.cjs.log",
+          "phase": "late approved fixtures replay"
+        }
+      ]
+    },
+    {
+      "file": "tests/v2066-rebirth-paid-run-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 14.53,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2066-rebirth-paid-run-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2068-rebirth-mode-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 34.19,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2068-rebirth-mode-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2065-start-active-battle-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 10.95,
+      "timeoutSeconds": 300,
+      "log": "browser-logs/v2065-start-active-battle-browser.cjs.log"
+    }
+  ],
+  "finalSourceCoverage": {
+    "availableRegistryFiles": 181,
+    "finalCssBoundaryAndApprovedFixtureReplays": 97,
+    "rawFilesAlreadyOnFinalCss": 84,
+    "conservativeBoundaryList": "browser-css-fix-rerun-files.json"
+  },
+  "sourceIntegrity": {
+    "beforeTrackedJsCjsPyManifestHtmlFiles": 996,
+    "runtimeJsManifestHtmlChanged": [],
+    "approvedTestChanges": [
+      "tests/v2014-quick-start-browser.cjs",
+      "tests/v2014-quick-start.test.js",
+      "tests/v2036-combat-scheduler-browser.cjs",
+      "tests/v2043-raidmisc-idle-farm-browser.cjs",
+      "tests/v2054-quick-start-row.test.js",
+      "tests/v2066-magister-sp-retry-browser.cjs",
+      "tests/v2066-quest-champion-kind-browser.cjs",
+      "tests/v715-ui-browser.py",
+      "tests/v718-ui-browser.py"
+    ],
+    "approvedProductCssChanges": [
+      "ui-game.css"
+    ],
+    "finalProductHashes": {
+      "content.js": "5ffa9e01b63d3811db588162df231c3e8b79e2e8a539ddf16f36f9d1665ed7af",
+      "background.js": "b7795ac95c83be264a920f09713f6c4c370717865008187162bbc7a67528ba02",
+      "popup.html": "2e4d4121b5f17046e7a81b2cb6c489f5cfc41d6d1898616f47cfea1dacd36e1c",
+      "ui-game.css": "6d122635e54d94043f6efe186b9cf6f564d1d5c81a0bcf70038c95fc60bc87b9",
+      "ui-v7.css": "9986920305bd8ada81b4e0578b29539af5060a73018b75a5e9c0444c18118305",
+      "manifest.json": "5a39bd71a19a4a6a628bcfdc75f4c309bdcb02fa8afb0d66f59f2e6770a09765",
+      "modules/rebirth.js": "a5b0bcaf1c9d9fd19adb5be9467b817951324cd25355956141b93ffac9ab1d88"
+    },
+    "productChangedDuringFinalReplays": false
+  },
+  "liveGameAttemptsBlocked": [],
+  "limits": [
+    "21 tests unavailable:19 require absent saved native public sources and2 require absent user DOM snapshots; no native files fetched and no synthetic substitutes used for those tests.",
+    "Unchanged full Lite browser suite excluded from this main Firefox release; registered Lite arrows regression included.",
+    "Initial7 failures preserved:2 mobile CSS regressions corrected,1 stale task-count fixture and4 fixture timing/class setup issues corrected with assertions retained or strengthened.",
+    "Chromium registry complements separately recorded native Firefox desktop and Android-UA checks; physical Android hardware not covered."
+  ]
+}

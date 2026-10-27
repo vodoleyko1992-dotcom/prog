@@ -17,7 +17,7 @@ const cases=[
 
 async function scenario(test){
  const h=await harness(),acts=[];
- let mp=500,ended=false,firstAnswer=false,nativeStarted=false,nativeEnded=false;
+ let mp=500,ended=false,firstAnswer=false,nativeStarted=false,nativeEnded=false,nativeStartedAt=0;
  const character=()=>({name:'AuditHero',level:48,l2Profession:'human_warlord',classBranch:'fighter',classSlots:{activeSlot:0},revision:100+acts.length,hp:6195,maxHp:6195,mp,maxMp:874,inBattle:!ended});
  const battle=()=>({spawnId:'fixture',mobName:'Garden Guard',mobHp:ended?0:2484,mobMaxHp:2484,mobLevel:48,kind:'normal',log:ended?['Победа!']:[]});
  try{
@@ -31,6 +31,7 @@ async function scenario(test){
    if(path==='/character'){
     if(u.searchParams.has('afterTurn')){
      nativeStarted=true;
+     nativeStartedAt=Date.now();
      await delay(test.get);
      if(test.lowMp)mp=0;
      nativeEnded=true;
@@ -74,6 +75,7 @@ async function scenario(test){
   // Длинный интервал опроса: ожидание isolated world завершает уведомление
   // настоящего hook раньше резервного таймера.
   const receiptWait=h.g.core(`(async()=>{const start=Date.now();const value=await combatWait(()=>{const r=[...battleReceipts.values()][0];return r?{...r,at:Date.now(),globalReadyAt:Date.now()+combatCooldown.globalWait(),ownerNow:observeOwner()}:null;},10000,9000);return {value,elapsed:Date.now()-start};})()`);
+  if(test.stop)await h.popup.evaluate(()=>{window.schedulerStopClickAt=0;document.getElementById('stop').addEventListener('click',()=>{window.schedulerStopClickAt=Date.now();},{capture:true,once:true});});
   await h.click('start');
   const observed=await receiptWait;
   assert.ok(observed.value, 'native action generated a receipt');
@@ -85,13 +87,18 @@ async function scenario(test){
   assert.ok(receipt.rid!=null,'receipt is tied to an actual hook request id');
   if(test.stop){
    await until(()=>nativeStarted&&h.g.core('gameBusy().busy'));
-   await h.click('stop');
+   // 20.69: popup уже загружен, но фоновые RAF задерживали actionability-wait Playwright почти на2с.
+   // Настоящий клик без ожидания стабильности должен попасть до штатного1500мс выхода gameFree, а не после следующего хода.
+   await h.popup.locator('#stop').click({force:true});
+   const stopClickAt=await h.popup.evaluate(()=>window.schedulerStopClickAt);
+   assert.ok(stopClickAt>=nativeStartedAt&&stopClickAt-nativeStartedAt<1500,'fixture Stop click precedes the native-wait timeout');
+   assert.equal(acts.length,1,'fixture Stop click preceded the next turn');
    await until(()=>h.g.core('!on && !running'));
    assert.equal(nativeEnded,false,'Stop reached the bot while the native GET was still pending');
    await delay(test.get+300);
    assert.deepEqual(acts.map(x=>x.action),['attack'],'Stop cancels the waiting next turn');
    assert.equal(ended,false);
-   console.log('PASS actual MV3 scheduler:',test.name,'(one POST, no follow-up action)');
+   console.log('PASS actual MV3 scheduler:',test.name,'(one POST, no follow-up action)',JSON.stringify({stopClickAfterNativeStartMs:stopClickAt-nativeStartedAt}));
   }else{
    await until(()=>ended,12000);
    const trace=await h.g.p.evaluate(()=>window.fixtureTrace);

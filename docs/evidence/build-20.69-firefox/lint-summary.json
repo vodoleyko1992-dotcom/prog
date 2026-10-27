@@ -1,0 +1,8 @@
+{
+  "web_ext": "10.8.0",
+  "errors": 0,
+  "notices": 0,
+  "warnings": 51,
+  "result": "PASS",
+  "note": "same count as previous release; actual full output retained in scratch/lint.json"
+}

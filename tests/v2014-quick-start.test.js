@@ -21,5 +21,5 @@ assert.match(fn, /\+\+controlGeneration/, 'Стоп во время записи
 assert.match(js, /quick:!st\.paused \};/);
 assert.match(js, /\$\('quickStart'\)\.hidden = !activity\.quick;/);
 // узкая панель: без значков и подписи, без горизонтальной прокрутки; с Rebirth шесть кнопок остаются в одну строку по ширине надписи
-assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(6,auto\)\}/);
+assert.match(css, /@media \(max-width:420px\)\{\.quick-start\{grid-template-columns:repeat\(6,auto\)(?:;[^}]*)?\}/);
 console.log('v2014-quick-start PASS');

@@ -1,0 +1,86 @@
+{
+  "version": "20.69",
+  "target": "Firefox only",
+  "source_base": "02d61a2b13750ddc7e5e8b0632585ab77be1cd90",
+  "included_prs": [
+    431,
+    432,
+    433
+  ],
+  "artifact": {
+    "path": "builds/l2wap-bot-v20.69-firefox.zip",
+    "files": 69,
+    "bytes": 1728508,
+    "sha256": "4ddfaba080cb279477e8dd8f506f0db59f2d7726b997783fbee60cee506fed4d"
+  },
+  "checks": {
+    "node": {
+      "pass": 682,
+      "fail": 0
+    },
+    "syntax": {
+      "javascript": 66,
+      "python": 2,
+      "result": "PASS"
+    },
+    "envcheck": {
+      "modules": 35,
+      "result": "PASS"
+    },
+    "credentials_fields": 0,
+    "firefox": {
+      "version": "153.5.1esr",
+      "desktop": "PASS",
+      "android_api_simulation": "PASS",
+      "lint_errors": 0,
+      "lint_notices": 0,
+      "lint_warnings": 51
+    },
+    "archive_audit": {
+      "pass": 35,
+      "fail": 0
+    },
+    "browser": {
+      "registry": 203,
+      "pass": 181,
+      "fail": 0,
+      "unavailable": 21,
+      "unchanged_lite_out_of_scope": 1,
+      "final_css_replays": 97,
+      "original_tail_already_final_css": 84,
+      "network": "local fixtures only, fail-closed external Node and Chromium DNS fences"
+    },
+    "chrome_mirror": {
+      "version": "20.69",
+      "cfg_keys": 213,
+      "errors": 0,
+      "scope": "69samefiles, canonicalChromemanifest only; no releasedChromeZIP"
+    }
+  },
+  "runtime_changes_during_packaging": [
+    "contentversionheaderonlyinJS",
+    "CSSmobilenav6to5columns",
+    "CSSsixquickbuttonnarrowspacinggap1/font10.5/padding1"
+  ],
+  "retention": {
+    "removed_old_firefox": "20.68",
+    "previous_backup_sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba",
+    "backup": "scratch/previous plus independent copy and git history",
+    "external_project_files_folder": "unavailable",
+    "retained": [
+      "Chrome20.66",
+      "Chrome20.65rollback",
+      "Lite1.8.1Chrome",
+      "Lite1.8.1Firefox"
+    ],
+    "historical_sha_files_preserved": true
+  },
+  "limits": [
+    "unsignedFirefoxpackage",
+    "AndroidAPIssimulatedonFirefoxdesktop,nophysicalAndroid",
+    "no livegame",
+    "21unavailable=2userDOMsnapshots+19nativepublicsourcecaches",
+    "other15automaticbosschoicesnotinvented",
+    "fish-nextseparatetask"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "cssSha256": "6d122635e54d94043f6efe186b9cf6f564d1d5c81a0bcf70038c95fc60bc87b9",
+  "rows": [
+    {
+      "width": 360,
+      "header": 196,
+      "pageOverflow": 0,
+      "quickRows": 1,
+      "cut": [],
+      "quickTasks": [
+        "farm",
+        "auto",
+        "fish",
+        "cat",
+        "rebirth",
+        "craft"
+      ],
+      "quickGap": "1px",
+      "quickFont": "10.5px",
+      "quickPadding": "2px 1px",
+      "navColumns": 5,
+      "navRows": 4,
+      "navOverflow": 0
+    },
+    {
+      "width": 375,
+      "header": 184,
+      "pageOverflow": 0,
+      "quickRows": 1,
+      "cut": [],
+      "quickTasks": [
+        "farm",
+        "auto",
+        "fish",
+        "cat",
+        "rebirth",
+        "craft"
+      ],
+      "quickGap": "1px",
+      "quickFont": "10.5px",
+      "quickPadding": "2px 1px",
+      "navColumns": 5,
+      "navRows": 4,
+      "navOverflow": 0
+    },
+    {
+      "width": 420,
+      "header": 184,
+      "pageOverflow": 0,
+      "quickRows": 1,
+      "cut": [],
+      "quickTasks": [
+        "farm",
+        "auto",
+        "fish",
+        "cat",
+        "rebirth",
+        "craft"
+      ],
+      "quickGap": "1px",
+      "quickFont": "10.5px",
+      "quickPadding": "2px 1px",
+      "navColumns": 5,
+      "navRows": 4,
+      "navOverflow": 0
+    }
+  ],
+  "errors": [],
+  "on": false
+}
