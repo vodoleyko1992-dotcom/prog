@@ -1,0 +1,152 @@
+{
+  "artifact": "/workspace/prog/builds/l2wap-bot-v20.68-firefox.zip",
+  "version": "20.68",
+  "sha256": "c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba",
+  "bytes": 1712876,
+  "files": 68,
+  "passed": 29,
+  "failed": 0,
+  "checks": [
+    {
+      "check": "CRC",
+      "pass": true
+    },
+    {
+      "check": "68 files / no directories",
+      "pass": true,
+      "detail": 68
+    },
+    {
+      "check": "no duplicate names",
+      "pass": true
+    },
+    {
+      "check": "safe paths",
+      "pass": true
+    },
+    {
+      "check": "exact saved allowlist",
+      "pass": true
+    },
+    {
+      "check": "exact previous archive allowlist",
+      "pass": true
+    },
+    {
+      "check": "no development files",
+      "pass": true
+    },
+    {
+      "check": "all non-manifest files byte-match source",
+      "pass": true
+    },
+    {
+      "check": "manifest matches canonical Firefox transformation",
+      "pass": true
+    },
+    {
+      "check": "Firefox version",
+      "pass": true
+    },
+    {
+      "check": "Firefox background order",
+      "pass": true
+    },
+    {
+      "check": "Firefox id and min versions",
+      "pass": true
+    },
+    {
+      "check": "no Chrome-only manifest fields",
+      "pass": true
+    },
+    {
+      "check": "permissions unchanged",
+      "pass": true
+    },
+    {
+      "check": "manifest resource closure",
+      "pass": true,
+      "detail": {
+        "references": 69,
+        "missing_count": 0
+      }
+    },
+    {
+      "check": "HTML resource closure",
+      "pass": true,
+      "detail": {
+        "references": 25
+      }
+    },
+    {
+      "check": "relative CSS resource closure",
+      "pass": true,
+      "detail": {
+        "references": 0
+      }
+    },
+    {
+      "check": "icons are PNG",
+      "pass": true
+    },
+    {
+      "check": "base profile has no credential fields",
+      "pass": true,
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "check": "base profile no password/auth text matches",
+      "pass": true
+    },
+    {
+      "check": "runtime equals PR429 base except content version header",
+      "pass": true,
+      "detail": {
+        "compared_files": 62,
+        "changed_files": []
+      }
+    },
+    {
+      "check": "content header 20.68",
+      "pass": true
+    },
+    {
+      "check": "log optimization included",
+      "pass": true
+    },
+    {
+      "check": "popup engine scripts present",
+      "pass": true
+    },
+    {
+      "check": "backup previous Firefox exact",
+      "pass": true
+    },
+    {
+      "check": "kept Chrome rollback and Lite archives unchanged",
+      "pass": true,
+      "detail": {
+        "archives": 4
+      }
+    },
+    {
+      "check": "historical SHA256SUMS unchanged",
+      "pass": true
+    },
+    {
+      "check": "new SHA256SUMS matches",
+      "pass": true
+    },
+    {
+      "check": "reported SHA and size match",
+      "pass": true
+    }
+  ],
+  "limits": [
+    "Static independent audit; native Firefox and browser runtime checks are separate agents.",
+    "No live game or network requests performed."
+  ]
+}

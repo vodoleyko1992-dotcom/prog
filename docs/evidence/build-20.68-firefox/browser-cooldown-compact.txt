@@ -1,0 +1,1 @@
+PASS actual MAIN hook → content handler → IDB: 3 covered POSTs retain 3 complete network events and zero duplicate CD; uncovered mystic deadline retains separate CD; original HTTP responses unchanged; 0 page errors; local routes only

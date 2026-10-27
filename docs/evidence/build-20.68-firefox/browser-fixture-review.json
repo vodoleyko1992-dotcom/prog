@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "checks": {
+    "original_browser_test_identical_to_62d07d8": true,
+    "only_comment_and_two_endpoint_fallback_added": true,
+    "assertion_count_unchanged": true,
+    "harness_handles_time_locally": true,
+    "harness_handles_daily_locally": true,
+    "harness_has_broad_local_fulfill": true,
+    "fixture_returns_server_authoritative_shape": true
+  },
+  "original_sha256": "1bf01a176887d3432ab9bf063d2b184b85bb4a86d54eb8874c37b6a64793666d",
+  "candidate_sha256": "1687dbe7e8fdd3509f13e86253e55b4b476cf9682c3c32da09d952b90e1fde6d",
+  "candidate_full_run": "PENDING",
+  "limits": [
+    "The original reload baseline passed; no baseline failure reproduction is claimed.",
+    "Two unpatched 20.68 runs failed in different cases after an empty server clock response; data is consistent with a fixture race.",
+    "No assertions/timeouts/payment guards or runtime ZIP bytes changed. Existing Node/runtime checks remain valid for their unchanged inputs; repository pre-commit requirements remain separate."
+  ]
+}

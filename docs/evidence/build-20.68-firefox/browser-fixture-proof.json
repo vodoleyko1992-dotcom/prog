@@ -1,0 +1,8 @@
+{
+  "baseline": "62d07d8",
+  "file": "tests/v1015-warlock-mv3-browser.cjs",
+  "original_sha256": "1bf01a176887d3432ab9bf063d2b184b85bb4a86d54eb8874c37b6a64793666d",
+  "baseline_file_identical": true,
+  "candidate_sha256": "1687dbe7e8fdd3509f13e86253e55b4b476cf9682c3c32da09d952b90e1fde6d",
+  "change": "Only route fallback for /game/time and /game/daily-quests to existing harness fixtures; assertions, timeouts and purchase logic unchanged."
+}

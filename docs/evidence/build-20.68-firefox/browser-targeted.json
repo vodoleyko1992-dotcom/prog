@@ -1,0 +1,80 @@
+{
+  "version": "20.68",
+  "browser": "Chrome for Testing156.0.8078.4",
+  "targeted": [
+    {
+      "file": "tests/v2043-learn-reset-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 3.24,
+      "log": "v2043-learn-reset-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2043-firefox-dock-commands-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.08,
+      "log": "v2043-firefox-dock-commands-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2018-limits-logs-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 6.38,
+      "log": "v2018-limits-logs-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2034-battle-evidence-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.09,
+      "log": "v2034-battle-evidence-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2041-battle-writes-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 31.85,
+      "log": "v2041-battle-writes-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2042-fast-turn-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 47.55,
+      "log": "v2042-fast-turn-browser.cjs.log"
+    },
+    {
+      "file": "tests/v2051-action-pace-browser.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.51,
+      "log": "v2051-action-pace-browser.cjs.log"
+    }
+  ],
+  "supplemental": {
+    "status": "PASS",
+    "log": "supplemental-cooldown-compact.log",
+    "probe_source_sha256": "159d28155848bc9bbda915d350f0aef061db3f7a34dc2c8c1e07866937a47ca6",
+    "cases": {
+      "covered_successful_post": 3,
+      "network_events_preserved": 3,
+      "duplicate_cooldown_events": 0,
+      "uncovered_mystic_post": 1,
+      "fallback_cooldown_events": 1,
+      "http_response_unchanged": true,
+      "page_errors": 0
+    }
+  },
+  "environment_retry": {
+    "first_browser": "DebianChromium154.0.8037.57",
+    "state": "ENVIRONMENT_FAILURE",
+    "reason": "Service worker not loaded even with original MV3 package; same failure seen by root zipload. Test assertions did not start.",
+    "logs": "environment-attempt-chromium154/"
+  },
+  "limits": [
+    "All browser game responses are local fixtures; no live game accessed.",
+    "Guarding fetch and DNS is not a packet capture audit.",
+    "Full201-file registry continues separately."
+  ]
+}

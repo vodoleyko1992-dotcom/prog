@@ -1,0 +1,12 @@
+PASS Warlock MV3 {} {"posts":1,"adena":19900000,"spent":10000000,"status":"active","paths":["/map.html","/city.html","/town-buffer.html","/teleport.html","/map.html","/map.html"]}
+PASS Warlock MV3 {"cat":true} {"posts":1,"adena":19999999,"spent":10000000,"status":"active","paths":["/dungeon.html?dungeonId=saints_necropolis","/city.html","/town-buffer.html","/catacombs.html","/map.html","/dungeon.html?dungeonId=saints_necropolis&enter=1","/dungeon.html?dungeonId=saints_necropolis"]}
+PASS Warlock MV3 {"battle":true} {"posts":1,"adena":19900000,"spent":10000000,"status":"active","paths":["/battle.html?spawnId=mob","/city.html","/town-buffer.html","/teleport.html","/map.html"]}
+PASS Warlock MV3 {"full":true} {"posts":0,"adena":30000000,"spent":0,"status":"active","paths":["/map.html"]}
+PASS Warlock MV3 Stop during catalog GET: no purchase/route
+PASS Warlock MV3 {"conflict":true} {"posts":1,"adena":29900000,"spent":0,"status":"rejected","paths":["/map.html","/city.html","/town-buffer.html","/teleport.html","/map.html"]}
+PASS Warlock MV3 {"price":true} {"posts":0,"adena":30000000,"spent":0,"status":"price","paths":["/map.html"]}
+PASS Warlock MV3 accepted request → Stop/reload/manual Start: exact one-payment ledger, prior route cancelled without extra cost
+PASS independent MV3 Stop while native city entry in flight: accepted free entry cannot authorize purchase or further navigation
+PASS independent MV3 native city409 returns safe map without buff or paidreturn
+PASS independent MV3 dungeon entry409 remains unconfirmed; explicit Stop/Start cancels old route without repeated payment
+PASS independent MV3 accepted paidreturn then response lost on reload: returnSent persists and forbids duplicate teleport

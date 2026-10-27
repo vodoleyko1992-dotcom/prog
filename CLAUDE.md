@@ -1,5 +1,7 @@
 # L2wap Bot — контекст для работы в Claude Code
 
+**Firefox20.68 (27.10, John «сборка», «на фаерфокс», [PR #430](https://github.com/vodoleyko1992-dotcom/prog/pull/430)):** база62d07d8 после#429, успешные КД без дублирующей строки при полном покрытии battle evidence. Архив68файлов/1712876байт/SHA c10342abeb0c8623db5e5eacaff782f5a0aef4985fb1388c954ed6c7431ffbba. NativeFirefox153.5.1esr desktop/AndroidAPI simulationPASS, lint0errors/51warnings, независимыйZIPаудит29PASS. Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS. GeckoID/настройки сохранены, runtime при упаковке не менялся. ТолькоFirefox; Chrome20.66/Lite1.8.1 прежние. Живаяигра/физическийAndroidне проверялись; пакет неподписан.
+
 **Исходники после20.67 (27.10, журнал):** по TXT/learn00:41 найдены 860 дублирующих успешных CD-событий за34мин (477692байта/7,594% TXT). Отдельная строка убирается только у POST action с включённым netLog и полным совпадением всех полей с безопасным battle evidence; ошибки/неизвестные/обрезанные формы и GET сохраняются. Запросы игры/настройка задержки500мс не меняются. Node673/новые48/syntax3/env34/независимое ревью PASS, replay860/860; версия иZIP20.67 прежние, живаяигра ибраузерныйпрогон не запускались. Отчёт docs/LOG-OPTIMIZATION-2026-10-27.md.
 
 **Firefox20.67 (27.10, по просьбе John «сборка на фаерфокс», [PR #428](https://github.com/vodoleyko1992-dotcom/prog/pull/428)):** база990f076, включает #422/#423/#425/#426/#427. ТолькоFirefox, ChromeZIP20.66/Lite1.8.1 прежние. NativeFirefox153.5.1esr desktop/AndroidAPI-simulationPASS, lint0errors/51oldwarnings; независимый68fileCRC/source/extract/closure/privacyPASS. Node672/syntax53/env34PASS; browser201:182PASS/0FAIL/19UNAVAILABLE (нетnativeJS). Runtime/testbodySHA997unchanged, Start/mail добавленвregistry/PASS, generatedPNG/JSON restored. ПубличныйdownloadSHAсовпал. Пакетнеподписан, живуюигрунеоткрывать. Дальше—установкавпрежнююпапку/перезагрузкадополнения/контроль20.67; отчётdocs/evidence/build-20.67-firefox/validation.json.
@@ -89,7 +91,7 @@
 **19.10, после20.25: автозаточка временно убрана по запросу игрока.** Раздел/галка/поиск скрыты, start/resume/refresh и автоматический шаг запрещены. Старые профили и импорт не выбирают задачу: фильтр withoutAutoEnchant на входе runtime/меню, legacyenchantMode переводится в ожидание. Очередь/история сохранены; неизвестная прежняя попытка только сверяется GET не чаще15с. Код оставлен для восстановления; старые браузерные сценарии запуска автозаточки больше не являются проверкой активной функции. Рыбалка/ЛС/свиткиРБ не отключаются. В ZIP20.25 это ещё не включено.
 
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущие сборки: **Chrome 20.66**, **Firefox 128+ — 20.67**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущие сборки: **Chrome 20.66**, **Firefox 128+ — 20.68**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 **19.10, включено в Chrome20.25:** база20.24 + PR#284/#285/#286: бесплатный полный городской бафф по активному классу на времяVIP с проверкой нулевой цены; выбор конкретного оружия дляЛС; обмен камней наАА по кнопке и автоматически в tasks-only, немедленное обновление остатков. Firefox остаётся20.23. Подробности — HANDOFF и CHANGELOG-20.25.
 
@@ -240,7 +242,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 667 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 673 файла; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -255,6 +257,8 @@ zip -qr l2wap-bot-v7.1.NN.zip . -x 'tests/*' -x '*.orig'
 Firefox ставится как временное дополнение (`about:debugging#/runtime/this-firefox`); после перезапуска браузера данные стираются → срабатывает базовый профиль. Android: в обычном Firefox неподписанный zip не ставится — нужен Firefox Nightly (about:config `xpinstall.signatures.required`=false, «Установить дополнение из файла» в секретном меню) или подпись на AMO (unlisted) аккаунтом игрока. В Firefox для Android нет chrome.commands/notifications/значка/снимка экрана; меню из «⋮ → Расширения» — отдельная вкладка; фоновая вкладка/погасший экран засыпают.
 
 ## Последние версии (что уже сделано)
+
+- **20.68 Firefox (27.10):** #429 — успешные КД без дублей, отказы и неполные формы сохранены. ТолькоFirefox, Chrome20.66/Lite1.8.1 прежние; changelog20.68. NativeFirefox/AndroidAPI simulation/lint/ZIPаудит PASS, Node673/syntax59/env34/privacy0 PASS; browser201:179PASS/0FAIL/21UNAVAILABLE/1Liteвнеscope, плюсMAIN→IDBcompactionPASS.
 
 - **20.67 Firefox (27.10):** #422/#423/#425/#426/#427, толькоFirefox; nativeDesktop/AndroidAPI simulation и ZIPаудит PASS, Node672/syntax53/env34PASS; browser201:182PASS/0FAIL/19UNAVAILABLE (нетnativeJS), безправокruntime. ChromeZIP20.66/Lite1.8.1 прежние; changelog20.67.
 
@@ -458,6 +462,8 @@ Firefox ставится как временное дополнение (`about:
 - 7.1.31: раздел «🐱 Слуга» (`tab-pet`), статистика котов `rt.petStat` (hits/hitDmg/crits/misses/acts/deaths/summons) + `rt.petAdvice` (после 30 боёв), добивание с учётом удара кота (`petExpect` в magePlan; только при MP < petFinishMp 80 %), баффы кота (`nPetBuffs`, `rt.petBuffAt`, `rt.petBornT`), `noEffect` по `rt.skillDb[..].desc` (Body To Mind больше не жмётся), Corpse Life Drain не удар; по логу 10.10: zoneForLevel → сразу лучшая замеренная зона, дебаффы по окупаемости, спам «Обнаружен питомец», тотем воина у мага.
 
 ## Известные ограничения / что дальше
+
+- **Firefox20.68:** после установки проверить журнал боя: таймеры остаются в полном battle JSON, отдельные дублирующие строки успешных КД не расходуют лимит. Задержка500мс прежняя, приростDPS не заявляется. Живаяигра ифизическийAndroidне проверялись, ZIPнеподписан. Прежние ограничения Rebirth/fish→next сохраняются.
 
 - **Firefox20.67:** получить лог установленнойверсии с Start/переходом оплаченногоRebirthmobs-run, ordinaryTumran иповтороммагистрапослеSP. Новыйплатныйвход/РБ неавтоматизированы, fish→nextне воспроизведён. ZIPнеподписан, реальныйAndroid/живаяигранепроверялись.
 
