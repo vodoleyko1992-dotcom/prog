@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-27",
+  "base": "bae25c4",
+  "scope": [
+    "Wizard/Mew full buff and preparation",
+    "retain confirmed VIP Greater choice"
+  ],
+  "validation": {
+    "node_files": {
+      "pass": 675,
+      "fail": 0
+    },
+    "new_node_scenarios": {
+      "wizard": 18,
+      "vip_greater": 27,
+      "baseline_expected_fail": 20
+    },
+    "chrome_mv3": {
+      "wizard": 3,
+      "warlock_control": 1,
+      "vip": 8,
+      "page_errors": 0,
+      "network": "all HTTPS mocked"
+    },
+    "syntax_files": 10,
+    "env_modules": 34,
+    "independent_review": "pass",
+    "additional_pet_probes": 4
+  },
+  "runtime_sha256": {
+    "content.js": "10ff9fad912fdbfea0cb4e2f2f89a66847c9a9f287cb2558c5c391f356465f10",
+    "modules/warlock.js": "7660e28d1ee90410b489d6c471dc7316f2507b4598d9d8e413c5ba1bad38438d",
+    "modules/raid.js": "ed2e207fb63075f733029b93208ea095f26bf7ee3260b3982ed1f23b8d3c4e8d",
+    "modules/buffs.js": "c3090299fa65ddccf85efc929159c86ffda9784febf6a338b626c79eddd4ac21",
+    "warlock-ui.js": "b951ade53a6c48406db0dbe23413bc7bb8fe02f0c9bb901e0b6b415d669549ad"
+  },
+  "limits": [
+    "no live game requests",
+    "Firefox not run",
+    "manifest and ZIP unchanged",
+    "additional missing ordinary mage buff not established by truncated logs"
+  ],
+  "initial_base": "62d07d8",
+  "pr": 431,
+  "final_rebase_validation": {
+    "base": "bae25c4",
+    "node_files": {
+      "pass": 675,
+      "fail": 0
+    },
+    "syntax_files": 10,
+    "env_modules": 34,
+    "chrome_mv3": {
+      "wizard": 3,
+      "remembered_magnus": 1,
+      "page_errors": 0
+    },
+    "diff": "pass",
+    "note": "original Warlock control and VIP eight cases ran on initial base; final targeted cases rerun after preserving PR430 clock fixture"
+  }
+}

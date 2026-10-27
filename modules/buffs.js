@@ -449,7 +449,13 @@ function vipBundle(ch, catalog, baseSet) {
   const rows=down?[]:[{set:baseSet,skills:base.skills}],available=free?greater.skills:[];
   const group=available.filter(x=>VIP_GREATER.includes(x.skillId));
   const explicit=[...faIdsOf(env.cfg.faBuffs),...faIdsOf(env.cfg.rbSessBuffs)].find(id=>group.some(x=>x.skillId===id));
-  const picked=group.find(x=>x.skillId===explicit)||group.find(present)||group.find(x=>x.skillId===(baseSet==='mage'?1357:1414))||group[0];
+  // 27.10.2026 (лог 01:47): после Cancel возвращаем подтверждённый ручной Magnus; новый живой выбор и явная настройка важнее памяти.
+  const p=env.rt.vipApplied,same=p?.schema===2&&p.bundleChecked===true&&p.char===ch.name&&p.char===env.rt.char&&p.actor===ch.id
+    &&p.set===baseSet&&p.prof===(ch.l2Profession||'')&&p.slot===(ch.classSlots?.activeSlot??null);
+  const saved=same&&Array.isArray(p.greaterIds)?p.greaterIds.filter(id=>VIP_GREATER.includes(id)):[];
+  const remembered=saved.length===1?group.find(x=>x.skillId===saved[0]):null;
+  const live=group.find(x=>ch.activeBuffs.some(b=>b.skillId===x.skillId&&b.level>=x.level&&Number.isFinite(b.expiresAtMs??b.expiresAt)&&(b.expiresAtMs??b.expiresAt)>now));
+  const picked=group.find(x=>x.skillId===explicit)||live||remembered||group.find(x=>x.skillId===(baseSet==='mage'?1357:1414))||group[0];
   const extra=[...(picked?[picked]:[]),...available.filter(x=>x.skillId===1323)];
   for(const x of extra)rows.push({set:'greater',skillId:x.skillId,skills:[x]});
   const res=vipResistsOn()&&catalog.sets.find(x=>x.id==='resists'),resists=vipPriceZero(res)?res.skills:[];

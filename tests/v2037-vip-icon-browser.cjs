@@ -10,6 +10,7 @@ const cases=[
  {name:'fighter default Paagrio',branch:'fighter',want:1414},
  {name:'stale base-only receipt',branch:'mystic',want:1357,stale:true},
  {name:'preserve active Greater',branch:'mystic',want:1413,existing:1413},
+ {name:'restore remembered Magnus on Wizard',branch:'mystic',prof:'human_wizard',want:1413,remembered:1413},
  {name:'explicit Water replaces Magnus',branch:'mystic',want:1357,existing:1413,explicit:1357},
  {name:'Stop during fresh icon quote',branch:'mystic',want:1357,stop:true},
  {name:'price increases between icons',branch:'mystic',want:1357,price:true},
@@ -17,7 +18,7 @@ const cases=[
 const clone=x=>JSON.parse(JSON.stringify(x));
 async function scenario(tc){
  const h=await harness(),posts=[],visits=[];let revision=50,fee=0,catalogCalls=0,paused=false,rejected=0;
- const base=tc.branch==='fighter'?'warrior':'mage',prof=tc.branch==='fighter'?'human_warlord':'human_archmage';
+ const base=tc.branch==='fighter'?'warrior':'mage',prof=tc.prof||(tc.branch==='fighter'?'human_warlord':'human_archmage');
  const baseRow=realCatalog.sets.find(x=>x.id===base),greater=realCatalog.sets.find(x=>x.id==='greater');
  assert.equal(greater.pickByIcon,true);assert.equal(greater.skills.length,7);assert.equal(realCatalog.sets.length,5);
  const applied=x=>({...x,expiresAtMs:Date.now()+86400000});
@@ -51,10 +52,12 @@ async function scenario(tc){
    if(p.endsWith('.html')){visits.push(p);return route.fulfill({contentType:'text/html',body:html()});}
    return route.fallback();
   });
-  await h.sw.evaluate(async ({base,prof,branch,stale,skills,explicit})=>{
+  await h.sw.evaluate(async ({base,prof,branch,stale,skills,explicit,remembered})=>{
    const{cfg,rt}=await chrome.storage.local.get(['cfg','rt']);
    await chrome.storage.local.set({on:false,cfg:{...cfg,autoTasks:['farm'],taskOnly:false,townBuffSet:'basic',vipBuffAuto:true,faBuffs:explicit?String(explicit):'',nBuffs:'',nKeyBuffs:'',nToggles:'',petAuto:false,petBuffAuto:false,autoMagister:false,autoRoles:false,rbMode:false,rbTour:false,epicMode:false,fishMode:false,tvtOn:false,enemyHunt:false,campAuto:false,campaign:false,shopAuto:false,weaponScanAuto:false,rec:true,autoSnap:false,reactMin:0,reactMax:0,dailyKillLimit:0,dailyFishLimit:0},rt:{...rt,char:'AuditHero',lvl:78,prof,classCur:{prof,slot:0},weaponsT:Date.now(),shopT:Date.now(),manualKickAt:0,tbT:0,tbWatchT:0,tbOk:true,tbFail:0,tbWant:null,hudLong:{},tbuff:null,actionOwner:null,tbSetIds:{[base]:skills.map(x=>x.skillId)},tbLvl:{[base]:Object.fromEntries(skills.map(x=>[x.skillId,x.level]))},vipBuff:{char:'AuditHero',actor:'vip-icon-fixture',active:true,until:Date.now()+86400000,set:base,prof,slot:0,t:Date.now()},vipApplied:stale?{char:'AuditHero',actor:'vip-icon-fixture',set:base,slot:0,prof,bundleChecked:true,skills:skills.map(x=>({skillId:x.skillId,level:x.level})),ids:skills.map(x=>x.skillId)}:null}});
-  },{base,prof,branch:tc.branch,stale:!!tc.stale,skills:baseRow.skills,explicit:tc.explicit||0});
+   // 20.67: сохранённая подтверждённая связка пережила reload; Magnus уже снят, остальные эффекты класса остались.
+   if(remembered){const s=await chrome.storage.local.get(['rt']);await chrome.storage.local.set({rt:{...s.rt,vipApplied:{schema:2,char:'AuditHero',actor:'vip-icon-fixture',set:base,slot:0,prof,bundleChecked:true,baseSkills:skills,greaterIds:[remembered,1323],greaterOptions:[1356,1357,1355,1363,1413,1414],resistIds:[],skills:[...skills,{skillId:remembered,level:1},{skillId:1323,level:1}],ids:[...skills.map(x=>x.skillId),remembered,1323]}}});}
+  },{base,prof,branch:tc.branch,stale:!!tc.stale,skills:baseRow.skills,explicit:tc.explicit||0,remembered:tc.remembered||0});
   await h.g.p.goto('https://l2wap.com/map.html?fixture=vip-icon');
   await until(()=>h.g.core('rt.char==="AuditHero"&&!!L2V7Modules.buffs.vipPreferred()'));
   assert.equal(await h.g.core(`Object.keys(hudBuffs()||{}).length`),buffs.length,'полный класс-набор уже висит до Старта');

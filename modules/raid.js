@@ -1223,7 +1223,7 @@ const SUMMON_NO_BUY = /^(?:budget|price|reserve|renew|early-loss|archived)$/;
 function rbSummonFullOn() {
   const prof = env.rt.classCur?.prof || '';
   return env.cfg.petFullAuto === true && (env.warlock?.fullClass ? !!env.warlock.fullClass(prof)
-    : /^(?:human_|dwarf_)?(?:warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/.test(prof));
+    : /^(?:human_|dwarf_)?(?:wizard|warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/.test(prof));
 }
 const rbSummonGolem = () => /^(?:dwarf_)?(?:warsmith|maestro)$/.test(env.rt.classCur?.prof || '');
 function rbSummonBuffReady() {
