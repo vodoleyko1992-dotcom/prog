@@ -5287,6 +5287,39 @@ function recordNetworkLog(d, path, key, body, secret) {
     { data: priv ? { q: '(приватно)' } : battle ? { rid: d.rid, battle } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
 }
 const cooldownDiagSeen = new Map();
+// 20.67 (лог 27.10 10:41): успешные ходы писали КД дважды, и журнал достиг 6 МБ.
+// Штатный регистратор сохраняет каждый POST action ниже; убираем отдельную строку лишь при полном совпадении полей.
+// GET может быть отфильтрован, а неизвестный/обрезанный формат или отказ оставляем в прежней диагностике.
+function cooldownAlreadyLogged(d, path, fields) {
+  const r = d.res, b = d.be;
+  if (path !== '/game/battle/action' || d.method !== 'POST' || cfg.rec !== true || cfg.netLog === false || d.error ||
+      !(d.status >= 200 && d.status < 300) || [r, r.delta, r.battle].some(x => x && (x.ok === false || x.error || x.code || x.blockedBy || x.reason)) ||
+      b?.schema !== 1 || b.ok === false || b.error || b.code || b.blockedBy || b.message ||
+      !Number.isSafeInteger(d.rid) || !b.cut || typeof b.cut !== 'object' || Array.isArray(b.cut) ||
+      !['text','extras','cooldowns'].every(k => b.cut[k] === 0) || Object.values(b.cut).some(n => n !== 0) ||
+      !fields.action || b.request?.action !== fields.action || !fields.spawn || b.request?.spawn !== fields.spawn ||
+      !b.timing || typeof b.timing !== 'object' || Array.isArray(b.timing) || !Array.isArray(b.cooldowns) ||
+      !b.cooldowns.every(x => x && typeof x === 'object' && !Array.isArray(x) && typeof x.key === 'string')) return false;
+  const sameNumber = (x, y) => typeof x === 'number' && Number.isFinite(x) && x === y;
+  for (const k of ['serverNowMs','globalCooldownUntilMs','cooldownUntilMs','skillRemainingMs','globalRemainingMs']) {
+    if (fields[k] != null && !sameNumber(fields[k], b.timing[k] ?? (k === 'cooldownUntilMs' ? b.timing.readyAtMs : undefined))) return false;
+  }
+  const sameCooldown = ([key, value]) => {
+    const saved = b.cooldowns.find(x => x.key === key);
+    if (!saved) return false;
+    if (typeof value === 'number') return sameNumber(value, saved.until);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const entries = Object.entries(value);
+    return entries.length > 0 && entries.every(([k, v]) => ['skillId','readyAt','readyAtMs','untilMs','remainingSec','remainingMs','level'].includes(k) && sameNumber(v, saved[k]));
+  };
+  if (fields.skillCooldowns && !fields.skillCooldowns.every(sameCooldown)) return false;
+  const mystic = fields.mysticSkillCdUntil;
+  if (mystic != null) {
+    if (typeof mystic === 'number') { if (!sameNumber(mystic, b.timing.mysticSkillCdUntil)) return false; }
+    else if (!mystic || typeof mystic !== 'object' || Array.isArray(mystic) || !Object.entries(mystic).every(sameCooldown)) return false;
+  }
+  return true;
+}
 function logCooldownApi(d, path) {
   if (!['/game/battle/action', '/game/battle/sync', '/game/battle'].includes(path) || !d.res || typeof d.res !== 'object') return;
   const r = d.res, inner = r.battle && typeof r.battle === 'object' ? r.battle : r.delta && typeof r.delta === 'object' ? r.delta : {};   // 8.0.3: и delta
@@ -5306,6 +5339,7 @@ function logCooldownApi(d, path) {
     receivedAt: Date.now()
   };
   if (fields.blockedBy == null && fields.globalCooldownUntilMs == null && fields.cooldownUntilMs == null && fields.skillCooldowns == null) return;
+  if (cooldownAlreadyLogged(d, path, fields)) return;
   const key = `${path}|${fields.action}|${fields.blockedBy}|${fields.status}`;
   if (Date.now() - (cooldownDiagSeen.get(key) || 0) < 3000) return;
   cooldownDiagSeen.set(key, Date.now());

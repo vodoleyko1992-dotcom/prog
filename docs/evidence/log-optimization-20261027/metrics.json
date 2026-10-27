@@ -1,0 +1,146 @@
+{
+  "file": {
+    "bytes": 6290388,
+    "lines": 10501,
+    "retained_event_lines": 10456,
+    "retained_first_time": "10:06:57.769",
+    "retained_last_time": "10:41:10.953",
+    "retained_duration_seconds": 2053.184,
+    "dropped_old_events_reported": 9544,
+    "original_event_count_reported": 20000
+  },
+  "summary_header": {
+    "network_events": 6409,
+    "server_cooldown_events": 1863,
+    "battle_outcome_events": 433,
+    "session_batch_battles": 429,
+    "session_batch_wins": 429,
+    "session_batch_deaths": 0
+  },
+  "retained": {
+    "network_events": 4022,
+    "http_status_counts": {
+      "200": 4021,
+      "409": 1
+    },
+    "native_response_body_bytes_reported": 130866261,
+    "server_cooldown_events": 860,
+    "server_cooldown_blocked_counts": {
+      "None": 860
+    },
+    "server_cooldown_status_counts": {
+      "200": 860
+    },
+    "cooldown_utf8_line_bytes": 477692,
+    "cooldown_fraction_of_file_percent": 7.594,
+    "session_batch_lines": 429,
+    "session_batch_wins": 429,
+    "session_batch_losses": 0,
+    "battle_outcome_lines": 428,
+    "native_action_victory_responses": 429,
+    "native_action_defeat_responses": 0,
+    "page_core_loads": {
+      "/character.html": 1,
+      "/char.html": 2,
+      "/map.html": 87,
+      "/character-quests.html": 4,
+      "/dion-campaign.html": 25,
+      "/battle.html": 82,
+      "/town-buffer.html": 6,
+      "/magister.html": 3
+    },
+    "quest_get_counts": {
+      "GET /character/profession-quest/dwarf-fighter-second/status": 84,
+      "GET /character/profession-quest/light-elf-mystic-second/status": 84,
+      "GET /character/profession-quest/light-elf-fighter-second/status": 84,
+      "GET /character/profession-quest/human-mystic-second/status": 84,
+      "GET /character/profession-quest/human-fighter-second/status": 84,
+      "GET /game/story-quests/dion-campaign": 84,
+      "GET /game/story-quests/giran-campaign": 84,
+      "GET /game/story-quests/starter-saga": 84,
+      "GET /game/story-quests/noblesse": 84,
+      "GET /game/story-quests/goddard-ocean-flame": 84
+    },
+    "quest_get_total": 840,
+    "quest_get_bytes_reported": 16592101,
+    "quest_get_latency_sum_ms_not_wall_time": 311858,
+    "network_counts": {
+      "GET /game/time": 150,
+      "GET /character/profession-quest/dwarf-fighter-second/status": 84,
+      "GET /character/profession-quest/light-elf-mystic-second/status": 84,
+      "GET /character/profession-quest/light-elf-fighter-second/status": 84,
+      "GET /character/profession-quest/human-mystic-second/status": 84,
+      "GET /character/profession-quest/human-fighter-second/status": 84,
+      "GET /game/story-quests/dion-campaign": 84,
+      "GET /game/story-quests/giran-campaign": 84,
+      "GET /game/story-quests/starter-saga": 84,
+      "GET /game/story-quests/noblesse": 84,
+      "GET /game/story-quests/goddard-ocean-flame": 84,
+      "GET /game/tvt": 20,
+      "GET /game/chat/replies/unread-count": 30,
+      "GET /game/party/hud": 8,
+      "GET /game/mail/unread-count": 29,
+      "POST /game/story-quests/dion-campaign/teleport": 5,
+      "POST /game/battle/start": 83,
+      "POST /game/battle/action": 1748,
+      "GET /character": 296,
+      "POST /game/player-interaction": 10,
+      "POST /game/battle/hotbar": 1,
+      "GET /game/battle": 389,
+      "GET /game/online": 28,
+      "GET /character/magister": 3,
+      "POST /game/battle/hunt-continue": 350,
+      "GET /game/chat/social-unread": 11,
+      "GET /game/server-news/unread": 11,
+      "GET /game/events": 5,
+      "POST /game/story-quests/dion-campaign/complete-chapter": 3,
+      "GET /game/latest-news-notice": 2
+    },
+    "native_action_count": 1748,
+    "native_action_name_counts": {
+      "mystic_spiritshot_toggle": 1,
+      "l2_1220": 632,
+      "l2_1225": 25,
+      "l2_1147": 547,
+      "l2_1181": 498,
+      "l2_1127": 12,
+      "battle_potion_use": 33
+    },
+    "action_response_interval_ms_all": {
+      "n": 1747,
+      "min": 345.0,
+      "p50": 595.0,
+      "p90": 1446.0,
+      "p95": 2686.0,
+      "max": 72672.0,
+      "mean": 1161.257
+    },
+    "action_response_interval_ms_same_spawn": {
+      "n": 1318,
+      "min": 345.0,
+      "p50": 556.0,
+      "p90": 809.0,
+      "p95": 1049.0,
+      "max": 2839.0,
+      "mean": 617.88
+    },
+    "action_request_start_interval_ms_same_spawn": {
+      "n": 1318,
+      "min": 480.0,
+      "p50": 533.0,
+      "p90": 731.0,
+      "p95": 1004.0,
+      "max": 3630.0,
+      "mean": 607.093
+    }
+  },
+  "notes": [
+    "Header counters cover older events too; do not use header network counts as retained fragment counts.",
+    "Cooldown events are telemetry from successful server responses, not cooldown rejects.",
+    "Network byte totals are payload sizes reported in log, not compressed wire traffic.",
+    "Latency sums include parallel requests and are not elapsed idle time.",
+    "Native requests logged here do not include bot own gameGet/gamePost requests.",
+    "Same-spawn intervals can include gaps and summoning/potions; no automatic action delay setting change is inferred.",
+    "No personal names, character identifiers, or credential values are included."
+  ]
+}

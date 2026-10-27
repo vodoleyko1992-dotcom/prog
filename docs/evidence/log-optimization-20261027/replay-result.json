@@ -1,0 +1,7 @@
+{
+  "matched_pairs": 860,
+  "suppressed_covered_events": 860,
+  "saved_utf8_line_bytes": 477692,
+  "saved_percent_of_original_file": 7.594,
+  "limitation": "Replay reconstructs raw cooldown fields from exported cd; it is not a live-server or CPU benchmark."
+}

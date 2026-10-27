@@ -1,0 +1,26 @@
+{
+  "base_commit": "1b1f42e",
+  "node_full_suite": {
+    "passed_files": 673,
+    "failed_files": 0
+  },
+  "new_behavioral_scenarios": 48,
+  "baseline_expected_failures": 4,
+  "syntax_checked": [
+    "content.js",
+    "tests/run-all.cjs",
+    "tests/v2067-cooldown-log-compact.test.cjs"
+  ],
+  "envcheck_modules_passed": 34,
+  "independent_review": "PASS",
+  "additional_review_probes": 10,
+  "live_game_checked": false,
+  "browser_run_checked": false,
+  "version_changed": false,
+  "zip_built": false,
+  "source_sha256": {
+    "content.js": "10073e8307f30bc003ddfe02d1c5ac723283fcc090149398e58a39628e97bfda",
+    "tests/run-all.cjs": "8c8bdeddfae25cb4c43907ba92a12ea8bd35d4a32befb5d5171d94b4edbb4ee4",
+    "tests/v2067-cooldown-log-compact.test.cjs": "7d286f44e629f591923e93463b94a312d3195fd9cd59bc8954476b1d12508061"
+  }
+}
