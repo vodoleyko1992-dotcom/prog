@@ -5,6 +5,12 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.combat = function create_combat(env) {
 const location = env.routeLocation || root.location;
+// 20.71: мобы, чемпион и выбранный РБ похода подтверждаются модулем Rebirth, без правил обычной охоты.
+const rebirthMode = () => env.rebirthSelected?.() === true;
+const rebirthBig = ctx => !!ctx?.rebirth && ctx.rebirth.role !== 'mob';
+const bigTarget = ctx => !!(ctx?.rb || ctx?.champ || rebirthBig(ctx));
+const raidTarget = ctx => !!ctx?.rb || ctx?.rebirth?.role === 'raid';
+const battleReturn = ctx => ctx?.rebirth || rebirthMode() ? env.rebirthReturn?.(() => killOwnerValid(ctx || {})) : env.toMap();
 // 8.0.3: шлюз нажатий — запас после ответа на ход (A) и после конца GET /character игры (B), мс: [мин, макс, начальный]
 const LOCK_A = [60, 500, 120], LOCK_B = [30, 200, 50];
 // 10.0.12 (игрок 14.10: разрешены только зелёные/синие): в цепочке URL хранит первого моба, а цвет нужен текущего.
@@ -83,7 +89,7 @@ function aoeProbeNote(name) {
 // преимущества над дополнительными убийствами; личный откат готового умения — не время каста.
 function groupPlan(ctx, opts, eco = false) {
   const mob = mobHp();
-  if (eco || !(mob?.cur > 0)) return null;
+  if (eco || rebirthBig(ctx) || !(mob?.cur > 0)) return null;
   const targets = extraMobs(), visible = targets.length > 0;
   const near = targets.filter(x => x.cur > 0), bestSingle = Math.max(0, ...opts.map(o => Math.min(mob.cur, o.dmg || 0)));
   // 20.14 (просьба игрока 18.10): на РБ АОЕ (Whirlwind и др.) — только по видимым живым обычным мобам рядом
@@ -659,7 +665,7 @@ function debuffGain() {                                   // медиана от
 // 20.43 (разбор 21.10): иммунитет к дебаффам — у РБ общий флаг (7.2.1), у мобов/чемпионов — по виду цели на 24 ч, потом одна проба.
 // Старые общие флаги .mob/.champ не действуют (миграция dbfImm2043 их снимает; у других классов в classStash они просто лежат)
 const IMM_MS = 24 * 3600000, immKey = ctx => (ctx?.champ ? 'ч:' : '') + String(ctx?.name || '?').trim().toLowerCase();
-const dbfImmune = ctx => ctx.rb ? !!env.rt.debuffImmune?.rb : Date.now() - (+env.rt.debuffImmune?.sp?.[immKey(ctx)] || 0) < IMM_MS;
+const dbfImmune = ctx => ctx.rebirth ? ctx.rebirthImmune === true : ctx.rb ? !!env.rt.debuffImmune?.rb : Date.now() - (+env.rt.debuffImmune?.sp?.[immKey(ctx)] || 0) < IMM_MS;
 function debuffPlan(ctx, mp, me) {
   if (env.cfg.debuffAuto === false) return null;
   if (dbfImmune(ctx)) return null;   // 7.2.1: «має імунітет до негативних ефектів»; 20.43: мобы/чемпионы — по виду и со сроком
@@ -678,7 +684,7 @@ function debuffPlan(ctx, mp, me) {
   const eff = (ratio - 1) * share * pass, turnS = Math.max(0.6, (env.rt.turnMs || 1000) / 1000);
   const needActs = Math.max(g ? 0 : (env.cfg.debuffMinActs ?? 10), eff > 0.001 ? Math.ceil(1 / eff) + 1 : Infinity);
   const noGain = !!g && g.ratio < 1.03 && mode !== 'always';                 // замер: прибавки нет
-  const longFight = actsLeft >= needActs, boss = !!(ctx.rb || ctx.champ), hurt = !!me && me.pct < 70;
+  const longFight = actsLeft >= needActs, boss = bigTarget(ctx), hurt = !!me && me.pct < 70;
   // на РБ и чемпионе без замера — сперва 2 заклинания без дебаффа (чтобы было с чем сравнить), потом дебафф
   const offSamples = Object.values(ctx.spellDmg || {}).reduce((s, x) => s + x.off[1], 0);
   const learnWait = !g && !!(ctx.rb || (ctx.champ && mode === 'auto')) && offSamples < 2;
@@ -1027,7 +1033,7 @@ function ultPick(ctx, mp) {
   const L = env.names(env.cfg.nUltra); if (!L.length) return null;
   const mob = mobHp(), me = env.meHp(), mode = env.cfg.ultMode || 'big';
   if (!mob || mob.cur <= 0) return null;
-  const boss = !!(ctx.rb || ctx.champ);
+  const boss = bigTarget(ctx);
   for (const n of L) {
     const b = slotsBy(n)[0]; const skillInfo = b && env.ilOf(b);
     if (nonOffenseSkill(b) || weaponBarred(b)) continue;
@@ -1093,10 +1099,10 @@ function frenzyDive(ctx, me) {                    // «сливаться под
 // Защита крупной цели: известны удары по нам и спецудар РБ, после слива HP переживает спецудар + несколько ударов,
 // у цели ещё есть что бить; усиленные чемпионы 73+ (атака ×4) — никогда
 function limitBigTarget(ctx, mob) {
-  if (env.cfg.limitBig === false || !(ctx.rb || ctx.champ)) return false;
+  if (env.cfg.limitBig === false || !bigTarget(ctx)) return false;
   if (ctx.champ && !ctx.rb && env.champs?.isHard?.(ctx)) return false;
   const left = mob?.max > 0 ? mob.cur / mob.max : 1;
-  return left >= (ctx.rb ? 0.1 : 0.3);
+  return left >= (raidTarget(ctx) ? 0.1 : 0.3);
 }
 function limitHitsIn(ctx) {                       // удары цели по нам: РБ — память РБ + этот бой; чемпион — память боя по имени + этот бой
   if (ctx.rb) return (ctx.rb.hits || []).filter(n => Number.isFinite(n) && n > 0);
@@ -1546,7 +1552,7 @@ function warlordPullReady(b) { return uiReady(b) && localCdLeft(b) <= 0 && env.c
 function warlordPullPlan(ctx, mp) {
   const skip = why => { ctx.warlordPullSkip = why; return null; }; ctx.warlordPullSkip = '';
   const prof = String(env.rt.classCur?.prof || env.rt.prof || '').replace(/[_-]/g, ' ');
-  if (env.cfg.warlordAggro === false || !/^(?:human )?(?:warlord|dreadnought)$/i.test(prof) || mageCombat() || ctx.rb || ctx.champ || env.pvpPending?.()) return null;
+  if (env.cfg.warlordAggro === false || !/^(?:human )?(?:warlord|dreadnought)$/i.test(prof) || mageCombat() || bigTarget(ctx) || env.pvpPending?.()) return null;
   const info = env.battleInfo?.(), age = Date.now() - (+info?.t || 0);
   if (!info || age < 0 || age > 60000 || String(info.name || '').toLowerCase() !== mobName().toLowerCase() || !(info.max > 0) || +info.max !== mobHp()?.max || !/^(normal|passive|neutral|aggressive)$/.test(info.kind || '') || info.tier) return skip('нет свежего подтверждения обычной цели');
   // 17.10.2026, журнал00:52–00:57: weaponNow — имя последнего клика, equip/скан его не подтверждают.
@@ -1614,7 +1620,7 @@ function chooseAction(ctx, mp) {
   const list = str => env.names(str).map(n => slotsBy(n)[0]).filter(Boolean);
   const powers = mpOk ? env.names(env.cfg.nPower).filter(n => !env.names(env.cfg.nUltra).includes(n)).map(n => slotsBy(n)[0]).filter(Boolean).filter(b => !nonOffenseSkill(b) && !weaponBarred(b) && free('power:' + b.title)) : [];
   const longFight = (mobHp()?.cur || 0) > env.expDmg('атака') * 2 + Math.max(0, ...powers.filter(ready).map(b => env.expDmg(env.skKey(b))));
-  const stuns  = mpOk && ctx.champ && !ctx.rb && longFight && Date.now() - ctx.lastStun >= env.cfg.stunEvery * 1000
+  const stuns  = mpOk && (ctx.champ || ctx.rebirth?.role === 'champion') && !raidTarget(ctx) && longFight && Date.now() - ctx.lastStun >= env.cfg.stunEvery * 1000
                ? list(env.cfg.nStun).filter(b => !nonOffenseSkill(b) && !weaponBarred(b) && free('stun:' + b.title) && affordable(b, mp)) : [];
   const st = stuns.find(ready);
   const ult = ultPick(ctx, mp);                   // v5.3: 💥 сверхсильный скилл (Punch of Doom, Crush of Doom, Vortex…)
@@ -1624,7 +1630,7 @@ function chooseAction(ctx, mp) {
   if (plan && (!st || !plan.charge || env.forceNow() < env.forceMax())) return plan;
   if (st) return { key: 'stun:' + st.title, name: 'стан', b: st, why: 'долгий бой, остальное на КД' };
   if (plan) return plan;
-  if (ctx.rb) return null;                        // v4.46: на РБ — только план (без запасного Force Buster и т. п.), иначе ждём атаку
+  if (raidTarget(ctx)) return null;               // На РБ похода тоже не подставляем запасной стан вместо плана урона.
   if (env.cfg.fightMode === 'kpd' && env.expDmg('атака') * 0.85 >= (mobHp()?.cur || Infinity)) return null;   // КПД: ждём откат атаки
   if (ctx.lfHold) return null;                    // РБ без банок: дорогие удары придержаны ради маны — ждём атаку
   if (env.forceCosts().some(c => { const b = slotsBy(c.name)[0]; return b && env.forceNow() >= c.cost && cdLeft(b) <= 0.6; })) return null;
@@ -1738,7 +1744,7 @@ async function battle() {
   const open = await battleOpen();
   if (!open?.[BATTLE_OPEN]) return open;
   const { ctx, spawnId, manualRb } = open;
-  if (ctx.hpProofCurrent && !ctx.hpProofCurrent()) return;
+  if (ctx.hpProofCurrent && !ctx.hpProofCurrent() || ctx.rebirth && !ctx.rebirth.current()) return;
 
   // Сравниваем сами строки, а не число маркеров: хвост журнала ограничен,
   // и новый сосед мог заменить старого при неизменном количестве строк.
@@ -1796,7 +1802,7 @@ async function battle() {
   ctx.quotaTicket = async () => { if (ctx.farmQuotaP) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; } return ctx.farmQuota || null; };
   // 20.41 (замер цикла катакомб: список подземелья ≈0,3 с после победы ждал «Охотиться дальше»): список для следующего моба читаем уже
   // в начале боя; на победе он переиспользуется, если не старше 4 с (долгий бой — читаем заново)
-  if (!ctx.rb) try { env.catPrefetch?.(); } catch (e) {}
+  if (!ctx.rb && !ctx.rebirth) try { env.catPrefetch?.(); } catch (e) {}
   if(ctx.rb&&env.noteRaidMobKills){
     if(env.raidMobReady&&!env.raidMobReady(ctx.spawnId||spawnId))await env.waitFor(()=>env.raidMobReady(ctx.spawnId||spawnId),1000,20);
     if(!killOwnerValid(ctx))return;
@@ -1841,7 +1847,7 @@ async function battle() {
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
   // mpFree: выключение тоггла бесплатно либо цену включения уже перепроверяет отдельный ON-plan, без старой IL-цены.
   const act = async (b, status, hpGuard = false, stillNeeded = null, mpFree = false) => {
-    const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.()&&(!ctx.hpProofCurrent||ctx.hpProofCurrent()),canSend=()=>valid()&&!victory()&&!defeat();
+    const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.()&&(!ctx.hpProofCurrent||ctx.hpProofCurrent())&&(!ctx.rebirth||ctx.rebirth.current()),canSend=()=>valid()&&!victory()&&!defeat();
     if(pendingTurn&&!turnAnswered(pendingTurn)){
       await waitNet(()=>turnAnswered(pendingTurn)||!canSend(),1000,40);
       if(!canSend())return false;if(!turnAnswered(pendingTurn))return 'lock';
@@ -1974,7 +1980,7 @@ async function battle() {
   };
 
   if (ctx.pet) { const n = env.actNet?.(); ctx.petActsKnown = Number.isSafeInteger(n?.okN); ctx.petActN = n?.okN; ctx.petActActor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]); env.warlock?.capture?.(ctx); }
-  env.champs?.observe?.(ctx);
+  if (!ctx.rebirth) env.champs?.observe?.(ctx);
   const t0 = Date.now();
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
   const strength = strengthSample(t0, env.actNet?.() || {});
@@ -1989,8 +1995,8 @@ async function battle() {
   // висит), выход от РБ (rbFlee), «мало HP», полоса банок HP на РБ и сама банка HP — тесты выполняют эти куски как тело цикла
   let s;
   while (env.on && env.tabOwner) {
-    if(actionContext()!==battleOwner||ctx.hpProofCurrent&&!ctx.hpProofCurrent())return;
-    env.champs?.observe?.(ctx);
+    if(actionContext()!==battleOwner||ctx.hpProofCurrent&&!ctx.hpProofCurrent()||ctx.rebirth&&!victory()&&!defeat()&&!ctx.rebirth.current())return;
+    if (!ctx.rebirth) env.champs?.observe?.(ctx);
     // 20.6: смена задач запрещает клики старого frame — продолжаем бой со следующего тика main.
     if (env.canAct?.() === false) return;
     strengthReliable(strength, Date.now(), env.actNet?.() || {});
@@ -1998,7 +2004,7 @@ async function battle() {
       if (spinN >= SPIN_N) { spinN = 0; await env.sleep(50); spinT = Date.now(); } }   // 20.12: круги без сна подряд — уступаем странице
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
-    if (env.rt.shop?.urgent) {                        // «🛒 Закупить сейчас»: бросаем бой (в игре он идёт дальше без нас)
+    if (!ctx.rebirth && env.rt.shop?.urgent) {         // Поход Rebirth не прерывается старым маршрутом магазина.
       env.rec('B', 'закупка', `«Закупить сейчас» — ухожу из боя${ctx.rb ? ' с РБ' : ''} в магазин`);
       env.setStatus('🛒 Закупка сейчас — бросаю бой'); location.href = '/char.html'; await env.sleep(4000); return;
     }
@@ -2019,7 +2025,7 @@ async function battle() {
         // недобитым не считаем (иначе тур платил бы за телепорт «добить» к уже мёртвому РБ); жив ли он — покажет список РБ
         const W = ctx.rb && env.rt.rbWound?.[ctx.rb.id] ? { ...env.rt.rbWound } : null; if (W) delete W[ctx.rb.id];
         await env.setRt({ target: null, ...(ctx.rb ? { rbCur: null } : {}), ...(W ? { rbWound: W } : {}) });
-        return env.toMap();
+        return battleReturn(ctx);
       } }
     // 8.0.3 (лог 11.10 10:31:48–10:32:17, Барда 55): ход ушёл, а ответа нет 28,6 с — пока игра ждёт ответ, нажатия она не отправляет; бот
     // 20 с жал вслепую («урон 0» ×12) при «✅ победа вероятна» по замёрзшим HP, потом герой погиб. Теперь ход без ответа > 8 с (до 60 с) —
@@ -2051,7 +2057,7 @@ async function battle() {
     await countExtras();
     if (!env.on || !env.tabOwner) return;
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
-    if (!victory() && await env.tvtStep?.()) return;
+    if (!ctx.rebirth && !victory() && await env.tvtStep?.()) return;
     if (victory()) break;
     if ((s = await mainTargetDead(mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await limitStep(me, mp, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
@@ -2122,7 +2128,7 @@ async function battle() {
     if ((s = await petStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     await env.keepShots();
     const ex = extraMobs().filter(x => x.cur > 0);
-    const tc = (ctx.rb ? ` [РБ ${ctx.rb.note}]` : ctx.champ ? ' [чемп]' : '') + (ex.length ? ` +${ex.length} рядом` : '');
+    const tc = (ctx.rebirth ? ` [поход: ${ctx.rebirth.role === 'raid' ? 'РБ' : ctx.rebirth.role === 'champion' ? 'чемпион' : 'моб'}]` : ctx.rb ? ` [РБ ${ctx.rb.note}]` : ctx.champ ? ' [чемп]' : '') + (ex.length ? ` +${ex.length} рядом` : '');
 
     if ((s = await healStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     // банка HP (если задана)
@@ -2131,7 +2137,7 @@ async function battle() {
     // симуляция 1000 РБ: побед Дестроер 80 → 97 %, Гладиатор 74 → 88 %, Тиран 85 → 100 %.
     // «Сливаться под Frenzy» (Дестроер): пока Frenzy готов — банок не пьём (кроме аварийных ≤ стоп-HP), HP падает до 30 %,
     // жмём Frenzy (+Guts/Zealot по правилам), дальше снова держим 90 %. Симуляция: бой на 21 % быстрее, банок на 31 % меньше.
-    let potAt = env.cfg.hpPotAt;
+    let potAt = rebirthBig(ctx) ? Math.max(env.cfg.hpPotAt || 0, 75) : env.cfg.hpPotAt;
     if (ctx.rb && me) {                            // 10.0 (аудит боя): HUD не отдал HP (me = null) — без TypeError на me.max
       const d = env.rt.rbDb?.[ctx.rb.id] || {};
       // 20.51 (лог23.10, Rahha11:31): старый P90≈635 не скрывает уже полученный в этом бою удар10576.
@@ -2186,7 +2192,7 @@ async function battle() {
     const potReserveHit = ctx.rb && !ctx.rb.allIn && me && me.pct > 35 && hpReserveBlocked(hpPot, env.cfg.rbPotReserve);   // v4.44: резерв бережём, пока не припёрло   // на РБ резерв не трогаем; в режиме заходов банки бережём
     // v5.3: на РБ банки — чаще: у банки в l2wap нет своего отката (только общий ~0,2 с; лог 08.10 14:14), а пили раз в 2–5 с —
     // 600 HP за глоток против потери 300–600 HP/с у РБ 50 ур. Теперь, пока держим полосу HP, — раз в 1,1 с
-    if (hpPot && potLeft !== 0 && !potReserveHit && me && me.pct <= potAt && Date.now() - lastHpPot > (ctx.rb ? 1100 : 2000)) {
+    if (hpPot && potLeft !== 0 && !potReserveHit && me && me.pct <= potAt && Date.now() - lastHpPot > (bigTarget(ctx) ? 1100 : 2000)) {
       const prevPot = lastHpPot; lastHpPot = Date.now();
       if (ctx.rb) (ctx.rb.potT ||= []).push(Date.now());    // для оценки «хватит ли банок»
       const r = await act(hpPot, `Банка HP${ctx.rb ? ` (РБ: осталось ${potLeft - 1}${ctx.rb.usePots ? ', убиваем с банками' : ''})` : ''}`, false, () => { const h = env.meHp(); return !!h && h.cur < h.max; });
@@ -2232,6 +2238,7 @@ async function battle() {
       if (!env.on || !env.tabOwner) return;
       if (nx === 'dead') return battleDeath(ctx,countExtras);
       if (nx !== 'next') return END;
+      if (ctx.rebirth && mobName() !== ctx.name) return; // Новый этап сначала заново подтверждает модуль похода.
       if (mobName() !== ctx.name) {               // бой переключился на соседа
         ctx.name = mobName(); ctx.champ = env.isChamp(mobTitle());
         ctx.questKill = env.isQuestName(ctx.name);
@@ -2344,6 +2351,7 @@ async function battle() {
 
   // шаг: проверки выхода — РБ (оценка, отход эпика, rbTryExit) или «не по зубам» / предел боя обычного моба
   async function exitCheckStep(me, mob) {
+    if (ctx.rebirth) return NEXT; // У похода нет цены чемпиона/чип-рейда и общего предела обычного моба в 180 с.
     if (ctx.rb) {
       const ep = env.epicOn() && env.epicById(ctx.rb.id) && env.rt.epic?.k === env.epicById(ctx.rb.id).k && env.rt.epic?.step === 'fight';
       const v = me ? env.rbAssess(ctx, me, mob) : { retreat: false };
@@ -2644,7 +2652,7 @@ async function battle() {
     let buffed = false;
     env.BUFF_CTX = ctx;
     if (await managedMonsterStep(ctx, act)) return AGAIN;
-    if (await env.spoilStep(ctx, act, mob)) return AGAIN;      // v5.3: ⛏ спойл в начале боя
+    if (!raidTarget(ctx) && await env.spoilStep(ctx, act, mob)) return AGAIN; // РБ похода не считается обычным мобом для спойла.
     if (await env.toggleStep(ctx, me, act)) return AGAIN;           // v5.3: постоянные баффы (тогглы) — вкл/выкл по MP
     const roar = battleRoarPlan(ctx, me, mp);
     if (roar) {
@@ -2712,6 +2720,12 @@ async function battle() {
         // (особый моб катакомб или рядом с РБ). Теперь моб/чемпион — по виду цели на сутки (rt.debuffImmune.sp, потом одна проба);
         // «Raid Boss» прямо в тексте — РБ при любом ctx (и вид этой цели, чтобы в бою не вешать снова)
         if (/імунітет|иммунитет|immune/i.test(added)) {
+          if (ctx.rebirth) {
+            ctx.rebirthImmune = true;
+            if (ctx.debuffed) delete ctx.debuffed[dbf.k];
+            env.rec('B', 'Rebirth', `${ctx.name}: иммунитет к дебаффам в текущем бою — продолжаю ударами`);
+            return AGAIN;
+          }
           const line = (added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim(), rb = ctx.rb || /raid\s*boss|рейд-?бос/i.test(line);
           if (ctx.debuffed) delete ctx.debuffed[dbf.k];
           const I0 = env.rt.debuffImmune || {}, { mob: _m, champ: _c, ...I } = I0, k = immKey(ctx), was = !ctx.rb && +I.sp?.[k] || 0, now = Date.now();   // старые общие флаги при записи не переносим
@@ -2964,17 +2978,17 @@ async function battleOpen() {
     await env.setRt({ battleReload: n });
     env.rec('B', 'бой', `страница боя не загрузилась за 10 с — ${n <= 2 ? `обновляю (${n}/2)` : 'ухожу на карту'}`);
     if (n <= 2) { location.reload(); await env.sleep(8000); return; }
-    await env.setRt({ battleReload: 0 }); return env.toMap();
+    await env.setRt({ battleReload: 0 }); return battleReturn();
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
-  if (st === 'dead') { const char = env.rt.char, owner=killOwner(); await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; await env.finishFarmQuota?.(null, true, resultKills(true)); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
+  if (st === 'dead') { const char = env.rt.char, owner=killOwner(); if(!rebirthMode())await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; await env.finishFarmQuota?.(null, true, resultKills(true)); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
     const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
     if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
-    return env.toMap();
+    return battleReturn();
   }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
-  if (st === 'win') { const owner=killOwner(); await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
+  if (st === 'win') { const owner=killOwner(); if(!rebirthMode())await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
   // бой открылся — счётчик петли сброшен. 8.0: без ожидания; 20.43 (лог 21.10 15:47–15:51): отложенной записью — полная запись
   // памяти ≈960 КБ в начале каждого боя катакомб стояла в очереди фона перед записями победы
@@ -3029,6 +3043,20 @@ async function battleOpen() {
 
   const title = mobTitle();
   const spawnId = new URLSearchParams(location.search).get('spawnId') || '';
+  if (rebirthMode()) {
+    const name = mobName(), max = mobHp()?.max, page = location.href, owner = killOwner();
+    const valid = () => killOwnerValid({ killOwner: owner }) && rebirthMode() && location.href === page
+      && mobTitle() === title && mobHp()?.max === max && !env.pvpPending?.() && !env.antibotState?.();
+    const proof = await env.rebirthBattleProof?.({ name, max, title, valid });
+    if (!proof || !valid() || !proof.current?.()) return;
+    const blockW = weaponBlocks(), mob0 = mobHp();
+    const ctx = { lastStun: 0, block: blockW, weaponContext: weaponContext(), weaponBlocked: Object.keys(blockW), killed: [], seq: [],
+      max, logStart: env.logLines(), champ: false, name, killOwner: owner, questKill: false, goalsAt: 0,
+      lvl: proof.lvl, spawnId: proof.spawn, rebirth: proof, hp0: mob0?.cur || 0, hp0T: Date.now(), hp0N: name.toLowerCase(), okN0: env.actNet?.()?.okN || 0 };
+    if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }
+    env.setStatus(`Rebirth: ${proof.role === 'raid' ? 'РБ похода' : proof.role === 'champion' ? 'чемпион похода' : 'моб похода'} — бой подтверждён`);
+    return { [BATTLE_OPEN]: true, ctx, spawnId: proof.spawn, manualRb: false };
+  }
   const isRb = env.isBoss(title) || /^l2dop_rb_/i.test(spawnId || '');
   const rbLvl = +(title.match(/ур\.?\s*(\d+)/i)?.[1] || 0);
   const campRb = isRb && env.campRbOpen().some(t => env.nameLike(t.name, title.split('·')[0]));
@@ -3182,9 +3210,9 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   if (result === 'dead') return battleDeath(ctx,countExtras);
   if (result !== 'win') {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
-    return env.toMap();
+    return battleReturn(ctx);
   }
-  if (!ctx.rb) try { env.catPrefetch?.(4000); } catch (e) {}   // 20.41: список подземелья для следующего моба — параллельно с учётом победы
+  if (!ctx.rb && !ctx.rebirth) try { env.catPrefetch?.(4000); } catch (e) {}   // 20.41: список подземелья для следующего моба — параллельно с учётом победы
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   await countExtras(true);
@@ -3194,7 +3222,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
   const rewardLines = freshBattleLines(ctx.logStart || [], env.logLines());
   const rewards = battleRewards(rewardLines, loot, ctx.extraCredited);
-  env.champs?.observe?.(ctx);
+  if (!ctx.rebirth) env.champs?.observe?.(ctx);
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду
     const ttk = (Date.now() - t0) / 1000;
     // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
@@ -3204,7 +3232,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0), measured?.removed || 0);   // победа — главный добит (соседи живы — их остаток не наш)
     const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(ctx.ashen ? Math.max(dps, totalDps) : dps, 1);   // время на одного такого моба
     // 20.61: в Ashen Bastion мобы 85 ур. толстые и стоят пачкой — бьём массовыми, «долго на одного» считаем по урону по всем, иначе вид на 2 ч выпадает
-    env.champs?.noteDamage?.(ctx,base,ttk)?.catch?.(e=>console.warn(env.TAG,'состав боя',e));
+    if (!ctx.rebirth) env.champs?.noteDamage?.(ctx,base,ttk)?.catch?.(e=>console.warn(env.TAG,'состав боя',e));
     const d = env.rt.dps?.singleTarget ? env.rt.dps : { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
     // записи; память вкладки обновлена сразу, очередь сохраняет порядок, при уходе со страницы недописанное уходит по pagehide
@@ -3214,7 +3242,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     // 10.0.5: чемпион — свой учёт (champs.learn: ДПС, итог по цвету, вердикт снимается); метка «не по зубам» по имени вида закрыла бы
     // и обычных мобов того же вида (красный Kookaburra ≈145 тыс. HP → обычные Kookaburra 3,4 тыс. HP на 2 ч не цели)
     if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, victory() ? 'win' : 'left', base, ttk)?.catch?.(e => console.warn(env.TAG, 'чемпионы', e));
-    else if (!ctx.rb && ttkOne > 45 && strengthReliable(strength, Date.now(), env.actNet?.() || {})) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
+    else if (!ctx.rebirth && !ctx.rb && ttkOne > 45 && strengthReliable(strength, Date.now(), env.actNet?.() || {})) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
       await lowDmgNote();
@@ -3228,7 +3256,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   env.trackLoot(rewardLines, ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
   try { env.cancelNote?.(ctx.cancelLines || [], ctx.name, { champ: !!ctx.champ, tier: ctx.tier || '', dungeon: (location.search || '').match(/[?&]spawnId=sdms_([^&]+)_\d+(?:&|$)/)?.[1] || '' }); } catch (e) { console.warn(env.TAG, 'снятие баффов', e); }   // 10.0.7: «[моб] зняв з вас N бафи»
   env.setRt({
-    kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
+    kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + (ctx.rebirth ? 0 : 1), target: null,
     adena: env.rt.adena + rewards.adena, exp: env.rt.exp + rewards.exp, sp: env.rt.sp + rewards.sp
   });
 
@@ -3266,7 +3294,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     try { env.rbRun?.kill({ id: ctx.rb.id, name: ctx.name, lvl: ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || ctx.lvl || 0, adena, exp, sp: pick(/([\d\s.,]+)\s*SP/i), lines: env.newLines(ctx.logStart || [], env.logLines()), epic: !!env.epicById?.(ctx.rb.id), fightS })?.catch?.(e => console.warn(env.TAG, 'серия РБ', e)); } catch (e) { console.warn(env.TAG, 'серия РБ', e); }
     if (env.rt.rbWound?.[ctx.rb.id]) { const W = { ...env.rt.rbWound }; delete W[ctx.rb.id]; env.setRt({ rbWound: W }); }   // 7.2.2; 20.41: без ожидания
   }
-  if (env.cfg.campaign) {
+  if (!ctx.rebirth && env.cfg.campaign) {
     // условия главы: строки «★ Квест · <цель> N / M · осталось K» в логе боя → модель целей
     const r = await env.applyQuestLog([ctx.name, ...ctx.killed], ctx.champ);
     if (r.changes.length) env.rec('B', 'квест', r.changes.join(' · '));
@@ -3278,7 +3306,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     if (allDone) env.setStatus('Все цели главы выполнены — иду сдавать главу');
   }
   // квест: прогресс с экрана победы («26 / 35 · осталось 9»), частота дропа, прогноз боёв
-  const qDone = await env.trackQuest(ctx.name, ctx.questKill);
+  const qDone = ctx.rebirth ? null : await env.trackQuest(ctx.name, ctx.questKill);
   if (qDone && env.cfg.questStop) return env.halt(`Квест выполнен: ${qDone}`);
   { const qT = await ctx.quotaTicket(); if (qT && await env.finishFarmQuota?.(qT, false, 1 + ctx.killed.length)) return; }
   await env.nextFight(ctx);

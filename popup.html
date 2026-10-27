@@ -200,6 +200,7 @@
 <nav id="moduleNav" aria-label="Разделы управления">
   <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
+  <button data-tab="rebirth" data-short="Подзем." title="Отдельный поход Rebirth: обычные мобы, чемпион и выбранный РБ"><span class="ic">♻</span><span class="lb">Подземелья</span></button>
   <button data-tab="craft" data-short="Крафт" title="Выбрать ресурс, количество и увидеть всю цепочку изготовления (Alt+3)"><span class="ic">⚒</span><span class="lb">Крафт</span></button>
   <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры боссов (Alt+4)"><span class="ic">♛</span><span class="lb">РБ</span></button>
   <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+5)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
@@ -317,16 +318,6 @@
   <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов». Список мобов бот берёт целиком из ответа игры (все страницы списка), первыми бьёт ★-цели квеста и чемпионов. После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). Для боссов используйте «👑 Тур по РБ». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
 
   <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включается в «Задачах бота» («Обзор» → «Изменить») или переключателем «Фармить в подземелье» — это одна и та же задача.</div>
-  <div class="subsec-title"><span id="tab-rebirth" class="tab-anchor"></span>♻ Rebirth-подземелья</div>
-  <label title="Отдельная задача для подземелий Rebirth. Выбор сохраняется; выполнение начинается кнопкой «Старт».">Фармить Rebirth-подземелья <input id="rebirthMode" type="checkbox"></label>
-  <label>Сложность <select id="rebirthDifficulty"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option></select></label>
-  <label>РБ в логове <select id="rebirthBossChoice"><option value="manual">Выбирать РБ в игре</option><option value="staff1h">РБ с одноручным посохом (как в последнем походе)</option></select></label>
-  <label title="Easy — 2, Medium — 4, Hard — 6 ключей. Перед каждым входом бот проверяет актуальную цену и запас ключей в игре.">Автоматически входить в следующий поход <input id="rebirthAutoEnter" type="checkbox"></label>
-  <label title="Ключи из этого резерва не расходуются на новые заходы.">Оставлять ключей после входа <input id="rebirthKeyReserve" type="number" min="0" step="1"></label>
-  <div id="rebirthBox" class="hint" style="white-space:pre-line" role="status"></div>
-  <div class="row"><button type="button" id="rebirthStart">▶ Запустить Rebirth</button></div>
-  <div class="hint">Продолжает открытый заход и бои с мобами. Текущий заход сохраняет свою сложность. Галочка автоматического входа разрешает следующий поход за ключи; без неё новый вход выполняется вручную. Выбор РБ в игре остаётся ручным, пока здесь не выбран РБ с одноручным посохом. Этот выбор повторяется в следующих походах.</div>
-
   <div class="subsec-title"><span id="tab-dailies" class="tab-anchor"></span>📅 Дейлики и клановые задания</div>
   <label title="Ежедневные задания игра засчитывает сама. Бот дотягивает то, чего фарм не даёт: «50 рыб» (1 Coin of Luck + 300 000 аден + 50 000 EXP) — идёт на рыбалку и возвращается; «Убей 1 РБ» и «Участие в РБ» — один тур по РБ и назад (раз в день, с 40 ур.)">📅 Дотягивать дейлики: 50 рыб и 1 РБ в день <input id="dailyAuto" type="checkbox"></label>
   <label title="Клановые задания (/clan-tasks): бот сам берёт доступное (500 монстров — 1 Coin of Luck; SP; адена; РБ, если РБ разрешены), помогает соклановцу, сдаёт готовое. Штурм стены не берёт. Свои запросы с токеном страницы, без переходов">🏰 Клановые задания: взять, помочь, сдать <input id="clanTasks" type="checkbox"></label>
@@ -405,6 +396,20 @@
 
 
 
+</section>
+
+<section id="tab-rebirth">
+  <div class="intro-callout"><b>♻ Подземелья Rebirth — отдельный режим.</b><p>Весь поход: обычные мобы → чемпион похода → выбранный РБ. Фильтры цветов чемпионов, окупаемость и окно уровней обычной охоты к этим этапам не применяются. Во время похода бот не переключается на охоту, TvT и фоновые задачи; их галочки сохраняются для других режимов.</p></div>
+  <h4>Поход Rebirth</h4>
+  <label title="Выбрать отдельный режим подземелий. Обычная охота, катакомбы, тур РБ и эпики выключаются; запуск — кнопкой ниже или общим «Старт».">Включить режим подземелий <input id="rebirthMode" type="checkbox"></label>
+  <label>Сложность следующего похода <select id="rebirthDifficulty"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option></select></label>
+  <label>РБ в логове <select id="rebirthBossChoice"><option value="manual">Выбирать РБ в игре</option><option value="staff1h">РБ с одноручным посохом (как в последнем походе)</option></select></label>
+  <label title="Easy — 2, Medium — 4, Hard — 6 ключей. Перед каждым входом бот проверяет актуальную цену и запас ключей в игре.">Автоматически входить в следующий поход <input id="rebirthAutoEnter" type="checkbox"></label>
+  <label title="Ключи из этого резерва не расходуются на новые заходы.">Оставлять ключей после входа <input id="rebirthKeyReserve" type="number" min="0" step="1"></label>
+  <div id="rebirthBox" class="hint" style="white-space:pre-line" role="status"></div>
+  <div class="row"><button type="button" id="rebirthStart">▶ Запустить подземелья</button></div>
+  <div class="hint">Открытый собственный поход продолжается на своей сложности, включая чемпиона и выбранного РБ. Автоматический вход разрешает следующий поход за ключи; без галочки войдите вручную. Выбор РБ остаётся ручным, пока не выбран вариант с одноручным посохом. Стоп, пауза, антибот и проверка принадлежности похода действуют на всех этапах.</div>
+  <div class="row"><button type="button" data-goto="limits">⏱ Общий дневной лимит мобов</button></div>
 </section>
 
 <section id="tab-craft">

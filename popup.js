@@ -1510,7 +1510,7 @@ async function saveFields(e) {
   // 20.12 (ревизия 17.10, UI-3): в режиме «Задачи бота» TvT/Катакомбы/Автофарм в разделах ведут тот же список задач,
   // а не только старый флаг, который движок в этом режиме не читает (раньше галка «Участвовать в TvT» молча не действовала).
   const taskOf = TASK_FLAG_OF[id];
-  if (taskOf && Array.isArray(cfg.autoTasks) && typeof n[id] === 'boolean') Object.assign(n, autoTaskPatch({ ...DEF, ...cfg }, taskOf, n[id]), { [id]: n[id] });
+  if (taskOf && (Array.isArray(cfg.autoTasks) || taskOf === 'rebirth') && typeof n[id] === 'boolean') Object.assign(n, autoTaskPatch({ ...DEF, ...cfg }, taskOf, n[id]), { [id]: n[id] });
   for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit','rebirthKeyReserve']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
   if (n.rebirthDifficulty != null && ![1,2,3].includes(n.rebirthDifficulty)) n.rebirthDifficulty = DEF.rebirthDifficulty;
   if (n.rebirthBossChoice != null && !['manual','staff1h'].includes(n.rebirthBossChoice)) n.rebirthBossChoice = DEF.rebirthBossChoice;
@@ -1524,6 +1524,7 @@ async function saveFields(e) {
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
+  if (n.rebirthMode === true && cfg.rebirthMode !== true) Object.assign(magReset, rebirthRouteReset(), { manualKickAt: Date.now() });
   if (['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit'].includes(id) || taskOf && Array.isArray(cfg.autoTasks)) magReset.manualKickAt = Date.now();
   try { await menuPatch(magReset, { cfgPatch: n, expectedChar }); }
   catch (error) {
@@ -1963,7 +1964,7 @@ $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: 
 // 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
 // «TvT/PvP и сервис»); 20.17: Маммон, заточка, ЛС и сервис выделены отдельно (10 разделов); 19.10 лимиты и снабжение вынесены отдельно (12 разделов). Тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
 // #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', rebirth: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
   seals: 'lifestone', loot: 'fish', tvtshop: 'tvt', enemies: 'pvp', log: 'svc' };
 // 23.10 (John: «Раздели режим РБ и ЭПИКИ, для удобства»): эпики — свой раздел #tab-epic, не подраздел «РБ»; старые ссылки на epic ведут туда же.
@@ -2492,9 +2493,19 @@ function taskNow(d, rt, key) {
 }
 function autoTaskPatch(d, key, enabled) {
   const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
+  // 20.71 (John: «вынеси режим подземелий вообще отдельно»): Rebirth заменяет обычные основные задачи.
+  if (key === 'rebirth' && enabled) return rebirthTaskPatch(d);
+  if (enabled && AUTO_MAIN_TASKS.includes(key)) tasks.delete('rebirth');
   const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto', rebirth: 'rebirthMode' };
-  return { autoTasks: [...tasks], ...(flags[key] ? { [flags[key]]: enabled } : {}), ...(key === 'quests' ? { storyTurnIn: enabled } : {}) };
+  return { autoTasks: [...tasks], ...(flags[key] ? { [flags[key]]: enabled } : {}), ...(key === 'quests' ? { storyTurnIn: enabled } : {}),
+    ...(enabled && AUTO_MAIN_TASKS.includes(key) && key !== 'rebirth' ? { rebirthMode: false } : {}) };
 }
+function rebirthTaskPatch(d) {
+  return { craftMode: false, enchantMode: false, epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false,
+    zoneAuto: false, rbMode: false, campaign: false, storyTurnIn: false, rebirthMode: true, chain: true,
+    autoTasks: [...selectedAutoTasks(d).filter(k => !AUTO_MAIN_TASKS.includes(k)), 'rebirth'] };
+}
+const rebirthRouteReset = () => ({ target: null, via: null, rbGo: null, rbWant: null, zoneGo: null, zoneAutoKick: null, catIn: null });
 let autoTaskEditQueue = Promise.resolve();
 // 20.12 (ревизия 17.10, UI-1): пока правка списка задач в очереди фона, промежуточная перерисовка (load по записи rt) не возвращает
 // галкам старое состояние из cfg — иначе быстрый второй клик «не меняет» галку. Финальный load() после записи рисует правду.
@@ -2511,7 +2522,7 @@ function editAutoTask(key, enabled, extraRt = {}) {
     catch (error) { settingsReadFailed(expectedChar, readSerial, ['autoTasks'], error); throw error; }
     const { cfg = {} } = stored;
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — выберите задачу в его меню');
-    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now(), ...extraRt }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled), expectedChar });
+    await menuPatch({ dailyFish: null, dailyRb: null, ...(key === 'rebirth' && enabled ? rebirthRouteReset() : {}), manualKickAt: Date.now(), ...extraRt }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled), expectedChar });
   } finally { autoTaskPending--; }
   if (formChar === expectedChar) await load();
   });
@@ -2686,7 +2697,7 @@ async function setMode(m, enabled) {
   else if (m === 'rb') await activateMode({ ...leaveEpic, ...rbTourRestart(rt), rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   else if (m === 'epic') await activateMode({ ...leaveHunt, rbRun: { t0: now, mode: 'epic' }, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
   else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
-  else if (m === 'rebirth') await activateMode({ ...leave }, { ...MODES_OFF, rebirthMode: true, chain: true, campaign: false, rbMode: false });
+  else if (m === 'rebirth') { showTab('rebirth'); await activateMode({ ...leave, ...rebirthRouteReset() }, rebirthTaskPatch({ ...DEF, ...cfg })); }
   else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: false });
   else if (m === 'craft') await activateMode({ ...leave, zoneGo: null, zoneAutoKick: null }, { ...MODES_OFF, craftMode: true, zoneAuto: false, rbMode: false, campaign: false });
   else if (m === 'enchant') {
@@ -2807,9 +2818,10 @@ async function quickStart(key) {
     const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
     if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
     const was = selectedAutoTasks({ ...DEF, ...cfg });
-    const cfgPatch = { autoTasks: [...was.filter(k => !AUTO_MAIN_TASKS.includes(k)), key], ...(was.includes('quests') ? { campaign: false, storyTurnIn: false } : {}) };
-    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch, expectedChar }); if (generation !== controlGeneration || formChar !== expectedChar) return;
+    const cfgPatch = key === 'rebirth' ? rebirthTaskPatch({ ...DEF, ...cfg }) : { autoTasks: [...was.filter(k => !AUTO_MAIN_TASKS.includes(k)), key], rebirthMode: false, ...(was.includes('quests') ? { campaign: false, storyTurnIn: false } : {}) };
+    await menuPatch({ dailyFish: null, dailyRb: null, ...(key === 'rebirth' ? rebirthRouteReset() : {}), manualKickAt: Date.now() }, { cfgPatch, expectedChar }); if (generation !== controlGeneration || formChar !== expectedChar) return;
     if (key === 'craft') { showTab('craft'); $('craftSection')?.scrollIntoView({ block: 'start' }); }
+    if (key === 'rebirth') showTab('rebirth');
     await $('start').onclick();
   } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 }
@@ -3527,7 +3539,8 @@ document.addEventListener('keydown', async e => {
   if (e.code === 'KeyW') { e.preventDefault(); showTab('rbtimer'); $('rbtFile').click(); return; }   // 10.0.3: Alt+R → 10.0.5 (игрок 13.10): Alt+W — загрузить таймеры боссов из файла
   if (e.code === 'KeyS') { e.preventDefault(); const { on = false } = await chrome.storage.local.get('on'); (on ? $('stop') : $('start')).click(); return; }
   const n = e.code === 'Digit0' ? 10 : +(e.code.match(/^Digit([1-9])$/) || [])[1];
-  if (n) { e.preventDefault(); const b = document.querySelectorAll('nav button')[n - 1]; if (b) showTab(b.dataset.tab); }
+  // 20.71: отдельная кнопка подземелий не сдвигает прежние сочетания Alt+1…0.
+  if (n) { e.preventDefault(); const tab = ['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp'][n - 1]; if (tab) showTab(tab); }
 });
 // Подтверждение Стоп/Пауза показывается после успешного ответа фона.
 

@@ -11,7 +11,8 @@ test('умолчания: режим и автоматический вход в
  assert.equal(profile.cfg.rebirthAutoEnter,false);assert.equal(profile.cfg.rebirthDifficulty,1);assert.equal(profile.cfg.rebirthKeyReserve,0);assert.equal(profile.cfg.rebirthBossChoice,'manual');
 });
 test('только явная задача Rebirth включает свой режим и сохраняет обычную цепочку',()=>{
- const c=selected(['rebirth','tvt']);assert.equal(E.selectedTask(c),'rebirth');assert.equal(c.rebirthMode,true);assert.equal(c.chain,true);assert.equal(c.tvtOn,true);
+ // 20.71: отдельный поход сохраняет выбранные TvT-настройки, но не допускает переключение на событие.
+ const c=selected(['rebirth','tvt']);assert.equal(E.selectedTask(c),'rebirth');assert.equal(c.rebirthMode,true);assert.equal(c.chain,true);assert.equal(c.tvtOn,false);
  for(const flag of ['rbHuntMode','rbMode','epicMode','catMode','fishMode','campaign','zoneAuto','craftMode','enchantMode'])assert.equal(c[flag],false,flag);
 });
 test('старый флаг Rebirth не обходит явный список других задач',()=>{
@@ -23,20 +24,23 @@ test('старый флаг Rebirth не обходит явный список 
 test('автоматический вход сам по себе не выбирает режим Rebirth',()=>{
  const c=selected(['farm'],{}, {rebirthAutoEnter:true});assert.equal(E.selectedTask(c),'farm');assert.equal(c.rebirthMode,false);assert.equal(E.chooseMode({}), 'farm');
 });
-test('приоритет Rebirth после тура РБ и перед квестами, рыбалкой и обычными подземельями',()=>{
- const order=['enchant','craft','epic','raid','rebirth','quests','fish','cat','auto','farm'];
+test('отдельный Rebirth сильнее остальных задач, без него прежний порядок сохраняется',()=>{
+ // 20.71: John вынес подземелья из общей очереди; смешанный старый autoTasks больше не уводит в тур РБ.
+ const order=['rebirth','enchant','craft','epic','raid','quests','fish','cat','auto','farm'];
  for(let bits=0;bits<(1<<order.length);bits++){
   const list=order.filter((_,i)=>bits&(1<<i));assert.equal(E.selectedTask(selected(list)),list[0]||'tasks',list.join(','));
  }
 });
-test('обычный флаг режима и legacy выбор знают Rebirth, прежние приоритеты сохранены',()=>{
- assert.equal(E.chooseMode({rebirth:true,campaign:true,fish:true,cat:true}),'rebirth');assert.equal(E.chooseMode({raid:true,rebirth:true}),'raid');
- assert.equal(E.chooseMode({epic:true,rebirth:true}),'epic');assert.equal(E.chooseMode({fish:true,campaign:true}),'fish');assert.equal(E.chooseMode({cat:true,campaign:true}),'campaign');
+test('явный legacy Rebirth не уступает обычному туру или эпикам; без него прежние приоритеты сохранены',()=>{
+ // 20.71: отдельный режим сильнее старых активных флагов профиля.
+ assert.equal(E.chooseMode({rebirth:true,campaign:true,fish:true,cat:true}),'rebirth');assert.equal(E.chooseMode({raid:true,rebirth:true}),'rebirth');
+ assert.equal(E.chooseMode({epic:true,rebirth:true}),'rebirth');assert.equal(E.chooseMode({fish:true,campaign:true}),'fish');assert.equal(E.chooseMode({cat:true,campaign:true}),'campaign');
 });
-test('Rebirth делит общий дневной лимит мобов и уступает следующей разрешённой задаче',()=>{
+test('Rebirth делит общий дневной лимит мобов, но ожидание лимита не выбирает другую задачу',()=>{
+ // 20.71: квоту ожидает собственный модуль подземелий; selectedTask не разрешает рыбалку вместо похода.
  const now=Date.UTC(2026,9,27,3),rt={dailyQuota:{day:E.dailyDay(now),basis:'server',auto:1,cat:2,raid:3,server:4}};
  const c=selected(['rebirth','fish'],rt,{dailyKillLimit:10,dailyFishLimit:100});
- assert.equal(E.dailyCount(rt,'rebirth',now),10);assert.equal(E.dailyBlocked(c,rt,'rebirth',now),true);assert.equal(E.selectedTask(c,rt,now),'fish');
+ assert.equal(E.dailyCount(rt,'rebirth',now),10);assert.equal(E.dailyBlocked(c,rt,'rebirth',now),true);assert.equal(E.selectedTask(c,rt,now),'rebirth');assert.equal(c.fishMode,false);
  rt.dailyQuota.server=3;assert.equal(E.selectedTask(c,rt,now),'rebirth');
 });
 test('нулевой дневной лимит сохраняет Rebirth, чужие старые сутки не блокируют новый день',()=>{
@@ -44,18 +48,20 @@ test('нулевой дневной лимит сохраняет Rebirth, чу�
  assert.equal(E.selectedTask(selected(['rebirth'],rt,{dailyKillLimit:10}),rt,now),'rebirth');
  rt.dailyQuota.day=E.dailyDay(now);assert.equal(E.selectedTask(selected(['rebirth'],rt,{dailyKillLimit:0}),rt,now),'rebirth');
 });
-test('старый профиль без списка задач временно выключает Rebirth по дневному лимиту и возобновляет в новые сутки',()=>{
+test('старый профиль без списка задач держит отдельный Rebirth при дневном лимите и в новые сутки',()=>{
+ // 20.71: удержание квоты не выключает сам режим, иначе main выбирал чужую работу.
  const raw={...D,rebirthMode:true,taskOnly:false,dailyKillLimit:10};delete raw.autoTasks;
  const rt={dailyQuota:{day:E.dailyDay(),basis:'server',auto:1,cat:2,raid:3,server:4}},c=E.taskConfig(raw,()=>rt);
- assert.equal(c.rebirthMode,false);assert.equal(c.taskOnly,true);assert.equal(raw.rebirthMode,true);assert.equal(raw.taskOnly,false);
+ assert.equal(c.rebirthMode,true);assert.equal(c.taskOnly,false);assert.equal(raw.rebirthMode,true);assert.equal(raw.taskOnly,false);assert.equal(E.dailyBlocked(c,rt,'rebirth'),true);
  rt.dailyQuota.day='2000-01-01';assert.equal(c.rebirthMode,true);assert.equal(c.taskOnly,false);
 });
-test('дневная пауза старого Rebirth не останавливает разрешённую рыбалку, пауза рыбалки не скрывает Rebirth',()=>{
+test('дневная пауза legacy Rebirth не запускает рыбалку, исходные разрешения сохраняются',()=>{
+ // 20.71: оба лимита остаются числовыми ограничениями модулей; чужой режим не запускается автоматически.
  const raw={...D,rebirthMode:true,fishMode:true,taskOnly:false,dailyKillLimit:10,dailyFishLimit:20};delete raw.autoTasks;
  const rt={dailyQuota:{day:E.dailyDay(),basis:'server',auto:10,fish:0}},c=E.taskConfig(raw,()=>rt);
- assert.equal(c.rebirthMode,false);assert.equal(c.fishMode,true);assert.equal(c.taskOnly,false);
+ assert.equal(c.rebirthMode,true);assert.equal(c.fishMode,false);assert.equal(c.taskOnly,false);assert.equal(raw.fishMode,true);
  rt.dailyQuota.auto=0;rt.dailyQuota.fish=20;assert.equal(c.rebirthMode,true);assert.equal(c.fishMode,false);assert.equal(c.taskOnly,false);
- rt.dailyQuota.auto=10;assert.equal(c.taskOnly,true);
+ rt.dailyQuota.auto=10;assert.equal(c.taskOnly,false);assert.equal(c.rebirthMode,true);assert.equal(c.fishMode,false);
 });
 test('новый герой не наследует Rebirth и разрешение расходовать ключи',()=>{
  const raw={autoTasks:['tvt','rebirth','farm','raid','craft'],rebirthMode:true,rebirthAutoEnter:true,rebirthBossChoice:'staff1h',rebirthDifficulty:3,rebirthKeyReserve:10,shopReserve:123};

@@ -5,19 +5,22 @@
  root.L2V7Factories.warlock = function create_warlock(env) {
 const DEF = { petFullAuto: false, petFullBudget: 10000000, petFullMaxPrice: 10000000, petFullReserve: null, petFullRenew: true };
 const number = x => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 ? x : typeof x === 'string' && /^\d+$/.test(x) && Number.isSafeInteger(+x) ? +x : null;
-const option = k => env.cfg[k] ?? DEF[k];
+// 20.71: отдельный поход использует только прежние явные разрешения на суммона, не включает чужие службы.
+const rebirthConfig = () => env.rebirthCfg?.() || null;
+const REBIRTH_OPTIONS = new Set(['petFullAuto','petFullBudget','petFullMaxPrice','petFullReserve','petFullRenew','shopReserve']);
+const option = k => { const own=rebirthConfig();return (own&&REBIRTH_OPTIONS.has(k)?own[k]:env.cfg[k]) ?? DEF[k]; };
 const state = () => env.rt.petFull || {};
 const charName = () => String(env.rt.char || '');
 const mine = T => env.tabOwner === true && T?.lease === env.leaseEpoch && !!T?.char && charName() === T.char && env.heroNick() === T.char;
 const active = () => env.on === true && env.tabOwner === true && option('petFullAuto') === true;
-const priority = afterWin => env.canRun?.() !== false && !env.rt.autoLs?.hold && !env.rt.autoLs?.pending && (!env.isBattle() || (afterWin && env.victory())) && !env.fishState()
+const priority = afterWin => env.canRun?.() !== false && (!env.rt.autoLs?.hold || !!rebirthConfig()) && !env.rt.autoLs?.pending && (!env.isBattle() || (afterWin && env.victory())) && !env.fishState()
   && !env.tvtHold() && !env.abHold() && !env.antibotState() && !env.rt.revive && !env.rt.shop?.urgent;
 // 20.60 (John 24.10: «Убери вообще лимит на Бафф суммонов»; лог 22:13–22:15 — тур РБ ждал «Бюджет автобафа исчерпан»): общий бюджет
 // наборов снят. petFullBudget больше не читается и не входит в ключ ожидания — старое ожидание «бюджет» после обновления снимается сразу.
 // Остались защита цены одного набора, резерв адены и запрет повторной оплаты при неизвестном исходе
 const signature = () => JSON.stringify([option('petFullAuto'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
-const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature() });
-const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
+const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature(), rebirth:!!rebirthConfig() });
+const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && T.rebirth===!!rebirthConfig() && priority(afterWin);
 // 20.43 (разбор 21.10, ревью): каждый срок следующей проверки пишется вместе с ключом, при котором он назначен (waitKey). Иначе после
 // Старта/смены настроек срок из веток «нет кота»/«класс»/«каталог»/«бой»/«ошибка чтения» не совпадал с ключом и не действовал — GET на каждом круге
 const patch = p => env.setRt({ petFull: { ...state(), ...p, ...('nextCheckAt' in p ? { waitKey: waitKey() } : {}) } });
@@ -37,6 +40,7 @@ const golemClass = p => /^(warsmith|maestro)$/.test(fullProf(p));
 let classBusy = false, classReadAt = 0, classRevision = -1, classOwner = '', classSeenKey = '', raidBusy = false, raidProof = null;
 // 23.10.2026, решение игрока: на активном котоводе восстанавливать выключенный автобаф и при повторном снимке, без сброса бюджета.
 async function autoEnableClass(ch) {
+  if (rebirthConfig()) return false; // Подготовка похода не переписывает сохранённый список задач/разрешения игрока.
   if (!env.on || !env.tabOwner || ch?.name !== charName() || ch.name !== env.heroNick()
     || !Number.isSafeInteger(ch.revision) || !Number.isInteger(ch.classSlots?.activeSlot) || !ch.l2Profession) return false;
   const key = `${ch.classSlots.activeSlot}:${classProf(ch.l2Profession)}`, old = env.rt.petClassEntry;
@@ -63,6 +67,7 @@ async function autoEnableClass(ch) {
   } finally { classBusy = false; }
 }
 async function classAutoTick() {
+  if (rebirthConfig()) return false;
   if (!env.on || !env.tabOwner || !charName() || charName() !== env.heroNick() || env.canRun?.() === false || env.isBattle() || Date.now() < classReadAt || classBusy) return false;
   classReadAt = Date.now() + 15000;
   const who = charName(), epoch = env.leaseEpoch;
@@ -120,9 +125,15 @@ function startReady(phase = 'pet') {
 // Родная внебоевая панель сама формирует POST /character/skills/cast; тело запроса не выдумываем.
 async function petPrepare(o = {}) {
   const start = o.reason === 'start', R = start ? PREP.start : PREP.raid, jobKey = R.jobKey, tag = R.tag, wanted = o.wanted || R.wanted;
+  const rebirthPrep = o.returnPath === '/rebirth-raids.html' && !!rebirthConfig(), returnPath = rebirthPrep ? o.returnPath : null;
   // 20.43: buffs:false — только призыв (Старт и тур РБ: кот → баффы героя → баффы кота); продолжение сохранённой задачи берёт её вид.
   const buffs = o.buffs ?? env.rt[jobKey]?.buffs !== false;
   if (raidBusy) return true;
+  // Смена режима отменяет бесплатный native-cast маршрут, а не платёжную квитанцию полного набора.
+  if(env.rt[jobKey]?.rebirth===true&&!rebirthPrep){
+    if(env.tabOwner===true&&env.rt[jobKey].char===charName())await env.setRt({[jobKey]:null});
+    return false;
+  }
   if (!raidManaged()) { if (env.rt[jobKey] && env.tabOwner) await env.setRt({[jobKey]:null}); return false; }
   if (!prepSafe(wanted)) return false;
   if (start) {
@@ -147,7 +158,7 @@ async function petPrepare(o = {}) {
   const who=charName(),epoch=env.leaseEpoch,kick=+env.rt.manualKickAt||0,key=raidClass(),settings=raidSettings();
   const gen=start?startGen():undefined,prepPage=env.nativePanelPath?.();
   const valid=()=>prepSafe(wanted)&&charName()===who&&env.heroNick()===who&&env.leaseEpoch===epoch&&(+env.rt.manualKickAt||0)===kick&&raidClass()===key&&raidSettings()===settings&&(!start||startGen()===gen&&env.nativePanelPath?.()===prepPage);
-  const save=async j=>valid()&&(await env.setRt({[jobKey]:j}))?.ok===true&&await env.rtCommit()&&valid();
+  const save=async j=>valid()&&(await env.setRt({[jobKey]:j&&rebirthPrep?{...j,rebirth:true,ownerMode:'rebirth',prof:env.rt.classCur?.prof,slot:env.rt.classCur?.slot}:j}))?.ok===true&&await env.rtCommit()&&valid();
   const proof=(phase,failed)=>{const P={char:who,classKey:key,settings,kick,gen,phase,failed:!!failed,until:Date.now()+(failed?120000:30000)};if(start)startProof=P;else if(phase==='pet')raidProof=P;else raidSummonProof=P;};
   // Старт: задача идёт без кота (касты бесплатные), призыв и баффы — в бою
   const giveUp=async(J,why)=>{if(!await save(null))return true;proof('pet',true);env.rec?.('B','суммон',tag+': '+why+' — начинаю задачу, призыв и баффы кота будут в бою');
@@ -194,7 +205,7 @@ async function petPrepare(o = {}) {
     noteSnapshot(ch);
     let J=env.rt[jobKey];
     if(J&&(J.char!==who||J.classKey!==key)){await save(null);return true;}
-    if(J&&!J.pending&&(J.settings!==settings||J.kick!==kick||J.buffs!==buffs)){J={...J,settings,kick,buffs};if(!await save(J))return true;}
+    if(J&&(rebirthPrep&&!J.rebirth||returnPath&&J.back!==returnPath||!J.pending&&(J.settings!==settings||J.kick!==kick||J.buffs!==buffs))){J={...J,settings,kick,buffs,...(returnPath?{back:returnPath}:{})};if(!await save(J))return true;}
     const pet=summon(ch),pending=J?.pending;
     if(pending){
       const confirmed=ch.revision>pending.revision&&(pending.kind==='summon'?pet&&+pet.summonSkillId===pending.skillId:pet&&hasNative(ch,pending));
@@ -241,11 +252,11 @@ async function petPrepare(o = {}) {
     }
     const page=env.nativePanelPath?.();
     if(page!=='/skill-panel.html'){
-      const back=env.nativeReturnPath?.()||'/map.html';
+      const back=returnPath||env.nativeReturnPath?.()||'/map.html';
       if(!J){J={char:who,classKey:key,settings,kick,buffs,gen,back,pending:null,t:Date.now()};if(!await save(J))return true;}
       if(valid())env.nativeNavigate?.('/skill-panel.html');return true;
     }
-    if(!J){J={char:who,classKey:key,settings,kick,buffs,gen,back:'/map.html',pending:null,t:Date.now()};if(!await save(J))return true;}
+    if(!J){J={char:who,classKey:key,settings,kick,buffs,gen,back:returnPath||'/map.html',pending:null,t:Date.now()};if(!await save(J))return true;}
     await env.nativePanelOpen?.();if(!valid())return true;
     const panel=env.nativePanel?.(ch)||{},rows=(panel.buffs||[]).filter(x=>!skip.has(x.name));
     // 20.43 (тур РБ): навыка из настроек нет на панели — неполная панель держала цикл без срока; через 2 мин готовим кота тем, что есть
@@ -297,6 +308,26 @@ async function startGiveUp(J, why) {
 }
 const raidPrepare = (o = {}) => petPrepare({ ...o, reason: 'raid' });
 const startPrepare = (o = {}) => petPrepare({ ...o, reason: 'start' });
+let rebirthPrepKey = '';
+// Собственный вызов перед открытием боя: родной призыв/баффы, затем прежний каталог и квитанции полного набора.
+// Полный набор всё так же требует подтверждённого входа в город; сюда не добавляется новый путь оплаты.
+async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth-raids.html' } = {}) {
+  const settings=rebirthConfig();
+  if(!settings||returnPath!=='/rebirth-raids.html'||typeof wanted!=='function'||!wanted()||env.on!==true||env.tabOwner!==true
+    ||env.canAct?.()===false||!priority(afterWin))return false;
+  const owns=()=>!!rebirthConfig()&&wanted();
+  const key=JSON.stringify([charName(),env.leaseEpoch,+env.rt.manualKickAt||0,raidClass(),env.rt.rebirth?.runId||'',returnPath]);
+  if(rebirthPrepKey!==key){rebirthPrepKey=key;startProof=null;startReadAt=null;}
+  if(latestSeen&&latest===null)startProof=null;
+  if(!afterWin&&await petPrepare({reason:'start',buffs:true,wanted:owns,returnPath}))return true;
+  if(!wanted()||!rebirthConfig())return false;
+  if(settings.petFullAuto!==true)return false;
+  const waiting=await step({afterWin});
+  if(!wanted()||!rebirthConfig())return waiting;
+  // На победе панели призыва нет. Проверенный сервером отсутствующий кот готовится в своём каталоге, без нового входа.
+  if(afterWin&&state().status==='pet'&&mine(token())&&priority(true)&&env.canAct?.()!==false){env.nativeNavigate?.(returnPath);return true;}
+  return waiting;
+}
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick() || !Number.isInteger(slot) || !Number.isSafeInteger(ch.revision)) return null;
@@ -501,7 +532,7 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     if (last && ch.revision < last.revision) { await status(T, 'stale', 'Снимок старее последней покупки; жду свежее состояние'); return false; }
     const cap = number(option('petFullMaxPrice'));
-    const reserve = number(option('petFullReserve') ?? env.cfg.shopReserve ?? 0), adena = number(ch.adena);
+    const reserve = number(option('petFullReserve') ?? option('shopReserve') ?? 0), adena = number(ch.adena);
     const fence = S.archiveFence;
     if (fence && (ch.revision < fence.verifiedRevision || Date.now() < fence.possibleUntil)) {
       await status(T, 'archived', 'Неопределённый расход: новый набор — после возможного срока прежнего',
@@ -824,6 +855,6 @@ async function noteBattle(ctx) {
 }
 // 20.43 (ревью au/travel): открытая квитанция перелёта (rt.travelCheck) — занятость, как маршрут zoneGo
 const chainBlocked = () =>!!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.travelCheck || !!env.rt.bagCheck || !!env.rt.revive;
-return { autoEnableClass, classAutoTick, fullClass, raidPrepare, raidReady, raidBlocked, raidHoldUntil, startPrepare, startReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, fullClass, raidPrepare, raidReady, raidBlocked, raidHoldUntil, startPrepare, startReady, rebirthPrepare, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
