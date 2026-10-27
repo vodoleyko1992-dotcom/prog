@@ -26,10 +26,11 @@ let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
 const classProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/, '');
-const catClass = p => /^(warlock|arcana_lord)$/.test(classProf(p));
+// 20.67 (лог 27.10 11:44): после Rebirth Wizard уже призывает Mew/Kat — коту нужен тот же автобаф до второй профессии.
+const catClass = p => /^(wizard|warlock|arcana_lord)$/.test(classProf(p));
 // 20.45 (лог 22.10 09:03, John «не взял бафф на суммона перед РБ»): платный «Повний баф сумона» берёт и голем крафтера
 // (Warsmith / Maestro, Mechanic Golem из набора РБ crafterkit). Раньше задача молча стояла на «нужен класс Warlock…».
-const FULL_CLASS = /^(warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/;
+const FULL_CLASS = /^(wizard|warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/;
 const fullProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^(?:human|dwarf)_/, '');
 const fullClass = p => FULL_CLASS.test(fullProf(p));
 const golemClass = p => /^(warsmith|maestro)$/.test(fullProf(p));
@@ -70,7 +71,7 @@ async function classAutoTick() {
 }
 const raidSettings = () => JSON.stringify([env.cfg.petAuto !== false,env.cfg.petBuffAuto !== false,env.cfg.petSummon || '',env.cfg.nPetBuffs || '']);
 const raidClass = () => `${env.rt.classCur?.slot}:${classProf(env.rt.classCur?.prof || env.rt.prof)}`;
-const raidManaged = () => /^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(classProf(env.rt.classCur?.prof || env.rt.prof)) && env.cfg.petAuto !== false;
+const raidManaged = () => /^(wizard|warlock|arcana_lord|dark_avenger|hell_knight)$/.test(classProf(env.rt.classCur?.prof || env.rt.prof)) && env.cfg.petAuto !== false;
 // 20.43 (лог 21.10 15:47–15:51): общий шаг кота вне боя — тур РБ (raid) и подготовка после Старта (start).
 const PREP = { raid: { jobKey: 'petRaidPrep', tag: 'Перед РБ', wanted: () => env.raidWanted?.() !== false }, start: { jobKey: 'petPrep', tag: 'Старт', wanted: () => env.startPrepWanted?.() === true } };
 const prepSafe = wanted => env.on && env.tabOwner && priority(false) && env.canAct?.() !== false && wanted();
@@ -484,7 +485,7 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     if (!same(T, afterWin)) return false;
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
-    if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord, Dark Avenger / Hell Knight или Warsmith / Maestro', { nextCheckAt: Date.now() + 15000 }); return false; }
+    if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Wizard / Warlock / Arcana Lord, Dark Avenger / Hell Knight или Warsmith / Maestro', { nextCheckAt: Date.now() + 15000 }); return false; }
     noteSnapshot(ch);
     // 20.13 (ревизия 17.10, шаг 5, аудит combat/C10): без nextCheckAt бой на сервере давал GET /character на каждом тике главного цикла
     if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя', { nextCheckAt: Date.now() + 10000 }); return false; }

@@ -3847,7 +3847,7 @@ const START_PREP_MS = 120000;
 const START_PREP_TASK = { cat: 'катакомбы', auto: 'автофарм', farm: 'фарм', quests: 'квесты' };
 function startPrepTask() { const t = L2EngineCore.selectedTask(cfg, rt); if (t != null) return t; const m = autonomyMode(); return m === 'campaign' ? 'quests' : m; }
 function startPrepProf() { return String(rt.classCur?.prof || rt.prof || '').trim().toLowerCase().replace(/[ -]+/g, '_').replace(/^human_/, ''); }
-function startPrepEligible() { return cfg.petAuto !== false && /^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(startPrepProf()) && Object.hasOwn(START_PREP_TASK, startPrepTask()); }
+function startPrepEligible() { return cfg.petAuto !== false && /^(wizard|warlock|arcana_lord|dark_avenger|hell_knight)$/.test(startPrepProf()) && Object.hasOwn(START_PREP_TASK, startPrepTask()); }
 function startPrepKey() { return { char: rt.char || '', classKey: `${rt.classCur?.slot}:${startPrepProf()}`, start: +rt.dailyStart || 0, task: startPrepTask() }; }
 function startPrepSame(S, K = startPrepKey()) { return !!S && S.char === K.char && S.classKey === K.classKey && S.start === K.start && S.task === K.task; }
 function startPrepWanted() {
