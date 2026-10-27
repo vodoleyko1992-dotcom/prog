@@ -2439,7 +2439,7 @@ async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...
 // Только фарм на месте: при выбранном туре cfg.zoneAuto/catMode остаются false, автофарм и катакомбы (платные перелёты) по-прежнему ждут.
 const raidIdleFarm = () => Array.isArray(cfg.autoTasks) && L2EngineCore.selectedTask(cfg,rt) === 'raid' && L2EngineCore.taskAllowed(cfg,'farm');
 async function map(...args) {
-  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !raidIdleFarm() && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
+  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn() && !campCompletionWait()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !raidIdleFarm() && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
   if(!await dailyWorkReady('mobs'))return;
   return L2V7Modules.mobfarm.map(...args);
 }
@@ -2536,6 +2536,8 @@ const isCampaignPage = (...args) => L2V7Modules.quests.isCampaignPage(...args);
 const isQuests = (...args) => L2V7Modules.quests.isQuests(...args);
 // «Проверить кампанию сейчас» при выключенной Кампании — разовое чтение главы (campOnce): без телепортов и сдачи, потом обратно на охоту
 const campOn = (...args) => (!Array.isArray(cfg.autoTasks) || L2EngineCore.selectedTask(cfg,rt) === 'quests') && L2V7Modules.quests.campOn(...args);
+// 20.68 (лог27.10 12:46): пока сдача главы недоступна, выбранные квесты продолжают обычную охоту на текущей карте.
+const campCompletionWait = () => (!Array.isArray(cfg.autoTasks) || L2EngineCore.selectedTask(cfg,rt) === 'quests') && L2V7Modules.quests.campCompletionWait?.();
 async function goCampaign(...args) { return L2V7Modules.quests.goCampaign(...args); }
 // «Персонаж → Мои квесты»: список активных кампаний (Клятва Гирана, Тень над Дионом…) — надёжнее письма в почте
 async function questsStep(...args) { return L2V7Modules.quests.questsStep(...args); }
@@ -4027,7 +4029,7 @@ async function loopActivity() {
   else if (campOn() && isQuests() && rt.campaignDue) await questsStep();
   // 10.0 (игрок 12.10: «кнопка старт без быстрого режима… не все задачи стоят на быстром режиме»): режим не выбран — бот делает только
   // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
-  else if (Array.isArray(cfg.autoTasks) && autonomyMode() === 'campaign' && !campOn()) await tasksIdle();
+  else if (Array.isArray(cfg.autoTasks) && autonomyMode() === 'campaign' && !campOn() && !campCompletionWait()) await tasksIdle();
   else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
   else if (autonomyMode() === 'tasks' && (tasksGoalNote(lootGoal()), isMap())) await map();   // 10.0.5: на чужой точке map() не бьёт, ждёт перелёта
   else if (location.pathname === '/ashen-bastion.html' && autonomyMode() === 'farm') await L2V7Modules.mobfarm.ashenStep();

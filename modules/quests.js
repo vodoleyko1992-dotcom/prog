@@ -170,7 +170,7 @@ const activeDion = () => env.rt.dionCampaign?.stage === 'active' && !env.rt.dion
 function resetChapter(url) {
   return { campaign: null, campaignUrl: url, campaignDue: true, sinceCamp: 0, questListT: 0,
     qAlias: {}, quests: {}, questTargets: [], questSeen: {}, needChamps: false, lastTeleport: '',
-    campEmptyPage: 0, campSkipUntil: 0, campActTry: 0, campOpenTry: 0, npcTried: 0 };
+    campEmptyPage: 0, campSkipUntil: 0, campActTry: 0, campOpenTry: 0, npcTried: 0, campCompletionWait: null };
 }
 function dionNote(q) {
   if (!q || !['not_started', 'active', 'completed'].includes(q.stage)) return;
@@ -179,7 +179,9 @@ function dionNote(q) {
   // Поздний ответ карты не возвращает уже сданную главу и завершённую цепочку.
   if (old && (chapter < old.chapter || old.completed && !(q.completed || q.stage === 'completed') || old.stage === 'active' && q.stage === 'not_started')) return;
   const S = { stage: q.stage, completed: !!q.completed || q.stage === 'completed', chapter,
-    title: q.chapterTitleRu || q.chapterTitleUk || q.titleRu || '', minLevel: +q.minLevel || 20, t: Date.now() };
+    title: q.chapterTitleRu || q.chapterTitleUk || q.titleRu || '', minLevel: +q.minLevel || 20, t: Date.now(),
+    level: Number.isSafeInteger(q.level) && q.level > 0 ? q.level : null, atNpc: typeof q.location?.atNpc === 'boolean' ? q.location.atNpc : null,
+    owner: JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null]) };
   const changed = !old || old.stage !== S.stage || old.chapter !== chapter || old.completed !== S.completed;
   const take = S.stage === 'active' && !S.completed && (changed || campPath() !== DION);
   env.setRt({ dionCampaign: S, ...(take ? resetChapter(DION) : S.completed && campPath() === DION ? resetChapter('') : {}) });
@@ -214,7 +216,26 @@ function campAuto() {
 }
 const campEnabled  = () => !!env.cfg.campaign || campAuto();
 
-const campActive   = () => campEnabled() && (env.rt.campaign?.targets || []).length > 0;
+// 27.10.2026 (лог 02:46): глава9 готова, но герой35/minLevel36 уже у NPC. Ожидание не превращает каждую победу в новую сдачу.
+const CAMP_COMPLETE_RETRY = 120000, CAMP_STATE_FRESH = 60000;
+const campCompletionOwner = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || env.rt.prof || '', env.rt.classCur?.slot ?? null]);
+const campCompletionKey = () => JSON.stringify([campCompletionOwner(), campPath(), chapterKey(), +env.rt.manualKickAt || 0]);
+function completionDion() {
+  const D=env.rt.dionCampaign,now=Date.now();
+  return campPath()===DION && D?.stage==='active' && !D.completed && D.owner===campCompletionOwner() && D.t<=now+1000 && now-D.t<=CAMP_STATE_FRESH ? D : null;
+}
+function campCompletionWait() {
+  const W=env.rt.campCompletionWait;if(!W || !campEnabled() || W.key!==campCompletionKey())return null;
+  const button=location.pathname===campPath() && env.$q('[data-action="complete-chapter"]');
+  if(button && !button.disabled && env.shown(button))return null; // живая кнопка важнее прежнего предположения об уровне
+  if(W.kind==='level') {
+    const D=completionDion();if(D && D.minLevel!==W.minLevel)return null;
+    const level=Math.max(+env.heroLvl?.()||0,D?.level||0);
+    return Number.isSafeInteger(W.minLevel) && W.minLevel>0 && level<W.minLevel ? W : null;
+  }
+  return W.kind==='retry' && Number.isFinite(W.until) && W.until>Date.now() ? W : null;
+}
+const campActive   = () => campEnabled() && !campCompletionWait() && (env.rt.campaign?.targets || []).length > 0;
 
 const campOpen     = () => (env.rt.campaign?.targets || []).filter(t => !t.ok);
 
@@ -229,7 +250,7 @@ const campChampMin  = () => campActive() ? Math.max(0, ...campOpen().filter(t =>
 function isQuestName(name, mapQuest = env.rt.questTargets || []) {   // моб — цель: по метке ★ карты или по условиям главы
   const n = (name || '').toLowerCase();
   if (!n) return false;
-  if (campActive()) {
+  if (campEnabled() && (env.rt.campaign?.targets || []).length) { // ожидание сдачи не возвращает готовым целям старые ★ метки карты
     const t = env.rt.campaign.targets.find(x => !x.objective && x.name.toLowerCase() === n);
     if (t) return !t.ok;                         // цель главы уже выполнена — больше не приоритет
   }
@@ -332,7 +353,7 @@ const isCampaignPage = () => !!env.rt.campaignUrl && location.pathname === env.r
 
 const isQuests = () => /\/character-quests\.html/i.test(location.pathname);
 
-const campOn = () => (campEnabled() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
+const campOn = () => (campEnabled() && !campCompletionWait() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
 
 // 23.10.2026, лог 12:47–12:48: Noblesse выбирался первым в «Мои квесты», но общая кампания не знает его DOM.
 // Готовые части Noblesse/сабкласса сдаёт story, а ★ цели продолжаем бить на карте без отключения режима квестов.
@@ -351,6 +372,7 @@ async function separateHunt(active, list) {
 
 async function goCampaign() {
   const active = campGuard(false); if (!active()) return;
+  if(campCompletionWait() && !(env.rt.campOnce && env.rt.campaignDue))return;
   if (staleCampaignPage()) return leaveOldCampaign();
   if (activeDion() && campPath() !== DION) await env.setRt(resetChapter(DION));
   if (env.isCampaign() || /\/starter-story-quest\.html$/i.test(location.pathname)) return campaign();
@@ -537,8 +559,9 @@ function campaignState() {
 }
 
 async function campaign() {
-  const active = campGuard(false);
+  const guarded=campGuard(false),owner=campCompletionOwner(),active=()=>guarded()&&campCompletionOwner()===owner;
   if (!active()) return;
+  if(campCompletionWait() && !(env.rt.campOnce && env.rt.campaignDue))return;
   if (staleCampaignPage()) return leaveOldCampaign();
   if (/teleport=/i.test(location.search)) {
     env.setStatus('Кампания: жду телепорт к NPC (страница перезагрузится)');
@@ -596,6 +619,8 @@ async function campaign() {
   }
   if (env.rt.campEmptyPage) await env.setRt({ campEmptyPage: 0, campSkipUntil: 0 });
   if (env.shown(st.complete)) {                      // все цели выполнены → «Завершить главу»
+    if(env.rt.campCompletionWait)await env.setRt({campCompletionWait:null});
+    if(!active())return;
     const was = st.title;
     env.setStatus(`Кампания: завершаю «${was}»`);
     await env.pause();
@@ -636,6 +661,16 @@ async function campaign() {
   if (!active()) return;
   if (!st.targets.length) { env.setStatus('Кампания: целей нет (кампания пройдена?)'); return env.goOutskirts(); }
   if (!open.length) {
+    const D=completionDion(),level=Math.max(+env.heroLvl?.()||0,D?.level||0);
+    const levelWait=D && D.level>0 && Number.isSafeInteger(D.minLevel) && D.minLevel>level;
+    const wait=async()=>{
+      if(!active())return;
+      const W={key:campCompletionKey(),kind:levelWait?'level':'retry',t:Date.now(),...(levelWait?{minLevel:D.minLevel}:{until:Date.now()+CAMP_COMPLETE_RETRY})};
+      await env.setRt({campCompletionWait:W,campaignDue:false,sinceCamp:0,campOnce:false});if(!active())return;
+      env.setStatus(levelWait?`Кампания: цели выполнены; герой ${level} ур., в данных главы указан ${D.minLevel} — продолжаю охоту до нового уровня`:'Кампания: цели выполнены, кнопки завершения нет — продолжаю охоту; проверю через 2 мин');
+      return env.goOutskirts();
+    };
+    if(levelWait || D?.atNpc===true)return wait();
     // всё выполнено, а «Завершить этап» нет — кнопка появляется только у NPC главы: «К NPC» → снова открыть главу
     const npc = [...document.querySelectorAll('[data-quest-teleport-id], [data-quest-transport-id]')].find(b => /npc/i.test(b.textContent))
       || env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]');
@@ -648,7 +683,7 @@ async function campaign() {
       if (active()) { location.href = env.rt.campaignUrl || location.pathname; await env.sleep(4000); }
       return;
     }
-    env.setStatus('Кампания: цели выполнены, кнопки завершения нет — проверю позже'); return env.goOutskirts();
+    return wait();
   }
   env.rec('B', 'кампания', `${st.title}: ` + open.map(t => `${t.name} ${t.done}/${t.total}${t.loc ? ' @' + t.loc : ''}`).join(' · '));
   // телепорт к локации первой невыполненной цели (если ещё не там)
@@ -661,6 +696,6 @@ async function campaign() {
   }
   return env.goOutskirts();
 }
- return { campLocationNote, campLocationStep, campReached, campTeleport, campGuard, questLinesInLog, sagaNote, dionNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
+ return { campLocationNote, campLocationStep, campReached, campTeleport, campGuard, questLinesInLog, sagaNote, dionNote, campAuto, campEnabled, campCompletionWait, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
  };
 })(globalThis);

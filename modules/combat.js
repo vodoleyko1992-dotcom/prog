@@ -2867,7 +2867,7 @@ async function hpChampionProof(name, urlSpawn, max, cameVia) {
   const target = () => JSON.stringify([env.rt.target?.id, env.rt.target?.spawnId, env.rt.target?.name, !!env.rt.target?.champ, env.rt.target?.tier]);
   const target0 = target(), tier = () => cameVia === 'chain' ? '' : env.champTier?.(urlSpawn, null, '') || '';
   const owner = env.evidenceOwner?.(), exit = env.battleExitContext?.(), generation = env.actionGeneration?.();
-  const meta = JSON.stringify(env.battleInfo?.() || null), key = JSON.stringify([char, prof, slot, owner, exit, generation, page, name, max]);
+  const meta = JSON.stringify(env.battleInfo?.() || null), key = JSON.stringify([char, prof, slot, owner, exit, generation, page, name, max, title, level, target0]);
   const current = (clearedTarget = false) => env.on && env.tabOwner === true && env.canAct?.() !== false && env.heroNick?.() === char
     && env.rt.char === char && env.rt.classCur?.prof === prof && env.rt.classCur?.slot === slot && location.href === page
     && env.evidenceOwner?.() === owner && env.battleExitContext?.() === exit && env.actionGeneration?.() === generation
@@ -2881,42 +2881,66 @@ async function hpChampionProof(name, urlSpawn, max, cameVia) {
   };
   if (!current()) return null;
   if (hpProofWait?.key === key && (hpProofWait.busy || Date.now() < hpProofWait.until)) return wait();
-  const probe = hpProofWait = { key, until: Date.now() + 15000, busy: true };
+  // 20.68 (разбор лога 27.10 12:45): один сбой собственного GET мог держать бой 60 с без повтора и причины в журнале.
+  // Временные ошибки повторяем через 3/6/12 с; неполные данные по-прежнему не разрешают удар и ждут 15 с.
+  const previous = hpProofWait?.key === key ? hpProofWait : null;
+  const probe = hpProofWait = { key, until: Date.now() + 15000, busy: true, failures: previous?.failures || 0, notes: { ...previous?.notes } };
+  const reject = async (code, reason, transient = false) => {
+    // Старый ответ после нового поколения/цели не меняет ожидание и диагностику новой сверки.
+    if (hpProofWait !== probe || !current()) return null;
+    if (transient) { probe.failures = Math.min(3, probe.failures + 1); probe.until = Date.now() + 3000 * 2 ** (probe.failures - 1); }
+    if (!(code in probe.notes) || Date.now() - probe.notes[code] >= 60000) {
+      probe.notes[code] = Date.now();
+      try { env.rec?.('B', 'сверка боя', `Тип цели по HP не подтверждён: ${reason} — повтор через ${Math.max(1, Math.ceil((probe.until - Date.now()) / 1000))} с`); }
+      catch (_) { env.quietErr?.('диагностика сверки боя', new Error('Не удалось записать причину сверки боя')); }
+    }
+    return wait();
+  };
+  const http = r => Number.isInteger(r?.status) && r.status >= 100 && r.status <= 599 ? ' HTTP ' + r.status : '';
+  let reading = 'памяти';
   const special = x => !!x && (['pvp', 'isPvp', 'inPvp', 'tvt', 'isTvt', 'inTvt'].some(k => x[k] === true)
     || ['battleMode', 'battleType', 'mode', 'kind', 'type'].some(k => /^(?:pvp|tvt)(?:_|-|:|$)/i.test(String(x[k] || ''))));
   const own = (c, min, id) => c?.name === char && (!id || c.id === id) && c.l2Profession === prof && c.classSlots?.activeSlot === slot && c.level === level
     && Number.isSafeInteger(c.revision) && c.revision >= min && c.inBattle === true && !special(c);
   try {
     if (!char || !prof || !Number.isInteger(slot) || slot < 0 || !(level > 0 && mobLevel > 0) || !owner || !exit || !Number.isFinite(generation)
-        || typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return wait();
+        || typeof env.gameGet !== 'function') return reject('context', 'контекст героя или цели неполный');
+    if (!await env.rtCommit?.()) return reject('storage', 'состояние не сохранено');
+    if (!current()) return null;
+    reading = 'персонажа';
     const first = await env.gameGet('/character', 4000);
     if (!current()) return null;
-    if (!first.ok) { probe.until = Date.now() + 60000; return wait(); }
+    if (!first.ok) return reject('http-character' + http(first), 'ответ персонажа' + http(first), true);
     const snapshot = await first.json();
     if (!current()) return null;
     const ch = snapshot?.character || snapshot, sid = ch?.battleSpawnId, id = ch?.id;
-    if (snapshot?.error || snapshot?.ok === false || special(snapshot) || !own(ch, 0) || typeof id !== 'string' || !id
-        || typeof sid !== 'string' || !/^[a-z0-9][a-z0-9_.:-]{0,199}$/i.test(sid)
-        || /^(?:pvp|tvt)(?:_|-|:|$)/i.test(sid) || cameVia !== 'chain' && sid !== urlSpawn) return wait();
+    if (snapshot?.error || snapshot?.ok === false) return reject('character-error', 'сервер не подтвердил состояние персонажа');
+    if (special(snapshot) || !own(ch, 0) || typeof id !== 'string' || !id) return reject('character-identity', 'герой, класс, ревизия или активный PvE-бой не совпали');
+    if (typeof sid !== 'string' || !/^[a-z0-9][a-z0-9_.:-]{0,199}$/i.test(sid)
+        || /^(?:pvp|tvt)(?:_|-|:|$)/i.test(sid) || cameVia !== 'chain' && sid !== urlSpawn) return reject('character-spawn', 'текущая цель персонажа не подтверждена');
+    reading = 'боя';
     const response = await env.gameGet('/game/battle?characterId=' + encodeURIComponent(id) + '&spawnId=' + encodeURIComponent(sid), 4000);
     if (!current()) return null;
-    if (!response.ok) { probe.until = Date.now() + 60000; return wait(); }
+    if (!response.ok) return reject('http-battle' + http(response), 'ответ боя' + http(response), true);
     const data = await response.json();
     if (!current()) return null;
     const c = data?.character, b = data?.battle;
-    if (data?.error || data?.ok === false || !own(c, ch.revision, id) || c.battleSpawnId != null && c.battleSpawnId !== '' && c.battleSpawnId !== sid
-        || !b || b.spawnId !== sid || String(b.mobName || '').trim().toLowerCase() !== name || b.mobMaxHp !== max || b.mobLevel !== mobLevel
-        || !Number.isFinite(b.mobHp) || b.mobHp <= 0 || b.mobHp > max || b.ended === true || b.finished === true
-        || data.victory || data.defeat || /^(?:ended|finished|victory|defeat)$/i.test(String(b.status || b.state || ''))
-        || special(data) || special(b)) return wait();
+    if (data?.error || data?.ok === false) return reject('battle-error', 'сервер не подтвердил состояние боя');
+    if (!own(c, ch.revision, id) || c.battleSpawnId != null && c.battleSpawnId !== '' && c.battleSpawnId !== sid) return reject('battle-identity', 'снимок боя не подтвердил героя, ревизию или его цель');
+    if (!b || b.spawnId !== sid || String(b.mobName || '').trim().toLowerCase() !== name || b.mobMaxHp !== max || b.mobLevel !== mobLevel
+        || !Number.isFinite(b.mobHp) || b.mobHp <= 0 || b.mobHp > max) return reject('battle-target', 'цель, уровень или HP в снимке боя не совпали');
+    if (b.ended === true || b.finished === true || data.victory || data.defeat || /^(?:ended|finished|victory|defeat)$/i.test(String(b.status || b.state || ''))
+        || special(data) || special(b)) return reject('battle-state', 'живой PvE-бой не подтверждён');
     const ordinary = /^(?:normal|passive|neutral|aggressive)$/.test(b.kind || '');
-    if (!ordinary && b.kind !== 'champion') return wait();
+    if (!ordinary && b.kind !== 'champion') return reject('battle-kind', 'серверный тип цели неизвестен');
     const raw = String(b.championTier || '').toLowerCase(), tier = ({ green: 'blue', yellow: 'orange' })[raw] || raw
       || (/^champ_o_/i.test(sid) ? 'orange' : /^champ_r_/i.test(sid) ? 'red' : '');
     const champ = b.kind === 'champion' || !!tier || /^champ_[or]_/i.test(sid);
-    if (champ && !['blue', 'orange', 'red'].includes(tier)) return wait();
+    if (champ && !['blue', 'orange', 'red'].includes(tier)) return reject('champion-tier', 'цвет чемпиона неизвестен');
+    if (hpProofWait !== probe) return null;
+    probe.failures = 0; probe.until = 0;
     return { spawn: sid, tier, ordinary: ordinary && !champ, lvl: b.mobLevel, champ, current };
-  } catch (_) { probe.until = Date.now() + 60000; return wait(); }
+  } catch (_) { return reject('read-' + reading, 'ошибка чтения ' + reading, true); }
   finally { probe.busy = false; }
 }
 
