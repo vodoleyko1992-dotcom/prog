@@ -7,7 +7,7 @@ const RUN='11111111-1111-4111-8111-111111111111',HERO='22222222-2222-4222-8222-2
 const sid=n=>'rebirth_raid_'+RUN+'_1_1_25146_mob_'+n,clone=x=>structuredClone(x);
 function fixture(o={}){
  const f=flowFixture('fighter'),e=f.env,posts=[],routes=[],checks=[],ss=o.ss||new Map();
- const state={now:1793000000000,hero:'Hero',mode:'farm',generation:1,canAct:true,challenge:null,pvp:false,tvt:false,tvtStep:false,tvtHold:false,
+ const state={now:1793000000000,hero:'Hero',mode:o.mode||'rebirth',generation:1,canAct:true,challenge:null,pvp:false,tvt:false,tvtStep:false,tvtHold:false,
   quota:true,quotaCalls:[],hooks:{},nativeClicks:0,nativeRequests:[],nextSpawn:sid(23),accepted:true,services:[],commits:0,saveOk:true,saveAck:true};
  f.box.Date=class extends Date{static now(){return state.now}};
  f.box.sessionStorage={getItem:k=>ss.get(k)||null,setItem:(k,v)=>ss.set(k,String(v)),removeItem:k=>ss.delete(k)};
@@ -19,19 +19,19 @@ function fixture(o={}){
  f.location.pathname='/battle.html';f.location.search='?spawnId='+(o.spawn||sid(19));
  let origin='https://l2wap.com',hash='';Object.defineProperty(f.location,'href',{get:()=>origin+f.location.pathname+f.location.search+hash,
   set:v=>{const u=new URL(v,'https://l2wap.com');origin=u.origin;hash=u.hash;f.location.pathname=u.pathname;f.location.search=u.search}});
- Object.assign(e.cfg,{catMode:false,deepEvery:20,chain:true});
+ Object.assign(e.cfg,{catMode:false,deepEvery:20,chain:true,rebirthMode:true});
  Object.assign(e.rt,{char:'Hero',lvl:21,classCur:{prof:'human_wizard',slot:0},manualKickAt:1,catIn:'witch',sinceDeep:200,deepHot:false,via:'manual'});
  Object.assign(e,{routeLocation:f.location,heroNick:()=>state.hero,heroLvl:()=>e.rt.lvl,autonomyMode:()=>state.mode,actionGeneration:()=>state.generation,leaseEpoch:'lease-1',
   campOn:()=>false,campEnabled:()=>false,campActive:()=>false,
   campMobOpen:()=>[],campChampOpen:()=>false,campRbOpen:()=>[],searchActive:()=>true,rbDue:()=>false,
   catGo:async()=>routes.push('catGo'),catNext:async()=>routes.push('catNext'),
   gamePost:async(p,b)=>{posts.push({p,b});throw Error('новый вход/ключ вне разрешённого сценария')},
-  canAct:()=>state.canAct,nativePending:()=>!!state.nativePending,antibotState:()=>state.challenge,pvpPending:()=>state.pvp,pvpRecoveryStep:async()=>routes.push('pvp'),
+  canAct:()=>state.canAct,canRun:()=>state.mode==='rebirth'&&!state.tvt&&!state.challenge&&!state.pvp,nativePending:()=>!!state.nativePending,antibotState:()=>state.challenge,pvpPending:()=>state.pvp,pvpRecoveryStep:async()=>routes.push('pvp'),
   tvtSoon:()=>state.tvt,tvtStep:async()=>{await state.hooks.tvt?.();return state.tvtStep},tvtHoldWait:async()=>state.tvtHold,
   dailyWorkReady:async task=>{state.quotaCalls.push(task);await state.hooks.quota?.(state.quotaCalls.length);return state.quota},
   rtCommit:async()=>{state.commits++;await state.hooks.commit?.();return state.saveOk},
   magisterAfterWin:async()=>{state.services.push('magister');return false},warlock:{step:async()=>state.services.push('warlock'),chainBlocked:()=>false}});
- state.character={id:HERO,name:'Hero',level:21,l2Profession:'human_wizard',classSlots:{activeSlot:0},revision:100,inBattle:false,rebirthStage:1};
+ state.character={id:HERO,name:'Hero',level:21,l2Profession:'human_wizard',classSlots:{activeSlot:0},revision:100,inBattle:false,rebirthStage:1,hp:1000};
  state.instance={enabled:true,rebirthStage:1,activeRun:{id:RUN,difficulty:1,phase:'mobs',mobKillTarget:300,mobKills:20,
   participantCharacterIds:[HERO],partyId:null,referenceBossSpawnId:'l2dop_rb_25146',referenceBossLevel:21}};
  state.meta={t:state.now,spawn:o.spawn||sid(19),name:'Rebirth · Akaste Succubus Turen',kind:'dungeon',lvl:21,max:7128};
@@ -58,6 +58,9 @@ function fixture(o={}){
   campRbOpen:()=>[],searchActive:()=>true};
  vm.runInNewContext(source.slice(source.indexOf('const deepN ='),source.indexOf('// цепочка сама'))+';this.api={deepN,mapDue};',policy);
  Object.assign(e,policy.api);f.setWon(o.won===true);
+ // 20.71: реальные проверки продолжения теперь принадлежат отдельному Rebirth-модулю.
+ vm.runInContext(read('modules/rebirth.js'),f.box);const rebirth=f.box.L2V7Factories.rebirth(e);
+ e.rebirthNext=ctx=>rebirth.nextFight(ctx);e.rebirthReturn=async(valid=()=>true)=>{if(e.victory()&&valid())routes.push('rebirthReturn');};
  return{...f,state,ss,posts,routes,checks,run:ctx=>f.farm.nextFight(ctx),context:{name:'Rebirth · Akaste Succubus Turen',spawnId:o.spawn||sid(19),killed:[],champ:false}};
 }
 
@@ -105,29 +108,40 @@ test('нужна точная identity победы; URL run без свежей
  }
 });
 
-test('Rebirth не становится обычными катакомбами при catMode и старом catIn',async()=>{
+test('20.71: режим катакомб не управляет Rebirth даже со старым catIn',async()=>{
  for(const won of [false,true]){const f=fixture({won});f.env.cfg.catMode=true;f.env.cfg.catDungeon='witch';f.state.mode='cat';
   await f.run(f.context);assert.deepEqual(f.routes,[]);assert.equal(f.env.rt.catIn,'witch');assert.equal(f.env.cfg.catDungeon,'witch');
-  assert.equal(f.state.nativeClicks,won?1:0);assert.equal(f.posts.length,0);assert.equal(f.events.includes('map'),false)}
+  assert.equal(f.state.nativeClicks,0,'отдельный режим Rebirth не выбран');assert.equal(f.posts.length,0);assert.equal(f.events.includes('map'),false)}
 });
 
-test('chain false и отсутствие/disabled native-кнопки не лечатся картой или повторным входом',async()=>{
- for(const change of [f=>{f.env.cfg.chain=false},f=>{f.state.noButton=true},f=>{f.hunt.disabled=true}]){
-  const f=fixture({won:true});change(f);await f.run(f.context);assert.equal(f.state.nativeClicks,0);assert.equal(f.events.includes('map'),false);assert.equal(f.posts.length,0);assert.deepEqual(f.routes,[]);
+test('20.71: обычная охота не продолжает оплаченный поход вместо отдельного режима',async()=>{
+ const f=fixture({won:true,mode:'farm'});await f.run(f.context);
+ assert.equal(f.state.nativeClicks,0);assert.deepEqual(f.checks,[]);assert.deepEqual(f.routes,[]);assert.equal(f.posts.length,0);
+});
+
+test('20.71: обычная галка chain не выключает продолжение отдельного Rebirth',async()=>{
+ const f=fixture({won:true});f.env.cfg.chain=false;await f.run(f.context);
+ assert.equal(f.state.nativeClicks,1);assert.equal(f.events.includes('map'),false);assert.equal(f.posts.length,0);assert.deepEqual(f.routes,[]);
+});
+
+test('20.71: отсутствие/disabled native-кнопки возвращает в свой поход без нового входа',async()=>{
+ for(const change of [f=>{f.state.noButton=true},f=>{f.hunt.disabled=true}]){
+  const f=fixture({won:true});change(f);await f.run(f.context);assert.equal(f.state.nativeClicks,0);assert.equal(f.events.includes('map'),false);assert.equal(f.posts.length,0);
+  assert.deepEqual(f.routes,['rebirthReturn'],'продолжение восстанавливает только страницу собственного подземелья');
  }
 });
 
 test('чужой/неполный character и отсутствие собственного activeRun не разрешают продолжение',async()=>{
  const changes={hero:f=>{f.state.character.name='Other'},id:f=>{f.state.character.id=''},class:f=>{f.state.character.l2Profession='human_warlock'},
   slot:f=>{f.state.character.classSlots.activeSlot=1},missingSlot:f=>{delete f.state.character.classSlots.activeSlot},revision:f=>{delete f.state.character.revision},
-  activeBattle:f=>{f.state.character.inBattle=true},notRebirth:f=>{f.state.character.rebirthStage=0},
+  activeBattle:f=>{f.state.character.inBattle=true},notRebirth:f=>{f.state.character.rebirthStage=0},deadHero:f=>{f.state.character.hp=0},
   noRun:f=>{f.state.instance.activeRun=null},otherRun:f=>{f.state.instance.activeRun.id='33333333-3333-4333-8333-333333333333'},
   foreignParticipant:f=>{f.state.instance.activeRun.participantCharacterIds=['other']},missingParticipants:f=>{delete f.state.instance.activeRun.participantCharacterIds},
   disabled:f=>{f.state.instance.enabled=false},unknownPhase:f=>{f.state.instance.activeRun.phase='unknown'},
   finished:f=>{f.state.instance.activeRun.phase='completed'},error:f=>{f.state.instance.error='unavailable'}};
  for(const [label,change] of Object.entries(changes)){
   const f=fixture({won:true});change(f);await f.run(f.context);assert.equal(f.state.nativeClicks,0,label);
-  assert.equal(f.events.includes('map'),false,label);assert.equal(f.posts.length,0,label);assert.deepEqual(f.routes,[],label);
+  assert.equal(f.events.includes('map'),false,label);assert.equal(f.posts.length,0,label);assert.deepEqual(f.routes,['unknownPhase','finished'].includes(label)?['rebirthReturn']:[],label+' сохраняет запрет нового боя/входа');
  }
 });
 
@@ -160,16 +174,15 @@ test('quota, TvT и уже отправленный native-запрос сохр
  const live=fixture();live.state.quota=false;await live.run(live.context);assert.equal(live.events.includes('map'),false);assert.equal(live.state.nativeClicks,0);
 });
 
-test('настоящий nativePending игнорирует chat/events и чужого владельца, учитывает next/start/hunt/action',()=>{
- const content=read('content.js'),at=content.indexOf('get nativePending() {');assert.ok(at>=0);
- const end=content.indexOf('get warlock()',at);assert.ok(end>at);
- const declaration=content.slice(at,end);
+test('20.71: настоящий Rebirth nativePending игнорирует chat/events и чужого владельца, учитывает next/start/hunt/action',()=>{
+ const content=read('content.js'),at=content.indexOf('L2V7Modules.rebirth = L2V7Factories.rebirth({');assert.ok(at>=0);
+ const declaration=content.slice(at).match(/get nativePending\(\)\{return ([^\n]+)\}/)?.[1];assert.ok(declaration);
  const box={NET_CONTEXT:new Map(),rt:{char:'Hero'},leaseEpoch:'lease-1'};
- const pending=vm.runInNewContext('({'+declaration+'}).nativePending',box);
+ const pending=vm.runInNewContext('('+declaration+')',box);
  for(const path of ['/chat','/game/chat','/game/events','/events','/character','/game/battle','/character/mail']){
   box.NET_CONTEXT.clear();box.NET_CONTEXT.set(1,{char:'Hero',lease:'lease-1',path});assert.equal(pending(),false,path);
  }
- for(const path of ['/game/rebirth-raids/next','/game/battle/start','/game/battle/hunt-continue','/game/battle/action']){
+ for(const path of ['/game/rebirth-raids/start','/game/rebirth-raids/next','/game/rebirth-raids/enter-boss','/game/battle/start','/game/battle/hunt-continue','/game/battle/action']){
   for(const [char,lease,expected] of [['Hero','lease-1',true],['Other','lease-1',false],['Hero','lease-2',false]]){
    box.NET_CONTEXT.clear();box.NET_CONTEXT.set(1,{char,lease,path});assert.equal(pending(),expected,path+'/'+char+'/'+lease);
   }
@@ -217,7 +230,7 @@ test('sdms-подземелья сохраняют прежнюю native-цеп�
 });
 
 test('обычный открытый бой сохраняет прежнюю политику карты',async()=>{
- const f=fixture({spawn:'dense_5598'});await f.run(f.context);assert.equal(f.events.includes('map'),true);assert.equal(f.posts.length,0);
+ const f=fixture({spawn:'dense_5598',mode:'farm'});await f.run(f.context);assert.equal(f.events.includes('map'),true);assert.equal(f.posts.length,0);
 });
 
 test('старый nextFight после victory19 не перекрывает вручную начатый живой mob20',async()=>{

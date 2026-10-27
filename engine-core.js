@@ -106,11 +106,11 @@
   // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
   // combat remain higher-priority interrupts in the content-script dispatcher.
   function chooseMode({ enchant = false, craft = false, epic = false, raid = false, rebirth = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
+    if (rebirth) return 'rebirth'; // 20.71: выбранные подземелья не уступают старым флагам других режимов.
     if (enchant) return 'enchant'; // 15.10: отдельный режим сильнее старых флагов импортированного профиля.
     if (craft) return 'craft'; // 22.10: отдельный режим использует очередь материалов и МП-банки.
     if (epic) return 'epic';
     if (raid) return 'raid';
-    if (rebirth) return 'rebirth';
     if (fish) return 'fish';
     if (cat && !campaign) return 'cat';
     if (campaign) return 'campaign';
@@ -123,7 +123,9 @@
   const taskRaw = new WeakMap();
   const rawTaskConfig = c => taskRaw.get(c) || c;
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
-  const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
+  // 20.71 (John: «вынеси режим подземелий вообще отдельно»): явный список сильнее старого флага; настройки других задач хранятся.
+  const rebirthSelected = c => { const raw=rawTaskConfig(c);return Array.isArray(raw?.autoTasks)?raw.autoTasks.includes('rebirth'):raw?.rebirthMode===true; };
+  const taskAllowed = (c, key) => rebirthSelected(c) ? key === 'rebirth' : taskList(c) === null || taskList(c).includes(key);
   // 19.10: дневные квоты сбрасываются в полночь сервера; /game/time задаёт часы и зону (с учётом DST).
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие!»): один дневной лимит мобов на обе охоты, счётчики auto/cat складываются.
   const dailyKeys = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit',rebirth:'dailyKillLimit'};
@@ -241,6 +243,8 @@
   // (actions.context) и задания Маммона. Раньше в контексте был фактический выбор, и конец передышки/ожидания выглядел как «пользователь
   // сменил режим»: начатый поход к Маммону (после платного телепорта) или «Закупить сейчас» отменялись, герой оставался у NPC
   function selectedTask(c, rt = {}, now = Date.now(), base = false) {
+    // Дневной лимит и передышка останавливают сам поход, но не выбирают вместо него фарм/рыбалку/тур РБ.
+    if (rebirthSelected(c)) return 'rebirth';
     const list = taskList(c); if (list === null) return null;
     const fishWait=fishTaskWait(c,rt,now);
     const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
@@ -275,14 +279,25 @@
   };
   const TC_SUPPORT = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
   const TC_PRIMARY = {enchantMode:'enchant',craftMode:'craft',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',rebirthMode:'rebirth',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
+  const TC_REBIRTH_OFF = new Set([...TC_SUPPORT,...Object.values(TC_GROUPS).flat(),'tvtOn','tvtOverRb','tsBuy','taskOnly','rbBetween','mmGoalFarm','goddardQuest','sealAuto']);
+  const TC_REBIRTH_EMPTY = new Set(['farmRes','recipeRes','resQuests']);
   const TC_SPECIAL = new Set([...Object.keys(TC_PRIMARY), ...Object.values(TC_GROUPS).flat(), ...TC_SUPPORT,
-    'tvtOn','taskOnly','tvtOverRb','tsBuy','chain','farmRes','recipeRes','resQuests','mmGoalItem','mmGoalFarm','campAuto']);
+    'tvtOn','taskOnly','tvtOverRb','tsBuy','chain','farmRes','recipeRes','resQuests','mmGoalItem','mmGoalFarm','campAuto',...TC_REBIRTH_OFF]);
   const TC_LEGACY = new Set(['rebirthMode','fishMode','catMode','zoneAuto','taskOnly']);
+  function rebirthConfigValue(target,key) {
+    if (Object.hasOwn(TC_PRIMARY,key)) return TC_PRIMARY[key] === 'rebirth';
+    if (TC_REBIRTH_EMPTY.has(key)) return '';
+    if (key === 'mmGoalItem') return 0;
+    if (TC_REBIRTH_OFF.has(key)) return false;
+    return Reflect.get(target,key);
+  }
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
     if (!Array.isArray(raw?.autoTasks)) {
-      if (!Object.keys(dailyKeys).some(k => dailyLimit(raw,k))) return raw;
+      if (!rebirthSelected(raw) && !Object.keys(dailyKeys).some(k => dailyLimit(raw,k))) return raw;
       const view = new Proxy(raw,{get(target,key){
+        if (!TC_SPECIAL.has(key)) return Reflect.get(target,key);
+        if (rebirthSelected(target)) return rebirthConfigValue(target,key);
         if (!TC_LEGACY.has(key)) return Reflect.get(target,key);
         const rt=runtime(), tasks={rebirthMode:'rebirth',fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
         if (Object.hasOwn(tasks,key) && dailyBlocked(target,rt,tasks[key]) && !(key==='fishMode' && rt.fishCastActive)) return false;
@@ -293,6 +308,7 @@
     const groups = TC_GROUPS, support = TC_SUPPORT, primary = TC_PRIMARY;
     const view = new Proxy(raw, { get(target, key) {
       if (!TC_SPECIAL.has(key)) return Reflect.get(target,key);
+      if (rebirthSelected(target)) return rebirthConfigValue(target,key);
       let a1; const act = () => a1 === undefined ? (a1 = selectedTask(target, runtime())) : a1, allowed = k => taskAllowed(target, k);
       if (Object.hasOwn(primary,key)) return primary[key] === act();
       if (key === 'tvtOn') return allowed('tvt');
@@ -326,6 +342,8 @@
   }
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
   function taskJobAllowed(c, key, rt = {}) {
+    // Чужие сохранённые маршруты и даже urgent-закупка не уводят отдельный поход; квитанции оплат здесь не меняются.
+    if (rebirthSelected(c)) return key === 'rebirthJob' || key === 'revive';
     // 22.10: выделенный крафт не возобновляет старые автоматические походы, даже если их службы остались в списке.
     // Разовые команды меню сохраняются; квитанции оплат хранятся отдельно от маршрутов.
     const craftOnly = taskList(c) === null ? rawTaskConfig(c)?.craftMode === true : selectedTask(c,rt) === 'craft';
@@ -364,6 +382,7 @@
   // Ревью: одного хранения мало — после передышки вкладка могла стоять не на карте (рыбалка), и прилёт/бой сдавались с платным выбором;
   // поэтому по концу передышки тур сначала бесплатно открывает карту (content: rt.rbResume, raidResumeMap).
   function taskJobHeld(c, key, rt = {}, now = Date.now()) {
+    if (rebirthSelected(c)) return false;
     if (taskList(c) === null || !rt?.[key]) return false;
     const holds = selfHoldList(rt, now); if (!holds.some(h => h.task)) return false;
     if (holds.some(h => Array.isArray(h.drop) && h.drop.includes(key))) return false;
@@ -687,6 +706,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { HOT_KEYS, HOT_FOLD_MS, HOT_MIN_RT, hotStr, hotOwn, hotJoin, hotNext, hotPlan, hotStore, stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { HOT_KEYS, HOT_FOLD_MS, HOT_MIN_RT, hotStr, hotOwn, hotJoin, hotNext, hotPlan, hotStore, stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, rebirthSelected, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

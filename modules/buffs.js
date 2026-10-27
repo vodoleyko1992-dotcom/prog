@@ -285,7 +285,7 @@ async function buffAuditStep(ctx, me) {
 }
 
 function buffList(ctx = env.BUFF_CTX) {
-  const keys = ctx && (ctx.rb || ctx.champ || env.cfg.keyBuffBoss === false) ? env.names(env.cfg.nKeyBuffs) : [];
+  const keys = ctx && (ctx.rb || ctx.champ || ['champion','raid'].includes(ctx.rebirth?.role) || env.cfg.keyBuffBoss === false) ? env.names(env.cfg.nKeyBuffs) : [];
   // 9.0: свой Noblesse Blessing (статус Noblesse) — бафф, если он на панели боя (уходит со смертью, держит остальные баффы)
   const nob = env.rt.story?.nobleOwn && env.slotsBy('noblesse blessing')[0] ? ['noblesse blessing'] : [];
   const arr = [...new Set([...env.names(env.cfg.nBuffs), ...keys, ...nob])].map(bn => ({ bn, b: env.slotsBy(bn)[0] }))

@@ -1,5 +1,13 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 27.10.2026 — самостоятельные подземелья, Firefox20.71 без проверок (Codex, PR в подготовке)
+
+- John: «не убивает чемпиона и РБ… вынеси режим подземелий вообще отдельно; Сборка без проверок». TXT05:32(2) содержит только5секунд двух обычных побед; champion/raid-остановка в события не попала. Статически подтверждены несовместимости _champion_N/_raid_N с прежним mob-only HP-допуском и обычными фильтрами.
+- Отдельная top-level вкладка/быстрый запуск; engine-core держит собственную задачу, подавляет другие режимы/службы без перезаписи rawcfg. Core ранним полным кругом ведёт Rebirth до обычного dispatcher/startprep/townjobs; сохраняет Stop/captcha/PvP/revive/selfhold/квитанции. Обычная городская подготовка отключена, навыки/банки/кот в бою сохранены.
+- `rebirth.battleProof` подтверждает свой живой бой и solo-run для mob/champion/raid, выбранный RB/slot включая0. Combat использует ctx.rebirth, без ordinary hpMin/champs/RB gates/базы/экономического180с-предела. Большие роли получают боевые баффы/ульты; глобальные правила обычной охоты не менялись. Продолжение перенесено из mobfarm в rebirth.nextFight, без cfg.chain, с durable receipt/identity/async guards. Ошибка/недоступное продолжение возвращают в свой каталог.
+- Написаны5новых regression-файлов и зарегистрированы, старые paid-run/policy fixture и5versionassertions обновлены; **никакие проверки не запускались** по прямой просьбе, новых PASS нет. Тесты/синтаксис/env/browser/lint/ZIPaudit/liveGame0. Описание — docs/changelog/CHANGELOG-20.71.md, квитанция — docs/evidence/build-20.71-firefox/receipt.json.
+- Firefox20.71, прежний69-fileallowlist, GeckoID/профили сохранены. ZIP69/1734217B/SHA1e3876e7f8879c11c4fdc046cc78a517301e93fd2daf3718a22a519686ad982b. Старый20.70 сохранён вwork/gitистории, SHAфайл оставлен; внешняяпапка недоступна. Chrome/Lite прежние. Далее установить/выбрать«Подземелья»/полныйлог300→champion→raid→none;500invalid_spawn иfish→next не объявлять проверенно исправленными.
+
 ## 27.10.2026 — Firefox20.70 без проверок (Codex, [PR #436](https://github.com/vodoleyko1992-dotcom/prog/pull/436))
 
 - Прямая просьба John: «сборка без проверок». Собран Firefox20.70 из777ebf6 после#435, с исправлением HP-сверки обычных мобов Rebirth. Версия/header/5versionassertions/README/история обновлены; игровая логика при упаковке не менялась.
