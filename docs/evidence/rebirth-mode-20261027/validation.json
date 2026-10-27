@@ -28,5 +28,6 @@
     "only selected encoded bossSlot3 weapon association known from user; other15 not invented",
     "no live game; nativeFirefox not run in mode PR; requested Firefox build next",
     "priority services intentionally precede Rebirth; ordinary farm cannot replace route"
-  ]
+  ],
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/433"
 }
