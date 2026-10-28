@@ -14,6 +14,7 @@ ORDER.push('v2069-rebirth-hp-proof.test.js');
 ORDER.push('v2071-rebirth-route-isolation.test.cjs','v2071-rebirth-combat-isolation.test.js','v2071-rebirth-isolation-policy.test.cjs','v2071-rebirth-isolation-ui.test.cjs','v2071-rebirth-core-loop.test.cjs','v2071-rebirth-pet-preflight.test.cjs');
 ORDER.push('v2071-rebirth-parallel-proof.test.cjs','v2071-rebirth-group-scope.test.cjs');
 ORDER.push('v2072-rebirth-victory-retry.test.cjs');
+ORDER.push('v2073-rebirth-hero-policy.test.cjs','v2073-rebirth-hero-survival.test.cjs','v2073-rebirth-hero-buffs.test.cjs','v2073-rebirth-hero-core.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){

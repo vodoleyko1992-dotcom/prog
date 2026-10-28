@@ -13,7 +13,8 @@ function scheduler(o={}){
   battle:async()=>events.push('battle'),
   L2V7Modules:{payments:{pending:()=>S.pending,blocked:()=>S.blocked},warlock:{paymentReconcile:async()=>events.push('reconcile:summon-buff')},rebirth:{step:async()=>{S.steps++;events.push('rebirth-step');await S.hook?.();return S.stepResult??false}}},sleep:async ms=>S.sleeps.push(ms)};
  for(const [,name] of dispatcher.matchAll(/await (loop\w+)\(/g))if(name!=='loopRebirth')c[name]=async()=>{events.push(name);return false};
- vm.runInNewContext("let rebirthPaymentRead={key:'',at:0};\n"+integration+'\n'+dispatcher,c);return{c,S,events};
+ // 20.73: готовность героя здесь уже подтверждена; собственный restore проверяется в v2073-rebirth-hero-core.
+ vm.runInNewContext("let rebirthPaymentRead={key:'',at:0};\n"+integration+'\n'+dispatcher,c);c.rebirthPrepareHero=async()=>false;return{c,S,events};
 }
 // 20.71: отдельный ранний цикл Rebirth заменил старый путь через обычные priority/menu/activity.
 test('настоящий mainTick: Rebirth владеет кругом даже когда модуль ждёт и возвращает false',async()=>{
