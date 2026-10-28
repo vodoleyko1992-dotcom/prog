@@ -32,5 +32,6 @@
   "liteRebuilt": false,
   "liveGameOpened": false,
   "signed": false,
-  "nextStep": "Update Firefox in same profile/folder, reload game tab; collect switching mode on victory/live battle log"
+  "nextStep": "Update Firefox in same profile/folder, reload game tab; collect switching mode on victory/live battle log",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/448"
 }
