@@ -225,7 +225,19 @@ async function nextFight(ctx) {
   if (!sameFrame()) return;
   if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
-  if (rebirthBattle()) return env.rebirthNext?.(ctx);
+  if (rebirthBattle()) {
+    if (env.autonomyMode() === 'rebirth') return env.rebirthNext?.(ctx);
+    // 20.75 (лог28.10 06:42): после смены на тур РБ выключенный Rebirth молча держал старую победу9мин.
+    // Выходим только из завершённого боя: сам оплаченный поход и квитанции остаются для будущего возврата.
+    const mode = env.autonomyMode();
+    const leave = () => location.pathname === '/battle.html' && sameFrame() && env.on && env.tabOwner && env.victory() && env.autonomyMode() === mode
+      && env.canAct?.() !== false && !env.pvpPending?.() && !env.tvtSoon() && !env.antibotState?.() && !env.nativePending?.();
+    if (leave() && await env.rtCommit?.() && leave()) {
+      env.setStatus('Режим изменён — выхожу из завершённого боя Rebirth');
+      location.href = '/map.html';
+    }
+    return;
+  }
   if (env.autonomyMode() === 'rebirth') return env.rebirthReturn?.();
   // 10.0.19: ручная смена оружия до запуска бота не даёт POST-события расширению.
   // Сверка по GET один раз в 10 мин не уводит катакомбы на карту.
