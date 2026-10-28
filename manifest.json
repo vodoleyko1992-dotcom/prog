@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.76",
-  "description": "L2wap Bot 20.76 — переключение из Rebirth на фарм РБ без зависания",
+  "version": "20.77",
+  "description": "L2wap Bot 20.77 — ревизия Rebirth, оплат и зависаний",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -143,5 +143,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.76"
+  "version_name": "20.77"
 }
