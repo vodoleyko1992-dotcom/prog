@@ -35,5 +35,5 @@
   "liveGameOpened": false,
   "signed": false,
   "nextStep": "Update Firefox add-on in same profile and folder; reload game tab; collect full Rebirth log including retry/resume",
-  "pullRequest": "PR в подготовке"
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/442"
 }
