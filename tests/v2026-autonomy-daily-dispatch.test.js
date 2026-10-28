@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 // 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 19.10: отказ дневного API закрывает новую добычу, а не весь диспетчер; старый улов не выдаёт разрешение на охоту.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
@@ -19,7 +20,7 @@ function fixture(){
 }
 test('сбой /game/time не перекрывает PvP-восстановление и последующие службы',async()=>{
  const f=fixture(),c=f.c,events=[];c.cfg.autoTasks=['clan','mammon'];c.gameGet=async p=>{f.requests.push(p);return {ok:false,status:503}};
- Object.assign(c,{actionWait:async()=>true,L2V7Modules:{actions:{enterFrame(){}},pvp:{recoveryStep:async()=>{events.push('pvp');return false}}},LOOP:{servicesStarted:true},lifestoneCommandBusy:false,serverDown:()=>false,loginPage:()=>false,antibotState:()=>null,enchantModePause:async()=>{},tvtSoon:()=>false});
+ Object.assign(c,{rebirthModeSelected:()=>false,actionWait:async()=>true,L2V7Modules:{actions:{enterFrame(){}},pvp:{recoveryStep:async()=>{events.push('pvp');return false}}},LOOP:{servicesStarted:true},lifestoneCommandBusy:false,serverDown:()=>false,loginPage:()=>false,antibotState:()=>null,enchantModePause:async()=>{},tvtSoon:()=>false});
  vm.runInNewContext(src.slice(src.indexOf('async function loopGate()'),src.indexOf('// Сторож «нет прогресса')),c);
  assert.equal(await c.loopGate(),undefined);assert.deepEqual(events,['pvp']);assert.deepEqual(f.requests,['/game/time']);
  // Этот результат передаёт круг следующим шагам mainTick, а не возвращает true из gate.

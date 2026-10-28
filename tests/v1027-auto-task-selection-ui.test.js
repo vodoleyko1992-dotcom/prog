@@ -10,9 +10,10 @@ const plain = x => JSON.parse(JSON.stringify(x));
 assert.deepStrictEqual(plain(selectedAutoTasks({ autoTasks: ['tvt'], campaign: true, fishMode: true })), ['tvt']);
 assert.deepStrictEqual(plain(selectedAutoTasks({ autoTasks: [] })), []);
 assert.deepStrictEqual(plain(selectedAutoTasks({ autoTasks: ['unknown', 'raid'] })), ['raid']);
-assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: ['tvt'] }, 'fish', true)), { autoTasks: ['tvt', 'fish'] });
+// 20.71: включение обычной основной задачи явно выключает самостоятельный Rebirth.
+assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: ['tvt'] }, 'fish', true)), { autoTasks: ['tvt', 'fish'], rebirthMode: false });
 assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: ['tvt', 'fish'] }, 'fish', false)), { autoTasks: ['tvt'] });
-assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: [] }, 'quests', true)), { autoTasks: ['quests'], campaign: true, storyTurnIn: true });
+assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: [] }, 'quests', true)), { autoTasks: ['quests'], campaign: true, storyTurnIn: true, rebirthMode: false });
 assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: [] }, 'mammon', true)), { autoTasks: ['mammon'] });
 assert.deepStrictEqual(plain(autoTaskPatch({ autoTasks: [] }, 'resources', true)), { autoTasks: ['resources'] });
 assert.strictEqual(currentMode({ autoTasks: ['tvt'], fishMode: true }), 'tasks');

@@ -181,7 +181,15 @@ function keyOf(o) {
 // 15.10, лог 04:36: панель соседей может отсутствовать, хотя АОЕ выдаёт две дополнительные добычи.
 // Предсказываем выгоду по принятым ходам в этой зоне/режиме; это ожидание, а не выдуманные живые цели.
 const groupPage = Date.now(); // неизвестная зона: не переносим прогноз через перезагрузку/телепорт
-function groupScope() { return env.cfg?.catMode ? 'cat:' + (env.rt.catIn || env.cfg.catDungeon || 'auto') : 'map:' + (env.rt.zone || 'page-' + groupPage); }
+// 20.71 (лог28.10 11:32): Rebirth перезагружает страницу между мобами — map:page терял каждый замер АОЕ.
+// Прогноз переносится только внутри того же точного run/этапа/сложности/вида/уровня и героя; номер обычного моба не меняет состав.
+function groupScope(spawn) {
+  if (spawn === undefined) { try { const ids = new URLSearchParams(location.search).getAll('spawnId'); spawn = ids.length === 1 ? ids[0] : ''; } catch (_) { spawn = ''; } }
+  const p = String(spawn || '').match(/^rebirth_raid_([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})_([1-9]\d*)_([123])_([1-9]\d*)_lv([1-9]\d*)_(mob|champion|raid)_(0|[1-9]\d*)$/i);
+  if (p && env.rt.char && env.rt.classCur?.prof && Number.isInteger(env.rt.classCur.slot) && env.rt.classCur.slot >= 0
+    && (p[6].toLowerCase() === 'raid' || Number(p[7]) > 0)) return 'rebirth:' + JSON.stringify([groupOwner(), ...p.slice(1, 7).map(x => x.toLowerCase()), p[6].toLowerCase() === 'raid' ? p[7] : '']);
+  return env.cfg?.catMode ? 'cat:' + (env.rt.catIn || env.cfg.catDungeon || 'auto') : 'map:' + (env.rt.zone || 'page-' + groupPage);
+}
 const groupOwner = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || '', env.rt.classCur?.slot ?? '']);
 function groupNote(name, parsed, mainMax, now) {
   const skill = low(name), old = env.rt.skills?.[skill];
@@ -196,7 +204,7 @@ function groupNote(name, parsed, mainMax, now) {
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
-  const s = (g?.evidence === GROUP_EVIDENCE ? g.samples || [] : []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
+  const s = (g?.evidence === GROUP_EVIDENCE ? g.samples || [] : []).filter(x => now - x.t >= 0 && now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
   if (!s.length) return null;
   const mean = k => s.reduce((n, x) => n + x[k], 0) / s.length;
   return { n: s.length, kills: mean('kills'), targets: mean('targets'), damage: mean('damage'), t: g.t };
@@ -394,7 +402,7 @@ function begin(bt, spawn, now) {
   const rb = /^l2dop_(?:rb|eg)_/i.test(spawn) || /raid|epic|boss/i.test(bt.kind || '') || !!(title && env.isBoss?.(title));
   F = { key: '', spawn, name, lvl, champ, rb, t0: now, tl: now, mob: bt.mob, mob0: bt.mob, mobMax: bt.mobMax, me: bt.hp, mp: bt.mp, seq: bt.seq ?? -1,
         actor: bt.actor || '', actorId: bt.actorId || '', rev: bt.rev, extras: (bt.extras || []).map(x => ({...x})), removed: 0, sideRemoved: 0, unknownSides: 0,
-        turns: 0, dealt: 0, petDmg: 0, a: {}, hits: [], sp: [], pots: 0, lost: 0, done: false, groupOwner: groupOwner(), groupScope: groupScope() };
+        turns: 0, dealt: 0, petDmg: 0, a: {}, hits: [], sp: [], pots: 0, lost: 0, done: false, groupOwner: groupOwner(), groupScope: groupScope(spawn) };
   F.key = keyOf({ spawn, name, champ, kind: rb ? 'raid' : '' });
   return F;
 }

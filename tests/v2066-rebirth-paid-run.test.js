@@ -217,8 +217,9 @@ test('два одновременных nextFight не дублируют proof 
  const f=fixture({won:true});let release;const gate=new Promise(resolve=>release=resolve);
  f.state.hooks.get=async p=>{if(p==='/character')await gate};
  const first=f.run(f.context);for(let n=0;n<50&&f.checks.length===0;n++)await Promise.resolve();
- assert.equal(f.checks.length,1,'первый proof действительно ожидает character');
- const second=f.run(f.context);for(let n=0;n<20;n++)await Promise.resolve();assert.equal(f.checks.length,1);
+ // 20.71: независимые character/run читаются параллельно, busy запрещает второй набор и native-клик.
+ assert.deepEqual(f.checks,['/character','/game/rebirth-raids?view=instance'],'первый proof ожидает character с уже отправленным instance');
+ const second=f.run(f.context);for(let n=0;n<20;n++)await Promise.resolve();assert.equal(f.checks.length,2);assert.equal(f.state.nativeClicks,0);
  release();await Promise.all([first,second]);assert.equal(f.state.nativeClicks,1);assert.equal(f.posts.length,0);
 });
 

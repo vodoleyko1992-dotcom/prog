@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 // 20.23, журнал19.10 17:26: raid снят из autoTasks, а rbSess.on продолжал блокировать явный поход к Маммону.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),E=require('../engine-core.js');
@@ -19,7 +20,7 @@ function fixture({tasks=['raid','mammon'],extra={},command='up'}={}){
  const box={console,Date,Math,JSON,URLSearchParams,document:{querySelectorAll:()=>[]},location:route,chrome:{runtime:{getURL:f=>f}},fetch:async()=>({ok:true,json:async()=>({})})};
  vm.runInNewContext(mammon,box);const M=box.L2V7Factories.mammon(env);
  // 20.24: новый шаг очереди AA здесь без команды; его поведение проверяет seal-aa-queue.
- const core={sealQueue:async()=>false,get on(){return state.on},tabOwner:true,L2EngineCore:E,L2V7Modules:{},taskPolicyNote(){},setRt:save,rec:env.rec,autonomyMode:env.autonomyMode,isBattle:env.isBattle,isFishing:env.isFishing,fishState:env.fishState,fishFight:async()=>{},battle:async()=>{},tasksIdle:async()=>{},sleep:env.sleep};
+ const core={rebirthModeSelected:()=>false,sealQueue:async()=>false,get on(){return state.on},tabOwner:true,L2EngineCore:E,L2V7Modules:{},taskPolicyNote(){},setRt:save,rec:env.rec,autonomyMode:env.autonomyMode,isBattle:env.isBattle,isFishing:env.isFishing,fishState:env.fishState,fishFight:async()=>{},battle:async()=>{},tasksIdle:async()=>{},sleep:env.sleep};
  Object.defineProperties(core,{cfg:{get:()=>env.cfg},rt:{get:()=>state.rt}});vm.runInNewContext(policy+'\nthis.step=loopTaskList;',core);
  const ui={console,Set,Date,Object,Promise,formChar:'Hero',settingsSerial:0,DEF:{},chrome:{storage:{local:{get:async()=>({cfg:structuredClone(state.cfg)})}}},menuPatch:async(p,{cfgPatch}={})=>{menuWrites.push({p:structuredClone(p),cfgPatch:structuredClone(cfgPatch)});Object.assign(state.rt,p);state.cfg={...state.cfg,...cfgPatch};persisted=structuredClone(state.rt);await afterMenu()},load:async()=>{},save:async()=>{},toast(){}};
  vm.runInNewContext(popup.slice(popup.indexOf('const AUTO_TASK_LABELS'),popup.indexOf('const MODE_NAME'))+'\nthis.edit=editAutoTask;',ui);

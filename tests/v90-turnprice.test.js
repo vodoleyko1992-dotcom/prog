@@ -24,7 +24,7 @@ assert.equal(rbTurnHeal({ cur: 4800, max: 5417, spike: 2845, p90: 500, stopPct: 
 assert.ok(r.floor <= 5417 * 0.96);
 
 // 2. полоса банок в бою: знакомый РБ — по цене хода, без гистерезиса; выключатель и незнакомый РБ — как в 8.0
-const i0 = combat.indexOf('    let potAt = env.cfg.hpPotAt;'), i1 = combat.indexOf('    const hpPot = me && me.pct <= potAt', i0);
+const i0 = combat.indexOf('    let potAt = '), i1 = combat.indexOf('    const hpPot = me && me.pct <= potAt', i0);
 assert.ok(i0 > 0 && i1 > i0, 'band block found');
 const band = combat.slice(i0, i1);
 const run = ({ pct, potOn = false, price = true, known = true }) => {
@@ -32,7 +32,8 @@ const run = ({ pct, potOn = false, price = true, known = true }) => {
   const env = { cfg: { hpPotAt: 50, stopHp: 25, rbBandAuto: true, rbTurnPrice: price, rbPotAt: 75, rbPotTo: 80 },
     rt: { rbDb: { rb1: known ? { sp: 1995, hitP90: 359 } : {} } }, rec: (...a) => recs.push(a.join(' ')) };
   const ctx = { rb: { id: 'rb1', potOn, hits: [] } };
-  const sb = { env, ctx, me, Math, rbTurnHeal, frenzyDive: () => false, epicFrenzyHold: () => false, slotsBy: () => [] };
+  // 20.71: большая роль Rebirth получает свой исходный порог; ordinary РБ сохраняет прежнюю полосу.
+  const sb = { env, ctx, me, Math, rebirthBig:()=>false, rbTurnHeal, frenzyDive: () => false, epicFrenzyHold: () => false, slotsBy: () => [] };
   return { potAt: vm.runInNewContext(`(() => {\n${band}\nreturn potAt; })()`, sb), ctx, recs };
 };
 assert.equal(run({ pct: 80 }).potAt, -1, 'known RB, 80 % → no potion');

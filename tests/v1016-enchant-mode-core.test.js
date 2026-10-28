@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 // 23.10.2026: стенд получает новые зависимости темпа; прежние проверки отправок сохранены.
 // 15.10.2026: выбранная заточка владеет циклом даже при пустой очереди и паузе.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
@@ -8,7 +9,7 @@ const fixtureBox={require,__dirname:path.join(base,'tests'),console,URLSearchPar
 vm.runInNewContext(lifecycle.slice(0,lifecycle.indexOf("test('по умолчанию"))+';this.fixture=fixture;',fixtureBox);
 function fixture(opts){const f=fixtureBox.fixture(opts);f.env.cfg.enchantMode=true;return f;}
 function coreFixture(){
- const calls=[],c=vm.createContext({actionWait:async()=>true,console,URL,Date,Promise,Math,L2EngineCore:require('../engine-core.js'),taskPolicyNote(){},location:{origin:'https://fixture.invalid',pathname:'/map.html',search:'',href:''},
+ const calls=[],c=vm.createContext({rebirthModeSelected:()=>false,TAG:'fixture',actionWait:async()=>true,console,URL,Date,Promise,Math,L2EngineCore:require('../engine-core.js'),taskPolicyNote(){},location:{origin:'https://fixture.invalid',pathname:'/map.html',search:'',href:''},
   on:true,tabOwner:true,cfg:{enchantMode:true,enchant:{enabled:true},tvtOn:true},rt:{char:'Hero'},hero:'Hero',battleNow:false,fishCaught:false,nearTvt:false,ab:false,calls,
   // 20.68: общий фрагмент регистрирует Rebirth; режим выключен, прежние приоритеты проверяются без его действий.
   L2V7Factories:{enchant:env=>({step:async()=>{calls.push('enchant');return true},command:async cmd=>{calls.push(cmd);if(cmd==='pause')c.rt.enchant={...c.rt.enchant,status:'paused'};return true}}),warlock:()=>({}),rebirth:()=>({step:async()=>false})},L2V7Modules:{}});

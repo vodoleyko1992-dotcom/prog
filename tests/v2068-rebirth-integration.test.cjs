@@ -7,40 +7,46 @@ function excerpt(a,b){const i=content.indexOf(a),j=content.indexOf(b,i);assert.o
 const dispatcher=excerpt('async function mainTick()','// Замок вкладки:');
 const integration=excerpt('async function loopRebirth()','// Сторож баффов, обслуживание');
 function scheduler(o={}){
- const events=[],S={mode:'rebirth',battle:false,steps:0,sleeps:[],hook:null,...o};
- const c={on:true,tabOwner:true,cfg:{rebirthMode:true},autonomyMode:()=>S.mode,isBattle:()=>S.battle,
-  L2V7Modules:{rebirth:{step:async()=>{S.steps++;events.push('rebirth-step');await S.hook?.();return S.stepResult??false}}},sleep:async ms=>S.sleeps.push(ms)};
+ const events=[],S={mode:'rebirth',battle:false,won:false,steps:0,sleeps:[],hook:null,pending:null,blocked:false,...o};
+ const c={on:true,tabOwner:true,cfg:{rebirthMode:true},rt:{},autonomyMode:()=>S.mode,rebirthModeSelected:()=>S.mode==='rebirth'&&c.cfg.rebirthMode,
+  isBattle:()=>S.battle,victory:()=>S.won,selfHoldMain:()=>false,setStatus:()=>{},location:{pathname:'/rebirth-raids.html'},
+  battle:async()=>events.push('battle'),
+  L2V7Modules:{payments:{pending:()=>S.pending,blocked:()=>S.blocked},warlock:{paymentReconcile:async()=>events.push('reconcile:summon-buff')},rebirth:{step:async()=>{S.steps++;events.push('rebirth-step');await S.hook?.();return S.stepResult??false}}},sleep:async ms=>S.sleeps.push(ms)};
  for(const [,name] of dispatcher.matchAll(/await (loop\w+)\(/g))if(name!=='loopRebirth')c[name]=async()=>{events.push(name);return false};
- vm.runInNewContext(integration+'\n'+dispatcher,c);return{c,S,events};
+ vm.runInNewContext("let rebirthPaymentRead={key:'',at:0};\n"+integration+'\n'+dispatcher,c);return{c,S,events};
 }
+// 20.71: отдельный ранний цикл Rebirth заменил старый путь через обычные priority/menu/activity.
 test('настоящий mainTick: Rebirth владеет кругом даже когда модуль ждёт и возвращает false',async()=>{
  const f=scheduler();assert.equal(await f.c.mainTick(),true);assert.equal(f.S.steps,1);assert.deepEqual(f.S.sleeps,[200]);
- assert.ok(f.events.includes('loopMenuJobs'));for(const s of ['loopStartPrep','loopTownJobs','loopSideJobs','loopActivity'])assert.ok(!f.events.includes(s),s+' не уводит поход в обычную охоту');
+ for(const s of ['loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopActivity'])assert.ok(!f.events.includes(s),s+' не уводит поход в обычную охоту');
 });
 test('обычный farm проходит прежний диспетчер, Rebirth-модуль не вызывается',async()=>{
  const f=scheduler({mode:'farm'});await f.c.mainTick();assert.equal(f.S.steps,0);assert.ok(f.events.includes('loopActivity'));
 });
-test('страница боя передаётся общему battle, а не внебоевому маршруту Rebirth',async()=>{
- const f=scheduler({battle:true});await f.c.mainTick();assert.equal(f.S.steps,0);assert.ok(f.events.includes('loopActivity'));
+test('страница боя передаётся общему battle внутри собственного цикла, без обычных сервисов',async()=>{
+ const f=scheduler({battle:true});await f.c.mainTick();assert.equal(f.S.steps,0);assert.ok(f.events.includes('battle'));assert.ok(!f.events.includes('loopActivity'));
 });
-test('приоритет платежа/срочной службы сохраняется раньше Rebirth',async()=>{
- const f=scheduler();f.c.loopPriority=async()=>true;assert.equal(await f.c.mainTick(),true);assert.equal(f.S.steps,0);
+test('срочная служба сохраняется раньше Rebirth; отправленная оплата сверяется без нового шага похода',async()=>{
+ const f=scheduler();f.c.loopUrgent=async()=>true;assert.equal(await f.c.mainTick(),true);assert.equal(f.S.steps,0);
+ const paid=scheduler({pending:{id:'paid',kind:'summon-buff'}});assert.equal(await paid.c.mainTick(),true);
+ assert.equal(paid.S.steps,0);assert.ok(paid.events.includes('reconcile:summon-buff'));assert.ok(!paid.events.includes('loopPriority'));
+ const blocked=scheduler({blocked:true});await blocked.c.mainTick();assert.equal(blocked.S.steps,0);assert.deepEqual(blocked.S.sleeps,[700]);
 });
-test('Stop и смена режима внутри Rebirth-шага не удерживают старую задачу',async()=>{
+test('Stop и смена режима внутри Rebirth-шага завершают уже выбранный круг без лишней паузы',async()=>{
  for(const kind of ['stop','owner','mode']){const f=scheduler();f.S.hook=()=>{if(kind==='stop')f.c.on=false;if(kind==='owner')f.c.tabOwner=false;if(kind==='mode')f.S.mode='fish'};
-  assert.equal(await f.c.loopRebirth(),false);assert.deepEqual(f.S.sleeps,[]);}
+  assert.equal(await f.c.loopRebirth(),true);assert.deepEqual(f.S.sleeps,[]);assert.equal(f.S.steps,1);}
 });
 
 function returning(){
  const routes=[],title={textContent:'Rebirth · Boss · ур.35'},S={mode:'rebirth',won:true,nick:'Hero',blocked:false,captcha:null,pvp:false,commit:true,hook:null};
  const c={on:true,tabOwner:true,cfg:{rebirthMode:true},rt:{char:'Hero',classCur:{prof:'human_wizard',slot:0}},leaseEpoch:'lease',automationGeneration:1,
-  location:{href:'https://l2wap.com/battle.html?spawnId=rebirth_raid_own_25098_raid_3'},BATTLE_NET:{spawn:'rebirth_raid_own_25098_raid_3',kind:'dungeon'},
+  location:{pathname:'/battle.html',search:'?spawnId=rebirth_raid_own_25098_raid_3',href:'https://l2wap.com/battle.html?spawnId=rebirth_raid_own_25098_raid_3'},BATTLE_NET:{spawn:'rebirth_raid_own_25098_raid_3',kind:'dungeon'},URLSearchParams,
   $q:()=>title,heroNick:()=>S.nick,autonomyMode:()=>S.mode,victory:()=>S.won,antibotState:()=>S.captcha,
   L2V7Modules:{actions:{canAct:()=>!S.blocked},pvp:{pending:()=>S.pvp}},actionLocation:{set href(v){routes.push(v)}},rtCommit:async()=>{await S.hook?.();return S.commit}};
  vm.runInNewContext(integration,c);return{c,S,title,routes};
 }
-test('подтверждённая ordinary-победа в режиме Rebirth возвращается к каталогу вместо карты',async()=>{
- const f=returning();await f.c.rebirthReturn();assert.deepEqual(f.routes,['/rebirth-raids.html']);
+test('подтверждённая победа собственного Rebirth возвращается к каталогу вместо карты',async()=>{
+ const f=returning();await f.c.rebirthReturn(()=>f.S.won);assert.deepEqual(f.routes,['/rebirth-raids.html']);
 });
 for(const change of ['stop','owner','hero','hud','class','slot','lease','generation','page','victory','title','metadata','mode','disabled','action','captcha','pvp','failedCommit','valid'])test('rebirthReturn после commit отменяется: '+change,async()=>{
  const f=returning();let allowed=true;f.S.hook=()=>{
@@ -49,7 +55,7 @@ for(const change of ['stop','owner','hero','hud','class','slot','lease','generat
   if(change==='page')f.c.location.href+='#changed';if(change==='victory')f.S.won=false;if(change==='title')f.title.textContent='New Battle';if(change==='metadata')f.c.BATTLE_NET.spawn='other';
   if(change==='mode')f.S.mode='fish';if(change==='disabled')f.c.cfg.rebirthMode=false;if(change==='action')f.S.blocked=true;if(change==='captcha')f.S.captcha='check';if(change==='pvp')f.S.pvp=true;
   if(change==='failedCommit')f.S.commit=false;if(change==='valid')allowed=false;
- };await f.c.rebirthReturn(()=>allowed);assert.deepEqual(f.routes,[]);
+ };await f.c.rebirthReturn(()=>allowed&&f.S.won);assert.deepEqual(f.routes,[]);
 });
 
 const paidFile=path.join(root,'tests/v2066-rebirth-paid-run.test.js'),paidSrc=fs.readFileSync(paidFile,'utf8');
@@ -57,9 +63,14 @@ const paid={require:createRequire(paidFile),__dirname:path.dirname(paidFile),pro
 vm.runInNewContext(paidSrc.slice(0,paidSrc.indexOf('\ntest('))+'\nthis.make=fixture;this.RUN=RUN;this.HERO=HERO;',paid);
 function runFixture(o={}){const f=paid.make({won:true,...o});f.state.mode='rebirth';f.env.cfg.rebirthMode=true;
  f.env.rebirthReturn=async valid=>{assert.ok(!valid||valid());f.routes.push('rebirth-catalog')};return f;}
-for(const phase of ['mobs','champion','rb_active'])test('настоящий mobfarm: '+phase+' после300 допускает только native next своего оплаченного run',async()=>{
- const f=runFixture();f.state.instance.activeRun.phase=phase;f.state.instance.activeRun.mobKills=300;await f.run(f.context);
+for(const phase of ['mobs','champion','rb_active'])test('настоящее продолжение Rebirth: завершённая роль '+phase+' после300 допускает только native next своего оплаченного run',async()=>{
+ const role=phase==='rb_active'?'raid':phase==='champion'?'champion':'mob',f=runFixture({spawn:'rebirth_raid_'+paid.RUN+'_1_1_25146_lv21_'+role+'_19'});
+ f.state.instance.activeRun.phase=phase;f.state.instance.activeRun.mobKills=300;await f.run(f.context);
  assert.equal(f.state.nativeClicks,1);assert.equal(f.posts.length,0);assert.equal(f.routes.length,0);assert.equal(f.events.includes('map'),false);assert.deepEqual(Array.from(f.state.quotaCalls),['mobs','mobs']);
+});
+for(const phase of ['champion','rb_active'])test('20.71: смена большой фазы '+phase+' после обычного моба возвращает в собственную подготовку без native next',async()=>{
+ const f=runFixture();f.state.instance.activeRun.phase=phase;f.state.instance.activeRun.mobKills=300;await f.run(f.context);
+ assert.equal(f.state.nativeClicks,0);assert.deepEqual(Array.from(f.routes),['rebirth-catalog']);assert.equal(f.posts.length,0);assert.equal(f.events.includes('map'),false);
 });
 test('прежний farm не автоматизирует новую фазу чемпионов и не открывает новый платный вход',async()=>{
  const f=runFixture();f.state.mode='farm';f.state.instance.activeRun.phase='champion';f.state.instance.activeRun.mobKills=300;await f.run(f.context);

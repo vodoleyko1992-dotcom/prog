@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 // 14.10: настоящий участок main от TvT до выбора режима + реальные tvt/story/dailies/mammon.modeFree.
 // Побочные действия остальных подсистем записываются; внешний мир/игровые запросы заменены.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
@@ -15,7 +16,7 @@ function make(mode='auto'){
  const cfg={tvtOn:true,weaponScanAuto:false,autoMagister:false,storyTurnIn:false,dailyAuto:false,clanTasks:false,zoneAuto:mode==='auto',fishMode:mode==='fish',rbHuntMode:mode==='raid',epicMode:mode==='epic',catMode:mode==='cat',taskOnly:mode==='tasks'};
  const rt={zone:'test-zone',tbWatchT:now,weaponsT:now};
  const noop=async()=>false,record=n=>async()=>{calls.push(n);return true};
- const sb={console,Date,URLSearchParams,taskPolicyNote(){},location:loc,actionLocation:loc,document:{querySelectorAll:()=>[]},sessionStorage:{getItem:()=>null,setItem(){}},cfg,rt,on:true,tabOwner:true,
+ const sb={rebirthModeSelected:()=>false,console,Date,URLSearchParams,taskPolicyNote(){},location:loc,actionLocation:loc,document:{querySelectorAll:()=>[]},sessionStorage:{getItem:()=>null,setItem(){}},cfg,rt,on:true,tabOwner:true,
   L2EngineCore:require('../engine-core.js'),L2V7Modules:{},TVT:null,TVTC:null,TVTS:null,
   setRt:async p=>Object.assign(rt,p),setCfg:async p=>Object.assign(cfg,p),sleep:async()=>{},rnd:()=>0,rec(){},setStatus(){},$q:()=>null,shown:()=>false,
   isBattle:()=>loc.pathname==='/battle.html',isMap:()=>loc.pathname==='/map.html',isFishing:()=>loc.pathname==='/fishing.html',isChar:()=>false,isFishShop:()=>false,isTeleport:()=>false,isCampaign:()=>false,isMail:()=>false,isQuests:()=>false,

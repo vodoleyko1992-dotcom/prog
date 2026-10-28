@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 // 22.10: выделенный крафт владеет кругом даже без работы; законченный бой не начинает следующую охоту.
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 const source = fs.readFileSync(__dirname + '/../content.js', 'utf8');
@@ -60,10 +61,10 @@ test('поздний результат шага после Stop не замен
 });
 test('настоящий mainTick: срочное/сверка маршрута раньше крафта; обычные службы и фарм не стартуют', async () => {
   const f = fixture(), tick = section('async function mainTick()', '// Замок вкладки');
-  for (const key of ['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity'])
+  for (const key of ['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopRebirth','loopEnchant','loopPriority','loopMenuJobs','loopStartPrep','loopTownJobs','loopSideJobs','loopSelfHoldWait','loopRaid','loopActivity'])
     f[key] = async () => { f.calls.push(key); return false; };
   vm.runInContext(tick, f); assert.equal(await f.mainTick(), true);
-  assert.deepEqual(f.calls.slice(0, 9), ['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant']);
+  assert.deepEqual(f.calls.slice(0, 10), ['loopLease','loopMigrations','loopGate','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopRebirth','loopEnchant']);
   assert.ok(f.calls.includes('craft')); assert.ok(!f.calls.includes('loopPriority')); assert.ok(!f.calls.includes('loopActivity'));
 });
 test('старые автоматические маршруты сняты и в legacy, и при выбранных службах; квитанции остаются', async () => {
@@ -89,7 +90,7 @@ test('явные проверки меню сохранены политикой
 });
 test('nextFight в крафте завершает бой выходом; смена режима во время дневного GET также отменяет новую охоту', async () => {
   for (const initial of ['craft', 'farm']) {
-    const calls = [], f = { on: true, tabOwner: true, mode: initial, rt: {}, autonomyMode: () => f.mode,
+    const calls = [], f = { rebirthModeSelected:()=>false, on: true, tabOwner: true, mode: initial, rt: {}, autonomyMode: () => f.mode,
       dailyServerSync: async () => { calls.push('daily'); f.mode = 'craft'; }, toMap: async () => calls.push('map'),
       L2V7Modules: { mobfarm: { nextFight: async () => calls.push('hunt') } }, selfHoldApplies: () => false };
     vm.createContext(f); vm.runInContext(section('async function nextFight(', '\n', ), f); await f.nextFight();

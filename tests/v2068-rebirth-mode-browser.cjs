@@ -2,6 +2,7 @@
 // 27.10.2026: настоящий MV3/Start/main. Контракт mob300→champion→bossSlot3→rb_active→none из журнала03:20.
 // Неизвестное имя фазы выбора помечено synthetic_gate_phase; выбор подтверждает видимый DOM16 ворот, без выдуманного enum.
 // Победа возвращает battle:null, как в настоящем журнале: краткая метка теряет kind/lvl/max.
+// 20.71: чемпион открывается после своей подготовки из каталога; native next после mob300 не нужен.
 // Все HTTPS и родные обработчики локальные. Полный игровой клиент/живой аккаунт не используются.
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
@@ -36,7 +37,7 @@ async function scenario(which){
   if(u.pathname==='/rebirth-raid-dungeon.html'){
    if(S.newRun)return '<h1>Подземелье Rebirth RB</h1><div id="rebirth-instance-content">Подготовка списка мобов нового похода</div>';
    if(S.phase==='synthetic_gate_phase')return `<h1>Подземелье Rebirth RB</h1><div id="rebirth-instance-content"><p>Чемпион побеждён! Выбери одного из16 рейд-боссов</p>${Array.from({length:16},(_,i)=>`<article><h2>РБ${i+1}${i===3?' — одноручный посох':''}</h2><button ${i===3?'id="manual-staff"':''} class="l2-rraid-main-button l2-rraid-gate__enter" data-fixture-slot="${i}">Войти</button></article>`).join('')}</div>`;
-   const page=+(u.searchParams.get('page')||1);return `<h1>Подземелье Rebirth RB</h1><div id="rebirth-instance-content"><p>Мобы · страница ${page} /20</p>${page===20?'<button class="l2-rraid-fight" id="fight">Бой</button>':'<button class="l2-rraid-pager-btn" data-fixture-page="20">20</button>'}</div>`;
+   const page=+(u.searchParams.get('page')||1);return `<h1>Подземелье Rebirth RB</h1><div id="rebirth-instance-content"><p>Мобы · страница ${page} /20</p>${page===20||S.phase==='champion'?'<button class="l2-rraid-fight" id="fight">Бой</button>':'<button class="l2-rraid-pager-btn" data-fixture-page="20">20</button>'}</div>`;
   }
   if(u.pathname==='/rebirth-raid-lair.html')return '<h1>Логово Rebirth RB</h1><div id="rebirth-instance-content"><button class="l2-rraid-fight" id="fight">Бой</button></div>';
   if(u.pathname==='/battle.html')return `<section id="battle-mob-panel"><h2 id="battle-mob-title">${name()} · ур.35 · агрессивный</h2><div id="battle-mob-hp-val">${S.won?0:max()} /${max()}</div></section><div id="battle-log"></div><button id="hit" class="l2-battle-hotbar-slot" data-slot-idx="0" title="Атака"><span data-slot-cd="attack">Атака</span></button><div id="battle-victory-inline" ${S.won?'':'hidden'}><div id="battle-victory-lootline">360EXP</div><button id="battle-victory-hunt" class="l2-battle-victory-link">Охотиться дальше</button><button id="battle-victory-continue" class="l2-battle-victory-link l2-battle-victory-link--primary">К подземелью</button></div>`;
@@ -50,7 +51,7 @@ async function scenario(which){
   const resume=document.getElementById('resume');if(resume)resume.onclick=()=>location.href='/rebirth-raid-dungeon.html';
   for(const p of document.querySelectorAll('.l2-rraid-pager-btn'))p.onclick=()=>location.href='/rebirth-raid-dungeon.html?page='+p.dataset.fixturePage;
   for(const b of document.querySelectorAll('.l2-rraid-difficulty__button'))b.onclick=async()=>{await ready;try{await post('/game/rebirth-raids/start',{difficulty:+b.dataset.fixtureDifficulty});location.href='/rebirth-raid-dungeon.html';}catch(e){window.lostEntryResponse=true;}};
-  const fight=document.getElementById('fight');if(fight)fight.onclick=async()=>{await ready;const d=await post('/game/battle/start',{spawnId:${JSON.stringify(S.phase==='rb_active'?target('boss'):target('mob'))},expectedRevision:window.snapshot.revision});location.href='/battle.html?spawnId='+encodeURIComponent(d.battle.spawnId);};
+  const fight=document.getElementById('fight');if(fight)fight.onclick=async()=>{await ready;const d=await post('/game/battle/start',{spawnId:${JSON.stringify(S.phase==='rb_active'?target('boss'):S.phase==='champion'?target('champion'):target('mob'))},expectedRevision:window.snapshot.revision});location.href='/battle.html?spawnId='+encodeURIComponent(d.battle.spawnId);};
   for(const b of document.querySelectorAll('.l2-rraid-gate__enter'))b.onclick=async()=>{await ready;await post('/game/rebirth-raids/enter-boss',{bossSlot:+b.dataset.fixtureSlot});location.href='/rebirth-raid-lair.html';};
   const hit=document.getElementById('hit');if(hit)hit.onclick=async()=>{await ready;render(await post('/game/battle/action',{action:'attack',battleSpawnId:window.currentSpawn,expectedRevision:window.snapshot.revision}));};
   const hunt=document.getElementById('battle-victory-hunt');if(hunt)hunt.onclick=async()=>{await ready;const n=await(await fetch('/game/rebirth-raids/next?after='+encodeURIComponent(window.currentSpawn))).json();if(n.phase==='none'){location.href='/rebirth-raids.html';return;}render(await post('/game/battle/start',{spawnId:n.spawnId,expectedRevision:window.snapshot.revision}));history.replaceState(null,'','/battle.html?spawnId='+encodeURIComponent(window.currentSpawn));};
@@ -124,7 +125,7 @@ async function scenario(which){
    }
    await until(()=>S.entries===1,50000);await until(async()=>{const r=(await h.get(['rt'])).rt.rebirth;return r?.runId===NEW&&(manual||r?.lastEntry?.runId===NEW)&&!r.pending;},20000);
    await h.click('stop');await until(()=>h.g.core('!on&&!running'));
-   assert.deepEqual(S.attacks,['mob','champion','boss']);assert.equal(S.starts.length,3);assert.deepEqual(S.next,['mob','boss']);assert.deepEqual(S.bossChoices,[3]);assert.deepEqual(S.pagers,[20]);
+   assert.deepEqual(S.attacks,['mob','champion','boss']);assert.equal(S.starts.length,3);assert.deepEqual(S.next,['boss']);assert.deepEqual(S.bossChoices,[3]);assert.deepEqual(S.pagers,[20]);
    assert.equal(S.entries,1);assert.equal(S.keys,98);assert.ok(paths.includes('/rebirth-raid-lair.html'));assert.equal(paths.some(x=>/^\/map|^\/city|^\/teleport/.test(x)),false,'режим не уходит в обычный фарм/город');
   }
   const finalBrowserIdentity=await h.g.core('(async()=>({key:BROWSER_TAB_KEY,id:await chrome.runtime.sendMessage({cmd:"tabId"})}))()');assert.deepEqual(finalBrowserIdentity,browserIdentity,'браузерный tabId сохраняется при навигации и reload');

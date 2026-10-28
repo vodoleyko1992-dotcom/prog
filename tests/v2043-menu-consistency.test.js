@@ -115,10 +115,12 @@ test('тексты меню совпадают с кодом: заводские
  const raid=read('modules/raid.js');assert.ok(raid.includes("«Тур РБ» снят из выбранных задач")&&raid.includes("режим «Автофарм», жду игрока"),'подсказка описывает обе ветки rbSessEnd');
 });
 test('горячие клавиши разделов: подсказки кнопок совпадают с тем, что открывает Alt+N',()=>{
- // 20.43: проверено — Alt+N считает кнопки по порядку вместе со скрытой «Заточкой»; подсказки кнопок написаны под этот счёт
+ // 20.71: отдельная кнопка Rebirth не сдвигает прежние Alt+1…0; проверяем фактическую таблицу обработчика.
  const nav=html.split('<nav id="moduleNav"')[1].split('</nav>')[0],btn=[...nav.matchAll(/<button([^>]*)>/g)].map(m=>m[1]);
- btn.forEach((b,i)=>{const m=b.match(/\(Alt\+(\d)\)"/);if(m)assert.equal(+m[1]||10,i+1,b);});
- assert.match(js,/const b = document\.querySelectorAll\('nav button'\)\[n - 1\]; if \(b\) showTab\(b\.dataset\.tab\);/);
+ const m=js.match(/const tab = (\[[^\n]+?\])\[n - 1\]; if \(tab\) showTab\(tab\);/);assert.ok(m,'таблица Alt+N найдена');
+ const tabs=vm.runInNewContext(m[1]);assert.deepEqual(Array.from(tabs),['overview','hunt','craft','rb','panel','enchant','fish','mammon','lifestone','pvp']);
+ btn.forEach(b=>{const key=b.match(/\(Alt\+(\d)\)"/),tab=b.match(/data-tab="([^"]+)"/);if(key){assert.ok(tab,b);assert.equal(tabs[(+key[1]||10)-1],tab[1],b);}});
+ assert.ok(btn.find(b=>/data-tab="rebirth"/.test(b)&&!/\(Alt\+/.test(b)),'отдельная кнопка не отнимает прежнюю клавишу');
 });
 test('поиск: по пояснению — ниже совпадений по названию; карточки другого класса помечены и открывают «все классы»',async()=>{
  const els={uiSearch:{value:''},uiResults:{classList:{add(){},remove(){}},innerHTML:''}};let showAll=0;

@@ -195,24 +195,24 @@ async function nextFight(ctx) {
     if (env.actionWait && !await env.actionWait(current) || !current()) return;
     if (typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return hold('не удалось подтвердить память перед продолжением');
     reading = true;
-    const response = await env.gameGet('/character', 4000);
+    // 20.71 (лог28.10 01:32): независимые свежие сверки героя и похода читаем вместе; до обеих нет native-клика.
+    const snapshots = await Promise.allSettled(['/character','/game/rebirth-raids?view=instance'].map(async url => {
+      const response = await env.gameGet(url, 4000);
+      if (!current()) return null;
+      return { ok: response.ok, data: response.ok ? await response.json() : null };
+    }));
     if (!current()) return;
-    if (!response.ok) return retry('персонаж не подтверждён сервером', 60000);
-    const data = await response.json();
-    if (!current()) return;
+    if (snapshots.some(r => r.status !== 'fulfilled')) throw Error('read_failed');
+    const [characterRead, instanceRead] = snapshots.map(r => r.value);
+    if (!characterRead?.ok) return retry('персонаж не подтверждён сервером', 60000);
+    const data = characterRead.data, ch = data?.character || data;
     reading = false;
-    const ch = data?.character || data;
     if (data?.error || data?.ok === false || ch?.name !== char || typeof ch.id !== 'string' || !ch.id || ch.l2Profession !== prof
         || ch.classSlots?.activeSlot !== slot || ch.level !== level || !Number.isSafeInteger(ch.revision) || ch.revision < 0 || ch.inBattle !== false
         || !Number.isSafeInteger(ch.rebirthStage) || ch.rebirthStage <= 0 || !(ch.hp > 0) || special(data) || special(ch))
       return retry('свой персонаж вне боя не подтверждён');
-    reading = true;
-    const result = await env.gameGet('/game/rebirth-raids?view=instance', 4000);
-    if (!current()) return;
-    if (!result.ok) return retry('оплаченный поход не подтверждён сервером', 60000);
-    const instance = await result.json();
-    if (!current()) return;
-    reading = false;
+    if (!instanceRead?.ok) return retry('оплаченный поход не подтверждён сервером', 60000);
+    const instance = instanceRead.data;
     const run = instance?.activeRun;
     if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0))
       return retry('принадлежность текущего оплаченного похода не подтверждена');
@@ -281,14 +281,19 @@ async function nextFight(ctx) {
    const ch=first?.character||first,sid=ch?.battleSpawnId,parts=spawnParts(sid);
    if(first?.error||first?.ok===false||special(first)||!own(ch,T)||ch.inBattle!==true||!Number.isSafeInteger(ch.rebirthStage)||ch.rebirthStage<=0||!parts)
     return hold('свой текущий бой подземелья не подтверждён');
-   const result=await readBattle('/game/battle?characterId='+encodeURIComponent(ch.id)+'&spawnId='+encodeURIComponent(sid));if(!still())return null;
+   // 20.71 (лог28.10 01:32): бой зависит от свежего character, но instance — независимый GET; ждём оба, сохраняя все проверки.
+   const snapshots=await Promise.allSettled([
+    readBattle('/game/battle?characterId='+encodeURIComponent(ch.id)+'&spawnId='+encodeURIComponent(sid)),
+    readBattle('/game/rebirth-raids?view=instance')]);
+   if(!still())return null;
+   if(snapshots.some(r=>r.status!=='fulfilled'))throw Error('read_failed');
+   const [result,instance]=snapshots.map(r=>r.value);
    const c=result?.character,b=result?.battle,role=parts[6].toLowerCase();
    if(result?.error||result?.ok===false||!own(c,T,ch.revision,ch.id)||c.inBattle!==true||c.battleSpawnId!==sid||c.rebirthStage!==ch.rebirthStage
     ||!b||b.spawnId!==sid||String(b.mobName||'').trim().toLowerCase()!==name.trim().toLowerCase()||b.mobLevel!==level||Number(parts[5])!==level
     ||b.mobMaxHp!==max||!Number.isFinite(b.mobHp)||b.mobHp<=0||b.mobHp>max||b.ended===true||b.finished===true||result.victory||result.defeat
     ||/^(?:ended|finished|victory|defeat)$/i.test(String(b.status||b.state||''))||special(result)||special(b)
     ||!(b.kind==='dungeon'||role==='raid'&&/^(?:raid|boss|raid_boss)$/.test(b.kind||'')))return hold('живая цель, тип или снимок героя не совпали');
-   const instance=await readBattle('/game/rebirth-raids?view=instance');if(!still())return null;
    const run=instance?.activeRun,progress=integer(run?.mobKills)&&integer(run?.mobKillTarget)&&run.mobKillTarget>0;
    if(instance?.error||instance?.ok===false||instance?.enabled!==true||instance.rebirthStage!==ch.rebirthStage||!solo(run,ch.id)
     ||run.id.toLowerCase()!==parts[1].toLowerCase()||![1,2,3].includes(run.difficulty)||!progress)return hold('принадлежность текущего одиночного похода не подтверждена');

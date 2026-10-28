@@ -33,9 +33,11 @@ assert.equal(E.taskJobAllowed(cfg(['fish','dailies']),'dailyFish'),false,'old da
 for(const key of ['shop','tbuff','magister','invScan'])assert.equal(E.taskJobAllowed(cfg(['fish']),key),false);
 // Журнал фиксирует переходы, но не разрастается на каждом тике.
 const notes=[],source=read('content.js'),start=source.indexOf('function taskPolicyNote('),end=source.indexOf('// эпики + рыбалка:',start);
-let clock=10000;const noteBox=vm.createContext({cfg:cfg(['tvt','fish']),rt:{},tabOwner:true,window:{},L2EngineCore:E,Date:{now:()=>clock},autonomyMode:()=> 'fish',rec:(...a)=>notes.push(a)});
+let clock=10000;const noteBox=vm.createContext({cfg:cfg(['tvt','fish']),rt:{},tabOwner:true,window:{},L2EngineCore:E,Date:{now:()=>clock},rebirthModeSelected:()=>E.rebirthSelected(noteBox.cfg),autonomyMode:()=> 'fish',rec:(...a)=>notes.push(a)});
 vm.runInContext(source.slice(start,end),noteBox);noteBox.taskPolicyNote();noteBox.taskPolicyNote();assert.equal(notes.length,1);
 noteBox.taskPolicyNote('tvt');assert.equal(notes.length,1);clock+=5000;noteBox.taskPolicyNote('tvt');assert.equal(notes.length,2);
+// 20.71: отдельный режим пишет только разрешённое подземелье, даже при старом списке остальных задач.
+noteBox.cfg={rebirthMode:true,autoTasks:['tvt','fish','rebirth']};clock+=5000;noteBox.taskPolicyNote('rebirth');assert.equal(notes.length,3);assert.match(notes.at(-1)[2],/разрешены: подземелья; сейчас: подземелья/);
 // Actual action coordinator cancels an in-flight continuation when only the allowlist changes.
 (async()=>{
  const context=vm.createContext({});vm.runInContext(read('modules/actions.js'),context);

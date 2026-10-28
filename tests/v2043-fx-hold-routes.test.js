@@ -32,7 +32,8 @@ test('taskJobHeld: тур на передышке — rbHunt/rbGo хранятс
 });
 
 function policy({ cfg, rt }) {
-  const writes = [], recs = [], box = { L2EngineCore: E, cfg, rt, on: true, tabOwner: true, L2V7Modules: {}, Date, Object, JSON,
+  // 20.71: fixture обычных маршрутов не выбирает отдельный Rebirth.
+  const writes = [], recs = [], box = { rebirthModeSelected: () => false, L2EngineCore: E, cfg, rt, on: true, tabOwner: true, L2V7Modules: {}, Date, Object, JSON,
     taskPolicyNote() {}, sealQueue: async () => false, rec: (...a) => recs.push(a[2]), autonomyMode: () => E.selectedTask(cfg, rt),
     isBattle: () => false, isFishing: () => false, fishState: () => null, fishFight: async () => {}, battle: async () => {}, tasksIdle: async () => {}, sleep: async () => {},
     setRt: async p => { writes.push(structuredClone(p)); Object.assign(rt, p); return { ok: true }; } };
