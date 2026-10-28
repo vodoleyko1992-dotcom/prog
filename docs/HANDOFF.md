@@ -1,6 +1,6 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 28.10.2026 — Firefox20.72 без проверок (Codex, PR в подготовке)
+## 28.10.2026 — Firefox20.72 без проверок (Codex, [PR #440](https://github.com/vodoleyko1992-dotcom/prog/pull/440))
 
 - John: «сборка на фаерфокс без проверок». Только Firefox20.72 на базе c2d30ef / #439: параллельные свежие сверки Rebirth и сохранение модели AoE между мобами точного похода. Версия/header/5versionassertions/README-FIREFOX/история обновлены; runtime при упаковке прежний. Chrome20.71, rollback20.66 и Lite1.8.1 не пересобраны.
 - ZIP69файлов/1737636байт/SHA256 `67f0406ea80992ea12b9debc579fef5699a790d4c6ce21ee077a279861a5fe34`; `builds/l2wap-bot-v20.72-firefox.zip`, квитанция `docs/evidence/build-20.72-firefox/receipt.json`. Строгий allowlist прежнего Firefox20.71; Firefoxbackground.scripts, gecko/gecko_android128+, прежний GeckoID/формат профиля. Пакет неподписан.

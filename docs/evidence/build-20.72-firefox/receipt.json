@@ -34,5 +34,5 @@
   "liveGameOpened": false,
   "signed": false,
   "nextStep": "Install in Firefox using the same add-on identity and profile; collect a full Rebirth run log; live speedup is not measured",
-  "pullRequest": "PR в подготовке"
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/440"
 }
