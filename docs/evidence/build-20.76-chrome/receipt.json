@@ -1,0 +1,42 @@
+{
+  "version": "20.76",
+  "format": "Chrome",
+  "sourceBase": "9914ec3250071e66e71b7e177efaf90a639ed272",
+  "sourceFixPullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/447",
+  "userRequest": "Сборка на Хром; прежняя просьба без проверок сохраняется",
+  "artifact": "builds/l2wap-bot-v20.76.zip",
+  "bytes": 1744483,
+  "sha256": "7a7aaf89f692329f55d72a4e415889efadfcd207d29c4127a279a673cf253db6",
+  "packagedFiles": 69,
+  "packaging": "Firefox20.76 filenames as explicit input allowlist; current sources and original Chrome MV3 manifest",
+  "checksRun": false,
+  "testsRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax",
+    "module getters",
+    "browser tests",
+    "lint",
+    "privacy tests",
+    "archive audit",
+    "download verification"
+  ],
+  "functionalRuntimeChanged": false,
+  "manifestChanged": false,
+  "versionIncreased": false,
+  "changes": [
+    "Includes20.72–20.76",
+    "Rebirth recovery after death and stale victory",
+    "Switching from Rebirth to raid farming leaves completed battle for selected task"
+  ],
+  "priorSourceValidation": "699Node files and119target scenarios passed for fix#447 before Firefox20.76 packaging; not re-run and not validation of this Chrome build",
+  "retainedChromeRollback": "builds/l2wap-bot-v20.71.zip",
+  "removedOldChromeBackup": "work/build-20.76-chrome/l2wap-bot-v20.66.zip and git history",
+  "externalBuildsFolderAvailable": false,
+  "firefoxRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "delivery": "immutable GitHub raw URL",
+  "pullRequest": "PR в подготовке",
+  "nextStep": "Распаковать поверх прежней папки Chrome, перезагрузить расширение и вкладку игры; лог переключения Rebirth→тур РБ на победе и в живом бою"
+}
