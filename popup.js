@@ -258,8 +258,14 @@ async function activateMode(rtPatch, cfgPatch) {
       const map = { craftMode: 'craft', enchantMode: 'enchant', epicMode: 'epic', rbHuntMode: 'raid', rebirthMode: 'rebirth', campaign: 'quests', fishMode: 'fish', catMode: 'cat', zoneAuto: 'auto' };
       const selected = new Set(cfg.autoTasks);
       for (const [flag, key] of Object.entries(map)) if (cfgPatch[flag] === true) selected.add(key);
+      // 20.76+ (ревизия 28.10): как autoTaskPatch (20.71) — другая основная задача снимает Rebirth; иначе «🎯 Один РБ»/«Цель +10» молча
+      // оставляли выбранный Rebirth (ядро выбирает его первым), а 'raid'/'fish' копились в списке и запускались после его снятия
+      if (Object.entries(map).some(([flag, key]) => key !== 'rebirth' && cfgPatch[flag] === true)) selected.delete('rebirth');
       cfgPatch = { ...cfgPatch, autoTasks: [...selected] };
     }
+    // 20.76+ (ревизия 28.10): и в плоском режиме (без autoTasks) включённая основная задача снимает rebirthMode — «Цель +10» и
+    // тумблеры тура/эпиков его не передавали, а rebirthSelected по rebirthMode:true оставлял Rebirth
+    if (cfgPatch.rebirthMode !== true && ['craftMode', 'enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto'].some(k => cfgPatch[k] === true)) cfgPatch = { ...cfgPatch, rebirthMode: false };
   }
   // 15.10: любой явный выбор другого режима снимает заточку; разовые службы без смены режима сохраняют её.
   if (modeChanged) cfgPatch = { enchantMode: false, craftMode: false, ...cfgPatch };
