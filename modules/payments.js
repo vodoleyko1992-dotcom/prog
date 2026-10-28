@@ -78,6 +78,7 @@
   function consumePermit() { const p=pending(); if (!p || permit!==p.id || !same(p) || !active() || context()!==p.context) return false; permit=null; requestPermit={id:p.id,context:p.context,at:Date.now()}; return true; }
   // 15.10, ревью: pending сам по себе не доказывает происхождение запроса. Один native POST
   // связывается только с использованным разрешением клика; служебные GET его не забирают.
+  // 20.76+ (ревизия 28.10, круг 2): платный городской набор тоже связывает свой POST — без paymentId явный отказ баффера не доходил до сверки.
   function claimRequest(d) {
     const prior=nativeClaim,p0=pending();
     if(d?.method==='POST'&&prior&&d.retryOf===prior.rid&&p0?.id===prior.id&&p0.kind==='story-teleport'&&same(p0)&&context()===prior.context&&Number.isFinite(d.retryAt)&&d.retryAt<=Date.now()&&Date.now()-d.retryAt<=10000&&d.path===prior.path&&d.req?.targetId===p0.target&&Number.isSafeInteger(d.req?.expectedRevision)&&d.req.expectedRevision>=prior.revision){nativeClaim=null;return p0.id;}
@@ -87,7 +88,7 @@
     const e=p.evidence||{},expected=p.kind==='fishing'&&/^\/game\/fishing\/(?:action|buy-starter|buy-gear)$/.test(e.path||'')?e.path:
       p.kind==='cat-teleport'?'/game/catacombs/teleport':p.kind==='raid-teleport'?'/game/raid-boss/teleport':
       p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='shop'?'/game/drops-shop/buy':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
-      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':p.kind==='mammon'&&e.action==='upgrade'?'/game/mammon/blacksmith/upgrade':p.kind==='mammon'&&e.action==='teleport'?'/game/mammon/teleport':p.kind==='fa-buff'?'/character/town/fast-aden-buffer/apply':null;
+      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':p.kind==='mammon'&&e.action==='upgrade'?'/game/mammon/blacksmith/upgrade':p.kind==='mammon'&&e.action==='teleport'?'/game/mammon/teleport':p.kind==='fa-buff'?'/character/town/fast-aden-buffer/apply':p.kind==='town-buff'?'/character/town/buffer':null;
     if(!expected||d.path!==expected)return '';
     if(p.kind==='fa-buff'&&(!e.set||d.req?.set!==e.set||e.ids?.length!==1||d.req?.skillId!==e.ids[0]||d.req?.expectedCostFastAden!==p.quote.amount||!Number.isSafeInteger(d.req?.expectedRevision)))return '';
     if(p.kind==='story-teleport'&&Number.isSafeInteger(d.rid)&&d.req?.targetId===p.target&&Number.isSafeInteger(d.req?.expectedRevision))nativeClaim={id:p.id,context:p.context,rid:d.rid,path:d.path,revision:d.req.expectedRevision,at:Date.now()};
