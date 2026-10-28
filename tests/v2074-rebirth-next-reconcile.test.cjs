@@ -43,7 +43,7 @@ for(const change of ['run','actor','prof','slot','spawn','role','char','kick','m
  await f.api().nextFight(f.ctx);assert.equal(f.location.pathname,'/battle.html');assert.equal(f.reads.length,0);noClicks(f);
 });
 
-for(const change of ['noRun','foreignRun','foreignActor','party','stage','inBattle','dead','revision','difficulty','http','json'])test('сверка receipt не принимает неизвестный или чужой свежий сервер: '+change,async()=>{
+for(const change of ['foreignRun','foreignActor','party','stage','inBattle','dead','revision','difficulty','http','json'])test('сверка receipt не принимает неизвестный или чужой свежий сервер: '+change,async()=>{
  const f=await fixture();if(change==='noRun')f.instance.activeRun=null;if(change==='foreignRun')f.instance.activeRun.id='22222222-2222-4222-8222-222222222222';
  if(change==='foreignActor'){f.ch.id='other';f.instance.activeRun.participantCharacterIds=['other'];}if(change==='party')f.instance.activeRun.partyId='party';
  if(change==='stage')f.instance.rebirthStage=2;if(change==='inBattle')f.ch.inBattle=true;if(change==='dead')f.ch.hp=0;if(change==='revision')f.ch.revision=-1;
@@ -52,9 +52,9 @@ for(const change of ['noRun','foreignRun','foreignActor','party','stage','inBatt
  await f.api().nextFight(f.ctx);assert.equal(f.location.pathname,'/battle.html');assert.equal(f.reads.length,2);noClicks(f);
 });
 
-test('receipt последнего рейда с activeRun:null не разрешает closed/следующий платный вход',async()=>{
+test('20.74: receipt последнего рейда с activeRun:null возвращает в каталог без следующего платного входа',async()=>{
  const f=await fixture({role:'raid'});f.env.rt.rebirth.char='Hero';f.env.cfg.rebirthAutoEnter=true;f.instance.activeRun=null;
- await f.api().nextFight(f.ctx);assert.equal(f.location.pathname,'/battle.html');assert.equal(f.reads.length,2);noClicks(f);
+ await f.api().nextFight(f.ctx);assert.equal(f.location.pathname,'/rebirth-raids.html');assert.equal(f.reads.length,2);noClicks(f);
 });
 
 for(const point of ['read','json','commit'])for(const change of ['stop','owner','class','mode','generation','page','lineage','receipt','captcha','native'])test(`receipt: отмена ${change} после ${point} не уводит старый контекст`,async()=>{

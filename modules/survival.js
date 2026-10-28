@@ -69,6 +69,8 @@ async function onDeath() {
   const rebirthRecovery=env.rebirthDeathRecovery?.();
   let saved;
   try { saved = await env.setRt({ deaths, deathLog, revive: { t: now, url: location.pathname + location.search, revived: false, counted: true, ...(rebirthRecovery?{rebirthRecovery}:{}), ...(!env.cfg.autoRevive ? { manual: true } : {}) },
+    // 20.74 (лог28.10 06:11): гибель своего похода — отдельный исход, а не победа и не неизвестная оплата.
+    ...(rebirthRecovery?{rebirth:{...env.rt.rebirth,failedRun:{...rebirthRecovery,at:now}}}:{}),
     ...(epicD ? { epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: now, cur: m?.cur ?? null, max: m?.max ?? null }] },
       epicDb: { ...(env.rt.epicDb || {}), [epicD.k]: { ...((env.rt.epicDb || {})[epicD.k] || {}), deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 } } } : {}),
     ...(seriesDeath ? { rbRun: { ...series, deaths: series.deaths + 1 } } : {}), ...(env.epicOn() || rbId ? { deaths1h } : {}),
