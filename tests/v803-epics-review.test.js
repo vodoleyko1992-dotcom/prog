@@ -84,7 +84,10 @@ function loadMod(file, name, env, o = {}) {
     await m.E.epicApiNote(listAlive(id), 'api', Date.now() + 1000); assert.ok(m.env.rt.epicDb.orfen.lifeT > 0, 'new life start remembered');
     // 10.0.2: HP недобитого — rbHpNow (hpAfter своего отхода и замер в бою rbWound); эпики по-прежнему передают HP сами (hpExact)
     assert.match(read('modules/raid.js'), /const curHp = st\.hpExact \? st\.hp \|\| 0 : rbHpNow\(id, st\.hp \|\| 0\)/);
-    assert.match(read('modules/raid.js'), /const rbHpNow = \(id, hp\) => \{ const w = env\.rt\.rbWound\?\.\[id\]; return Math\.min\(hp, env\.rt\.rb\?\.\[id\]\?\.hpAfter/);
+    // 20.76+ (ревизия 28.10): hpAfter отхода в rbHpNow — только запись этой же «жизни» РБ (rbRetreatRec: время записи, моложе минимального
+    // респа, таймеры не видели смерти после неё); rbWound — свежий (30 мин), как раньше. Поведение — v2077-audit-raid
+    assert.match(read('modules/raid.js'), /const rbHpNow = \(id, hp\) => \{\n  const now = Date\.now\(\), w = env\.rt\.rbWound\?\.\[id\], r = rbRetreatRec\(id, now\)/);
+    assert.match(read('modules/raid.js'), /return Math\.min\(hp, after, w && now - \(\+w\.t \|\| 0\) < 30 \* 60000 && w\.cur > 0 \? w\.cur : hp\);/);
     console.log('PASS R2: verdict uses only a fresh (30 min) wound of this life; a new life clears rbWound / rb[id]; hpAfter not re-applied');
   }
   // ---------- R3 / R8: платный «Повний баф» — только при разрешённом заходе; в режиме эпиков всегда в лимите CoL ----------

@@ -212,7 +212,11 @@ const revivedSince = t => Object.entries(state().b || {}).filter(([, x]) => x.al
 const winOf = () => { const L = +env.heroLevel?.() || +env.rt?.lvl || 0, w = +env.RB_WIN || 15; return L ? [L - w, L + w] : [-Infinity, Infinity]; };
 async function save(rows, src, extra = {}, meta = null) {
   const now = Date.now(), o = observe(state(), rows, now), T = meta ? { ...o.T, ...meta } : o.T, ev = o.ev;
-  await env.setRt({ rbTimer: T, ...extra });
+  // 20.76+ (ревизия 28.10): РБ умер или воскрес — HP прошлого отхода (rt.rb[id]: hpAfter/chip/attempts) уже не про него, как
+  // epics.lifeResetPatch у эпиков. Раньше запись жила до своей победы: на возродившемся РБ combat видел «реген = полный − hpAfter»
+  // и ставил ложное «отхиливается быстрее» (не по силам до нового уровня), а тур/меню — устаревшее «у него N/M»
+  const R = { ...(env.rt?.rb || {}) }, gone = ev.filter(e => R[e.id]).map(e => e.id); gone.forEach(id => delete R[id]);
+  await env.setRt({ rbTimer: T, ...extra, ...(gone.length ? { rb: R } : {}) });
   const [lo, hi] = winOf();
   for (const e of ev) {
     const x = e.x; if (!x.e && (x.l < lo || x.l > hi)) continue;   // в журнал — только РБ своего окна и эпики
