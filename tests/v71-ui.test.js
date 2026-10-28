@@ -9,7 +9,7 @@ const css=fs.readFileSync(path.join(root,'ui-v7.css'),'utf8');
 const mf=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
 const base=JSON.parse(fs.readFileSync(path.join(__dirname,'v71-baseline-ids.json'),'utf8'));
-assert.equal(mf.version,'20.74');
+assert.equal(mf.version,'20.75');
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 // 14.10: GM больше не продаёт наживку; прежнее поле заменено подсказкой к отдельному сервису рыбалки.
 const retained=base.filter(id=>!['shopBait','rbToggle','campToggle','tasksToggle','farmToggle','autoFarmToggle','huntToggle','epicToggle','fishToggle','catToggle','enchantToggle','tvtToggle'].includes(id));
