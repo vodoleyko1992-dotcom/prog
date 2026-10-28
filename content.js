@@ -3639,7 +3639,12 @@ async function loopTaskList() {
     // вызывается, а прежний rbSess.on бессрочно держал явный поход к Маммону.
     // Снимаем только завершённую выбором сессию; покупки, статистика и квитанции остаются.
     // В pending нет rbSess-снимка: повтор после ошибки записи не перекрывает новый Start.
-    if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.retireRaidSession = { start: rt.rbSess.start ?? null };
+    // 20.76+ (ревизия 28.10): фон и вкладка снимали сессию по разным правилам — неснятая сессия возвращала этот шаг каждый круг без
+    // паузы (запись + строка журнала, Rebirth не запускался). Повтор отмены той же сессии — не чаще раза в 5 с, между ними круг идёт дальше.
+    if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) {
+      const start = rt.rbSess.start ?? null, now = Date.now(), last = rbRetireTry;
+      if (!(last?.start === start && now >= last.at && now - last.at < 5000)) { rbRetireTry = { start, at: now }; blocked.retireRaidSession = { start }; }
+    }
     // 20.43 (автономность, доводка 21.10): маршрут задачи на передышке (L2EngineCore.taskJobHeld) — не «несовместимый»: он хранится до конца
     // передышки (иначе тур после подтверждённого платного перелёта начинал с выбора и платил за тот же перелёт снова), но не исполняется —
     // диспетчер его не видит (jobs), а владение кругом с него снимаем одной строкой журнала. Ревью: после передышки тур сначала бесплатно
@@ -3668,6 +3673,7 @@ async function loopTaskList() {
     }
   }
 }
+let rbRetireTry = null;   // 20.76+ (ревизия 28.10): последняя отмена РБ-сессии из loopTaskList {start, at}
 // 15.10: заточка — отдельный режим. Доводим текущий бой/улов, затем ждём выбранную серию.
 async function loopEnchant() {
   if (autonomyMode() === 'enchant') {
@@ -3974,7 +3980,7 @@ function rebirthDeathRecovery() {
     ||B.prof!==rt.classCur?.prof||B.slot!==rt.classCur?.slot||B.observedRun?.char!==rt.char||B.observedRun?.kick!==(rt.manualKickAt||0))return null;
   return {kind:'death',char:rt.char,prof:rt.classCur.prof,slot:rt.classCur.slot,kick:rt.manualKickAt||0,actor:B.actor,runId:B.runId,spawn:sid};
 }
-let rebirthDeathChecked = null;
+let rebirthDeathChecked = null, rebirthHeroReadFail = 0;
 async function rebirthPrepareHero(snapshot) {
   if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
   const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,kick=rt.manualKickAt||0,page=location.href;
@@ -3992,23 +3998,30 @@ async function rebirthPrepareHero(snapshot) {
   if(!snapshot&&!rebirthHeroNeeded()&&(!deathCheck||rt.tbuff))return false;   // чужой tbuff при полной шапке — прежний путь, без новой задержки
   if(rt.tbuff)return true; // чужой маршрут не превращаем в разрешение на собственную подготовку
   if(rt.restoreRes?.ok===false&&Date.now()-(rt.restoreRes.t||0)<180000){setStatus('Подземелья: восстановление пока не удалось — повторю у баффера, бой не начинаю');return true;}
+  // 20.76+ (ревизия 28.10): неудачное чтение /character (не 502/503) повторялось каждый круг (~0,2 с) — и внеплановая сверка
+  // открытой смерти при полной шапке, и низкое HP. Следующая попытка — через 3 с; до неё держим круг, как при самой ошибке.
+  const sinceFail=Date.now()-rebirthHeroReadFail;
+  if(!snapshot&&sinceFail>=0&&sinceFail<3000){setStatus('Подземелья: сверяю здоровье героя перед подготовкой');return true;}
   let ch=snapshot;
   try{if(!ch){const r=await gameGet('/character',4000);if(!wanted())return true;if(!r.ok)throw Error('read_failed');const d=await r.json();if(!wanted())return true;ch=d?.character||d;if(d?.error||d?.ok===false)ch=null;}}
-  catch(_){if(wanted())setStatus('Подземелья: сверяю здоровье героя перед подготовкой');return true;}
+  catch(_){if(wanted()){rebirthHeroReadFail=Date.now();setStatus('Подземелья: сверяю здоровье героя перед подготовкой');}return true;}
   if(!wanted())return true;
-  if(ownDeath)rebirthDeathChecked=F.at; // повторную внеплановую сверку при полной шапке не крутим — дальше прежний путь по HUD
+  if(ownDeath&&ch)rebirthDeathChecked=F.at; // повторную внеплановую сверку при полной шапке не крутим — дальше прежний путь по HUD (20.76+: ответ-ошибка — не сверка)
   // 20.76+ (ревизия 28.10): свежий свой герой уже в бою (Start из почты, ошибка загрузки боя увела в каталог) — не отказ подготовки:
   // возврат в незавершённый бой ведёт rebirth.step; раньше круг бесконечно писал «бой не начинаю», а step не вызывался.
   if(!snapshot&&ch&&ch.inBattle===true&&ch.name===who&&typeof ch.id==='string'&&ch.id&&ch.l2Profession===prof&&ch.classSlots?.activeSlot===slot
     &&ch.level===heroLvl()&&Number.isSafeInteger(ch.revision)&&ch.revision>=0)return false;
   if(!ch||ch.name!==who||typeof ch.id!=='string'||!ch.id||ch.l2Profession!==prof||ch.classSlots?.activeSlot!==slot||ch.level!==heroLvl()
     ||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||ch.revision<0||!(ch.hp>0&&ch.maxHp>0&&ch.hp<=ch.maxHp)){
+    if(!ch&&!snapshot)rebirthHeroReadFail=Date.now();   // ответ-ошибка игры — тоже неудачное чтение
     setStatus('Подземелья: свой герой и здоровье не подтверждены — бой не начинаю');return true;
   }
   const need=L2V7Modules.buffs.rebirthBuffNeed?.(ch);
   if(need?.unknown){setStatus('Подземелья: баффы героя ещё не подтверждены — бой не начинаю');return true;}
   const death=ownDeath&&F.actor===ch.id;
-  if(ch.hp>=ch.maxHp*.99&&!need?.set){
+  // 20.76+ (ревизия 28.10): смерть закрываем, как «HP и MP уже полные» у баффера, — и по MP: после неудачного первого восстановления
+  // маг с неполной маной иначе снова входил по AutoEnter. Неполная MP — восстановление у баффера с маркером смерти; без MP в ответе — по HP.
+  if(ch.hp>=ch.maxHp*.99&&!need?.set&&(!death||!(ch.maxMp>0)||ch.mp>=ch.maxMp*.99)){
     // как «HP и MP уже полные» у баффера (20.54): своя смерть закрыта свежим сервером, без похода в город
     if(death&&(await setRt({rebirth:{...rt.rebirth,failedRun:{...F,restoredAt:Date.now()}}}))?.ok!==true)return true;
     return false;
@@ -4768,10 +4781,18 @@ function dockGameBounds(viewport) {
 let dockHb = 0, dockBorn = 0, dockFix = 0;
 // v5.6: в Firefox адрес расширения moz-extension:// — сигнал панели не принимался, и её перезапускали каждые 20–60 с (лог 09.10: 80 раз за час)
 const EXT_ORIGIN = (() => { try { return new URL(chrome.runtime.getURL('')).origin; } catch (e) { return ''; } })();
-addEventListener('message', e => { if (e.data?.__l2dock === 'hb' && (e.origin === EXT_ORIGIN || /^(chrome|moz)-extension:\/\//.test(String(e.origin)))) dockHb = Date.now(); });
+// 20.76+ (ревизия 28.10): на Android поверх игры (dockOver) свёрнутость — язычок и localStorage, а меню в iframe считало себя
+// свёрнутым по cfg.dockMin (◀ в альбомной ориентации, импорт с ПК) и после первой отрисовки застывало. Фактическую свёрнутость
+// дока сообщаем самому меню: при каждой смене и в ответ на его пульс (iframe мог загрузиться позже сообщения); сторож — по ней же.
+let dockShownMin = null, dockOrigin = '';
+function dockMinPost(w = document.querySelector('#l2bot-dock iframe')?.contentWindow, origin = dockOrigin || EXT_ORIGIN) {
+  if (dockShownMin === null || !w || !origin) return;
+  try { w.postMessage({ __l2dock: 'min', min: dockShownMin }, origin); } catch (e) {}
+}
+addEventListener('message', e => { if (e.data?.__l2dock === 'hb' && (e.origin === EXT_ORIGIN || /^(chrome|moz)-extension:\/\//.test(String(e.origin)))) { dockHb = Date.now(); dockOrigin = e.origin; dockMinPost(e.source, e.origin); } });
 setInterval(() => {
   const fr = document.querySelector('#l2bot-dock iframe');
-  if (!fr || !cfg.dock || cfg.dockMin || document.hidden) return;
+  if (!fr || !cfg.dock || dockShownMin === true || document.hidden) return;
   const now = Date.now();
   if (now - Math.max(dockHb, dockBorn) < 20000 || now - dockFix < 60000) return;
   dockFix = now;
@@ -4809,7 +4830,7 @@ function dock() {
   if (window.top !== window) return;
   if (!cfg.dock) try { layoutInd(dockGameBounds(document.documentElement.clientWidth || innerWidth)); } catch (e) {}
   let wrap = document.getElementById('l2bot-dock');
-  if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; try { ui.classList.remove('over', 'hid', 'dock-covered'); } catch (e) {} return; }
+  if (!cfg.dock) { wrap?.remove(); dockShownMin = null; dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; try { ui.classList.remove('over', 'hid', 'dock-covered'); } catch (e) {} return; }
   const viewport = document.documentElement.clientWidth || innerWidth;
   const bounds = dockGameBounds(viewport), available = viewport - bounds.right - 8;
   // 8.0.7 (игрок 11.10, планшет с Firefox для Android: «всё немного криво косо»): рядом с игрой места нет (портрет планшета,
@@ -4853,6 +4874,7 @@ function dock() {
     wrap.append(tg, wide, fr);
     document.documentElement.appendChild(wrap);
   }
+  if (min !== dockShownMin) { dockShownMin = min; dockMinPost(); }   // 20.76+ (ревизия 28.10): меню в iframe — по фактической свёрнутости
   // 16.10.2026: x2 делит экран с индикатором; обе панели используют одну границу, без наложения.
   const normalWidth = bounds.right > 0 && available >= 300 ? available : Math.min(dockOver ? 460 : 380, Math.max(0, viewport - 16));
   const wideOn = dockWideOpen() && !dockOver;
@@ -7566,6 +7588,13 @@ async function petReturnAshen(J,T) {
     await rtCommit();return live();
   }catch(_){return false;}
 }
+// 20.76+ (ревизия 28.10): сбой/не-JSON сверки, отказ свежей цены/лимита/резерва и ожидание activeDungeonId возвращали true без
+// срока — два GET каждые ~0,2 с, пока игрок не нажмёт Start. Повтор той же фазы того же похода: сбой 5→10→…→60 с, отказ 30 с,
+// подтверждение входа в катакомбы 3 с (как petAshenReturnPoll). Удачная сверка снимает паузу.
+let petReturnPoll = null;
+const petReturnWait = key => { const P=petReturnPoll,now=Date.now();return P?.key===key&&now>=P.at&&now-P.at<P.wait; };
+const petReturnHold = (key, kind) => { const n=petReturnPoll?.key===key&&petReturnPoll.kind===kind?petReturnPoll.n+1:0;
+  petReturnPoll={key,kind,n,at:Date.now(),wait:kind==='fail'?Math.min(60000,5000*2**n):kind==='deny'?30000:3000}; };
 async function warlockTripReturn(J) {
   if(!petTripFree(J))return false;
   // Своя подготовка Rebirth возвращается в каталог похода, без обычных телепортов зоны/катакомб.
@@ -7589,7 +7618,9 @@ async function warlockTripReturn(J) {
     await petTripNotice(J,'Жду подтверждение возврата; повторный платный телепорт запрещён');return true;
   }
   if(J.phase==='returnEnter') {
-    if(location.pathname==='/dungeon.html'&&new URLSearchParams(location.search).get('dungeonId')===T?.id) {
+    const pollKey=J.id+'|returnEnter';
+    if(location.pathname==='/dungeon.html'&&new URLSearchParams(location.search).get('dungeonId')===T?.id&&!petReturnWait(pollKey)) {
+      petReturnHold(pollKey,'poll');
       try {const r=await gameGet('/character'),d=r.ok?await r.json():null;
         if(petTripFree(J)&&d?.character?.name===J.char&&d.character.activeDungeonId===T.id) {await setRt({petBufferTrip:null});return true;}
       }catch(_){}
@@ -7625,19 +7656,22 @@ async function warlockTripReturn(J) {
   if(!b){await petTripNotice(J,'Жду строку прежних катакомб и подтверждённую цену');return true;}
   const quote=petReturnPrice(T,b);
   if(quote===null){await petTripNotice(J,'Цена возврата неизвестна или валюта не адена; не плачу');return true;}
+  const pollKey=J.id+'|return';
+  if(petReturnWait(pollKey))return true;   // статус прошлой попытки уже показан
   let ch,rows;
   try {
     const responses=await Promise.all([gameGet('/character'),gameGet(T.kind==='cat'?'/game/catacombs':'/game/teleport/locations')]);
     const body=await Promise.all(responses.map(r=>r.json()));
-    if(!responses.every(r=>r.ok)||body.some(d=>d?.error))return true;
+    if(!responses.every(r=>r.ok)||body.some(d=>d?.error)){petReturnHold(pollKey,'fail');return true;}
     ch=body[0].character;rows=T.kind==='cat'?body[1].dungeons:body[1].locations;
-  }catch(_){return true;}
+  }catch(_){petReturnHold(pollKey,'fail');return true;}
   if(!petTripFree(J))return true;
   const row=Array.isArray(rows)?rows.find(x=>String(T.kind==='cat'?x.dungeonId:x.teleportId)===T.id):null;
   const cost=petMoney(row?.adenaCost),wallet=petMoney(ch?.adena),reserve=petMoney(cfg.petFullReserve??cfg.shopReserve??200000),cap=petMoney(cfg.shopMaxSpend??2000000);
   if(!row||cost===null||cost!==quote||ch?.name!==J.char||wallet===null||reserve===null||cap===null||cost>cap||wallet-cost<reserve){
-    await petTripNotice(J,'Возврат не проходит свежую цену, лимит снабжения или резерв адены');return true;
+    petReturnHold(pollKey,'deny');await petTripNotice(J,'Возврат не проходит свежую цену, лимит снабжения или резерв адены');return true;
   }
+  if(petReturnPoll?.key===pollKey)petReturnPoll=null;
   b=petReturnButton(T);if(!b||petReturnPrice(T,b)!==cost)return true;
   if(!await petTripSave(J,{phase:'returnSent',returnQuote:{kind:T.kind,id:T.id,price:cost,revision:ch.revision,t:Date.now()}})||!petTripFree(J))return true;
   b=petReturnButton(T);if(!b||petReturnPrice(T,b)!==cost){await petTripSave(rt.petBufferTrip,{phase:'return'});return true;}
