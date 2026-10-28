@@ -33,5 +33,6 @@
   "liteRebuilt": false,
   "liveGameOpened": false,
   "signed": false,
-  "nextStep": "Update Firefox in same profile/folder, reload game tab and press Start once for old stuck state; collect death/recovery/reentry log"
+  "nextStep": "Update Firefox in same profile/folder, reload game tab and press Start once for old stuck state; collect death/recovery/reentry log",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/446"
 }
