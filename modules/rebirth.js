@@ -161,13 +161,16 @@ async function nextFight(ctx) {
   const ids = new URLSearchParams(location.search || '').getAll('spawnId'), route = ids.length === 1 ? ids[0] : '', parts = spawnParts(route);
   const lineage = s => JSON.stringify([s.actor,s.prof,s.slot,s.runId,s.battleSpawn,s.battleRole,s.observedRun?.char,s.observedRun?.kick]);
   const previousFight = state(), lineageSig = lineage(previousFight);
-  const recover = !fresh && !(ctx?.name === name && ctx.spawnId) && path() === '/battle.html' && parts
+  const boundLineage = path() === '/battle.html' && parts
     && previousFight.battleSpawn === route && typeof previousFight.runId === 'string' && previousFight.runId.toLowerCase() === parts[1].toLowerCase()
     && previousFight.battleRole === parts[6].toLowerCase() && previousFight.prof === prof && previousFight.slot === slot
     && typeof previousFight.actor === 'string' && !!previousFight.actor && previousFight.observedRun?.char === char
     && previousFight.observedRun?.kick === (env.rt.manualKickAt || 0)
     && (!info?.spawn || info.spawn === route) && (!info?.name || String(info.name).toLowerCase() === name.toLowerCase())
     && (!ctx || ctx.spawnId === route && ctx.name === name);
+  const recover = !fresh && !(ctx?.name === name && ctx.spawnId) && boundLineage;
+  let receiptRecovery = false, pendingReceiptRaw = null;
+  const sameReceipt = () => { try { return root.sessionStorage.getItem('l2bot.rebirth-next') === pendingReceiptRaw; } catch (_) { return false; } };
   const after = fresh && info.spawn || ctx?.name === name && ctx.spawnId || recover && route || '';
   const victory = env.$q('#battle-victory-inline'), hunt = env.$q('#battle-victory-hunt'), ctxSpawn = ctx?.spawnId;
   const active = () => on() && env.canRun?.() !== false && env.tabOwner === true && env.canAct?.() !== false && env.heroNick?.() === char
@@ -177,7 +180,7 @@ async function nextFight(ctx) {
   const current = () => active() && env.victory() && ctx?.spawnId === ctxSpawn
     && env.$q('#battle-victory-inline') === victory && env.$q('#battle-victory-hunt') === hunt
     && (env.$q('#battle-mob-title')?.textContent || '') === title && JSON.stringify(env.battleInfo?.() || null) === infoSig
-    && (!recover || lineage(state()) === lineageSig);
+    && (!(recover || receiptRecovery) || lineage(state()) === lineageSig) && (!receiptRecovery || sameReceipt() && !env.nativePending?.());
   const huntReady = () => current() && !!hunt && env.shown(hunt) && !hunt.disabled;
   const hold = async why => { if (active()) { env.setStatus('Rebirth: ' + why); await env.sleep(1000); } };
   if (!active()) return;
@@ -188,7 +191,18 @@ async function nextFight(ctx) {
   const key = JSON.stringify([char, prof, slot, after]), receiptKey = 'l2bot.rebirth-next';
   const receipt = () => JSON.parse(root.sessionStorage.getItem(receiptKey) || 'null');
   const clear = () => { try { if (receipt()?.key === key) root.sessionStorage.setItem(receiptKey, 'null'); } catch (_) {} };
-  try { if (receipt()?.key === key) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю'); }
+  try {
+    pendingReceiptRaw = root.sessionStorage.getItem(receiptKey);
+    const pendingNext = JSON.parse(pendingReceiptRaw || 'null');
+    if (pendingNext?.key === key) {
+      // 20.74 (лог28.10 05:58): next уже ответил, но start/переход мог не состояться; старый hunt не повторяем.
+      // Сохраняем квитанцию. После окончания нативного ожидания разрешена лишь свежая сверка своего run и бесплатный каталог.
+      if (!boundLineage || route !== after || !Number.isFinite(pendingNext.t) || pendingNext.t < 0 || Date.now() - pendingNext.t < 8000)
+        return hold('исход продолжения ещё не подтверждён — повторно не нажимаю');
+      receiptRecovery = true;
+      if (env.nativePending?.()) return hold('жду завершения запроса игры перед сверкой продолжения');
+    }
+  }
   catch (_) { return hold('не удалось прочитать отметку продолжения'); }
   if (rebirthAttempt?.key === key && (rebirthAttempt.busy || Date.now() < rebirthAttempt.until)) return hold('жду повторной серверной сверки');
   // 20.71 (лог27.10 05:49): отменённый до клика await не является отказом сервера и не оставляет паузу15с.
@@ -229,6 +243,9 @@ async function nextFight(ctx) {
     const run = instance?.activeRun;
     if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0))
       return retry('принадлежность текущего оплаченного похода не подтверждена');
+    if (receiptRecovery && (!run || !solo(run,ch.id) || ![1,2,3].includes(run.difficulty)
+        || run.id.toLowerCase() !== parts[1].toLowerCase() || ch.id !== previousFight.actor || instance.rebirthStage !== ch.rebirthStage))
+      return retry('свой текущий оплаченный поход после продолжения не подтверждён');
     // 20.68 (лог27.10 13:20): после РБ native next возвращает none; известная победа своего похода доводится до каталога.
     const previous=env.rt.rebirth,closed=mode==='rebirth'&&run===null&&previous?.char===char&&previous.actor===ch.id
       &&previous.prof===prof&&previous.slot===slot&&typeof previous.runId==='string'&&after.startsWith('rebirth_raid_'+previous.runId+'_')&&/_raid_\d+$/i.test(after);
@@ -236,7 +253,8 @@ async function nextFight(ctx) {
         || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id)
         || mode==='rebirth' && (run.partyId!==null || run.participantCharacterIds.length!==1 || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(run.id))))
       return retry('принадлежность текущего оплаченного похода не подтверждена');
-    if (recover && (ch.id !== previousFight.actor || instance.rebirthStage !== ch.rebirthStage)) return retry('свой поход после потери метки победы не подтверждён');
+    if ((recover || receiptRecovery) && (ch.id !== previousFight.actor || instance.rebirthStage !== ch.rebirthStage)) return retry('свой поход после потери метки победы не подтверждён');
+    if (receiptRecovery && env.nativePending?.()) return hold('жду завершения запроса игры перед сверкой продолжения');
     const progress=run&&Number.isSafeInteger(run.mobKillTarget)&&run.mobKillTarget>0&&Number.isSafeInteger(run.mobKills)&&run.mobKills>=0;
     const nextStage=progress&&(run.phase==='mobs'&&(run.mobKills<run.mobKillTarget||mode==='rebirth'&&run.mobKills===run.mobKillTarget)
       ||mode==='rebirth'&&['champion','rb_active'].includes(run.phase)&&run.mobKills>=run.mobKillTarget);
@@ -245,7 +263,7 @@ async function nextFight(ctx) {
       return hold('этап требует вашего выбора — новый вход и логово не открываю');
     }
     if (env.nativePending?.()) return hold('жду завершения запроса игры перед продолжением');
-    if (recover) {
+    if (recover || receiptRecovery) {
       // Только бесплатный возврат: свежий каталог сам продолжит этот оплаченный run, не повторяя неизвестный native next.
       return env.rebirthReturn?.(current);
     }

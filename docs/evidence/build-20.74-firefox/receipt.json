@@ -1,0 +1,42 @@
+{
+  "version": "20.74",
+  "format": "Firefox",
+  "sourceBase": "549b7062df7e7681214e2cd83537dd2ef1a9136a",
+  "sourceFixPullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/443",
+  "additionalFix": "same build includes untested next-receipt reconciliation from user log05:58",
+  "userRequest": "сборк абез тестов; Firefox context retained; user then supplied05:58 failure",
+  "artifact": "builds/l2wap-bot-v20.74-firefox.zip",
+  "bytes": 1742772,
+  "sha256": "3103fc2ad63d85c574cf45d565fe2d25a274709f5d462b95a4aad82a9d71cfce",
+  "packagedFiles": 69,
+  "packaging": "same explicit file allowlist as prior Firefox20.73; standard Firefox manifest transformation",
+  "checksRun": false,
+  "testsRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax",
+    "module getters",
+    "browser tests",
+    "lint",
+    "privacy tests",
+    "archive audit",
+    "download verification"
+  ],
+  "changes": [
+    "own death/prepare hero-buff job survives isolated Rebirth policy",
+    "free basic or confirmed zero-cost VIP and restored hero HP precede pet preparation and combat",
+    "pending next receipt allows fresh own-lineage/character/solo-run reconciliation and free catalogue return without replaying hunt",
+    "missing-run guard, unknown payment receipts, Stop, ownership and manual difficulty preserved"
+  ],
+  "priorSourceValidation": "696 Node files and3ChromeMV3 scenarios passed for fix#443 before this build; not re-run; not evidence of new receipt fix or Firefox20.74",
+  "newRegression": "tests/v2074-rebirth-next-reconcile.test.cjs:63 scenarios written and registered, not run",
+  "oldArchiveRetainedIn": "git history and /workspace/work/build-20.74-firefox/",
+  "externalBuildsFolderAvailable": false,
+  "chromeRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "signed": false,
+  "nextStep": "Update Firefox in same profile/folder, reload game tab, collect death/recovery and lost-next reconciliation log",
+  "pullRequest": "PR в подготовке",
+  "manualReview": "source read by independent reviewer; no blockers; no runtime validation"
+}

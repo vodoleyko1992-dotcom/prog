@@ -67,11 +67,11 @@ for(const point of ['read','json','commit'])for(const change of ['stop','owner',
  f.S.hooks[point]=cancel;await f.api().nextFight();assert.equal(changed,true);assert.equal(f.location.pathname,'/battle.html');noActions(f);
 });
 
-test('неизвестный отправленный next и native-inflight не обходятся восстановлением',async()=>{
+test('20.74: отправленный next сверяется без повтора, активный native-запрос удерживает переход',async()=>{
  for(const pending of ['receipt','native']){const f=await own();
   if(pending==='receipt'){await f.api().nextFight();assert.equal(f.clicks.filter(x=>x==='hunt').length,1);f.clicks.length=0;}
   else f.S.native=true;
-  f.tick(61000);await f.api().nextFight();assert.equal(f.location.pathname,'/battle.html');noActions(f);
+  f.tick(61000);await f.api().nextFight();assert.equal(f.location.pathname,pending==='receipt'?'/rebirth-raids.html':'/battle.html');noActions(f);
  }
 });
 
