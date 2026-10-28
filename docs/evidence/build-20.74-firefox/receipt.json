@@ -37,6 +37,6 @@
   "liveGameOpened": false,
   "signed": false,
   "nextStep": "Update Firefox in same profile/folder, reload game tab, collect death/recovery and lost-next reconciliation log",
-  "pullRequest": "PR в подготовке",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/444",
   "manualReview": "source read by independent reviewer; no blockers; no runtime validation"
 }
