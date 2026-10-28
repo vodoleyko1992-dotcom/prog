@@ -1,0 +1,55 @@
+{
+  "base": "73c3f0f85b1cce4a5e06b633c1f46d75d8a4dc40",
+  "node": {
+    "passedFiles": 692,
+    "failedFiles": 0,
+    "newGroups": 57
+  },
+  "syntax": {
+    "passedFiles": 4
+  },
+  "shellRegistry": "bash -n PASS",
+  "env": {
+    "passedModules": 35
+  },
+  "review": {
+    "independentProbes": 26,
+    "blockers": 0
+  },
+  "baseline": {
+    "passedGroups": 22,
+    "expectedFailures": 35,
+    "failedOutcomes": 3,
+    "unreachedGetOrAwaitChecks": 32
+  },
+  "browser": {
+    "runtime": "Chrome156MV3",
+    "passedScenarios": [
+      "aged-after-http",
+      "missing-reload",
+      "stop-held"
+    ],
+    "nativeNextRequests": 0,
+    "paidEntryRequests": 0,
+    "keysPreserved": 100,
+    "pageErrors": 0
+  },
+  "sourceHashes": {
+    "modules/rebirth.js": "4a4707bc07d1782ee9ef0d94d961ed6cfcfeb4ec205d9657e7b0f43ece720e09",
+    "tests/v2072-rebirth-victory-retry.test.cjs": "dacfff7ce42de7a6504568bb052a2569fdd96a1bf9a58ebe5fba3af1260dd275",
+    "tests/v2072-rebirth-victory-retry-browser.cjs": "c76048959f7727ffeedf498ddc208b6567e4ccc32066a97a52d861becde3e65e"
+  },
+  "evidence": {
+    "uploadedVersion": "20.71",
+    "lastVictory": "2026-10-28 12:16:14.909 UTC+10",
+    "firstExpiredHold": "2026-10-28 12:17:15.687 UTC+10",
+    "expiredHolds": 1748,
+    "nextStart": "2026-10-28 13:12:28.920 UTC+10",
+    "gapSeconds": 3374.011
+  },
+  "limits": [
+    "No live game requests",
+    "No new ZIP or version bump",
+    "Watchdog unchanged"
+  ]
+}

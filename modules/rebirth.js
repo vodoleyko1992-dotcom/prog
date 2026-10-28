@@ -156,7 +156,19 @@ async function nextFight(ctx) {
   const info = env.battleInfo?.(), infoSig = JSON.stringify(info || null), title = env.$q('#battle-mob-title')?.textContent || '';
   const name = title.replace(/\s*[·•]\s*ур\.?\s*\d+[\s\S]*$/i, '').trim();
   const fresh = info && Date.now() - info.t >= 0 && Date.now() - info.t < 60000 && String(info.name || '').toLowerCase() === name.toLowerCase();
-  const after = fresh && info.spawn || ctx?.name === name && ctx.spawnId || '';
+  // 20.72 (лог28.10 03:12): таймаут повторяется через60с, когда прежняя метка уже устарела; после reload ctx тоже нет.
+  // URL — только указатель: восстановление требует сохранённого своего боя, свежего героя/run и ведёт в каталог без next-клика.
+  const ids = new URLSearchParams(location.search || '').getAll('spawnId'), route = ids.length === 1 ? ids[0] : '', parts = spawnParts(route);
+  const lineage = s => JSON.stringify([s.actor,s.prof,s.slot,s.runId,s.battleSpawn,s.battleRole,s.observedRun?.char,s.observedRun?.kick]);
+  const previousFight = state(), lineageSig = lineage(previousFight);
+  const recover = !fresh && !(ctx?.name === name && ctx.spawnId) && path() === '/battle.html' && parts
+    && previousFight.battleSpawn === route && typeof previousFight.runId === 'string' && previousFight.runId.toLowerCase() === parts[1].toLowerCase()
+    && previousFight.battleRole === parts[6].toLowerCase() && previousFight.prof === prof && previousFight.slot === slot
+    && typeof previousFight.actor === 'string' && !!previousFight.actor && previousFight.observedRun?.char === char
+    && previousFight.observedRun?.kick === (env.rt.manualKickAt || 0)
+    && (!info?.spawn || info.spawn === route) && (!info?.name || String(info.name).toLowerCase() === name.toLowerCase())
+    && (!ctx || ctx.spawnId === route && ctx.name === name);
+  const after = fresh && info.spawn || ctx?.name === name && ctx.spawnId || recover && route || '';
   const victory = env.$q('#battle-victory-inline'), hunt = env.$q('#battle-victory-hunt'), ctxSpawn = ctx?.spawnId;
   const active = () => on() && env.canRun?.() !== false && env.tabOwner === true && env.canAct?.() !== false && env.heroNick?.() === char
     && env.rt.char === char && env.rt.classCur?.prof === prof && env.rt.classCur?.slot === slot && location.href === page
@@ -164,7 +176,8 @@ async function nextFight(ctx) {
     && env.autonomyMode() === mode && env.heroLvl() === level && !env.pvpPending?.() && !env.antibotState?.() && !env.tvtSoon();
   const current = () => active() && env.victory() && ctx?.spawnId === ctxSpawn
     && env.$q('#battle-victory-inline') === victory && env.$q('#battle-victory-hunt') === hunt
-    && (env.$q('#battle-mob-title')?.textContent || '') === title && JSON.stringify(env.battleInfo?.() || null) === infoSig;
+    && (env.$q('#battle-mob-title')?.textContent || '') === title && JSON.stringify(env.battleInfo?.() || null) === infoSig
+    && (!recover || lineage(state()) === lineageSig);
   const huntReady = () => current() && !!hunt && env.shown(hunt) && !hunt.disabled;
   const hold = async why => { if (active()) { env.setStatus('Rebirth: ' + why); await env.sleep(1000); } };
   if (!active()) return;
@@ -223,6 +236,7 @@ async function nextFight(ctx) {
         || !Array.isArray(run.participantCharacterIds) || !run.participantCharacterIds.includes(ch.id)
         || mode==='rebirth' && (run.partyId!==null || run.participantCharacterIds.length!==1 || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(run.id))))
       return retry('принадлежность текущего оплаченного похода не подтверждена');
+    if (recover && (ch.id !== previousFight.actor || instance.rebirthStage !== ch.rebirthStage)) return retry('свой поход после потери метки победы не подтверждён');
     const progress=run&&Number.isSafeInteger(run.mobKillTarget)&&run.mobKillTarget>0&&Number.isSafeInteger(run.mobKills)&&run.mobKills>=0;
     const nextStage=progress&&(run.phase==='mobs'&&(run.mobKills<run.mobKillTarget||mode==='rebirth'&&run.mobKills===run.mobKillTarget)
       ||mode==='rebirth'&&['champion','rb_active'].includes(run.phase)&&run.mobKills>=run.mobKillTarget);
@@ -231,6 +245,10 @@ async function nextFight(ctx) {
       return hold('этап требует вашего выбора — новый вход и логово не открываю');
     }
     if (env.nativePending?.()) return hold('жду завершения запроса игры перед продолжением');
+    if (recover) {
+      // Только бесплатный возврат: свежий каталог сам продолжит этот оплаченный run, не повторяя неизвестный native next.
+      return env.rebirthReturn?.(current);
+    }
     // Новый большой этап проходит свою подготовку в каталоге; победу над самим РБ доводим до native next:none.
     const completedRole=after.match(/_(mob|champion|raid)_\d+$/i)?.[1].toLowerCase();
     if (!closed && (run.phase==='champion' && completedRole!=='champion' || run.phase==='rb_active' && completedRole!=='raid'
