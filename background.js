@@ -1500,10 +1500,15 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     try { const src = new URL(_s?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); fromPopup = src.origin === expected.origin && src.pathname === expected.pathname; } catch (e) {}
     const okObj = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= MAX_PATCH_KEYS && Object.keys(p).every(k => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k));
     const per = m.perChar && typeof m.perChar === 'object' && !Array.isArray(m.perChar) ? m.perChar : {};
-    if (!fromPopup || !okObj(m.cfg) || Object.keys(per).length > 50 || !Object.entries(per).every(([k, v]) => /^cfg@[^\s]{1,100}$/.test(k) && okObj(v))) { reply({ ok: false, reason: 'invalid' }); return true; }
+    // 20.77 (ревизия 28.10): флаги разовых миграций из файла (меню отделяет их от настроек, cfgImportClean) — {cfg|cfg@Ник: [имена]}.
+    // Ставятся только значением 1 и только недостающие: настройку не перекрывают, а импортированные значения не переписываются once() заново
+    const fl = m.flags && typeof m.flags === 'object' && !Array.isArray(m.flags) ? m.flags : {};
+    const okFl = Object.entries(fl).every(([k, v]) => (k === 'cfg' || Object.hasOwn(per, k)) && Array.isArray(v) && v.length <= MAX_PATCH_KEYS && v.every(f => typeof f === 'string' && /^[a-z][A-Za-z0-9_]{0,62}(?:\d|Mig)$/.test(f)));
+    if (!fromPopup || !okObj(m.cfg) || Object.keys(per).length > 50 || !Object.entries(per).every(([k, v]) => /^cfg@[^\s]{1,100}$/.test(k) && okObj(v)) || !okFl) { reply({ ok: false, reason: 'invalid' }); return true; }
     serializeLock(async () => {
       const keys = ['cfg', ...Object.keys(per)], state = await chrome.storage.local.get(keys), change = { cfg: { ...(state.cfg || {}), ...m.cfg } };
       for (const [k, v] of Object.entries(per)) change[k] = { ...(state[k] && typeof state[k] === 'object' ? state[k] : {}), ...v };
+      for (const [k, v] of Object.entries(fl)) for (const f of v) if (!Object.hasOwn(change[k], f)) change[k][f] = 1;
       await chrome.storage.local.set(change); return { ok: true };
     }).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
@@ -1549,7 +1554,9 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m?.cmd === 'sleep') { setTimeout(() => { try { reply(true); } catch (e) {} }, Math.min(Math.max(+m.ms || 0, 0), 120000)); return true; }
   // v5.5.6: «позвать игрока» — антибот-проверка игры (её решает только человек) / блок PvE-фарма
   if (m?.cmd === 'alert') {
-    try { chrome.notifications?.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
+    // 20.77 (ревизия 28.10): через общий notify — Firefox отвергает requireInteraction даже со значением false («Unexpected property»),
+    // ошибку глотал catch: в Firefox ПК не было уведомлений о капче, блоке PvE, остановке автовхода и нехватке для крафта
+    notify('l2bot-' + (m.id || 'alert'), m.title || 'L2wap Bot', m.text || '', !!m.sticky);
     try { chrome.action?.setBadgeText?.({ text: m.badge || '!' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#c0392b' })?.catch?.(() => {}); } catch (e) {}
   }
   if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
