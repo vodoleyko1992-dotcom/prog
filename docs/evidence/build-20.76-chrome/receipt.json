@@ -37,6 +37,7 @@
   "liteRebuilt": false,
   "liveGameOpened": false,
   "delivery": "immutable GitHub raw URL",
-  "pullRequest": "PR в подготовке",
-  "nextStep": "Распаковать поверх прежней папки Chrome, перезагрузить расширение и вкладку игры; лог переключения Rebirth→тур РБ на победе и в живом бою"
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/449",
+  "nextStep": "Распаковать поверх прежней папки Chrome, перезагрузить расширение и вкладку игры; лог переключения Rebirth→тур РБ на победе и в живом бою",
+  "downloadUrl": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/6b322056847f1d527f4f948bde9d003e54d68d4c/builds/l2wap-bot-v20.76.zip"
 }
