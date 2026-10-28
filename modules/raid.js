@@ -197,10 +197,32 @@ async function rbDpsLearn(id, dps) {
   return rbNote(id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), dpsLvl: L || null, dpsBase: base || null, dpsContext: null });
 }
 // 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
-// 20.76+ (ревизия 28.10): hpAfter отхода (rt.rb[id], пишет rbRetreat) — тоже только свежий (30 мин), как rbWound и epics.epicWoundHp.
+// 20.76+ (ревизия 28.10): hpAfter отхода (rt.rb[id], пишет rbRetreat) — только запись этой же «жизни» РБ (rbRetreatRec).
 // Раньше бессрочно: после чужого убийства и респауна РБ считался на 25 % HP, прогноз боя занижался вчетверо и предел «долгий бой»
-// (rbMaxKillMin, правило 18.10) не срабатывал до покупки набора за FA и платного телепорта
-const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id], r = env.rt.rb?.[id], fresh = t => Date.now() - (+t || 0) < 30 * 60000; return Math.min(hp, r?.hpAfter > 0 && fresh(r.t) ? r.hpAfter : hp, w && fresh(w.t) && w.cur > 0 ? w.cur : hp); };
+// (rbMaxKillMin, правило 18.10) не срабатывал до покупки набора за FA и платного телепорта.
+// 20.76+ (ревью ревизии 28.10): срок — минимальный респ, а не 30 мин: пауза тура после выхода по опасности тоже 30 мин, и плоский срок
+// отбрасывал HP недобитого РБ ровно к моменту, когда тур снова мог его выбрать (HP РБ хранится на сервере между заходами, kb/repo-facts).
+// Известный реген РБ (rbDb.regen, HP/с — замер combat по двум заходам) прибавляется за время с отхода. rbWound (замер в бою) — 30 мин, как раньше
+const rbHpNow = (id, hp) => {
+  const now = Date.now(), w = env.rt.rbWound?.[id], r = rbRetreatRec(id, now), g = +env.rt.rbDb?.[id]?.regen;
+  const after = r?.hpAfter > 0 ? r.hpAfter + (g > 0 ? g * (now - r.t) / 1000 : 0) : hp;
+  return Math.min(hp, after, w && now - (+w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp);
+};
+// 20.76+ (ревью ревизии 28.10): запись отхода rt.rb[id] (hpAfter/chip/attempts) относится к той же «жизни» РБ, пока:
+// - у неё есть время записи t (старый формат без t — не применяем);
+// - она моложе минимального респа с запасом 5 % (8 ч: замер 12.10, 11 РБ — 7,98–8,04 ч от смерти; меньший cfg.rbRespH — по нему). РБ, убитый
+//   даже сразу после нашего отхода, за это время воскреснуть не успел: запись либо про эту жизнь, либо РБ мёртв и список его не выберет;
+// - таймеры боссов (rt.rbTimer, в том числе импорт слежки, который rbtimer.save не проходит) не видели его мёртвым после t.
+// Общая проверка для прогноза (rbHpNow), повторного отхода (rbRetreat: попытки прошлой жизни не копятся) и combat (реген/«отхиливается быстрее»)
+function rbRetreatRec(id, now = Date.now()) {
+  const r = env.rt.rb?.[id], t = +r?.t || 0;
+  if (!r || !(t > 0)) return null;
+  const respH = Math.min(8, +env.cfg.rbRespH > 0 ? +env.cfg.rbRespH : 8);
+  if (now - t >= respH * 0.95 * 3600000) return null;
+  const T = env.rt.rbTimer?.b?.[id];
+  if (T && (T.al === false ? Math.max(+T.dh || 0, +T.k || 0) > t : +T.pv > t)) return null;   // мёртв после отхода / видели мёртвым после него
+  return r;
+}
 // 15.10, живой Andras: старая броня не описывает текущий входящий урон.
 // Ключ включает героя, подкласс, защиту, экипировку/баффы и цель. Legacy остаётся
 // осторожной оценкой; наблюдением текущего состава оно не становится.
@@ -843,6 +865,12 @@ function rbEntryDecision(id, x) {
   if (price) return { ok: false, kind: 'currency', action: 'wait', why: price };
   const wallet = env.rt.adenaSeen;
   const here = env.isMap?.() && raidList().some(r => r.id === id);
+  // 20.76+ (ревью ревизии 28.10): недавняя нехватка адены на платный телепорт rbGo (rbSkip {funds}, 10 мин, пишет rbGoStep) вне обычного тура
+  // (там rbSkip проверен выше). Кошелёк в фарме почти всегда старше 60 с, и проверка бюджета ниже молчала: farmStep раз в минуту снова
+  // создавал задание («лечу к …» в журнал), а rbGoStep читал героя и снимал его. Более свежий кошелёк после отсрочки решает сам, как обычно
+  { const sk = env.rt.rbSkip?.[id];
+    if (!here && !ordinaryLiveTour(id) && sk?.funds && Date.now() < rbSkipUntil(id) && !(wallet?.t > (+sk.t || 0) && wallet.t > (env.rt.rbPaidAt || 0) && Date.now() - wallet.t <= 60000))
+      return { ok: false, kind: 'funds', action: 'prepare', why: `отложен: ${sk.why || 'не хватало адены на телепорт'}` }; }
   if (!here && Number.isFinite(x?.price) && x?.unit === 'аден' && wallet?.t > (env.rt.rbPaidAt || 0) && Date.now() - wallet.t <= 60000) {
     const budget = rbTravelBudget(x);
     if (budget) return { ok: false, kind: 'funds', action: 'prepare', why: budget };
@@ -1095,6 +1123,22 @@ async function rbGoStep() {                       // список РБ → ну�
     await env.setRt({ rbGo: null, rbWant: null });
     return;
   }
+  // 20.76+ (ревью ревизии 28.10): кошелёк под платный телепорт — до баффера и страницы списка (rbGoBudget). Не хватает адены сверх резерва
+  // или цена выше лимита снабжения — задание снимаем без оплаты и перехода (в журнал раз в 30 мин); сверка не ответила — ждём.
+  const walletOk = async price => {
+    const why = await rbGoBudget(g.id, price, active);
+    if (!active() || !sameJob()) return false;
+    if (!why) return true;
+    if (why === RB_WALLET_WAIT) { env.setStatus(`РБ: перед платным телепортом к ${g.name} сверяю адену — оплату не готовлю`); return false; }
+    noteRbSkip(g.id, `${why} — оплату не отправляю`);
+    // отсрочка 10 мин: rbEntryDecision (выбор farmStep) и rbTourPlan («Фарм РБ») не создают это задание снова, пока нет более свежей адены
+    const now = Date.now();
+    await env.setRt({ rbGo: null, rbWant: null, rbSkip: { ...(env.rt.rbSkip || {}), [g.id]: { t: now, until: now + 10 * 60000, why: `${why} (${(env.rt.adenaSeen?.v ?? 0).toLocaleString('ru')} аден)`, funds: true } } });
+    if (isRbPage()) { location.href = '/map.html'; await env.sleep(3000); }
+    return false;
+  };
+  // Только что улетели к нему (rbGoTried < 2 мин) — ниже «ищу на карте» без оплаты; кошелёк там не нужен
+  if (Date.now() - (env.rt.rbGoTried?.[g.id] || 0) >= 120000 && !await walletOk(g.price)) return;
   // 17.10, реворк: баффер может ждать ответ. Новая цель/команда за это время не заменяется прежним РБ.
   if (!isRbPage()) {
     const started=await env.townBuffStart(`перед РБ ${g.name}`, true);
@@ -1128,6 +1172,8 @@ async function rbGoStep() {                       // список РБ → ну�
     env.rec('B', 'РБ-тур', `${g.name}: цена телепорта изменилась (${Number.isFinite(g.price) ? g.price.toLocaleString('ru') : '?'} → ${row.price.toLocaleString('ru')} аден) — обновляю задание, оплату пока не отправляю`);
     await env.setRt({ rbGo: { ...g, price: row.price }, rbList: rbListDomMerge({ [g.id]: row }) }); return;
   }
+  // 20.76+ (ревью ревизии 28.10): кошелёк — по подтверждённой цене строки, прямо перед оплатой (страница/баффер могли занять > 60 с)
+  if (!await walletOk((row || btnPrice(b))?.price)) return;
   env.rec('B', 'РБ-тур', `телепорт к ${g.name} (${g.lvl})${g.price ? ' · ' + g.price.toLocaleString('ru') + ' аден' : ''}`);
   // v4.30: rbGo снимаем ДО нажатия: телепорт уводит со страницы и скрипт умирает, не дойдя до «rbGo: null» внизу.
   // Раньше бот на новой странице видел rbGo, возвращался в список и телепортировался снова — 90 с подряд, за аден.
@@ -1136,7 +1182,8 @@ async function rbGoStep() {                       // список РБ → ну�
   await env.pause();
   if (!active() || !sameJob()) return;
   const cnt = [...((env.rt.rbGoCnt || {})[g.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);
-  if (!await rbTeleportFire(b, { rbWant: g.id, rbGo: null, rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now() })) return;
+  // 20.76+ (ревью ревизии 28.10): после платного перелёта кошелёк несвежий (rbPaidAt, как в туре) — следующий платный переход перечитает адену
+  if (!await rbTeleportFire(b, { rbWant: g.id, rbGo: null, rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now(), ...(g.price > 0 ? { rbPaidAt: Date.now() } : {}) })) return;
   if (!active()) return;
   await env.waitX(() => !isRbPage(), 6000, 200);
   if (!active()) return;
@@ -1283,6 +1330,18 @@ function rbTravelBudget(row) {
   if (!(cap > 0) || row.price > cap) return `цена ${row.price} выше лимита снабжения ${cap}`;
   if (balance.v - row.price < reserve) return `на телепорт ${row.price} не хватает адены сверх резерва ${reserve}`;
   return '';
+}
+
+// 20.76+ (ревью ревизии 28.10): кошелёк платного телепорта rbGo (фарм ресурса с РБ, «Фарм РБ») — как шаг go тура: rbTravelBudget и current()
+// в rbTeleportFire требуют адену не старше 60 с (и новее последней оплаты rbPaidAt), а rbGoStep её не перечитывал. В фарме adenaSeen почти
+// всегда старше: «телепорт к X · 100 000 аден», prepare/cancel оплаты на каждой итерации до конца 90 с задания, перелёта не было вовсе.
+// Несвежий кошелёк — бесплатный GET /character (rbRefreshState). Ответа нет — RB_WALLET_WAIT: ждём, оплату не готовим.
+const RB_WALLET_WAIT = 'нужен свежий запас адены';
+async function rbGoBudget(id, price, active) {
+  if (!(price > 0)) return '';
+  const fresh = () => env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000 && Number.isFinite(env.rt.adenaSeen.v);
+  if (!fresh()) await rbRefreshState(id, active, true);
+  return fresh() ? rbTravelBudget({ price, unit: 'аден' }) : RB_WALLET_WAIT;
 }
 
 // 20.12 (ревизия 17.10): бюджет телепорта до покупки набора за FA. РБ на этой карте — без телепорта, бюджет не нужен.
@@ -2305,7 +2364,8 @@ function rbFlee(ctx, me, mob) {
 // verdict (8.0.3, аварийный выход rbFlee): 'no' — «не по силам» до нового уровня героя, 'skip' — пропуск 30 мин; оба — без возврата
 // к нему после отдыха (rbPending), обычный отход (без verdict) — как раньше
 async function rbRetreat(ctx, mob, why, verdict) {
-  const prev = env.rt.rb?.[ctx.rb.id] || { attempts: 0 };
+  // 20.76+ (ревью ревизии 28.10): запись прошлой жизни РБ (rbRetreatRec) не продолжаем — попытки не копятся через респаун
+  const prev = rbRetreatRec(ctx.rb.id) || { attempts: 0 };
   const rec = { ...prev, name: ctx.name, max: mob.max, hpAfter: mob.cur, chip: ctx.rb.start - mob.cur,
                 attempts: prev.attempts + 1, t: Date.now() };
   await env.setRt({ rb: { ...(env.rt.rb || {}), [ctx.rb.id]: rec }, target: null, rbPending: !verdict,
@@ -2348,6 +2408,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { listPriceNote, rbPriceRefresh, rbTeleportFire, rbHasScrolls, rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { listPriceNote, rbPriceRefresh, rbTeleportFire, rbHasScrolls, rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, rbRetreatRec, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

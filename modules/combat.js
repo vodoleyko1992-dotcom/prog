@@ -2963,6 +2963,18 @@ async function hpChampionProof(name, urlSpawn, max, cameVia) {
   finally { probe.busy = false; }
 }
 
+// 20.76+ (ревью ревизии 28.10): реген РБ между заходами — только по записи отхода этой же «жизни» РБ (raid.rbRetreatRec: время записи,
+// моложе минимального респа, таймеры не видели его мёртвым после неё). Раньше бралась любая rt.rb[id]: на возродившемся РБ (бот не видел
+// смерти/воскрешения или запись осталась от прошлой жизни) «реген = полный − старый hpAfter» учил rbDb.regen, а при attempts ≥ 2 ставил ложное
+// «отхиливается быстрее» — вердикт «не по силам» до нового уровня. rate — HP/с для rbDb.regen, healed — сколько отхилился, no — вердикт
+function rbRegenCheck(id, cur, now = Date.now()) {
+  const prev = typeof env.rbRetreatRec === 'function' ? env.rbRetreatRec(id, now) || null : null;
+  if (!prev || prev.hpAfter == null) return { prev, rate: undefined, healed: null, no: false };
+  const dt = (now - prev.t) / 1000, healed = cur - prev.hpAfter;
+  const rate = prev.hpAfter && cur >= prev.hpAfter && dt > 30 ? +(healed / dt).toFixed(2) : undefined;   // HP/с, 0 — не лечится
+  const no = !env.ordinaryLiveTour?.(id) && prev.attempts >= 2 && prev.chip > 0 && healed >= prev.chip * 0.9 && !env.epicById?.(id);
+  return { prev, rate, healed, no };
+}
 // 20.13 (шаг 7): начало боя — загрузка страницы, панель, слуга/банки на панели, проверки входа (РБ вне окна, цвета и предел чемпиона,
 // «не по зубам», выше героя), ctx и заход к РБ/эпику. Ранний выход — значение для battle (как прежний return); иначе { [BATTLE_OPEN] }
 async function battleOpen() {
@@ -3170,24 +3182,20 @@ async function battleOpen() {
         env.rec('B', 'РБ', `${nm}: в памяти были чужие цифры (HP ${env.fmtK(st0.hp)} вместо ${env.fmtK(mob0.max)}) — стёр, оценю заново`);
       } }
     // HP РБ сохраняется между заходами: «Моб ще поранений: HP 143526 / 148507» (через 13 мин — ровно столько же)
-    const prevR = env.rt.rb?.[ctx.rb.id], dbR = env.rt.rbDb?.[ctx.rb.id] || {};
+    const RG = rbRegenCheck(ctx.rb.id, mob0.cur), dbR = env.rt.rbDb?.[ctx.rb.id] || {};
     const wounded = env.logLines().some(l => /(?:Моб ще поранений|Моб ещё ранен|still wounded)/i.test(l)) || mob0.cur < mob0.max;
-    let regen = dbR.regen;
-    if (prevR?.hpAfter && prevR.t && mob0.cur >= prevR.hpAfter) {
-      const dtR = (Date.now() - prevR.t) / 1000;
-      if (dtR > 30) regen = +((mob0.cur - prevR.hpAfter) / dtR).toFixed(2);      // HP/с, 0 — не лечится
-    }
+    let regen = RG.rate ?? dbR.regen;
     ctx.rb.persist = !!(dbR.persist || wounded) && !(regen > 0 && mob0.cur >= mob0.max);   // ранен при входе ⇒ HP хранится
     ctx.rb.regen = regen;
     // 20.41: статистика РБ (сохраняется ли HP, число заходов) — без ожидания записи перед первым ударом; rbNote меняет память вкладки сразу
     if (ctx.rb.persist || regen != null) env.rbNote(ctx.rb.id, { persist: ctx.rb.persist, regen: regen ?? dbR.regen })?.catch?.(() => {});
     if (ctx.rb.persist) env.rec('B', 'РБ', `${nm}: HP сохранилось с прошлого захода ${mob0.cur}/${mob0.max}${regen != null ? ` · восстановление ${regen} HP/с` : ''}`);
     env.rbNote(ctx.rb.id, { name: ctx.name, lvl: rbLvl, tries: (env.rt.rbDb?.[ctx.rb.id]?.tries || 0) + 1 })?.catch?.(() => {});
-    const prev = env.rt.rb?.[ctx.rb.id];
+    const prev = RG.prev;
     if (prev?.hpAfter != null) {
-      const regen = mob0.cur - prev.hpAfter;                // сколько РБ отхилился, пока мы отдыхали
+      const regen = RG.healed;                              // сколько РБ отхилился, пока мы отдыхали
       console.log(env.TAG, `РБ ${ctx.name}: был ${prev.hpAfter}, сейчас ${mob0.cur} (реген ${regen}), прошлый заход снял ${prev.chip}`);
-      if (!env.ordinaryLiveTour?.(ctx.rb.id) && prev.attempts >= 2 && prev.chip > 0 && regen >= prev.chip * 0.9 && !env.epicById(ctx.rb.id)) {   // эпик: решает epicStep
+      if (RG.no) {   // эпик: решает epicStep
         await env.rbNote(ctx.rb.id, { verdict: 'no', note: `отхиливается быстрее (реген ${regen} ≥ снимаем ${prev.chip})` });
         await env.setRt({ rbCur: null, target: null });
         env.setStatus(`РБ ${ctx.name}: ❌ отхиливается быстрее, чем мы бьём — в базу «не по силам»`);
@@ -3354,6 +3362,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { limitDiveFresh, epicFrenzyOn, epicFrenzyHold, epicFrenzyFloor, armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
+ return { rbRegenCheck, limitDiveFresh, epicFrenzyOn, epicFrenzyHold, epicFrenzyFloor, armMonsterRequest, monsterRequestToken, noteMonsterSnapshot, managedMonsterPlan, managedMonsterStep, limitPlan, managedToggleClass, managedToggleStep, noteToggleSnapshot, noteToggleBattle, battleRoarActive, battleRoarPlan, aoeProbe: { note: aoeProbeNote, capped: aoeProbeCapped }, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, combatWeapon, combatWeaponLive, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, dbfImmune, immKey, IMM_MS, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel, learnWeaponBarred };
  };
 })(globalThis);
