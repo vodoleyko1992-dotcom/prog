@@ -1,0 +1,38 @@
+{
+  "version": "20.75",
+  "format": "Firefox",
+  "sourceBase": "4978d6e1a65a20d3ae8ac81e72fffc8eef854260",
+  "sourceFixPullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/445",
+  "userRequest": "сборка без проверок",
+  "artifact": "builds/l2wap-bot-v20.75-firefox.zip",
+  "bytes": 1743850,
+  "sha256": "da9a580ca4c5a7705252c5a992835e95e71ed622c1e2e231ef6bb5cb50f7c437",
+  "packagedFiles": 69,
+  "packaging": "prior Firefox20.74 ZIP filenames used as explicit input allowlist; current sources; standard Firefox manifest transformation",
+  "checksRun": false,
+  "testsRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax",
+    "module getters",
+    "browser tests",
+    "lint",
+    "privacy tests",
+    "archive audit",
+    "download verification"
+  ],
+  "changes": [
+    "own death and successful recovery allow enabled AutoEnter after fresh own no-run proof",
+    "stale victory with activeRun:null returns to free catalogue without repeating hunt",
+    "fresh final raid victory retains native next/completion; unknown payments remain blocked"
+  ],
+  "priorSourceValidation": "698 Node files and125target scenarios passed for fix#445 before this build, not re-run and not validation of Firefox20.75",
+  "oldArchiveRetainedIn": "git history and /workspace/work/build-20.75-firefox/",
+  "externalBuildsFolderAvailable": false,
+  "chromeRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "signed": false,
+  "nextStep": "Update Firefox in same profile/folder, reload game tab and press Start once for old stuck state; collect death/recovery/reentry log",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/446"
+}
