@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.72",
-  "description": "L2wap Bot 20.72 — ускорение подземелий Rebirth и память массовых атак",
+  "version": "20.73",
+  "description": "L2wap Bot 20.73 — восстановление подземелий Rebirth после сетевого сбоя",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -143,5 +143,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.72"
+  "version_name": "20.73"
 }
