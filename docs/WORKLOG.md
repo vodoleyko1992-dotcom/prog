@@ -2,6 +2,12 @@
 
 **Ведущий: ChatGPT/Codex (с 26.10.2026, 09:48 UTC+10, John «я пока перейду в ГПТ, доделывай задачу и вливай»).** Claude по этой просьбе доделал и влил только начатую часть 3 нагрузки (запись ниже); дальше Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`. До этого с 23.10.2026, 23:00 UTC+10 вёл Claude.
 
+## 28.10.2026, 13:20 UTC+10 — Codex — Rebirth после устаревшей победы (PR в подготовке)
+
+- TXT/learn03:12/20.71: mob231победа→timeout→60сbackoff→expiredmetadata/noctx→1748hold,3reload и20минпередышка/каталог; разрыв56мин14с. Прежний #439/#440этотпуть не закрывал.
+- Узкое восстановление собственной связи по exactURL+persistedlineage и freshownhero/solo-run, бесплатныйкаталог→Continue/Fight. Никакого next/reentry изстаройпобеды, receipts/Stop/async/квоты прежние, общийсторож не отключён.
+- Новые57Node/26независимыхпробPASS, reviewбезблокеров, baseline3outcome/32непройденныхGET/awaitFAIL. ПолныйNode692/0FAIL,syntax4/bash/env35/diffPASS; Chrome156MV3timeout/reload/Stop3PASS/0JSошибок,0next/entry,ключи100. Версия/ZIP20.72прежние, live0. Далее публикацияPR и отдельнаясборка по просьбе.
+
 ## 28.10.2026, 12:10 UTC+10 — Codex — Firefox20.72 без проверок ([PR #440](https://github.com/vodoleyko1992-dotcom/prog/pull/440))
 
 - John «сборка на фаерфокс без проверок». База c2d30ef/#439, только Firefox20.72: параллельныеfreshGET и память массовых атак Rebirth. Версия/header/5versionassertions/README/история; runtime при упаковке прежний.
