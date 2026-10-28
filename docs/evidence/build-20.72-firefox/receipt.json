@@ -1,0 +1,38 @@
+{
+  "version": "20.72",
+  "format": "Firefox",
+  "sourceBase": "c2d30ef3996173e561a4d9e2c65873d9fc30f420",
+  "sourceFixPullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/439",
+  "userRequest": "сборка на фаерфокс без проверок",
+  "artifact": "builds/l2wap-bot-v20.72-firefox.zip",
+  "bytes": 1737636,
+  "sha256": "67f0406ea80992ea12b9debc579fef5699a790d4c6ce21ee077a279861a5fe34",
+  "packagedFiles": 69,
+  "packaging": "same explicit file allowlist as prior Firefox20.71; Firefox manifest transformation from firefox-build.cjs",
+  "checksRun": false,
+  "testsRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax",
+    "module getters",
+    "browser tests",
+    "lint",
+    "privacy tests",
+    "archive audit",
+    "download verification"
+  ],
+  "changes": [
+    "parallel independent fresh Rebirth battle/instance checks before first action",
+    "parallel fresh character/instance checks before native next",
+    "AoE model persists between ordinary mobs of the same exact run/stage/difficulty/species/level/role/owner"
+  ],
+  "priorSourceValidation": "691 Node files and3ChromeMV3 scenarios passed for source fix before packaging; not re-run and not evidence of this build",
+  "oldArchiveRetainedIn": "git history and /workspace/work/build-20.72-firefox/",
+  "externalBuildsFolderAvailable": false,
+  "chromeRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "signed": false,
+  "nextStep": "Install in Firefox using the same add-on identity and profile; collect a full Rebirth run log; live speedup is not measured",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/440"
+}
