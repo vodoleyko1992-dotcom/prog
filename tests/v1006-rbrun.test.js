@@ -56,7 +56,9 @@ function make({ rt = {}, cfg = {} } = {}) {
   assert.ok(combat.indexOf('env.rbRun?.kill(') > combat.indexOf("rbKills: (env.rt.rbKills || 0) + 1"), 'учёт после записи убийства РБ');
   // 19.10: survival сохраняет rbRun вместе с историей смерти; реальное поведение проверяет v2022-death-once.test.js.
   // 10.0.14: вход вынесен в enterDetour, который продолжает сохранённый дейлик после Stop; режим и старт серии остаются связаны.
-  assert.ok(/async function enterDetour[\s\S]*rbHuntMode: true, fishMode: false, epicMode: false, catMode: false \}\);[\s\S]*if \(key === 'dailyRb' && sameDetour\(key, D, kick\)\) try \{ await env\.rbRun\?\.start\('daily'/.test(daily), 'daily: enterDetour включает тур РБ и запускает серию после проверки текущего задания');
+  // 20.76+ (ревизия 28.10): набор режимов объезда вынесен в detourCfg (по нему detourEnd узнаёт нетронутые игроком ключи); enterDetour пишет его же
+  assert.ok(/const detourCfg = key => [^\n]*\n\s*: \{ rbHuntMode: true, fishMode: false, epicMode: false, catMode: false \};/.test(daily), 'daily: detourCfg — набор режимов тура РБ');
+  assert.ok(/async function enterDetour[\s\S]*await env\.setCfg\(detourCfg\(key\)\);[\s\S]*if \(key === 'dailyRb' && sameDetour\(key, D, kick\)\) try \{ await env\.rbRun\?\.start\('daily'/.test(daily), 'daily: enterDetour включает тур РБ и запускает серию после проверки текущего задания');
   // 14.10: сброс обычного простоя добавляется перед новой серией; остальные поля запуска прежние.
   assert.ok(/m === 'rb'\) await activateMode\(\{ \.\.\.leaveEpic, \.\.\.rbTourRestart\(rt\), rbRun: \{ t0: now, mode: 'tour' \}/.test(popup), 'popup: ручной тур сбрасывает простой и начинает новую серию');
   assert.ok(/m === 'epic'\) await activateMode\(\{ \.\.\.leaveHunt, rbRun: \{ t0: now, mode: 'epic' \}/.test(popup), 'popup: /m === \'epic\'\) await activateMode\(\{ \.\.\.leave');

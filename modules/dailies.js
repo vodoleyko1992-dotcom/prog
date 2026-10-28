@@ -194,11 +194,13 @@ async function dailyStep() {
 // 10.0.14: запись задания и переключение режима разделены await. Stop/новый ручной режим не дают старому шагу
 // включить рыбалку/тур. Незавершённый вход переживает перезапуск; ручной выбор в popup отменяет само задание.
 const sameDetour = (key, D, kick) => canRun() && (+env.rt.manualKickAt || 0) === kick && (D.kick == null || D.kick === kick) && env.rt[key]?.t === D.t && env.rt[key]?.day === D.day;
+// 20.76+ (ревизия 28.10): что объезд пишет в режимы — по этому же набору detourEnd узнаёт, какие ключи с тех пор никто не трогал
+const detourCfg = key => key === 'dailyFish' ? { fishMode: true, rbHuntMode: false, epicMode: false, catMode: false, zoneAuto: false }
+  : { rbHuntMode: true, fishMode: false, epicMode: false, catMode: false };
 async function enterDetour(key, D, kick) {
   if (!sameDetour(key, D, kick) || env.cfg.dailyAuto === false) return false;
   if (campaignBusy()) return yieldCampaign(key, D, kick);
-  await env.setCfg(key === 'dailyFish' ? { fishMode: true, rbHuntMode: false, epicMode: false, catMode: false, zoneAuto: false }
-    : { rbHuntMode: true, fishMode: false, epicMode: false, catMode: false });
+  await env.setCfg(detourCfg(key));
   if (!sameDetour(key, D, kick)) return true;
   if (campaignBusy()) return yieldCampaign(key, D, kick);
   await env.setRt({ [key]: { ...D, entering: false } });
@@ -208,7 +210,12 @@ async function enterDetour(key, D, kick) {
 async function detourEnd(key, D, why) {
   const kick = +env.rt.manualKickAt || 0;
   if (!sameDetour(key, D, kick)) return;
-  await env.setCfg({ ...(D.prev || {}) });
+  // 20.76+ (ревизия 28.10): в старом режиме (autoTasks=null) галки «Катакомбы»/«Автофарм» в разделах не поднимают manualKickAt —
+  // объезд жив, и конец его затирал выбор игрока старым снимком prev. Рыбный объезд возвращает только ключи, которые всё ещё
+  // равны записанному им самим; изменённые игроком остаются. Старый dailyRb (до 20.12) заканчивается на первом шаге — прежний полный возврат
+  const raw = root.L2EngineCore?.rawTaskConfig(env.cfg) || env.cfg, wrote = detourCfg(key);
+  const back = key === 'dailyFish' ? Object.fromEntries(Object.entries(D.prev || {}).filter(([k]) => Object.hasOwn(wrote, k) && !!raw[k] === wrote[k])) : { ...(D.prev || {}) };
+  if (Object.keys(back).length) await env.setCfg(back);
   if (!sameDetour(key, D, kick)) return;
   await env.setRt({ [key]: null, ...(key === 'dailyRb' ? { rbHunt: { step: 'pick', t: Date.now(), last: 'дейлик по РБ окончен' }, rbGo: null } : {}) });
   if (!canRun() || (+env.rt.manualKickAt || 0) !== kick) return;
