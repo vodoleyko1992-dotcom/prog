@@ -122,6 +122,11 @@ function paymentNote(path,d) {
   try {root.sessionStorage?.setItem('l2bot.fishingPayment',JSON.stringify(receipt));}catch(_){}
   if(env.tabOwner!==false)env.setRt({fishPaymentReceipt:receipt});
 }
+// 20.76+ (ревизия 28.10): отказ сервера в покупке цели рыбака (500 inventory_full, 409, «не применилась») откладывает эту цель
+// на 30 мин. Раньше следующий круг fishExchange сразу слал тот же POST buy-gear, и бот без конца крутился в магазине рыбака.
+const GEAR_FAIL_MS = 30 * 60000;
+const gearHeld = g => Date.now() - (+env.rt.fishGearFail?.[g] || 0) < GEAR_FAIL_MS;
+async function gearFail(e) { if (e?.action === 'gear' && e.key) await env.setRt({ fishGearFail: { ...(env.rt.fishGearFail || {}), [e.key]: Date.now() } }); }
 async function paymentReconcile() {
   const p=env.payments?.pending();if(p?.kind!=='fishing')return !p;
   const lease=env.leaseEpoch,char=env.rt.char,valid=()=>env.tabOwner!==false&&env.leaseEpoch===lease&&env.rt.char===char&&char===p.char&&env.payments.pending()?.id===p.id;
@@ -129,6 +134,7 @@ async function paymentReconcile() {
   const e=p.evidence||{};let receipt=env.rt.fishPaymentReceipt;
   try {const r=JSON.parse(root.sessionStorage?.getItem('l2bot.fishingPayment')||'null');if(r?.paymentId===p.id)receipt=r;}catch(_){}
   if(receipt?.paymentId===p.id&&receipt.charId===e.charId&&receipt.refused){
+    await gearFail(e);if(!valid())return false;
     await env.payments.confirm(p,{kind:'server-rejected',status:receipt.refused,spent:0});env.setStatus?.(`Рыбалка: сервер отклонил покупку (${receipt.refused}); перечитываю состояние`);return false;
   }
   let proof=receipt?.paymentId===p.id&&receipt.charId===e.charId&&receipt.revision>e.revision?{kind:'server-receipt',revision:receipt.revision}:null;
@@ -141,6 +147,7 @@ async function paymentReconcile() {
     // за ≥2 мин после оплаты: покупка не применилась. Рыбалку в это время бот не ведёт, ревизии сам не двигает.
     if(ch?.name===p.char&&ch.id===e.charId&&Number.isSafeInteger(e.chRev)&&Number.isSafeInteger(s?.revision)&&env.payments.probeNote?.(p,s.revision===e.stRev&&env.payments.unchanged?.({revision:e.chRev,adena:e.adena},ch))){
       if(!valid())return false;
+      await gearFail(e);if(!valid())return false;
       await env.payments.confirm(p,{kind:'state-not-applied',revision:ch.revision,spent:0});env.setStatus?.('Рыбалка: покупка не применилась (состояние не изменилось); перечитываю состояние');return false;
     }
     if(ch?.name===p.char&&ch.id===e.charId&&Number.isSafeInteger(ch.revision)&&ch.revision>e.revision&&Number.isSafeInteger(s?.revision)&&s.revision>e.revision){
@@ -164,14 +171,18 @@ async function paymentReconcile() {
 // Значение прежнее: полный cfg.shopReserve. В economy.shopReserve для бедного героя резерв — не больше половины адены; свести их —
 // решение о тратах, не чистка (как и лимит shopMaxSpend: здесь без настройки — без предела, в economy — 2 млн)
 const fishReserve = () => Math.max(0, +env.cfg.shopReserve || 0);
+// 20.76+ (ревизия 28.10): причина последнего отказа подготовки оплаты (цена/резерв/сверка) — для журнала паузы места и цели
+// рыбака; раньше null возвращался без следа. Пусто — отказа «по делу» не было (Stop, сверка прошлой оплаты, смена задачи).
+let prepWhy = '';
 async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
+  prepWhy='';
   // 20.13 (шаг 7, services/CQ-1): в расширении env.payments есть всегда; ветка legacy жива только для старых тестов без payments
   // (v80-fishing, v716-feature, v1014-fishing-controls, v1027-daily-campaign-priority) — удалять вместе с переводом этих тестов
   if(!env.payments)return {legacy:true};
   if(env.payments.blocked()){await paymentReconcile();return null;}
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode(),valid=()=>fishOwn()&&env.rt.char===char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&env.autonomyMode()===mode&&wanted();
   const [j,s]=await Promise.all([paymentRead('/character'),paymentRead('/game/fishing/state')]);if(!valid())return null;
-  const ch=j?.character||j;if(ch?.name!==char||!ch.id||!Number.isSafeInteger(ch.revision)||!Number.isSafeInteger(s?.revision))return null;
+  const ch=j?.character||j;if(ch?.name!==char||!ch.id||!Number.isSafeInteger(ch.revision)||!Number.isSafeInteger(s?.revision)){prepWhy='сверка с сервером не прошла';return null;}
   // 20.12: отдельные ревизии и адена до клика — для сверки «состояние не изменилось» (L2PayOutcome.unchanged).
   const e={action,key,charId:ch.id,revision:Math.max(ch.revision,s.revision),chRev:ch.revision,stRev:s.revision,adena:amountNumber(ch.adena)},reserve=fishReserve();
   let actual,available,canBuy=false;
@@ -182,7 +193,7 @@ async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
   }else if(action==='starter'){
     const row=s.starterShop?.offers?.find(x=>x.key===key);actual=amountNumber(row?.priceAdena)==null?null:amountNumber(row.priceAdena)*amount;available=amountNumber(s.starterShop?.availableAdena);canBuy=row?.canBuy===true;
     const known=starterQty(s,key),visible=key==='starter_rod'?0:fishQty({bait_x10:'basicBait',good_bait_x10:'goodBait',soulshot_x50:'soulshot'}[key]);
-    if(visible==null||known!==visible)return null;
+    if(visible==null||known!==visible){prepWhy='запас на панели не совпал с сервером';return null;}
     Object.assign(e,{path:'/game/fishing/buy-starter',request:{offerKey:key,amount},before:known,gain:row?.qty*amount});
   }else if(action==='gear'){
     const row=(s.economy?.gearCategories||[]).flatMap(x=>x.items||[]).find(x=>x.key===key);actual=amountNumber(row?.priceAdena);available=amountNumber(ch.adena);canBuy=row?.canBuy===true&&Number.isFinite(row.priceProof)&&row.priceProof>=0&&s.economy.proofQty>=row.priceProof;
@@ -191,7 +202,11 @@ async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
     actual=amountNumber(s.fishingSpot?.priceAdena);available=amountNumber(ch.adena);canBuy=s.fishingSpot?.canBuy===true&&s.fishingSpot.purchased===false;
     Object.assign(e,{path:'/game/fishing/action',request:{action:'buyFishingSpot'},before:0,gain:1});
   }
-  if(!canBuy||!Number.isSafeInteger(actual)||actual<0||price!=null&&actual!==price||!Number.isFinite(available)||available-actual<reserve||!Number.isFinite(e.before)||!Number.isFinite(e.gain)||e.gain<=0)return null;
+  if(!canBuy||!Number.isSafeInteger(actual)||actual<0||price!=null&&actual!==price||!Number.isFinite(available)||available-actual<reserve||!Number.isFinite(e.before)||!Number.isFinite(e.gain)||e.gain<=0){
+    prepWhy=!Number.isSafeInteger(actual)||actual<0||price!=null&&actual!==price?'цена на сервере не подтверждена':!canBuy?(action==='gear'?'игра не разрешает покупку или не хватает Proof':'игра не разрешает покупку')
+      :!Number.isFinite(available)?'адена на сервере не прочитана':available-actual<reserve?`нужно ${actual.toLocaleString('ru')} Adena + резерв ${reserve.toLocaleString('ru')}, есть ${available.toLocaleString('ru')}`:'запас до покупки не прочитан';
+    return null;
+  }
   const p=await env.payments.prepare({key:`fishing:${action}:${key}`,kind:'fishing',quote:{amount:actual,currency:'Adena'},evidence:e});
   if(p&&!valid()){await env.payments.cancel(p);return null;}
   return p;
@@ -1170,6 +1185,10 @@ async function fishSetup() {
   if (spot && env.shown(spot) && !spot.disabled) {
     if(env.payments){
       const payment=await paymentPrepare('spot','spot',1,null,()=>env.cfg.fishAutoSetup!==false&&!env.rt.dailyFish);
+      // 20.76+ (ревизия 28.10): подготовка не прошла (адены меньше цены + резерв, canBuy:false, сверка не сошлась) — как в старой
+      // ветке: причина в журнал, лесенка пауз fishSoft и передача очереди другим задачам. Раньше return true без паузы: каждые
+      // ≈1,6 с два GET впустую, пока сторож не перезагружал вкладку. Неподтверждённая прошлая оплата по-прежнему ждёт сверки.
+      if(!payment){if(prepWhy&&!env.payments.blocked())await fishSoft(`Рыбалка: рыболовное место не куплено — ${prepWhy}`);return true;}
       if(!await paymentFire(payment,spot))return true;
       env.setStatus('Рыбалка: покупаю рыболовное место');await paymentReconcile();return true;
     }
@@ -1505,6 +1524,8 @@ async function fishExchange() {
   for (const g of env.names(env.cfg.fishGoal || '')) {
   if (!valid()) return;
     if(bought.has(g))continue;
+    // 20.76+ (ревизия 28.10): сервер недавно отказал в этой цели — ждём 30 мин; дальше по списку не идём, как при «копим»
+    if (gearHeld(g)) { env.setStatus(`Рыбалка: цель ${g} — игра отказала в покупке, повтор не раньше чем через 30 мин`); break; }
     const kind = g.split('_')[0];               // cloak | tattoo | belt
     const tab = env.$q(`#fishing-shop-tab-${kind}s`);
     if (tab && !tab.classList.contains('l2-fishing-special-shop-tab--active')) { env.fire(tab); await env.sleep(env.rnd(700, 1000)); }
@@ -1517,10 +1538,23 @@ async function fishExchange() {
     const before = env.$q('#fishing-shop-success')?.textContent || '';
     const payment=await paymentPrepare('gear',g,1,null,()=>env.names(env.cfg.fishGoal||'').includes(g));
     if (!valid()) return;
+    // 20.76+ (ревизия 28.10): подготовка не прошла (адены меньше цены + резерв shopReserve, canBuy/Proof сервера не сошлись,
+    // GET не прошёл) — цель ждёт, как при неактивной кнопке «копим». Раньше return оставлял fishService:'exchange', и бот
+    // без конца крутился в магазине рыбака без забросов. Своя неподтверждённая оплата по-прежнему ждёт сверки.
+    if (!payment) {
+      if (env.payments?.blocked()) return;
+      const why = prepWhy || 'сверка цены/Proof не прошла';
+      env.setStatus(`Рыбалка: цель ${g} — покупка отложена (${why})`); env.rec('B', 'рыбалка', `${g}: покупка отложена — ${why}`);
+      break;
+    }
     if(!await paymentFire(payment,btn))return;
     const ok = await env.waitFor(() => (env.$q('#fishing-shop-success')?.textContent || '') !== before, 5000, 150);
     if (!valid()) return;
-    if(!payment.legacy&&!await paymentReconcile())return;
+    if(!payment.legacy&&!await paymentReconcile()){
+      // 20.76+ (ревизия 28.10): отказ сервера уже записан в fishGearFail — уходим рыбачить, а не повторяем POST на следующем круге
+      if (!valid() || !gearHeld(g)) return;
+      env.setStatus(`Рыбалка: цель ${g} — игра отказала в покупке, повтор не раньше чем через 30 мин`); break;
+    }
     if (!valid()) return;
     env.rec('B', 'рыбалка: покупка за Proof', `${g}: ${ok ? env.$q('#fishing-shop-success').textContent.trim().slice(0, 100) : 'без подтверждения'}`);
     if (ok || !payment.legacy) { bought.add(g); p1 = proof(); }
