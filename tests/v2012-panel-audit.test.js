@@ -105,8 +105,9 @@ const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); a
     vm.createContext(b); vm.runInContext(part(popup, 'const CFG_IMPORT_EXTRA', "$('cfgImport').onclick") + ';this.clean=cfgImportClean;', b);
     const r = b.clean({ shopReserve: 7, nPower: 'Blaze', tvtOn: 'yes', autoTasks: ['fish'], enchant: { q: 1 }, dockMin: true, petFullReserve: 5, deep25: 1, evil: { x: 1 }, stopHp: 1, shopMaxSpend: -5 });
     assert.strictEqual(JSON.stringify(r.clean), '{"shopReserve":7,"nPower":"Blaze","autoTasks":["fish"],"enchant":{"q":1},"dockMin":true,"petFullReserve":5}', 'белый список и типы');
-    assert.strictEqual(JSON.stringify(r.skipped), '["tvtOn","deep25","evil","stopHp","shopMaxSpend"]'); }
-  assert.match(popup, /chrome\.runtime\.sendMessage\(\{ cmd: 'cfgImport', cfg: main\.clean, perChar \}\)/, 'UI-4: импорт через фон');
+    // 20.77 (ревизия 28.10): флаг миграции deep25:1 больше не «пропущен» — уходит отдельным списком flags (tests/v2077-audit-r2-bg)
+    assert.strictEqual(JSON.stringify(r.skipped), '["tvtOn","evil","stopHp","shopMaxSpend"]'); assert.strictEqual(JSON.stringify(r.flags), '["deep25"]'); }
+  assert.match(popup, /chrome\.runtime\.sendMessage\(\{ cmd: 'cfgImport', cfg: main\.clean, perChar, flags \}\)/, 'UI-4: импорт через фон');
   assert.ok(!/const patch = \{ cfg: \{ \.\.\.cfg, \.\.\.src\.cfg \} \}/.test(popup), 'прямой записи cfg мимо очереди больше нет');
 
   // ---------- UI-10: док во вкладке без замка ----------
