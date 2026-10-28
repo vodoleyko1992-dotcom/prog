@@ -243,6 +243,11 @@ async function nextFight(ctx) {
     const run = instance?.activeRun;
     if (instance?.error || instance?.ok === false || instance?.enabled !== true || !(instance.rebirthStage > 0))
       return retry('принадлежность текущего оплаченного похода не подтверждена');
+    // 20.74 (лог28.10 06:10): устаревшая победа не должна удерживать уже исчезнувший поход на странице боя.
+    // Каталог бесплатен; исход похода/повторный вход он проверяет отдельно, квитанцию next здесь не снимаем.
+    if (run === null && boundLineage && (recover || receiptRecovery || parts[6].toLowerCase() !== 'raid')
+        && ch.id === previousFight.actor && instance.rebirthStage === ch.rebirthStage
+        && !env.nativePending?.()) return env.rebirthReturn?.(() => current() && lineage(state()) === lineageSig && !env.nativePending?.());
     if (receiptRecovery && (!run || !solo(run,ch.id) || ![1,2,3].includes(run.difficulty)
         || run.id.toLowerCase() !== parts[1].toLowerCase() || ch.id !== previousFight.actor || instance.rebirthStage !== ch.rebirthStage))
       return retry('свой текущий оплаченный поход после продолжения не подтверждён');
@@ -378,6 +383,8 @@ async function nextFight(ctx) {
    gate.failures=0;
    if(run){
     if(!solo(run,ch.id)||![1,2,3].includes(run.difficulty))return status(T,'wait','принадлежность одиночного похода не подтверждена');
+    // Если после восстановления поход всё ещё существует, та смерть не подтверждает его последующее исчезновение.
+    if(state().failedRun?.restoredAt&&state().failedRun.runId===run.id)await save(T,{failedRun:null});
     const info=runFields(run,ch);
     if(P&&knownUnsent(P,'pending',ch,T)&&await save(T,{pending:null})){unmark(P,'pending');P=null;}
     if(P?.kind==='entry'){
@@ -451,8 +458,15 @@ async function nextFight(ctx) {
    if(!current(T))return true;
    if(env.cfg.rebirthAutoEnter!==true)return status(T,'manual-entry','поход не активен — войдите вручную или разрешите автоматические входы',{runId:null,mobKills:0,mobKillTarget:0});
    const previous=state().observedRun;
+   const failed=state().failedRun;
+   const deathRestart=failed?.kind==='death'&&failed.char===T.char&&failed.actor===ch.id&&failed.prof===T.prof&&failed.slot===T.slot
+    &&failed.kick===T.kick&&UUID.test(failed.runId||'')&&failed.runId===previous?.id
+    &&spawnParts(failed.spawn)?.[1]?.toLowerCase()===failed.runId.toLowerCase()
+    &&Number.isFinite(failed.at)&&failed.at<=characterReadAt&&env.rt.deathLog?.includes(failed.at)
+    &&Number.isFinite(failed.restoredAt)&&failed.restoredAt>=failed.at&&failed.restoredAt<=characterReadAt
+    &&instance.rebirthStage===ch.rebirthStage;
    if(previous?.char===T.char&&previous.actor===ch.id&&UUID.test(previous.id||'')
-    &&previous.kick===T.kick&&!completion(ch,T,previous))return status(T,'missing-run','прошлый поход исчез без подтверждённого завершения — нужен новый Старт или ручной вход');
+    &&previous.kick===T.kick&&!completion(ch,T,previous)&&!deathRestart)return status(T,'missing-run','прошлый поход исчез без подтверждённого завершения — нужен новый Старт или ручной вход');
    if(!await quota(T))return current(T)?status(T,'quota','лимит охоты проверяется или достигнут'):true;
    // Подготовка может вести героя в город: только перед новым разрешённым входом, никогда посреди оплаченного похода.
    if(typeof env.prepareEntry==='function'){

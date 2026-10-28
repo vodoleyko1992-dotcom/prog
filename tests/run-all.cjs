@@ -16,6 +16,7 @@ ORDER.push('v2071-rebirth-parallel-proof.test.cjs','v2071-rebirth-group-scope.te
 ORDER.push('v2072-rebirth-victory-retry.test.cjs');
 ORDER.push('v2073-rebirth-hero-policy.test.cjs','v2073-rebirth-hero-survival.test.cjs','v2073-rebirth-hero-buffs.test.cjs','v2073-rebirth-hero-core.test.cjs');
 ORDER.push('v2074-rebirth-next-reconcile.test.cjs');
+ORDER.push('v2074-rebirth-loop-recovery.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){

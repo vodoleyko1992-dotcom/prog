@@ -956,7 +956,11 @@ async function townBuffStep() {
       }
       env.rec('B', 'восстановление', ok ? `HP ${hp0}% → ${hpPct() | 0}%` : `не удалось за ${waits.length} попыток (HP ${hpPct() | 0}%) — ${recovery?'бой не начинаю; повтор восстановления после сверки':'лечусь на мобах, к бафферу снова через 3 мин'}`);
     } else env.rec('B', 'восстановление', 'нет кнопки «Восстановить» — баффер не открылся');
-    const cleared=await env.setRt({ tbuff: null, restoreRes: { t: Date.now(), ok } });
+    const failed=env.rt.rebirth?.failedRun,R=st.rebirthRecovery;
+    const recoveredDeath=ok&&recovery&&R.kind==='death'&&failed?.kind==='death'&&failed.runId===R.runId&&failed.spawn===R.spawn
+      &&failed.actor===R.actor&&failed.char===R.char&&failed.prof===R.prof&&failed.slot===R.slot&&failed.kick===R.kick;
+    const cleared=await env.setRt({ tbuff: null, restoreRes: { t: Date.now(), ok },
+      ...(recoveredDeath?{rebirth:{...env.rt.rebirth,failedRun:{...failed,restoredAt:Date.now()}}}:{}) });
     if(recovery&&cleared?.ok!==true){if(active.closed())await env.setRt({tbuff:st});return;}
     if(!(recovery?active.closed():active()))return;
     location.href = recovery?'/rebirth-raids.html':st.back || '/map.html'; await env.sleep(4000); return;
