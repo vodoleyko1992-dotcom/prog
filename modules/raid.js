@@ -528,9 +528,10 @@ async function rbInfo(id) {
   try {
     const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
     // 9.0: с токеном страницы (без него сервер отвечает 401 — см. content.gameAuth)
-    const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal }).finally(() => clearTimeout(tm));
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
+    // 20.76+ (ревизия 28.10): дедлайн охватывает и тело ответа (как gameGet 20.46) — таймер снимается после r.json(), а не после заголовков
+    let j; try { const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      j = await r.json(); } finally { clearTimeout(tm); }
     const st = await rbInfoNote(id, j, 'api');
     if (!st) throw new Error('нет stats');
     return st;

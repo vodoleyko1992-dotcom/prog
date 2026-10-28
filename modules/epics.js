@@ -223,8 +223,9 @@ async function epicApiScan(why) {                  // свой запрос (GET
     try {
       const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
       // 9.0: с токеном страницы (без него сервер отвечает 401 — см. content.gameAuth)
-      const r = await fetch('/game/epic-bosses?page=1', { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal }).finally(() => clearTimeout(tm));
-      const j = r.ok ? await r.json() : null;
+      // 20.76+ (ревизия 28.10): дедлайн охватывает и тело ответа (как gameGet 20.46) — таймер снимается после r.json(), а не после заголовков:
+      // зависшее тело держало apiBusy, и epicStep/epicPayGate ждали без срока до перезагрузки сторожем
+      let r, j; try { r = await fetch('/game/epic-bosses?page=1', { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal }); j = r.ok ? await r.json() : null; } finally { clearTimeout(tm); }
       const res = await epicApiNote(j, 'api');
       if (!res) throw new Error(r.ok ? 'в ответе нет полного списка bosses' : 'HTTP ' + r.status);
       if (env.rt.epicApiFail) await env.setRt({ epicApiFail: null });
@@ -948,6 +949,15 @@ async function epicStep() {
       await epicTpBudgetRelease(E.k, E.tpRes, 'маршрут в логово снят запретом перелётов до телепорта');
       if (!active()) return;
       return epicGiveUp(E.k, Math.max(1, Math.ceil((+zb.until - Date.now()) / MIN)), `маршрут в логово снят запретом перелётов до ${when(+zb.until)} — телепорта не было, это не промах логова; жду конца запрета`);
+    }
+    // 20.76+ (ревизия 28.10): навигация сама сняла маршрут без телепорта (адены нет сверх резерва, цена/валюта не прочитаны, кнопки нет,
+    // персонаж не подтверждён, сверка «оплаты не было») — она пишет zoneBad этой зоне после создания маршрута. Раньше через 25 с это
+    // считалось промахом логова (lairBadT на 6 ч, резерв адены висел), и дальше эпик шёл страницей за Coin of Luck. Не промах: резерв снят
+    const nd = E.via === 'zone' && !E.seenSaved && +E.lairT > 0 && E.lair && !env.rt.zoneGo && !env.rt.travelCheck && +(env.rt.zoneBad || {})[E.lair] >= +E.lairT;
+    if (nd) {
+      await epicTpBudgetRelease(E.k, E.tpRes, 'перелёт в логово снят навигацией до оплаты');
+      if (!active()) return;
+      return epicGiveUp(E.k, 60, 'перелёт в логово не состоялся (адена сверх резерва / цена / кнопка / персонаж не подтверждены) — телепорта не было, это не промах логова');
     }
     if (E.via === 'page') {
       const ack = epicTpAck(E);
