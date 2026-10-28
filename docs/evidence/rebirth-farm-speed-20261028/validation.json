@@ -1,0 +1,78 @@
+{
+  "base": "da2f736de00b560163f112a5ddba02ea5345e48c",
+  "sourceHashes": {
+    "modules/rebirth.js": "14b52a046c8cac2080e9aa8efdbe76953e8b1c93a71bb3621f713811ae87b3c8",
+    "modules/fightlab.js": "1ec12c877bfb7dd19bbb9dd5f7aca29b59b9fab8872603e8eddfd7c5c704bfd8",
+    "tests/v2071-rebirth-parallel-proof.test.cjs": "b0c1e85ef1d14d821284f2974bdd684b354d8903340f8c47de372ef6921a5e40",
+    "tests/v2071-rebirth-group-scope.test.cjs": "ad6e840c10290cad31671014bde086d9fca189ec79b1ddd351f2000b1df5c528"
+  },
+  "node": {
+    "passedFiles": 691,
+    "failedFiles": 0
+  },
+  "syntax": {
+    "passedFiles": 42
+  },
+  "env": {
+    "passedModules": 35
+  },
+  "review": {
+    "parallel": {
+      "newGroups": 16,
+      "independentProbes": 12,
+      "blockers": 0
+    },
+    "scope": {
+      "newGroups": 17,
+      "independentProbes": 13,
+      "baselineExpectedFails": 4,
+      "blockers": 0
+    },
+    "testFixtureDiffBlockers": 0
+  },
+  "browser": {
+    "version": "156.0.8078.73",
+    "passedCases": [
+      {
+        "case": "auto-full-cycle",
+        "entries": 1,
+        "keys": 98,
+        "attacks": [
+          "mob",
+          "champion",
+          "boss"
+        ],
+        "errors": []
+      },
+      {
+        "case": "manual",
+        "entries": 1,
+        "keys": 98,
+        "attacks": [
+          "mob",
+          "champion",
+          "boss"
+        ],
+        "errors": []
+      },
+      {
+        "case": "lost-entry-reload",
+        "entries": 1,
+        "keys": 98,
+        "attacks": [],
+        "errors": []
+      }
+    ],
+    "environmentUnavailable": "Preinstalled Chromium154 serviceworker timeout; successful browser cases use CfT156"
+  },
+  "limitations": [
+    "No live game requests",
+    "No measured live speedup percentage",
+    "No ZIP or version update"
+  ],
+  "initialNode": {
+    "passedFiles": 656,
+    "failedFiles": 35,
+    "cause": "34 preexisting20.71 fixture failures;1 changed parallel GET count"
+  }
+}

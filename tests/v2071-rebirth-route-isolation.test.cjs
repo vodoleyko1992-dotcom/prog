@@ -92,11 +92,12 @@ test('локальная отмена до native-клика не оставля
  }
 });
 
+// 20.71: оба независимых GET уже отправлены при отмене/ошибке; запреты клика и backoff прежние.
 test('обновившаяся metadata победы после GET отменяет только старый probe без15с паузы',async()=>{
  const f=victoryFixture();f.env.battleInfo=()=>({t:f.now()-1+(f.S.metaRevision||0),spawn:sid(),name:f.ctx.name});
  f.S.hooks.json=url=>{if(url==='/character')f.S.metaRevision=1;};
- await f.api().nextFight(f.ctx);assert.equal(f.reads.length,1);assert.equal(f.clicks.length,0);
- f.S.hooks={};await f.api().nextFight(f.ctx);assert.equal(f.reads.length,3);assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.posts.length,0);
+ await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2);assert.equal(f.clicks.length,0);
+ f.S.hooks={};await f.api().nextFight(f.ctx);assert.equal(f.reads.length,4);assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.posts.length,0);
 });
 
 test('локальная ошибка flush не маскируется серверным backoff, durable receipt после fire сохраняется',async()=>{
@@ -116,9 +117,9 @@ test('настоящие HTTP/JSON отказы и серверное несов
    if(kind==='json')return{...r,json:async()=>{throw Error('bad JSON');}};
    return{...r,json:async()=>({character:{...f.ch,name:'Other'}})};
   };
-  await f.api().nextFight(f.ctx);assert.equal(f.reads.length,1,kind);assert.equal(f.clicks.length,0,kind);failing=false;
-  const wait=kind==='identity'?15000:60000;f.tick(wait-1);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,1,kind+' до срока нет GET');
-  f.tick(1);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,3,kind);assert.equal(f.clicks.filter(x=>x==='hunt').length,1,kind);assert.equal(f.posts.length,0);
+  await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2,kind);assert.equal(f.clicks.length,0,kind);failing=false;
+  const wait=kind==='identity'?15000:60000;f.tick(wait-1);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2,kind+' до срока нет GET');
+  f.tick(1);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,4,kind);assert.equal(f.clicks.filter(x=>x==='hunt').length,1,kind);assert.equal(f.posts.length,0);
  }
 });
 
@@ -131,15 +132,15 @@ test('поздняя ошибка старого probe не снимает backo
   if(calls===2){f.reads.push(url);return{ok:false,status:503};}
  }return get(url);};
  const old=f.api().nextFight(f.ctx);await began;f.S.after=sid('mob',25098,2);f.ctx.spawnId=f.S.after;f.location.href='https://l2wap.com/battle.html?spawnId='+f.S.after;
- await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2);release();await old;
- await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2,'старый probe не сбросил ограничение нового');assert.equal(f.clicks.length,0);
- f.tick(60000);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,4);assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.posts.length,0);
+ await f.api().nextFight(f.ctx);assert.equal(f.reads.length,4);release();await old;
+ await f.api().nextFight(f.ctx);assert.equal(f.reads.length,4,'старый probe не сбросил ограничение нового');assert.equal(f.clicks.length,0);
+ f.tick(60000);await f.api().nextFight(f.ctx);assert.equal(f.reads.length,6);assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.posts.length,0);
 });
 
 test('busy по-прежнему удерживает два одновременных продолжения одной победы',async()=>{
  const f=victoryFixture();let release,started;const gate=new Promise(r=>release=r),began=new Promise(r=>started=r);
  f.S.hooks.read=async url=>{if(url==='/character'){started();await gate;}};
- const first=f.api().nextFight(f.ctx);await began;await f.api().nextFight(f.ctx);assert.equal(f.reads.length,1);assert.equal(f.clicks.length,0);
+ const first=f.api().nextFight(f.ctx);await began;await f.api().nextFight(f.ctx);assert.equal(f.reads.length,2);assert.equal(f.clicks.length,0);
  release();await first;assert.equal(f.reads.length,2);assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.posts.length,0);
 });
 

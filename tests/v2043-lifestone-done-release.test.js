@@ -63,11 +63,12 @@ test('уступка TvT: идущая серия → пауза без удер
 
 // Ядро: шаг loopGate из content.js с настоящими модулями tvt и lifestone.
 function gate({tvtOn=true,stored=null,fresh=null,pending=false,status='paused',fail=false}={}){
- const src=read('content.js'),a=src.indexOf('  if (rt.autoLs?.hold && !rt.autoLs.pending && cfg.tvtOn) lsTvtPoll();'),b=src.indexOf('\n',src.indexOf('if (lifestoneCommandBusy || rt.autoLs?.hold',a));
+ // 20.71: обычный loopGate содержит явный запрет сервисов в отдельном Rebirth.
+ const src=read('content.js'),a=src.indexOf('  if (!rebirthModeSelected() && rt.autoLs?.hold && !rt.autoLs.pending && cfg.tvtOn) lsTvtPoll();'),b=src.indexOf('\n',src.indexOf('if (!rebirthModeSelected() && (lifestoneCommandBusy || rt.autoLs?.hold',a));
  const d1=src.indexOf('let lsTvtReadT = 0;'),d2=src.indexOf('\n',src.indexOf('const lsTvtRegOpen =',d1));
  assert.ok(a>0&&b>a&&d1>0&&d2>d1,'фрагменты loopGate найдены');
  const clock={t:Date.parse('2026-10-21T03:00:00Z')},gets=[],steps=[];
- const box={console,Date:class extends Date{static now(){return clock.t}},setTimeout,clearTimeout,lifestoneCommandBusy:false,sleep:async()=>{}};vm.createContext(box);
+ const box={rebirthModeSelected:()=>false,isBattle:()=>false,autonomyMode:()=> 'farm',console,Date:class extends Date{static now(){return clock.t}},setTimeout,clearTimeout,lifestoneCommandBusy:false,sleep:async()=>{}};vm.createContext(box);
  vm.runInContext(read('augment.js'),box);vm.runInContext(read('modules/lifestone.js'),box);vm.runInContext(read('modules/tvt.js'),box);
  const reg=()=>({phase:'REGISTRATION',eventId:'ev1',isRegistered:false,registrationEndsAt:new Date(clock.t+5*60000).toISOString(),registeredCount:3,maxPlayers:20,serverNow:new Date(clock.t).toISOString()});
  box.rt={char:'Hero',manualKickAt:1,tvt:stored==='reg'?{...reg(),t:clock.t-10*60000,off:0}:null,

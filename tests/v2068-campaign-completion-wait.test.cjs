@@ -3,7 +3,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=process.env.L2_TEST_ROOT||path.resolve(__dirname,'..'),code=fs.readFileSync(process.env.QUESTS_SOURCE||path.join(root,'modules/quests.js'),'utf8');
 const combat=fs.readFileSync(path.join(root,'modules/combat.js'),'utf8');
-const a=combat.indexOf('  if (env.cfg.campaign) {\n    // условия главы'),b=combat.indexOf('  // квест: прогресс с экрана победы',a);
+const a=combat.indexOf('  if (!ctx.rebirth && env.cfg.campaign) {\n    // условия главы'),b=combat.indexOf('  // квест: прогресс с экрана победы',a);
 assert.ok(a>0&&b>a,'исполняем настоящий post-win учёт кампании');
 const clone=x=>JSON.parse(JSON.stringify(x));
 function fixture(o={}){

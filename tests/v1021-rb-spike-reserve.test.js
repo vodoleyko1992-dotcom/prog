@@ -9,11 +9,12 @@ const fn = src.slice(src.indexOf('function rbTurnHeal('), src.indexOf('function 
 const heal = vm.runInNewContext(`${fn}; rbTurnHeal`, { Math });
 assert.equal(heal({ cur: 3100, max: 6570, spike: 2916, p90: 265, stopPct: 25 }).need, true);
 assert.equal(heal({ cur: 5000, max: 6570, spike: 2916, p90: 265, stopPct: 25 }).need, false);
-const band = src.slice(src.indexOf('    let potAt = env.cfg.hpPotAt;'), src.indexOf('    const hpPot = me && me.pct <= potAt'));
+// 20.71: начало полосы учитывает отдельные большие роли Rebirth; здесь проверяется прежний ordinary РБ.
+const band = src.slice(src.indexOf('    let potAt = '), src.indexOf('    const hpPot = me && me.pct <= potAt'));
 const ctx = { rb: { id: 'boss', hits: [], potOn: false } };
 const env = { cfg: { hpPotAt: 50, stopHp: 25, rbBandAuto: true, rbTurnPrice: true, rbPotAt: 75, rbPotTo: 80 }, rt: { rbDb: { boss: { sp: 2916, hitP90: 265 } } }, fightSpikeEta: () => ({ eta: 100, gap: 14 }), turnSec: () => 2, rec: () => {} };
 const me = { cur: 3100, max: 6570, pct: 47 };
-const potAt = vm.runInNewContext(`(() => { ${band} return potAt; })()`, { env, ctx, me, rbTurnHeal: heal, frenzyDive: () => false, epicFrenzyHold: () => false, Math });
+const potAt = vm.runInNewContext(`(() => { ${band} return potAt; })()`, { env, ctx, me, rebirthBig: () => false, rbTurnHeal: heal, frenzyDive: () => false, epicFrenzyHold: () => false, Math });
 assert.equal(potAt, 100, 'even a distant estimated spike must leave enough HP for the next one');
 const raid = fs.readFileSync(path.join(__dirname, '../modules/raid.js'), 'utf8');
 const shortageFn = raid.slice(raid.indexOf('function rbBuffShortage('), raid.indexOf('async function huntSet('));

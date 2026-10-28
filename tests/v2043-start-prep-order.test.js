@@ -22,7 +22,9 @@ function load(o={}){
 }
 (async()=>{
  await run('mainTick: подготовка между разовыми командами меню и сторожем баффов',async()=>{
-  assert.ok(content.includes('await loopMenuJobs() || await loopRebirth() || await loopStartPrep() || await loopTownJobs()'));
+  // 20.71: отдельный Rebirth получает круг перед обычными службами; обычная подготовка остаётся между меню и городом.
+  assert.ok(content.includes('await loopTaskList() || await loopRebirth() || await loopEnchant()'));
+  assert.ok(content.includes('await loopMenuJobs() || await loopStartPrep() || await loopTownJobs()'));
   const a=content.indexOf('rt.petRaidPrep && !idleTvtBreak() && await L2V7Modules.warlock.raidPrepare()'),b=content.indexOf('rt.petPrep && !idleTvtBreak() && await L2V7Modules.warlock.startPrepare()'),c=content.indexOf('await enchantModePause();');
   assert.ok(a>0&&b>a&&c>b);
   const town=content.slice(content.indexOf('async function loopTownJobs()'),content.indexOf('async function loopSideJobs()'));

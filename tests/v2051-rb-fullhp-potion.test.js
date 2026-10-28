@@ -4,8 +4,10 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=fs.readFileSync(process.env.L2BOT_COMBAT_SOURCE||path.join(__dirname,'../modules/combat.js'),'utf8');
 function between(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,'реальный участок найден: '+start);return source.slice(a,b);}
+// 20.71: фрагменты полосы используют общие признаки больших целей; загружаем настоящие helpers вместе с act.
+const targetSource=between('const rebirthBig =','const battleReturn =');
 const priceSource=between('function rbTurnHeal(','function frenzyDive(');
-const bandSource=between('    let potAt = env.cfg.hpPotAt;','    if ((s = await mpPotStep(me, mp))');
+const bandSource=between('    let potAt = ','    if ((s = await mpPotStep(me, mp))');
 const emergencySource=between('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)','    ctx.emWait = 0;');
 const actSource=between('  const act = async ','  const t0 = Date.now();\n  let progSig');
 const price=vm.runInNewContext(priceSource+';rbTurnHeal;',{Math});
@@ -33,7 +35,7 @@ function fixture({hp=22873,max=22873,pct=hp/max*100,sp=1329,p90=13002,hits=[],rb
   hpReserveBlocked:()=>false,frenzyDive:()=>false,epicFrenzyHold:()=>false,epicFrenzyFloor:()=>0,slotsBy:()=>[],
   drainPick:()=>null,mageCombat:()=>false,drainPreferred:()=>false,healPick:()=>null,
   lastHpPot:0,lastAct:0,lastActT:0};
- vm.createContext(box);vm.runInContext(priceSource+'\n'+actSource+'\nthis.actualAct=act;',box);
+ vm.createContext(box);vm.runInContext(targetSource+'\n'+priceSource+'\n'+actSource+'\nthis.actualAct=act;',box);
  async function step(which='band'){
   const block=which==='emergency'?emergencySource:bandSource;
   return vm.runInContext('(async()=>{for(let once=0;once<1;once++){'+block+'}return {lastHpPot,potOn:ctx.rb?.potOn,potTimes:ctx.rb?.potT?.length||0};})()',box);

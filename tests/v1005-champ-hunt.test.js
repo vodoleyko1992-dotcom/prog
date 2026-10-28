@@ -56,7 +56,7 @@ const C = load('modules/champs.js', env);
   assert.match(cb, /const fl = env\.champs\.fleeCheck\(ctx, me, mob, \(Date\.now\(\) - t0\) \/ 1000\);/);
   // 10.0.22: обычный вид оценивается только по достоверной серии ходов; чемпион сохраняет отдельную ветку.
   // 15.10: обучаем одиночную силу по HP чемпиона; дополнительный AoE остаётся отдельной аналитикой.
-  assert.match(cb, /if \(ctx\.champ && !ctx\.rb\) env\.champs\?\.learn\(ctx, victory\(\) \? 'win' : 'left', base, ttk\)[^\n]*\n\s*else if \(!ctx\.rb && ttkOne > 45 && strengthReliable\(strength, Date\.now\(\), env\.actNet\?\.\(\) \|\| \{\}\)\)/);
+  assert.match(cb, /if \(ctx\.champ && !ctx\.rb\) env\.champs\?\.learn\(ctx, victory\(\) \? 'win' : 'left', base, ttk\)[^\n]*\n\s*else if \(!ctx\.rebirth && !ctx\.rb && ttkOne > 45 && strengthReliable\(strength, Date\.now\(\), env\.actNet\?\.\(\) \|\| \{\}\)\)/);
   assert.match(ct, /: champHunt\(\) \? \(mapOff\(\) \? champEvery\(\) : Math\.min\(cfg\.deepEvery, champEvery\(\)\)\)/);
   assert.match(read('manifest.json'), /"modules\/champs\.js",\s*"modules\/rbtimer\.js"/);
   assert.match(read('popup.html'), /id="champLeave"/); assert.match(read('popup.html'), /id="champEvery"/);

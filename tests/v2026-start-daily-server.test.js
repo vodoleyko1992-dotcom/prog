@@ -1,4 +1,5 @@
 'use strict';
+// 20.71: отдельный Rebirth в этих старых сценариях выключен; его guard включён в зависимости стенда.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),E=require('../engine-core.js'),data=require('./tools/daily-server-fixture.cjs');
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8');
 function fixture(mobs=8055,fish=1511){
@@ -51,7 +52,7 @@ test('ожидание проверки передаёт круг срочном
 });
 
 test('цепочка после начатого боя проверяет сервер перед передачей в nextFight, даже на battle.html',async()=>{
- const f=fixture();f.c.isBattle=()=>true;await f.sync();assert.equal(f.requests.length,0);
+ const f=fixture();f.c.rebirthModeSelected=()=>false;f.c.isBattle=()=>true;await f.sync();assert.equal(f.requests.length,0);
  let next=0;f.c.L2V7Modules={mobfarm:{nextFight:()=>{next++;assert.equal(E.dailyBlocked(f.c.cfg,f.c.rt,'auto'),true);return 'checked'}}};
  const js=read('content.js');vm.runInNewContext(js.match(/async function nextFight\(\.\.\.args\) \{[^\n]+/)[0],f.c);
  assert.equal(await f.c.nextFight(),'checked');assert.equal(next,1);assert.deepEqual(f.requests,['/game/time','/game/daily-quests']);

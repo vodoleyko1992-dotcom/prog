@@ -63,7 +63,9 @@ function step(f,act){
  Object.assign(f.box,{env:f.env,ctx:f.ctx,act,NEXT:'next',AGAIN:'again',battleRoarPlan:f.C.battleRoarPlan,battleRoarActive:f.C.battleRoarActive,
   managedMonsterStep:f.C.managedMonsterStep,slotsBy:f.C.slotsBy,ready:f.C.ready,affordable:f.C.affordable});
  const a=combat.indexOf('  async function buffStep('),b=combat.indexOf('  // шаг: дебафф мага',a);
- vm.runInContext(combat.slice(a,b)+'\nthis.roarBuffStep=buffStep;',f.box);
+ // 20.71: вырезка buffStep использует общий предикат РБ, в том числе РБ собственного похода.
+ const raidTarget=combat.match(/^const raidTarget = .*;$/m)[0];
+ vm.runInContext(raidTarget+'\n'+combat.slice(a,b)+'\nthis.roarBuffStep=buffStep;',f.box);
  return ()=>f.box.roarBuffStep(f.env.meHp(),f.env.meMp(),{cur:100000,max:100000,pct:100});
 }
 test('MaxHP кастуется до обычных баффов один раз, задержка HUD не вызывает повтор',async()=>{

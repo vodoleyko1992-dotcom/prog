@@ -103,7 +103,7 @@ test('battle: шаги круга вызываются в прежнем пор�
  const b=combat.slice(combat.indexOf('async function battle() {'),combat.indexOf('  // ---------- шаги круга боя'));
  const order=['epicRetreatWait(','const me = env.meHp()','{ const g = env.actNet?.().gone;','{ const an = env.actNet?.(), hangMs','mainTargetDead(','emergencyBuffStep(','champFleeStep(',
   'if (ctx.rb && me && mob && !ctx.rb.retreated)','if (me && me.pct <= Math.max(env.cfg.stopHp, 25)','ctx.emWait = 0;','exitCheckStep(','stallStep(','petStep(','await env.keepShots();','healStep(' /* 20.43: призыв кота раньше зарядов */,
-  'let potAt = env.cfg.hpPotAt;','const hpPot = me && me.pct <= potAt','mpPotStep(','petBuffStep(','buffStep(','debuffStep(','strikeStep(','idleStep(','await env.sleep(100);','return battleWin('];
+  'let potAt = rebirthBig(ctx) ? Math.max(env.cfg.hpPotAt || 0, 75) : env.cfg.hpPotAt;','const hpPot = me && me.pct <= potAt','mpPotStep(','petBuffStep(','buffStep(','debuffStep(','strikeStep(','idleStep(','await env.sleep(100);','return battleWin(']; // 20.71: повышенный порог только большим целям Rebirth, обычный порог прежний.
  let at=-1;for(const m of order){const i=b.indexOf(m,at+1);assert.ok(i>at,'порядок: '+m);at=i;}
  for(const n of ['epicRetreatWait','mainTargetDead','emergencyBuffStep','champFleeStep','exitCheckStep','stallStep','petStep','healStep','mpPotStep','petBuffStep','buffStep','debuffStep','strikeStep','idleStep'])
   assert.match(combat,new RegExp('\\n  async function '+n+'\\('),n);

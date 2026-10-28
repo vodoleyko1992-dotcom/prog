@@ -31,7 +31,7 @@ const raid = fs.readFileSync(path.join(root, 'modules/raid.js'), 'utf8'), combat
 assert.ok(!/verdict: 'no', name: r\.name, lvl: r\.lvl, note: 'оценка до боя/.test(raid), 'no permanent verdict from an estimate');
 // 20.43 (разбор 21.10): у РБ общий флаг прежний, мобы/чемпионы — по виду на сутки (поведение — tests/v2043-learn-honest.test.js)
 assert.match(combat, /if \(dbfImmune\(ctx\)\) return null;/);
-assert.match(combat, /const dbfImmune = ctx => ctx\.rb \? !!env\.rt\.debuffImmune\?\.rb : /);
+assert.match(combat, /const dbfImmune = ctx => ctx\.rebirth \? ctx\.rebirthImmune === true : ctx\.rb \? !!env\.rt\.debuffImmune\?\.rb : /);
 assert.match(combat, /\/імунітет\|иммунитет\|immune\/i\.test\(added\)/);
 assert.match(combat, /в памяти были чужие цифры/);
 assert.match(content, /once\('rbFix721'/);

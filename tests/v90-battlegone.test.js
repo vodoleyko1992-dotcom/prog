@@ -26,14 +26,15 @@ const content = read('content.js'), combat = read('modules/combat.js');
   { const i0 = combat.indexOf('    { const g = env.actNet?.().gone;'), i1 = combat.indexOf('    // 8.0.3 (лог 11.10 10:31:48', i0);
     assert.ok(i0 > 0 && i1 > i0, 'combat block found');
     assert.ok(i0 < combat.indexOf("if (me && me.pct <= Math.max(env.cfg.stopHp, 25)"), 'before any action of the loop');
-    const block = combat.slice(i0, i1);
+    // 20.71: маршрут выхода вынесен в battleReturn; исполняем настоящий helper, проверяя прежний ordinary путь.
+    const block = combat.slice(i0, i1), returnHelper=combat.match(/const battleReturn = [^\n]+/)[0];
     const run = async ({ goneT, rb = true, win = false }) => {
       const NET = { start: 9, done: 9, gone: goneT == null ? null : { t: goneT, spawn: 'l2dop_rb_25423' } }, recs = [], patches = [];
       const env = { actNet: () => NET, rec: (...a) => recs.push(a.join(' ')), setRt: async p => patches.push(p), toMap: async () => 'map',
         rt: { rbWound: { l2dop_rb_25423: { cur: 7092, max: 1877023, t: 1 }, l2dop_rb_25050: { cur: 1, max: 2, t: 1 } } } };
       const sb = { env, ctx: { rb: rb ? { id: 'l2dop_rb_25423' } : null, name: 'Fairy Queen Timiniel' }, mob: { cur: 7092, max: 1877023 }, t0: 1000,
-        victory: () => win, defeat: () => false, mobName: () => 'x', Math };
-      vm.runInNewContext(`this.step = async () => { for (let i = 0; i < 1; i++) {\n${block}\n return 'through'; } };`, sb);
+        rebirthMode:()=>false,killOwnerValid:()=>true,victory: () => win, defeat: () => false, mobName: () => 'x', Math };
+      vm.runInNewContext(`${returnHelper}\nthis.step = async () => { for (let i = 0; i < 1; i++) {\n${block}\n return 'through'; } };`, sb);
       return { r: await sb.step(), recs, patches, NET };
     };
     let x = await run({ goneT: 5000 });

@@ -1,9 +1,10 @@
 'use strict';
+// 20.71: этот стенд обычного маршрута явно выключает отдельный Rebirth.
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 // 10.0.23: граница по объявлению функции, независимо от переименования кота в суммона.
 const core=fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');const source=core.slice(core.indexOf('// Поход за платным бафом:'),core.indexOf('const warlockShotContext ='));
 function make(){let now=100000;class Clock extends Date{static now(){return now}}
- const c={console,Date:Clock,URLSearchParams,Number,Set,Promise,crypto:{randomUUID:()=> 'trip-1'},CSS:{escape:x=>x},on:true,tabOwner:true,cfg:{tvtOn:true,petFullAuto:true,catDungeon:'saints',shopReserve:200000,shopMaxSpend:2000000},rt:{char:'Hero',zone:'home-zone'},mode:'farm',hero:'Hero',tvt:false,ab:false,otherJob:false,commits:0,saves:[],clicks:[],backend:0,status:'',saveOk:true,afterSave:null,afterCommit:null,onGet:null,
+ const c={console,Date:Clock,URLSearchParams,Number,Set,Promise,crypto:{randomUUID:()=> 'trip-1'},CSS:{escape:x=>x},on:true,tabOwner:true,rebirthModeSelected:()=>false,cfg:{tvtOn:true,petFullAuto:true,catDungeon:'saints',shopReserve:200000,shopMaxSpend:2000000},rt:{char:'Hero',zone:'home-zone'},mode:'farm',hero:'Hero',tvt:false,ab:false,otherJob:false,commits:0,saves:[],clicks:[],backend:0,status:'',saveOk:true,afterSave:null,afterCommit:null,onGet:null,
   window:{postMessage(){}},sleep:async()=>{},location:{pathname:'/map.html',search:'',href:'',reload(){c.reloads=(c.reloads||0)+1}},CAT_URL:'/catacombs.html',at:null,button:null,
   document:{querySelectorAll:()=>[]},shown:b=>!!b&&!b.hidden,heroNick:()=>c.hero,autonomyMode:()=>c.mode,isBattle:()=>c.location.pathname==='/battle.html',victory:()=>true,isFishing:()=>false,fishState:()=>false,fishNow:()=>c.mode==='fish',abHold:()=>false,antibotState:()=>c.ab,warlockCanRun:()=>!c.otherJob,heroAt:()=>c.at,setStatus:s=>c.status=s,
   setRt:async p=>{c.saves.push(structuredClone(p));Object.assign(c.rt,p);await c.afterSave?.(p);return{ok:c.saveOk}},rtCommit:async()=>{c.commits++;await c.afterCommit?.();return true},

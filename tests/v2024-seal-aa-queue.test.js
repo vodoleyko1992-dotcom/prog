@@ -45,6 +45,7 @@ test('отказ durable записи не даёт уйти к торговцу
 });
 
 test('подготовка очереди в политике не перехватывает выбранную заточку',async()=>{
- const w={L2EngineCore:E,cfg:{autoTasks:['enchant']},rt:{},on:true,tabOwner:true,taskPolicyNote(){},sealQueue:async()=>false,loopStale:()=>true,autonomyMode:()=> 'enchant'};
+ // 20.71: отдельный режим подземелий в этом сценарии заточки выключен.
+ const w={L2EngineCore:E,cfg:{autoTasks:['enchant']},rt:{},on:true,tabOwner:true,taskPolicyNote(){},sealQueue:async()=>false,loopStale:()=>true,autonomyMode:()=> 'enchant',rebirthModeSelected:()=>false};
  vm.runInNewContext(content.slice(content.indexOf('async function loopTaskList()'),content.indexOf('// 15.10: заточка — отдельный режим.')),w);assert.equal(await w.loopTaskList(),undefined);
 });

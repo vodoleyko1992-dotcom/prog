@@ -145,7 +145,8 @@ test('исходник: главный цикл, сторож вкладки, с
   assert.match(content, /await loopSideJobs\(\) \|\| await loopSelfHoldWait\(\) \|\| await loopRaid\(\) \|\| await loopActivity\(\);/);
   const wd = slice(content, 'async function loopWatchdog() {', 'async function loopUrgent() {');
   assert.match(wd, /if \(selfHoldMain\(\) && Date\.now\(\) - \(LOOP\.holdWaitT \|\| 0\) < 15000\) \{ progressMonitor\.tick\('', false\); return; \}/);
-  assert.match(wd, /if \(history\.length >= 3\) \{\s+await setRt\(\{ stallRecoveries: \[\] \}\);[\s\S]{0,120}selfHoldStart\('stall', `Автономный режим не продвигается после 3 восстановлений за 30 мин[^`]*`, \{ hard: true, page: '\/map\.html' \}\);\s+return r === 'stop' \? LOOP_BREAK : true;/);
+  // 20.71: сторож возвращает Rebirth в свой каталог; обычный маршрут по-прежнему на карту.
+  assert.match(wd, /if \(history\.length >= 3\) \{\s+await setRt\(\{ stallRecoveries: \[\] \}\);[\s\S]{0,120}selfHoldStart\('stall', `Автономный режим не продвигается после 3 восстановлений за 30 мин[^`]*`, \{ hard: true, page: rebirthModeSelected\(\) \? '\/rebirth-raids\.html' : '\/map\.html' \}\);\s+return r === 'stop' \? LOOP_BREAK : true;/);
   assert.doesNotMatch(wd, /halt\('Автономный режим не продвигается/);
   assert.match(content, /async function nextFight\(\.\.\.args\) \{[^\n]*if \(rt\.selfHold && selfHoldApplies\(\)\) return toMap\(\);/);
   // 20.43 (доводка 21.10): передышек может быть несколько — в статусе ожидания все, ближайшая первой

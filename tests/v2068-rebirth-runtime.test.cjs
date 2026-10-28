@@ -57,10 +57,12 @@ test('каталог существующего run нажимает натив�
 test('с другой страницы режим сначала открывает каталог без нового входа',async()=>{
  const f=fixture({page:'/map.html'});await f.step();assert.equal(f.location.pathname,'/rebirth-raids.html');assert.deepEqual(f.clicks,[]);assert.equal(f.S.entries,0);
 });
-test('нетронутый ordinary бой завершается до какого-либо платного входа',async()=>{
- const f=fixture({page:'/map.html',noRun:true,cfg:{rebirthAutoEnter:true},char:{inBattle:true,battleSpawnId:'dense_21883'}});
- await f.step();assert.equal(f.location.pathname,'/battle.html');assert.equal(new URL(f.location.href).searchParams.get('spawnId'),'dense_21883');assert.equal(f.S.entries,0);
- assert.ok(!f.reads.includes('/game/rebirth-raids?view=instance'));
+// 20.71: отдельные подземелья ждут ручного завершения ordinary-боя; не перехватывают его маршрутом в бой или новым входом.
+test('нетронутый ordinary бой удерживает отдельный Rebirth до какого-либо платного входа',async()=>{
+ const f=fixture({page:'/map.html',noRun:true,cfg:{rebirthAutoEnter:true},char:{inBattle:true,battleSpawnId:'dense_21883'}}),page=f.location.href;
+ await f.step();assert.equal(f.location.href,page);assert.equal(f.S.entries,0);assert.equal(f.S.keys,100);
+ assert.deepEqual(f.clicks,[]);assert.deepEqual(f.posts,[]);assert.deepEqual(f.reads,['/character']);
+ assert.equal(f.env.rt.rebirth.phase,'wait');assert.match(f.env.rt.rebirth.reason,/бой вне подземелья Rebirth/);
 });
 test('неподтверждённый или PvP-бой не разрешает новый вход и не открывает чужую цель',async()=>{
  for(const char of [{inBattle:true,battleSpawnId:'pvp_other'},{inBattle:true,battleSpawnId:null},{inBattle:true,battleSpawnId:'dense_1',isPvp:true}]){

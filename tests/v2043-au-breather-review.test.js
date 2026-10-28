@@ -19,7 +19,8 @@ const MIN = 60000;
 const HOLD_SRC = slice(content, 'const SELF_HOLD_STEPS =', '// ---------- переходы');
 const LOOP_SRC = slice(content, 'const LOOP_BREAK =', '// Магистр: актуальный');
 const TB_SRC = content.match(/^async function townBuffStart\(.*$/m)[0];
-const base = () => ({ L2EngineCore: E, Date, String, Number, Math, Object, Array, JSON, console, Promise, URL });
+// 20.71: в обычных service/breather-стендах отдельный Rebirth выключен.
+const base = () => ({ rebirthModeSelected: () => false, L2EngineCore: E, Date, String, Number, Math, Object, Array, JSON, console, Promise, URL });
 
 // ---------- content.selfHoldStart: счёт вида — только после настоящей остановки ----------
 function holdBox({ tasks = ['raid'], mode = 'raid', rt: rt0 = {}, halt } = {}) {
