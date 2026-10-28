@@ -5,7 +5,7 @@
 
 
 
-## 29.10.2026, 09:12 UTC+10 — Codex — Chrome20.77: сборка ревизии (PR в подготовке)
+## 29.10.2026, 09:12 UTC+10 — Codex — Chrome20.77: сборка ревизии ([PR #452](https://github.com/vodoleyko1992-dotcom/prog/pull/452))
 
 - John «собери новую ревизию на хром», уточнение «бот для l2wap основная версия». Базаb88acca/#450/#451, все39исправлений ревизии28.10 включены; функциональный runtime при упаковке не менялся, только version/description/header/5assertions/README/история.
 - ZIP69/1762791B/SHA256 `2d65af69993058905663cd72e574f324332f7d5226eb356649b5b41e0115cb14`; квитанция docs/evidence/build-20.77-chrome/receipt.json. Сохраняется прежнее «без проверок»: Node/syntax/env/browser/lint/privacy/ZIPaudit/download не запускались, новыхPASS нет.714Node/смоуки — исторические результаты исходной ревизии, не этой упаковки; живаяигра0.
