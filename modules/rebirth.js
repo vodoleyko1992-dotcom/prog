@@ -192,8 +192,9 @@ async function nextFight(ctx) {
     && !/^rebirth_raid_/i.test(info?.spawn || '') && !/^rebirth_raid_/i.test(ctxSpawn || '') && state().battleSpawn !== route;
   if (foreign) {
     const leave = () => current() && !env.nativePending?.();
-    if (leave() && await env.rtCommit?.() && leave()) { env.setStatus('Rebirth: завершённый бой вне подземелий — открываю каталог'); location.href = '/rebirth-raids.html'; }
-    return;
+    if (leave() && await env.rtCommit?.() && leave()) { env.setStatus('Rebirth: завершённый бой вне подземелий — открываю каталог'); location.href = '/rebirth-raids.html'; return; }
+    // 20.76+ (ревизия 28.10): запрос игры ещё идёт или запись не сохранилась — пауза 1 с с причиной, а не холостой круг каждые ~0,2 с
+    return hold('жду завершения запроса игры перед выходом в каталог');
   }
   if (!current() || !/^rebirth_raid_/i.test(after) || !owner || !scan || !Number.isFinite(generation)
       || !prof || !Number.isInteger(slot) || slot < 0 || fresh && ctxSpawn && ctxSpawn !== after)

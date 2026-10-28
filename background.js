@@ -267,9 +267,11 @@ function retireRaidSessionPatch(patch, rt, cfg, now) {
   if (!Object.hasOwn(patch,'retireRaidSession')) return { patch, retired: false };
   const next = { ...patch }, intent = next.retireRaidSession, session = rt.rbSess;
   delete next.retireRaidSession;
+  // 20.76+ (ревизия 28.10): вкладка снимает сессию по L2EngineCore.taskAllowed (старый rebirthMode без autoTasks, ['rebirth','raid']),
+  // а здесь было только «массив без raid» — ключ молча удалялся, вкладка крутила отмену без паузы и Rebirth не запускался. Одно правило.
+  const E = globalThis.L2EngineCore, raidOff = E?.taskAllowed ? !E.taskAllowed(cfg, 'raid') : Array.isArray(cfg.autoTasks) && !cfg.autoTasks.includes('raid');
   if (!Object.hasOwn(next,'rbSess') && session?.on && intent &&
-      (intent.start === null || Number.isSafeInteger(intent.start)) && intent.start === (session.start ?? null) &&
-      Array.isArray(cfg.autoTasks) && !cfg.autoTasks.includes('raid')) {
+      (intent.start === null || Number.isSafeInteger(intent.start)) && intent.start === (session.start ?? null) && raidOff) {
     next.rbSess = { ...session, on: false, end: now };
     return { patch: next, retired: true };
   }

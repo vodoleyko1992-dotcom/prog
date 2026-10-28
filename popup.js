@@ -312,6 +312,11 @@ function confirmClick(id, fn) {
 // 8.0 (аудит меню): состояние для экономной перерисовки встроенного меню (см. loadSoon)
 const DOCKED = /dock=1/.test(location.search);
 let dockMin = false, recN = 0, snapN = 0;
+// 20.76+ (ревизия 28.10): на Android поверх игры (dockOver) свёрнутость дока — язычок страницы (localStorage), а не cfg.dockMin:
+// меню, свёрнутое ◀ в альбомной ориентации или импортом с ПК, застывало после первой отрисовки. Страница игры сообщает фактическую
+// свёрнутость (__l2dock 'min'); пока её не было — прежний cfg.dockMin.
+let dockView = null;
+const dockMinNow = cfgMin => DOCKED && (dockView ?? !!cfgMin);
 // перерисовка меню — не чаще 3 раз в секунду и только когда его видно (loadSoon ниже). 20.62 (жалоба John 25.10 «бот грузит ЦП и память»):
 // состояние объявлено здесь, до первого вызова load()/showTab() (иначе let в TDZ). loadAt — когда сработает отложенный load(),
 // loadDone — стартовый load() завершён, lastPaint — rt/cfg последней отрисовки (живой статус live@ без полной перерисовки),
@@ -343,6 +348,11 @@ if (DOCKED) {
   // v5.2: «я жива» для страницы игры раз в 3 с — если панель упадёт (грустный листок), бот перезапустит её сам
   const hb = () => { try { parent.postMessage({ __l2dock: 'hb' }, '*'); } catch (e) {} };
   hb(); setInterval(hb, 3000);
+  addEventListener('message', e => {
+    if (e.source !== parent || e.data?.__l2dock !== 'min' || typeof e.data.min !== 'boolean') return;
+    const was = dockMin; dockView = e.data.min; dockMin = dockView;
+    if (was && !dockMin) { if (loadPending) loadSoon(0); showCounts(recN, snapN); document.dispatchEvent(new Event('l2:dockshow')); }   // показали — догоняем пропущенное
+  });
 }
 
 // 8.0.7 (игрок 11.10, планшет с Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — было окошко
@@ -401,7 +411,7 @@ async function loadNow() {
     formChar = rt.char || '';
   }
   paintActionDelay();
-  recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
+  recN = reccount; snapN = snapcount; dockMin = dockMinNow(d.dockMin);
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
   const ver = chrome.runtime.getManifest().version, hl = healthLine(rt, wdog).trim(), S = sessInfo(rt);
   const chip = (ic, v, t) => `<span class="chip" title="${t}">${ic} <b>${v}</b></span>`;
@@ -3362,7 +3372,7 @@ document.addEventListener('l2:tabchange', e => {
   if (lastPaint) renderOpen(lastPaint.rt, lastPaint.d); else if (loadDone) loadSoon(0);   // первый load() ещё идёт — он нарисует открытый раздел сам
 });
 onStore(ch => {
-  if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
+  if (ch.cfg) { const was = dockMin; dockMin = dockMinNow(ch.cfg.newValue?.dockMin); if (was && !dockMin) loadPending = true; }
   // 20.62 (ревью): lock/hbBg (продление замка, пульс фона) load() не зовут — запоминаем для paintLive; сменилась шапка («Запуск» → «Активен») — перерисовка
   if ((ch.lock || ch.hbBg) && lastPaint) {
     if (ch.lock) lastPaint.lock = ch.lock.newValue ?? null; if (ch.hbBg) lastPaint.hbBg = ch.hbBg.newValue ?? null;
@@ -3619,6 +3629,7 @@ function panelRefresher(el, refresh, delay) {
   chrome.storage.onChanged?.addListener(ch => { if (!(ch.cfg || ch.rt || ch.hot || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
   const wake = () => { if (stale) soon(); };
   document.addEventListener('l2:tabchange', wake); document.addEventListener('l2:cardtoggle', wake); document.addEventListener('visibilitychange', wake);
+  document.addEventListener('l2:dockshow', wake);   // 20.76+ (ревизия 28.10): док раскрыт язычком страницы — без записи cfg
   return { wake };
 }
 panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);
