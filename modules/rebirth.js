@@ -274,10 +274,10 @@ async function nextFight(ctx) {
     }
     // Новый большой этап проходит свою подготовку в каталоге; победу над самим РБ доводим до native next:none.
     const completedRole=after.match(/_(mob|champion|raid)_\d+$/i)?.[1].toLowerCase();
-    // 20.76+ (ревизия 28.10): mobs 300/300 до серверного перехода в champion из каталога не продолжить (step ждал «ручного выбора»);
-    // единственный подтверждённый переход — native next?after=mob_300 → champion, поэтому подготовка здесь не уводит с победы. Лечение в бою прежнее.
+    // 20.76+ (ревизия 28.10, после ревью): mobs 300/300 с нужной подготовкой тоже уходит в каталог — next?after=mob_300 сразу открывает
+    // чемпиона (312 тыс. HP), а решение 20.73/20.74 — вход/Fight только после подготовки HP/баффов/кота. Продолжение 300/300 из каталога ведёт step.
     if (!closed && (run.phase==='champion' && completedRole!=='champion' || run.phase==='rb_active' && completedRole!=='raid'
-        || run.phase==='mobs' && run.mobKills<run.mobKillTarget && env.needsPetPreparation?.())) return env.rebirthReturn?.(current);
+        || run.phase==='mobs' && env.needsPetPreparation?.())) return env.rebirthReturn?.(current);
     if (!huntReady()) return env.rebirthReturn?.(current);
     const stillReady = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
     if (!current()) return;
@@ -407,7 +407,8 @@ async function nextFight(ctx) {
     }
     if(!current(T))return true;
     const progress=integer(run.mobKills)&&integer(run.mobKillTarget)&&run.mobKillTarget>0;
-    // 20.76+ (ревизия 28.10): mobs 300/300 до серверного перехода в champion — тот же продолжаемый этап, что в nextFight, а не ручной выбор.
+    // 20.76+ (ревизия 28.10): mobs 300/300 до серверного перехода в champion — продолжаемый этап (prepareRun → «Продолжить» → нативный «Бой»
+    // или ожидание кнопки чемпиона), а не ручной выбор: сюда приводит возврат в каталог с победы над mob_300 ради подготовки.
     const known=progress&&(run.phase==='mobs'&&run.mobKills<=run.mobKillTarget||run.phase==='champion'&&run.mobKills>=run.mobKillTarget||selectedBoss(run));
     if(!known){
      if(path()!=='/rebirth-raid-dungeon.html'){

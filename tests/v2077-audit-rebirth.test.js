@@ -1,6 +1,7 @@
 'use strict';
 // 20.76+ (ревизия 28.10, группа rebirth): (1) sent-квитанция бесплатного Fight, который сервер не открыл, больше не держит поход вечно;
-// (2) mobs 300/300 до серверного перехода в champion продолжается native next с победы и не считается «ручным выбором» в step.
+// (2) mobs 300/300 до серверного перехода в champion не считается «ручным выбором» в step. После ревью: победа над mob_300 при нужной
+// подготовке по-прежнему уходит в каталог (next?after=mob_300 сразу открывает чемпиона; решение 20.73/20.74 — Fight только после подготовки).
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const file=path.join(__dirname,'v2068-rebirth-runtime.test.cjs'),source=fs.readFileSync(file,'utf8');
 const box={require:require('node:module').createRequire(file),__dirname,path,console,URL,URLSearchParams,Date,structuredClone};
@@ -50,25 +51,34 @@ function victoryFixture(){
  f.env.$q=s=>s==='#battle-mob-title'?title:s==='#battle-victory-inline'?win:s==='#battle-victory-hunt'?hunt:q(s);
  f.env.evidenceOwner=()=>'owner';f.env.scanContext=()=>'scan';f.env.pvpPending=()=>false;f.env.antibotState=()=>false;
  f.env.tvtSoon=()=>false;f.env.tvtHoldWait=async()=>false;f.env.actionWait=async valid=>valid();f.env.waitFor=async valid=>valid();
- f.S.returns=0;f.env.fire=b=>{assert.equal(b,hunt);f.clicks.push('hunt');return true;};f.env.rebirthReturn=async valid=>{f.S.returns++;if(valid())f.location.href='/rebirth-raids.html';};
+ f.S.returns=0;f.S.fire0=f.env.fire;f.env.fire=b=>{assert.equal(b,hunt);f.clicks.push('hunt');return true;};f.env.rebirthReturn=async valid=>{f.S.returns++;if(valid())f.location.href='/rebirth-raids.html';};
  return{...f,ctx:{name,spawnId:sid()}};
 }
 
-test('победа над mob_300 при mobs 300/300 и нужной подготовке жмёт native next, а не уводит в каталог',async()=>{
+test('победа над mob_300 при нужной подготовке уходит в каталог, без подготовки — native next к чемпиону',async()=>{
  const f=victoryFixture();f.env.needsPetPreparation=()=>true;await f.api().nextFight(f.ctx);
- assert.equal(f.clicks.filter(x=>x==='hunt').length,1);assert.equal(f.S.returns,0);assert.equal(f.location.pathname,'/battle.html');
- assert.ok(f.storage.get('l2bot.rebirth-next'),'квитанция next записана до клика');noSpend(f);
- // Контроль: до 300 подготовка по-прежнему возвращает в каталог.
+ assert.equal(f.clicks.length,0,'next к чемпиону без подготовки не жмём');assert.equal(f.S.returns,1);assert.equal(f.location.pathname,'/rebirth-raids.html');
+ assert.equal(f.storage.get('l2bot.rebirth-next'),undefined,'квитанция next не пишется');noSpend(f);
+ // Подготовка не нужна — прежний единственный подтверждённый переход native next?after=mob_300.
+ const ready=victoryFixture();ready.env.needsPetPreparation=()=>false;await ready.api().nextFight(ready.ctx);
+ assert.equal(ready.clicks.filter(x=>x==='hunt').length,1);assert.equal(ready.S.returns,0);assert.ok(ready.storage.get('l2bot.rebirth-next'),'квитанция next записана до клика');noSpend(ready);
+ // Контроль: до 300 подготовка тоже возвращает в каталог.
  const early=victoryFixture();early.instance.activeRun.mobKills=299;early.env.needsPetPreparation=()=>true;await early.api().nextFight(early.ctx);
  assert.equal(early.clicks.length,0);assert.equal(early.S.returns,1);assert.equal(early.location.pathname,'/rebirth-raids.html');noSpend(early);
 });
 
-test('step: mobs 300/300 — подготовка и продолжение похода вместо «выберите цель вручную»',async()=>{
- const f=box.fixture({page:'/rebirth-raids.html'});Object.assign(f.instance.activeRun,{phase:'mobs',mobKills:300});let prepared=0;
- f.env.prepareRun=async()=>{prepared++;return false;};
- await f.step();assert.equal(prepared,1);assert.equal(JSON.stringify(f.clicks),'["continue"]');assert.notEqual(f.env.rt.rebirth.phase,'manual');
- f.tick(3000);await f.step();assert.equal(JSON.stringify(f.clicks),'["continue","fight"]','нативная кнопка боя на странице похода');noSpend(f);
+test('после возврата с mob_300: step сначала готовит героя, Fight — только после подготовки, без «выберите цель вручную»',async()=>{
+ const base=victoryFixture();base.env.needsPetPreparation=()=>true;await base.api().nextFight(base.ctx);
+ assert.equal(base.location.pathname,'/rebirth-raids.html');assert.equal(base.clicks.length,0);
+ // Тот же поход и та же вкладка: дальше работает step с нативными кнопками каталога/подземелья.
+ base.env.fire=base.S.fire0;base.tick(3000);
+ let preparing=true,prepared=0;base.env.prepareRun=async({character})=>{prepared++;assert.equal(character.inBattle,false);return preparing;};
+ for(let i=0;i<3;i++){await base.step();base.tick(3000);}
+ assert.equal(prepared,3);assert.equal(base.clicks.length,0,'пока идёт подготовка — ни «Продолжить», ни «Бой»');assert.equal(base.env.rt.rebirth.phase,'prepare');
+ preparing=false;await base.step();assert.equal(JSON.stringify(base.clicks),'["continue"]');assert.notEqual(base.env.rt.rebirth.phase,'manual');
+ base.tick(3000);await base.step();assert.equal(JSON.stringify(base.clicks),'["continue","fight"]','нативная кнопка боя на странице похода');noSpend(base);
  const none=box.fixture({page:'/rebirth-raid-dungeon.html?page=20',state:{fights:0}});Object.assign(none.instance.activeRun,{phase:'mobs',mobKills:300});
+ none.env.prepareRun=async()=>false;
  await none.step();assert.equal(none.clicks.length,0,'страницы мобов не листаются');assert.equal(none.env.rt.rebirth.phase,'wait');
  assert.match(none.env.rt.rebirth.reason,/кнопку чемпиона/);noSpend(none);
 });
