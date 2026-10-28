@@ -284,6 +284,8 @@ async function nextFight(ctx) {
     }
     // Новый большой этап проходит свою подготовку в каталоге; победу над самим РБ доводим до native next:none.
     const completedRole=after.match(/_(mob|champion|raid)_\d+$/i)?.[1].toLowerCase();
+    // 20.76+ (ревизия 28.10, после ревью): mobs 300/300 с нужной подготовкой тоже уходит в каталог — next?after=mob_300 сразу открывает
+    // чемпиона (312 тыс. HP), а решение 20.73/20.74 — вход/Fight только после подготовки HP/баффов/кота. Продолжение 300/300 из каталога ведёт step.
     if (!closed && (run.phase==='champion' && completedRole!=='champion' || run.phase==='rb_active' && completedRole!=='raid'
         || run.phase==='mobs' && env.needsPetPreparation?.())) return env.rebirthReturn?.(current);
     if (!huntReady()) return env.rebirthReturn?.(current);
@@ -415,7 +417,9 @@ async function nextFight(ctx) {
     }
     if(!current(T))return true;
     const progress=integer(run.mobKills)&&integer(run.mobKillTarget)&&run.mobKillTarget>0;
-    const known=progress&&(run.phase==='mobs'&&run.mobKills<run.mobKillTarget||run.phase==='champion'&&run.mobKills>=run.mobKillTarget||selectedBoss(run));
+    // 20.76+ (ревизия 28.10): mobs 300/300 до серверного перехода в champion — продолжаемый этап (prepareRun → «Продолжить» → нативный «Бой»
+    // или ожидание кнопки чемпиона), а не ручной выбор: сюда приводит возврат в каталог с победы над mob_300 ради подготовки.
+    const known=progress&&(run.phase==='mobs'&&run.mobKills<=run.mobKillTarget||run.phase==='champion'&&run.mobKills>=run.mobKillTarget||selectedBoss(run));
     if(!known){
      if(path()!=='/rebirth-raid-dungeon.html'){
       await status(T,'manual','открываю текущий поход для ручного выбора',info);await navigate(T,'/rebirth-raid-dungeon.html');return true;
@@ -442,11 +446,24 @@ async function nextFight(ctx) {
      if(!shown(button)||!/продолжить подземелье|продовжити підземелля/i.test(button.textContent||''))return status(T,'wait','жду нативную кнопку продолжения',info);
      if(current(T)&&!env.nativePending?.())env.fire(button);return true;
     }
-    if(state().fightPending)return status(T,'unknown','исход открытия боя не подтверждён — повторно не нажимаю',info);
+    // 20.76+ (ревизия 28.10): sent-квитанция боя, который сервер не открыл (500 invalid_spawn/незагрузка боя → каталог), держала оплаченный поход вечно:
+    // Start/сторож её не снимали. Fight бесплатен (оплачен вход): через 30 с без запроса игры в полёте, по свежему «вне боя» и тому же run/этапу/счёту —
+    // до двух повторов на этот счёт; затем ожидание ручного «Бой» или нового Старта (Start даёт ещё два).
+    const FP=state().fightPending;
+    if(FP){
+     const R=state().fightRetry,tries=R?.runId===run.id&&R.runPhase===run.phase&&R.mobKills===run.mobKills&&R.kick===T.kick&&integer(R.n)?R.n:0;
+     const stale=FP.phase==='sent'&&Number.isFinite(FP.sentAt)&&FP.sentAt<=characterReadAt-30000&&!env.nativePending?.()&&ch.inBattle===false&&ch.revision>=FP.revision
+      &&FP.runId===run.id&&FP.runPhase===run.phase&&FP.mobKills===run.mobKills&&FP.actor===ch.id&&FP.char===T.char&&FP.prof===T.prof&&FP.slot===T.slot;
+     if(!stale||tries>=2)return status(T,'unknown',stale?'бой дважды не открылся — откройте его вручную или нажмите Старт':'исход открытия боя не подтверждён — повторно не нажимаю',info);
+     if(!await save(T,{fightPending:null,fightRetry:{runId:run.id,runPhase:run.phase,mobKills:run.mobKills,kick:T.kick,n:tries+1}}))return true;
+     env.rec?.('B','Rebirth','Бой не открылся за 30 с: свежий герой вне боя, поход и счёт прежние — бесплатный повтор «Бой» '+(tries+1)+'/2');
+    }
     const content=env.$q?.('#rebirth-instance-content'),button=[...(content?.querySelectorAll?.('.l2-rraid-fight')||[])].find(shown)
      ||run.phase==='rb_active'&&env.$q?.('.l2-rraid-fight');
     if(!button){
      if(run.phase!=='mobs')return status(T,'wait','жду нативную кнопку боя текущего этапа',info);
+     // 20.76+ (ревизия 28.10): все мобы этапа убиты — страницы мобов не листаем (hint 21 > 20 страниц), ждём кнопку чемпиона.
+     if(run.mobKills>=run.mobKillTarget)return status(T,'wait','все мобы этапа убиты — жду нативную кнопку чемпиона (или откройте его вручную)',info);
      const currentPage=Number(new URLSearchParams(location.search||'').get('page')||1),hint=Math.floor(run.mobKills/15)+1,maxPage=Math.ceil(run.mobKillTarget/15);
      const pages=[...(content?.querySelectorAll?.('.l2-rraid-pager-btn')||[])].filter(shown).map(b=>({b,n:Number(String(b.textContent||'').trim())}))
       .filter(x=>Number.isSafeInteger(x.n)&&x.n>0&&x.n<=maxPage&&x.n!==currentPage);
