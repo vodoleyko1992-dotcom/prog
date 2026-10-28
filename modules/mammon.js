@@ -104,8 +104,9 @@ async function npcPoll(strict = false, active = guard(), fails = null) {
     const { ok, status, j } = await getJson(STATE[k][0]);
     if (!active()) return null;
     if (!ok && strict) throw Error(`положение ${k}: HTTP ${status}`);
-    if (!ok) fails?.add(k);
     const s = ok && j?.[STATE[k][1]];
+    // 20.76+ (ревизия 28.10, ревью): 200 без блока NPC (HTML техработ, пустой ответ) — тоже не свежие координаты
+    if (!s?.current) fails?.add(k);
     if (s?.current) out[k] = { loc: s.current.labelEn || s.current.id, id: s.current.id, x: +s.current.worldX, y: +s.current.worldY,
       next: s.next?.labelEn || s.next?.id || '', at: +s.rotatesAtMs || 0, price: j.teleport?.vipFreeApplied ? 0 : +(j.teleport?.adenaCost ?? 500000) };
   }
@@ -572,7 +573,8 @@ function homePoint() {
 async function finish(J, ok, why) {
   const active = guard(J); if (!active()) return;
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
-  env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
+  const stay = !J.home && J.stay === '/ashen-bastion.html' && !env.fishNow() ? J.stay : null;
+  env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : stay ? ' · остаюсь в Ashen Bastion' : ''}`);
   // 20.43 (ревью): svc — обратный перелёт службы: передышка фарма его не снимает (engine-core taskJobAllowed)
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку', svc: 'mammon', ...(J.home === 'ashen_bastion' ? { returnPath: '/ashen-bastion.html' } : {}) }, zoneGoT: 0 } : {};
   // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
@@ -588,8 +590,11 @@ async function finish(J, ok, why) {
   await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok || J.cancelled ? 0 : Date.now() } : {}),
     ...(J.kind === 'send' ? { mmSendT: ok || J.cancelled ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
   if (!active()) return;
-  if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
+  if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : stay || '/map.html'; await env.sleep(3000); }
 }
+// 20.76+ (ревизия 28.10, ревью): герой не улетал (отказ по резерву, ошибка игры на странице телепорта) — обратного перелёта нет (home:null),
+// но поход из Ashen Bastion возвращается на его страницу: на /map.html фарм Ashen не продолжается. Это переход по странице, не телепорт
+const grounded = J => ({ ...J, home: null, stay: J.home === 'ashen_bastion' ? '/ashen-bastion.html' : null });
 // 15.10: сохранённое задание не должно хранить отменённую квитанцию после Stop до клика.
 async function cancelUnsent(ticket, original, sent = false) {
   if(!ticket || !await env.payments.cancel(ticket, sent ? {notSent:true} : {}))return false;
@@ -619,7 +624,7 @@ async function teleport(J) {                      // страница телеп
   if (price > 0) {
     const reserve = Math.max(0, +env.cfg.shopReserve || 0);
     if (wallet == null) { env.setStatus('Маммон: запас адены перед платным телепортом не подтверждён (ошибка ответа игры) — повторю, телепорт не оплачиваю'); await env.sleep(5000); return; }
-    if (wallet - price < reserve) return finish({ ...J, home: null }, false, `телепорт ${fmtA(price)} адены оставит ${fmtA(wallet - price)} — ниже резерва ${fmtA(reserve)}`);
+    if (wallet - price < reserve) return finish(grounded(J), false, `телепорт ${fmtA(price)} адены оставит ${fmtA(wallet - price)} — ниже резерва ${fmtA(reserve)}`);
   }
   const ticket = env.payments ? await env.payments.prepare({ key: `mammon:tp:${J.kind}:${J.t}`, kind: 'mammon', quote: { amount: price, currency: 'adena' }, evidence: { action: 'teleport', npc: J.kind, home: J.home, ...(before0 || {}) } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
@@ -637,7 +642,7 @@ async function teleport(J) {                      // страница телеп
   // Смена URL сама по себе не подтверждает платный телепорт. Следующий шаг сверит NPC с сервером.
   if (!ticket && location.pathname === LOC[J.kind]) {
     const err = (env.$q('#mammon-loc-err')?.textContent || '').trim();
-    if (err) return finish({ ...J, home: null }, false, `не улетели: ${err.slice(0, 80)}`);
+    if (err) return finish(grounded(J), false, `не улетели: ${err.slice(0, 80)}`);
   }
 }
 // 10.0.24: общая диспетчеризация сверяет неизвестный платёж даже после отмены похода/смены режима.

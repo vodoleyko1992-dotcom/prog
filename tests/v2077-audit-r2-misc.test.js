@@ -9,6 +9,8 @@
 //    Теперь кэш только пока NPC не сменил место (rotatesAtMs), иначе null (повтор без оплаты).
 // 4) equipment: каталог игры weaponType 'dual' переводился в 'дуалы', а классы (CLASS_W/items-il) ждут 'парные мечи' — новые дуалы
 //    (кланы 9002276, Glory 920040) были «не в класс», и автосмена надевала более слабое оружие.
+// Ревью 28.10: поход из Ashen Bastion после отказа без перелёта (резерв, «не улетели») возвращается на /ashen-bastion.html, а не на карту;
+//    ответ 200 без блока mammonMerchant тоже считается сбоем координат (кэш только до rotatesAtMs).
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 
@@ -55,24 +57,41 @@ function mm(kind,o={}){
  const btn={disabled:false},cost={textContent:o.cost||'500000'};
  const env={rt:{char:'Tank',manualKickAt:0,...(o.rt||{})},cfg:{shopReserve:200000,mmTpMax:500000,...(o.cfg||{})},on:true,tabOwner:true,leaseEpoch:3,autonomyMode:()=> 'farm',canRun:()=>true,ITEMS:{},FARM:{res:{}},
   isBattle:()=>false,fishNow:()=>false,rec:(...a)=>events.push(a.join(' ')),setStatus:s=>events.push(s),sleep:async()=>{},waitX:async f=>f(),
-  $q:s=>s==='#mammon-loc-teleport-btn'?btn:s==='#mammon-loc-cost'?cost:null,fire:()=>{fired++;return true},
+  $q:s=>s==='#mammon-loc-teleport-btn'?btn:s==='#mammon-loc-cost'?cost:s==='#mammon-loc-err'&&o.err?{textContent:o.err}:null,fire:()=>{fired++;return true},
   setRt:async p=>{Object.assign(env.rt,p);return {ok:true}},rtCommit:async()=>true,
   gameGet:async p=>{
    if(p==='/game/mammon/blacksmith/upgrades')return {ok:st.ups===200,status:st.ups,json:async()=>(st.ups===200?{items:[]}:{error:'mammon_blacksmith_not_nearby'})};
    if(p==='/character')return {ok:st.char===200,status:st.char,json:async()=>(st.char===200?{character:{name:'Tank',id:'tank',revision:9,adena:st.adena,worldX:st.hero.x,worldY:st.hero.y}}:{})};
-   if(p==='/game/mammon/merchant')return {ok:st.merchant===200,status:st.merchant,json:async()=>(st.merchant===200?{mammonMerchant:{current:{id:'m1',worldX:st.npc.x,worldY:st.npc.y}},teleport:{adenaCost:500000}}:{})};
+   if(p==='/game/mammon/merchant')return {ok:st.merchant===200,status:st.merchant,json:async()=>(st.merchant===200&&!st.merchantEmpty?{mammonMerchant:{current:{id:'m1',worldX:st.npc.x,worldY:st.npc.y}},teleport:{adenaCost:500000}}:{})};
    if(p==='/game/mammon/blacksmith')return {ok:true,status:200,json:async()=>({mammonBlacksmith:{current:{id:'b1',worldX:st.npc.x,worldY:st.npc.y}},teleport:{adenaCost:500000}})};
    return {ok:false,status:404,json:async()=>({})};}};
- env.payments=box.L2V7Factories.payments(env);vm.runInNewContext(read('modules/mammon.js'),box);const M=box.L2V7Factories.mammon(env);
- env.rt.mmJob={kind,step:'go',why:'тест',home:'z1',t:now,context:{char:'Tank',kick:0,mode:'farm'}};
+ env.payments=o.noPay?null:box.L2V7Factories.payments(env);vm.runInNewContext(read('modules/mammon.js'),box);const M=box.L2V7Factories.mammon(env);
+ env.rt.mmJob={kind,step:'go',why:'тест',home:o.home||'z1',t:now,context:{char:'Tank',kick:0,mode:'farm'}};
  const paid=()=>!!(env.rt.actionPayments?.pending||(env.rt.actionPayments?.history||[]).length);
- return {env,M,st,events,paid,fired:()=>fired};
+ return {env,M,st,events,paid,fired:()=>fired,loc};
 }
 for(const kind of ['order','smith'])test(`телепорт к ${kind==='order'?'торговцу':'кузнецу'}: 600 000 адены, резерв 200 000 — 500 000 не платим`,async()=>{
  const f=mm(kind);assert.equal(await f.M.mmStep(),true);
  assert.equal(f.paid(),false,'платёж не подготовлен');assert.equal(f.fired(),0,'кнопка не нажата');
  assert.equal(f.env.rt.mmJob,null,'задание закрыто');assert.equal(f.env.rt.mmLog[0].ok,false);assert.match(f.env.rt.mmLog[0].why,/ниже резерва/);
  assert.equal(f.env.rt.zoneGo,undefined,'герой не улетал — обратного маршрута нет');
+ assert.equal(f.loc.href,'/map.html','обычная точка — на карту, как прежде');
+});
+// ревью 28.10: поход из Ashen Bastion после отказа без перелёта возвращается на страницу Ashen (на /map.html фарм Ashen не продолжается)
+test('телепорт из Ashen Bastion ниже резерва — без оплаты и без платного zoneGo, обратно на /ashen-bastion.html',async()=>{
+ const f=mm('order',{home:'ashen_bastion'});await f.M.mmStep();
+ assert.equal(f.paid(),false);assert.equal(f.fired(),0);assert.equal(f.env.rt.mmJob,null);
+ assert.equal(f.env.rt.zoneGo,undefined,'обратного телепорта нет — герой в Ashen');assert.equal(f.loc.href,'/ashen-bastion.html');
+ assert.ok(f.events.some(e=>/ниже резерва.*остаюсь в Ashen Bastion/.test(e)));
+});
+test('Ashen Bastion, рыбалка выбрана — после отказа как прежде на /fishing.html',async()=>{
+ const f=mm('order',{home:'ashen_bastion'});f.env.fishNow=()=>true;await f.M.mmStep();
+ assert.equal(f.fired(),0);assert.equal(f.loc.href,'/fishing.html');
+});
+test('без журнала оплат: игра ответила ошибкой на странице телепорта из Ashen — «не улетели», обратно на /ashen-bastion.html',async()=>{
+ const f=mm('order',{home:'ashen_bastion',adena:5000000,noPay:true,err:'Недостатньо адени'});await f.M.mmStep();
+ assert.equal(f.fired(),1);assert.equal(f.env.rt.mmJob,null);assert.match(f.env.rt.mmLog[0].why,/не улетели/);
+ assert.equal(f.env.rt.zoneGo,undefined);assert.equal(f.loc.href,'/ashen-bastion.html');
 });
 test('телепорт: адены хватает сверх резерва (800 000) — платим и летим',async()=>{
  const f=mm('order',{adena:800000});await f.M.mmStep();
@@ -92,6 +111,17 @@ for(const status of [429,502])test(`торговец: GET /game/mammon/merchant 
  assert.equal(await f.M.isNear('order'),null);
  for(let i=0;i<3;i++)assert.equal(await f.M.mmStep(),true);
  assert.equal(f.paid(),false);assert.equal(f.fired(),0);assert.equal(f.env.rt.mmJob.step,'go');
+});
+// ревью 28.10: 200 без блока mammonMerchant (HTML техработ, пустое тело) — тоже не свежие координаты
+test('торговец: GET координат 200 без mammonMerchant, кэша нет — положение неизвестно, телепорт не оплачивается',async()=>{
+ const f=mm('order',{adena:5000000});f.st.merchantEmpty=true;
+ assert.equal(await f.M.isNear('order'),null);
+ for(let i=0;i<3;i++)assert.equal(await f.M.mmStep(),true);
+ assert.equal(f.paid(),false);assert.equal(f.fired(),0);assert.equal(f.env.rt.mmJob.step,'go');
+});
+test('торговец: GET координат 200 без mammonMerchant, кэш свежий — решение по кэшу',async()=>{
+ const f=mm('order',{adena:5000000,rt:{mmNpc:{order:{x:100,y:100,at:Date.now()+600000}}}});f.st.merchantEmpty=true;
+ assert.equal(await f.M.isNear('order'),true);
 });
 test('торговец: GET координат 429, кэш свежий (место ещё не сменилось) — решение по кэшу',async()=>{
  const far=mm('order',{adena:5000000,rt:{mmNpc:{order:{x:50000,y:50000,at:Date.now()+600000}}}});far.st.merchant=429;

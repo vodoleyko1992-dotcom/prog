@@ -39,7 +39,9 @@ const PAGES = {
         const body = u.pathname === '/game/mammon/merchant/request' ? order(claimed ? 'CLAIMED' : 'OPEN') : u.pathname === '/game/mammon/merchant'
           ? { mammonMerchant: { current: { id: 'pilgrims_necropolis', labelEn: "The Pilgrim's Necropolis", worldX: 45600, worldY: 126944 }, next: { labelEn: 'Necropolis of Worship' }, rotatesAtMs: Date.now() + 3600000 }, teleport: { adenaCost: 500000 } }
           : u.pathname === '/game/mammon/blacksmith' ? { mammonBlacksmith: { current: { id: 'catacomb_of_the_witch', labelEn: 'Catacomb of the Witch', worldX: 136672, worldY: 79328 }, next: { labelEn: 'Catacomb of Dark Omens' }, rotatesAtMs: Date.now() + 3600000 }, teleport: { adenaCost: 500000 } }
-          : u.pathname === '/character' ? { character: { worldX: 114736, worldY: -2316 } } : {};
+          // 20.76+ (ревизия 28.10): платный телепорт к NPC сверяет свежий кошелёк своего героя с резервом shopReserve —
+          // как настоящий GET /character, мок отдаёт имя, ревизию и адену (без них телепорт честно ждёт повтора без оплаты)
+          : u.pathname === '/character' ? { character: { name: 'Warlock', revision: 1, adena: 10000000, worldX: 114736, worldY: -2316 } } : {};
         return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
       }
       return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: PAGES[u.pathname] || PAGES['/map.html'] });
