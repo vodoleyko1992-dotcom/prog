@@ -842,7 +842,9 @@ chrome.commands?.onCommand.addListener(async c => {
   await serializeLock(async () => {
     const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
     const { on = false, rt = {}, cfg = {} } = await ST.get(['on', 'rt', 'cfg']), now = Date.now();
-    const change = { on: !on };
+    // 20.76+ (ревизия 28.10): клавиша, как «Старт»/«Стоп» меню и botControl, снимает старую паузу — иначе после стопа клавишей
+    // меню и индикатор показывали «⏸ Пауза»/«▶ Продолжить» вместо «○ Остановлен»
+    const change = { on: !on, paused: null };
     if (!on) {
       // 19.10.2026: новый запуск отменяет старые release/ответы и требует сверки суточных лимитов, как Start в меню.
       const next = { ...rt, manualKickAt: Math.max(now, (+rt.manualKickAt || 0) + 1), dailyStart: (+rt.dailyStart || 0) + 1, _src: 'hotkey' };
