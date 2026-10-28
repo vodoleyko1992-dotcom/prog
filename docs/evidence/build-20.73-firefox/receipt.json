@@ -1,0 +1,39 @@
+{
+  "version": "20.73",
+  "format": "Firefox",
+  "sourceBase": "7d2e05fdae3f35dfeb969c72eb13f05fc29d0206",
+  "sourceFixPullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/441",
+  "userRequest": "сборка; Firefox context and previous without-checks preference retained",
+  "artifact": "builds/l2wap-bot-v20.73-firefox.zip",
+  "bytes": 1738487,
+  "sha256": "936fc44f995f69bd1af6c807e1726b4b0f54861974b987964d15cb54385f328b",
+  "packagedFiles": 69,
+  "packaging": "same explicit file allowlist as prior Firefox20.72; standard Firefox manifest transformation",
+  "checksRun": false,
+  "testsRun": false,
+  "skippedByUserRequest": [
+    "Node tests",
+    "syntax",
+    "module getters",
+    "browser tests",
+    "lint",
+    "privacy tests",
+    "archive audit",
+    "download verification"
+  ],
+  "changes": [
+    "recover stale or missing Rebirth victory after60s timeout using exact URL and saved own battle lineage",
+    "fresh own outside-battle character and same solo-run actor/stage before free catalogue return",
+    "resume existing paid run through native Continue/Fight without replaying old next or purchasing new entry",
+    "previous20.72 parallel fresh checks and AoE model preserved"
+  ],
+  "priorSourceValidation": "692 Node files and3ChromeMV3 scenarios passed for source fix#441 before packaging; not re-run and not evidence of this build",
+  "oldArchiveRetainedIn": "git history and /workspace/work/build-20.73-firefox/",
+  "externalBuildsFolderAvailable": false,
+  "chromeRebuilt": false,
+  "liteRebuilt": false,
+  "liveGameOpened": false,
+  "signed": false,
+  "nextStep": "Update Firefox add-on in same profile and folder; reload game tab; collect full Rebirth log including retry/resume",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/442"
+}
