@@ -3931,6 +3931,8 @@ async function loopRebirth() {
     return true;
   }
   if (L2V7Modules.payments?.blocked?.()) { setStatus('Подземелья: жду подтверждения ранее отправленного действия'); await sleep(700); return true; }
+  // 20.73 (лог28.10 04:59): своё восстановление героя завершается раньше missing-run и подготовки нового входа.
+  if (!isBattle() && await rebirthPrepareHero()) { if (on && tabOwner && rebirthModeSelected()) await sleep(200); return true; }
   if (isBattle()) await battle(); else await L2V7Modules.rebirth.step();
   if (on && tabOwner && rebirthModeSelected()) await sleep(200);
   return true;
@@ -3952,15 +3954,63 @@ async function paymentReconcileOnly(P) {
   if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();
   if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');
 }
+function rebirthHeroNeeded(ch) {
+  const hp=ch?{cur:ch.hp,max:ch.maxHp}:meHp();
+  const need=L2V7Modules.buffs.rebirthBuffNeed?.(ch);
+  return !!(hp?.max>0 && hp.cur<hp.max*.99) || !!(need?.set||need?.unknown);
+}
+function rebirthBuffAllowed(job) {
+  return L2EngineCore.rebirthBuffJob(cfg,rt,job)&&on&&tabOwner&&heroNick()===rt.char&&!isBattle()&&!antibotState()&&!abHold()
+    &&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+}
+function rebirthDeathRecovery() {
+  if(!rebirthModeSelected())return null;
+  const ids=new URLSearchParams(location.search).getAll('spawnId'),sid=ids.length===1?ids[0]:'',B=rt.rebirth;
+  if(location.pathname!=='/battle.html'||!/^rebirth_raid_[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}_/i.test(sid)||B?.battleSpawn!==sid||typeof B.actor!=='string'||!B.actor
+    ||B.prof!==rt.classCur?.prof||B.slot!==rt.classCur?.slot||B.observedRun?.char!==rt.char||B.observedRun?.kick!==(rt.manualKickAt||0))return null;
+  return {kind:'death',char:rt.char,prof:rt.classCur.prof,slot:rt.classCur.slot,kick:rt.manualKickAt||0,actor:B.actor,runId:B.runId,spawn:sid};
+}
+async function rebirthPrepareHero(snapshot) {
+  if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
+  const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,kick=rt.manualKickAt||0,page=location.href;
+  const wanted=()=>on&&tabOwner&&rebirthModeSelected()&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who&&rt.classCur?.prof===prof
+    &&rt.classCur?.slot===slot&&(rt.manualKickAt||0)===kick&&location.href===page&&!isBattle()&&!antibotState()&&!abHold()&&!L2V7Modules.pvp?.pending?.()
+    &&L2V7Modules.actions?.canAct?.()!==false&&!L2V7Modules.payments?.blocked?.();
+  if(!wanted())return true;
+  if(L2EngineCore.rebirthBuffJob(cfg,rt)){if(!await rtCommit()||!wanted()||!L2EngineCore.rebirthBuffJob(cfg,rt))return true;await townBuffStep();return true;}
+  if(!snapshot&&!rebirthHeroNeeded())return false;
+  if(rt.tbuff)return true; // чужой маршрут не превращаем в разрешение на собственную подготовку
+  if(rt.restoreRes?.ok===false&&Date.now()-(rt.restoreRes.t||0)<180000){setStatus('Подземелья: восстановление пока не удалось — повторю у баффера, бой не начинаю');return true;}
+  let ch=snapshot;
+  try{if(!ch){const r=await gameGet('/character',4000);if(!wanted())return true;if(!r.ok)throw Error('read_failed');const d=await r.json();if(!wanted())return true;ch=d?.character||d;if(d?.error||d?.ok===false)ch=null;}}
+  catch(_){if(wanted())setStatus('Подземелья: сверяю здоровье героя перед подготовкой');return true;}
+  if(!wanted())return true;
+  if(!ch||ch.name!==who||typeof ch.id!=='string'||!ch.id||ch.l2Profession!==prof||ch.classSlots?.activeSlot!==slot||ch.level!==heroLvl()
+    ||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||ch.revision<0||!(ch.hp>0&&ch.maxHp>0&&ch.hp<=ch.maxHp)){
+    setStatus('Подземелья: свой герой и здоровье не подтверждены — бой не начинаю');return true;
+  }
+  const need=L2V7Modules.buffs.rebirthBuffNeed?.(ch);
+  if(need?.unknown){setStatus('Подземелья: баффы героя ещё не подтверждены — бой не начинаю');return true;}
+  if(ch.hp>=ch.maxHp*.99&&!need?.set)return false;
+  const marker={kind:'prepare',char:who,prof,slot,kick,actor:ch.id,revision:ch.revision};
+  const job={set:null,fa:[],step:'restore',why:'подготовка героя к подземелью',t:Date.now(),back:'/rebirth-raids.html',rebirthRecovery:marker};
+  const saved=await setRt({tbuff:job,restoreRes:null});
+  if(saved?.ok!==true){if(wanted()&&rt.tbuff===job)await setRt({tbuff:null});return true;}
+  if(!wanted())return true;
+  setStatus('Подземелья: бесплатные баффы и восстановление HP перед боем');
+  await townBuffStep();return true;
+}
 function rebirthNeedsPet() {
   const pet=petState();
-  return rebirthModeSelected() && L2EngineCore.rawTaskConfig(cfg).petAuto !== false && pet?.has === false && Date.now()-(pet.t||0)<600000;
+  return rebirthModeSelected() && (rebirthHeroNeeded() || L2EngineCore.rawTaskConfig(cfg).petAuto !== false && pet?.has === false && Date.now()-(pet.t||0)<600000);
 }
-async function rebirthPreparePet() {
+async function rebirthPreparePet(preparation) {
   if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
   const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,kick=rt.manualKickAt||0;
   const wanted=()=>on&&tabOwner&&rebirthModeSelected()&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who&&rt.classCur?.prof===prof
     &&rt.classCur?.slot===slot&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&!isBattle()&&!antibotState()&&!abHold()&&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+  if(await rebirthPrepareHero(preparation?.character))return true;
+  if(!wanted())return true;
   if(rebirthPetTrip(rt.petBufferTrip)){await warlockTripStep();return true;}
   const preparing=await L2V7Modules.warlock.rebirthPrepare({wanted,returnPath:'/rebirth-raids.html'});
   return !wanted()||preparing===true||rebirthPetTrip(rt.petBufferTrip);
@@ -6840,7 +6890,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtComm
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get releaseDetectJob(){return id=>L2V7Modules.actions.releaseExpired('detectOutside',id)},get detectTab(){return ()=>TAB_KEY},get detectLineage(){return ()=>detectIncomingOwner===leaseEpoch?detectIncomingLease:null},get detectGate(){return detectOutsideGate},get detectTask(){return startPrepTask},get actionGeneration(){return ()=>automationGeneration},get heroNick(){return heroNick},get meMp(){return meMp},get detectPanel(){return detectOutsidePanel},get detectPanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()},get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get gamePost(){return gamePost},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get rebirthBuffAllowed(){return rebirthBuffAllowed}, get releaseDetectJob(){return id=>L2V7Modules.actions.releaseExpired('detectOutside',id)},get detectTab(){return ()=>TAB_KEY},get detectLineage(){return ()=>detectIncomingOwner===leaseEpoch?detectIncomingLease:null},get detectGate(){return detectOutsideGate},get detectTask(){return startPrepTask},get actionGeneration(){return ()=>automationGeneration},get heroNick(){return heroNick},get meMp(){return meMp},get detectPanel(){return detectOutsidePanel},get detectPanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()},get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get gamePost(){return gamePost},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
@@ -7020,7 +7070,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get weaponNow(){return ()=>L2V7Modules.c
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.survival = L2V7Factories.survival({ get rebirthDeathRecovery(){return rebirthDeathRecovery}, get rebirthRecoveryAllowed(){return marker=>L2EngineCore.rebirthBuffJob(cfg,rt,{back:'/rebirth-raids.html',rebirthRecovery:marker})}, get on(){return on}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },

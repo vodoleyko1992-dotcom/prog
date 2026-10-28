@@ -8,8 +8,8 @@ const location = env.routeLocation || root.location;
 // Переходы уже защищены ядром, но отложенная запись восстановления тоже
 // принадлежит исходному персонажу, владельцу вкладки и команде игрока.
 function contextGuard() {
-  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt,prof=env.rt.classCur?.prof,slot=env.rt.classCur?.slot;
-  return () => env.on!==false && env.tabOwner!==false && env.rt.char===char && env.leaseEpoch===lease && env.rt.manualKickAt===kick && env.rt.classCur?.prof===prof && env.rt.classCur?.slot===slot;
+  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt,prof=env.rt.classCur?.prof,slot=env.rt.classCur?.slot,rebirth=env.cfg?.rebirthMode===true;
+  return () => env.on!==false && env.tabOwner!==false && env.rt.char===char && env.leaseEpoch===lease && env.rt.manualKickAt===kick && env.rt.classCur?.prof===prof && env.rt.classCur?.slot===slot && (!rebirth || env.cfg?.rebirthMode===true);
 }
 async function restoreVitals(why) {
   const active=contextGuard();if(!active())return false;
@@ -66,8 +66,9 @@ async function onDeath() {
   // История, эпик и серия сохраняются одним patch: Stop сразу после await не
   // должен оставить counted без deathsLife/итога серии или часового счётчика.
   // Это жизненный цикл возврата в город, а не придуманный ID серверной смерти.
+  const rebirthRecovery=env.rebirthDeathRecovery?.();
   let saved;
-  try { saved = await env.setRt({ deaths, deathLog, revive: { t: now, url: location.pathname + location.search, revived: false, counted: true, ...(!env.cfg.autoRevive ? { manual: true } : {}) },
+  try { saved = await env.setRt({ deaths, deathLog, revive: { t: now, url: location.pathname + location.search, revived: false, counted: true, ...(rebirthRecovery?{rebirthRecovery}:{}), ...(!env.cfg.autoRevive ? { manual: true } : {}) },
     ...(epicD ? { epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: now, cur: m?.cur ?? null, max: m?.max ?? null }] },
       epicDb: { ...(env.rt.epicDb || {}), [epicD.k]: { ...((env.rt.epicDb || {})[epicD.k] || {}), deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 } } } : {}),
     ...(seriesDeath ? { rbRun: { ...series, deaths: series.deaths + 1 } } : {}), ...(env.epicOn() || rbId ? { deaths1h } : {}),
@@ -110,11 +111,14 @@ async function reviveStep() {
   }
   const finish = async (why, toBuffer) => {
     if(!active())return false;
-    const saved = await env.setRt({ revive: null, ...(toBuffer ? { restoreT: Date.now(), restoreRes: null, tbuff: { set: null, fa: [], step: 'restore', why: 'после смерти', t: Date.now(), back: '/map.html', reviveTried: true } } : {}) });
+    const recovery=R.rebirthRecovery&&env.rebirthRecoveryAllowed?.(R.rebirthRecovery)?R.rebirthRecovery:null;
+    // Новый Старт/режим не возобновляет старую привилегию, но и не удерживает counted revive навсегда.
+    const replan=toBuffer&&R.rebirthRecovery&&!recovery&&env.cfg.rebirthMode===true;
+    const saved = await env.setRt({ revive: null, ...(toBuffer&&!replan ? { restoreT: Date.now(), restoreRes: null, tbuff: { set: null, fa: [], step: 'restore', why: 'после смерти', t: Date.now(), back: recovery?'/rebirth-raids.html':'/map.html', ...(recovery?{rebirthRecovery:recovery}:{}), reviveTried: true } } : {}) });
     if(saved?.ok===false) { if(active())await env.setRt({ revive: R });return false; }
     if(!active())return false;
-    env.rec('B', 'воскрешение', why);
-    return true;
+    env.rec('B', 'воскрешение', replan?'прежняя подготовка отменена новой командой — заново проверю героя перед восстановлением':why);
+    return !replan;
   };
   // Учтённое поражение не забываем по таймауту: игрок может нажать Start через несколько минут.
   if (!R.counted && Date.now() - (R.t || 0) > 150000) return finish('не уложился в 2,5 мин — продолжаю как есть');

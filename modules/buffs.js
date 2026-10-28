@@ -186,9 +186,13 @@ async function detectOutsideStep() {
   return true;
 }
 function contextGuard() {
-  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt;
-  const same=()=>env.tabOwner!==false&&env.rt.char===char&&env.leaseEpoch===lease&&env.rt.manualKickAt===kick;
-  const active=()=>env.on!==false&&same();active.same=same;return active;
+  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt,job=env.rt.tbuff,recovery=job?.rebirthRecovery;
+  const signature=recovery?JSON.stringify(recovery):'',prof=env.rt.classCur?.prof,slot=env.rt.classCur?.slot,townSet=env.cfg.townBuffSet||'basic';
+  // 20.73 (лог28.10 04:59): собственное восстановление Rebirth не переживает смену класса/команды/своей метки между await.
+  const identity=()=>env.tabOwner!==false&&env.rt.char===char&&env.leaseEpoch===lease&&env.rt.manualKickAt===kick
+    &&(!recovery||env.rt.classCur?.prof===prof&&env.rt.classCur?.slot===slot&&(env.cfg.townBuffSet||'basic')===townSet&&JSON.stringify(recovery)===signature&&env.rebirthBuffAllowed?.(job)===true);
+  const same=()=>identity()&&(!recovery||JSON.stringify(env.rt.tbuff?.rebirthRecovery)===signature);
+  const active=()=>env.on!==false&&same();active.same=same;active.closed=()=>env.on!==false&&identity()&&(!recovery||env.rt.tbuff==null);return active;
 }
 function activeBuffs() {
   return [...document.querySelectorAll('#l2-hud-active-buffs [data-skill-id]')]
@@ -411,7 +415,7 @@ async function vipRefresh(active) {
 }
 const vipEnabled = () => env.cfg.vipBuffAuto !== false && ['basic','warrior','mage'].includes(env.cfg.townBuffSet || 'basic');
 function vipPreferred() {
-  const v = env.rt.vipBuff, now = Date.now();
+  const v = planningSnapshot?.vip || env.rt.vipBuff, now = Date.now();
   if (!vipEnabled() || !v || v.char !== env.rt.char || !v.active || !v.set
       || now - v.t > 120000 || v.t > now + 1000 || v.until !== null && v.until <= now + 3000 || (env.rt.classSwT || 0) > v.t) return '';
   if (Number.isInteger(env.rt.classCur?.slot) && v.slot !== null && env.rt.classCur.slot !== v.slot) return '';
@@ -419,7 +423,7 @@ function vipPreferred() {
 }
 function vipSession() {
   if(!vipNoFa())return null;
-  const set=vipPreferred(),v=env.rt.vipBuff,p=env.rt.vipApplied,H=hudBuffs(),levels=hudLevels(),now=Date.now();
+  const set=vipPreferred(),v=planningSnapshot?.vip||env.rt.vipBuff,p=env.rt.vipApplied,H=hudBuffs(),levels=hudLevels(),now=Date.now();
   const wanted=[...faIdsOf(env.cfg.faBuffs),...faIdsOf(env.cfg.rbSessBuffs)].find(id=>VIP_GREATER.includes(id)&&(!p?.greaterOptions||p.greaterOptions.includes(id)));
   const same=!!(set&&p?.schema===2&&p.bundleChecked===true&&p.char===env.rt.char&&p.actor===v.actor&&p.set===set&&p.slot===v.slot&&p.prof===v.prof);
   const present=skills=>!!(skills?.length&&H&&skills.every(x=>H[x.skillId]>now+60000&&levels[x.skillId]>=x.level));
@@ -468,7 +472,7 @@ async function vipTownStep(st, active, done) {
   const classKey=()=>JSON.stringify([env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.classSwT||0]),ownerClass=classKey();
   const current=()=>active()&&classKey()===ownerClass&&env.rt.tbuff?.t===st.t;
   const finish=async(ch,q,existing=false)=>{
-    if(q.schema!==2||!current()||!vipEffects(ch,q,existing))return false;
+    if(q.schema!==2||!current()||st.rebirthRecovery&&!rebirthBuffSnapshot(ch)||!vipEffects(ch,q,existing))return false;
     const skills=q.bundleSkills||q.skills,set=q.baseSet||q.set;
     if(!vipEffects(ch,{...q,skills},true)){
       await env.setRt({tbuff:{...st,set,vipFree:true,vipRequest:null}});
@@ -490,6 +494,7 @@ async function vipTownStep(st, active, done) {
   let ch,catalog;
   try{const [cr,lr]=await Promise.all([env.gameGet('/character'),env.gameGet('/character/town/buffer/catalog')]);const [c,l]=await Promise.all([cr.json(),lr.json()]);if(!current())return;ch=cr.ok&&c?.character;catalog=lr.ok&&l;}
   catch(_){if(current()){await env.setRt({tbOk:false});await done('VIP: цену не удалось проверить — набор не применяю');}return;}
+  if(st.rebirthRecovery&&!rebirthBuffSnapshot(ch)){if(current())env.setStatus('Подземелья: свой герой перед VIP-баффом не подтверждён — не применяю');return;}
   if(!ch||ch.name!==env.rt.char||!ch.id||!Number.isSafeInteger(ch.revision)||ch.inBattle!==false||!(ch.hp>0)||!Array.isArray(ch.activeBuffs))return done('VIP: состояние персонажа не подтверждено — набор не применяю');
   vipNote(ch);
   const eligible=ch.vip?.active===true&&(vipUntil(ch.vip.vipUntil)===null||vipUntil(ch.vip.vipUntil)>Date.now()+3000);
@@ -558,6 +563,31 @@ function townBuffNeed() {                          // что взять: { set, 
   }
   const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < FA_RENEW_MS || (id === 1323 && nobGone(H)) || faLow(id));
   return needSet || fa.length ? { set: needSet ? set : null, fa, ...(vip && needSet ? { vipFree: true } : {}) } : null;
+}
+
+// 20.73: подготовка героя в подземельях не наследует платный mage/warrior и список FA обычной охоты.
+function rebirthBuffSnapshot(ch) {
+  const cur=env.rt.classCur,marker=env.rt.tbuff?.rebirthRecovery,actor=marker?.actor||env.rt.rebirth?.actor;
+  if(!ch||ch.name!==env.rt.char||typeof ch.id!=='string'||!ch.id||!Number.isSafeInteger(ch.revision)||ch.revision<0
+    ||marker?.revision!=null&&(!Number.isSafeInteger(marker.revision)||ch.revision<marker.revision)||typeof actor==='string'&&actor&&ch.id!==actor||ch.l2Profession!==cur?.prof||!cur?.prof||!Number.isInteger(cur.slot)||cur.slot<0||ch.classSlots?.activeSlot!==cur.slot
+    ||ch.inBattle!==false||!(ch.hp>0)||!Array.isArray(ch.activeBuffs))return null;
+  const H={},levels={};
+  for(const b of ch.activeBuffs){const id=+b.skillId,raw=b.expiresAtMs??b.expiresAt,exp=raw==null?Infinity:raw;
+    if(!Number.isSafeInteger(id)||id<=0||!(Number.isFinite(exp)||exp===Infinity)||b.level!=null&&(!Number.isSafeInteger(+b.level)||+b.level<=0))return null;
+    H[id]=exp;if(+b.level>0)levels[id]=+b.level;}
+  const set=ch.classBranch==='fighter'?'warrior':ch.classBranch==='mystic'?'mage':'';
+  return {H,levels,...(typeof ch.vip?.active==='boolean'?{vip:{char:ch.name,actor:ch.id,active:ch.vip.active,until:vipUntil(ch.vip.vipUntil),set,
+    prof:ch.l2Profession,slot:cur.slot,t:Date.now()}}:{})};
+}
+function rebirthBuffNeed(ch) {
+  if ((env.cfg.townBuffSet || 'basic') === 'off') return null;
+  if(ch!==undefined){const snapshot=rebirthBuffSnapshot(ch);if(!snapshot)return {unknown:true};
+    const previous=planningSnapshot;try{planningSnapshot=snapshot;return rebirthBuffNeed();}finally{planningSnapshot=previous;}}
+  const H=hudBuffs();if(!H)return {unknown:true};
+  if (vipPreferred()) { const n=townBuffNeed();return n?.set?{...n,fa:[]}:null; }
+  const ids=[...new Set([...(env.TB_KEYS.basic||[]),...(env.rt.tbSetIds?.basic||[])])];
+  if(!ids.some(id=>!H[id]||H[id]-Date.now()<BUFF_LOW_MS)||tbDowngrade('basic',H).length)return null;
+  return {set:'basic',fa:[]};
 }
 
 const faIdsOf = v => String(v || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
@@ -707,7 +737,7 @@ async function freshBuffPlan(){
     // 20.13 (ревизия 17.10, шаг 5, BF-2): эффект без срока (тоггл/постоянный; поля срока нет или null) — бессрочный, как в шапке
     // (hudBuffs: Infinity), а не повод забраковать весь снимок. Явно испорченный срок по-прежнему делает снимок непригодным.
     for(const b of ch.activeBuffs){const id=+b.skillId,raw=b.expiresAtMs??b.expiresAt,exp=raw==null?Infinity:raw;if(!(id>0)||!(Number.isFinite(exp)||exp===Infinity))return null;H[id]=exp;if(+b.level>0)levels[id]=+b.level;}
-    return {H,levels};
+    return {H,levels,ch};
   }catch(_){return null;}
 }
 function planWith(snapshot){try{planningSnapshot=snapshot;return townBuffNeed();}finally{planningSnapshot=null;}}
@@ -862,18 +892,34 @@ async function townBuffStep() {
   const active=contextGuard();if(!active())return;
   const st = env.rt.tbuff;
   if(!st)return;
+  const recovery=!!st.rebirthRecovery,carry=job=>recovery?{...job,back:'/rebirth-raids.html',rebirthRecovery:st.rebirthRecovery}:job;
+  let recoverySnapshot=null;
+  if(recovery){
+    recoverySnapshot=await freshBuffPlan();if(!active())return;
+    if(!recoverySnapshot||!rebirthBuffSnapshot(recoverySnapshot.ch)){env.setStatus('Подземелья: свой герой перед восстановлением не подтверждён — бой не начинаю');await env.sleep(1000);return;}
+  }
+  if(recovery&&(st.step==='fa'||st.fa?.length||st.step==='town'&&st.set!=='basic'&&!st.vipFree&&!st.vipRequest)){
+    await env.setRt({tbuff:carry({...st,fa:[],...(st.step==='fa'?{step:'restore',set:null,buffDone:false}:st.set!=='basic'&&!st.vipFree&&!st.vipRequest?{set:'basic'}:{})})});return;
+  }
   const done = async msg => {
     if(!active())return;
     env.rec('B', 'бафф', msg);
-    if (st.then) { await env.setRt({ tbuff: { ...st.then, t: Date.now() } }); return; }   // бафф был перед «Восстановить» — теперь восстановление
-    await env.setRt({ tbuff: null });if(!active())return;location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html';await env.sleep(4000);
+    if (st.then) { await env.setRt({ tbuff: carry({ ...st.then, t: Date.now() }) }); return; }   // бафф был перед «Восстановить» — теперь восстановление
+    const cleared=await env.setRt({ tbuff: null });
+    if(recovery&&cleared?.ok!==true){if(active.closed())await env.setRt({tbuff:st});return;}
+    if(!(recovery?active.closed():active()))return;location.href = recovery?'/rebirth-raids.html':env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html';await env.sleep(4000);
   };
+  if(recovery&&st.step==='town'&&env.cfg.townBuffSet==='off'&&!st.vipRequest)return done('Подземелья: городской бафф выключен — только восстановление HP/MP');
   if (st.step === 'restore') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
     // v4.34: сначала бафф (после смерти он слетел, а с ним и часть макс. HP), потом «Восстановить» — до нового максимума.
     // Раньше было наоборот: восстановили до 5164, бафф поднял максимум до 6326 — и снова 19 %
-    const n = !st.buffDone && townBuffNeed();
-    if (n && (n.set || n.fa.length)) { await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', reviveTried: st.reviveTried, then: { ...st, buffDone: true } }, tbT: Date.now() }); return; }
+    let n = !st.buffDone && (recovery?rebirthBuffNeed():townBuffNeed());
+    if(recovery&&n?.unknown){
+      n=recoverySnapshot?rebirthBuffNeed(recoverySnapshot.ch):{unknown:true};
+      if(n?.unknown){env.setStatus('Подземелья: баффы героя не подтверждены — сверю перед боем');await env.sleep(1000);return;}
+    }
+    if (n && (n.set || n.fa.length)) { await env.setRt({ tbuff: carry({ ...n, t: Date.now(), step: n.set ? 'town' : 'fa', reviveTried: st.reviveTried, then: carry({ ...st, buffDone: true }) }), tbT: Date.now() }); return; }
     env.setStatus('Восстановление: баффер «Восстановить HP|MP|CP»');
     const rb = await env.waitX(() => env.$q('#town-buffer-restore-btn'), 10000, 200);
     if(!active())return;
@@ -908,15 +954,22 @@ async function townBuffStep() {
           return;
         }
       }
-      env.rec('B', 'восстановление', ok ? `HP ${hp0}% → ${hpPct() | 0}%` : `не удалось за ${waits.length} попыток (HP ${hpPct() | 0}%) — лечусь на мобах, к бафферу снова через 3 мин`);
+      env.rec('B', 'восстановление', ok ? `HP ${hp0}% → ${hpPct() | 0}%` : `не удалось за ${waits.length} попыток (HP ${hpPct() | 0}%) — ${recovery?'бой не начинаю; повтор восстановления после сверки':'лечусь на мобах, к бафферу снова через 3 мин'}`);
     } else env.rec('B', 'восстановление', 'нет кнопки «Восстановить» — баффер не открылся');
-    await env.setRt({ tbuff: null, restoreRes: { t: Date.now(), ok } });
-    if(!active())return;
-    location.href = st.back || '/map.html'; await env.sleep(4000); return;
+    const cleared=await env.setRt({ tbuff: null, restoreRes: { t: Date.now(), ok } });
+    if(recovery&&cleared?.ok!==true){if(active.closed())await env.setRt({tbuff:st});return;}
+    if(!(recovery?active.closed():active()))return;
+    location.href = recovery?'/rebirth-raids.html':st.back || '/map.html'; await env.sleep(4000); return;
   }
   if (st.step === 'town') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
     if (st.vipFree || st.vipRequest) return vipTownStep(st, active, done);
+    if(recovery){
+      // Новых разрешений на валюту нет: даже basic перед нативным кликом подтверждаем нулевой ценой свежего каталога.
+      try{const r=await env.gameGet('/character/town/buffer/catalog'),d=r.ok?await r.json():null;if(!active())return;
+        if(!vipPriceZero(d?.sets?.find(x=>x.id==='basic')))return done('Подземелья: бесплатный basic не подтверждён — не применяю');}
+      catch(_){if(active())return done('Подземелья: цену basic не удалось проверить — не применяю');return;}
+    }
     if (st.set !== 'basic' && !['warrior', 'mage'].includes(env.cfg.townBuffSet)) return done('платный бафф не выбран в меню — пропускаю');
     // 8.0.3 (эпики): платный набор в режиме эпиков — в пределах лимита Coin of Luck; не разрешён — бесплатный «basic».
     // 8.0.3 (ревью): сначала только проверка (epicBuffCol, без резерва); резерв — прямо перед нажатием, после кнопки и проверки «не
@@ -1115,6 +1168,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { detectOutsideSnapshot:detectOwnSnapshot, detectOutsideMaintain, detectOutsideQueue, detectOutsideStep, detectOutsideNote, detectOutsideRequest, detectOutsidePlan, vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { detectOutsideSnapshot:detectOwnSnapshot, detectOutsideMaintain, detectOutsideQueue, detectOutsideStep, detectOutsideNote, detectOutsideRequest, detectOutsidePlan, vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, rebirthBuffNeed, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

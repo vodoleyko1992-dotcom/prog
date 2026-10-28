@@ -2,6 +2,12 @@
 
 **Ведущий: ChatGPT/Codex (с 26.10.2026, 09:48 UTC+10, John «я пока перейду в ГПТ, доделывай задачу и вливай»).** Claude по этой просьбе доделал и влил только начатую часть 3 нагрузки (запись ниже); дальше Claude код без прямой просьбы не правит; при возврате («работаем на Клоде») — сначала этот журнал и открытые PR `codex/*`. До этого с 23.10.2026, 23:00 UTC+10 вёл Claude.
 
+## 28.10.2026, 15:23 UTC+10 — Codex — Rebirth: свой баффер и готовность героя (PR в подготовке)
+
+- По04:59/20.72:3смертиMedium→отменаtbuff→missing-run, простои84мин/12мин; новые входы359/2292HPбезгеройскихбаффов. В20.73это оставалось. Крит6971—реальныйпределпрочности, победа не обещана.
+- Свой boundмаршрутdeath/prepare через enginepolicy/раннийcore: freebasic/zeroVIP→HP→каталог; свежие hero/activeBuffs перед входом/Fight, потомкот. Чужиеjobs/FA/CoL не включаются; missingrun/receipts/deathcap/watchdog прежние. ЗакрытыновыйStart/режим, failedACK/localrt, VIPidentity и postawaitcaptcha/PvPгонки.
+- Node696/0FAIL,260новыхгрупп/21независимаяпробаPASS, syntax12/bash/env35/diffPASS; Chrome156MV3death/lowHP/Stop3PASS/0JSошибок,0новыхвходов/ключи100. Ревьюбезблокеров. Версия/ZIP20.73прежние,live0. ДалееPR/отдельнаясборка/контрольныйлог.
+
 ## 28.10.2026, 14:44 UTC+10 — Codex — Firefox20.73 без проверок ([PR #442](https://github.com/vodoleyko1992-dotcom/prog/pull/442))
 
 - John «сборка» после предложения исправленного Firefox; прежняя просьба без проверок сохранена. База7d2e05f/#441, восстановление после timeout/expiredvictory через freshownrun/бесплатный каталог; предыдущая скорость20.72 включена. Версия/header/5versionassertions/README/история; runtime при упаковке прежний.

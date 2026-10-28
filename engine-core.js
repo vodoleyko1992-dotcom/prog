@@ -341,10 +341,25 @@
     return next;
   }
   const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
+  // 20.73 (лог28.10 13:17): обычная политика стирала посмертное восстановление героя в отдельном Rebirth.
+  // Разрешаем только собственный маркированный маршрут к своему каталогу; бесплатность действий проверяет исполнитель.
+  function rebirthBuffJob(c, rt = {}, job = rt?.tbuff) {
+    const R=job?.rebirthRecovery,kick=rt?.manualKickAt??0;
+    return !!(rebirthSelected(c)&&job&&typeof job==='object'&&!Array.isArray(job)&&job.back==='/rebirth-raids.html'
+      &&R&&typeof R==='object'&&!Array.isArray(R)&&['death','prepare'].includes(R.kind)
+      &&typeof R.char==='string'&&!!R.char.trim()&&R.char===rt?.char
+      &&typeof R.prof==='string'&&!!R.prof.trim()&&R.prof===rt?.classCur?.prof
+      &&Number.isInteger(R.slot)&&R.slot>=0&&R.slot===rt?.classCur?.slot
+      &&Number.isFinite(kick)&&kick>=0&&Number.isFinite(R.kick)&&R.kick>=0&&R.kick===kick
+      &&typeof R.actor==='string'&&!!R.actor.trim()
+      &&(R.revision===undefined||Number.isSafeInteger(R.revision)&&R.revision>=0));
+  }
   function taskJobAllowed(c, key, rt = {}) {
+    if(key==='tbuff'&&rt?.tbuff?.rebirthRecovery&&!rebirthBuffJob(c,rt))return false;
     // Чужие сохранённые маршруты и даже urgent-закупка не уводят отдельный поход; квитанции оплат здесь не меняются.
     if (rebirthSelected(c)) {
       const J=rt.petBufferTrip;
+      if(key==='tbuff')return rebirthBuffJob(c,rt);
       if(key==='petBufferTrip')return rawTaskConfig(c)?.petFullAuto===true&&J?.rebirth===true&&J.home?.mode==='rebirth'&&J.home.path==='/rebirth-raids.html'
         &&J.char===rt.char&&J.prof===rt.classCur?.prof&&J.slot===rt.classCur?.slot&&J.kick===(+rt.manualKickAt||0);
       return key === 'rebirthJob' || key === 'revive';
@@ -711,6 +726,6 @@
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'petStat','petAdvice','petCohorts','expMark',   // 20.43 (лог 21.10 15:47–15:51): статистика кота и отметка EXP% — отложенной записью
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { HOT_KEYS, HOT_FOLD_MS, HOT_MIN_RT, hotStr, hotOwn, hotJoin, hotNext, hotPlan, hotStore, stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, rebirthSelected, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { HOT_KEYS, HOT_FOLD_MS, HOT_MIN_RT, hotStr, hotOwn, hotJoin, hotNext, hotPlan, hotStore, stashKeyOf, stashValue, stashLegacyMerge, stashRehome, stashJoin, stashWrap, stashStrip, stashSplitSet, stashKeep, stashFold, stashUnfold, createActionPace, FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldKey, selfHoldMap, selfHoldValid, selfHoldList, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, rebirthSelected, taskAllowed, selectedTask, baseTask, taskConfig, rawTaskConfig, rebirthBuffJob, taskJobAllowed, taskJobHeld, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

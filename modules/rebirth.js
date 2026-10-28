@@ -395,7 +395,7 @@ async function nextFight(ctx) {
     }
     if(!await quota(T))return current(T)?status(T,'quota','лимит охоты проверяется или достигнут',info):true;
     if(typeof env.prepareRun==='function'){
-     const preparing=await env.prepareRun();if(!current(T))return true;
+     const preparing=await env.prepareRun({character:ch});if(!current(T))return true;
      if(preparing){await status(T,'prepare','готовлю героя и суммона перед боем текущего похода',info);return true;}
     }
     const wantedPage=run.phase==='rb_active'?'/rebirth-raid-lair.html':'/rebirth-raid-dungeon.html';
@@ -438,7 +438,7 @@ async function nextFight(ctx) {
    if(!await quota(T))return current(T)?status(T,'quota','лимит охоты проверяется или достигнут'):true;
    // Подготовка может вести героя в город: только перед новым разрешённым входом, никогда посреди оплаченного похода.
    if(typeof env.prepareEntry==='function'){
-    const preparing=await env.prepareEntry();if(!current(T))return true;
+    const preparing=await env.prepareEntry({character:ch});if(!current(T))return true;
     if(preparing){await status(T,'prepare','подготовка героя и суммона перед новым входом');return true;}
    }
    if(path()!=='/rebirth-raids.html'){await status(T,'catalog','открываю каталог подземелий');await navigate(T,'/rebirth-raids.html');return true;}

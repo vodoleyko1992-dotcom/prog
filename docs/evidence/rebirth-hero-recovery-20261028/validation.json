@@ -1,0 +1,113 @@
+{
+  "base": "73d2d0dfd4737ec652446f9b4a8e9313b2a67845",
+  "node": {
+    "passedFiles": 696,
+    "failedFiles": 0,
+    "newGroups": {
+      "policy": 49,
+      "survival": 33,
+      "buffs": 107,
+      "core": 71
+    }
+  },
+  "syntax": {
+    "passedFiles": 12
+  },
+  "shellRegistry": "bash -n PASS",
+  "env": {
+    "passedModules": 35
+  },
+  "review": {
+    "independentProbes": 21,
+    "blockers": 0
+  },
+  "browser": [
+    {
+      "case": "death-recovery",
+      "browser": "156.0.8078.73",
+      "result": {
+        "basic": 1,
+        "restores": 1,
+        "starts": 0,
+        "returns": 1,
+        "entries": 0,
+        "hp": 3562,
+        "maxHp": 3562,
+        "keys": 100,
+        "recoveryKinds": [
+          "death"
+        ]
+      },
+      "errors": []
+    },
+    {
+      "case": "lowhp-before-fight",
+      "browser": "156.0.8078.73",
+      "result": {
+        "basic": 1,
+        "restores": 1,
+        "starts": 1,
+        "returns": 0,
+        "entries": 0,
+        "hp": 3562,
+        "maxHp": 3562,
+        "keys": 100,
+        "recoveryKinds": [
+          "prepare"
+        ]
+      },
+      "errors": []
+    },
+    {
+      "case": "stop-held",
+      "browser": "156.0.8078.73",
+      "result": {
+        "basic": 0,
+        "restores": 0,
+        "starts": 0,
+        "returns": 0,
+        "entries": 0,
+        "hp": 359,
+        "maxHp": 2292,
+        "keys": 100,
+        "recoveryKinds": []
+      },
+      "errors": []
+    }
+  ],
+  "sourceHashes": {
+    "content.js": "7e18d47ed83a54d258cc5695e894cea406e1fad46be3b64113ff53f780927ae9",
+    "engine-core.js": "4d2085d33ef8b1b44e9eec749341832ee94254ab49401d1a86a465419ebee064",
+    "modules/survival.js": "ed5525786d41b03e9c47a7498eb60b7ea646ab829882cad76ff37e055ec7a3fe",
+    "modules/buffs.js": "7cfa69a99858d4cd89e5fc8bec4476bf3921491d3ee36598abc0c9b65ed36db9",
+    "modules/rebirth.js": "3f3e68fe45a7922de7fe16b1a523f412342c93c6b1b4eb75ce8ffff60f103289",
+    "tests/v2073-rebirth-hero-policy.test.cjs": "6f513c382a8b0a7b23e0c984ec961481f969b82af9bf6b822d162b50346dfbca",
+    "tests/v2073-rebirth-hero-survival.test.cjs": "16de5b907d2c752da37c5ae104b81e6b0027fcb28ca3cc257072b202770bff98",
+    "tests/v2073-rebirth-hero-buffs.test.cjs": "803800b681238966e5416235c72b62256f94997901289b6411d76cc362099575",
+    "tests/v2073-rebirth-hero-core.test.cjs": "b678ebf2e1202fbe5a4b7dfa09c712d442ab6c1d9502a3f78037968bc7bbc9f7",
+    "tests/v2073-rebirth-hero-recovery-browser.cjs": "df5caf02146045e0d11cd22da0034c8059988cd8070c75de2d413011db5b4f46"
+  },
+  "evidence": {
+    "uploadedVersion": "20.72",
+    "deathTimes": [
+      "13:17:46.668 UTC+10",
+      "14:42:56.098 UTC+10",
+      "14:55:40.375 UTC+10"
+    ],
+    "canceledRecoveryTimes": [
+      "13:17:52.547 UTC+10",
+      "14:43:02.956 UTC+10",
+      "14:55:47.287 UTC+10"
+    ],
+    "largestIncomingHit": 6971,
+    "buffedHeroMaxHp": 3562,
+    "unbuffedHeroMaxHp": 2292
+  },
+  "limits": [
+    "No live game requests or actual Firefox/Android run",
+    "No new archive or version bump",
+    "Missing-run, death limit and watchdog unchanged",
+    "No new FA/CoL or entry permissions",
+    "Complete activeRun:null and hidden POST history not exported"
+  ]
+}
