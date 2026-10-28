@@ -1405,7 +1405,8 @@ function fillWeapons(rt, d) {
   const W = rt.weapons || [], R = rt.weaponRec || {}, types = R.types || [];
   const panel = new Set((rt.panel || []).filter(s => s.kind === 'снаряжение').map(s => (s.name || '').toLowerCase()));
   const onPanel = n => [...panel].some(p => p.startsWith(n.toLowerCase()) || n.toLowerCase().startsWith(p));
-  const inClass = w => types[0] === '#mage' || types.includes(w.wt);
+  // 20.76+ (ревизия 28.10): «дуалы» из каталога игры в памяти прежних версий = «парные мечи» классов, как equipment.rankWeapons
+  const inClass = w => types[0] === '#mage' || types.includes(w.wt === 'дуалы' ? 'парные мечи' : w.wt);
   const uniq = []; const seen = new Set();
   for (const w of W) { if (!w.name || seen.has(w.name)) continue; seen.add(w.name); uniq.push(w); }
   const opt = (w, sel) => `<option value="${esc(w.name)}"${sel ? ' selected' : ''}>${inClass(w) ? '⭐ ' : ''}${w.where === 'надето' ? '✓ ' : ''}${esc(w.name)} · ${esc(w.wt)} · ${w.g}${w.ench ? ' +' + w.ench : ''} · ${types[0] === '#mage' ? 'M' : 'P'}.Atk ${types[0] === '#mage' ? w.ma : w.pa}${onPanel(w.name) ? '' : ' · не на панели'}</option>`;

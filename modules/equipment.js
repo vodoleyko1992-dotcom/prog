@@ -11,7 +11,10 @@ const manualWeaponChoice = () => !!env.cfg.weaponManual && !!String(env.cfg.nWea
 // Читаем только публичные поля каталога игры; экземпляры и бонусы остаются из inventory.
 const WEAPON_CATALOG_TTL = 30 * 60 * 1000;
 let weaponCatalogLoading = null;
-const nativeWeaponTypes = { sword:'меч', bigsword:'двуруч. меч', blunt:'дубина', bigblunt:'двуруч. дубина', dagger:'кинжал', bow:'лук', pole:'древковое', fist:'кастеты', dual:'дуалы' };
+// 20.76+ (ревизия 28.10): каталог игры weaponType dual = 'парные мечи', как items-il/CLASS_W/combat.WT_ALIAS; с прежним 'дуалы' новые дуалы
+// (кланы 9002276, Glory 920040, Багет) были «не в класс» и автосмена надевала более слабое. wtNorm — для кэша каталога/rt.weapons прежних версий
+const nativeWeaponTypes = { sword:'меч', bigsword:'двуруч. меч', blunt:'дубина', bigblunt:'двуруч. дубина', dagger:'кинжал', bow:'лук', pole:'древковое', fist:'кастеты', dual:'парные мечи' };
+const wtNorm = t => t === 'дуалы' ? 'парные мечи' : t;
 const finiteStat = n => typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : null;
 function weaponCatalogFresh() {
   const c = env.rt.weaponCatalog, age = Date.now() - (+c?.t || 0);
@@ -345,7 +348,7 @@ function weaponOf(id, extra = {}) {
   // 20.43 (лог 21.10 23:07:57): щит в справочнике — k 'W' с видом «—» (Full Plate Shield 2497); как и в weaponEquipNote, это не оружие:
   // скан сумки не пишет его в rt.weapons, а weaponRescanWhy не перечитывает инвентарь ради «нового оружия»-щита
   if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '') || it.wt === '—') return null;
-  return { id: +id, en: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: Number.isFinite(it.pa) ? it.pa + (extra.pb || 0) : null, ma: Number.isFinite(it.ma) ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, requiredLevel:it.requiredLevel, weaponMode:it.weaponMode, ...extra };
+  return { id: +id, en: it.n, wt: wtNorm(it.wt) || '—', g: it.g || 'NG', pa: Number.isFinite(it.pa) ? it.pa + (extra.pb || 0) : null, ma: Number.isFinite(it.ma) ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, requiredLevel:it.requiredLevel, weaponMode:it.weaponMode, ...extra };
 }
 
 // 20.62 (анонс Rebirth 25.10): оружие/щиты Rebirth — атака/блок на экземпляре, случайные бонусы и заточка до +10 000 за CoL.
@@ -354,7 +357,7 @@ const isRebirthRow = r => !!r && typeof r === 'object' && (+r.rebirthWeaponAttac
 const GRADE_RANK = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 function rankWeapons(list) {
   const { types, src } = classWeaponTypes(), lv = env.heroLevel() || env.rt.lvl || 99, mage = types[0] === env.MAGE;
-  const inClass = w => mage ? true : types.includes(w.wt);
+  const inClass = w => mage ? true : types.includes(wtNorm(w.wt));
   const canWear = w => lv >= (Number.isFinite(w.requiredLevel) ? w.requiredLevel : env.GRADE_LV[w.g] ?? 0);
   const atk = w => Number.isFinite(mage ? w.ma : w.pa) ? (mage ? w.ma : w.pa) : -1;
   // Достоверная атака уже включает заточку. Грейд не заменяет характеристики.

@@ -96,13 +96,15 @@ async function orderPoll(strict = false, active = guard()) {
   if (!ok) { if (strict) throw Error(`заказ торговца: HTTP ${status}`); if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
   return orderNote(j?.request);
 }
-async function npcPoll(strict = false, active = guard()) {
+// 20.76+ (ревизия 28.10): fails — виды NPC, чей GET в этом вызове не удался (их координаты в out — из старого кэша)
+async function npcPoll(strict = false, active = guard(), fails = null) {
   if(!active())return null;
   const out = { ...(env.rt.mmNpc || {}) };
   for (const k of ['order', 'smith']) {
     const { ok, status, j } = await getJson(STATE[k][0]);
     if (!active()) return null;
     if (!ok && strict) throw Error(`положение ${k}: HTTP ${status}`);
+    if (!ok) fails?.add(k);
     const s = ok && j?.[STATE[k][1]];
     if (s?.current) out[k] = { loc: s.current.labelEn || s.current.id, id: s.current.id, x: +s.current.worldX, y: +s.current.worldY,
       next: s.next?.labelEn || s.next?.id || '', at: +s.rotatesAtMs || 0, price: j.teleport?.vipFreeApplied ? 0 : +(j.teleport?.adenaCost ?? 500000) };
@@ -554,7 +556,10 @@ async function isNear(kind) {
   const active=guard();if(!active())return false;
   if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok){smithNote(r.j?.items);return true;}return r.status===403?false:null; }
   const me=await heroXY();if(!active())return false;if(me===undefined)return null;
-  const positions=await npcPoll(false,active);if(!active())return false;const n=positions?.[kind];
+  const fails=new Set(),positions=await npcPoll(false,active,fails);if(!active())return false;const n=positions?.[kind];
+  // 20.76+ (ревизия 28.10, остаток): GET /game/mammon/merchant 429/5xx — координаты только из кэша, пока NPC не сменил место (rotatesAtMs);
+  // кэша нет или он устарел — положение неизвестно (null, повтор без оплаты), а не «далеко» с платным телепортом 500 000 адены
+  if(fails.has(kind)&&!(n&&n.at>Date.now()))return null;
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
@@ -606,9 +611,16 @@ async function teleport(J) {                      // страница телеп
   const max = env.cfg.mmTpMax ?? 500000;
   if (price > max) return finish(J, false, `телепорт ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
   // 20.12 (ревизия 17.10, аудит PAY-2): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
-  let before0 = null;
-  if (env.payments) try { const r = await getJson('/character'), ch = r.ok && (r.j?.character || r.j); if (ch?.name === env.rt.char && Number.isSafeInteger(ch.revision)) before0 = { revision: ch.revision, adena: money(ch.adena), charId: ch.id }; } catch (_) {}
+  let before0 = null, wallet = null;
+  if (env.payments || price > 0) try { const r = await getJson('/character'), ch = r.ok && (r.j?.character || r.j); if (ch?.name === env.rt.char) { wallet = money(ch.adena); if (Number.isSafeInteger(ch.revision)) before0 = { revision: ch.revision, adena: wallet, charId: ch.id }; } } catch (_) {}
   if (!active()) return;
+  // 20.76+ (ревизия 28.10): платный телепорт к NPC держит резерв адены (shopReserve), как navigation.teleportBudget/катакомбы/тур РБ —
+  // раньше 500 000 при 600 000 адены оставляли 100 000: обратный перелёт и закупка упирались в резерв. Без свежего кошелька не платим
+  if (price > 0) {
+    const reserve = Math.max(0, +env.cfg.shopReserve || 0);
+    if (wallet == null) { env.setStatus('Маммон: запас адены перед платным телепортом не подтверждён (ошибка ответа игры) — повторю, телепорт не оплачиваю'); await env.sleep(5000); return; }
+    if (wallet - price < reserve) return finish({ ...J, home: null }, false, `телепорт ${fmtA(price)} адены оставит ${fmtA(wallet - price)} — ниже резерва ${fmtA(reserve)}`);
+  }
   const ticket = env.payments ? await env.payments.prepare({ key: `mammon:tp:${J.kind}:${J.t}`, kind: 'mammon', quote: { amount: price, currency: 'adena' }, evidence: { action: 'teleport', npc: J.kind, home: J.home, ...(before0 || {}) } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!active()) { if (ticket) await env.payments.cancel(ticket); return; }
