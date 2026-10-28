@@ -10,7 +10,11 @@ test('VIP + городской бафф выкл.: охота не ждёт, б�
  assert.equal(await f.B.townBuffStart('баффы кончились'),false);
  assert.equal(f.gets.length,0);assert.equal(f.posts.length,0);assert.equal(f.prepareCount,0);assert.deepEqual([...f.B.faWanted()],[]);
 });
-test('VIP + набор включён, но не подтверждён: прежнее ожидание сохраняется (без платной замены)',async()=>{
+// 20.76+ (ревизия 28.10): тест по названию проверял «набор включён», а в коде — vipBuffAuto=false; true значило вечное ожидание.
+// Теперь выключенный бесплатный набор = обычный бесплатный basic (поход, true), без VIP-запроса/FA/оплаты. Ожидание при включённом
+// наборе и недоступной сверке — tests/v2077-audit-buffs.test.js.
+test('VIP + бесплатный набор выключен: обычный basic без платной замены и без FA',async()=>{
  const f=box.fixture();f.env.cfg.vipBuffAuto=false;f.gets.length=0;
  assert.equal(await f.B.townBuffStart('баффы кончились'),true);assert.equal(f.posts.length,0);assert.equal(f.prepareCount,0);
+ assert.equal(f.env.rt.tbuff.set,'basic');assert.deepEqual([...f.env.rt.tbuff.fa],[]);assert.ok(!f.env.rt.tbuff.vipFree);assert.equal(f.gets.length,0);
 });

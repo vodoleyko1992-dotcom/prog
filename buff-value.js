@@ -22,7 +22,9 @@
     1062: { nm: 'Berserker Lv.2', matk: 1.12, patk: 1.07, g: 1, k: 'урон', town: 1.10 },
     4703: { nm: 'Дар Серафима', tempo: 1, k: 'темп' },
     1323: { nm: 'Noblesse Blessing', keep: 1, cost: 5, k: 'защита' },
-    4699: { nm: 'Blessing of Queen Lv.3', catCrit: 0.30, catCk: 0.25, k: 'урон' },
+    // 20.76+ (ревизия 28.10): эффект 4699 висит и на герое (каталог FA «warrior»: физ. крит +30 %, урон крита +25 %) — воину это бафф героя;
+    // раньше только catCrit/catCk → у воина без кота прибавка 0 и автонабор FA его выбрасывал. Урон мага crit/ck не считает — магу без изменений
+    4699: { nm: 'Blessing of Queen Lv.3', catCrit: 0.30, catCk: 0.25, crit: 1.3, ck: 0.25, g: 1, k: 'урон' },
     // воин
     1414: { nm: "Victories of Pa'agrio", patk: 1.20, crit: 1.3, g: 1, cost: 5, k: 'урон' },
     1363: { nm: 'Chant of Victory', patk: 1.15, crit: 1.3, g: 1, cost: 5, k: 'урон' },

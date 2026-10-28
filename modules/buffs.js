@@ -431,7 +431,11 @@ function vipSession() {
   const resistsOk=!vipResistsOn()||Array.isArray(p?.resistIds)&&(!p.resistIds.length||present(p.skills.filter(x=>p.resistIds.includes(x.skillId))));
   const additionalReady=!!(same&&resistsOk&&!p.greaterUnavailable&&(!wanted||p.greaterIds?.includes(wanted))&&(!p.greaterIds?.length||present(p.skills.filter(x=>p.greaterIds.includes(x.skillId)))));
   const baseReady=same&&present(p.baseSkills||p.skills),ready=baseReady&&additionalReady;
-  return {set,ready,baseReady,additionalReady,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
+  // 20.76+ (ревизия 28.10): свежий каталог (≤30 мин) того же героя/набора/слота подтвердил, что Greater не бесплатный — ready не ставим,
+  // но и к бафферу каждую минуту не ходим (раньше needSet навсегда: поход раз в 1–2 мин и ложное «баффы не появились»).
+  const greaterHeld=!!(same&&p.greaterUnavailable&&resistsOk&&now-(p.checkedT||0)<30*60000);
+  return {set,ready,baseReady,additionalReady,greaterHeld,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0,
+    baseUntil:baseReady?Math.min(...(p.baseSkills||p.skills).map(x=>H[x.skillId])):0};
 }
 const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
   && Object.entries(s).every(([k,v]) => !/^fee/i.test(k) || ['feeAdena','feeCoinOfLuck','feeHintUk','feeHintRu','feeHintEn'].includes(k) || v === 0 || v === '0')
@@ -479,7 +483,7 @@ async function vipTownStep(st, active, done) {
       if(current())env.setStatus('VIP: применённый бафф подтверждён — проверяю следующую иконку');return true;
     }
     const levels=Object.fromEntries(q.baseSkills.map(x=>[x.skillId,x.level])),baseComplete=vipEffects(ch,{...q,skills:q.baseSkills},true);
-    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,resistIds:q.resistIds||[],skills,ids:skills.map(x=>x.skillId)},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId),...(q.resistIds?.length?{resists:q.resistIds}:{})},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
+    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,resistIds:q.resistIds||[],skills,ids:skills.map(x=>x.skillId),checkedT:Date.now()},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId),...(q.resistIds?.length?{resists:q.resistIds}:{})},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
     if(!current())return true;
     const extra=[...q.greaterIds.map(id=>env.FA_KNOWN?.[id]?.[0]||env.IL?.[id]?.n||id),...(q.resistIds?.length?['резисты']:[])].join(', ');
     env.rec('B','бафф',q.greaterUnavailable?'VIP: основной набор подтверждён; дополнительный не подтверждён бесплатным — не применяю':`VIP: ${q.baseSkipped?'сильные действующие баффы сохранены':'классовый набор подтверждён'}${extra?' · дополнительные: '+extra:''} — 0 адены, 0 Coin of Luck`);
@@ -555,7 +559,8 @@ function townBuffNeed() {                          // что взять: { set, 
   // После окончания VIP обычный набор не может восстановить его дополнительные эффекты.
   const unavailableVip = !vip && set === 'basic' && env.rt.char && env.rt.vipApplied?.char === env.rt.char ? env.rt.vipApplied.ids || [] : [];
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000 && (!unavailableVip.includes(id) || ids.includes(id)));
-  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && !vipSession()?.ready);
+  // 20.76+ (ревизия 28.10): платный Greater при VIP, подтверждённый свежим каталогом, при целом основном наборе — не повод идти к бафферу
+  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && (s => !s?.ready && !(s?.baseReady && s.greaterHeld))(vipSession()));
   const down = needSet ? tbDowngrade(set, H) : [];
   if (down.length && !(vip && !vipSession()?.additionalReady)) { // 20.38: сильный базовый бафф не запрещает отдельную Greater-иконку; 7.2.2: набор понизил бы баффы — не берём
     needSet = false;
@@ -747,13 +752,16 @@ let rbAskT = 0;                                     // 10.0.1: когда тур
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
   const active=contextGuard();if(!active())return false;
   if(env.payments?.blocked())return true;
-  if(vipNoFa() && !vipPreferred()){
+  // 20.76+ (ревизия 28.10): ждём только включённый бесплатный VIP-набор. Галка vipBuffAuto снята или свежий сервер дал класс без
+  // набора (vipBuff.set пуст) — раньше true навсегда: охота стояла весь срок VIP с GET /character на каждом круге. Теперь обычное
+  // планирование: FA при VIP и так запрещены (faWanted → []), бесплатный basic разрешён, платный набор — прежние проверки цены.
+  if(vipNoFa() && vipEnabled() && !vipPreferred()){
     // 20.41 (аудит скорости): «Городской бафф: выкл.» при активном VIP — FA нельзя, бесплатный набор не нужен; раньше каждый вызов
     // после победы возвращал «жду» и охота стояла с GET /character на каждом круге. Покупок здесь нет — просто продолжаем без баффа.
     if((env.cfg.townBuffSet||'basic')==='off')return false;
     if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return true;}
     if(!active())return false;
-    if(vipNoFa() && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен или отключён');return true;}
+    if(vipNoFa() && vipEnabled() && env.rt.vipBuff?.set && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен');return true;}
   }
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   // Отмена маршрута не равна неудачной покупке. Перед новым планом читаем сервер:
@@ -1056,6 +1064,8 @@ async function townBuffStep() {
     if(!active())return;
     if(vipNoFa()){
       const set=vipPreferred();
+      // 20.76+ (ревизия 28.10): набор выключен галкой или классу не положен — ждать нечего, очередь FA снимаем без покупки (раньше висела вечно).
+      if(!set&&(!vipEnabled()||!env.rt.vipBuff?.set)){await env.setRt({tbuff:{...st,fa:[]}});return done('VIP активен, бесплатный набор выключен или недоступен классу — очередь FA снята без покупки');}
       if(!set){env.setStatus('VIP активен: FA не трачу; жду подтверждения бесплатного набора и его настройки');return;}
       await env.setRt({tbuff:{...st,step:'town',set,vipFree:true,fa:[]}});
       if(active())location.href='/town-buffer.html';return;
