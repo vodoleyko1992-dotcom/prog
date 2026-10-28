@@ -162,7 +162,9 @@ test('MP-банка: закрытая revision при неизменной су�
 test('MP-банка: регенерация при прежней revision не считается доказательством расхода', async () => {
   const w = world({ mp: 0 }), a = w.reload({ post: () => { throw Error('network'); } });
   await a.C.step(); w.hero.mp = 500; w.now += 20000; const b = w.reload(); await b.C.step();
-  assert.ok(w.disk.craftMpPending); assert.equal(w.disk.craftMpUsed, undefined); assert.equal(w.posts.length, 1);
+  // 20.76+ (ревизия 28.10): прежде pending держался до смены revision (в режиме крафта — вечно). Теперь та же revision и остаток
+  // при достаточной мане закрывают намерение как неприменённое: расход по-прежнему не засчитан, банка не повторяется.
+  assert.equal(w.disk.craftMpPending, null); assert.equal(w.disk.craftMpUsed, undefined); assert.equal(w.posts.length, 1);
 });
 test('MP-банка: старый снимок и противоречивый остаток не снимают pending и не повторяют POST', async () => {
   for (const change of [w => { w.hero.revision--; }, w => { w.hero.inventory.stacks[0].qty--; }]) {
