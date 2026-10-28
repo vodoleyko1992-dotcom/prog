@@ -55,9 +55,11 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
     assert.equal(await M.mmStep(), true);
     assert.equal(env.rt.mmJob.kind, 'order'); assert.equal(env.rt.mmJob.home, 'ancient_battleground'); assert.ok(env.rt.mmTried.r1); }
   // 4. телепорт: дороже лимита / не за адену — не жмём; 500 000 — жмём
+  // 20.76+ (ревизия 28.10): платный телепорт сверяет свежий кошелёк героя с резервом shopReserve — GET /character отдаёт адену
+  const wallet = async p => p === '/character' ? { ok: true, status: 200, json: async () => ({ character: { revision: 1, adena: 10000000 } }) } : { ok: false, status: 401, json: async () => ({}) };
   for (const [cost, ok] of [['Ціна телепорту: 900000 Адена', false], ['Ціна телепорту: 5 Coin of Luck', false], ['Ціна телепорту: 500000 Адена', true], ['Ціна телепорту: Безкоштовно · VIP', true]]) {
     const btn = { disabled: false }, loc = { pathname: '/mammon-merchant-loc.html', href: '' };
-    const { env, M } = mk({}, {}, { location: loc, els: { '#mammon-loc-teleport-btn': btn, '#mammon-loc-cost': { textContent: cost } } });
+    const { env, M } = mk({}, {}, { gameGet: wallet, location: loc, els: { '#mammon-loc-teleport-btn': btn, '#mammon-loc-cost': { textContent: cost } } });
     await M.teleport({ kind: 'order', id: 'r1', step: 'go', t: Date.now(), why: 't' });
     assert.equal(env.fired.includes(btn), ok, cost);
     if (ok) assert.equal(env.rt.mmJob.step, 'act'); else assert.equal(env.rt.mmJob, null, 'job closed: ' + cost); }

@@ -28,6 +28,9 @@ const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
+// 20.76+ (ревизия 28.10): отказ core gamePost ДО fetch (Stop/замок, PvP, устаревший кадр действий, ЛС, неподтверждённая оплата) — покупка
+// не уходила на сервер; это не «ответ потерян». Тот же список, что craft.js/crafterkit.js NOT_SENT
+const NOT_SENT = /^(?:bot_inactive|action_cancelled|pvp_defeat_pending|payment_unconfirmed|lifestone_session_active)$/;
 const classProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/, '');
 // 20.67 (лог 27.10 11:44): после Rebirth Wizard уже призывает Mew/Kat — коту нужен тот же автобаф до второй профессии.
 const catClass = p => /^(wizard|warlock|arcana_lord)$/.test(classProf(p));
@@ -551,8 +554,11 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     unsent.add(P.id);
     const saved = await patch({ pending: P, budgetEpoch: S.budgetEpoch || Date.now(), status: 'prepared', reason: 'Сохраняю запрос перед покупкой' });
     const durable = saved?.ok === true && (await env.rtCommit()) === true;
-    if (!durable || !same(T, afterWin) || !pendingSame(P) || env.townBufferReady?.() !== true) {
-      if (mine(T) && pendingSame(P)) await patch({ pending: null, nextCheckAt: 0, status: 'paused', reason: durable ? 'Покупка отменена до отправки' : 'Состояние не сохранено; покупка отложена' });
+    // 20.76+ (ревизия 28.10): same() не видит устаревший кадр действий (правка меню) и удержание ЛС в Rebirth, а gamePost по ним отказывает
+    // до отправки — проверяем здесь, до пометки sent; ожидание 15 с, чтобы постоянное удержание не гоняло GET на каждом тике
+    const held = env.canAct?.() === false || !!env.rt.autoLs?.hold || !!env.rt.autoLs?.pending;
+    if (!durable || held || !same(T, afterWin) || !pendingSame(P) || env.townBufferReady?.() !== true) {
+      if (mine(T) && pendingSame(P)) await patch({ pending: null, nextCheckAt: held ? Date.now() + 15000 : 0, status: 'paused', reason: durable ? 'Покупка отменена до отправки' : 'Состояние не сохранено; покупка отложена' });
       return false;
     }
     // Между пометкой sent и вызовом API нет await. Core gamePost повторно проверяет Stop/lease.
@@ -562,6 +568,8 @@ async function step({ afterWin = false, forceRead = false } = {}) {
       .then(response => ({ response }), error => ({ error }));
     await queued; const result = await sent;
     if (!mine(T) || !pendingSame(P)) return true;
+    // 20.76+ (ревизия 28.10): отказ до fetch — запрос не ушёл, сервер ничего не списал; pending снимаем, иначе вечный 'sent' блокировал все оплаты
+    if (result.error && NOT_SENT.test(result.error?.message || '')) { await patch({ pending: null, nextCheckAt: Date.now() + 15000, status: 'paused', reason: 'Покупка отменена до отправки' }); return false; }
     if (result.error) { await status(T, 'unknown', 'Ответ покупки потерян; повторно не оплачиваю', { nextCheckAt: 0 }); return true; }
     const response = result.response;
     if (response.status >= 400 && response.status < 500) {

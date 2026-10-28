@@ -267,9 +267,11 @@ function retireRaidSessionPatch(patch, rt, cfg, now) {
   if (!Object.hasOwn(patch,'retireRaidSession')) return { patch, retired: false };
   const next = { ...patch }, intent = next.retireRaidSession, session = rt.rbSess;
   delete next.retireRaidSession;
+  // 20.76+ (ревизия 28.10): вкладка снимает сессию по L2EngineCore.taskAllowed (старый rebirthMode без autoTasks, ['rebirth','raid']),
+  // а здесь было только «массив без raid» — ключ молча удалялся, вкладка крутила отмену без паузы и Rebirth не запускался. Одно правило.
+  const E = globalThis.L2EngineCore, raidOff = E?.taskAllowed ? !E.taskAllowed(cfg, 'raid') : Array.isArray(cfg.autoTasks) && !cfg.autoTasks.includes('raid');
   if (!Object.hasOwn(next,'rbSess') && session?.on && intent &&
-      (intent.start === null || Number.isSafeInteger(intent.start)) && intent.start === (session.start ?? null) &&
-      Array.isArray(cfg.autoTasks) && !cfg.autoTasks.includes('raid')) {
+      (intent.start === null || Number.isSafeInteger(intent.start)) && intent.start === (session.start ?? null) && raidOff) {
     next.rbSess = { ...session, on: false, end: now };
     return { patch: next, retired: true };
   }
@@ -842,7 +844,9 @@ chrome.commands?.onCommand.addListener(async c => {
   await serializeLock(async () => {
     const ST = globalThis.L2EngineCore?.hotStore?.(() => chrome.storage.local) ?? chrome.storage.local;   // 20.65: rt вместе с hot
     const { on = false, rt = {}, cfg = {} } = await ST.get(['on', 'rt', 'cfg']), now = Date.now();
-    const change = { on: !on };
+    // 20.76+ (ревизия 28.10): клавиша, как «Старт»/«Стоп» меню и botControl, снимает старую паузу — иначе после стопа клавишей
+    // меню и индикатор показывали «⏸ Пауза»/«▶ Продолжить» вместо «○ Остановлен»
+    const change = { on: !on, paused: null };
     if (!on) {
       // 19.10.2026: новый запуск отменяет старые release/ответы и требует сверки суточных лимитов, как Start в меню.
       const next = { ...rt, manualKickAt: Math.max(now, (+rt.manualKickAt || 0) + 1), dailyStart: (+rt.dailyStart || 0) + 1, _src: 'hotkey' };
@@ -1496,10 +1500,15 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     try { const src = new URL(_s?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); fromPopup = src.origin === expected.origin && src.pathname === expected.pathname; } catch (e) {}
     const okObj = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= MAX_PATCH_KEYS && Object.keys(p).every(k => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k));
     const per = m.perChar && typeof m.perChar === 'object' && !Array.isArray(m.perChar) ? m.perChar : {};
-    if (!fromPopup || !okObj(m.cfg) || Object.keys(per).length > 50 || !Object.entries(per).every(([k, v]) => /^cfg@[^\s]{1,100}$/.test(k) && okObj(v))) { reply({ ok: false, reason: 'invalid' }); return true; }
+    // 20.77 (ревизия 28.10): флаги разовых миграций из файла (меню отделяет их от настроек, cfgImportClean) — {cfg|cfg@Ник: [имена]}.
+    // Ставятся только значением 1 и только недостающие: настройку не перекрывают, а импортированные значения не переписываются once() заново
+    const fl = m.flags && typeof m.flags === 'object' && !Array.isArray(m.flags) ? m.flags : {};
+    const okFl = Object.entries(fl).every(([k, v]) => (k === 'cfg' || Object.hasOwn(per, k)) && Array.isArray(v) && v.length <= MAX_PATCH_KEYS && v.every(f => typeof f === 'string' && /^[a-z][A-Za-z0-9_]{0,62}(?:\d|Mig)$/.test(f)));
+    if (!fromPopup || !okObj(m.cfg) || Object.keys(per).length > 50 || !Object.entries(per).every(([k, v]) => /^cfg@[^\s]{1,100}$/.test(k) && okObj(v)) || !okFl) { reply({ ok: false, reason: 'invalid' }); return true; }
     serializeLock(async () => {
       const keys = ['cfg', ...Object.keys(per)], state = await chrome.storage.local.get(keys), change = { cfg: { ...(state.cfg || {}), ...m.cfg } };
       for (const [k, v] of Object.entries(per)) change[k] = { ...(state[k] && typeof state[k] === 'object' ? state[k] : {}), ...v };
+      for (const [k, v] of Object.entries(fl)) for (const f of v) if (!Object.hasOwn(change[k], f)) change[k][f] = 1;
       await chrome.storage.local.set(change); return { ok: true };
     }).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
@@ -1545,7 +1554,9 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m?.cmd === 'sleep') { setTimeout(() => { try { reply(true); } catch (e) {} }, Math.min(Math.max(+m.ms || 0, 0), 120000)); return true; }
   // v5.5.6: «позвать игрока» — антибот-проверка игры (её решает только человек) / блок PvE-фарма
   if (m?.cmd === 'alert') {
-    try { chrome.notifications?.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
+    // 20.77 (ревизия 28.10): через общий notify — Firefox отвергает requireInteraction даже со значением false («Unexpected property»),
+    // ошибку глотал catch: в Firefox ПК не было уведомлений о капче, блоке PvE, остановке автовхода и нехватке для крафта
+    notify('l2bot-' + (m.id || 'alert'), m.title || 'L2wap Bot', m.text || '', !!m.sticky);
     try { chrome.action?.setBadgeText?.({ text: m.badge || '!' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#c0392b' })?.catch?.(() => {}); } catch (e) {}
   }
   if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»

@@ -84,7 +84,8 @@ function raid(change=()=>{}){
  const s=fs.readFileSync(__dirname+'/../modules/raid.js','utf8'),first={id:'old-boss',t:1,name:'Old Boss'},replacement={id:'new-boss',t:2,name:'New Boss'};
  let generation=1,allowed=true;const loc={href:'/map.html'},writes=[],e={on:true,tabOwner:true,cfg:{},rt:{char:'Hero',manualKickAt:1,rbGo:first},actionGeneration:()=>generation,canAct:()=>allowed,setStatus(){},sleep:async()=>{},
  setRt:async p=>{writes.push(p);Object.assign(e.rt,p)},townBuffStart:async()=>{await change({e,replacement,next:()=>generation++,block:()=>allowed=false});return true}};
- const b={env:e,location:loc,huntOn:()=>false,rbVerdictBlocks:()=>false,rbTeleportCheck:()=>null,isRbPage:()=>false};
+ // 20.76+ (ревью ревизии 28.10): rbGoStep сверяет кошелёк платного телепорта (rbGoBudget) до баффера; у задания здесь нет цены — бюджет не нужен
+ const b={env:e,location:loc,huntOn:()=>false,rbVerdictBlocks:()=>false,rbTeleportCheck:()=>null,isRbPage:()=>false,rbGoBudget:async()=>''};
  vm.runInNewContext(s.slice(s.indexOf('async function rbGoStep()'),s.indexOf('const huntOn ='))+'\nthis.run=rbGoStep;',b);return {e,writes,loc,run:b.run};
 }
 for(const [name,change] of Object.entries({replacement:f=>f.e.rt.rbGo=f.replacement,kick:f=>f.e.rt.manualKickAt++,character:f=>f.e.rt={char:'New',rbGo:f.replacement},generation:f=>f.next(),frame:f=>f.block(),stop:f=>f.e.on=false,owner:f=>f.e.tabOwner=false}))test(`raid buff await → ${name} cannot restore the captured boss`,async()=>{

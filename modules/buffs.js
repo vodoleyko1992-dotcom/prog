@@ -431,7 +431,11 @@ function vipSession() {
   const resistsOk=!vipResistsOn()||Array.isArray(p?.resistIds)&&(!p.resistIds.length||present(p.skills.filter(x=>p.resistIds.includes(x.skillId))));
   const additionalReady=!!(same&&resistsOk&&!p.greaterUnavailable&&(!wanted||p.greaterIds?.includes(wanted))&&(!p.greaterIds?.length||present(p.skills.filter(x=>p.greaterIds.includes(x.skillId)))));
   const baseReady=same&&present(p.baseSkills||p.skills),ready=baseReady&&additionalReady;
-  return {set,ready,baseReady,additionalReady,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
+  // 20.76+ (ревизия 28.10): свежий каталог (≤30 мин) того же героя/набора/слота подтвердил, что Greater не бесплатный — ready не ставим,
+  // но и к бафферу каждую минуту не ходим (раньше needSet навсегда: поход раз в 1–2 мин и ложное «баффы не появились»).
+  const greaterHeld=!!(same&&p.greaterUnavailable&&resistsOk&&now-(p.checkedT||0)<30*60000);
+  return {set,ready,baseReady,additionalReady,greaterHeld,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0,
+    baseUntil:baseReady?Math.min(...(p.baseSkills||p.skills).map(x=>H[x.skillId])):0};
 }
 const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
   && Object.entries(s).every(([k,v]) => !/^fee/i.test(k) || ['feeAdena','feeCoinOfLuck','feeHintUk','feeHintRu','feeHintEn'].includes(k) || v === 0 || v === '0')
@@ -479,7 +483,7 @@ async function vipTownStep(st, active, done) {
       if(current())env.setStatus('VIP: применённый бафф подтверждён — проверяю следующую иконку');return true;
     }
     const levels=Object.fromEntries(q.baseSkills.map(x=>[x.skillId,x.level])),baseComplete=vipEffects(ch,{...q,skills:q.baseSkills},true);
-    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,resistIds:q.resistIds||[],skills,ids:skills.map(x=>x.skillId)},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId),...(q.resistIds?.length?{resists:q.resistIds}:{})},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
+    await env.setRt({tbOk:!q.greaterUnavailable&&baseComplete,tbFail:0,hudLong:{},vipApplied:{schema:2,char:env.rt.char,actor:ch.id,set,slot:ch.classSlots?.activeSlot??null,prof:ch.l2Profession||'',bundleChecked:true,greaterIds:q.greaterIds,greaterOptions:q.greaterOptions,baseSkills:q.baseSkills,greaterUnavailable:q.greaterUnavailable,baseSkipped:q.baseSkipped,resistIds:q.resistIds||[],skills,ids:skills.map(x=>x.skillId),checkedT:Date.now()},tbSetIds:{...(env.rt.tbSetIds||{}),[set]:q.baseSkills.map(x=>x.skillId),...(q.resistIds?.length?{resists:q.resistIds}:{})},tbLvl:{...(env.rt.tbLvl||{}),[set]:levels,greater:Object.fromEntries(skills.filter(x=>q.greaterIds.includes(x.skillId)).map(x=>[x.skillId,x.level]))}});
     if(!current())return true;
     const extra=[...q.greaterIds.map(id=>env.FA_KNOWN?.[id]?.[0]||env.IL?.[id]?.n||id),...(q.resistIds?.length?['резисты']:[])].join(', ');
     env.rec('B','бафф',q.greaterUnavailable?'VIP: основной набор подтверждён; дополнительный не подтверждён бесплатным — не применяю':`VIP: ${q.baseSkipped?'сильные действующие баффы сохранены':'классовый набор подтверждён'}${extra?' · дополнительные: '+extra:''} — 0 адены, 0 Coin of Luck`);
@@ -534,6 +538,10 @@ function townBuffNeed() {                          // что взять: { set, 
   // бесплатный «Звичайний баф». Признак — состояние эпика (rt.epic), поэтому и в «Восстановить», и после смерти; для РБ выбор не меняется
   // 8.0.3 (ревью): в режиме эпиков — всегда (и между эпиками), и только когда сам заход разрешён (epics.epicBuffWhy)
   if (!vip && (set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
+  // 20.76+ (ревизия 28.10, круг 2): VIP активен, а бесплатный VIP-набор не берётся (галка vipBuffAuto снята или классу набора нет) — платный
+  // warrior/mage каталог под VIP показывает за 0 CoL, и шаг 'town' его не оплачивает («цена не подтверждена»): ≈3 похода к бафферу каждые
+  // 13 мин весь срок VIP с ложным «баффы не появились». Берём бесплатный «basic», как при запрете CoL на эпиках.
+  if (!vip && (set === 'warrior' || set === 'mage') && vipNoFa() && (!vipEnabled() || !(planningSnapshot?.vip || env.rt.vipBuff)?.set)) set = 'basic';
   const H = hudBuffs();
   if (H) try { faDeathNote(H); } catch (e) {}       // 8.0.3: что смерть сделала с баффами за FA — в журнал
   // 8.0.3: городской набор выключен и своего списка FA нет — Noblesse при платных баффах (и РБ-сессия) всё равно докупается
@@ -555,7 +563,8 @@ function townBuffNeed() {                          // что взять: { set, 
   // После окончания VIP обычный набор не может восстановить его дополнительные эффекты.
   const unavailableVip = !vip && set === 'basic' && env.rt.char && env.rt.vipApplied?.char === env.rt.char ? env.rt.vipApplied.ids || [] : [];
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000 && (!unavailableVip.includes(id) || ids.includes(id)));
-  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && !vipSession()?.ready);
+  // 20.76+ (ревизия 28.10): платный Greater при VIP, подтверждённый свежим каталогом, при целом основном наборе — не повод идти к бафферу
+  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && (s => !s?.ready && !(s?.baseReady && s.greaterHeld))(vipSession()));
   const down = needSet ? tbDowngrade(set, H) : [];
   if (down.length && !(vip && !vipSession()?.additionalReady)) { // 20.38: сильный базовый бафф не запрещает отдельную Greater-иконку; 7.2.2: набор понизил бы баффы — не берём
     needSet = false;
@@ -747,13 +756,20 @@ let rbAskT = 0;                                     // 10.0.1: когда тур
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
   const active=contextGuard();if(!active())return false;
   if(env.payments?.blocked())return true;
-  if(vipNoFa() && !vipPreferred()){
+  // 20.76+ (ревизия 28.10): ждём только включённый бесплатный VIP-набор. Галка vipBuffAuto снята или свежий сервер дал класс без
+  // набора (vipBuff.set пуст) — раньше true навсегда: охота стояла весь срок VIP с GET /character на каждом круге. Теперь обычное
+  // планирование: FA при VIP и так запрещены (faWanted → []), бесплатный basic разрешён, платный набор — прежние проверки цены.
+  // 20.76+ (ревизия 28.10, круг 2): свежий (≤2 мин) снимок своего класса уже сказал «набора нет» (vipBuff.set пуст) — раньше каждый вызов
+  // (после победы, раз в 15 с от сторожа) делал лишний GET /character и только потом шёл в обычное планирование. Теперь сразу планируем.
+  const vb=env.rt.vipBuff,vnow=Date.now(),classless=!!(vb&&vb.char===env.rt.char&&vb.active===true&&vb.set===''&&vnow-vb.t<=120000&&vb.t<=vnow+1000
+    &&!((env.rt.classSwT||0)>vb.t)&&!(Number.isInteger(env.rt.classCur?.slot)&&vb.slot!==null&&env.rt.classCur.slot!==vb.slot));
+  if(vipNoFa() && vipEnabled() && !vipPreferred() && !classless){
     // 20.41 (аудит скорости): «Городской бафф: выкл.» при активном VIP — FA нельзя, бесплатный набор не нужен; раньше каждый вызов
     // после победы возвращал «жду» и охота стояла с GET /character на каждом круге. Покупок здесь нет — просто продолжаем без баффа.
     if((env.cfg.townBuffSet||'basic')==='off')return false;
     if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return true;}
     if(!active())return false;
-    if(vipNoFa() && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен или отключён');return true;}
+    if(vipNoFa() && vipEnabled() && env.rt.vipBuff?.set && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен');return true;}
   }
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   // Отмена маршрута не равна неудачной покупке. Перед новым планом читаем сервер:
@@ -849,6 +865,15 @@ async function faClashNote(id, H0, now = Date.now()) {
 // 16.10, журнал22:29: срок/уровень эффекта не заменяет квитанцию конкретной покупки.
 function paymentNote(path,d) {
   const P=env.payments?.pending(),E=P?.evidence||{},q=d?.req,ch=d?.res?.character;
+  // 20.76+ (ревизия 28.10, круг 2): явный отказ сервера (общее правило 20.12 — payments.classify: 4xx из списка, 2xx с error/ok:false) раньше
+  // не оставлял следа: оплата FA-баффа/платного городского набора висела «исход неизвестен» до ручного «Считать оплату не прошедшей», бот стоял.
+  // Теперь — квитанция отказа этого запроса (сверка ниже закрывает оплату как не прошедшую, повтор разрешён).
+  if((P?.kind==='fa-buff'&&path==='/character/town/fast-aden-buffer/apply'||P?.kind==='town-buff'&&path==='/character/town/buffer'&&q?.set===E.set)
+    &&P.char===env.rt.char&&env.tabOwner!==false&&d?.method==='POST'&&d.paymentId===P.id&&env.payments.classify?.(d)==='rejected'){
+    const refusal={paymentId:P.id,char:P.char,kind:P.kind,refused:d.status,msg:String(d.res?.error||d.res?.message||'').slice(0,60)};
+    try{root.sessionStorage?.setItem('l2bot.faBuffReceipt',JSON.stringify(refusal));}catch(_){}
+    env.setRt({faBuffReceipt:refusal});return;
+  }
   if(P?.kind!=='fa-buff'||P.char!==env.rt.char||env.tabOwner===false||path!=='/character/town/fast-aden-buffer/apply'||d.method!=='POST'||d.paymentId!==P.id||d.error||d.status<200||d.status>=300||!Number.isInteger(d.status)||d.res?.error||d.res?.ok===false)return;
   if(P.quote?.currency!=='FA'||!E.set||q?.set!==E.set||E.ids?.length!==1||q.skillId!==E.ids[0]||q.expectedCostFastAden!==P.quote.amount||!Number.isSafeInteger(q.expectedRevision)||q.expectedRevision<0||ch?.name!==P.char||!Number.isSafeInteger(ch.revision)||ch.revision<=q.expectedRevision)return;
   if(d.res.skillId!==q.skillId||d.res.set!==q.set||d.res.costFastAden!==P.quote.amount||!Number.isSafeInteger(E.balance)||d.res.fastAdenBalance!==E.balance-P.quote.amount)return;
@@ -878,14 +903,22 @@ async function paymentReconcile() {
     journalCheck={id:P.id,t:Date.now()};const r=await env.faBuffEvidence(P);if(!valid())return false;
     if(r?.kind==='journal-receipt'&&r.spent===P.quote.amount&&r.balance===E.balance-P.quote.amount&&Number.isSafeInteger(r.requestRevision)&&typeof r.eventKey==='string')proof=r;
   }
+  // 20.76+ (ревизия 28.10, круг 2): эффекта и квитанции успеха нет, а сервер явно отклонил именно этот запрос — оплата не прошла (spent 0).
+  // Эффект проверяется раньше: бафф, наложенный повтором самой игры после 409, остаётся успехом.
+  if(!proof&&receipt?.paymentId===P.id&&receipt.char===P.char&&receipt.kind===P.kind&&receipt.refused)proof={kind:'server-rejected',status:receipt.refused,spent:0};
   if(!proof){env.setStatus?.('Бафф: исход оплаты неизвестен; повтор запрещён, сверяю эффекты');return false;}
+  const rejected=proof.kind==='server-rejected';
   const current=env.rt.tbuff, S=current && Number.isFinite(E.jobT) && current.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick ? current : null, patch={};
-  if(P.kind==='fa-buff') {
+  // отказ (не списано): очередь FA и шаг набора не продвигаем, Noblesse купленным не отмечаем
+  if(!rejected && P.kind==='fa-buff') {
     if(S)patch.tbuff={...S,fa:(S.fa||[]).filter(id=>!ids.includes(id))};
     if(ids.includes(1323))patch.nobBuyT=P.at;
-  }else if(S?.step==='town' && S.set===E.set){patch.tbuff=S.fa?.length?{...S,step:'fa'}:S.then?{...S.then,t:Date.now()}:null;patch.tbOk=true;}
+  }else if(!rejected && S?.step==='town' && S.set===E.set){patch.tbuff=S.fa?.length?{...S,step:'fa'}:S.then?{...S.then,t:Date.now()}:null;patch.tbOk=true;}
   if(Object.keys(patch).length && ((await env.setRt(patch))?.ok!==true || !valid()))return false;
-  return env.payments.confirm(P,proof);
+  const confirmed=await env.payments.confirm(P,proof);
+  // 15 CoL не списаны — резерв бюджета эпиков снимаем и после reload (время резерва сохранено в оплате)
+  if(confirmed&&rejected&&P.kind==='town-buff'&&E.payAt>0&&env.tabOwner!==false&&env.leaseEpoch===lease&&env.rt.char===char)await env.epicBuffRelease?.(E.payAt,`сервер отклонил ${proof.status}`);
+  return confirmed;
 }
 async function townBuffStep() {
   if(env.payments?.blocked()){await paymentReconcile();return;}
@@ -1000,29 +1033,41 @@ async function townBuffStep() {
     const H0 = hudBuffs() || {};
     await env.pause();
     if(!active()){await releaseUnsent();return;}
-    const P=paidSet?await env.payments.prepare({key:`town:${set}`,kind:'town-buff',quote:{amount:+paidSet.feeCoinOfLuck,currency:'Coin of Luck'},
-      evidence:{jobT:st.t,set,ids:[...new Set(env.TB_KEYS[set]||[])],before:H0}}):null;
-    if(paidSet && (!P || !active() || !env.payments.sent(P))){if(P)await env.payments.cancel(P);await releaseUnsent();return;}
+    // 20.76+ (ревизия 28.10, круг 2): окно «Підтвердити» (20.55) лежит в разметке скрытым — кнопка набора только открывает его, оплата уходит
+    // по «Підтвердити». Раньше разовое разрешение оплаты тратилось на кнопку набора, а fire(«Підтвердити») при ожидающей оплате блокировался:
+    // POST не уходил, оплата висела «исход неизвестен» до ручного сброса, бот стоял, резерв CoL эпиков не снимался. Теперь при окне в разметке
+    // платный набор открываем без оплаты, сверяем цену окна (ровно 15 Coin of Luck), prepare/sent — прямо перед «Підтвердити». Без окна — прежний путь.
+    const confirmUi=!!env.$q('#town-buffer-confirm-overlay');
+    const prepare=()=>env.payments.prepare({key:`town:${set}`,kind:'town-buff',quote:{amount:+paidSet.feeCoinOfLuck,currency:'Coin of Luck'},
+      evidence:{jobT:st.t,set,ids:[...new Set(env.TB_KEYS[set]||[])],before:H0,...(payAt?{payAt}:{})}});
+    let P=paidSet&&!confirmUi?await prepare():null;
+    if(paidSet && !confirmUi && (!P || !active() || !env.payments.sent(P))){if(P)await env.payments.cancel(P);await releaseUnsent();return;}
     const clicked=env.fire(btn);
     if(clicked===false){if(P)await env.payments.cancel(P,{notSent:true});await releaseUnsent();return done(`городской «${set}»: кнопка не нажалась`);}
     // 20.55 (лог 24.10 03:06/03:16, «тупит на баффе»): игра добавила окно «Підтвердити отримання бафа?» (town-buffer-confirm.js) —
     // кнопка набора только открывает его, POST /character/town/buffer уходит по «Підтвердити». Бот окно не нажимал: ответа нет →
     // «без сознания» → лишний круг воскрешения → «без подтверждения» → сторож «баффы слетели» через 50 с, и так по кругу.
-    // Бесплатный «basic» подтверждаем, только если окно пишет «Безкоштовно»; платный — уже подготовленной оплатой (P) выше.
+    // Бесплатный «basic» подтверждаем, только если окно пишет «Безкоштовно»; платный — только при цене окна 15 Coin of Luck.
     const cOv=await env.waitX(()=>{const o=env.$q('#town-buffer-confirm-overlay');return o&&!o.hidden?o:null;},3000,100);
-    if(!active()){if(P)await paymentReconcile();return;}
+    if(!active()){if(P)await paymentReconcile();else await releaseUnsent();return;}
     if(cOv){
       const fee=(env.$q('#town-buffer-confirm-fee')?.textContent||'').trim(),acc=env.$q('#town-buffer-confirm-accept');
-      if(!acc||acc.disabled||(set==='basic'&&!/безкоштовно|бесплатно|free/i.test(fee))){
-        try{env.fire(env.$q('#town-buffer-confirm-cancel'));}catch(e){}
-        if(P)await env.payments.cancel(P,{notSent:true});await releaseUnsent();
-        return done(`городской «${set}»: окно подтверждения ${acc?`с ценой «${fee.slice(0,40)}»`:'без кнопки «Підтвердити»'} — не подтверждаю`);
-      }
-      env.fire(acc);
+      const feeOk=set==='basic'?/безкоштовно|бесплатно|free/i.test(fee):!P&&/(?:^|\D)15(?:\D|$)/.test(fee)&&/coin\s*of\s*luck|\bCoL\b/i.test(fee)&&!/безкоштов|бесплат|free|аден|adena/i.test(fee);
+      const refuse=async why=>{if(P)await env.payments.cancel(P,{notSent:true});try{env.fire(env.$q('#town-buffer-confirm-cancel'));}catch(e){}await releaseUnsent();return done(why);};
+      if(!acc||acc.disabled||!feeOk)return refuse(`городской «${set}»: окно подтверждения ${acc?`с ценой «${fee.slice(0,40)}»`:'без кнопки «Підтвердити»'} — не подтверждаю`);
+      if(paidSet){
+        P=await prepare();
+        const a2=P&&active()&&(o=>o&&!o.hidden)(env.$q('#town-buffer-confirm-overlay'))&&(a=>a&&!a.disabled?a:null)(env.$q('#town-buffer-confirm-accept'));
+        // между sent и кликом «Підтвердити» нет await: разовое разрешение уходит ровно на этот клик
+        if(!a2||!env.payments.sent(P)){if(P)await env.payments.cancel(P);try{env.fire(env.$q('#town-buffer-confirm-cancel'));}catch(e){}await releaseUnsent();return;}
+        if(env.fire(a2)===false)return refuse(`городской «${set}»: «Підтвердити» не нажалась — оплата не отправлена`);
+      }else if(env.fire(acc)===false)return done(`городской «${set}»: «Підтвердити» не нажалась`);
     }
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
     const ok = await env.waitX(() => /накладено|наложен|applied/i.test(res()), 6000, 200);
     if(!active()){if(P)await paymentReconcile();return;}
+    // 20.76+ (круг 2): окно есть в разметке, но после кнопки не открылось — «Підтвердити» не нажата, оплата не готовилась: резерв CoL снимаем
+    if(paidSet && confirmUi && !cOv && !ok)await releaseUnsent();
     if (ok) {                                       // v5.3: запоминаем, какие баффы даёт набор (новые и обновлённые в шапке)
       await env.waitX(() => Object.keys(hudBuffs() || {}).some(id => !(id in H0) || (hudBuffs()[id] || 0) > (H0[id] || 0) + 60000), 3000, 200);
       if(!active()){if(P)await paymentReconcile();return;}
@@ -1056,6 +1101,8 @@ async function townBuffStep() {
     if(!active())return;
     if(vipNoFa()){
       const set=vipPreferred();
+      // 20.76+ (ревизия 28.10): набор выключен галкой или классу не положен — ждать нечего, очередь FA снимаем без покупки (раньше висела вечно).
+      if(!set&&(!vipEnabled()||!env.rt.vipBuff?.set)){await env.setRt({tbuff:{...st,fa:[]}});return done('VIP активен, бесплатный набор выключен или недоступен классу — очередь FA снята без покупки');}
       if(!set){env.setStatus('VIP активен: FA не трачу; жду подтверждения бесплатного набора и его настройки');return;}
       await env.setRt({tbuff:{...st,step:'town',set,vipFree:true,fa:[]}});
       if(active())location.href='/town-buffer.html';return;

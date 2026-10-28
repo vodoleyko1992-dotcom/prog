@@ -96,7 +96,8 @@ async function orderPoll(strict = false, active = guard()) {
   if (!ok) { if (strict) throw Error(`заказ торговца: HTTP ${status}`); if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
   return orderNote(j?.request);
 }
-async function npcPoll(strict = false, active = guard()) {
+// 20.76+ (ревизия 28.10): fails — виды NPC, чей GET в этом вызове не удался (их координаты в out — из старого кэша)
+async function npcPoll(strict = false, active = guard(), fails = null) {
   if(!active())return null;
   const out = { ...(env.rt.mmNpc || {}) };
   for (const k of ['order', 'smith']) {
@@ -104,6 +105,8 @@ async function npcPoll(strict = false, active = guard()) {
     if (!active()) return null;
     if (!ok && strict) throw Error(`положение ${k}: HTTP ${status}`);
     const s = ok && j?.[STATE[k][1]];
+    // 20.76+ (ревизия 28.10, ревью): 200 без блока NPC (HTML техработ, пустой ответ) — тоже не свежие координаты
+    if (!s?.current) fails?.add(k);
     if (s?.current) out[k] = { loc: s.current.labelEn || s.current.id, id: s.current.id, x: +s.current.worldX, y: +s.current.worldY,
       next: s.next?.labelEn || s.next?.id || '', at: +s.rotatesAtMs || 0, price: j.teleport?.vipFreeApplied ? 0 : +(j.teleport?.adenaCost ?? 500000) };
   }
@@ -546,12 +549,18 @@ function want() {
   if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', priceOnly: true, why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
 }
-async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); return c && Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
+// 20.76+ (ревизия 28.10): undefined — ответ /character не получен (положение неизвестно), null — герой без координат
+async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); if (!c) return undefined; return Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
+// 20.76+ (ревизия 28.10): true — рядом, false — далеко (кузнец: только 403 mammon_blacksmith_not_nearby, как в smith()), null — ответ игры
+// не получен (429/5xx/401): раньше любой сбой GET = «далеко» и платный телепорт 500 000 адены к NPC, у которого герой может уже стоять
 async function isNear(kind) {
   const active=guard();if(!active())return false;
-  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok)smithNote(r.j?.items);return r.ok; }
-  const me=await heroXY();if(!active())return false;
-  const positions=await npcPoll(false,active);if(!active())return false;const n=positions?.[kind];
+  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok){smithNote(r.j?.items);return true;}return r.status===403?false:null; }
+  const me=await heroXY();if(!active())return false;if(me===undefined)return null;
+  const fails=new Set(),positions=await npcPoll(false,active,fails);if(!active())return false;const n=positions?.[kind];
+  // 20.76+ (ревизия 28.10, остаток): GET /game/mammon/merchant 429/5xx — координаты только из кэша, пока NPC не сменил место (rotatesAtMs);
+  // кэша нет или он устарел — положение неизвестно (null, повтор без оплаты), а не «далеко» с платным телепортом 500 000 адены
+  if(fails.has(kind)&&!(n&&n.at>Date.now()))return null;
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
@@ -564,7 +573,8 @@ function homePoint() {
 async function finish(J, ok, why) {
   const active = guard(J); if (!active()) return;
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
-  env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
+  const stay = !J.home && J.stay === '/ashen-bastion.html' && !env.fishNow() ? J.stay : null;
+  env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : stay ? ' · остаюсь в Ashen Bastion' : ''}`);
   // 20.43 (ревью): svc — обратный перелёт службы: передышка фарма его не снимает (engine-core taskJobAllowed)
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку', svc: 'mammon', ...(J.home === 'ashen_bastion' ? { returnPath: '/ashen-bastion.html' } : {}) }, zoneGoT: 0 } : {};
   // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
@@ -580,8 +590,11 @@ async function finish(J, ok, why) {
   await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok || J.cancelled ? 0 : Date.now() } : {}),
     ...(J.kind === 'send' ? { mmSendT: ok || J.cancelled ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
   if (!active()) return;
-  if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
+  if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : stay || '/map.html'; await env.sleep(3000); }
 }
+// 20.76+ (ревизия 28.10, ревью): герой не улетал (отказ по резерву, ошибка игры на странице телепорта) — обратного перелёта нет (home:null),
+// но поход из Ashen Bastion возвращается на его страницу: на /map.html фарм Ashen не продолжается. Это переход по странице, не телепорт
+const grounded = J => ({ ...J, home: null, stay: J.home === 'ashen_bastion' ? '/ashen-bastion.html' : null });
 // 15.10: сохранённое задание не должно хранить отменённую квитанцию после Stop до клика.
 async function cancelUnsent(ticket, original, sent = false) {
   if(!ticket || !await env.payments.cancel(ticket, sent ? {notSent:true} : {}))return false;
@@ -603,9 +616,16 @@ async function teleport(J) {                      // страница телеп
   const max = env.cfg.mmTpMax ?? 500000;
   if (price > max) return finish(J, false, `телепорт ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
   // 20.12 (ревизия 17.10, аудит PAY-2): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
-  let before0 = null;
-  if (env.payments) try { const r = await getJson('/character'), ch = r.ok && (r.j?.character || r.j); if (ch?.name === env.rt.char && Number.isSafeInteger(ch.revision)) before0 = { revision: ch.revision, adena: money(ch.adena), charId: ch.id }; } catch (_) {}
+  let before0 = null, wallet = null;
+  if (env.payments || price > 0) try { const r = await getJson('/character'), ch = r.ok && (r.j?.character || r.j); if (ch?.name === env.rt.char) { wallet = money(ch.adena); if (Number.isSafeInteger(ch.revision)) before0 = { revision: ch.revision, adena: wallet, charId: ch.id }; } } catch (_) {}
   if (!active()) return;
+  // 20.76+ (ревизия 28.10): платный телепорт к NPC держит резерв адены (shopReserve), как navigation.teleportBudget/катакомбы/тур РБ —
+  // раньше 500 000 при 600 000 адены оставляли 100 000: обратный перелёт и закупка упирались в резерв. Без свежего кошелька не платим
+  if (price > 0) {
+    const reserve = Math.max(0, +env.cfg.shopReserve || 0);
+    if (wallet == null) { env.setStatus('Маммон: запас адены перед платным телепортом не подтверждён (ошибка ответа игры) — повторю, телепорт не оплачиваю'); await env.sleep(5000); return; }
+    if (wallet - price < reserve) return finish(grounded(J), false, `телепорт ${fmtA(price)} адены оставит ${fmtA(wallet - price)} — ниже резерва ${fmtA(reserve)}`);
+  }
   const ticket = env.payments ? await env.payments.prepare({ key: `mammon:tp:${J.kind}:${J.t}`, kind: 'mammon', quote: { amount: price, currency: 'adena' }, evidence: { action: 'teleport', npc: J.kind, home: J.home, ...(before0 || {}) } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!active()) { if (ticket) await env.payments.cancel(ticket); return; }
@@ -622,7 +642,7 @@ async function teleport(J) {                      // страница телеп
   // Смена URL сама по себе не подтверждает платный телепорт. Следующий шаг сверит NPC с сервером.
   if (!ticket && location.pathname === LOC[J.kind]) {
     const err = (env.$q('#mammon-loc-err')?.textContent || '').trim();
-    if (err) return finish({ ...J, home: null }, false, `не улетели: ${err.slice(0, 80)}`);
+    if (err) return finish(grounded(J), false, `не улетели: ${err.slice(0, 80)}`);
   }
 }
 // 10.0.24: общая диспетчеризация сверяет неизвестный платёж даже после отмены похода/смены режима.
@@ -1093,6 +1113,10 @@ async function sendStep(J) {
   if (!allowed() && !J.cur) return finish(copyJob(J, { cancelled: true }), false, 'автоотправка крафтеру выключена');
   // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
   if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
+  // 20.76+ (ревизия 28.10): квитанция этой отправки закрыта (игрок нажал «Считать оплату не прошедшей») — cur со state 'sent' больше никто
+  // не снимет: каждый круг шёл GET /character и «повтор запрещён», главный цикл стоял до Stop. Не досылаем — задание неудачей, повтор новой кнопкой
+  if (J.cur && env.payments && J.cur.state !== 'prepared' && J.cur.paymentId && !env.payments.blocked() && env.payments.pending()?.id !== J.cur.paymentId)
+    return finish(copyJob(J, { cur: null }), false, `исход отправки ${J.cur.nm} ×${fmtA(J.cur.q)} закрыт без подтверждения игры — проверь «Відправлені», повтор только новой кнопкой`);
   if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
   // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
   if (J.cur) {
@@ -1248,7 +1272,10 @@ async function mmStep() {
   if (J?.kind === 'send' && !J.hand) {
     if (env.payments?.blocked()) { await paymentReconcile(); waitPayment(); return true; }
     // Сохраняем учёт уже отправленного; неизвестную оплату не объявляем отменённой.
-    if (J.cur && J.cur.state !== 'prepared') { env.setStatus('Прежняя отправка крафтеру требует сверки; повтор запрещён'); return true; }
+    // 20.76+ (ревизия 28.10): квитанция cur закрыта (её нет в ожидании) — задание не держит главный цикл вечно, снимаем его без повтора
+    const closed = !!(J.cur?.paymentId && env.payments && env.payments.pending()?.id !== J.cur.paymentId);
+    if (J.cur && J.cur.state !== 'prepared' && !closed) { env.setStatus('Прежняя отправка крафтеру требует сверки; повтор запрещён'); return true; }
+    if (closed) env.rec('B', 'Маммон', `прежняя отправка крафтеру ${J.cur.nm || ''} ×${fmtA(J.cur.q)}: исход закрыт без подтверждения игры — задание снято, проверь «Відправлені»`);
     await env.setRt({ mmJob: null }); return false;
   }
   if (J) {
@@ -1274,8 +1301,11 @@ async function mmStep() {
     if (J.kind === 'send') { await sendStep(J); return true; }
     if (J.kind === 'claim') { await claimStep(J); return true; }
     if (J.step === 'go') {
-      if (await isNear(J.kind)) { if (!active()) return true; await env.setRt({ mmJob: { ...J, step: 'act' } }); }
-      else if (active()) await teleport(J);
+      const near = await isNear(J.kind); if (!active()) return true;
+      if (near) await env.setRt({ mmJob: { ...J, step: 'act' } });
+      // 20.76+ (ревизия 28.10): проверка положения не удалась — не платим за телепорт, повтор через 5 с (JOB_MAX закроет задание сам)
+      else if (near === null) { env.setStatus('Маммон: положение героя у NPC не проверено (ошибка ответа игры) — повторю, телепорт не оплачиваю'); await env.sleep(5000); }
+      else await teleport(J);
       return true;
     }
     if (J.visit) await visit(J); else if (J.kind === 'order') await claim(J); else await smith(J);

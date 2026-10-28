@@ -258,8 +258,14 @@ async function activateMode(rtPatch, cfgPatch) {
       const map = { craftMode: 'craft', enchantMode: 'enchant', epicMode: 'epic', rbHuntMode: 'raid', rebirthMode: 'rebirth', campaign: 'quests', fishMode: 'fish', catMode: 'cat', zoneAuto: 'auto' };
       const selected = new Set(cfg.autoTasks);
       for (const [flag, key] of Object.entries(map)) if (cfgPatch[flag] === true) selected.add(key);
+      // 20.76+ (ревизия 28.10): как autoTaskPatch (20.71) — другая основная задача снимает Rebirth; иначе «🎯 Один РБ»/«Цель +10» молча
+      // оставляли выбранный Rebirth (ядро выбирает его первым), а 'raid'/'fish' копились в списке и запускались после его снятия
+      if (Object.entries(map).some(([flag, key]) => key !== 'rebirth' && cfgPatch[flag] === true)) selected.delete('rebirth');
       cfgPatch = { ...cfgPatch, autoTasks: [...selected] };
     }
+    // 20.76+ (ревизия 28.10): и в плоском режиме (без autoTasks) включённая основная задача снимает rebirthMode — «Цель +10» и
+    // тумблеры тура/эпиков его не передавали, а rebirthSelected по rebirthMode:true оставлял Rebirth
+    if (cfgPatch.rebirthMode !== true && ['craftMode', 'enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto'].some(k => cfgPatch[k] === true)) cfgPatch = { ...cfgPatch, rebirthMode: false };
   }
   // 15.10: любой явный выбор другого режима снимает заточку; разовые службы без смены режима сохраняют её.
   if (modeChanged) cfgPatch = { enchantMode: false, craftMode: false, ...cfgPatch };
@@ -306,6 +312,11 @@ function confirmClick(id, fn) {
 // 8.0 (аудит меню): состояние для экономной перерисовки встроенного меню (см. loadSoon)
 const DOCKED = /dock=1/.test(location.search);
 let dockMin = false, recN = 0, snapN = 0;
+// 20.76+ (ревизия 28.10): на Android поверх игры (dockOver) свёрнутость дока — язычок страницы (localStorage), а не cfg.dockMin:
+// меню, свёрнутое ◀ в альбомной ориентации или импортом с ПК, застывало после первой отрисовки. Страница игры сообщает фактическую
+// свёрнутость (__l2dock 'min'); пока её не было — прежний cfg.dockMin.
+let dockView = null;
+const dockMinNow = cfgMin => DOCKED && (dockView ?? !!cfgMin);
 // перерисовка меню — не чаще 3 раз в секунду и только когда его видно (loadSoon ниже). 20.62 (жалоба John 25.10 «бот грузит ЦП и память»):
 // состояние объявлено здесь, до первого вызова load()/showTab() (иначе let в TDZ). loadAt — когда сработает отложенный load(),
 // loadDone — стартовый load() завершён, lastPaint — rt/cfg последней отрисовки (живой статус live@ без полной перерисовки),
@@ -337,6 +348,11 @@ if (DOCKED) {
   // v5.2: «я жива» для страницы игры раз в 3 с — если панель упадёт (грустный листок), бот перезапустит её сам
   const hb = () => { try { parent.postMessage({ __l2dock: 'hb' }, '*'); } catch (e) {} };
   hb(); setInterval(hb, 3000);
+  addEventListener('message', e => {
+    if (e.source !== parent || e.data?.__l2dock !== 'min' || typeof e.data.min !== 'boolean') return;
+    const was = dockMin; dockView = e.data.min; dockMin = dockView;
+    if (was && !dockMin) { if (loadPending) loadSoon(0); showCounts(recN, snapN); document.dispatchEvent(new Event('l2:dockshow')); }   // показали — догоняем пропущенное
+  });
 }
 
 // 8.0.7 (игрок 11.10, планшет с Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — было окошко
@@ -395,7 +411,7 @@ async function loadNow() {
     formChar = rt.char || '';
   }
   paintActionDelay();
-  recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
+  recN = reccount; snapN = snapcount; dockMin = dockMinNow(d.dockMin);
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
   const ver = chrome.runtime.getManifest().version, hl = healthLine(rt, wdog).trim(), S = sessInfo(rt);
   const chip = (ic, v, t) => `<span class="chip" title="${t}">${ic} <b>${v}</b></span>`;
@@ -1399,7 +1415,8 @@ function fillWeapons(rt, d) {
   const W = rt.weapons || [], R = rt.weaponRec || {}, types = R.types || [];
   const panel = new Set((rt.panel || []).filter(s => s.kind === 'снаряжение').map(s => (s.name || '').toLowerCase()));
   const onPanel = n => [...panel].some(p => p.startsWith(n.toLowerCase()) || n.toLowerCase().startsWith(p));
-  const inClass = w => types[0] === '#mage' || types.includes(w.wt);
+  // 20.76+ (ревизия 28.10): «дуалы» из каталога игры в памяти прежних версий = «парные мечи» классов, как equipment.rankWeapons
+  const inClass = w => types[0] === '#mage' || types.includes(w.wt === 'дуалы' ? 'парные мечи' : w.wt);
   const uniq = []; const seen = new Set();
   for (const w of W) { if (!w.name || seen.has(w.name)) continue; seen.add(w.name); uniq.push(w); }
   const opt = (w, sel) => `<option value="${esc(w.name)}"${sel ? ' selected' : ''}>${inClass(w) ? '⭐ ' : ''}${w.where === 'надето' ? '✓ ' : ''}${esc(w.name)} · ${esc(w.wt)} · ${w.g}${w.ench ? ' +' + w.ench : ''} · ${types[0] === '#mage' ? 'M' : 'P'}.Atk ${types[0] === '#mage' ? w.ma : w.pa}${onPanel(w.name) ? '' : ' · не на панели'}</option>`;
@@ -3170,11 +3187,17 @@ const CFG_IMPORT_EXTRA = { dockMin: 'boolean', potSlotAuto: 'boolean', weaponCla
   rbOrder: 'string', champNoCancel: 'boolean', farmHere: 'boolean', fishAutoSetup: 'boolean', fishRodBuy: 'boolean', mageEcoPct: 'number', mageMpPct: 'number',
   mageProbe: 'boolean', magisterSkip: 'string', magisterSpReserve: 'number', rbDeathPenalty: 'number', rbVampHp: 'number' };
 const CFG_MONEY = ['shopReserve', 'shopMaxSpend', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicAdenaDailyMax', 'mmTpMax', 'storyTpMax', 'petFullBudget', 'petFullMaxPrice', 'petFullReserve', 'enchant'];
+// 20.77 (ревизия 28.10): флаги разовых миграций (once в content.js: имя на цифру или «Mig», значение 1, не настройка меню/ядра) больше не
+// теряются — идут отдельным списком, фон ставит только недостающие. Раньше cfg@Ник, созданный импортом (Firefox после перезапуска,
+// новая папка Chrome), был без флагов: при входе героя все once() заново ложились поверх импорта — pvpAll2054 включал нападение на
+// игроков, actionDelay2059 возвращал 500 мс, champAuto1005/zone7128/magEveryLevel… Флаг едет вместе со значениями, которые он уже изменил.
+const CFG_FLAG_RE = /^[a-z][A-Za-z0-9_]{0,62}(?:\d|Mig)$/;
 function cfgImportClean(src) {
-  const clean = {}, skipped = [];
+  const clean = {}, skipped = [], flags = [];
   for (const [k, v] of Object.entries(src || {})) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k)) { skipped.push(k); continue; }
     const def = Object.hasOwn(DEF, k) ? DEF[k] : undefined, want = def === undefined ? CFG_IMPORT_EXTRA[k] : def === null ? 'null' : Array.isArray(def) ? 'array' : typeof def;
+    if (want === undefined && v === 1 && CFG_FLAG_RE.test(k)) { flags.push(k); continue; }
     let ok = false;
     if (want === 'number') ok = typeof v === 'number' && Number.isFinite(v) && v >= 0;
     else if (want === 'boolean' || want === 'string') ok = typeof v === want && (want !== 'string' || v.length <= 20000);
@@ -3182,7 +3205,13 @@ function cfgImportClean(src) {
     else if (want === 'null') ok = v === null || (k === 'autoTasks' ? Array.isArray(v) && v.length <= 50 && v.every(x => typeof x === 'string' && x.length <= 40) : typeof v === 'number' && Number.isFinite(v) && v >= 0);
     if (ok) clean[k] = v; else skipped.push(k);
   }
-  return { clean, skipped };
+  return { clean, skipped, flags };
+}
+// Сообщение фону: общие настройки, настройки героев cfg@Ник и флаги миграций каждого из них
+function cfgImportMsg(src) {
+  const main = cfgImportClean(src.cfg), perChar = {}, flags = main.flags.length ? { cfg: main.flags } : {};
+  for (const [k, v] of Object.entries(src)) if (/^cfg@[^\s]{1,100}$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) { const c = cfgImportClean(v); if (Object.keys(c.clean).length) { perChar[k] = c.clean; if (c.flags.length) flags[k] = c.flags; } }
+  return { main, perChar, flags };
 }
 $('cfgImport').onclick = () => $('cfgFile').click();
 $('cfgFile').onchange = async e => {
@@ -3193,12 +3222,11 @@ $('cfgFile').onchange = async e => {
     const src = j?.l2botCfg ? j.data : j?.l2bot ? j.data : null;          // файл настроек или файл «Памяти бота»
     if (!src?.cfg || typeof src.cfg !== 'object') throw new Error('в файле нет настроек L2wap Bot');
     // 20.12 (ревизия 17.10, UI-4): только известные настройки с подходящим типом (cfgImportClean), запись — через очередь фона
-    const main = cfgImportClean(src.cfg), perChar = {};
-    for (const [k, v] of Object.entries(src)) if (/^cfg@[^\s]{1,100}$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) { const c = cfgImportClean(v).clean; if (Object.keys(c).length) perChar[k] = c; }
+    const { main, perChar, flags } = cfgImportMsg(src);
     if (!Object.keys(main.clean).length && !Object.keys(perChar).length) throw new Error('в файле нет известных настроек');
     const { cfg = {} } = await chrome.storage.local.get('cfg');
     const money = CFG_MONEY.filter(k => Object.hasOwn(main.clean, k) && JSON.stringify(main.clean[k]) !== JSON.stringify(cfg[k] ?? DEF[k]));
-    const r = await chrome.runtime.sendMessage({ cmd: 'cfgImport', cfg: main.clean, perChar });
+    const r = await chrome.runtime.sendMessage({ cmd: 'cfgImport', cfg: main.clean, perChar, flags });
     if (!r?.ok) throw new Error('фон не принял импорт: ' + (r?.reason || 'нет ответа'));
     $('cfgNote').textContent = `✅ Импортировано настроек: ${Object.keys(main.clean).length} (из v${j.v || '?'}, ${j.t ? new Date(j.t).toLocaleString('ru') : '—'}). Работающий бот подхватит их сразу.`
       + (main.skipped.length ? ` Пропущено неизвестных или неверных: ${main.skipped.length} (${main.skipped.slice(0, 8).join(', ')}${main.skipped.length > 8 ? '…' : ''}).` : '')
@@ -3356,7 +3384,7 @@ document.addEventListener('l2:tabchange', e => {
   if (lastPaint) renderOpen(lastPaint.rt, lastPaint.d); else if (loadDone) loadSoon(0);   // первый load() ещё идёт — он нарисует открытый раздел сам
 });
 onStore(ch => {
-  if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
+  if (ch.cfg) { const was = dockMin; dockMin = dockMinNow(ch.cfg.newValue?.dockMin); if (was && !dockMin) loadPending = true; }
   // 20.62 (ревью): lock/hbBg (продление замка, пульс фона) load() не зовут — запоминаем для paintLive; сменилась шапка («Запуск» → «Активен») — перерисовка
   if ((ch.lock || ch.hbBg) && lastPaint) {
     if (ch.lock) lastPaint.lock = ch.lock.newValue ?? null; if (ch.hbBg) lastPaint.hbBg = ch.hbBg.newValue ?? null;
@@ -3613,6 +3641,7 @@ function panelRefresher(el, refresh, delay) {
   chrome.storage.onChanged?.addListener(ch => { if (!(ch.cfg || ch.rt || ch.hot || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
   const wake = () => { if (stale) soon(); };
   document.addEventListener('l2:tabchange', wake); document.addEventListener('l2:cardtoggle', wake); document.addEventListener('visibilitychange', wake);
+  document.addEventListener('l2:dockshow', wake);   // 20.76+ (ревизия 28.10): док раскрыт язычком страницы — без записи cfg
   return { wake };
 }
 panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);

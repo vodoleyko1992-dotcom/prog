@@ -38,9 +38,11 @@ const {harness,until,delay}=require(root+'/tests/v1014-core-lifecycle-browser.cj
  await until(()=>h.g.core('cfg.vipBuffAuto===false&&cfg.townBuffSet==="off"'));
  await h.g.core('(async()=>{await setRt({tbuff:{t:Date.now(),step:"fa",fa:[1414]},actionOwner:null});await rtCommit();return true})()');
  await h.g.p.goto('https://l2wap.com/fast-aden-buffer.html');
- await until(()=>h.g.core('/VIP активен: FA не трачу/.test(rt.status||"")'),15000);await delay(700);
- state=await h.get(['cfg','rt']);assert.equal(posts.length,1);assert.equal(state.rt.tbuff.step,'fa');assert.equal(state.rt.actionPayments.pending,null);assert.equal(state.cfg.vipBuffAuto,false);assert.equal(state.cfg.townBuffSet,'off');assert.equal(state.cfg.faBuffs,'1414,1323');assert.deepEqual(h.errors,[]);
- console.log('PASS actual MV3: free auto OFF while VIP remains active → saved FA waits, zero native FA/extra free POST, settings preserved, 0 pageerrors');
+ // 20.76+ (ревизия 28.10): набор VIP выключен — сохранённая очередь FA больше не ждёт весь срок VIP (раньше держала главный цикл),
+ // а снимается без покупки; FA при VIP по-прежнему не тратятся, лишних POST нет.
+ await until(async()=>{const{rt}=await h.get(['rt']);return rt.tbuff===null},15000);await delay(700);
+ state=await h.get(['cfg','rt']);assert.equal(posts.length,1);assert.equal(state.rt.tbuff,null);assert.equal(state.rt.actionPayments.pending,null);assert.equal(state.cfg.vipBuffAuto,false);assert.equal(state.cfg.townBuffSet,'off');assert.equal(state.cfg.faBuffs,'1414,1323');assert.deepEqual(h.errors,[]);
+ console.log('PASS actual MV3: free auto OFF while VIP remains active → saved FA queue dropped without purchase, zero native FA/extra free POST, settings preserved, 0 pageerrors');
  await h.g.core('automationStop("Конец локальной проверки VIP", "stop", {user:true})');
  }catch(e){console.error('DIAG',JSON.stringify({posts,revision,core:await h.g.core('({on,running,tabOwner,status:rt.status,tbuff:rt.tbuff,session:rt.rbSess,vip:rt.vipBuff,applied:rt.vipApplied,owner:rt.actionOwner})').catch(()=>null)}));throw e}finally{await h.ctx.close()}
 })().catch(e=>{console.error(e.stack);process.exitCode=1});

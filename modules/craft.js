@@ -163,16 +163,22 @@ async function reconcile(t) {
   if (rev !== p.rev) {
     if (got >= p.out) { await credit(Date.now(), p, 'сверка: скрафчено ', t); later(Date.now(), BUSY); return true; }
     // Выход могли уже потратить/передать после крафта: новая revision сама по себе не доказывает отказ.
-    // Разрешаем новый заказ только при неизменных выходе, сырье и MP; иначе сохраняем неизвестный исход.
-    if (got === 0 && Array.isArray(p.inputs) && p.inputs.every(x => countOf(c, x[0]) === x[1]) && c.mp === p.mp0)
-      return pendNot(p, 'revision героя ушла вперёд, выход, сырьё и MP не изменились', t);
+    // Разрешаем новый заказ только при неизменных выходе и сырье; иначе сохраняем неизвестный исход.
+    // 20.76+ (ревизия 28.10): MP не сверяем — вне боя он растёт регеном без смены revision (docs/evidence/craft-mode, 22.10), в фоне тратится
+    // в бою; точное равенство mp0 после 409/обрыва навсегда держало «Сверяю результат крафта». Применённый крафт всегда списывает сырьё.
+    if (got === 0 && Array.isArray(p.inputs) && p.inputs.length > 0 && p.inputs.every(x => countOf(c, x[0]) === x[1]))
+      return pendNot(p, 'revision героя ушла вперёд, выход и сырьё не изменились', t);
     later(Date.now(), MP_WAIT); pendNote(p, `сверка крафта ${p.nm}: revision изменилась, исход не подтверждён — новый крафт не шлю`); return false;
   }
   if (!active(t)) return false;
   // Удалённый игроком пункт не является разрешением тратить снова; старый исход продолжает сверяться по GET.
-  if (!requested(p)) return false;
+  // 20.76+ (ревизия 28.10): раз в минуту — без later() nextT оставался в прошлом, и GET /character шёл на каждом такте (≈1 с) молча.
+  const gone = () => { later(Date.now(), MP_WAIT); note('pendGone' + p.code, `сверка крафта ${p.nm}: пункт очереди снят — исход прежнего запроса сверяю раз в минуту, новый крафт не шлю`); return false; };
+  if (!requested(p)) return gone();
   // В том числе после смены хозяина: локальное наличие p не заменяет ACK его durable-копии.
-  if (!await persist({ craftPending: p }, t) || !active(t) || !same(p) || !requested(p)) return false;
+  if (!await persist({ craftPending: p }, t)) { later(Date.now(), PEND_WAIT); return false; }
+  if (!active(t) || !same(p)) return false;
+  if (!requested(p)) return gone();
   let res = null, j = null;
   try { res = await env.gamePost('/game/craft/materials', { recipeCode: p.code, craftCount: p.count, expectedRevision: p.rev }); j = await res.json().catch(() => null); }
   catch (e) { if (!owner(t) || !same(p)) return false; if (NOT_SENT.test(e?.message || '')) { later(Date.now(), BUSY); return false; } return pendKeep(p, e?.name === 'AbortError' ? 'ответ не пришёл' : `обрыв (${e?.message || e})`, t); }
@@ -286,7 +292,10 @@ async function reconcileMp(t) {
   if (!mpPermit(t, p)) return mpSay(Date.now(), 'Сверка МП-банки: первый исход неизвестен; повтор выключен или заказ снят');
   if (!mpInputs(c, p.inputs)) return mpSay(Date.now(), 'Сверка МП-банки: сырья для крафта не хватает — прежний запрос не повторяю');
   if (!goalStillReady(c,p)) return mpSay(Date.now(), 'Сверка МП-банки: цепочка изменилась — исход прежнего запроса ещё сверяется');
-  if (c.mp >= p.need) return mpSay(Date.now(), 'Сверка МП-банки: мана восстановилась, но расход банки ещё не подтверждён — подожду');
+  // 20.76+ (ревизия 28.10): та же revision и прежний остаток через ≥15 с — POST банки не применён, а MP уже хватает: банку не повторяем,
+  // намерение закрываем без учёта расхода. Раньше ждали смены revision, которую в режиме крафта ничто не двигает, — крафт стоял вечно.
+  // Следующий крафт уйдёт с той же expectedRevision: из него и запоздалой банки сервер примет только один запрос (проигравший — 409 и сверка).
+  if (c.mp >= p.need) return settleMp(t, p, false, 'Сверка МП-банки: revision и остаток банок прежние, MP уже хватает — банка не понадобилась, продолжаю крафт');
   if (!await persist({ craftMpPending: p }, t) || !mpPermit(t, p) || !sameMp(p)) return false;
   return sendMp(t, p, true); // только прежняя revision: из двух запоздалых запросов сервер примет один
 }
