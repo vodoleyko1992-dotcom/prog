@@ -585,8 +585,12 @@ async function potSlotRestore(kind) {
   const tk = kind + 'PotFixT', now = Date.now();
   if (now - (env.rt[tk] || 0) < 120000) return false;
   env.rt[tk] = now; env.setRt({ [tk]: now });   // 7.1.30: пауза переживает перезагрузку страницы боя
-  const want = kind === 'mp' ? /зілля мани|зелье маны|mana potion/i : /^(?:зілля зцілення|зелье исцеления|healing potion|greater healing potion|зілля сильного зцілення)/i;
+  // 20.76+ (ревизия 28.10): усиленные «Велике зілля HP/MP» (#920044/#920045, 18.10 — пьются первыми, признаки как resources.bigPot) и
+  // «Зілля слабкого зцілення» фильтр не проходили: при пустом слоте и только усиленных в сумке — «в сумке их тоже нет», бой без банок. Усиленные — первыми
+  const big = kind === 'mp' ? /^(?:велике зілля|большое зелье)\s*(?:mp|ман)|^large mp potion|^#920045\b/i : /^(?:велике зілля|большое зелье)\s*hp|^large hp potion|^#920044\b/i;
+  const want = kind === 'mp' ? /зілля мани|зелье маны|mana potion/i : /^(?:зілля (?:слабкого |сильного )?зцілення|зелье (?:слабого |сильного )?исцеления|(?:lesser |greater )?healing potion)/i;
   const pref = kind === 'mp' ? /велик|больш|greater/i : /^(?:зілля зцілення|зелье исцеления|healing potion)\b/i;
+  const rank = b => big.test(b.title || '') ? 2 : pref.test(b.title || '') ? 1 : 0;
   const label = kind === 'mp' ? 'маны' : 'HP';
   const warn = why => { if (now - (env.rt[kind + 'PotWarnT'] || 0) > 1800000) { env.rt[kind + 'PotWarnT'] = now; env.setRt({ [kind + 'PotWarnT']: now }); env.rec('B', 'внимание', `банки ${label} нет на панели боя — ${why}`); } return false; };
   const empty = [...document.querySelectorAll('.l2-battle-hotbar-slot--empty')].find(b => env.shown(b));
@@ -599,8 +603,8 @@ async function potSlotRestore(kind) {
   if (tab && !tab.classList.contains('l2-battle-hotbar-tab--on')) { env.fire(tab); await env.sleep(400); }
   await env.waitFor(() => document.querySelector('.l2-battle-hotbar-pick') ? 1 : null, 2000, 100);
   const qtyOf = b => +((b.title || '').match(/×\s*([\d\s]+)$/)?.[1] || '0').replace(/\D/g, '');
-  const picks = [...document.querySelectorAll('.l2-battle-hotbar-pick')].filter(b => want.test(b.title || '') && qtyOf(b) > 0)
-    .sort((a, b) => (pref.test(b.title) ? 1 : 0) - (pref.test(a.title) ? 1 : 0) || qtyOf(b) - qtyOf(a));
+  const picks = [...document.querySelectorAll('.l2-battle-hotbar-pick')].filter(b => (big.test(b.title || '') || want.test(b.title || '')) && qtyOf(b) > 0)
+    .sort((a, b) => rank(b) - rank(a) || qtyOf(b) - qtyOf(a));
   if (!picks.length) { await close(); return warn('в сумке их тоже нет (докупит магазин)'); }
   const pk = picks[0], nm = (pk.title || '').replace(/\s*×.*$/, '');
   env.fire(pk);
@@ -2302,6 +2306,9 @@ async function battle() {
         const r = await act(low[1], `Аварийный бафф (HP ${me.pct | 0}%): ${low[1].title}`);
         if (r === 'lock') ctx.block['buff:' + low[0]] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
         if (r === 'nomp') ctx.block['buff:' + low[0]] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота, не повтор сразу
+        // 20.76+ (ревизия 28.10): отказ сервера «недоступно» (400 battle_skill_not_allowed) — до конца боя, как buffStep/limitStep/petBuffStep;
+        // раньше блок 5 с истекал и при низком HP тот же бафф снова уходил на заведомый отказ каждые 5 с, без причины в журнале
+        if (r === 'unavail') { ctx.block['buff:' + low[0]] = Infinity; env.rec('B', 'недоступно', `аварийный бафф «${env.cleanTitle(low[1].title)}»: ${ctx.refuseText || noticeText() || 'недоступен'} — до конца боя не трогаю`); }
         if (r === true) env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [low[0]]: Date.now() } })?.catch?.(() => {});   // 20.41: без ожидания записи
         return AGAIN;
       }
