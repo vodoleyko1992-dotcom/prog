@@ -197,7 +197,10 @@ async function rbDpsLearn(id, dps) {
   return rbNote(id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), dpsLvl: L || null, dpsBase: base || null, dpsContext: null });
 }
 // 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
-const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id]; return Math.min(hp, env.rt.rb?.[id]?.hpAfter || hp, w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp); };
+// 20.76+ (ревизия 28.10): hpAfter отхода (rt.rb[id], пишет rbRetreat) — тоже только свежий (30 мин), как rbWound и epics.epicWoundHp.
+// Раньше бессрочно: после чужого убийства и респауна РБ считался на 25 % HP, прогноз боя занижался вчетверо и предел «долгий бой»
+// (rbMaxKillMin, правило 18.10) не срабатывал до покупки набора за FA и платного телепорта
+const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id], r = env.rt.rb?.[id], fresh = t => Date.now() - (+t || 0) < 30 * 60000; return Math.min(hp, r?.hpAfter > 0 && fresh(r.t) ? r.hpAfter : hp, w && fresh(w.t) && w.cur > 0 ? w.cur : hp); };
 // 15.10, живой Andras: старая броня не описывает текущий входящий урон.
 // Ключ включает героя, подкласс, защиту, экипировку/баффы и цель. Legacy остаётся
 // осторожной оценкой; наблюдением текущего состава оно не становится.
@@ -891,7 +894,7 @@ function rbValueScore(id, x) {
   const adena = Math.max(0, stats.adenaPerKill ?? stats.adena ?? 196000);
   const exp = Math.max(0, stats.expPerKill ?? stats.xp ?? 637000);
   const reward = adena + exp * Math.max(0, env.cfg.rbExpValue ?? .20);
-  const teleport = Math.max(0, x.price || 100000);
+  const teleport = Math.max(0, Number.isFinite(x?.price) ? x.price : 100000);   // 20.76+ (ревизия 28.10): подтверждённый бесплатный (VIP, 0) — 0, а не 100 000; неизвестная цена — по-прежнему 100 000
   const healing = Math.max(0, (tFight / 10) * (env.cfg.rbPotCost ?? 500));
   const risk = Math.max(0, 1-win) * Math.max(0, env.cfg.rbDeathPenalty || 0);
   const net = reward*win - teleport - healing - risk;
@@ -1117,6 +1120,14 @@ async function rbGoStep() {                       // список РБ → ну�
   const row = rbRowsParse()[g.id];
   if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
   if (!row && rbPriceWhy(btnPrice(b))) { env.rec('B', 'РБ-тур', `${g.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`); await env.setRt({ rbGo: null }); location.href = '/map.html'; await env.sleep(3000); return; }
+  // 20.76+ (ревизия 28.10): цена задания (rbGo.price — из rbList на момент выбора) разошлась с подтверждённой ценой строки (VIP включился
+  // или кончился). rbTeleportFire сверяет строку с ценой задания и отменял оплату на каждой итерации: «телепорт к …» в журнале без перелёта,
+  // prepare/cancel оплаты до конца 90 с задания, потом то же задание со старой ценой заново. Обновляем цену задания и rbList; следующий шаг
+  // заново проверит решение, а current() в rbTeleportFire — бюджет по свежей строке.
+  if (row && row.unit === 'аден' && Number.isFinite(row.price) && row.price >= 0 && row.price !== g.price) {
+    env.rec('B', 'РБ-тур', `${g.name}: цена телепорта изменилась (${Number.isFinite(g.price) ? g.price.toLocaleString('ru') : '?'} → ${row.price.toLocaleString('ru')} аден) — обновляю задание, оплату пока не отправляю`);
+    await env.setRt({ rbGo: { ...g, price: row.price }, rbList: rbListDomMerge({ [g.id]: row }) }); return;
+  }
   env.rec('B', 'РБ-тур', `телепорт к ${g.name} (${g.lvl})${g.price ? ' · ' + g.price.toLocaleString('ru') + ' аден' : ''}`);
   // v4.30: rbGo снимаем ДО нажатия: телепорт уводит со страницы и скрипт умирает, не дойдя до «rbGo: null» внизу.
   // Раньше бот на новой странице видел rbGo, возвращался в список и телепортировался снова — 90 с подряд, за аден.
