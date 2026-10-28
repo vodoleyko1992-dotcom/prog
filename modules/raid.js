@@ -1316,8 +1316,11 @@ async function rbSessTick() {
   // 20.29 (20.10, правило игрока): VIP-сессия принимает бесплатный серверный набор, не ожидает FA-уровни/покупку.
   const vip=env.vipSession?.();
   if(vip){
-    if(!vip.ready){await env.townBuffStart('РБ-сессия: бесплатный VIP-бафф',true);env.setStatus('РБ-сессия: жду подтверждения бесплатного VIP-набора; FA не трачу');return true;}
-    if(!S.vip || !S.bought || S.until!==vip.until){const now=Date.now();await env.setRt({rbSess:{...S,vip:true,bought:true,until:vip.until,t0:S.t0||now,k0:S.k0??env.rt.rbKills??0,e0:S.e0??env.rt.exp??0,a0:S.a0??env.rt.adena??0,d0:S.d0??(env.rt.deaths||[]).length,fa:S.fa??env.rt.faBal?.v??null}});}
+    // 20.76+ (ревизия 28.10): Greater свежим каталогом подтверждён платным (greaterHeld), основной набор висит — бесплатнее не будет, FA при VIP
+    // нельзя: сессия идёт с основным набором (раньше ждала вечно). Каталог перепроверяется раз в 30 мин тем же townBuffStart.
+    const held=!vip.ready&&vip.baseReady&&vip.greaterHeld,until=held?vip.baseUntil:vip.until;
+    if(!vip.ready&&!held){await env.townBuffStart('РБ-сессия: бесплатный VIP-бафф',true);env.setStatus('РБ-сессия: жду подтверждения бесплатного VIP-набора; FA не трачу');return true;}
+    if(!S.vip || !S.bought || S.until!==until){const now=Date.now();await env.setRt({rbSess:{...S,vip:true,bought:true,until,t0:S.t0||now,k0:S.k0??env.rt.rbKills??0,e0:S.e0??env.rt.exp??0,a0:S.a0??env.rt.adena??0,d0:S.d0??(env.rt.deaths||[]).length,fa:S.fa??env.rt.faBal?.v??null}});}
     return false;
   }
   if(S.vip){await env.setRt({rbSess:{...S,vip:false,bought:false,start:Date.now(),until:0}});return true;}
