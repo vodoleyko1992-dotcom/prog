@@ -185,6 +185,16 @@ async function nextFight(ctx) {
   const hold = async why => { if (active()) { env.setStatus('Rebirth: ' + why); await env.sleep(1000); } };
   if (!active()) return;
   if (mode !== 'rebirth') return hold('выберите отдельный режим подземелий');
+  // 20.76+ (ревизия 28.10): победа обычного моба/РБ тура при выбранном Rebirth (Start или смена режима на экране победы) держала
+  // «жду вашего продолжения» до сторожа (~36 мин): rebirthReturn принимает только свои страницы. Точно чужой завершённый бой (URL,
+  // метаданные, ctx и сохранённая связь — не Rebirth) бесплатно выходит в каталог: hunt не жмём, run/квитанции/оплаты не трогаем.
+  const foreign = path() === '/battle.html' && ids.length === 1 && !!route && !/^rebirth_raid_/i.test(route)
+    && !/^rebirth_raid_/i.test(info?.spawn || '') && !/^rebirth_raid_/i.test(ctxSpawn || '') && state().battleSpawn !== route;
+  if (foreign) {
+    const leave = () => current() && !env.nativePending?.();
+    if (leave() && await env.rtCommit?.() && leave()) { env.setStatus('Rebirth: завершённый бой вне подземелий — открываю каталог'); location.href = '/rebirth-raids.html'; }
+    return;
+  }
   if (!current() || !/^rebirth_raid_/i.test(after) || !owner || !scan || !Number.isFinite(generation)
       || !prof || !Number.isInteger(slot) || slot < 0 || fresh && ctxSpawn && ctxSpawn !== after)
     return hold('текущая победа не подтверждена — жду вашего продолжения');

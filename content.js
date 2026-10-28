@@ -150,7 +150,9 @@ function fire(el) {
   if (!el || (on && !tabOwner)) return false;
   if (on && L2V7Modules.actions?.canAct?.() === false) return false;
   const login = !!el.closest?.('form')?.querySelector?.('input[type="password"]') && /войти|увійти|вход|вхід|login|sign in/i.test((el.textContent || '') + ' ' + (el.value || '')) && loginPage();
-  if (!login && (rt.autoLs?.hold || rt.autoLs?.pending)) return false;
+  // 20.76+ (ревизия 28.10): удержание серии ЛС (hold) не держит выбранный Rebirth — как loopGate/warlockCanRun с 20.71; без этого
+  // бой, банки, вход и Fight подземелий молча не нажимались. Неизвестная попытка/покупка ЛС (pending) блокирует в любом режиме.
+  if (!login && (rt.autoLs?.pending || rt.autoLs?.hold && !rebirthModeSelected())) return false;
   if (!login && L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
       && !isBattle() && !/\/tvt-arena\.html$/i.test(location.pathname)
       && !el.matches?.('#tvt-register-btn,#map-defeat-tocity,#battle-defeat-tocity') && !paymentFreeClick(el)) return false;
@@ -3482,7 +3484,9 @@ async function loopGate() {
   // не чаще раза в 30 с и без ожидания ответа (ход ЛС не задерживается). Неизвестная попытка/покупка (pending) держит, как прежде.
   if (!rebirthModeSelected() && rt.autoLs?.hold && !rt.autoLs.pending && cfg.tvtOn) lsTvtPoll();
   if (!rebirthModeSelected() && rt.autoLs?.hold && !rt.autoLs.pending && (tvtSoon() || lsTvtRegOpen())) await L2V7Modules.lifestone.yieldToUrgent();
-  if (rebirthModeSelected() && (!isBattle() || victory()) && (lifestoneCommandBusy || rt.autoLs?.pending)) { setStatus('Подземелья: жду подтверждения ранее начатого действия ЛС'); await sleep(500); return true; }
+  // 20.76+ (ревизия 28.10): при неизвестной попытке/покупке ЛС Rebirth только спал — сверка (step → reconcile, GET раз в 15 с, без POST)
+  // не запускалась, и подземелья ждали без конца. Шаг ЛС зовём лишь при pending: попытку/закупку серии он в этом случае не делает.
+  if (rebirthModeSelected() && (!isBattle() || victory()) && (lifestoneCommandBusy || rt.autoLs?.pending)) { if (!lifestoneCommandBusy && rt.autoLs?.pending) await L2V7Modules.lifestone.step(); if (on && tabOwner && rebirthModeSelected()) setStatus('Подземелья: жду подтверждения ранее начатого действия ЛС'); await sleep(500); return true; }
   if (!rebirthModeSelected() && (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending)) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
   // 20.43 (разбор 21.10): ожидание подготовки кота перед РБ не держит круг, когда подошла запись на TvT или сам TvT: tvtStep стоит
   // после loopGate, и на /skill-panel.html статус TvT иначе не освежался (idleTvtBreak сам перечитывает /game/tvt по своему расписанию)
@@ -3970,6 +3974,7 @@ function rebirthDeathRecovery() {
     ||B.prof!==rt.classCur?.prof||B.slot!==rt.classCur?.slot||B.observedRun?.char!==rt.char||B.observedRun?.kick!==(rt.manualKickAt||0))return null;
   return {kind:'death',char:rt.char,prof:rt.classCur.prof,slot:rt.classCur.slot,kick:rt.manualKickAt||0,actor:B.actor,runId:B.runId,spawn:sid};
 }
+let rebirthDeathChecked = null;
 async function rebirthPrepareHero(snapshot) {
   if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
   const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,kick=rt.manualKickAt||0,page=location.href;
@@ -3978,21 +3983,37 @@ async function rebirthPrepareHero(snapshot) {
     &&L2V7Modules.actions?.canAct?.()!==false&&!L2V7Modules.payments?.blocked?.();
   if(!wanted())return true;
   if(L2EngineCore.rebirthBuffJob(cfg,rt)){if(!await rtCommit()||!wanted()||!L2EngineCore.rebirthBuffJob(cfg,rt))return true;await townBuffStep();return true;}
-  if(!snapshot&&!rebirthHeroNeeded())return false;
+  // 20.76+ (ревизия 28.10): незакрытая собственная смерть похода (failedRun без restoredAt). Повтор восстановления после неудачного
+  // первого шёл с маркером 'prepare' и restoredAt не ставил, а HP, отросшее за 3 мин ожидания, вовсе пропускало restore — deathRestart
+  // в rebirth.step не срабатывал, и AutoEnter вставал в missing-run «нужен новый Старт». Теперь при такой смерти один раз сверяем свежий
+  // /character даже при полной шапке: повтор восстановления несёт маркер смерти, полное HP без нужных баффов закрывает её сразу.
+  const F=rt.rebirth?.failedRun,ownDeath=F?.kind==='death'&&!Number.isFinite(F.restoredAt)&&F.char===who&&F.prof===prof&&F.slot===slot&&F.kick===kick
+    &&typeof F.actor==='string'&&!!F.actor,deathCheck=ownDeath&&rebirthDeathChecked!==F.at;
+  if(!snapshot&&!rebirthHeroNeeded()&&(!deathCheck||rt.tbuff))return false;   // чужой tbuff при полной шапке — прежний путь, без новой задержки
   if(rt.tbuff)return true; // чужой маршрут не превращаем в разрешение на собственную подготовку
   if(rt.restoreRes?.ok===false&&Date.now()-(rt.restoreRes.t||0)<180000){setStatus('Подземелья: восстановление пока не удалось — повторю у баффера, бой не начинаю');return true;}
   let ch=snapshot;
   try{if(!ch){const r=await gameGet('/character',4000);if(!wanted())return true;if(!r.ok)throw Error('read_failed');const d=await r.json();if(!wanted())return true;ch=d?.character||d;if(d?.error||d?.ok===false)ch=null;}}
   catch(_){if(wanted())setStatus('Подземелья: сверяю здоровье героя перед подготовкой');return true;}
   if(!wanted())return true;
+  if(ownDeath)rebirthDeathChecked=F.at; // повторную внеплановую сверку при полной шапке не крутим — дальше прежний путь по HUD
+  // 20.76+ (ревизия 28.10): свежий свой герой уже в бою (Start из почты, ошибка загрузки боя увела в каталог) — не отказ подготовки:
+  // возврат в незавершённый бой ведёт rebirth.step; раньше круг бесконечно писал «бой не начинаю», а step не вызывался.
+  if(!snapshot&&ch&&ch.inBattle===true&&ch.name===who&&typeof ch.id==='string'&&ch.id&&ch.l2Profession===prof&&ch.classSlots?.activeSlot===slot
+    &&ch.level===heroLvl()&&Number.isSafeInteger(ch.revision)&&ch.revision>=0)return false;
   if(!ch||ch.name!==who||typeof ch.id!=='string'||!ch.id||ch.l2Profession!==prof||ch.classSlots?.activeSlot!==slot||ch.level!==heroLvl()
     ||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||ch.revision<0||!(ch.hp>0&&ch.maxHp>0&&ch.hp<=ch.maxHp)){
     setStatus('Подземелья: свой герой и здоровье не подтверждены — бой не начинаю');return true;
   }
   const need=L2V7Modules.buffs.rebirthBuffNeed?.(ch);
   if(need?.unknown){setStatus('Подземелья: баффы героя ещё не подтверждены — бой не начинаю');return true;}
-  if(ch.hp>=ch.maxHp*.99&&!need?.set)return false;
-  const marker={kind:'prepare',char:who,prof,slot,kick,actor:ch.id,revision:ch.revision};
+  const death=ownDeath&&F.actor===ch.id;
+  if(ch.hp>=ch.maxHp*.99&&!need?.set){
+    // как «HP и MP уже полные» у баффера (20.54): своя смерть закрыта свежим сервером, без похода в город
+    if(death&&(await setRt({rebirth:{...rt.rebirth,failedRun:{...F,restoredAt:Date.now()}}}))?.ok!==true)return true;
+    return false;
+  }
+  const marker=death?{kind:'death',char:who,prof,slot,kick,actor:ch.id,runId:F.runId,spawn:F.spawn,revision:ch.revision}:{kind:'prepare',char:who,prof,slot,kick,actor:ch.id,revision:ch.revision};
   const job={set:null,fa:[],step:'restore',why:'подготовка героя к подземелью',t:Date.now(),back:'/rebirth-raids.html',rebirthRecovery:marker};
   const saved=await setRt({tbuff:job,restoreRes:null});
   if(saved?.ok!==true){if(wanted()&&rt.tbuff===job)await setRt({tbuff:null});return true;}
@@ -4589,15 +4610,22 @@ function serverDown() {
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
 async function gamePost(path, body, ms = 8000, lsPermit) {
-  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body)
+  // 20.76+ (ревизия 28.10): то же условие, что в fire() — hold серии ЛС не держит выбранный Rebirth, pending держит всегда.
+  if ((rt.autoLs?.pending || rt.autoLs?.hold && !rebirthModeSelected()) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body)
     || L2V7Modules.lifestone?.consumeSupplyPermit?.(lsPermit, path, body))) throw new Error('lifestone_session_active');
   if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
   if (L2V7Modules.pvp?.pending()) throw new Error('pvp_defeat_pending');
   if (L2V7Modules.actions?.canAct?.() === false) throw new Error('action_cancelled');
   if (L2V7Modules.payments?.blocked?.() && !/^\/game\/(?:tvt\/register|battle\/(?:action|return-to-town))$/.test(path)) throw new Error('payment_unconfirmed');
-  const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
+  // 20.76+ (ревизия 28.10): дедлайн снимался сразу после заголовков, и зависшее тело ответа (await r.json() у вызывающих: выбор РБ
+  // Rebirth, клан, крафт…) держало главный цикл до сторожа (~5 мин). Как у gameGet с 20.46, срок охватывает и тело: после заголовков
+  // взводим отдельный дедлайн чтения (не короче 15 с — вызывающие читают тело после короткой записи памяти); abort прочитанного безвреден.
+  const c = new AbortController();
+  let tm = setTimeout(() => c.abort(), ms);
   actionNote();
-  try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
+  try { const r = await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal });
+    clearTimeout(tm); tm = setTimeout(() => c.abort(), Math.max(ms, 15000)); tm?.unref?.(); return r; }   // unref — только Node-тесты, в браузере no-op
+  catch (e) { clearTimeout(tm); throw e; }
 }
 async function gameGet(path, ms = 6000) {
   // 20.46 (лог 22.10 12:19): дедлайн охватывает и тело ответа, а не только получение заголовков.
