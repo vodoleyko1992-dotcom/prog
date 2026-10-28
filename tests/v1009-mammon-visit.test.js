@@ -15,7 +15,11 @@ const mk = ({ rt = {}, cfg = {}, path: pn = '/map.html', near = false, cost = '5
     setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), setStatus: () => {}, sleep: async () => {}, waitX: async fn => fn(),
     fire: el => { fired.push(el); loc.pathname = '/map.html'; }, $q: s => els[s] || null, isBattle: () => false, isFishing: () => false, fishState: () => null, fishNow: () => false,
     autonomyMode: () => 'hunt', tvtSoon: () => false, heroNick: () => 'Warlock', invQty: () => null, ITEMS: {}, FARM: { res: {} }, pauseBot: async m => { paused.push(m); },
-    gameGet: async (u) => ({ ok: near, status: near ? 200 : 403, json: async () => ({ items: [], character: { worldX: 0, worldY: 0 } }) }) };
+    // 20.76+ (ревизия 28.10): сбой GET /character больше не значит «торговец далеко» (isNear → null, телепорт не оплачивается) —
+    // «далеко» у торговца теперь по координатам героя и NPC, у кузнеца — 403 /upgrades, как в игре
+    gameGet: async (u) => u === '/character' ? { ok: true, status: 200, json: async () => ({ character: { worldX: 0, worldY: 0 } }) }
+      : /^\/game\/mammon\/(merchant|blacksmith)$/.test(u) ? { ok: true, status: 200, json: async () => { const c = { current: { id: 'npc', worldX: near ? 0 : 50000, worldY: near ? 0 : 50000 } }; return { mammonMerchant: c, mammonBlacksmith: c }; } }
+      : ({ ok: near, status: near ? 200 : 403, json: async () => ({ items: [], character: { worldX: 0, worldY: 0 } }) }) };
   return { env, M: sb.L2V7Factories.mammon(env), loc, fired, recs, paused };
 };
 const now = Date.now();

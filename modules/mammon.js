@@ -546,11 +546,14 @@ function want() {
   if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', priceOnly: true, why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
 }
-async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); return c && Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
+// 20.76+ (ревизия 28.10): undefined — ответ /character не получен (положение неизвестно), null — герой без координат
+async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); if (!c) return undefined; return Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
+// 20.76+ (ревизия 28.10): true — рядом, false — далеко (кузнец: только 403 mammon_blacksmith_not_nearby, как в smith()), null — ответ игры
+// не получен (429/5xx/401): раньше любой сбой GET = «далеко» и платный телепорт 500 000 адены к NPC, у которого герой может уже стоять
 async function isNear(kind) {
   const active=guard();if(!active())return false;
-  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok)smithNote(r.j?.items);return r.ok; }
-  const me=await heroXY();if(!active())return false;
+  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok){smithNote(r.j?.items);return true;}return r.status===403?false:null; }
+  const me=await heroXY();if(!active())return false;if(me===undefined)return null;
   const positions=await npcPoll(false,active);if(!active())return false;const n=positions?.[kind];
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
@@ -1093,6 +1096,10 @@ async function sendStep(J) {
   if (!allowed() && !J.cur) return finish(copyJob(J, { cancelled: true }), false, 'автоотправка крафтеру выключена');
   // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
   if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
+  // 20.76+ (ревизия 28.10): квитанция этой отправки закрыта (игрок нажал «Считать оплату не прошедшей») — cur со state 'sent' больше никто
+  // не снимет: каждый круг шёл GET /character и «повтор запрещён», главный цикл стоял до Stop. Не досылаем — задание неудачей, повтор новой кнопкой
+  if (J.cur && env.payments && J.cur.state !== 'prepared' && J.cur.paymentId && !env.payments.blocked() && env.payments.pending()?.id !== J.cur.paymentId)
+    return finish(copyJob(J, { cur: null }), false, `исход отправки ${J.cur.nm} ×${fmtA(J.cur.q)} закрыт без подтверждения игры — проверь «Відправлені», повтор только новой кнопкой`);
   if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
   // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
   if (J.cur) {
@@ -1248,7 +1255,10 @@ async function mmStep() {
   if (J?.kind === 'send' && !J.hand) {
     if (env.payments?.blocked()) { await paymentReconcile(); waitPayment(); return true; }
     // Сохраняем учёт уже отправленного; неизвестную оплату не объявляем отменённой.
-    if (J.cur && J.cur.state !== 'prepared') { env.setStatus('Прежняя отправка крафтеру требует сверки; повтор запрещён'); return true; }
+    // 20.76+ (ревизия 28.10): квитанция cur закрыта (её нет в ожидании) — задание не держит главный цикл вечно, снимаем его без повтора
+    const closed = !!(J.cur?.paymentId && env.payments && env.payments.pending()?.id !== J.cur.paymentId);
+    if (J.cur && J.cur.state !== 'prepared' && !closed) { env.setStatus('Прежняя отправка крафтеру требует сверки; повтор запрещён'); return true; }
+    if (closed) env.rec('B', 'Маммон', `прежняя отправка крафтеру ${J.cur.nm || ''} ×${fmtA(J.cur.q)}: исход закрыт без подтверждения игры — задание снято, проверь «Відправлені»`);
     await env.setRt({ mmJob: null }); return false;
   }
   if (J) {
@@ -1274,8 +1284,11 @@ async function mmStep() {
     if (J.kind === 'send') { await sendStep(J); return true; }
     if (J.kind === 'claim') { await claimStep(J); return true; }
     if (J.step === 'go') {
-      if (await isNear(J.kind)) { if (!active()) return true; await env.setRt({ mmJob: { ...J, step: 'act' } }); }
-      else if (active()) await teleport(J);
+      const near = await isNear(J.kind); if (!active()) return true;
+      if (near) await env.setRt({ mmJob: { ...J, step: 'act' } });
+      // 20.76+ (ревизия 28.10): проверка положения не удалась — не платим за телепорт, повтор через 5 с (JOB_MAX закроет задание сам)
+      else if (near === null) { env.setStatus('Маммон: положение героя у NPC не проверено (ошибка ответа игры) — повторю, телепорт не оплачиваю'); await env.sleep(5000); }
+      else await teleport(J);
       return true;
     }
     if (J.visit) await visit(J); else if (J.kind === 'order') await claim(J); else await smith(J);
