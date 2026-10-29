@@ -61,5 +61,7 @@
     "Fresh raw activeBuffs/VIP response truncated in uploaded TXT; code mismatch reproduced separately",
     "Published Chrome20.77 ZIP does not contain this source fix until explicit rebuild",
     "Persistent adena reserve rejection after summon buff remains separate open issue"
-  ]
+  ],
+  "fixCommit": "1aba4a4d9e2f60bab8b2bf52e00d881f92c55906",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/453"
 }
