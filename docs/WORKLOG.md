@@ -9,7 +9,7 @@
 
 
 
-## 29.10.2026, 12:29 UTC+10 — Codex — Chrome20.79 без проверок (PR в подготовке)
+## 29.10.2026, 12:29 UTC+10 — Codex — Chrome20.79 без проверок ([PR #456](https://github.com/vodoleyko1992-dotcom/prog/pull/456))
 
 - John «сборка», сохранено прежнее«без проверок»/основнаяChrome. База22349ac/#455, готовностьiframe передpostMessage; фиксRebirth20.78 включён. Приупаковке функциональныйruntime прежний, толькоversion/description/header/5assertions/README/история.
 - ZIP69/1763544B/SHA256 `35bc634ca52b5e9d3f8ea7f51b2acad17ab0b0b41a375bdf3d37fff0b73e83bb`; квитанцияdocs/evidence/build-20.79-chrome/receipt.json. Node/syntax/env/browser/lint/privacy/ZIPaudit/download0, новыхPASSнет;716Node/2Chrome/55целевых — толькоисходныйфикс#455, живаяигра0.

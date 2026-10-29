@@ -36,7 +36,9 @@
   "liteRebuilt": false,
   "liveGameOpened": false,
   "delivery": "immutable GitHub raw URL",
-  "pullRequest": "PR в подготовке",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/456",
   "createdAt": "2026-10-29T12:29:39.650423+10:00",
-  "nextStep": "Распаковать поверх прежней папки Chrome, перезагрузить расширение и вкладку; контроль меню без предупреждения postMessage"
+  "nextStep": "Распаковать поверх прежней папки Chrome, перезагрузить расширение и вкладку; контроль меню без предупреждения postMessage",
+  "artifactCommit": "118ebccca666a7d64448d2b15a18be241dfa79dd",
+  "downloadUrl": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/118ebccca666a7d64448d2b15a18be241dfa79dd/builds/l2wap-bot-v20.79.zip"
 }
