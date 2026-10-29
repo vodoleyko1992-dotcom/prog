@@ -7708,9 +7708,11 @@ async function warlockTripReturn(J) {
   }catch(_){petReturnHold(pollKey,'fail');return true;}
   if(!petTripFree(J))return true;
   const row=Array.isArray(rows)?rows.find(x=>String(T.kind==='cat'?x.dungeonId:x.teleportId)===T.id):null;
-  const cost=petMoney(row?.adenaCost),wallet=petMoney(ch?.adena),reserve=petMoney(cfg.petFullReserve??cfg.shopReserve??200000),cap=petMoney(cfg.shopMaxSpend??2000000);
-  if(!row||cost===null||cost!==quote||ch?.name!==J.char||wallet===null||reserve===null||cap===null||cost>cap||wallet-cost<reserve){
-    petReturnHold(pollKey,'deny');await petTripNotice(J,'Возврат не проходит свежую цену, лимит снабжения или резерв адены');return true;
+  // 20.82 (John 30.10: «убери вообще лимиты на бафф кота, адены как грязи»): возврат после бафа без лимита снабжения и резерва —
+  // нужна только свежая та же цена и адена на сам телепорт; раньше постоянный отказ резерва держал поход на телепорте
+  const cost=petMoney(row?.adenaCost),wallet=petMoney(ch?.adena);
+  if(!row||cost===null||cost!==quote||ch?.name!==J.char||wallet===null||wallet<cost){
+    petReturnHold(pollKey,'deny');await petTripNotice(J,'Возврат не проходит свежую цену или не хватает адены на телепорт');return true;
   }
   if(petReturnPoll?.key===pollKey)petReturnPoll=null;
   b=petReturnButton(T);if(!b||petReturnPrice(T,b)!==cost)return true;

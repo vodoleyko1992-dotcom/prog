@@ -17,8 +17,9 @@ const priority = afterWin => env.canRun?.() !== false && (!env.rt.autoLs?.hold |
   && !env.tvtHold() && !env.abHold() && !env.antibotState() && !env.rt.revive && !env.rt.shop?.urgent;
 // 20.60 (John 24.10: «Убери вообще лимит на Бафф суммонов»; лог 22:13–22:15 — тур РБ ждал «Бюджет автобафа исчерпан»): общий бюджет
 // наборов снят. petFullBudget больше не читается и не входит в ключ ожидания — старое ожидание «бюджет» после обновления снимается сразу.
-// Остались защита цены одного набора, резерв адены и запрет повторной оплаты при неизвестном исходе
-const signature = () => JSON.stringify([option('petFullAuto'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
+// 20.82 (John 30.10: «убери вообще лимиты на бафф кота, адены как грязи»): потолок цены набора petFullMaxPrice и резерв адены
+// (petFullReserve/shopReserve) тоже сняты — бот покупает, пока адены хватает на сам набор. Остался запрет повторной оплаты при неизвестном исходе
+const signature = () => JSON.stringify([option('petFullAuto'), option('petFullRenew')]);
 const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature(), rebirth:!!rebirthConfig() });
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && T.rebirth===!!rebirthConfig() && priority(afterWin);
 // 20.43 (разбор 21.10, ревью): каждый срок следующей проверки пишется вместе с ключом, при котором он назначен (waitKey). Иначе после
@@ -542,15 +543,13 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери суммона повторно не покупаю', { nextCheckAt: Math.max(Date.now() + 10000, last.expiresAt) }); return false; }
     if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     if (last && ch.revision < last.revision) { await status(T, 'stale', 'Снимок старее последней покупки; жду свежее состояние'); return false; }
-    const cap = number(option('petFullMaxPrice'));
-    const reserve = number(option('petFullReserve') ?? option('shopReserve') ?? 0), adena = number(ch.adena);
+    const adena = number(ch.adena);
     const fence = S.archiveFence;
     if (fence && (ch.revision < fence.verifiedRevision || Date.now() < fence.possibleUntil)) {
       await status(T, 'archived', 'Неопределённый расход: новый набор — после возможного срока прежнего',
         { nextCheckAt: ch.revision < fence.verifiedRevision ? Date.now() + 10000 : Math.min(Date.now() + NO_BUY_MS, Math.max(Date.now() + 10000, +fence.possibleUntil || 0)) }); return false;
     }
-    if (cap === null || set.price > cap) { await status(T, 'price', `Цена ${set.price} выше разрешённой ${cap ?? '?'}`, { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
-    if (reserve === null || adena === null || adena - set.price < reserve) { await status(T, 'reserve', 'Не хватает адены с учётом резерва', { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
+    if (adena === null || adena < set.price) { await status(T, 'adena', `Не хватает адены на набор: нужно ${set.price}`, { nextCheckAt: Date.now() + NO_BUY_MS }); return false; }
     // Оплата только после подтверждённого штатного входа в город; прямой POST с карты не предполагаем.
     if (env.townBufferReady?.() !== true) {
       await status(T, 'travel', 'Для покупки нужен подтверждённый вход в город');

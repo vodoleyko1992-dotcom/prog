@@ -31,14 +31,14 @@ test('prepared reload unchanged revision+wallet still reserves possible in-fligh
 });
 
 for(const phase of ['/character','/character/town/buffer/catalog'])for(const change of ['captcha','config','character'])test(change+' during '+phase+' never pays',async()=>{
- const f=fixture({read:(path,e)=>{if(path!==phase)return;if(change==='captcha')e.antibotState=()=> 'check';if(change==='config')e.cfg.petFullMaxPrice=9999999;if(change==='character')e.rt.char='other'}});
+ const f=fixture({read:(path,e)=>{if(path!==phase)return;if(change==='captcha')e.antibotState=()=> 'check';if(change==='config')e.cfg.petFullRenew=false;if(change==='character')e.rt.char='other'}});
  await f.step();assert.equal(f.calls.length,0);
 });
 
-test('catalog changed after409 exceeds cap: only rejected request, no renewed payment',async()=>{
+test('catalog changed after409 exceeds wallet: only rejected request, no renewed payment',async()=>{
  const f=fixture({reject:409,char:{adena:'50000000'},cfg:{petFullBudget:30000000}});await f.step();
- f.set().feeAdena='11000000';f.ch.revision++;f.tick(16000);await f.step();
- assert.equal(f.calls.length,1);assert.equal(f.status(),'price');
+ f.set().feeAdena='51000000';f.ch.revision++;f.tick(16000);await f.step();
+ assert.equal(f.calls.length,1);assert.equal(f.status(),'adena');
 });
 
 test('unknown payment GETs honor throttle and never rePOST after repeated ticks',async()=>{

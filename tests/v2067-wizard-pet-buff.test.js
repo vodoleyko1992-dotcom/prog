@@ -69,12 +69,11 @@ test('Wizard: отсутствие, смерть и неподдержанный
   const f=wizard({char:{activeSummon:p}});await f.step();assert.equal(f.status(),'pet');assert.equal(f.calls.length,0);
  }
 });
-test('Wizard: CoL, неизвестная цена, лимит цены и резерв адены сохраняют запрет оплаты',async()=>{
+test('Wizard: CoL, неизвестная цена и нехватка адены на набор сохраняют запрет оплаты (20.82: лимита цены и резерва нет)',async()=>{
  for(const [kind,options,status] of [
   ['col',{catalog:c=>c.sets.find(x=>x.id==='summon').feeCoinOfLuck=1},'catalog'],
   ['unknown',{catalog:c=>delete c.sets.find(x=>x.id==='summon').feeAdena},'catalog'],
-  ['price',{cfg:{petFullMaxPrice:9999999}},'price'],
-  ['reserve',{char:{adena:'10199999'}},'reserve']
+  ['adena',{char:{adena:'9999999'}},'adena']
  ]){const f=wizard(options);await f.step();assert.equal(f.status(),status,kind);assert.equal(f.calls.length,0,kind);}
 });
 test('Wizard: неизвестный результат платежа переживает reload без второй оплаты',async()=>{

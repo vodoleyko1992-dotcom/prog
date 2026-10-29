@@ -22,13 +22,13 @@ test('старое ожидание «бюджет» после обновлен
 });
 
 test('сброс счётчика кнопкой снимает ожидание (nextCheckAt 0)',async()=>{
- const f=fixture({cfg:{petFullMaxPrice:9999999}});await f.step();assert.equal(f.status(),'price');const g=reads(f);
+ const f=fixture({char:{adena:'9999999'}});await f.step();assert.equal(f.status(),'adena');const g=reads(f);
  f.tick(5000);assert.equal(await f.reset(),true);await f.step({afterWin:true});assert.equal(reads(f),g+1);assert.equal(f.calls.length,0);
 });
 
-for(const [name,cfg,code] of [['автообновление выключено',{petFullBudget:30000000,petFullRenew:false},'renew'],['цена выше лимита',{petFullMaxPrice:9999999},'price'],['мало адены',{petFullReserve:15000000},'reserve']])
+for(const [name,cfg,code] of [['автообновление выключено',{petFullBudget:30000000,petFullRenew:false},'renew'],['мало адены на набор (20.82: без лимита цены и резерва)',{},'adena']])
  test(name+': следующая проверка через 10 мин, не через 10 с',async()=>{
-  const f=fixture({cfg,char:{adena:'20000000'}});
+  const f=fixture({cfg,char:{adena:code==='adena'?'9999999':'20000000'}});
   if(code==='renew'){await f.step();f.tick(PAID+1000);f.ch.revision++;}
   await f.step({afterWin:true});assert.equal(f.status(),code);const g=reads(f);
   await wins(f,595000);assert.equal(reads(f),g);await wins(f,10000);assert.equal(reads(f),g+1);
@@ -37,7 +37,7 @@ for(const [name,cfg,code] of [['автообновление выключено'
 
 test('новый Старт и смена класса снимают ожидание «купить нельзя»',async()=>{
  for(const change of ['kick','class']){
-  const f=fixture({cfg:{petFullMaxPrice:9999999}});await f.step();assert.equal(f.status(),'price');const g=reads(f);
+  const f=fixture({char:{adena:'9999999'}});await f.step();assert.equal(f.status(),'adena');const g=reads(f);
   f.tick(5000);await f.step({afterWin:true});assert.equal(reads(f),g);
   if(change==='kick')f.env.rt.manualKickAt=77;else f.env.rt.classCur={prof:'human_warlock',slot:1};
   f.tick(5000);await f.step({afterWin:true});assert.equal(reads(f),g+1);
@@ -48,8 +48,8 @@ test('новый Старт и смена класса снимают ожида
 // ключа — после Старта/смены класса старый ключ не совпадал, срок не действовал, и каждый круг цикла (≈0,3 с) шёл свой GET /character
 test('после Старта/смены класса ветки без observe держат свой срок: 100 кругов по 300 мс — не больше 3 GET',async()=>{
  for(const change of ['kick','class'])for(const kind of ['pet','class','catalog','battle','read']){
-  let broken=false;const f=fixture({cfg:{petFullMaxPrice:9999999},read:p=>{if(broken&&p==='/character')throw Error('read_failed')}});
-  await f.step();assert.equal(f.status(),'price');assert.ok(f.env.rt.petFull.waitKey,'ключ записан при наблюдении');
+  let broken=false;const f=fixture({char:{adena:'9999999'},read:p=>{if(broken&&p==='/character')throw Error('read_failed')}});
+  await f.step();assert.equal(f.status(),'adena');assert.ok(f.env.rt.petFull.waitKey,'ключ записан при наблюдении');
   if(kind==='pet')f.ch.activeSummon=null;if(kind==='class')f.ch.l2Profession='human_sorcerer';if(kind==='catalog')f.cat.sets=[];if(kind==='battle')f.ch.inBattle=true;if(kind==='read')broken=true;
   if(change==='kick')f.env.rt.manualKickAt=55;else f.env.rt.classCur={prof:'human_warlock',slot:1};
   const g=reads(f);for(let i=0;i<100;i++){f.tick(300);await f.step();}
@@ -96,6 +96,6 @@ test('архив неизвестной попытки: ожидание до в
 });
 
 test('бой на сервере после победы по-прежнему перепроверяется сразу (20.13)',async()=>{
- const f=fixture({cfg:{petFullMaxPrice:9999999},char:{inBattle:true}});await f.step();assert.equal(f.status(),'battle');
- f.ch.inBattle=false;f.tick(3000);await f.step({afterWin:true});assert.equal(f.status(),'price');
+ const f=fixture({char:{inBattle:true,adena:'9999999'}});await f.step();assert.equal(f.status(),'battle');
+ f.ch.inBattle=false;f.tick(3000);await f.step({afterWin:true});assert.equal(f.status(),'adena');
 });
