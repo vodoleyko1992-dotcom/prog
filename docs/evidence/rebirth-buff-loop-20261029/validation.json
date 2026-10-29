@@ -1,0 +1,65 @@
+{
+  "sourceBase": "d405b6795c842e9b3c3b03b5849dfd76d719d63a",
+  "reportedVersion": "20.77",
+  "recordedAt": "2026-10-29T10:37:54.519528+10:00",
+  "newRegressionBaseline": {
+    "tests": 16,
+    "pass": 12,
+    "fail": 4,
+    "runtime": "before fix"
+  },
+  "newRegressionAfterFix": {
+    "tests": 16,
+    "pass": 16,
+    "fail": 0
+  },
+  "relatedScenarios": {
+    "tests": 143,
+    "pass": 143,
+    "fail": 0,
+    "files": [
+      "tests/v2073-rebirth-hero-buffs.test.cjs",
+      "tests/v2077-audit-core-rebirth.test.js"
+    ]
+  },
+  "allNodeFiles": {
+    "pass": 715,
+    "fail": 0,
+    "command": "node tests/run-all.cjs"
+  },
+  "browser": {
+    "pass": 2,
+    "fail": 0,
+    "version": "156.0.8078.4",
+    "boundary": "Actual Chrome MV3/main/hook, locally mocked HTTPS, no live game",
+    "proof": "browser.json",
+    "freeExtraBuffPosts": 2,
+    "paidEntries": 0,
+    "restorePosts": 0,
+    "strongerBuffPreserved": true,
+    "stopDuringCatalogPassed": true,
+    "jsErrors": 0
+  },
+  "syntaxFiles": [
+    "modules/buffs.js",
+    "tests/run-all.cjs",
+    "tests/v2077-rebirth-buff-loop.test.cjs",
+    "tests/v2077-rebirth-buff-loop-browser.cjs"
+  ],
+  "syntaxPassed": true,
+  "bashSyntaxPassed": true,
+  "moduleGettersPassed": true,
+  "moduleCount": 35,
+  "diffCheckPassed": true,
+  "independentReview": "No blockers; identity/class/slot/Stop/ownership/free-price checks and stronger-buff guard preserved; ordinary restore unchanged",
+  "runtimeSha256": "f29acdc784be4a3e206dbf7c1f42bf45b4434e7a49bda1478445874a57923d21",
+  "liveGameOpened": false,
+  "allHistoricalBrowserSmokesRun": false,
+  "versionIncreased": false,
+  "zipBuilt": false,
+  "limitations": [
+    "Fresh raw activeBuffs/VIP response truncated in uploaded TXT; code mismatch reproduced separately",
+    "Published Chrome20.77 ZIP does not contain this source fix until explicit rebuild",
+    "Persistent adena reserve rejection after summon buff remains separate open issue"
+  ]
+}

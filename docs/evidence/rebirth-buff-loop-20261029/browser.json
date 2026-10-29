@@ -1,0 +1,59 @@
+{
+  "boundary": "Actual Chrome MV3/main/hook; all HTTPS fulfilled locally; resumed fullHP/MP death marker, stale VIP, protected stronger buffs, free extras, popupStop; no live game or paid entry",
+  "proof": [
+    {
+      "case": "full-vitals-stale-VIP",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/rebirth-raids.html",
+        "/town-buffer.html",
+        "/rebirth-raids.html"
+      ],
+      "posts": [
+        {
+          "path": "/character/town/buffer",
+          "body": {
+            "set": "greater",
+            "skillId": 1357,
+            "expectedRevision": 100,
+            "expectedFeeAdena": "0",
+            "expectedFeeCoinOfLuck": 0
+          }
+        },
+        {
+          "path": "/character/town/buffer",
+          "body": {
+            "set": "greater",
+            "skillId": 1323,
+            "expectedRevision": 101,
+            "expectedFeeAdena": "0",
+            "expectedFeeCoinOfLuck": 0
+          }
+        }
+      ],
+      "held": false,
+      "strongBuffPreserved": true,
+      "paidEntries": 0,
+      "restorePosts": 0,
+      "liveRequests": 0,
+      "status": "Rebirth: поход не активен — войдите вручную или разрешите автоматические входы",
+      "errors": []
+    },
+    {
+      "case": "Stop-during-catalog",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/rebirth-raids.html",
+        "/town-buffer.html"
+      ],
+      "posts": [],
+      "held": true,
+      "strongBuffPreserved": true,
+      "paidEntries": 0,
+      "restorePosts": 0,
+      "liveRequests": 0,
+      "status": "Проверяю серверное время и лимиты дня",
+      "errors": []
+    }
+  ]
+}

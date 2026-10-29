@@ -947,10 +947,11 @@ async function townBuffStep() {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
     // v4.34: сначала бафф (после смерти он слетел, а с ним и часть макс. HP), потом «Восстановить» — до нового максимума.
     // Раньше было наоборот: восстановили до 5164, бафф поднял максимум до 6326 — и снова 19 %
-    let n = !st.buffDone && (recovery?rebirthBuffNeed():townBuffNeed());
+    // 20.77+ (лог29.10 09:51–10:28): каталог проверяет свежего героя, а HUD/память VIP могли считать basic готовым —
+    // полные HP/MP возвращали в каталог 491 раз без нужного баффа. Свой маршрут планируем по тому же проверенному серверному снимку.
+    const n = !st.buffDone && (recovery?rebirthBuffNeed(recoverySnapshot.ch):townBuffNeed());
     if(recovery&&n?.unknown){
-      n=recoverySnapshot?rebirthBuffNeed(recoverySnapshot.ch):{unknown:true};
-      if(n?.unknown){env.setStatus('Подземелья: баффы героя не подтверждены — сверю перед боем');await env.sleep(1000);return;}
+      env.setStatus('Подземелья: баффы героя не подтверждены — сверю перед боем');await env.sleep(1000);return;
     }
     if (n && (n.set || n.fa.length)) { await env.setRt({ tbuff: carry({ ...n, t: Date.now(), step: n.set ? 'town' : 'fa', reviveTried: st.reviveTried, then: carry({ ...st, buffDone: true }) }), tbT: Date.now() }); return; }
     env.setStatus('Восстановление: баффер «Восстановить HP|MP|CP»');

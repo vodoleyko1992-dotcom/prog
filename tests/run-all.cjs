@@ -18,6 +18,7 @@ ORDER.push('v2073-rebirth-hero-policy.test.cjs','v2073-rebirth-hero-survival.tes
 ORDER.push('v2074-rebirth-next-reconcile.test.cjs');
 ORDER.push('v2074-rebirth-loop-recovery.test.cjs');
 ORDER.push('v2075-rebirth-mode-exit.test.cjs');
+ORDER.push('v2077-rebirth-buff-loop.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){
