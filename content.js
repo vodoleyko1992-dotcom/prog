@@ -4784,12 +4784,19 @@ const EXT_ORIGIN = (() => { try { return new URL(chrome.runtime.getURL('')).orig
 // 20.76+ (ревизия 28.10): на Android поверх игры (dockOver) свёрнутость — язычок и localStorage, а меню в iframe считало себя
 // свёрнутым по cfg.dockMin (◀ в альбомной ориентации, импорт с ПК) и после первой отрисовки застывало. Фактическую свёрнутость
 // дока сообщаем самому меню: при каждой смене и в ответ на его пульс (iframe мог загрузиться позже сообщения); сторож — по ней же.
-let dockShownMin = null, dockOrigin = '';
+let dockShownMin = null, dockOrigin = '', dockMinWindow = null;
 function dockMinPost(w = document.querySelector('#l2bot-dock iframe')?.contentWindow, origin = dockOrigin || EXT_ORIGIN) {
-  if (dockShownMin === null || !w || !origin) return;
+  // 20.78+ (29.10, content.js:4790): до первого пульса iframe ещё about:blank с origin игры; Chrome пишет предупреждение вне try/catch.
+  // После замены панели её новое окно тоже ждёт собственного пульса. Точный origin расширения сохраняем.
+  if (dockShownMin === null || !w || !origin || w !== dockMinWindow || w !== document.querySelector('#l2bot-dock iframe')?.contentWindow) return;
   try { w.postMessage({ __l2dock: 'min', min: dockShownMin }, origin); } catch (e) {}
 }
-addEventListener('message', e => { if (e.data?.__l2dock === 'hb' && (e.origin === EXT_ORIGIN || /^(chrome|moz)-extension:\/\//.test(String(e.origin)))) { dockHb = Date.now(); dockOrigin = e.origin; dockMinPost(e.source, e.origin); } });
+addEventListener('message', e => {
+  const w = document.querySelector('#l2bot-dock iframe')?.contentWindow;
+  if (w && e.source === w && e.data?.__l2dock === 'hb' && (e.origin === EXT_ORIGIN || /^(chrome|moz)-extension:\/\//.test(String(e.origin)))) {
+    dockHb = Date.now(); dockOrigin = e.origin; dockMinWindow = w; dockMinPost(w, e.origin);
+  }
+});
 setInterval(() => {
   const fr = document.querySelector('#l2bot-dock iframe');
   if (!fr || !cfg.dock || dockShownMin === true || document.hidden) return;

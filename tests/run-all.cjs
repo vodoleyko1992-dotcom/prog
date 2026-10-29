@@ -19,6 +19,7 @@ ORDER.push('v2074-rebirth-next-reconcile.test.cjs');
 ORDER.push('v2074-rebirth-loop-recovery.test.cjs');
 ORDER.push('v2075-rebirth-mode-exit.test.cjs');
 ORDER.push('v2077-rebirth-buff-loop.test.cjs');
+ORDER.push('v2078-dock-min-ready.test.cjs');
 const EXCLUDE=new Set([]);
 const isTest=f=>/\.test\.c?js$/.test(f);
 function listTests(dir=__dirname){

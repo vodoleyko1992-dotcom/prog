@@ -176,18 +176,21 @@ function page({android=true,dockMin=true,open='1'}={}){
  c.window.top=c.window;c.self=c.window;
  vm.createContext(c);vm.runInContext('window=globalThis.window;\n'+cut('let dockHb = 0, dockBorn = 0','// 7.2.1 (игрок 10.10')+'\n'+cut('const ANDROID = ',"addEventListener('resize', scheduleDock);"),c);
  // dock() сравнивает window.top с window — в стенде это один объект.
- const hb=(source={postMessage:(m,o)=>posts.push(['hb-reply',structuredClone(m),o])})=>(winListeners.message||[]).forEach(f=>f({data:{__l2dock:'hb'},origin:'chrome-extension://abc',source}));
+ // 20.78+: готовность подтверждает только пульс текущего iframe, а не произвольный объект с postMessage.
+ const hb=(source=document.querySelector('#l2bot-dock iframe')?.contentWindow)=>(winListeners.message||[]).forEach(f=>f({data:{__l2dock:'hb'},origin:'chrome-extension://abc',source}));
  return{c,posts,store,replaced,hb,watch:()=>intervals.forEach(f=>f()),tick:ms=>{now+=ms},run:s=>vm.runInContext(s,c)};
 }
 test('страница: dockOver открыт язычком при cfg.dockMin=true — в iframe уходит «открыто», закрытие — «свёрнуто»',()=>{
- const P=page();P.run('dock()');same(P.posts,[[{__l2dock:'min',min:false},'chrome-extension://abc']]);
+ const P=page();P.run('dock()');same(P.posts,[],'20.78+: до пульса iframe ещё может иметь origin игры');
+ P.hb();same(P.posts,[[{__l2dock:'min',min:false},'chrome-extension://abc']]);
  P.run('dock()');assert.equal(P.posts.length,1,'без изменений не шлём повторно');
  P.store['l2bot-dockOpen']='0';P.run('dock()');same(P.posts.at(-1),[{__l2dock:'min',min:true},'chrome-extension://abc']);
  // Пульс меню (iframe загрузился позже) получает текущее состояние ответом.
- P.hb();same(P.posts.at(-1),['hb-reply',{__l2dock:'min',min:true},'chrome-extension://abc']);
+ P.hb();same(P.posts.at(-1),[{__l2dock:'min',min:true},'chrome-extension://abc']);
 });
 test('страница на ПК: свёрнутость по cfg.dockMin, как раньше, и тоже сообщается меню',()=>{
- const P=page({android:false,dockMin:true,open:'1'});P.run('dock()');same(P.posts.at(-1)[0],{__l2dock:'min',min:true});
+ const P=page({android:false,dockMin:true,open:'1'});P.run('dock()');same(P.posts,[],'20.78+: сначала загрузка собственного iframe');
+ P.hb();same(P.posts.at(-1)[0],{__l2dock:'min',min:true});
  P.c.cfg={dock:true,dockMin:false};P.run('dock()');same(P.posts.at(-1)[0],{__l2dock:'min',min:false});
 });
 test('сторож дока: открытое язычком меню при cfg.dockMin=true перезапускается после 20 с тишины; свёрнутое — нет',()=>{

@@ -1,0 +1,125 @@
+{
+  "boundary": "Actual current Chrome MV3 extension; all HTTPS fulfilled locally by harness; Android UA/layout emulation, not real Firefox or Android device; no live game",
+  "proof": [
+    {
+      "case": "Desktop",
+      "browser": "156.0.8078.4",
+      "beforeHeartbeat": {
+        "ready": false,
+        "hb": 0,
+        "shown": false
+      },
+      "first": {
+        "ANDROID": false,
+        "dockOver": false,
+        "dockShownMin": false,
+        "cfgMin": false,
+        "hb": [
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          }
+        ]
+      },
+      "final": {
+        "dockHb": 1793239891342,
+        "dockShownMin": false,
+        "dockOver": false,
+        "cfgMin": false,
+        "hb": [
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": false,
+            "nullSource": false,
+            "sameSource": false
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          }
+        ]
+      },
+      "wrongSourceIgnored": true,
+      "replacementReady": true,
+      "periodicHeartbeat": true,
+      "originWarnings": [],
+      "pageErrors": []
+    },
+    {
+      "case": "Android-UA overlay",
+      "browser": "156.0.8078.4",
+      "beforeHeartbeat": {
+        "ready": false,
+        "hb": 0,
+        "shown": false
+      },
+      "first": {
+        "ANDROID": true,
+        "dockOver": true,
+        "dockShownMin": false,
+        "cfgMin": true,
+        "hb": [
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          }
+        ]
+      },
+      "final": {
+        "dockHb": 1793239896074,
+        "dockShownMin": false,
+        "dockOver": true,
+        "cfgMin": true,
+        "hb": [
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": false,
+            "nullSource": false,
+            "sameSource": false
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          },
+          {
+            "origin": "chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh",
+            "trusted": true,
+            "nullSource": false,
+            "sameSource": true
+          }
+        ]
+      },
+      "wrongSourceIgnored": true,
+      "replacementReady": true,
+      "periodicHeartbeat": true,
+      "originWarnings": [],
+      "pageErrors": []
+    }
+  ]
+}
