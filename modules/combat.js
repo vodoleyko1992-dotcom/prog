@@ -96,6 +96,12 @@ function groupPlan(ctx, opts, eco = false) {
   // (РБ остаётся основной целью). Урон по РБ теряем не больше 15 %, а при проспойленных соседях — до 40 %.
   const rbK = ctx.rb ? (ctx.nearSpoiled > 0 ? .6 : .85) : .6;
   if (ctx.rb && (env.cfg.rbNearMobs === false || !near.length)) return null;
+  // 20.82 (John 30.10: «старайся убивать в подземелье мобов масс-магией»; лог 29.10 16:55, Rebirth Windsus 13 543 HP):
+  // в подземелье панели соседей нет (extras []), а «Удар полум’я» бьёт ещё двоих −8 310; их рана остаётся — следующий бой
+  // начинается с «Моб ще поранений: HP 5862 / 13543». Раньше АОЕ шёл только добиванием после Blaze (B→FS, 139 FS на 332 Blaze).
+  // Теперь в подземелье урон по невидимым соседям из свежей модели этого же похода/подземелья — полезный, даже без убийства.
+  // Чемпион/РБ/эпик основной целью — не здесь: масс-умения их не цепляют (обновление 13.10), rebirthBig/ctx.rb/ctx.champ.
+  const dungeon = !ctx.rb && !ctx.champ && (ctx.rebirth?.role === 'mob' || /[?&]spawnId=sdms_/i.test(globalThis.location?.search || ''));
   const ranked = [], DS = skillView();
   for (const o of opts) {
     if (o.charge || o.force || !(o.dmg > 0)) continue;
@@ -110,10 +116,15 @@ function groupPlan(ctx, opts, eco = false) {
     const each = Math.min(o.dmg, model?.damage || (near.length && p?.splN && p.spl ? p.spl / p.splN / near.length : ilArea ? o.dmg : 0));
     const sideKills = visible ? near.filter(x => each * .85 >= x.cur).length : model?.kills || 0;
     const useful = Math.min(mob.cur, o.dmg) + (visible ? near.reduce((s, x) => s + Math.min(x.cur, each), 0) : 0);
-    const probe = !visible && !model && reliable && !!p?.aoe && !aoeProbeCapped(o.name);
-    if (!(!ctx.rb && reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * rbK || !ctx.rb && probe)) continue;
-    ranked.push({ ...o, group: true, sideKills, useful, probe,
-      why: ctx.rb ? `РБ: АОЕ по мобам рядом · живых ${near.length}${ctx.nearSpoiled > 0 ? ' · проспойлено ' + ctx.nearSpoiled : ''} · доп. убийств ≈${sideKills.toFixed(1)}` : probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
+    const probe = !visible && !model && (reliable || dungeon) && !!p?.aoe && !aoeProbeCapped(o.name);
+    // Подземелье: основной урон + соседи по модели (не больше удара по основной цели) против лучшего одиночного удара
+    const hidden = dungeon && !visible && model?.targets > 0 && model.damage > 0 ? model.targets * Math.min(model.damage, o.dmg) : 0;
+    const dungeonUseful = hidden ? Math.min(mob.cur, o.dmg) + hidden : 0;
+    const dungeonAoe = dungeonUseful > bestSingle * 1.15;
+    if (!(!ctx.rb && reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * rbK || dungeonAoe || !ctx.rb && probe)) continue;
+    ranked.push({ ...o, group: true, sideKills, useful: Math.max(useful, dungeonUseful), probe,
+      why: ctx.rb ? `РБ: АОЕ по мобам рядом · живых ${near.length}${ctx.nearSpoiled > 0 ? ' · проспойлено ' + ctx.nearSpoiled : ''} · доп. убийств ≈${sideKills.toFixed(1)}` : probe ? (reliable ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом' : 'подземелье: АОЕ — проверяю, сколько соседей задевает')
+        : dungeonAoe && !(reliable && sideKills > .25) ? `подземелье: АОЕ по соседям · целей ≈${(1 + model.targets).toFixed(1)} · полезный урон ≈${Math.round(dungeonUseful)} против ${Math.round(bestSingle)} одиночным`
         : `АОЕ: ${visible ? 'живых соседей ' + near.length : 'по свежим боям'} · доп. убийств ≈${sideKills.toFixed(1)} · полезный урон ≈${Math.round(useful)}` });
   }
   return ranked.sort((a, b) => b.sideKills - a.sideKills || b.useful - a.useful || b.dmg - a.dmg || (b.cd || 0) - (a.cd || 0) || (a.mpCost || 0) - (b.mpCost || 0))[0] || null;
