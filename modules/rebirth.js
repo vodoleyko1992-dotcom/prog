@@ -494,7 +494,11 @@ async function nextFight(ctx) {
     &&Number.isFinite(failed.restoredAt)&&failed.restoredAt>=failed.at&&failed.restoredAt<=characterReadAt
     &&instance.rebirthStage===ch.rebirthStage;
    if(previous?.char===T.char&&previous.actor===ch.id&&UUID.test(previous.id||'')
-    &&previous.kick===T.kick&&!completion(ch,T,previous)&&!deathRestart)return status(T,'missing-run','прошлый поход исчез без подтверждённого завершения — нужен новый Старт или ручной вход');
+    &&previous.kick===T.kick&&!completion(ch,T,previous)&&!deathRestart){
+    // 20.79+ (лог 29.10 14:39): старый городской маршрут иначе не достигает prepareEntry/return и остаётся навсегда. Нового входа это не разрешает.
+    if(typeof env.cancelRunPreparation==='function'){const waiting=await env.cancelRunPreparation({character:ch});if(!current(T)||waiting)return true;}
+    return status(T,'missing-run','прошлый поход исчез без подтверждённого завершения — нужен новый Старт или ручной вход');
+   }
    if(!await quota(T))return current(T)?status(T,'quota','лимит охоты проверяется или достигнут'):true;
    // Подготовка может вести героя в город: только перед новым разрешённым входом, никогда посреди оплаченного похода.
    if(typeof env.prepareEntry==='function'){

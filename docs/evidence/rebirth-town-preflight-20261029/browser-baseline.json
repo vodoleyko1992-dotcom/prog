@@ -1,0 +1,21 @@
+{
+  "boundary": "Actual Chrome MV3 with fully local HTTPS fixture; old source; city navigation blocked by fixture; no live game, city entry, purchase or paid entry executed",
+  "sourceCommit": "8dce92b57175c579ff1afd6eafa3621a81a361e4",
+  "case": "active-run",
+  "paths": [
+    "/rebirth-raid-dungeon.html",
+    "/city.html"
+  ],
+  "nativeChampionFights": 0,
+  "mobKills": 300,
+  "mobKillTarget": 300,
+  "petBuffStatus": "travel",
+  "petTripPhase": "city",
+  "proposedPriceAdena": 10000000,
+  "fixtureErrors": [
+    "поход не должен уходить в город: /city.html"
+  ],
+  "pageErrors": [],
+  "expectedAssertion": "Champion fight was not reached; paid run navigated to city for summon buff",
+  "liveRequests": 0
+}

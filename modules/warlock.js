@@ -314,7 +314,7 @@ const startPrepare = (o = {}) => petPrepare({ ...o, reason: 'start' });
 let rebirthPrepKey = '';
 // Собственный вызов перед открытием боя: родной призыв/баффы, затем прежний каталог и квитанции полного набора.
 // Полный набор всё так же требует подтверждённого входа в город; сюда не добавляется новый путь оплаты.
-async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth-raids.html' } = {}) {
+async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth-raids.html', allowTown = false } = {}) {
   const settings=rebirthConfig();
   if(!settings||returnPath!=='/rebirth-raids.html'||typeof wanted!=='function'||!wanted()||env.on!==true||env.tabOwner!==true
     ||env.canAct?.()===false||!priority(afterWin))return false;
@@ -324,7 +324,8 @@ async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth
   if(latestSeen&&latest===null)startProof=null;
   if(!afterWin&&await petPrepare({reason:'start',buffs:true,wanted:owns,returnPath}))return true;
   if(!wanted()||!rebirthConfig())return false;
-  if(settings.petFullAuto!==true)return false;
+  // 20.79+ (лог 29.10 14:39): после городской поездки с mob_300 поход исчез, начался missing-run. Родные касты доступны и в походе; полный набор — только перед новым входом.
+  if(settings.petFullAuto!==true||allowTown!==true)return false;
   const waiting=await step({afterWin});
   if(!wanted()||!rebirthConfig())return waiting;
   // На победе панели призыва нет. Проверенный сервером отсутствующий кот готовится в своём каталоге, без нового входа.

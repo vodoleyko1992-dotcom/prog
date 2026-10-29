@@ -5,7 +5,8 @@ const {fixture}=require('./warlock-fixture.cjs');
 function own(o={}){
  const f=fixture({...o,cfg:{petFullAuto:false,petAuto:false,...o.cfg}}),raw={petFullAuto:true,petFullMaxPrice:10000000,petFullReserve:null,petFullRenew:true,shopReserve:200000,...o.raw};
  let selected=true;f.env.leaseEpoch='owner';f.env.canAct=()=>true;f.env.canRun=()=>true;f.env.rebirthCfg=()=>selected?raw:null;
- return{...f,raw,select:v=>selected=v,prep:options=>f.api().rebirthPrepare({wanted:()=>selected,returnPath:'/rebirth-raids.html',...options})};
+ // 20.80: прежние проверки полного городского набора относятся к подготовке до нового входа; внутри run разрешение не подразумевается.
+ return{...f,raw,select:v=>selected=v,prep:options=>f.api().rebirthPrepare({wanted:()=>selected,returnPath:'/rebirth-raids.html',allowTown:true,...options})};
 }
 test('собственное разрешение полного баффа работает при отключённой обычной petbuff-службе',async()=>{
  const f=own();await f.prep();assert.equal(f.calls.length,1);assert.equal(f.status(),'active');assert.equal(f.env.cfg.petFullAuto,false);
