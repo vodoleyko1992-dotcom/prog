@@ -11,6 +11,12 @@
 
 
 
+## 30.10.2026, 09:45 UTC+10 — Claude — Chrome/Firefox 20.82
+
+- John: «Сборка хром и фаер». База `490a21d`: PR #460 (масс-магия в подземелье) и #461 (бафф суммона без лимита цены и резерва). Версия 20.82 в manifest/content.js/5 тестах версии, README-CHROME/FIREFOX, CHANGELOG-20.82, CLAUDE.md.
+- Проверки: Node 725 PASS / 0 FAIL, `node --check` 54 runtime JS, envcheck PASS, privacy base-profile 0. Chrome 156: zipload 20.82, cfg 213, 0 ошибок. Firefox ESR (последний с download.mozilla.org): firefox-smoke desktop и `--android` PASS, web-ext lint 0 ошибок / 49 предупреждений. Состав обоих ZIP — тот же список 69 файлов, что у 20.81; runtime Chrome и Firefox совпадает побайтно, кроме manifest.
+- Chrome ZIP 1781205 байт, SHA256 `ae215cac3442d4eb2f6498d28ef2723a02f71c22ba4962a5de842f94eff679a0`; Firefox 1781463 байт, SHA256 `e7fca75218584f46363daa5de23d219be715f6d2a792b3284552f345f7ab220b` (`builds/SHA256SUMS-20.82.txt`). 20.81 обоих браузеров оставлены для отката, Chrome 20.80 убран из текущих ZIP (есть в git-истории). Полный исторический browser-suite не запускался; живую игру, физический Android и подпись AMO не проверяли.
+
 ## 30.10.2026, 09:30 UTC+10 — Claude — бафф суммона без лимитов цены и резерва
 
 - John: «убери вообще лимиты на бафф кота, адены как грязи» (ответ на открытый вопрос ревизии 28.10). `modules/warlock.js`: полный баф суммона больше не проверяет потолок `petFullMaxPrice` и резерв `petFullReserve`/`shopReserve`; покупка, пока адены хватает на сам набор (иначе статус `adena`, проверка через 10 мин). Поля убраны из ключа ожидания и из меню (`warlock-ui.js`), в настройках остались только для совместимости. `content.js`: возврат после бафа без резерва и лимита снабжения `shopMaxSpend` — нужна прежняя свежая цена и адена на телепорт. Неизвестный исход оплаты, «early-loss» (оплаченный срок), выключатель автообновления и CoL/FA-запреты прежние.
