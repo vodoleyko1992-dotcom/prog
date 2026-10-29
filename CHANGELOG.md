@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.79 Chrome — меню ждёт загрузки iframe, без предупреждения postMessage; без проверок](docs/changelog/CHANGELOG-20.79.md)
 - [20.78 Chrome — Rebirth без цикла у баффера при полных HP/MP; без проверок](docs/changelog/CHANGELOG-20.78.md)
 - [20.77 Chrome — 39 исправлений ревизии Rebirth, оплат и зависаний; без повторных проверок](docs/changelog/CHANGELOG-20.77.md)
 - [20.76 Chrome + Firefox — переключение из Rebirth на фарм РБ без зависания; без проверок](docs/changelog/CHANGELOG-20.76.md)

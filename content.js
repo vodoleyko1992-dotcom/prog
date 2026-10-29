@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.78 — Rebirth без цикла у баффера =====
+// ===== L2wap Bot v20.79 — меню без раннего postMessage =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
