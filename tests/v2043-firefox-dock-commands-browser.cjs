@@ -6,13 +6,14 @@ const assert = require('node:assert/strict');
 const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
 (async () => { const h = await harness({ withPopup: false }); try {
   const { p, core } = h.g;
-  const snapshot = { name: 'AuditHero', revision: 55, level: 75, l2Profession: 'human_warlock', classSlots: { activeSlot: 0 }, adena: 30000000, inBattle: false,
+  // 20.82: потолка цены набора больше нет — Start не уводит в город, потому что адены (9 999 999) меньше цены набора (10 000 000)
+  const snapshot = { name: 'AuditHero', revision: 55, level: 75, l2Profession: 'human_warlock', classSlots: { activeSlot: 0 }, adena: 9999999, inBattle: false,
     activeSummon: { kind: 'servitor', key: 'kai_the_cat', hp: 100, maxHp: 100, summonSkillId: 1331, summonSkillLevel: 8, pAtk: 3000, accuracy: 150, critRate: 650, critDmgMul: 3.8, activeBuffs: [] } };
   await h.ctx.route('https://l2wap.com/character', r => r.fulfill({ json: { character: snapshot } }));
   await h.ctx.route('https://l2wap.com/character/town/buffer/catalog', r => r.fulfill({ json: { sets: [{ id: 'summon', feeAdena: 10000000, feeCoinOfLuck: 0, skills: [{ skillId: 1204, level: 2, durationSec: 18000 }] }] } }));
   await h.sw.evaluate(async () => { const { cfg, rt } = await chrome.storage.local.get(['cfg', 'rt']);
     // 20.60: общего бюджета набора суммона нет — бот не уходит в город, пока цена набора выше разрешённой
-    await chrome.storage.local.set({ on: false, cfg: { ...cfg, dock: true, dockMin: false, petFullMaxPrice: 1 }, rt: { ...rt, _src: 'v2043-dock-fixture', petFull: { spent: 10000000, lifetimeSpent: 10000000, budgetEpoch: 123, purchases: 1 } } }); });
+    await chrome.storage.local.set({ on: false, cfg: { ...cfg, dock: true, dockMin: false }, rt: { ...rt, _src: 'v2043-dock-fixture', petFull: { spent: 10000000, lifetimeSpent: 10000000, budgetEpoch: 123, purchases: 1 } } }); });
   await p.setViewportSize({ width: 1897, height: 953 });
   await core("cfg.dock=true;cfg.dockMin=false;localStorage.setItem('l2bot-dockWide','1');dock();true");
   const frame = p.frameLocator('#l2bot-dock iframe'), body = frame.locator('body');

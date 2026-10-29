@@ -37,10 +37,11 @@ async function inReturn(o){const f=trip(o);assert.equal(await f.api.warlockTownS
  Object.assign(f.box.rt.petBufferTrip,{phase:'return',entry:{job:'trip-local',char:'hero',revision:101,at:Date.now()}});f.nav.length=0;return f;}
 const ticks=async(f,n)=>{for(let i=0;i<n;i++)await f.api.warlockTripStep();};
 
-test('отказ резерва адены: 20 тактов без хода часов — одна пара GET, через 30 с — следующая, клика нет',async()=>{
- const f=await inReturn();await ticks(f,20);
+// 20.82 (John 30.10): резерв и лимит снабжения для возврата сняты — отказ теперь только при нехватке адены на сам телепорт (8 000)
+test('нехватка адены на телепорт: 20 тактов без хода часов — одна пара GET, через 30 с — следующая, клика нет',async()=>{
+ const f=await inReturn({adena:7999});await ticks(f,20);
  same(f.gets,['/character','/game/teleport/locations'],'одна сверка вместо 40 GET');assert.equal(f.box.rt.petBufferTrip.phase,'return');assert.equal(f.clicks(),0);
- assert.match(f.box.lastStatus,/резерв адены/);
+ assert.match(f.box.lastStatus,/не хватает адены/);
  f.tick(29999);await ticks(f,5);assert.equal(f.gets.length,2,'до 30 с не повторяем');
  f.tick(1);await ticks(f,5);assert.equal(f.gets.length,4,'через 30 с — одна новая сверка');assert.equal(f.clicks(),0);
  // Адена выросла (например, игрок пополнил): следующая сверка проходит и жмёт штатный телепорт один раз.
@@ -59,6 +60,10 @@ test('сбой растёт не дальше 60 с',async()=>{
 });
 test('достаточно адены: клик и returnSent на первом же такте, без задержки',async()=>{
  const f=await inReturn({adena:500000});await ticks(f,1);assert.equal(f.clicks(),1);assert.equal(f.box.rt.petBufferTrip.phase,'returnSent');assert.equal(f.gets.length,2);
+});
+test('20.82: возврат без резерва и лимита снабжения — адены ровно на телепорт, лимит снабжения ниже цены, клик один',async()=>{
+ const f=await inReturn({adena:8000});f.box.cfg.shopMaxSpend=1;f.box.cfg.shopReserve=9000000;f.box.cfg.petFullReserve=9000000;
+ await ticks(f,3);assert.equal(f.clicks(),1);assert.equal(f.box.rt.petBufferTrip.phase,'returnSent');
 });
 test('returnEnter: ожидание activeDungeonId опрашивает /character не чаще раза в 3 с и завершает поход по подтверждению',async()=>{
  const f=trip({mode:'cat'});assert.equal(await f.api.warlockTownStart({char:'hero',revision:100,price:10000000}),true);

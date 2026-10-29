@@ -38,8 +38,9 @@ test('ранняя потеря сообщается один раз для вх
 for(const allowTown of [undefined,false])test('внутри run нет свежей платной сверки, города или оплаты: '+allowTown,async()=>{
  const f=own();f.cached({expired:true});await f.prep(allowTown);same(f.gets,[]);same(f.calls,[]);same(f.trips,[]);
 });
-for(const reason of ['price','reserve','renew'])test('свежая проверка не обходит прежний запрет '+reason,async()=>{
- const f=own({raw:reason==='price'?{petFullMaxPrice:9999999}:reason==='reserve'?{petFullReserve:15000000}:{petFullRenew:false}});
+// 20.82: лимит цены и резерв сняты; остались нехватка адены на сам набор и выключенное автообновление
+for(const reason of ['adena','renew'])test('свежая проверка не обходит прежний запрет '+reason,async()=>{
+ const f=own(reason==='adena'?{char:{adena:'9999999'}}:{raw:{petFullRenew:false}});
  f.cached({expired:true});await f.prep(true);assert.equal(f.status(),reason);same(f.calls,[]);same(f.trips,[]);
 });
 test('неизвестная покупка остаётся неизвестной после свежей проверки перед входом',async()=>{

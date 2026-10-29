@@ -16,9 +16,9 @@ test('отдельная подготовка не включает выключ
  const f=own({raw:{petFullAuto:false}});await f.prep();assert.equal(f.calls.length,0);assert.equal(f.raw.petFullAuto,false);
  let writes=0;f.env.setCfg=async()=>{writes++;};await f.api().autoEnableClass(f.ch);assert.equal(writes,0);
 });
-test('прежние цена, резерв и неизвестный платёж остаются обязательными',async()=>{
- const cap=own({raw:{petFullMaxPrice:9999999}});await cap.prep();assert.equal(cap.calls.length,0);assert.equal(cap.status(),'price');
- const reserve=own({raw:{petFullReserve:15000000}});await reserve.prep();assert.equal(reserve.calls.length,0);assert.equal(reserve.status(),'reserve');
+test('20.82: адена на набор и неизвестный платёж остаются обязательными, лимит цены и резерв — нет',async()=>{
+ const cap=own({raw:{petFullMaxPrice:9999999,petFullReserve:15000000}});await cap.prep();assert.equal(cap.calls.length,1);assert.equal(cap.status(),'active');
+ const poor=own({char:{adena:'9999999'}});await poor.prep();assert.equal(poor.calls.length,0);assert.equal(poor.status(),'adena');
  const unknown=own({post:()=>{throw Error('lost_response');}});await unknown.prep();assert.equal(unknown.calls.length,1);assert.ok(unknown.env.rt.petFull.pending);
  unknown.reload();unknown.tick(61000);await unknown.prep();assert.equal(unknown.calls.length,1);assert.ok(unknown.env.rt.petFull.pending);
 });
