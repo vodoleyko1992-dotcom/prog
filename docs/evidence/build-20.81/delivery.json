@@ -1,0 +1,18 @@
+[
+  {
+    "file": "l2wap-bot-v20.81.zip",
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/d85a340ebe1f958747e419bbb64a0728324b3e28/builds/l2wap-bot-v20.81.zip",
+    "http": 200,
+    "bytes": 1769429,
+    "shaMatches": true,
+    "crc": "PASS"
+  },
+  {
+    "file": "l2wap-bot-v20.81-firefox.zip",
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/d85a340ebe1f958747e419bbb64a0728324b3e28/builds/l2wap-bot-v20.81-firefox.zip",
+    "http": 200,
+    "bytes": 1780317,
+    "shaMatches": true,
+    "crc": "PASS"
+  }
+]

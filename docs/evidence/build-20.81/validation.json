@@ -121,5 +121,32 @@
     "Source smokes model local responses, not a full live Rebirth raid",
     "Town buff inside paid run and early-loss purchase restrictions preserved",
     "Read failure before entry preserves existing non-blocking behavior"
-  ]
+  ],
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/458",
+  "delivery": [
+    {
+      "file": "l2wap-bot-v20.81.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/d85a340ebe1f958747e419bbb64a0728324b3e28/builds/l2wap-bot-v20.81.zip",
+      "http": 200,
+      "bytes": 1769429,
+      "shaMatches": true,
+      "crc": "PASS"
+    },
+    {
+      "file": "l2wap-bot-v20.81-firefox.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/d85a340ebe1f958747e419bbb64a0728324b3e28/builds/l2wap-bot-v20.81-firefox.zip",
+      "http": 200,
+      "bytes": 1780317,
+      "shaMatches": true,
+      "crc": "PASS"
+    }
+  ],
+  "publicationGate": {
+    "nodeFiles": 723,
+    "pass": 723,
+    "fail": 0,
+    "envcheck": "PASS",
+    "diffCheck": "PASS",
+    "runtimeUnchangedSinceArchive": true
+  }
 }
