@@ -64,5 +64,7 @@
     "Uploaded own API responses do not prove exact server mechanism of run disappearance",
     "Already missing run is not marked completed and does not auto-authorize another paid entry",
     "Build checks skipped by persistent user preference; source checks above precede packaging"
-  ]
+  ],
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/457",
+  "fixCommit": "4cc306ee0313232efa8ffd28a508851b2349a153"
 }
