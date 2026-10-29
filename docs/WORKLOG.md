@@ -10,6 +10,14 @@
 
 
 
+
+## 29.10.2026, 15:27 UTC+10 — Codex — Chrome20.80: сборка исправления Rebirth (PR в подготовке)
+
+- По «сбой, правка, сборка» упакован4cc306e: городскийноборкотатолькопередentry, nativeвrun/legacycleanup/missingguard. Функциональныйruntimeприупаковкенеменялся, толькоmetadata/header/5assertions/README/история.
+- ZIP69/1764637B/SHA256 `80969411ea810d15406e71340ff4f20389f400df77a8830ceb11ae2e0a955ac8`; receipt docs/evidence/build-20.80-chrome/receipt.json. Источники717Node/47новых/8прежних/3ChromePASS; упаковкабезповторныхпроверок, новыхPASSнет. Живаяигра0; полногоchampioncombatнет.
+- Chrome20.79rollback, старый20.78вwork/git-историииубранизтекущихZIP, SHAисториясохранена; внешняяпапка=False. Firefox20.76/Lite1.8.1 прежние. Далееустановка/↻/вкладка/новыйСтартодинраз/контроль300→чемпион.
+
+
 ## 29.10.2026, 15:26 UTC+10 — Codex — Rebirth: не уезжать за баффом внутри run (PR в подготовке)
 
 - John «сбой, правка, сборка», база8dce92b; журнал20.78,14:39моб300→городскойбаффкота→missing-run,33мин42,7спростоя. prepareEntry/run раньше теряли контекст. Теперь город толькопо явному допуску перед новымвходом, nativeкастывrunостаются; ownlegacyroutecleanup безновогоentry/стиранияpending/history/receipts.

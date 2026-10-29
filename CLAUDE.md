@@ -1,5 +1,7 @@
 # L2wap Bot — контекст для работы в Claude Code
 
+**Текущая сборка Chrome20.80 (29.10, John «сбой, правка, сборка»):** исходники4cc306e, городской полныйбаффкота разрешёнтолькоперед новымRebirthвходом, nativeкастывrunостаются, legacytripcleanupбезновогоentry/стиранияpending/history/run. Источники717Node/47новых/8прежних/3ChromePASS; упаковкабезповторныхпроверок, новыхPASSнет. Chrome20.79rollback, Firefox20.76/Lite1.8.1 прежние. ПослеобновленияодинСтартдляужеисчезнувшегоrun; changelog20.80. Живуюигрунеоткрывали.
+
 **Исходники после Chrome20.79 (29.10, городской бафф кота/Rebirth):** prepareEntry явно разрешает город после noRun/completion/quota, prepareRun/default запрещает; nativeкасты остаются. Свой legacytrip очищается без pending/history/run и без обхода missing-run. Node717/0FAIL, новые47PASS (baseline44FAIL), Chrome156MV3 3/3PASS, syntax7/env35/bash/diffPASS. По «сбой, правка, сборка» далее Chrome20.80 без повторныхпроверок; отчёт docs/REBIRTH-TOWN-PREFLIGHT-2026-10-29.md. Живуюигрунеоткрывали.
 
 **Текущая сборка Chrome20.79 (29.10, John «сборка», прежнее «без проверок»):** база22349ac/#455, устранён раннийpostMessage доку: текущееокно подтверждаетготовность доотправки. Точныйorigin/игровыедействия/оплаты прежние; фиксRebirth20.78 включён. Приупаковке толькоversion/description/header/5ожиданий версии/README/история. Проверкине запускались, новыхPASSнет;716Node/2Chrome/55целевых — исходныйфикс#455, неэтаупаковка. Chrome20.78 rollback, Firefox20.76/Lite1.8.1 прежние; changelog20.79. Живуюигруне открывали.
@@ -293,6 +295,8 @@ zip -qr l2wap-bot-v7.1.NN.zip . -x 'tests/*' -x '*.orig'
 Firefox ставится как временное дополнение (`about:debugging#/runtime/this-firefox`); после перезапуска браузера данные стираются → срабатывает базовый профиль. Android: в обычном Firefox неподписанный zip не ставится — нужен Firefox Nightly (about:config `xpinstall.signatures.required`=false, «Установить дополнение из файла» в секретном меню) или подпись на AMO (unlisted) аккаунтом игрока. В Firefox для Android нет chrome.commands/notifications/значка/снимка экрана; меню из «⋮ → Расширения» — отдельная вкладка; фоновая вкладка/погасший экран засыпают.
 
 ## Последние версии (что уже сделано)
+
+- **20.80 Chrome (29.10):** разделеныentry/runpreflight, городскойбаффкотаотложендоновоговхода, nativeкасты/legacycleanup. Источники717Node/3ChromePASS; упаковкабезповторныхпроверок. Chrome20.79rollback; changelog20.80.
 
 - **20.79 Chrome (29.10, без проверок):** #455 — готовность текущего iframe перед postMessage, без раннего предупреждения origin. Прежние716Node/2Chrome — толькоисходныйфикс, новыхPASS нет. Chrome20.78 rollback; Firefox20.76/Lite1.8.1 прежние; changelog20.79.
 
