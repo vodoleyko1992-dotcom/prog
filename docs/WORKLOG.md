@@ -8,6 +8,14 @@
 
 
 
+
+## 29.10.2026, 12:29 UTC+10 — Codex — Chrome20.79 без проверок (PR в подготовке)
+
+- John «сборка», сохранено прежнее«без проверок»/основнаяChrome. База22349ac/#455, готовностьiframe передpostMessage; фиксRebirth20.78 включён. Приупаковке функциональныйruntime прежний, толькоversion/description/header/5assertions/README/история.
+- ZIP69/1763544B/SHA256 `35bc634ca52b5e9d3f8ea7f51b2acad17ab0b0b41a375bdf3d37fff0b73e83bb`; квитанцияdocs/evidence/build-20.79-chrome/receipt.json. Node/syntax/env/browser/lint/privacy/ZIPaudit/download0, новыхPASSнет;716Node/2Chrome/55целевых — толькоисходныйфикс#455, живаяигра0.
+- Chrome20.78 rollback; старый20.77 сохранёнвwork/git-истории иубран изтекущихZIP, SHAисториясохранена, внешняяпапканедоступна. Firefox20.76/Lite1.8.1 прежние. Далеепубликация/установкаповерх/↻/вкладка/контрольменю.
+
+
 ## 29.10.2026, 12:24 UTC+10 — Codex — готовность iframe перед postMessage ([PR #455](https://github.com/vodoleyko1992-dotcom/prog/pull/455))
 
 - John «Ошибка», затем строка и скрин content.js:4790: сообщение расширения ушло в ещё пустой iframe с origin игры. В actualChrome156 воспроизведено browserwarning безJSexception; try/catch не скрывает.
