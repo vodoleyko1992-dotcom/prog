@@ -1815,7 +1815,14 @@ async function battle() {
   }
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   const actionContext=()=>JSON.stringify([env.evidenceOwner?.(),env.battleExitContext?.(),env.rt.char||'',env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.manualKickAt||0,env.routeLocation?.href||env.routeLocation?.search||'']);
-  const battleOwner=actionContext(),pulse=ms=>env.combatPulse?env.combatPulse(ms):env.sleep(ms),waitNet=(fn,ms,step)=>env.combatWait?env.combatWait(fn,ms,step):env.waitFor(fn,ms,step);
+  const battleOwner=actionContext(),recoveryGeneration=env.actionGeneration?.(),pulse=ms=>env.combatPulse?env.combatPulse(ms):env.sleep(ms),waitNet=(fn,ms,step)=>env.combatWait?env.combatWait(fn,ms,step):env.waitFor(fn,ms,step);
+  // 20.81 (лог 29.10 20:08:10): reload обогнал позднюю победу и повторил start уже убитого spawn. Поход сверяет свой этап сам.
+  const recoverRebirth = async () => {
+    if (!ctx.rebirth) return false;
+    const valid = () => actionContext() === battleOwner && env.actionGeneration?.() === recoveryGeneration && killOwnerValid(ctx) && rebirthMode() && env.isBattle() && !env.pvpPending?.() && !env.antibotState?.();
+    if (valid()) { if (typeof env.rebirthRecover === 'function') await env.rebirthRecover(valid); else await env.sleep(300); }
+    return true; // Отмена/неизвестность похода не разрешает запасной reload старого spawn.
+  };
   let pendingTurn=null; // 20.36: таймаут ожидания не разрешает второй ход до ответа на первый.
   const turnAnswered=n=>env.actReceipt&&n.rid!=null?!!env.actReceipt(n.rid):env.actNet().done>=n.count;
   // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
@@ -2046,10 +2053,16 @@ async function battle() {
           const up = env.srvUp ? await env.srvUp() : false;
           if (!env.on || !env.tabOwner) return;
           if (env.actNet().done >= env.actNet().start) continue;   // ответ пришёл, пока спрашивали
-          if (up && reloadSlot()) { env.rec('B', 'бой', 'сервер игры отвечает — завис только этот ход: обновляю страницу'); location.reload(); await env.sleep(8000); return; }
+          if (up) {
+            if (await recoverRebirth()) return;
+            if (reloadSlot()) { env.rec('B', 'бой', 'сервер игры отвечает — завис только этот ход: обновляю страницу'); location.reload(); await env.sleep(8000); return; }
+          }
           if (!up) env.rec('B', 'бой', 'сервер игры не отвечает — жду ответа, не жму');
         }
-        if (hangMs > 20000 && reloadSlot()) { env.rec('B', 'бой', `ход без ответа ${hs} с — обновляю страницу`); location.reload(); await env.sleep(8000); return; }
+        if (hangMs > 20000) {
+          if (await recoverRebirth()) return;
+          if (reloadSlot()) { env.rec('B', 'бой', `ход без ответа ${hs} с — обновляю страницу`); location.reload(); await env.sleep(8000); return; }
+        }
         await env.sleep(300); continue;
       } }
     if (ctx.pet) petTick(ctx);
@@ -2121,7 +2134,10 @@ async function battle() {
     ctx.emWait = 0;                                  // HP выше порога — ожидание банки с нуля
     if (!mob) {                                   // v5.6: полоски HP моба нет 15 с (окно ошибки, недогруз) — раньше цикл ждал вечно
       ctx.noMobT ||= Date.now();
-      if (Date.now() - ctx.noMobT > 15000) { env.rec('B', 'бой', 'полоски HP моба нет 15 с — обновляю страницу'); location.reload(); await env.sleep(8000); return; }
+      if (Date.now() - ctx.noMobT > 15000) {
+        if (await recoverRebirth()) return;
+        env.rec('B', 'бой', 'полоски HP моба нет 15 с — обновляю страницу'); location.reload(); await env.sleep(8000); return;
+      }
       await env.sleep(100); continue;
     }
     ctx.noMobT = 0;
@@ -2467,6 +2483,7 @@ async function battle() {
       const pending = env.actNet?.();
       const waiting = pending && pending.start > pending.done;
       env.srvHangMark?.(waiting ? 'нет ответа игры 20 с' : 'бой не обновляется 20 с без отправленного хода', waiting ? 'network' : 'interface');   // 8.0.3: смерть сразу после — не «не по силам»
+      if (await recoverRebirth()) return;
       if (reloadSlot()) {   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик)
         env.rec('B', 'бой', `${waiting ? 'нет ответа игры' : 'нет боевых действий'} 20 с (моб ${mob.cur}/${mob.max}) — обновляю страницу`);
         location.reload(); await env.sleep(8000); return;
@@ -2479,13 +2496,13 @@ async function battle() {
   // шаг: слуга — призыв, лечение, перепризыв
   async function petStep(me, mp) {
     // 7.1.16-fix: слуга мага. Призыв — только если сервер явно сказал «слуги нет» (activeSummon: null) не дольше 10 с назад,
-    // не чаще раза в 60 с; лечение слуги — скиллом с целью PET при HP слуги ≤ petHealAt (50 %). Без скилла на панели — ничего
+    // лечение слуги — скиллом с целью PET при HP слуги ≤ petHealAt (50 %). Без скилла на панели — ничего
     if (summonCombat() && env.cfg.petAuto !== false) {
       // HP кота: из ответа сервера (activeSummon), иначе из шапки «Активний слуга» (#l2-hud-companion: «Mew the CatLv.1HP479/750MP320/320»).
       // Окно кота («Відкликати слугу») бот не открывает и не нажимает
       // по просьбе игрока: кот мёртв/не призван — призыв ПЕРВЫМ действием боя. В начале боя ждём до 1,5 с ответа сервера о слуге
       if (!ctx.petChecked) { ctx.petChecked = 1; await env.waitFor(() => { const q = env.petState?.(); return q && Date.now() - q.t < 10000 ? q : null; }, 1500, 100); }
-      let P = env.petState?.(), fresh = P && Date.now() - P.t < 10000;
+      let P = env.petState?.(), fresh = P && Date.now() - P.t >= 0 && Date.now() - P.t < 10000;
       if (!fresh) {
         const box = env.$q('#l2-hud-companion'), tx = box && env.shown(box) ? box.textContent.replace(/\s+/g, '') : '';
         const m = tx.match(/HP(\d+)\/(\d+)/i);
@@ -2499,17 +2516,38 @@ async function battle() {
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
       // 20.46 (John 22.10): голем разрешён и на фарме/в катах; остаются обычные условия petAuto/MP/готовности/перепризыва.
-      if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000 && !env.crafterKit?.noSummon?.(!!ctx.rb)) {
+      // 20.81 (лог 29.10 20:39:28): свежая смерть после успешного призыва не должна ждать оставшиеся 8–15 с.
+      // Ранний повтор — только по запросу, начатому после призыва, и готовому навыку: поздний старый GET не доказывает новую смерть.
+      // Без причинной метки/HUD сохраняется прежний 15-секундный запас после последнего призыва.
+      const summonT = Math.max(+env.rt.petSummonT || 0, +env.rt.petSummonOkT || 0), summonAge = Date.now() - summonT;
+      const causal = fresh && Number.isFinite(P.requestStartedAt) && P.requestStartedAt > 0;
+      const ordered = !causal || P.requestStartedAt > summonT && P.requestStartedAt <= P.t;
+      const serverGone = fresh && ordered && causal && P.hud !== true && Number.isFinite(P.t) && P.t <= Date.now();
+      if (fresh && !P.has && ordered && (ctx.block.petsummon || 0) <= Date.now() && (summonAge > 15000 || serverGone && summonAge >= 2000) && !env.crafterKit?.noSummon?.(raidTarget(ctx))) {
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && servitorSummonSlot(b));   // 9.2: Feline Queen — бафф, не кот; 20.13 (C4): и не кубик
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10 && affordable(sb, mp, 10))) {   // 20.12: и цена act()
+          const needed = () => {
+            if (env.cfg.petAuto === false || env.antibotState?.() || env.crafterKit?.noSummon?.(raidTarget(ctx)) || !ready(sb)) return false;
+            const q = env.petState?.(), age = q ? Date.now() - q.t : Infinity;
+            if (q && age >= 0 && age < 10000) {
+              const stamp = q.requestStartedAt, known = Number.isFinite(stamp) && stamp > 0;
+              if (known && (stamp <= summonT || stamp > q.t) || summonAge < 15000 && !known) return false;
+              return q.has === false || q.has === true && q.hp <= 0;
+            }
+            if (!P.hud) return false;
+            const box = env.$q('#l2-hud-companion'), text = box && env.shown(box) ? box.textContent.replace(/\s+/g, '') : '';
+            const hp = text.match(/HP(\d+)\/(\d+)/i);
+            return !!box && (!env.shown(box) || !!hp && +hp[1] === 0);
+          };
+          ctx.block.petsummon = Date.now() + 2000; // Потерянный клик не превращает один снимок отсутствия в непрерывный повтор.
           env.setRt({ petSummonT: Date.now() })?.catch?.(() => {});   // 20.41: таймеры призыва — без ожидания записи (память вкладки обновлена сразу)
           env.rec('B', 'питомец', `кота нет (умер или не призван) — призываю первым действием: ${env.cleanTitle(sb.title)}`);
-          const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`);
+          const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`, false, needed);
           if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } env.rt.petSummonOkT = env.rt.petBornT = Date.now(); env.setRt({ petBornT: env.rt.petBornT, petSummonOkT: env.rt.petSummonOkT })?.catch?.(() => {}); }   // 7.1.31; 20.43: в памяти сразу
           // 7.2.2 (лог 10.10 23:18:59): клик призыва не ушёл в игру (сразу после включения зарядов) — раньше следующая попытка через 15 с,
           // и игрок призвал кота сам. Теперь повтор через ≈2 с; 8.0.3 (лог 11.10 10:00:45, 10:33:01): потерян в окне занятости игры ('lock') — сразу
-          else env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 })?.catch?.(() => {});   // 20.12: 'nomp' — повтор через ≈2 с, как непрошедший клик
+          else { if (sr === 'lock') ctx.block.petsummon = 0; env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 })?.catch?.(() => {}); }   // 20.12: 'nomp' — повтор через ≈2 с, как непрошедший клик
           return AGAIN;
         }
       }
@@ -2534,12 +2572,12 @@ async function battle() {
         const lastSum = Math.max(+env.rt.petSummonOkT || 0, +env.rt.petResummonT || 0);
         const nPB = env.names(env.cfg.nPetBuffs || '').filter(n => slotsBy(n).length).length;
         const HG = env.rt.petHealGain || [], healAvg = HG.length >= 3 ? HG.reduce((a, x) => a + x, 0) / HG.length : 0;
-        const healWeak = !ctx.rb && sumHp > 0 && healAvg > 0 && healAvg < sumHp / (1 + nPB);
+        const healWeak = !raidTarget(ctx) && sumHp > 0 && healAvg > 0 && healAvg < sumHp / (1 + nPB); // 20.81: РБ Rebirth тоже лечит кота, как обычный РБ.
         const reSoon = now - lastSum < PET_RESUMMON_GAP, reLow = sumHp > 0 && sumHp - P.hp < 0.3 * P.maxHp;
         if (healWeak && petPct <= healAt && hb && now - petHealSkipT > 1800000) { petHealSkipT = now;
           env.rec('B', 'питомец', `лечение слуги ≈+${Math.round(healAvg)} HP за ход меньше, чем новый кот (≈${sumHp} HP за ${1 + nPB} ход.) — вне РБ не лечу, кот бьёт, пока жив`); }
         const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb) && !healWeak;
-        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.(!!ctx.rb) && !reSoon && !reLow;
+        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb) && !env.crafterKit?.noSummon?.(raidTarget(ctx)) && !reSoon && !reLow;
         const useSummon = !!canSummon && (env.cfg.petHealPrefer === 'resummon' || !canHeal);
         const pick = useSummon ? sb : canHeal ? hb : null;
         if (pick) {
@@ -2861,11 +2899,14 @@ async function battle() {
       const atkB = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака');
       const act0 = atkB && env.slotAction(atkB), srvBusy = act0 && env.combatCooldown.skillWait(act0, (env.cdSpawn || env.battleSpawn)()) > 0;
       if (atkB && ready(atkB) && !srvBusy) { ctx.block.attack = 0; await act(atkB, `Атака (простой ${mageCombat() ? 'мага' : 'воина'})`); return AGAIN; }
-      if (atkB && !uiReady(atkB) && !srvBusy && Date.now() - progT > 6000 && reloadSlot()) {
-        if (!killOwnerValid(ctx)) return;
-        env.srvHangMark?.('кнопки боя заняты без серверного отката', 'interface');
-        env.rec('B', 'бой', `6 с без действий: кнопки заняты, серверный КД истёк — обновляю интерфейс боя`);
-        location.reload(); await env.sleep(8000); return;
+      if (atkB && !uiReady(atkB) && !srvBusy && Date.now() - progT > 6000) {
+        if (await recoverRebirth()) return;
+        if (reloadSlot()) {
+          if (!killOwnerValid(ctx)) return;
+          env.srvHangMark?.('кнопки боя заняты без серверного отката', 'interface');
+          env.rec('B', 'бой', `6 с без действий: кнопки заняты, серверный КД истёк — обновляю интерфейс боя`);
+          location.reload(); await env.sleep(8000); return;
+        }
       }
     }
     if (Date.now() - lastAct > 10000) {
@@ -2988,11 +3029,18 @@ async function battleOpen() {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.setStatus('Бой: загрузка');
   const bUrl = location.pathname + location.search;   // v4.43: экран поражения — на странице боя; после смерти вернёмся сюда
+  const openOwner = killOwner(), openEvidence = env.evidenceOwner?.(), openGeneration = env.actionGeneration?.(), openKick = env.rt.manualKickAt || 0, openPage = location.href, openRebirth = rebirthMode();
   if (env.rt.lastBattle !== bUrl) env.setRt({ lastBattle: bUrl });
   const st = await env.waitFor(() => env.serverDown() ? 'down' : victory() ? 'win' : defeat() ? 'dead' : loadErr() ? 'err' : mobHp() ? 'fight' : null, 10000, 50);   // 10.0: опрос 50 мс (было 250 — в среднем +125 мс на бой)
   if (!env.on || st === 'down') return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (!st) {                                     // не загрузилась — обновить (2 раза), потом на карту
+    if (openRebirth) {
+      const valid = () => killOwnerValid({killOwner:openOwner}) && env.evidenceOwner?.() === openEvidence && env.actionGeneration?.() === openGeneration && (env.rt.manualKickAt || 0) === openKick
+        && location.href === openPage && rebirthMode() && env.isBattle() && !env.pvpPending?.() && !env.antibotState?.();
+      if (valid()) { if (typeof env.rebirthRecover === 'function') await env.rebirthRecover(valid); else await env.sleep(300); }
+      return;
+    }
     const n = (env.rt.battleReload || 0) + 1;
     await env.setRt({ battleReload: n });
     env.rec('B', 'бой', `страница боя не загрузилась за 10 с — ${n <= 2 ? `обновляю (${n}/2)` : 'ухожу на карту'}`);

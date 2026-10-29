@@ -1,0 +1,142 @@
+{
+  "firefox": "153.6.0esr",
+  "geckodriver": "0.37.1",
+  "web_ext": "10.8.0",
+  "checks": {
+    "desktop": {
+      "result": "PASS",
+      "observed": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 262,
+        "epicCoin": 0,
+        "popupText": 1326,
+        "sim": "",
+        "ver": "20.81",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.81"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    },
+    "android_api_simulation": {
+      "result": "PASS",
+      "observed": {
+        "hook": true,
+        "content": "l2bot-ind,l2bot-dock,l2bot-dock-toggle,l2bot-dock-wide",
+        "bgReply": {
+          "ok": false
+        },
+        "cfgKeys": 262,
+        "epicCoin": 0,
+        "popupText": 1326,
+        "sim": "undefined,undefined,undefined",
+        "ver": "20.81",
+        "dock": {
+          "checkText": "⚠ Откройте страницу боя и нажмите ещё раз",
+          "foreign": true,
+          "kick": {
+            "ok": false,
+            "owner": false,
+            "reason": "stopped",
+            "running": false,
+            "v": "20.81"
+          },
+          "on": false,
+          "slots": true,
+          "tabs": "undefined"
+        }
+      }
+    }
+  },
+  "lint": {
+    "summary": {
+      "errors": 0,
+      "notices": 0,
+      "warnings": 51
+    },
+    "codes": {
+      "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "UNSAFE_VAR_ASSIGNMENT": 49
+    },
+    "files": {
+      "manifest.json": 2,
+      "enchant-ui.js": 1,
+      "pvp-ui.js": 1,
+      "warlock-ui.js": 1,
+      "popup.js": 44,
+      "content.js": 2
+    }
+  },
+  "packages": {
+    "chrome": {
+      "files": 69,
+      "size": 1769429,
+      "sha256": "bd281b7535e792ab8d6da96c3b311d133396140c9f9972a4c854c96e12ded570",
+      "crc": null,
+      "version": "20.81"
+    },
+    "firefox": {
+      "files": 69,
+      "size": 1780317,
+      "sha256": "ab0b3a6a456c72a5efb73e5d7828657bb4f301e852675fda2ca16cdb09ade0e1",
+      "crc": null,
+      "version": "20.81",
+      "background": {
+        "scripts": [
+          "engine-core.js",
+          "background.js"
+        ]
+      },
+      "browser_specific_settings": {
+        "gecko": {
+          "id": "l2wap-bot@local",
+          "strict_min_version": "128.0",
+          "data_collection_permissions": {
+            "required": [
+              "none"
+            ]
+          }
+        },
+        "gecko_android": {
+          "strict_min_version": "128.0"
+        }
+      }
+    },
+    "chrome_only": [],
+    "firefox_only": [],
+    "different_files": [
+      "manifest.json"
+    ],
+    "shared_runtime_equal": true,
+    "gecko_id_preserved": true
+  },
+  "network": {
+    "game_origin": "https://l2wap.com",
+    "forced_local_dns": true,
+    "server": "127.0.0.1:443",
+    "live_game_requests": 0,
+    "method": "Existing firefox-smoke.cjs forces l2wap.com to loopback with network.dns.localDomains and serves all game paths from a local HTTPS mock."
+  },
+  "limitations": [
+    "Android check simulates absent extension APIs in desktop Firefox; no physical Android device was tested.",
+    "No live game session or real battle was executed.",
+    "This is package startup/menu/background/hook compatibility smoke, not full Rebirth combat browser validation.",
+    "Firefox package is unsigned."
+  ],
+  "original_archives_unchanged": true
+}
