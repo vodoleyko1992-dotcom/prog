@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.80",
-  "description": "L2wap Bot 20.80 — городской бафф кота перед входом в Rebirth",
+  "version": "20.81",
+  "description": "L2wap Bot 20.81 — восстановление Rebirth, кот и сохранение обучения",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -143,5 +143,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.80"
+  "version_name": "20.81"
 }

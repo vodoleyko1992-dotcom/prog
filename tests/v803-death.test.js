@@ -96,7 +96,8 @@ const content = read('content.js'), combat = read('modules/combat.js');
       const env = { actNet: () => NET, srvHangMark: w => marks.push(w), setStatus: () => {}, rec: (...a) => recs.push(a.join(' ')), on: true, tabOwner: true,
         srvUp: async () => { if (answerDuring) NET.done = NET.start; return up; }, sleep: async ms => { now += ms; } };
       let n = 0; const reloadSlot = () => n++ < slots;
-      const sb = { env, ctx: { rb: { id: 'l2dop_rb_25434' }, name: 'Барда' }, mob: { cur: 504275, max: 704170 }, reloadSlot, location: { reload: () => reloads.push(1) }, Date: { now: () => now }, Math };
+      // 20.81: этот стенд проверяет обычного РБ; отдельная Rebirth-сверка здесь неприменима (покрыта v2081-rebirth-recovery-dispatch).
+      const sb = { env, ctx: { rb: { id: 'l2dop_rb_25434' }, name: 'Барда' }, mob: { cur: 504275, max: 704170 }, recoverRebirth: async () => false, reloadSlot, location: { reload: () => reloads.push(1) }, Date: { now: () => now }, Math };
       vm.runInNewContext(`this.step = async () => { for (let i = 0; i < 1; i++) {\n${block}\n return 'through'; } return 'wait'; };`, sb);
       const r = await sb.step();
       return { r: r ?? 'return', recs, marks, reloads };

@@ -26,7 +26,7 @@ const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualK
 const patch = p => env.setRt({ petFull: { ...state(), ...p, ...('nextCheckAt' in p ? { waitKey: waitKey() } : {}) } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
-let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
+let busy = false, serial = 0, fullReadN = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
 // 20.76+ (ревизия 28.10): отказ core gamePost ДО fetch (Stop/замок, PvP, устаревший кадр действий, ЛС, неподтверждённая оплата) — покупка
 // не уходила на сервер; это не «ответ потерян». Тот же список, что craft.js/crafterkit.js NOT_SENT
@@ -311,7 +311,7 @@ async function startGiveUp(J, why) {
 }
 const raidPrepare = (o = {}) => petPrepare({ ...o, reason: 'raid' });
 const startPrepare = (o = {}) => petPrepare({ ...o, reason: 'start' });
-let rebirthPrepKey = '';
+let rebirthPrepKey = '', rebirthTownChecked = '';
 // Собственный вызов перед открытием боя: родной призыв/баффы, затем прежний каталог и квитанции полного набора.
 // Полный набор всё так же требует подтверждённого входа в город; сюда не добавляется новый путь оплаты.
 async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth-raids.html', allowTown = false } = {}) {
@@ -326,8 +326,14 @@ async function rebirthPrepare({ afterWin = false, wanted, returnPath = '/rebirth
   if(!wanted()||!rebirthConfig())return false;
   // 20.79+ (лог 29.10 14:39): после городской поездки с mob_300 поход исчез, начался missing-run. Родные касты доступны и в походе; полный набор — только перед новым входом.
   if(settings.petFullAuto!==true||allowTown!==true)return false;
-  const waiting=await step({afterWin});
+  // 20.81 (лог 29.10 20:05–20:15): старый nextCheckAt полного набора не доказывает живые эффекты перед новым походом.
+  // Один принудительный осмотр на вход; последующие круги сохраняют обычные паузы ошибок/цены/резерва и квитанции оплаты.
+  if(busy)return true;
+  const checkKey=JSON.stringify([key,signature(),+env.rt.petBornT||0]),fresh=rebirthTownChecked!==checkKey,readN=fullReadN;
+  const waiting=await step({afterWin,forceRead:fresh});
   if(!wanted()||!rebirthConfig())return waiting;
+  if(fresh){if(fullReadN===readN)return true;rebirthTownChecked=checkKey;} // отменённый темп/кадр не засчитывает сверку; ошибка чтения сохраняет штатную паузу
+  if(fresh&&state().status==='early-loss')env.rec?.('B','суммон','Перед новым входом Rebirth: полный набор эффектов суммона не подтверждён, оплаченный срок ещё действует — до его окончания повторно не покупаю');
   // На победе панели призыва нет. Проверенный сервером отсутствующий кот готовится в своём каталоге, без нового входа.
   if(afterWin&&state().status==='pet'&&mine(token())&&priority(true)&&env.canAct?.()!==false){env.nativeNavigate?.(returnPath);return true;}
   return waiting;
@@ -518,6 +524,7 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     // 23.10: после победы тоже ждём общий темп до свежего снимка, не задерживая сверку неизвестной оплаты.
     if (!state().pending && env.actionWait && !await env.actionWait(() => same(T, afterWin))) return false;
     if (!same(T, afterWin)) return false;
+    fullReadN++;
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
     if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Wizard / Warlock / Arcana Lord, Dark Avenger / Hell Knight или Warsmith / Maestro', { nextCheckAt: Date.now() + 15000 }); return false; }

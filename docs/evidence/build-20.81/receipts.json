@@ -1,0 +1,24 @@
+[
+  {
+    "browser": "chrome",
+    "file": "l2wap-bot-v20.81.zip",
+    "version": "20.81",
+    "files": 69,
+    "bytes": 1769429,
+    "sha256": "bd281b7535e792ab8d6da96c3b311d133396140c9f9972a4c854c96e12ded570",
+    "crc": "PASS",
+    "sourceMatches": "PASS",
+    "profileCredentialKeys": 0
+  },
+  {
+    "browser": "firefox",
+    "file": "l2wap-bot-v20.81-firefox.zip",
+    "version": "20.81",
+    "files": 69,
+    "bytes": 1780317,
+    "sha256": "ab0b3a6a456c72a5efb73e5d7828657bb4f301e852675fda2ca16cdb09ade0e1",
+    "crc": "PASS",
+    "sourceMatches": "PASS",
+    "profileCredentialKeys": 0
+  }
+]

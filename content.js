@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.80 — городской бафф кота перед входом в Rebirth =====
+// ===== L2wap Bot v20.81 — восстановление Rebirth, кот и сохранение обучения =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -5272,7 +5272,8 @@ const learnLoad = () => LEARN ? Promise.resolve(LEARN) : chrome.storage.local.ge
   let L = learn && learn.v === 1 ? learn : { v: 1, t0: Date.now(), sel: {}, pages: {}, api: {}, changes: [] };
   try { const ss = JSON.parse(sessionStorage.getItem(LEARN_SS) || 'null');
     if (ss?.L?.v === 1 && ss.t > (L.saved || 0) && (ss.L.t0 || 0) === (L.t0 || 0)) { L = ss.L; learnDirty = true; } } catch (e) {}
-  learnSavedT = Date.now();
+  // 20.81 (лог 29.10 20:38): короткие бои не начинают трёхминутный срок сохранения заново на каждой странице.
+  learnSavedT = [L.saved, L.t0].find(t => Number.isFinite(t) && t > 0 && t <= Date.now()) || Date.now();
   // 20.43: старые ключи с номером спавна (l2dop_rb_25063 …) сливаем в ключ своего вида (l2dop_rb_:n); их «новый запрос API» в списке
   // изменений — шум. Схемы (forms) складываем счётчиками: иначе слитый ключ взял бы схему одного РБ (у части есть
   // raidBossAttackBlockedReasonUk — 16 из 242 ответов) и следующий РБ без этого поля дал бы ложное «ответ API изменился»
@@ -5296,19 +5297,31 @@ function learnMerge(y, x) {
   return { ...y, n: (y.n || 0) + (x.n || 0), keys: learnCnt(y.keys, x.keys), forms, st: learnCnt(y.st, x.st),
     first: Math.min(+y.first || Date.now(), +x.first || Date.now()), last: Math.max(+y.last || 0, +x.last || 0) };
 }
+const learnBuffer = () => { try { sessionStorage.setItem(LEARN_SS, JSON.stringify({ t: Math.max(Date.now(), learnSavedT) + 1, L: LEARN })); return true; } catch (_) { return false; } };
+let learnWriting = null;
 const learnSave = () => {
-  if (!learnDirty || !LEARN || tabIdle || document.prerendering) return;
-  learnDirty = false; learnSavedT = Date.now(); LEARN.saved = learnSavedT;
-  chrome.storage.local.set({ learn: LEARN }).catch(() => {});
-  try { sessionStorage.removeItem(LEARN_SS); } catch (e) {}
+  if (!learnDirty || !LEARN || tabIdle || document.prerendering || learnWriting) return Promise.resolve(false);
+  const L = LEARN, at = Date.now(); learnBuffer(); learnDirty = false;
+  const failed = () => { if (LEARN === L) { learnDirty = true; learnBuffer(); } return false; };
+  let request;
+  try { request = chrome.storage.local.set({ learn: { ...L, saved: at } }); } catch (_) { return Promise.resolve(failed()); }
+  // Подтверждение относится к отправленному снимку: новые наблюдения или сброс обучения не очищаются старым ACK.
+  const writing = Promise.resolve(request).then(() => {
+    if (LEARN !== L) return false;
+    L.saved = at; learnSavedT = at;
+    if (learnDirty) learnBuffer(); else try { sessionStorage.removeItem(LEARN_SS); } catch (_) {}
+    return true;
+  }, failed).finally(() => { if (learnWriting === writing) learnWriting = null; });
+  learnWriting = writing; return writing;
 };
 setInterval(() => { if (Date.now() - learnSavedT > 180000) learnSave(); }, 20000);
 // v5.2: страница РБ перезагружается каждые ~20 с — обучение не успевало сохраниться. При уходе со страницы — копия в памяти
 // вкладки (быстро, без рассылки), следующая страница продолжит с неё
 addEventListener('pagehide', () => {
   if (!LEARN || !learnDirty) return;
-  if (Date.now() - learnSavedT > 180000) return learnSave();
-  try { sessionStorage.setItem(LEARN_SS, JSON.stringify({ t: Date.now(), L: LEARN })); } catch (e) { learnSave(); }
+  const buffered = learnBuffer();
+  // Новый API/изменение страницы не ждёт отменённый навигацией таймер 1,5 с. Обычные счётчики пишутся раз в 3 мин.
+  if (!buffered || learnSaveT || Date.now() - learnSavedT > 180000) learnSave();
 });
 let learnSaveT = null; const learnSaveSoon = () => { if (!learnSaveT) learnSaveT = setTimeout(() => { learnSaveT = null; learnSave(); }, 1500); };
 function learnChange(kind, what, opts = {}) {
@@ -6045,7 +6058,7 @@ addEventListener('message', e => {
   }
   // 20.43: собственный GET /character игры — тоже свежий источник слуги (поле есть только когда сервер его прислал)
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char && d.pet.activeSummon !== undefined) {
-    const s = d.pet.activeSummon; petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || PET?.key || '', name: PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char' });
+    const s = d.pet.activeSummon; petSet({ t: Date.now(), has: !!s && +s.hp > 0, key: s?.key || PET?.key || '', name: PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, srv: 'char', requestStartedAt: netContext.at });
     // Кот пропал вне боя после готовой подготовки — подготовить снова (не чаще раза в минуту и не больше 3 раз за Старт).
     const S = rt.startPrep;
     if (!s && tabOwner && d.pet.inBattle === false && !isBattle() && S?.phase === 'done' && startPrepEligible() && startPrepSame(S) && (+S.resets || 0) < 3 && Date.now() - (+S.resetT || 0) > 60000) {
@@ -6174,7 +6187,7 @@ addEventListener('message', e => {
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
     // 20.43: ответ хода несёт слугу в delta.activeSummon — без него «кота нет» из start держалось весь бой
     const src = d.res.battle && typeof d.res.battle === 'object' && 'activeSummon' in d.res.battle ? d.res.battle : d.res.delta && typeof d.res.delta === 'object' && 'activeSummon' in d.res.delta ? d.res.delta : d.res;
-    if ('activeSummon' in src) { const s = src.activeSummon; petSet({ t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 });
+    if ('activeSummon' in src) { const s = src.activeSummon; petSet({ t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0, requestStartedAt: netContext.at });
       if (s?.key && rt.petLast !== s.key && tabOwner) setRt({ petLast: s.key }).catch(e => quietErr('запись памяти', e)); }   // 8.0.3: последний живой кот — переживает перезагрузку (combat.petPick)
   } catch (er) {}
   // v5.5.1: темп обычной атаки — от сервера. С луком (лог 08.10 19:32) интервал атаки длиннее, кнопка «готова» раньше, игра
@@ -6646,7 +6659,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get rebirthSelected(){return rebirthModeSelected}, get rebirthBattleProof(){return options=>L2V7Modules.rebirth.battleProof(options)}, get rebirthReturn(){return rebirthReturn}, get actionWait(){return actionWait}, get heroNick(){return heroNick}, get actionGeneration(){return ()=>automationGeneration}, get rtCommit(){return rtCommit}, get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get rbRetreatRec(){return (...args)=>L2V7Modules.raid.rbRetreatRec(...args)}/* 20.76+ ревью ревизии 28.10: запись отхода этой жизни РБ */, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get rebirthSelected(){return rebirthModeSelected}, get rebirthBattleProof(){return options=>L2V7Modules.rebirth.battleProof(options)}, get rebirthReturn(){return rebirthReturn}, get rebirthRecover(){return valid=>L2V7Modules.rebirth.recoverBattle(valid)}, get actionWait(){return actionWait}, get heroNick(){return heroNick}, get actionGeneration(){return ()=>automationGeneration}, get rtCommit(){return rtCommit}, get crafterKit(){return L2V7Modules.crafterkit}, get quietErr(){return modErr}, get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get rbRetreatRec(){return (...args)=>L2V7Modules.raid.rbRetreatRec(...args)}/* 20.76+ ревью ревизии 28.10: запись отхода этой жизни РБ */, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);}, get invQty(){return invQty;},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); }, get fightHitsIn() { return () => { const F = L2V7Modules.fightlab.fight(); if (!F) return []; const m = F.key && L2V7Modules.fightlab.recall(F.key); return [...(m?.h || []), ...(F.hits || [])]; }; },
@@ -7789,7 +7802,7 @@ const warlockService = L2V7Modules.warlock;
 L2V7Modules.warlock = { ...warlockService, step: async options => { if (!warlockCanRun()) return false; await warlockService.classAutoTick(); return warlockCanRun() ? warlockService.step(options) : false; } };
 L2V7Modules.rebirth = L2V7Factories.rebirth({
   get cfg(){return cfg},get rt(){return rt},get on(){return on},get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch},get actionGeneration(){return ()=>automationGeneration},
-  get browserTabKey(){return BROWSER_TAB_KEY},get completedBoss(){return rebirthCompletedBoss},
+  get browserTabKey(){return BROWSER_TAB_KEY},get completedBoss(){return rebirthCompletedBoss},get onDeath(){return onDeath},
   get autonomyMode(){return autonomyMode},get victory(){return victory},get battleInfo(){return ()=>BATTLE_NET},get evidenceOwner(){return observeOwner},
   get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])},get tvtSoon(){return tvtSoon},get tvtHoldWait(){return tvtHoldWait},
   get pvpPending(){return ()=>!!L2V7Modules.pvp?.pending()},get antibotState(){return antibotState},get actionWait(){return actionWait},get waitFor(){return waitFor},get rebirthReturn(){return rebirthReturn},
@@ -7798,6 +7811,7 @@ L2V7Modules.rebirth = L2V7Factories.rebirth({
   get heroNick(){return heroNick},get heroLvl(){return heroLvl},get routeLocation(){return actionLocation},get gameGet(){return gameGet},get gamePost(){return gamePost},
   get setRt(){return setRt},get rtCommit(){return rtCommit},get fire(){return fire},get pause(){return pause},get sleep(){return sleep},get shown(){return shown},get $q(){return $q},
   get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return preparation=>rebirthPreparePet({...preparation,allowTown:true})},get prepareRun(){return preparation=>rebirthPreparePet({...preparation,allowTown:false})},get cancelRunPreparation(){return rebirthCancelRunPreparation},get needsPetPreparation(){return rebirthNeedsPet}, // Внутри оплаченного похода — только родные касты кота, городской набор — перед новым входом.
+  get nativePendingKey(){return ()=>JSON.stringify([...NET_CONTEXT.entries()].filter(([,c])=>c.char===rt.char&&c.lease===leaseEpoch&&/^\/game\/(?:rebirth-raids\/(?:start|next|enter-boss)|battle\/(?:start|hunt-continue|action))$/.test(c.path)).map(([rid,c])=>[rid,c.path,c.at]))},
   get nativePending(){return ()=>[...NET_CONTEXT.values()].some(c=>c.char===rt.char&&c.lease===leaseEpoch&&/^\/game\/(?:rebirth-raids\/(?:start|next|enter-boss)|battle\/(?:start|hunt-continue|action))$/.test(c.path))}
 });
 let warlockCommandBusy = false;

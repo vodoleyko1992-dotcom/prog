@@ -15,8 +15,8 @@ root.L2V7Factories.rebirth=function create_rebirth(env){
  const current=T=>on()&&env.canAct?.()!==false&&env.canRun?.()!==false&&env.heroNick?.()===T.char&&env.rt.char===T.char
   &&env.rt.classCur?.prof===T.prof&&env.rt.classCur?.slot===T.slot&&(env.heroLvl?.()||env.rt.lvl)===T.level
   &&env.leaseEpoch===T.lease&&env.actionGeneration?.()===T.generation&&(env.rt.manualKickAt||0)===T.kick&&location.href===T.page&&config()===T.config;
- const own=(c,T,min=0,id)=>c?.name===T.char&&typeof c.id==='string'&&!!c.id&&(!id||c.id===id)&&c.l2Profession===T.prof
-  &&c.classSlots?.activeSlot===T.slot&&c.level===T.level&&integer(c.revision)&&c.revision>=min&&typeof c.inBattle==='boolean'&&c.hp>0&&!special(c);
+ const own=(c,T,min=0,id,dead=false)=>c?.name===T.char&&typeof c.id==='string'&&!!c.id&&(!id||c.id===id)&&c.l2Profession===T.prof
+  &&c.classSlots?.activeSlot===T.slot&&c.level===T.level&&integer(c.revision)&&c.revision>=min&&typeof c.inBattle==='boolean'&&(c.hp>0||dead&&c.hp===0)&&!special(c);
  const solo=(run,actor)=>UUID.test(run?.id||'')&&run.partyId===null&&Array.isArray(run.participantCharacterIds)
   &&run.participantCharacterIds.length===1&&run.participantCharacterIds[0]===actor;
  const pendingSame=(P,field='pending')=>state()[field]?.id===P?.id;
@@ -112,7 +112,14 @@ root.L2V7Factories.rebirth=function create_rebirth(env){
    const response=await env.gamePost('/game/rebirth-raids/enter-boss',{bossSlot:3},8000);
    if(!current(T)||!pendingSame(P,'bossPending'))return true;
    const body=await response.json();if(!current(T)||!pendingSame(P,'bossPending'))return true;
-   const r=body?.run,ack={status:response.status,ok:response.ok&&!body?.error&&r?.id===run.id&&selectedBoss(r)&&r.selectedBossSlot===3&&r.selectedBossSpawnId==='l2dop_rb_25098'};
+   // 20.81 (лог29.10 19:47): encoded slot задаёт категорию; конкретный РБ меняется с уровнем (25098 → 25134).
+   // Ответ всё равно обязан принадлежать своему одиночному run; если есть nextSpawnId, он должен согласоваться с выбранным РБ.
+   const r=body?.run,next=body?.nextSpawnId,parts=spawnParts(next),linked=next==null||!!parts&&parts[1].toLowerCase()===run.id.toLowerCase()
+    &&Number(parts[2])===ch.rebirthStage&&Number(parts[3])===r?.difficulty&&Number(parts[5])===ch.level
+    &&parts[4]===String(r?.selectedBossSpawnId||'').replace(/^l2dop_rb_/,'')&&parts[6].toLowerCase()==='raid'&&Number(parts[7])===P.bossSlot;
+   const ack={status:response.status,ok:response.ok&&!body?.error&&body?.ok!==false&&r?.id===run.id&&solo(r,ch.id)
+    &&r.difficulty===run.difficulty&&r.mobKillTarget===run.mobKillTarget&&integer(r.mobKills)&&r.mobKills>=run.mobKills
+    &&selectedBoss(r)&&r.selectedBossSlot===P.bossSlot&&linked};
    await save(T,{bossPending:{...state().bossPending,ack}});
    await status(T,ack.ok?'boss-selected':'manual',ack.ok?'выбор РБ принят — сверяю своё логово':'выбор РБ не подтверждён — требуется ручная проверка');
   }catch(_){if(current(T)&&pendingSame(P,'bossPending'))await status(T,'unknown','ответ выбора РБ потерян — повторно не выбираю');}
@@ -231,7 +238,11 @@ async function nextFight(ctx) {
     if (!current()) return;
     if (!ready) return hold('лимит охоты проверяется или достигнут');
     if (env.actionWait && !await env.actionWait(current) || !current()) return;
-    if (typeof env.gameGet !== 'function' || !await env.rtCommit?.() || !current()) return hold('не удалось подтвердить память перед продолжением');
+    if (typeof env.gameGet !== 'function') return hold('серверная сверка продолжения недоступна');
+    const committed = await env.rtCommit?.();
+    // 20.81 (лог29.10 19:42): поздний итог меняет metadata/DOM во время успешной записи. Старый probe отменён, память не сломана.
+    if (!current()) return;
+    if (!committed) return hold('не удалось подтвердить память перед продолжением');
     reading = true;
     // 20.71 (лог28.10 01:32): независимые свежие сверки героя и похода читаем вместе; до обеих нет native-клика.
     const snapshots = await Promise.allSettled(['/character','/game/rebirth-raids?view=instance'].map(async url => {
@@ -315,6 +326,68 @@ async function nextFight(ctx) {
  // Допуск всегда читает собственный живой бой и одиночный run; имя или один суффикс ID разрешением не служат.
  const spawnParts=sid=>{const p=typeof sid==='string'?sid.match(/^rebirth_raid_([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})_([1-9]\d*)_([1-9]\d*)_([1-9]\d*)_lv([1-9]\d*)_(mob|champion|raid)_(0|[1-9]\d*)$/i):null;
   return p&&(p[6].toLowerCase()==='raid'||Number(p[7])>0)?p:null;};
+ // 20.81 (лог29.10 20:08): reload старого URL повторял start уже убитого моба до запуска content.js.
+ // После зависшего хода восстанавливаем только свой контекст через бесплатный каталог; неизвестные оплаты/next-квитанции сохраняются.
+ let recoveryGate={key:'',until:0,busy:false};
+ async function recoverBattle(valid){
+  if(!on()||env.autonomyMode?.()!=='rebirth'||path()!=='/battle.html')return false;
+  const T=token(),ids=new URLSearchParams(location.search||'').getAll('spawnId'),sid=ids.length===1?ids[0]:'',parts=spawnParts(sid),s=state();
+  const lineage=r=>JSON.stringify([r.actor,r.prof,r.slot,r.runId,r.battleSpawn,r.battleRole,r.observedRun?.char,r.observedRun?.kick]);
+  const saved=lineage(s),linked=!!parts&&s.battleSpawn===sid&&typeof s.runId==='string'&&s.runId.toLowerCase()===parts[1].toLowerCase()&&s.battleRole===parts[6].toLowerCase()
+   &&s.prof===T.prof&&s.slot===T.slot&&typeof s.actor==='string'&&!!s.actor&&s.observedRun?.char===T.char&&s.observedRun?.kick===T.kick;
+  const still=()=>current(T)&&env.autonomyMode?.()==='rebirth'&&typeof valid==='function'&&valid()===true&&lineage(state())===saved
+   &&!env.antibotState?.()&&!env.pvpPending?.()&&!env.tvtSoon?.();
+  const hold=async why=>{if(still()){env.setStatus?.('Rebirth: '+why);await env.sleep?.(300);}return true;};
+  if(!still())return true;
+  if(!linked||!T.lease||!Number.isInteger(T.slot)||T.slot<0||!Number.isFinite(T.generation)||typeof env.gameGet!=='function')return hold('жду подтверждение своего боя без повторного входа');
+  const key=JSON.stringify([T,saved]);if(recoveryGate.key!==key)recoveryGate={key,until:0,busy:false};
+  const G=recoveryGate;if(G.busy||Date.now()<G.until)return hold('жду свежую сверку зависшего хода без перезагрузки боя');
+  const pendingKey=()=>typeof env.nativePendingKey==='function'?env.nativePendingKey():'',pendingAtStart=pendingKey();
+  G.busy=true;G.until=Date.now()+3000;
+  try{
+   const results=await Promise.allSettled(['/character','/game/rebirth-raids?view=instance'].map(url=>read(url,T)));
+   if(!still())return true;if(results.some(r=>r.status!=='fulfilled'))return hold('сверка зависшего хода не ответила — старый бой не перезагружаю');
+   const [data,instance]=results.map(r=>r.value),ch=data?.character||data,run=instance?.activeRun;
+   if(data?.error||data?.ok===false||special(data)||!own(ch,T,0,s.actor,true)||!Number.isSafeInteger(ch.rebirthStage)||ch.rebirthStage<=0
+    ||Number(parts[2])!==ch.rebirthStage||Number(parts[3])!==(run?.difficulty??s.difficulty)||Number(parts[5])!==ch.level
+    ||instance?.error||instance?.ok===false||instance?.enabled!==true||instance.rebirthStage!==ch.rebirthStage||!Object.hasOwn(instance,'activeRun')
+    ||run!==null&&(!solo(run,ch.id)||run.id.toLowerCase()!==s.runId.toLowerCase()||![1,2,3].includes(run.difficulty)
+     ||!integer(run.mobKills)||!integer(run.mobKillTarget)||run.mobKillTarget<=0))return hold('свой герой и оплаченный поход после зависания не подтверждены');
+   if(ch.hp===0){
+    if(ch.inBattle&&ch.battleSpawnId!==sid||typeof env.onDeath!=='function')return hold('собственная смерть после зависания ещё не подтверждена');
+    // Штатный учёт сохраняет counted/failedRun и соблюдает autoRevive/предел смертей. Победу и новый вход здесь не создаём.
+    await env.onDeath();if(!still())return true;
+    const R=env.rt.revive,m=R?.rebirthRecovery;
+    if(!R?.counted||R.revived||m?.kind!=='death'||m.char!==T.char||m.actor!==s.actor||m.prof!==T.prof||m.slot!==T.slot||m.kick!==T.kick||m.runId!==s.runId||m.spawn!==sid)return true;
+    // В старом DOM может не быть кнопки поражения. Карта покажет родной возврат; revive не должен снова открывать battle/start по старому URL.
+    const pendingSafe=()=>!env.nativePending?.()||!!pendingAtStart&&pendingKey()===pendingAtStart;
+    if(!pendingSafe())return true;
+    const write=await env.setRt({revive:{...R,url:'/map.html'}});
+    if(write?.ok!==true||!still()||!pendingSafe()||!await env.rtCommit?.()||!still()||!pendingSafe())return true;
+    location.href='/map.html';return true;
+   }
+   const role=parts[6].toLowerCase(),progressed=!ch.inBattle&&(run===null
+    ||role==='mob'&&integer(s.mobKills)&&run.mobKills>s.mobKills&&run.mobKills>=Number(parts[7])
+    ||role==='champion'&&s.runPhase==='champion'&&run.mobKills>=run.mobKillTarget&&typeof run.phase==='string'&&!!run.phase
+     &&!['mobs','champion','none','completed','finished'].includes(run.phase));
+   // Свежая смена этапа/отсутствие run разрешает только бесплатный каталог. Это не квитанция победы и не допуск нового входа.
+   const pendingSafe=()=>!env.nativePending?.()||!!pendingAtStart&&pendingKey()===pendingAtStart&&progressed;
+   if(!pendingSafe())return hold('ход ещё выполняется — жду результат без повторного старта');
+   if(ch.inBattle){
+    if(ch.battleSpawnId!==sid||!run)return hold('активный бой изменился — старый URL не перезагружаю');
+    const result=await read('/game/battle?characterId='+encodeURIComponent(ch.id)+'&spawnId='+encodeURIComponent(sid),T);if(!still())return true;
+    const c=result?.character,b=result?.battle;
+    if(result?.error||result?.ok===false||special(result)||!own(c,T,ch.revision,ch.id)||c.inBattle!==true||c.battleSpawnId!==sid||c.rebirthStage!==ch.rebirthStage
+     ||!b||b.spawnId!==sid||!Number.isFinite(b.mobHp)||b.mobHp<=0||!Number.isFinite(b.mobMaxHp)||b.mobMaxHp<b.mobHp||b.ended||b.finished
+     ||result.victory||result.defeat||special(b)||!(b.kind==='dungeon'||parts[6].toLowerCase()==='raid'&&/^(?:raid|boss|raid_boss)$/.test(b.kind||'')))
+     return hold('живой бой после зависания не подтверждён — старый URL не перезагружаю');
+   }
+   if(!still()||!pendingSafe()||!await env.rtCommit?.()||!still()||!pendingSafe())return true;
+   env.setStatus?.('Rebirth: состояние после зависшего хода сверено — продолжаю через каталог');
+   location.href='/rebirth-raids.html';return true;
+  }catch(_){return hold('сверка зависшего хода не ответила — старый бой не перезагружаю');}
+  finally{G.busy=false;}
+ }
  let battleGate={key:'',until:0,busy:false,failures:0};
  async function battleProof({name,max,title,valid}={}){
   const T=token(),still=()=>current(T)&&env.autonomyMode?.()==='rebirth'&&typeof valid==='function'&&valid()===true;
@@ -413,7 +486,7 @@ async function nextFight(ctx) {
     const B=state().bossPending;
     if(B&&B.runId===run.id&&B.actor===ch.id&&B.char===T.char&&B.prof===T.prof&&B.slot===T.slot&&ch.revision>=B.revision){
      if(selectedBoss(run))await save(T,{bossPending:null,lastBossChoice:{runId:run.id,bossSlot:run.selectedBossSlot,spawnId:run.selectedBossSpawnId,
-      choice:run.selectedBossSlot===3&&run.selectedBossSpawnId==='l2dop_rb_25098'?'staff1h':'manual-other',confirmation:'fresh-own-run'}});
+      choice:B.bossSlot===3&&run.selectedBossSlot===B.bossSlot?'staff1h':'manual-other',confirmation:'fresh-own-run'}});
      else if(B.phase==='prepared'||knownUnsent(B,'bossPending',ch,T)){if(await save(T,{bossPending:null}))unmark(B,'bossPending');}
     }
     if(!current(T))return true;
@@ -517,6 +590,6 @@ async function nextFight(ctx) {
    return true;
   }finally{busy=false;}
  }
- return{on,step,note,nextFight,battleProof,summary:()=>({...state(),enabled:on()})};
+ return{on,step,note,nextFight,battleProof,recoverBattle,summary:()=>({...state(),enabled:on()})};
 };
 })(globalThis);

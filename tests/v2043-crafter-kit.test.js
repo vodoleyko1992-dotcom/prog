@@ -143,7 +143,10 @@ test('подключение: цикл, оружие «в класс», бой, 
   assert.match(eq, /better && !augHold && !env\.gearHold\?\.\(\)\) \{/);
   assert.match(content, /get gearHold\(\)\{return \(\)=>!!L2V7Modules\.crafterkit\?\.holds\?\.\(\)\}/);
   const cb = read('modules/combat.js');
-  assert.equal((cb.match(/!env\.crafterKit\?\.noSummon\?\.\(!!ctx\.rb\)/g) || []).length, 2, 'призыв и перепризыв слуги (20.44: в бою с РБ голема можно)');
+  // 20.81: raidTarget включает Rebirth РБ; прежние два запрета сохранены, перед кликом добавлена третья повторная проверка.
+  assert.equal((cb.match(/!env\.crafterKit\?\.noSummon\?\.\(raidTarget\(ctx\)\)/g) || []).length, 2, 'призыв и перепризыв соблюдают запрет набора для обычного и Rebirth РБ');
+  assert.equal((cb.match(/env\.crafterKit\?\.noSummon\?\.\(raidTarget\(ctx\)\)/g) || []).length, 3, 'классовый запрет дополнительно проверяется перед fire призыва');
+  assert.match(cb, /const raidTarget = ctx => !!ctx\?\.rb \|\| ctx\?\.rebirth\?\.role === 'raid';/, 'критерий РБ включает оба режима');
   assert.match(read('modules/mobfarm.js'), /env\.victory\(\) && env\.canAct\?\.\(\) !== false && env\.crafterKit\?\.chainWant\?\.\(\)\) return env\.toMap\(\);/);
   assert.match(content, /known\.wt === '—'\)\) return;/, 'щит не записывается надетым оружием');
   const js = JSON.parse(read('manifest.json')).content_scripts.find(x => x.js.includes('content.js')).js;

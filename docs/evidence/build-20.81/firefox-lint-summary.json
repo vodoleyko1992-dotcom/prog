@@ -1,0 +1,20 @@
+{
+  "summary": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 51
+  },
+  "codes": {
+    "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+    "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+    "UNSAFE_VAR_ASSIGNMENT": 49
+  },
+  "files": {
+    "manifest.json": 2,
+    "enchant-ui.js": 1,
+    "pvp-ui.js": 1,
+    "warlock-ui.js": 1,
+    "popup.js": 44,
+    "content.js": 2
+  }
+}

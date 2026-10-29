@@ -26,6 +26,7 @@ const p = R.rbListPick();
 assert.equal(p.id, 'w', 'wounded RB we fought goes first among equal levels'); assert.ok(p.wounded);
 // 3. призыв кота: клик не ушёл — повтор через ≈2 с; убит РБ — рана забыта
 const combat = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8');
-assert.match(combat, /else env\.setRt\(\{ petSummonT: sr === 'lock' \? 0 : Date\.now\(\) - 13000 \}\)\?\.catch\?\.\(\(\) => \{\}\);/);   // 20.41: без ожидания записи   // 8.0.3: потерян в окне занятости ('lock') — сразу
+// 20.81: новая ветка дополнительно снимает petsummon-блок при lock; прежний откат таймера (lock=0, потеря≈2с) обязателен.
+assert.match(combat, /else \{ if \(sr === 'lock'\) ctx\.block\.petsummon = 0; env\.setRt\(\{ petSummonT: sr === 'lock' \? 0 : Date\.now\(\) - 13000 \}\)\?\.catch\?\.\(\(\) => \{\}\); \}/);   // 20.41: без ожидания записи
 assert.match(combat, /delete W\[ctx\.rb\.id\]; env\.setRt\(\{ rbWound: W \}\);/);   // 20.41: без ожидания записи
 console.log('PASS: town set never downgrades active buffs, wounded RB first in the tour, cat summon retried in ~2 s');
