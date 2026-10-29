@@ -97,7 +97,7 @@ async function testRetention() {
   console.log('PASS: sparse ID retention, important state preserved, journal retry buffer');
 }
 (async () => {
-  assert.equal(manifest.version, '20.77');
+  assert.equal(manifest.version, '20.78');
   await testItems();
   await testKnowledgeCaches();
   await testRetention();
