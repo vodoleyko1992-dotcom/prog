@@ -1,0 +1,29 @@
+{
+  "reportedVersion": "20.78",
+  "latestPublishedAtTaskStart": "20.79",
+  "timeZone": "UTC+10",
+  "sourceFile": "l2bot-log-2026-10-29-05-13.txt",
+  "lastMobVictoryAt": "14:39:09.664",
+  "lastMobIndex": 300,
+  "petTownTripAt": "14:39:13.339",
+  "knownActiveRunPreparationAt": "14:39:13.349",
+  "enterCityAt": "14:39:15.226",
+  "missingRunAt": "14:39:15.275",
+  "lastEventAt": "15:12:58.006",
+  "idleSeconds": 2022.725,
+  "userClicksAfterFailure": 0,
+  "events": [
+    "14:39:10.322 [B] бот Бой: загрузка",
+    "14:39:10.368 [B] бот Rebirth: серверная сверка не ответила — жду без повторного входа",
+    "14:39:11.303 [S] ядро v20.78: управление вкладкой получено, запускаю цикл /rebirth-raids.html",
+    "14:39:13.339 [B] бот Автобаф суммона: иду в город",
+    "14:39:13.349 [B] бот Rebirth: готовлю героя и суммона перед боем текущего похода",
+    "14:39:14.565 [S] ядро v20.78: управление вкладкой получено, запускаю цикл /city.html",
+    "14:39:15.275 [B] бот Rebirth: прошлый поход исчез без подтверждённого завершения — нужен новый Старт или ручной вход",
+    "14:39:16.649 [S] страница Город — L2WAP"
+  ],
+  "shownHeroHp": "5198/5198",
+  "shownHeroMpInCity": "1337/2271",
+  "boundary": "Own fetch responses are not fully logged. Preparing status requires a fresh activeRun before trip; missing-run status after enter-city implies fresh activeRun:null. The uploads do not prove the server mechanism that removed it. Old learn20.77 events are historical, hidden DOM victory templates do not prove current victory.",
+  "liveGameOpened": false
+}

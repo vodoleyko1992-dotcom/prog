@@ -1,0 +1,129 @@
+{
+  "boundary": "Actual current Chrome MV3/core/main/hook with fully local HTTPS and native champion button; paid run mobs300/300, live unbuffed Mew, no town/buff/new-entry; Stop and legacy orphan; full champion battle not modelled; no live game",
+  "proof": [
+    {
+      "case": "active-run",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/rebirth-raid-dungeon.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/battle/start",
+          "method": "POST"
+        }
+      ],
+      "nativeChampionFights": 1,
+      "paidEntries": 0,
+      "cityEntries": 0,
+      "summonPurchases": 0,
+      "keys": 100,
+      "runId": "00000000-0000-4000-8000-000000000001",
+      "mobKills": 300,
+      "orphanCleared": null,
+      "status": "Проверяю серверное время и лимиты дня",
+      "liveRequests": 0,
+      "errors": []
+    },
+    {
+      "case": "Stop-read",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/rebirth-raid-dungeon.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raid-dungeon.html",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "nativeChampionFights": 0,
+      "paidEntries": 0,
+      "cityEntries": 0,
+      "summonPurchases": 0,
+      "keys": 100,
+      "runId": "00000000-0000-4000-8000-000000000001",
+      "mobKills": 300,
+      "orphanCleared": null,
+      "status": "Проверяю серверное время и лимиты дня",
+      "liveRequests": 0,
+      "errors": []
+    },
+    {
+      "case": "legacy-missing",
+      "browser": "156.0.8078.4",
+      "paths": [
+        "/rebirth-raids.html"
+      ],
+      "calls": [
+        {
+          "path": "/rebirth-raids.html",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/rebirth-raids",
+          "method": "GET"
+        }
+      ],
+      "nativeChampionFights": 0,
+      "paidEntries": 0,
+      "cityEntries": 0,
+      "summonPurchases": 0,
+      "keys": 100,
+      "runId": "00000000-0000-4000-8000-000000000001",
+      "mobKills": 300,
+      "orphanCleared": true,
+      "status": "Проверяю серверное время и лимиты дня",
+      "liveRequests": 0,
+      "errors": []
+    }
+  ]
+}

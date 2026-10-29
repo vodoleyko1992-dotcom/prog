@@ -4038,15 +4038,36 @@ function rebirthNeedsPet() {
   const pet=petState();
   return rebirthModeSelected() && (rebirthHeroNeeded() || L2EngineCore.rawTaskConfig(cfg).petAuto !== false && pet?.has === false && Date.now()-(pet.t||0)<600000);
 }
+// 20.79+ (лог 29.10 14:39): отменяем только свой городской маршрут внутри/после потерянного похода; оплаты и история остаются для сверки.
+async function rebirthCancelRunPreparation({character:ch}={}) {
+  const J=rt.petBufferTrip;if(!rebirthPetTrip(J))return false;
+  const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,kick=rt.manualKickAt||0,page=location.href,actor=ch?.id,runId=rt.rebirth?.runId;
+  const live=()=>on&&tabOwner&&rebirthModeSelected()&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who&&rt.classCur?.prof===prof
+    &&rt.classCur?.slot===slot&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&location.href===page&&rt.rebirth?.runId===runId&&!isBattle()
+    &&!antibotState()&&!abHold()&&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+  const paid=()=>!!rt.petFull?.pending||!!L2V7Modules.payments?.pending?.()||!!L2V7Modules.payments?.blocked?.();
+  const own=()=>ch?.name===who&&typeof actor==='string'&&!!actor&&ch.id===actor&&(!rt.rebirth?.actor||rt.rebirth.actor===actor)
+    &&ch.l2Profession===prof&&ch.classSlots?.activeSlot===slot&&ch.level===heroLvl()&&ch.inBattle===false&&ch.hp>0
+    &&Number.isSafeInteger(ch.revision)&&ch.revision>=0&&Number.isSafeInteger(J.revision)&&ch.revision>=J.revision;
+  const current=()=>live()&&own()&&!paid()&&rt.petBufferTrip===J&&rebirthPetTrip(J);
+  if(!current()||!await rtCommit()||!current())return true;
+  const saved=await setRt({petBufferTrip:null});
+  if(saved?.ok!==true){if(live()&&!rt.petBufferTrip)await setRt({petBufferTrip:J});return true;}
+  if(!live()||paid()||rt.petBufferTrip)return true;
+  if(!await rtCommit()||!live()||!own()||paid()||rt.petBufferTrip)return true;
+  return false;
+}
 async function rebirthPreparePet(preparation) {
   if(!rebirthModeSelected()||!on||!tabOwner||isBattle())return false;
   const stamp=automationSnapshot(),who=rt.char,prof=rt.classCur?.prof,slot=rt.classCur?.slot,epoch=leaseEpoch,kick=rt.manualKickAt||0;
   const wanted=()=>on&&tabOwner&&rebirthModeSelected()&&automationCurrent(stamp)&&rt.char===who&&heroNick()===who&&rt.classCur?.prof===prof
     &&rt.classCur?.slot===slot&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&!isBattle()&&!antibotState()&&!abHold()&&!L2V7Modules.pvp?.pending?.()&&L2V7Modules.actions?.canAct?.()!==false;
+  const allowTown=preparation?.allowTown===true;
+  if(!allowTown&&await rebirthCancelRunPreparation(preparation))return true;
   if(await rebirthPrepareHero(preparation?.character))return true;
   if(!wanted())return true;
   if(rebirthPetTrip(rt.petBufferTrip)){await warlockTripStep();return true;}
-  const preparing=await L2V7Modules.warlock.rebirthPrepare({wanted,returnPath:'/rebirth-raids.html'});
+  const preparing=await L2V7Modules.warlock.rebirthPrepare({wanted,returnPath:'/rebirth-raids.html',allowTown});
   return !wanted()||preparing===true||rebirthPetTrip(rt.petBufferTrip);
 }
 // Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати; первым — набор крафтера.
@@ -7776,7 +7797,7 @@ L2V7Modules.rebirth = L2V7Factories.rebirth({
   get canRun(){return ()=>!loopStale()&&autonomyMode()==='rebirth'&&!tvtSoon()&&!abHold()&&((isBattle()&&!victory())||!selfHoldMain()&&!L2V7Modules.payments?.blocked?.())&&!/tvt|pvp/i.test(location.pathname)},
   get heroNick(){return heroNick},get heroLvl(){return heroLvl},get routeLocation(){return actionLocation},get gameGet(){return gameGet},get gamePost(){return gamePost},
   get setRt(){return setRt},get rtCommit(){return rtCommit},get fire(){return fire},get pause(){return pause},get sleep(){return sleep},get shown(){return shown},get $q(){return $q},
-  get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return rebirthPreparePet},get prepareRun(){return rebirthPreparePet},get needsPetPreparation(){return rebirthNeedsPet}, // Свой preflight кота возвращается к своему походу.
+  get setStatus(){return setStatus},get rec(){return rec},get dailyWorkReady(){return dailyWorkReady},get prepareEntry(){return preparation=>rebirthPreparePet({...preparation,allowTown:true})},get prepareRun(){return preparation=>rebirthPreparePet({...preparation,allowTown:false})},get cancelRunPreparation(){return rebirthCancelRunPreparation},get needsPetPreparation(){return rebirthNeedsPet}, // Внутри оплаченного похода — только родные касты кота, городской набор — перед новым входом.
   get nativePending(){return ()=>[...NET_CONTEXT.values()].some(c=>c.char===rt.char&&c.lease===leaseEpoch&&/^\/game\/(?:rebirth-raids\/(?:start|next|enter-boss)|battle\/(?:start|hunt-continue|action))$/.test(c.path))}
 });
 let warlockCommandBusy = false;

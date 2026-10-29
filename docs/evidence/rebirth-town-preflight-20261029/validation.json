@@ -1,0 +1,68 @@
+{
+  "sourceBase": "8dce92b57175c579ff1afd6eafa3621a81a361e4",
+  "reportedVersion": "20.78",
+  "sourceVersionBeforePackaging": "20.79",
+  "recordedAt": "2026-10-29T15:26:24.207112+10:00",
+  "newNodeBaseline": {
+    "pass": 3,
+    "fail": 44,
+    "total": 47
+  },
+  "newNodeAfterFix": {
+    "pass": 47,
+    "fail": 0
+  },
+  "relatedPreflight": {
+    "pass": 8,
+    "fail": 0
+  },
+  "allNodeFiles": {
+    "pass": 717,
+    "fail": 0
+  },
+  "browser": {
+    "version": "156.0.8078.4",
+    "pass": 3,
+    "fail": 0,
+    "scenarios": [
+      "active-run",
+      "Stop-read",
+      "legacy-missing"
+    ],
+    "cityEntries": 0,
+    "summonPurchases": 0,
+    "paidEntries": 0,
+    "liveRequests": 0,
+    "jsErrors": 0,
+    "proof": "browser.json",
+    "boundary": "Actual Chrome MV3 and native champion button -> local battle/start; full champion battle not modelled"
+  },
+  "syntaxFiles": [
+    "content.js",
+    "modules/rebirth.js",
+    "modules/warlock.js",
+    "tests/run-all.cjs",
+    "tests/v2080-rebirth-town-preflight.test.cjs",
+    "tests/v2071-rebirth-pet-preflight.test.cjs",
+    "tests/v2080-rebirth-town-preflight-browser.cjs"
+  ],
+  "syntaxPassed": true,
+  "bashSyntaxPassed": true,
+  "moduleGettersPassed": true,
+  "moduleCount": 35,
+  "diffCheckPassed": true,
+  "independentReview": "No blockers: native summon/buffs preserved, town preflight explicit before entry, own legacy route cleanup keeps pending/receipts/run and missing-run guard",
+  "runtimeSha256": {
+    "content.js": "34b483654f1304db81c8cf1c82a1efd0f96e2a7839f39fb697aec5d30a4955a0",
+    "modules/rebirth.js": "5c7b9c219f336a50a745936caa297e618f739000d214d78b1e5e672956a27964",
+    "modules/warlock.js": "5e5100a8595b586d7fc9d2861f9ef12ef22c467d4989d32377c33f2d4d591656"
+  },
+  "liveGameOpened": false,
+  "fullHistoricalBrowserSuiteRun": false,
+  "packagingChecksRun": false,
+  "limitations": [
+    "Uploaded own API responses do not prove exact server mechanism of run disappearance",
+    "Already missing run is not marked completed and does not auto-authorize another paid entry",
+    "Build checks skipped by persistent user preference; source checks above precede packaging"
+  ]
+}

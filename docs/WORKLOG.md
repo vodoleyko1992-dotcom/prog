@@ -9,6 +9,14 @@
 
 
 
+
+## 29.10.2026, 15:26 UTC+10 — Codex — Rebirth: не уезжать за баффом внутри run (PR в подготовке)
+
+- John «сбой, правка, сборка», база8dce92b; журнал20.78,14:39моб300→городскойбаффкота→missing-run,33мин42,7спростоя. prepareEntry/run раньше теряли контекст. Теперь город толькопо явному допуску перед новымвходом, nativeкастывrunостаются; ownlegacyroutecleanup безновогоentry/стиранияpending/history/receipts.
+- Новые47PASS (baseline3/44), прежние8PASS, полныйNode717PASS/0FAIL; syntax7/env35/bash/diffPASS. Chrome156MV3 3/3PASS: nativeкнопкачемпиона/Stop/legacy,0city/buy/newentry/JSerror/live; полногоchampioncombatнет. Независимоеревьюбезблокеров.
+- Отчёт/квитанциисозданы; далее разрешённая Chrome20.80 безповторныхпроверок. Ужеисчезнувшийrunавтоматическиневосстанавливается, послеустановкиодинСтарт/ручнойвход. Резервпослекотаосталсяотдельнойтемой.
+
+
 ## 29.10.2026, 12:29 UTC+10 — Codex — Chrome20.79 без проверок ([PR #456](https://github.com/vodoleyko1992-dotcom/prog/pull/456))
 
 - John «сборка», сохранено прежнее«без проверок»/основнаяChrome. База22349ac/#455, готовностьiframe передpostMessage; фиксRebirth20.78 включён. Приупаковке функциональныйruntime прежний, толькоversion/description/header/5assertions/README/история.
