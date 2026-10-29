@@ -7,6 +7,14 @@
 
 
 
+
+## 29.10.2026, 12:24 UTC+10 — Codex — готовность iframe перед postMessage ([PR #455](https://github.com/vodoleyko1992-dotcom/prog/pull/455))
+
+- John «Ошибка», затем строка и скрин content.js:4790: сообщение расширения ушло в ещё пустой iframe с origin игры. В actualChrome156 воспроизведено browserwarning безJSexception; try/catch не скрывает.
+- В content.js сигнал готовности привязан к текущему WindowProxy; отправка только после его пульса, замена ждёт нового, старый/чужой пульс игнорируется. Точныйorigin/игровые действия/оплаты сохранены. НовыйNode/browserтесты, реестры, согласованы2прежнихUIтеста, отчёт/квитанции.
+- Baseline5PASS/12FAIL→17PASS/0FAIL, аудит38PASS, полныйNode716PASS/0FAIL; syntax5/env35/bash/diffPASS. Chrome156 Desktop+AndroidUA2/2PASS,0originwarning/JSerror/live; ревьюбезблокеров. Версия20.78/ZIP прежние. Далее публикация и отдельнаясборка по просьбе; реальныеFirefox/Androidне запускались.
+
+
 ## 29.10.2026, 10:58 UTC+10 — Codex — Chrome20.78 без проверок ([PR #454](https://github.com/vodoleyko1992-dotcom/prog/pull/454))
 
 - John «сборка без проверок»; только основнаяChrome, базаab52b0b/#453. Включёнфикс491кругаRebirth→баффер: свойrestore планирует по свежемуsnapshot. При упаковке функциональныйruntime не менялся, толькоversion/description/header/5assertions/README/история.

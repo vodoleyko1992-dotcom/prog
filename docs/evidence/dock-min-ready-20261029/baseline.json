@@ -1,0 +1,23 @@
+{
+  "boundary": "Actual Chrome MV3 before dock readiness fix; all HTTPS fulfilled locally by harness; no live game",
+  "browser": "156.0.8078.4",
+  "trigger": "First dock() immediately after appending extension iframe",
+  "console": [
+    {
+      "type": "warning",
+      "text": "Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('chrome-extension://jfgipcfghogndiefcffcnnifncjoeddh') does not match the recipient window's origin ('https://l2wap.com')."
+    }
+  ],
+  "source": {
+    "file": "content.js",
+    "line": 4790,
+    "stack": [
+      "dockMinPost",
+      "dock"
+    ]
+  },
+  "exceptionCaught": false,
+  "pageErrors": [],
+  "heartbeatArrivedLater": true,
+  "liveRequests": 0
+}
