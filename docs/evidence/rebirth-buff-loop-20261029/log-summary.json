@@ -1,0 +1,30 @@
+{
+  "reportedVersion": "20.77",
+  "timeZone": "UTC+10 (browser log)",
+  "sources": [
+    "l2bot-log-2026-10-29-00-28.txt",
+    "l2wap-pages-2026-10-29-00-29.html",
+    "l2bot-learn-2026-10-29-00-29.html"
+  ],
+  "afterManualReturnAt": "09:50:50.627",
+  "initialPreparationAt": "09:50:57.536",
+  "firstRepeatAt": "09:51:06.028",
+  "lastRepeatAt": "10:28:54.202",
+  "repeatedPreparations": 491,
+  "fullVitalsSkips": 490,
+  "medianRepeatIntervalSeconds": 4.178,
+  "firstToLastRepeatSeconds": 2268.174,
+  "pausedAt": "10:28:56.579",
+  "hp": "5198/5198",
+  "mp": "2271/2271",
+  "userClicksAfterManualReturn": 0,
+  "evidenceBoundary": "Network log omits bot fetch; no claim that absent native POST proves no bot requests. Fresh activeBuffs/VIP raw response truncated; code-level reproduction separately verifies mismatch.",
+  "examples": [
+    "09:50:57.536 [B] бот Подземелья: бесплатные баффы и восстановление HP перед боем",
+    "09:51:06.028 [B] бот Подземелья: бесплатные баффы и восстановление HP перед боем",
+    "09:51:08.320 [B] восстановление HP и MP уже полные — «Восстановить» не нужно",
+    "10:28:51.992 [B] восстановление HP и MP уже полные — «Восстановить» не нужно",
+    "10:28:54.202 [B] бот Подземелья: бесплатные баффы и восстановление HP перед боем"
+  ],
+  "liveGameOpened": false
+}
