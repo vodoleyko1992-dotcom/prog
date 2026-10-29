@@ -8,7 +8,7 @@
 
 
 
-## 29.10.2026, 12:24 UTC+10 — Codex — готовность iframe перед postMessage (PR в подготовке)
+## 29.10.2026, 12:24 UTC+10 — Codex — готовность iframe перед postMessage ([PR #455](https://github.com/vodoleyko1992-dotcom/prog/pull/455))
 
 - John «Ошибка», затем строка и скрин content.js:4790: сообщение расширения ушло в ещё пустой iframe с origin игры. В actualChrome156 воспроизведено browserwarning безJSexception; try/catch не скрывает.
 - В content.js сигнал готовности привязан к текущему WindowProxy; отправка только после его пульса, замена ждёт нового, старый/чужой пульс игнорируется. Точныйorigin/игровые действия/оплаты сохранены. НовыйNode/browserтесты, реестры, согласованы2прежнихUIтеста, отчёт/квитанции.

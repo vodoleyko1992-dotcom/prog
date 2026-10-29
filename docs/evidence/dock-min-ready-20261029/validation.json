@@ -50,5 +50,7 @@
   "physicalAndroidTested": false,
   "fullHistoricalBrowserSuiteRun": false,
   "versionIncreased": false,
-  "zipBuilt": false
+  "zipBuilt": false,
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/455",
+  "fixCommit": "4ab3e8f1b64ef832cc31b8f0b349d3e7a5344555"
 }
