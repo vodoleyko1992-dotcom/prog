@@ -6,6 +6,14 @@
 
 
 
+
+## 29.10.2026, 10:58 UTC+10 — Codex — Chrome20.78 без проверок ([PR #454](https://github.com/vodoleyko1992-dotcom/prog/pull/454))
+
+- John «сборка без проверок»; только основнаяChrome, базаab52b0b/#453. Включёнфикс491кругаRebirth→баффер: свойrestore планирует по свежемуsnapshot. При упаковке функциональныйruntime не менялся, толькоversion/description/header/5assertions/README/история.
+- ZIP69/1763198B/SHA256 `b8d8272cc7f65bcdea321a6b694cf2028c47965ea9bff4f3e833e61c8c759cfb`; квитанция docs/evidence/build-20.78-chrome/receipt.json. Node/syntax/env/browser/lint/privacy/ZIPaudit/download не запускались по прямой просьбе, новыхPASS нет; прежние715Node/2Chrome/143целевых — толькоисходныйфикс #453; живаяигра0.
+- Chrome20.77 rollback, старыйChrome20.76 сохранён вwork/git-истории и убран изтекущихZIP, SHAистория сохранена; внешняяпапка недоступна. Firefox20.76/Lite1.8.1 прежние. Далее публикация/установкаповерх/↻/вкладка/контрольныйлог баффер→Rebirth; открытыйвопрос резервапослекота прежний.
+
+
 ## 29.10.2026, 10:37 UTC+10 — Codex — Rebirth: цикл баффера при полных HP/MP ([PR #453](https://github.com/vodoleyko1992-dotcom/prog/pull/453))
 
 - John «попал в loop», TXT/learn/pages00:28–00:29, базаd405b67/#452. 09:51–10:28:491 отправка к бафферу/490full,37мин48с между первой/последней, период4,178с. Каталог планировал по свежему `/character`, restore — по HUD/устаревшейVIPпамяти; отказывался от баффа и возвращал каталог. RawAPI обрезан, конкретный mismatch воспроизведён отдельным тестом.
