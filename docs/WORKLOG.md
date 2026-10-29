@@ -7,7 +7,7 @@
 
 
 
-## 29.10.2026, 10:58 UTC+10 — Codex — Chrome20.78 без проверок (PR в подготовке)
+## 29.10.2026, 10:58 UTC+10 — Codex — Chrome20.78 без проверок ([PR #454](https://github.com/vodoleyko1992-dotcom/prog/pull/454))
 
 - John «сборка без проверок»; только основнаяChrome, базаab52b0b/#453. Включёнфикс491кругаRebirth→баффер: свойrestore планирует по свежемуsnapshot. При упаковке функциональныйruntime не менялся, толькоversion/description/header/5assertions/README/история.
 - ZIP69/1763198B/SHA256 `b8d8272cc7f65bcdea321a6b694cf2028c47965ea9bff4f3e833e61c8c759cfb`; квитанция docs/evidence/build-20.78-chrome/receipt.json. Node/syntax/env/browser/lint/privacy/ZIPaudit/download не запускались по прямой просьбе, новыхPASS нет; прежние715Node/2Chrome/143целевых — толькоисходныйфикс #453; живаяигра0.
