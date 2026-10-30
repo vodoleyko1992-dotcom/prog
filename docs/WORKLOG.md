@@ -11,6 +11,12 @@
 
 
 
+## 30.10.2026, 12:45 UTC+10 — Claude — Chrome/Firefox 20.83
+
+- John: «обе сборки». База `6434f40` (PR #463, Rebirth без лишних серверных сверок). Версия, header, 5 ожиданий версии, README Chrome/Firefox, CLAUDE.md, changelog 20.83.
+- Проверки: Node 726 PASS / 0 FAIL, `node --check` runtime JS, envcheck PASS, privacy base-profile 0. Chrome 156: zipload 20.83, cfg 213, 0 ошибок. Firefox ESR: desktop и симуляция Android API PASS, web-ext lint 0 ошибок / 51 предупреждение. Список файлов ZIP тот же, что у 20.82 (69 Chrome / 69 Firefox), rebirth.js и content.js в архивах совпадают с исходниками по SHA.
+- Chrome ZIP 1783515 байт, SHA256 `9b12447543c552f452be70fc6209979523f1c4e07e3910d8e69eb34044c86f10`; Firefox 1783591 байт, SHA256 `15a02e6f12a9068504d8454f404cb2d0d634913a64c1f0c670bf655f575dfa82`. 20.82 оставлен для отката, 20.81 убран из builds/ (в git-истории). Живую игру не открывали.
+
 ## 30.10.2026, 12:20 UTC+10 — Claude — Rebirth: лаги от серверных сверок
 
 - John: «какие-то серверные сверки, лаги», лог/learn 30.10 12:03 (Chrome 20.82, Warlock в Rebirth Easy). По логу: 879 мобов, медиана 3,0 с на моба, из них сам бой ≈0,5 с; от «Бой: загрузка» до «бой подтверждён» ≈1,0 с (GET /character, затем battle+instance, запись памяти) и от победы до «продолжаю» ≈0,95 с (запись, character+instance, ещё одна полная запись памяти ради `via`). PR #460/#461 ни при чём: новых запросов к серверу они не добавляли.
