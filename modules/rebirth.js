@@ -156,6 +156,10 @@ root.L2V7Factories.rebirth=function create_rebirth(env){
  }
  // 20.71: продолжение принадлежит подземельям и не использует правила/цепочку обычной охоты.
  let rebirthAttempt = null;
+ // 20.83 (лог30.10 11:00–12:03, John «серверные сверки, лаги»): моб похода ≈3 с, из них ≈1 с — повторная сверка героя и похода
+ // в начале каждого следующего боя, хотя те же сверки прошли ≈1 с назад перед своим «Охотиться дальше». Здесь — свежий итог этой
+ // сверки для одного следующего моба того же похода; допуск боя всё равно читает живой бой сервера (battleProof).
+ let chainProof = null, viaSaved = '';
 async function nextFight(ctx) {
   if (!env.victory() || !on() || env.autonomyMode?.() !== 'rebirth') return; // старое продолжение победы не трогает уже начатый игроком бой
   const char = env.rt.char, prof = env.rt.classCur?.prof, slot = env.rt.classCur?.slot, page = location.href;
@@ -256,6 +260,18 @@ async function nextFight(ctx) {
     if (!characterRead?.ok) return retry('персонаж не подтверждён сервером', 60000);
     const data = characterRead.data, ch = data?.character || data;
     reading = false;
+    // 20.83 (лог30.10 12:02:44): ответ start потерян (500 через7с), а сервер уже открыл следующего моба этого же похода — свой
+    // герой в бою. Раньше «вне боя не подтверждён» и пауза15с по кругу до ручного обновления; теперь — бесплатный каталог,
+    // который сам вернёт в этот живой бой (новый next/start не нажимаем, квитанцию не снимаем).
+    const liveNext = spawnParts(ch?.battleSpawnId), afterParts = spawnParts(after);
+    if (receiptRecovery && boundLineage && ch?.inBattle === true && liveNext && afterParts && ch.battleSpawnId !== after
+        && liveNext[1].toLowerCase() === afterParts[1].toLowerCase() && ch.name === char && ch.id === previousFight.actor
+        && ch.l2Profession === prof && ch.classSlots?.activeSlot === slot && ch.level === level && ch.hp > 0 && !special(data) && !special(ch)
+        && instanceRead?.ok && solo(instanceRead.data?.activeRun, ch.id) && instanceRead.data.activeRun.id.toLowerCase() === afterParts[1].toLowerCase()
+        && !env.nativePending?.()) {
+      env.setStatus('Rebirth: сервер уже открыл следующий бой похода — возвращаюсь в него без нового входа');
+      return env.rebirthReturn?.(current);
+    }
     if (data?.error || data?.ok === false || ch?.name !== char || typeof ch.id !== 'string' || !ch.id || ch.l2Profession !== prof
         || ch.classSlots?.activeSlot !== slot || ch.level !== level || !Number.isSafeInteger(ch.revision) || ch.revision < 0 || ch.inBattle !== false
         || !Number.isSafeInteger(ch.rebirthStage) || ch.rebirthStage <= 0 || !(ch.hp > 0) || special(data) || special(ch))
@@ -304,15 +320,26 @@ async function nextFight(ctx) {
     const stillReady = !env.dailyWorkReady || await env.dailyWorkReady('mobs');
     if (!current()) return;
     if (!stillReady) return hold('лимит охоты проверяется или достигнут');
-    const saved = await env.setRt({ via: 'chain' });
-    if (saved?.ok !== true || !current() || !await env.rtCommit?.() || !current()) return;
+    // 20.83 (лог30.10): via уже «chain» с прошлого моба — без лишней полной записи памяти (≈500 КБ) на каждого моба.
+    if (env.rt.via !== 'chain' || viaSaved !== char) {
+      const saved = await env.setRt({ via: 'chain' });
+      if (saved?.ok !== true || !current()) return;
+      viaSaved = char;
+    }
+    if (!await env.rtCommit?.() || !current()) return;
     if (env.nativePending?.()) return hold('жду завершения запроса игры перед продолжением');
     // Синхронная отметка переживает reload: неизвестный native next/start не разрешает второй клик.
     try { root.sessionStorage.setItem(receiptKey, JSON.stringify({ key, t: Date.now() })); }
     catch (_) { return hold('не удалось сохранить отметку продолжения'); }
     if (!huntReady()) { clear(); return; }
     env.setStatus('Rebirth: продолжаю оплаченный поход');
-    if (!env.fire(hunt)) { clear(); return hold('кнопка продолжения не сработала'); }
+    const afterIdx = spawnParts(after);
+    chainProof = run && completedRole === 'mob' && afterIdx && run.phase === 'mobs' && run.mobKills < run.mobKillTarget
+      ? { at: Date.now(), char, prof, slot, level, lease: env.leaseEpoch, generation, kick: env.rt.manualKickAt || 0, config: config(),
+          actor: ch.id, revision: ch.revision, stage: ch.rebirthStage, runId: run.id, index: Number(afterIdx[7]), receipt: key,
+          run: JSON.parse(JSON.stringify(run)) }
+      : null;
+    if (!env.fire(hunt)) { chainProof = null; clear(); return hold('кнопка продолжения не сработала'); }
     await env.waitFor(() => !active() || !env.victory() || JSON.stringify(env.battleInfo?.() || null) !== infoSig, 8000, 50);
     if (current()) return hold('исход продолжения ещё не подтверждён — повторно не нажимаю');
   } catch (_) {
@@ -404,17 +431,35 @@ async function nextFight(ctx) {
    const body=await response.json();return still()?body:null;};
   try{
    if(!await env.rtCommit?.()||!still())return null;
-   const first=await readBattle('/character');if(!still())return null;
-   const ch=first?.character||first,sid=ch?.battleSpawnId,parts=spawnParts(sid);
-   if(first?.error||first?.ok===false||special(first)||!own(ch,T)||ch.inBattle!==true||!Number.isSafeInteger(ch.rebirthStage)||ch.rebirthStage<=0||!parts)
-    return hold('свой текущий бой подземелья не подтверждён');
-   // 20.71 (лог28.10 01:32): бой зависит от свежего character, но instance — независимый GET; ждём оба, сохраняя все проверки.
-   const snapshots=await Promise.allSettled([
-    readBattle('/game/battle?characterId='+encodeURIComponent(ch.id)+'&spawnId='+encodeURIComponent(sid)),
-    readBattle('/game/rebirth-raids?view=instance')]);
-   if(!still())return null;
-   if(snapshots.some(r=>r.status!=='fulfilled'))throw Error('read_failed');
-   const [result,instance]=snapshots.map(r=>r.value);
+   // 20.83 (лог30.10, John «серверные сверки, лаги»): следующий моб после своего «Охотиться дальше» — герой и поход сверены
+   // перед кликом ≈1 с назад. Один свежий GET живого боя (герой внутри него) вместо character→battle+instance; для чемпиона/РБ,
+   // другого run/героя/класса/уровня, старой (>15 с) или чужой квитанции продолжения — полная сверка, как прежде.
+   let ch=null,sid='',parts=null,result=null,instance=null,fastAt=0;
+   const C=chainProof;chainProof=null;
+   const urlIds=new URLSearchParams(location.search||'').getAll('spawnId'),urlSid=urlIds.length===1?urlIds[0]:'',U=spawnParts(urlSid);
+   let receipt=null;try{receipt=JSON.parse(root.sessionStorage.getItem('l2bot.rebirth-next')||'null');}catch(_){}
+   if(C&&U&&U[6].toLowerCase()==='mob'&&Date.now()-C.at>=0&&Date.now()-C.at<15000&&receipt?.key===C.receipt
+    &&C.char===T.char&&C.prof===T.prof&&C.slot===T.slot&&C.level===T.level&&C.lease===T.lease&&C.generation===T.generation
+    &&C.kick===T.kick&&C.config===T.config&&U[1].toLowerCase()===C.runId.toLowerCase()&&Number(U[7])>C.index){
+    const live=await readBattle('/game/battle?characterId='+encodeURIComponent(C.actor)+'&spawnId='+encodeURIComponent(urlSid));if(!still())return null;
+    const c=live?.character;
+    if(!live?.error&&live?.ok!==false&&!special(live)&&own(c,T,C.revision,C.actor)&&c.inBattle===true&&c.battleSpawnId===urlSid&&c.rebirthStage===C.stage){
+     ch=c;sid=urlSid;parts=U;result=live;instance={enabled:true,rebirthStage:C.stage,activeRun:C.run};fastAt=C.at;
+    }
+   }
+   if(!ch){
+    const first=await readBattle('/character');if(!still())return null;
+    ch=first?.character||first;sid=ch?.battleSpawnId;parts=spawnParts(sid);
+    if(first?.error||first?.ok===false||special(first)||!own(ch,T)||ch.inBattle!==true||!Number.isSafeInteger(ch.rebirthStage)||ch.rebirthStage<=0||!parts)
+     return hold('свой текущий бой подземелья не подтверждён');
+    // 20.71 (лог28.10 01:32): бой зависит от свежего character, но instance — независимый GET; ждём оба, сохраняя все проверки.
+    const snapshots=await Promise.allSettled([
+     readBattle('/game/battle?characterId='+encodeURIComponent(ch.id)+'&spawnId='+encodeURIComponent(sid)),
+     readBattle('/game/rebirth-raids?view=instance')]);
+    if(!still())return null;
+    if(snapshots.some(r=>r.status!=='fulfilled'))throw Error('read_failed');
+    [result,instance]=snapshots.map(r=>r.value);
+   }
    const c=result?.character,b=result?.battle,role=parts[6].toLowerCase();
    if(result?.error||result?.ok===false||!own(c,T,ch.revision,ch.id)||c.inBattle!==true||c.battleSpawnId!==sid||c.rebirthStage!==ch.rebirthStage
     ||!b||b.spawnId!==sid||String(b.mobName||'').trim().toLowerCase()!==name.trim().toLowerCase()||b.mobLevel!==level||Number(parts[5])!==level
@@ -429,7 +474,7 @@ async function nextFight(ctx) {
     :selectedBoss(run)&&run.mobKills>=run.mobKillTarget&&run.selectedBossSpawnId==='l2dop_rb_'+parts[4]&&run.selectedBossSlot===Number(parts[7]);
    if(!phase)return hold('роль цели не совпала с этапом собственного похода');
    const F=state().fightPending,clearFight=F&&F.runId===run.id&&F.actor===ch.id&&F.char===T.char&&F.prof===T.prof&&F.slot===T.slot;
-   if(!await save(T,{...runFields(run,c),phase:'battle',battleRole:role,battleSpawn:sid,...(clearFight?{fightPending:null}:{})})||!still())return null;
+   if(!await save(T,{...runFields(run,c),...(fastAt?{checkedAt:fastAt}:{}),phase:'battle',battleRole:role,battleSpawn:sid,...(clearFight?{fightPending:null}:{})})||!still())return null;
    if(battleGate!==G)return null;
    G.until=0;G.failures=0;
    return{spawn:sid,name:String(b.mobName).trim(),lvl:b.mobLevel,role,runId:run.id,
@@ -439,6 +484,7 @@ async function nextFight(ctx) {
    return hold('серверная сверка боя не ответила — повторю без смены режима');
   }finally{G.busy=false;}
  }
+ let stepErr={why:'',t:0};
  async function step(){
   if(busy||!on()||env.canAct?.()===false||env.canRun?.()===false)return false;
   // Открытый бой и его победу ведёт общее боевое ядро, включая уже начатый игроком бой с выбранным РБ.
@@ -585,7 +631,13 @@ async function nextFight(ctx) {
    quote.previousRunId=state().runId||state().lastEntry?.runId||null;
    await status(T,'entry','подтверждены цена и ключи; готовлю нативный вход',{actor:ch.id,prof:T.prof,slot:T.slot,runId:null});
    await native(T,quote.button,'entry',ch,null,quote);return true;
-  }catch(_){
+  }catch(e){
+   // 20.83 (лог30.10 11:22–11:36): 14 мин одной строкой «сверка не ответила» без причины, пока John не обновил страницу;
+   // общий catch ловит и сбой подготовки/навигации — текст ошибки раз в минуту в журнал, чтобы следующий лог показал причину.
+   // Текст сетевой ошибки может нести адрес/токен — его не пишем; ошибки кода (TypeError и т. п.) — с текстом, без секретов.
+   const why=e?.message==='read_failed'||e?.name==='AbortError'||e?.name==='TimeoutError'?'сервер не ответил'
+    :/^(?:TypeError|ReferenceError|RangeError|SyntaxError)$/.test(e?.name||'')?(e.name+': '+String(e.message||'')).slice(0,160):'ошибка '+String(e?.name||'без имени').slice(0,40);
+   if(current(T)&&(why!==stepErr.why||Date.now()-stepErr.t>60000)){stepErr={why,t:Date.now()};env.rec?.('B','Rebirth','сверка хода похода прервана: '+(why||'без текста'));}
    if(current(T)){gate.failures=Math.min(3,gate.failures+1);gate.until=Date.now()+3000*2**(gate.failures-1);await status(T,'read','серверная сверка не ответила — повторю без нового входа');}
    return true;
   }finally{busy=false;}
