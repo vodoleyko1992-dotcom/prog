@@ -2,7 +2,7 @@
 
 ## 01.11.2026 — откат инструментов Claude Code ([PR #465](https://github.com/vodoleyko1992-dotcom/prog/pull/465))
 
-- Решение игрока 01.11 15:34: «полный откат» добавленного в PR #363 и «оставить только суперспособности». Task Observer, Headroom MCP и стартовый хук удалены; Claude Code Setup (навык `claude-automation-recommender`) оставлен по уточнению 15:46 «этот нужен». Superpowers — плагин аккаунта claude.ai, в репозиторий не кладётся. Подробности — WORKLOG 01.11 15:34.
+- Решение игрока 01.11 15:34: «полный откат» добавленного в PR #363 и «оставить только суперспособности». Task Observer, Headroom MCP и стартовый хук удалены; Claude Code Setup (навык `claude-automation-recommender`) оставлен по уточнению 15:46 «этот нужен». Superpowers (15:47 «включи») установлен в репозиторий навыками и стартовым хуком, т.к. плагин аккаунта отсюда не включается. **Проверить** в следующей облачной сессии: вводная Superpowers пришла, навыки видны. Подробности — WORKLOG 01.11 15:34.
 
 ## 30.10.2026 — Chrome/Firefox 20.81: Rebirth, кот и обучение (Codex, [PR #458](https://github.com/vodoleyko1992-dotcom/prog/pull/458))
 

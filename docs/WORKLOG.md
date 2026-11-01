@@ -15,8 +15,8 @@
 
 - По команде игрока «полный откат» и «хочу оставить только суперспособности» удалено добавленное PR #363, кроме Claude Code Setup (игрок 15:46: «Claude Code Setup — этот нужен»; навык `claude-automation-recommender` и его строка в CLAUDE.md оставлены): навык `task-observer`, хук `.claude/hooks/task-observer-start.sh` и его регистрация в `.claude/settings.json` (файл возвращён к прежнему виду: только три разрешения Edit), `.mcp.json` с Headroom, строка task-observer в CLAUDE.md. Журнал наблюдений `docs/skill-observations/` так и не был создан — удалять нечего.
 - Навыки проекта `l2-build`, `l2-fix`, `l2-game-facts`, `l2-log-review` не тронуты. Код бота, manifest, профиль и ZIP не менялись.
-- Superpowers (obra) в репозиторий не добавляется: он есть в каталоге плагинов аккаунта claude.ai и подключается там, тогда попадает и в облачные сессии. На аккаунте сейчас включены Plans и Frontend Design — их отключает игрок в настройках claude.ai.
-- Проверки: 726 Node PASS / 0 FAIL, envcheck PASS, JSON `.claude/settings.json` PASS.
+- Superpowers по просьбе игрока 15:47 «Superpowers — включи»: на аккаунте claude.ai отсюда не включается (там включены только Plans и Frontend Design, их отключает игрок), поэтому установлен в репозиторий — 15 навыков obra/superpowers v7.0.1 (MIT) в `.claude/skills/` и хук `.claude/hooks/superpowers-start.sh` в `.claude/settings.json` (SessionStart). Хук проверен в копии репозитория: корректный JSON, вводная using-superpowers 3,7 тыс. знаков. В новой облачной сессии работа не проверялась.
+- Проверки: 726 Node PASS / 0 FAIL, envcheck PASS, JSON `.claude/settings.json` PASS, запуск хука PASS.
 
 ## 30.10.2026, 12:45 UTC+10 — Claude — Chrome/Firefox 20.83
 

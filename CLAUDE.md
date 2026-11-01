@@ -197,6 +197,7 @@
 - `l2-fix` — правила правок: модули/геттеры, once-миграции, тесты, запреты, worktree и слияние.
 - `l2-game-facts` — проверенные факты об игре: API, клики/откаты, эпики, коты, язык UA/RU, рыбалка.
 - `claude-automation-recommender` (23.10, официальный плагин Anthropic `claude-code-setup`, Apache-2.0, перенесён навыком: облачные сессии не ставят плагины из `enabledPlugins`) — по просьбе разбирает проект и предлагает хуки/навыки/MCP/субагентов, файлы не меняет.
+- Superpowers (01.11, obra/superpowers v7.0.1, MIT, `.claude/superpowers/LICENSE`; по просьбе игрока «Superpowers — включи») — 15 навыков процесса (brainstorming, writing-plans, test-driven-development, systematic-debugging, verification-before-completion и др.) в `.claude/skills/`; облачные сессии не ставят плагины, поэтому перенесены навыками. Хук `.claude/hooks/superpowers-start.sh` (SessionStart в `.claude/settings.json`) подаёт вводную using-superpowers; ссылка `superpowers:<имя>` = навык проекта `<имя>`. Правила этого файла, AGENTS.md и прямые просьбы игрока важнее навыков Superpowers: сборка только по команде, ветка по умолчанию и рабочий цикл по логам прежние.
 **База знаний** `kb/` (11.10): `kb/README.md` — факты из кода, логов прошлых сессий и живой игры, таблицы мобов/РБ/зон/цен в `kb/data/`; в zip не входит.
 Инструменты: `tests/tools/envcheck.cjs` (геттеры), `tests/tools/smokes.sh` (смоуки), `tests/tools/zipload.cjs` (zip в Chromium), `tests/tools/rbstats-collect.py` (цифры РБ из логов).
 
