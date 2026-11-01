@@ -11,7 +11,7 @@
 
 
 
-## 01.11.2026, 15:34 UTC+10 — Claude — откат инструментов Claude Code из PR #363 (PR в подготовке)
+## 01.11.2026, 15:34 UTC+10 — Claude — откат инструментов Claude Code из PR #363 ([PR #465](https://github.com/vodoleyko1992-dotcom/prog/pull/465))
 
 - По команде игрока «полный откат» и «хочу оставить только суперспособности» удалено всё, что добавил PR #363: навыки `task-observer` и `claude-automation-recommender`, хук `.claude/hooks/task-observer-start.sh` и его регистрация в `.claude/settings.json` (файл возвращён к прежнему виду: только три разрешения Edit), `.mcp.json` с Headroom, две строки в CLAUDE.md. Журнал наблюдений `docs/skill-observations/` так и не был создан — удалять нечего.
 - Навыки проекта `l2-build`, `l2-fix`, `l2-game-facts`, `l2-log-review` не тронуты. Код бота, manifest, профиль и ZIP не менялись.
