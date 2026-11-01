@@ -11,6 +11,13 @@
 
 
 
+## 01.11.2026, 15:34 UTC+10 — Claude — откат инструментов Claude Code из PR #363 ([PR #465](https://github.com/vodoleyko1992-dotcom/prog/pull/465))
+
+- По команде игрока «полный откат» и «хочу оставить только суперспособности» удалено всё добавленное PR #363 (Claude Code Setup сначала оставлен по 15:46, затем убран по итоговому решению 16:02 «оставляем только нужное + Superpowers»): навыки `task-observer` и `claude-automation-recommender`, хук `.claude/hooks/task-observer-start.sh` и его регистрация в `.claude/settings.json` (файл возвращён к прежнему виду: только три разрешения Edit), `.mcp.json` с Headroom, обе строки в CLAUDE.md. Журнал наблюдений `docs/skill-observations/` так и не был создан — удалять нечего.
+- Навыки проекта `l2-build`, `l2-fix`, `l2-game-facts`, `l2-log-review` не тронуты. Код бота, manifest, профиль и ZIP не менялись.
+- Superpowers по просьбе игрока 15:47 «Superpowers — включи»: на аккаунте claude.ai отсюда не включается (там включены только Plans и Frontend Design, их отключает игрок), поэтому установлен в репозиторий — 15 навыков obra/superpowers v7.0.1 (MIT) в `.claude/skills/` и хук `.claude/hooks/superpowers-start.sh` в `.claude/settings.json` (SessionStart). Хук проверен в копии репозитория: корректный JSON, вводная using-superpowers 3,7 тыс. знаков. В новой облачной сессии работа не проверялась.
+- Проверки: 726 Node PASS / 0 FAIL, envcheck PASS, JSON `.claude/settings.json` PASS, запуск хука PASS.
+
 ## 30.10.2026, 12:45 UTC+10 — Claude — Chrome/Firefox 20.83
 
 - John: «обе сборки». База `6434f40` (PR #463, Rebirth без лишних серверных сверок). Версия, header, 5 ожиданий версии, README Chrome/Firefox, CLAUDE.md, changelog 20.83.
