@@ -196,6 +196,7 @@
 - `l2-build` — сборка версии: версия, CHANGELOG, проверки, zip, загрузка в Chromium, отправка.
 - `l2-fix` — правила правок: модули/геттеры, once-миграции, тесты, запреты, worktree и слияние.
 - `l2-game-facts` — проверенные факты об игре: API, клики/откаты, эпики, коты, язык UA/RU, рыбалка.
+- `claude-automation-recommender` (23.10, официальный плагин Anthropic `claude-code-setup`, Apache-2.0, перенесён навыком: облачные сессии не ставят плагины из `enabledPlugins`) — по просьбе разбирает проект и предлагает хуки/навыки/MCP/субагентов, файлы не меняет.
 **База знаний** `kb/` (11.10): `kb/README.md` — факты из кода, логов прошлых сессий и живой игры, таблицы мобов/РБ/зон/цен в `kb/data/`; в zip не входит.
 Инструменты: `tests/tools/envcheck.cjs` (геттеры), `tests/tools/smokes.sh` (смоуки), `tests/tools/zipload.cjs` (zip в Chromium), `tests/tools/rbstats-collect.py` (цифры РБ из логов).
 
