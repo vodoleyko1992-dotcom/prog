@@ -8,7 +8,7 @@ const T = require(path.join(__dirname, 'lib'));
 const G = require(path.join(__dirname, 'gz-lib'));
 const { assert } = T;
 const HOME = 254102;
-const OTHER = ['botsave', 'botfarm', 'botbuild', 'botexpo'];
+const OTHER = ['botsave', 'botfarm', 'botbuild', 'botexpo', 'botmissiles'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function until(fn, { timeoutMs = 30000, what = 'cond' } = {}) { const t0 = Date.now(); for (;;) { const v = await fn(); if (v) return v; if (Date.now() - t0 > timeoutMs) throw new Error('timeout ' + what); await sleep(250); } }
 const SEND = (over = {}) => Object.assign({ type: 'fleet.send', bodyId: HOME, why: 'module-off test', params: { target: { galaxy: 2, system: 68, position: 9, type: 1 }, ships: { 208: 1 }, mission: 7, speed: 10, cargo: { metal: 0, crystal: 0, deuterium: 0 } } }, over);

@@ -37,6 +37,8 @@ function checkTree(dir, browser) {
   const m = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   assert.equal(m.manifest_version, 3);
   assert.equal(m.version, '0.3.2');
+  // the spec list (DESIGN.md): unlimitedStorage lifts the 10 MB cap of chrome.storage.local, no user-visible prompt in either browser
+  assert.deepEqual(m.permissions, ['storage', 'unlimitedStorage'], browser + ': permissions');
   assert.equal(m.version_name, browser === 'chrome' ? '0.3.2 beta' : undefined, 'version_name only for Chrome (Firefox warns)');
   if (browser === 'chrome') {
     assert.deepEqual(m.background, { service_worker: 'background.js' });
@@ -126,7 +128,7 @@ function checkTree(dir, browser) {
       const names = (Array.isArray(pageNames) ? pageNames : (typeof pageNames === 'function' ? pageNames() : Object.keys(pageNames)));
       assert.equal(names.length, 20, 'saved pages: ' + names.join(','));
       // Live / Infinity alone must not act on load: the bot (on by default since 0.3.2) is switched off globally for this pass
-      const BOT_MODS = ['botcore', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo'];
+      const BOT_MODS = ['botcore', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo', 'botmissiles'];
       await sw.evaluate((mods) => new Promise((res) => chrome.storage.local.set({ '*|*|suite.modules': Object.fromEntries(mods.map((m) => [m, false])) }, res)), BOT_MODS);
       const page = await ctx.newPage();
       // the game's own scripts throw on a few saved pages (fleettrader.js / shipyard.js) with or without the extension:
@@ -165,7 +167,7 @@ function checkTree(dir, browser) {
       assert.ok(!['off', 'stopped'].includes(bot.state), 'bot state ' + bot.state);
       assert.equal(bot.dry, false, '«Пробный режим» off by default');
       assert.equal(bot.banner, true, 'live banner');
-      const modTabs = ['bot-botsave', 'bot-botfarm', 'bot-botdebris', 'bot-botbuild', 'bot-botexpo'];
+      const modTabs = ['bot-botsave', 'bot-botfarm', 'bot-botdebris', 'bot-botbuild', 'bot-botexpo', 'bot-botmissiles'];
       for (const t of modTabs) assert.ok(bot.tabs.includes(t), 'bot tab ' + t + ' in ' + bot.tabs.join(','));
       for (const t of modTabs) {
         await page.click(`#ogx-panel-infinity .ogx-tab[data-tab="${t}"]`);

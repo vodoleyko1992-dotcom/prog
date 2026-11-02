@@ -1,5 +1,5 @@
 /* shared/core/14-state.js — page snapshot, body store, data collection, refresh-all. Owner: core.
- * Store keys (single writer = this file): bodies, research, player, slots, shipStats (player scope);
+ * Store keys (single writer = this file): bodies, research, player, slots, shipStats, combatBonus, shipSpeeds (player scope);
  * server, titles, topScore (server scope). Newer data is never replaced by older data (per-field timestamps). */
 (function (OGX) {
   'use strict';
@@ -286,6 +286,23 @@
       await OGX.storage.update('combatBonus', (o) => (o && o.t > T ? o : Object.assign({}, bonus, { t: T })), null);
       changed.add('combatBonus');
     }
+    // GALAXYZ page=fleetTable ship list: the server's own speed per ship type (tooltip "Speed: 6000": drives, officers and server
+    // bonuses included), player scope 'shipSpeeds' (state.shipSpeeds / shipStats). Stored with the drive levels of the same page's
+    // «Bonus» table; other levels, or a listed type whose speed changed, drop the types this page does not list.
+    const ftShips = s.fleetPage && s.fleetPage.gz && s.fleetPage.gz.fleetTable ? s.fleetPage.gz.fleetTable.ships : null;
+    if (ftShips && ftShips.some((sh) => sh.id && +sh.speed > 0)) {
+      const drives = drivesFromBonus(bonus);
+      await OGX.storage.update('shipSpeeds', (o) => {
+        if (o && o.t > T) return o;
+        const old = o && o.ships ? o.ships : null;
+        const drivesDiffer = !!(old && o.drives && drives && [115, 117, 118].some((id) => o.drives[id] !== drives[id]));
+        const speedDiffers = !!old && ftShips.some((sh) => sh.id && +sh.speed > 0 && old[sh.id] && old[sh.id].speed !== +sh.speed);
+        const ships = old && !drivesDiffer && !speedDiffers ? Object.assign({}, old) : {};
+        for (const sh of ftShips) if (sh.id && +sh.speed > 0) ships[sh.id] = { speed: +sh.speed, t: T };
+        return { ships, drives: drives || (old && !speedDiffers ? o.drives : null) || null, t: T };
+      }, null);
+      changed.add('shipSpeeds');
+    }
 
     // GALAXYZ empire page: levels, ships, defense, stock and energy production of every body in one page
     if (s.empire) {
@@ -444,6 +461,34 @@
   state.slots = async () => OGX.storage.get('slots', null);
   /** GALAXYZ page=fleetTable «Bonus» table as last seen: { attack, defense, shield, combustion, impulse, hyperspace (in %), t } | null. */
   state.combatBonus = async () => OGX.storage.get('combatBonus', null);
+  /** Drive levels implied by that table (combustion x 10 %, impulse x 20 %, hyperspace x 30 % [UPSTREAM ShowFleetTablePage:281-286]):
+   * { 115, 117, 118 } with null for a missing value, or null without the table. */
+  function drivesFromBonus(b) {
+    if (!b) return null;
+    const out = {}; let any = false;
+    for (const [id, k, per] of [[115, 'combustion', 10], [117, 'impulse', 20], [118, 'hyperspace', 30]]) {
+      out[id] = Number.isFinite(+b[k]) && +b[k] >= 0 ? Math.round(+b[k] / per) : null;
+      if (out[id] !== null) any = true;
+    }
+    return any ? out : null;
+  }
+  /** GALAXYZ: ship speeds as page=fleetTable printed them: { ships: { [id]: { speed, t } }, drives: { 115, 117, 118 } | null, t } | null.
+   * null when a newer page=research (research.t > t) shows another level of a drive than the one stored with them: the speeds then
+   * follow the calc until the next fleetTable page. */
+  state.shipSpeeds = async function () {
+    const sp = await OGX.storage.get('shipSpeeds', null);
+    if (!sp || !sp.ships || !Object.keys(sp.ships).length) return null;
+    if (sp.drives) {
+      const research = await state.research();
+      if (research.t && research.t > sp.t) {
+        for (const id of [115, 117, 118]) {
+          const cur = research.levels ? research.levels[id] : undefined;
+          if (cur !== undefined && cur !== null && sp.drives[id] !== undefined && sp.drives[id] !== null && +cur !== +sp.drives[id]) return null;
+        }
+      }
+    }
+    return sp;
+  };
   state.server = async function () {
     const s = (await OGX.storage.get('server', {}, SRV)) || {};
     // GALAXYZ: until a fleetStep1 page stored data.gamespeed, the fleet speed is the Aeternum value (calc.gz.fleetSpeed)
@@ -510,12 +555,8 @@
     // impulse x 20 %, hyperspace x 30 % [UPSTREAM ShowFleetTablePage:281-286]); without them the catalog base speeds are ~1.5x slow
     const levels = Object.assign({}, research.levels || {});
     if ([115, 117, 118].some((id) => levels[id] === undefined || levels[id] === null) && state.combatBonus) {
-      const b = await state.combatBonus().catch(() => null);
-      if (b) {
-        for (const [id, k, per] of [[115, 'combustion', 10], [117, 'impulse', 20], [118, 'hyperspace', 30]]) {
-          if ((levels[id] === undefined || levels[id] === null) && Number.isFinite(+b[k]) && +b[k] >= 0) levels[id] = Math.round(+b[k] / per);
-        }
-      }
+      const d = drivesFromBonus(await state.combatBonus().catch(() => null));
+      if (d) for (const id of [115, 117, 118]) if ((levels[id] === undefined || levels[id] === null) && d[id] !== null) levels[id] = d[id];
     }
     const calc = OGX.calc.shipStats(levels, player ? player.playerClass : 'none', opts);
     const t = research.t || null;
@@ -528,6 +569,19 @@
       if (measured) {
         const base = OGX.calc.cargoCapacity(+id);
         if (base > 0) Object.assign(out[id], { cargo: Math.round(base * measured.factor), src: 'fleetroom', t: measured.t, factor: measured.factor });
+      }
+    }
+    // GALAXYZ: the speed page=fleetTable printed per ship type (state.shipSpeeds: drives, officers and server bonuses included) wins
+    // over the calc (speedSrc 'fleetTable'); a calc more than 5 % off with known drive levels is catalog drift (L-alert 'ship-speed:<id>').
+    const speeds = gzMode ? await state.shipSpeeds().catch(() => null) : null;
+    if (speeds) {
+      const drivesKnown = [115, 117, 118].every((id) => levels[id] !== undefined && levels[id] !== null);
+      for (const [id, v] of Object.entries(speeds.ships)) {
+        if (!out[id] || !(+v.speed > 0)) continue;
+        if (drivesKnown && out[id].speed > 0 && Math.abs(out[id].speed / +v.speed - 1) > 0.05) {
+          try { if (OGX.learn && OGX.learn.alert) OGX.learn.alert('ship-speed:' + id, `скорость корабля ${id}: расчёт ${out[id].speed}, страница флота ${+v.speed}`, { kind: 'ship-speed', data: { id: +id, calc: out[id].speed, page: +v.speed, drives: [115, 117, 118].map((d) => levels[d]) } }); } catch (e) { /* ignore */ }
+        }
+        Object.assign(out[id], { speed: +v.speed, speedSrc: 'fleetTable', speedT: v.t });
       }
     }
     return out;

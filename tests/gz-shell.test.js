@@ -1,8 +1,9 @@
 'use strict';
 // The «OgameX Suite» shell on the REAL saved GALAXYZ pages of ogamex.eu/Aeternum (scratchpad/eu/pages): the real unpacked
 // extension (manifest, loader, hub, all modules) in Chromium; every host resolves to a local server that serves
-// /Aeternum/game.php?page=<name>[&mode=<mode>] from the saved pages and the live CSS/images from eu/overview/*_files
-// (the game's own JS is not served). Checks the menu entry in #menuTable, the side panel with Live / Infinity / Бот / Логи,
+// /Aeternum/game.php?page=<name>[&mode=<mode>] from the saved pages and the live CSS/images from eu/overview/*_files,
+// falling back to fixtures/galaxyz/assets (the game's own JS is not served). Without the CSS the pages render unstyled
+// and the left menu is in the normal flow, so our one menu row would move #inhalt: the layout checks need the styles. Checks the menu entry in #menuTable, the side panel with Live / Infinity / Бот / Логи,
 // the journal export, the page layout staying intact, and the popup's «эта вкладка» status. Screenshots of every page go to
 // tests/out/shell-<page>.png.
 //   node tests/gz-shell.test.js
@@ -20,7 +21,8 @@ const DIR = path.join(ROOT, 'ogamex-suite');
 const OUT = path.join(__dirname, 'out');
 const EU = path.resolve(ROOT, '..', 'eu');
 const PAGES = process.env.OGX_GZ_PAGES || path.join(EU, 'pages');
-const ASSETS = path.join(EU, 'overview', fs.existsSync(path.join(EU, 'overview')) ? (fs.readdirSync(path.join(EU, 'overview')).find((f) => /_files$/.test(f)) || '') : '');
+const EU_FILES = fs.existsSync(path.join(EU, 'overview')) ? (fs.readdirSync(path.join(EU, 'overview')).find((f) => /_files$/.test(f)) || '') : '';
+const ASSET_DIRS = [EU_FILES ? path.join(EU, 'overview', EU_FILES) : null, path.join(ROOT, 'fixtures', 'galaxyz', 'assets')].filter((d) => d && fs.existsSync(d));
 const ALL = fs.readdirSync(PAGES).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)).sort();
 const MIME = { css: 'text/css', gif: 'image/gif', png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml', woff: 'font/woff', woff2: 'font/woff2' };
 
@@ -38,8 +40,12 @@ function startServer() {
       return send(200, 'text/html; charset=UTF-8', fs.readFileSync(file, 'utf8').replace(/<meta http-equiv="refresh"[^>]*>/i, ''));
     }
     const ext = (u.pathname.match(/\.(\w+)$/) || [])[1];
-    const file = ASSETS && path.join(ASSETS, path.basename(decodeURIComponent(u.pathname)));
-    if (ext && MIME[ext] && file && fs.existsSync(file)) return send(200, MIME[ext], fs.readFileSync(file));
+    if (ext && MIME[ext]) {
+      for (const dir of ASSET_DIRS) {
+        const file = path.join(dir, path.basename(decodeURIComponent(u.pathname)));
+        if (fs.existsSync(file)) return send(200, MIME[ext], fs.readFileSync(file));
+      }
+    }
     send(404, 'text/plain', '');
   });
   return new Promise((resolve) => srv.listen(0, '127.0.0.1', () => resolve({ srv, port: srv.address().port })));
@@ -110,7 +116,7 @@ T.test('menu entry «OgameX Suite» in the real left menu (#menuTable) on every 
     await p.close();
   }
   assert.deepEqual(e.errors, [], 'no [OGX ...] console errors');
-});
+}, { timeout: 300000 });   // 21 styled real pages: about 160 s on a loaded shared machine
 
 T.test('panel: groups Live / Infinity / Бот / Логи, Бот = обзор бота (с 0.3.2 включён по умолчанию), layout unchanged, Esc closes', async () => {
   const e = await env();
@@ -223,7 +229,7 @@ T.test('right column at laptop widths: no horizontal scroll, planet list not spl
       await ctx.close();
     }
   } finally { await plain.close(); }
-});
+}, { timeout: 200000 });
 
 T.test('«Логи для разбора»: «Выгрузить логи» = one TXT with everything; «Ещё» → «Новое с прошлой выгрузки» with the GALAXYZ context', async () => {
   const e = await env();

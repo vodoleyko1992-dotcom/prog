@@ -34,6 +34,12 @@
 
       // ------------------------------------------------------------------ panel and groups
       const panel = S.panel();
+      // A page that already carries our panel markup (a copy saved while the extension ran, a second instance): every
+      // #ogx-panel-<id> that is not the live element is a dead duplicate beside the real one — drop it, one journal line.
+      try {
+        const dead = [...document.querySelectorAll('#' + panel.el.id)].filter((x) => x !== panel.el);
+        if (dead.length) { dead.forEach((x) => x.remove()); rec('S', 'stale-panel', { n: dead.length }); }
+      } catch (e) { /* ignore */ }
       // The Infinity «panel» module titles the shared panel «OgameX Infinity» when it starts; the suite name wins.
       const title = () => { if (panel.setTitle) panel.setTitle('OgameX Suite'); };
       title();

@@ -412,3 +412,65 @@ T.test('collect v2 core: fleetTable merge zeroes missing types, applySent, fitCa
     assert.deepEqual(env.ogxErrors(), []);
   } finally { await env.close(); }
 });
+
+T.test('api.sendFleet on GALAXYZ = fleet.gz.dispatch: cargo fitted to the step-2 room, staytime by hours, fleet id from the result (core-fleet-12)', async () => {
+  const env = await G.launch();
+  try {
+    const page = await env.game('fleetTable');
+    env.server.clearLog();
+    Object.assign(env.server.state, { missions: [3], cargoPerShip: { 208: 1000 }, consumption: 100, enforceRoom: true });
+    const r = await env.evalOgx(page, async () => {
+      const send = await OGX.api.sendFleet({ galaxy: 2, system: 68, position: 9, type: 1, mission: 3, speed: 10, ships: { 208: 1 }, cargo: { metal: 5000, crystal: 0, deuterium: 0 } });
+      // staytime: the option whose HOURS match holdingtime (values 1/2/4/8 = 0.5/1/2/4 h at haltSpeed 2), never the raw value
+      const step2 = { token: 't', missions: [{ id: 5 }], stayOptions: [{ value: 1, hours: 0.5 }, { value: 2, hours: 1 }, { value: 4, hours: 2 }, { value: 8, hours: 4 }] };
+      const f = OGX.fleet.gz.step3Form(step2, { mission: 5, cargo: {}, holdingtime: 2 });
+      return { ok: send.success, step: send.step, clamped: send.fit && send.fit.clamped, cargo: send.cargo, stay: f.staytime };
+    });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.equal(r.step, 3);
+    assert.deepEqual(r.clamped, ['metal'], 'cargo above the room is cut before step 3');
+    assert.equal(r.cargo.metal, 900, 'room 1000 - consumption 100');
+    assert.equal(r.stay, 4, 'holdingtime 2 h -> the option with hours 2 (value 4)');
+    const st = env.server.state;
+    assert.deepEqual(st.sent.map((x) => [x.mission, x.cargo.metal]), [[3, 900]], 'the server got the fitted cargo, no "Not enough cargo space" refusal');
+    assert.deepEqual(env.requests('POST').map((x) => x.route).filter((x) => /fleetStep/.test(x)), ['page=fleetStep1', 'page=fleetStep2', 'page=fleetStep3']);
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
+});
+
+T.test('step 3 refusals [UPSTREAM ShowFleetStep3Page]: more ships than the planet holds pass step 1 and are refused at step 3 (en / ru), botcore maps the exact en / ru texts', async () => {
+  // tests-mock-17: upstream step 1 does not compare the posted ships with the planet; step 3 answers fl_not_all_ship_avalible
+  const { STEP3_TEXTS } = require('./gz-server');
+  const env = await G.launch();
+  try {
+    const page = await env.game('fleetTable');
+    const out = {};
+    for (const lang of ['en', 'ru']) {
+      env.setState({ lang, bodyShips: { 254102: { 210: 2 } }, missions: [3], token: null, fleet: null });
+      env.server.clearLog();
+      out[lang] = await env.evalOgx(page, async () => {
+        const r = await OGX.fleet.gz.dispatch({ galaxy: 2, system: 68, position: 8, type: 1, mission: 3, ships: { 210: 5 }, cargo: {} }, { cp: 254102 });
+        return { ok: !!r.success, step: r.step, kind: r.kind, message: r.message, posted: !!r.posted };
+      });
+      const posts = env.server.find('POST').map((x) => x.page);
+      assert.deepEqual(posts, ['fleetStep1', 'fleetStep2', 'fleetStep3'], lang + ': step 1 accepts the over-count, step 3 refuses it');
+      assert.deepEqual(out[lang], { ok: false, step: 3, kind: 'refusal', message: STEP3_TEXTS[lang].ships, posted: true }, lang);
+    }
+    assert.equal(env.server.state.sent.length, 0, 'nothing was sent');
+    const mapped = await env.evalOgx(page, (texts) => {
+      const map = OGX.bot && OGX.bot._mapStep3Text;
+      if (!map) return null;
+      const r = {};
+      for (const [lang, t] of Object.entries(texts)) { r[lang] = {}; for (const [code, s] of Object.entries(t)) r[lang][code] = map(s); }
+      return r;
+    }, STEP3_TEXTS);
+    assert.ok(mapped, 'OGX.bot._mapStep3Text is loaded');
+    for (const lang of ['en', 'ru']) {
+      for (const code of ['ships', 'slots', 'fuel', 'cargo']) assert.equal(mapped[lang][code], code, `${lang} ${code}: «${STEP3_TEXTS[lang][code]}»`);
+    }
+    assert.equal(mapped.ru.attackLimit, 'attackLimit', 'ru fl_bash_protection (John\'s UI)');
+    // KNOWN botcore gaps (reported for the botcore scope, not asserted here): en fl_bash_protection 'Bash Rule' maps to 'other'
+    // instead of 'attackLimit', and ru fl_no_noresource 'Ресурсы не погружены.' to 'other' while the en text maps to 'cargo'.
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
+});

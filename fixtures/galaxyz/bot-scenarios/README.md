@@ -28,14 +28,28 @@ seed 1 (every random draw — counter-espionage, expedition, battle seed, moon �
 | botexpo-dm.json | astrophysics 6 = 2 expedition slots, haltSpeed 2; probes and light cargo on 254102 |
 | botexpo-cycle.json | 2 expedition slots, haltSpeed 100 (hold 36..216 s); outcomes resources, black hole, 250 DM, nothing |
 | botexpo-colonize.json | 5 of 6 planets, one colony ship; 2:68:10 occupied, 2:68:9 free |
+| aeternum-day.json | tests/gz-bot-defaults.test.js: the packaged 0.3.2 defaults; main 2:68:5 (+ moon) with ~1e12 stock, 33000 probes, 600 × 217, 150 × 219, 400 × 220, an own debris field; rich colony 2:68:7 (repatriation, attacked by Jon Snow), empty colony 2:68:9 (logistics); seven inactives in 2:67–2:69; account spycount 1100 |
+| botmissiles.json | botmissiles e2e: botfarm-three bodies, unit time 1 s; home 254102 silo 5 (25 IPM), no IPM yet, 10 × 217 + 50 probes + 5 × 219, no warships; only farm target 2:68:13 (1200 RL + 300 LL + 10 ABM, shield 3) needs ~29 IPM -> waves 25 + 3, flight 5 s; Jon Snow active 2:69:4 |
+| botmissiles-none.json | botmissiles negatives: impulse 1 (range 4 systems), home silo 4 with 20 IPM; inactive 2:75:13 out of range, Jon Snow 2:69:4 in range but active -> no launch |
 | day.json | tests/gz-bot-scenario.test.js: every module on, gamespeed 40, haltSpeed 100, build/research 120 s, 8 fleet / 2 expedition slots; farm targets 2:68:10 (empty), 2:68:13 (defended -> debris), 2:68:14 (grows 50 HF after the attack left -> recall), 2:68:12 (vacation); moon 254110 with 3 × 219 (+ 60 × 209 never used), 10 × 217 at home; 254104 with 100 LF is attacked by Jon Snow at noon |
 
 Spec extensions beyond C7.1 (all optional): `universe.galaxyDeuteriumCost` (10), `universe.debrisMoon` (1 = a moon created by a battle erases the whole debris field [UPSTREAM MissionCaseAttack:380-386, install.sql debris_moon DEFAULT 1]; 0 keeps it), `universe.buildTimeSec` / `researchTimeSec` /
-`unitTimeSec` (fixed times), `universe.ecoSpeed`, `bodies[].perHour` / `storage` / `energy` / `image` / `diameter`,
+`unitTimeSec` (fixed times), `universe.ecoSpeed`, `universe.ecoScale` (1 = the live economy: mine formula × resourceMultiplier
+22000 [UPSTREAM PlanetRessUpdate.php], basic income 20/10 × multiplier; the scenarios without `perHour` written before 0.3.2
+(basic, botdebris-residual, botexpo-*, botfarm-*, botsave-attack) pin 0.001 = the old ×22 incomes their stock thresholds were
+calibrated on), `universe.bashOn` / `bashCount` / `bashTime` (true / 6 / 86400: at most 6 attacks, missions 1/2/9, on one target
+body per 24 h, the 7th is refused at step 3 with fl_bash_protection [UPSTREAM CheckBash]), `lang` ('en' | 'ru': the texts the
+world answers with; OGX_WORLD_LANG=ru sets it for a whole run), `queueMarkup` ('live': the build/research queue box in the
+live Aeternum markup of fixtures/galaxyz/queue/*-live.html; OGX_QUEUE_MARKUP=live for a whole run), `fleetHandlerOnAjax`
+(false: an ajax request does not process fleets [UPSTREAM common.php:125-127]), `universe.dmMission` (null = the old mission-11
+model [GUESS]: every trip finds 100..300 DM and the collectors are scrapped; 'upstream' = MissionCaseFoundDM: chance
+min(50, 30 + 0.25 × ships) %, 423..1278 DM; an object overrides { base, perShip, max, findMin, findMax, scrap }; ru return texts
+with `lang` 'ru'), `universe.expeditionModel` (null = the old one-tier outcomes; 'upstream' = MissionCaseExpedition tiers for
+resources / DM / found ships, battles with tier losses [loss % GUESS], the upstream return time change), `bodies[].perHour` / `storage` / `energy` / `image` / `diameter`,
 `others[].protection` (`'noob'|'strong'`), `others[].allyId|allyName|allyTag`, `others[].planets[].lastActivity` (minutes) /
 `perHour`, top-level `debris: [{ coords, metal, crystal }]`, `expeditionOutcomes: [{ type: 'resources'|'darkMatter'|'ships'|
 'nothing'|'blackHole'|'battle'|'time', amount?, res?, ships?, lossPct?, delaySec? }]`, `player.spyProbes`, `player.extraSlots`,
-`player.bonusPct`, `player.storageFactor`. Energy: solar satellites (212) built after the start add 30817/797 energy each to the
+`player.bonusPct`, `player.storageFactor`. Missiles: `page=fleetMissile` POST (ShowFleetMissilePage checks and EN texts) launches a mission-10 fleet that takes no slot and cannot be recalled; its impact follows MissionCaseMIP + calculateMIPAttack (interceptors 1:1, consumed; primary, 401..411, 503; checked against specs/galaxyz/tools/missiles/mip_cases.json) and sends a cat-3 «Rocket impact» message; shipyard orders of 502/503 are capped by the silo (level × 10 slots, IPM 2, ABM 1, queued units count). Energy: solar satellites (212) built after the start add 30817/797 energy each to the
 production (`bodies[].energy` or the solar-plant estimate), the per-satellite output of the saved resources page [REAL]. Script commands (`script[].do` and `POST /__ogx/world {cmd, args}`): advance,
 setSpeedup, addHostile, setVacation, setPlayerVacation, logout, login, captcha, setRes, setShips, setOther, setDebris,
 setResearch, expeditionOutcome, message.

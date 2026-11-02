@@ -173,6 +173,70 @@ T.test('fleetTable: recall ids from the movement list, movement rows, Deploy out
   } finally { await env.close(); }
 });
 
+T.test('event box body types: the Planet/Moon/Debris word before each link (en + ru) keys the body, expo style = 15, unknown style alerts', async () => {
+  const env = await launch();
+  try {
+    const p = await env.open('page=overview');
+    // minimal GALAXYZ page with one event [UPSTREAM FlyingFleetsTable sentences: $LNG['type_planet_<type>'] before every body name]
+    const doc = (cls, sentence, key = '1793348429396900', end = 1793348429) => `<!doctype html><html><head><meta name="generator" content="GALAXYZ 1.8.git"></head><body>
+      <div id="messages_collapsed"><div id="OvfleetEvents" class="OvfleetEvents_">
+      <span id="fleettime_${key}" class="fleets" data-fleet-end-time="${end}" data-fleet-time="1012">00:16:46</span>
+      <span><span class="${cls}">${sentence}</span></span></div></div></body></html>`;
+    const gal = (c, cls) => `<a href="game.php?page=galaxy&amp;galaxy=${c.split(':')[0]}&amp;system=${c.split(':')[1]}" class="${cls}">[${c}]</a>`;
+    const fleetA = (cls, word) => `<a href="game.php?page=overview#" data-tooltip-content="x" class="tooltip ${cls}">${word}</a>`;
+    const pm = 'Bob <a href="#" onclick="return Dialog.PM(4377)">PM</a>';
+    const docs = {
+      // en hostile attack on OUR MOON from a planet whose name starts with "Moon" (cff_mission_target_bad)
+      enMoon: doc('flight attack', `A hostile ${fleetA('attack', 'Fleets')}<span class="textForBlind"> (approaching 12 ships: Light Fighter; Cruiser)</span> from player ${pm} from Planet Moonbase ${gal('2:70:9', 'attack')} reached the Moon Главная планета ${gal('2:68:5', 'attack')}. Mission: Attack`),
+      // ru: the same attack; the attacker's planet is NAMED «Луна» (the type word comes first)
+      ruMoon: doc('flight attack', `Чужой ${fleetA('attack', 'флот')}<span class="textForBlind"> (приближается 12 кораблей: Лёгкий истребитель; Крейсер)</span> игрока ${pm} летит с Планета Луна ${gal('2:70:9', 'attack')} на Луна Главная планета ${gal('2:68:5', 'attack')}. Задание: Атаковать`),
+      // ru own Deploy leaving OUR MOON for the planet next to it (cff_mission_own_0)
+      ruFromMoon: doc('flight owndeploy', `Ваш ${fleetA('owndeploy', 'флот')}<span class="textForBlind"> (5 Крейсер)</span> летит с Луна Главная планета ${gal('2:68:5', 'owndeploy')} на Планета Планета ${gal('2:68:4', 'owndeploy')}. Задание: Оставить`),
+      // ru expedition return, REAL text of fixtures/galaxyz/queue/buildings-queue5-live.html (GALAXYZ class ownexpo)
+      ruExpo: doc('return ownexpo', `Ваш ${fleetA('ownexpo', 'флот')}<span class="textForBlind"> (1 Шпионский зонд)</span> возвращается с координат ${gal('2:68:16', 'ownexpo')} на Планета 1992 ${gal('2:68:8', 'ownexpo')}. Задание: Экспедиция`),
+      // en recycle return (REAL overview sentence): "back to planet Planet X" — the lower-case word is no label
+      enRecy: doc('return ownharvest', `One of your ${fleetA('ownharvest', 'Fleets')}<span class="textForBlind"> (8290 Recycler)</span> returns from debris ${gal('2:87:8', 'ownharvest')} back to planet Planet Главная планета ${gal('2:68:5', 'ownharvest')}. Mission: Recycle`),
+      // vanilla 2Moons: missions 11 and 15 share the 'transport' style
+      vanilla16: doc('flight owntransport', `One of your ${fleetA('owntransport', 'Fleets')}<span class="textForBlind"> (1 Espionage Probe)</span> from Planet Главная планета ${gal('2:68:5', 'owntransport')} reached the Position ${gal('2:68:16', 'owntransport')}. Mission: Expedition`),
+      // a style class this core does not know
+      unknown: doc('flight ownasteroid', `One of your ${fleetA('ownasteroid', 'Fleets')}<span class="textForBlind"> (1 Recycler)</span> from Planet Главная планета ${gal('2:68:5', 'ownasteroid')} reached the Asteroid ${gal('2:68:17', 'ownasteroid')}. Mission: Mining`),
+    };
+    const r = await p.evaluate(async (docs) => {
+      const bodies = {
+        p254102: { key: 'p254102', id: 254102, coords: '2:68:5', type: 'planet', name: 'Главная планета' },
+        m254110: { key: 'm254110', id: 254110, coords: '2:68:5', type: 'moon', name: 'Главная планета' },
+        p254120: { key: 'p254120', id: 254120, coords: '2:68:4', type: 'planet', name: 'Планета' },
+        p254118: { key: 'p254118', id: 254118, coords: '2:68:8', type: 'planet', name: '1992' },
+      };
+      const out = {};
+      for (const [k, html] of Object.entries(docs)) {
+        const ev = OGX.parse.gz.events(html).map((e) => [e.mission, e.from, e.fromType, e.to, e.toType, e.hostile]);
+        const fl = OGX.flights.parseEventList(html, { bodies }).map((f) => [f.missionType, f.returnFlight, f.from, f.fromType, f.to, f.toType, f.originKey, f.destKey, f.status]);
+        out[k] = { ev, fl };
+      }
+      out.alerts = OGX.learn.state().alertLog.filter((a) => /^event-style:/.test(a.key)).map((a) => [a.key, a.kind, a.data && a.data.style]);
+      out.words = ['Moon', 'Planet', 'Луна', 'Планета', 'Поле обломков', 'Debris Field', 'moon', 'debris', 'Moonbase', 'Lunar'].map((w) => OGX.parse.gz.bodyTypeIn(' x ' + w + ' y '));
+      return out;
+    }, docs);
+    assert.deepEqual(r.words, [3, 1, 3, 1, 2, 2, null, null, null, null], 'whole capitalised type words only');
+    assert.deepEqual(r.enMoon.ev, [[1, '2:70:9', 1, '2:68:5', 3, true]]);
+    assert.deepEqual(r.enMoon.fl, [[1, false, '2:70:9', 1, '2:68:5', 3, null, 'm254110', 'hostile']], 'an attack on the moon keys the MOON, not the planet at the same coordinates');
+    assert.deepEqual(r.ruMoon.ev, [[1, '2:70:9', 1, '2:68:5', 3, true]]);
+    assert.deepEqual(r.ruMoon.fl, [[1, false, '2:70:9', 1, '2:68:5', 3, null, 'm254110', 'hostile']], 'Russian: the type word «Луна» before the link, not the planet name «Луна»');
+    assert.deepEqual(r.ruFromMoon.ev, [[4, '2:68:5', 3, '2:68:4', 1, false]]);
+    assert.deepEqual(r.ruFromMoon.fl, [[4, false, '2:68:5', 3, '2:68:4', 1, 'm254110', 'p254120', 'friendly']], 'the origin may be a moon');
+    assert.deepEqual(r.ruExpo.ev, [[15, '2:68:8', 1, '2:68:16', null, false]], 'ownexpo = Expedition');
+    assert.deepEqual(r.ruExpo.fl, [[15, true, '2:68:16', 4, '2:68:8', 1, null, 'p254118', 'friendly']], 'expedition return: position 16 is deep space (4), home is the planet');
+    assert.deepEqual(r.enRecy.ev, [[8, '2:68:5', 1, '2:87:8', null, false]]);
+    assert.deepEqual(r.enRecy.fl, [[8, true, '2:87:8', 2, '2:68:5', 1, null, 'p254102', 'friendly']], 'no type word before the debris link -> the mission rule (2)');
+    assert.deepEqual(r.vanilla16.ev, [[11, '2:68:5', 1, '2:68:16', null, false]], 'vanilla transport style to position 16 = mission 11 (GALAXYZ styles 15 ownexpo)');
+    assert.deepEqual(r.vanilla16.fl.map((x) => x.slice(0, 6)), [[11, false, '2:68:5', 1, '2:68:16', 4]]);
+    assert.deepEqual(r.unknown.ev, [[null, '2:68:5', 1, '2:68:17', null, false]], 'unknown style -> mission null, never a guess');
+    assert.deepEqual(r.alerts, [['event-style:transport16', 'event-style', 'owntransport'], ['event-style:asteroid', 'event-style', 'ownasteroid']], 'both journaled once through the learning module');
+    assert.deepEqual(await env.ogxErrors(p), []);
+  } finally { await env.close(); }
+});
+
 T.test('dispatch: the three POST bodies match the real forms, token from the previous step; step-3 result parsed', async () => {
   const env = await launch();
   try {
@@ -302,6 +366,45 @@ T.test('flight math reproduces the real pages; estimate uses the stored game spe
   } finally { await env.close(); }
 });
 
+T.test('fleetTable ship speeds: shipStats takes the speed the page printed (219: 6000, not the catalog calc), the estimate uses it, other drive levels drop it', async () => {
+  const env = await launch();
+  try {
+    // the REAL page lists Colony Ship "Speed: 6000" (= calc 2500 x 2.4 at Impulse +140 %) and Spy Probe 220000000; a Battle Recycler
+    // row is added (219: catalog 7500 hyperspace -> calc 16500 at Hyperspace +120 %, the server prints 6000)
+    const ft = page('fleetTable').replace(/<tr>\s*<td><img src="\.\/7_files\/208\.gif"[\s\S]*?<\/tr>/, (row) => row + row.replace(/208/g, '219').replace('Colony Ship', 'Battle Recycler'));
+    // a later page=fleetTable of another body: only the Spy Probe listed, Hyperspace +150 % (a drive level researched meanwhile)
+    const ft2 = page('fleetTable').replace(/<tr>\s*<td><img src="\.\/7_files\/208\.gif"[\s\S]*?<\/tr>/, '').replace('hiperspace.png" alt="">+120 %', 'hiperspace.png" alt="">+150 %');
+    env.server.answers['GET fleetTable'] = ft;
+    const p = await env.open('page=fleetTable');
+    const r = await p.evaluate(async (ft2) => {
+      await OGX.storage.flush();
+      const speeds = async () => { const sp = await OGX.state.shipSpeeds(); return sp && { drives: sp.drives, ships: Object.fromEntries(Object.entries(sp.ships).map(([id, v]) => [id, v.speed])) }; };
+      const stats = async (ids) => { const st = await OGX.state.shipStats(); return Object.fromEntries(ids.map((id) => [id, [Math.round(st[id].speed), st[id].speedSrc || null, st[id].src]])); };   // calc: 2500 x 2.4 = 6000.000000000001
+      const alerts = () => OGX.learn.state().alertLog.filter((a) => /^ship-speed:/.test(a.key)).map((a) => [a.key, a.data.calc, a.data.page]);
+      const est = await OGX.fleet._estimateGz({ from: '2:68:8', to: '2:82:8', ships: { 219: 2 } });
+      const first = { sp: await speeds(), st: await stats([208, 210, 219, 209]), est: [est.distance, est.duration, est.maxSpeed], alerts: alerts() };
+      // the second page, merged like fleet.status({ merge: true }) does
+      await OGX.state.merge(OGX.state.snapshotSync(new DOMParser().parseFromString(ft2, 'text/html'), 'fleet'), { t: OGX.time.serverNow() + 60000 });
+      const second = { sp: await speeds(), st: await stats([208, 210, 219]), bonus: (await OGX.state.combatBonus()).hyperspace };
+      // a newer page=research with yet another hyperspace level
+      await OGX.storage.update('research', (o) => Object.assign({}, o || {}, { t: OGX.time.serverNow() + 120000, levels: Object.assign({}, (o && o.levels) || {}, { 115: 12, 117: 7, 118: 6 }) }), null);
+      const third = { sp: await speeds(), st: await stats([210, 219]) };
+      return { first, second, third };
+    }, ft2);
+    assert.deepEqual(r.first.sp, { drives: { 115: 12, 117: 7, 118: 4 }, ships: { 208: 6000, 210: 220000000, 219: 6000 } }, 'drive levels from the Bonus table of the same page');
+    assert.deepEqual([r.first.st[208], r.first.st[210], r.first.st[219]], [[6000, 'fleetTable', 'calc'], [220000000, 'fleetTable', 'calc'], [6000, 'fleetTable', 'calc']]);
+    assert.equal(r.first.st[209][1], null, 'a type the page does not list keeps the calc');
+    assert.ok(r.first.st[209][0] > 0);
+    // 2:68:8 -> 2:82:8 = 2700 + 14 x 95 = 4030; round((3500 x sqrt(4030 x 10 / 6000) + 10) / 7) = 1297 s (the calc 16500 would say 785 s)
+    assert.deepEqual(r.first.est, [4030, 1297, 6000]);
+    assert.deepEqual(r.first.alerts, [['ship-speed:219', 16500, 6000]], 'the catalog disagrees with the page for 219 only');
+    assert.deepEqual(r.second, { sp: { drives: { 115: 12, 117: 7, 118: 5 }, ships: { 210: 220000000 } }, st: { 208: [6000, null, 'calc'], 210: [220000000, 'fleetTable', 'calc'], 219: [18750, null, 'calc'] }, bonus: 150 },
+      'other drive levels: only the types of the newer page remain, the rest follow the calc with the new Bonus levels');
+    assert.deepEqual(r.third, { sp: null, st: { 210: [220000000, null, 'calc'], 219: [21000, null, 'calc'] } }, 'a newer page=research with another drive level drops the printed speeds');
+    assert.deepEqual(await env.ogxErrors(p), []);
+  } finally { await env.close(); }
+});
+
 T.test('prefill: native fleetTable link, ships filled on fleetTable, speed on step 1, mission + cargo on step 2, never submitted', async () => {
   const env = await launch();
   try {
@@ -332,5 +435,30 @@ T.test('prefill: native fleetTable link, ships filled on fleetTable, speed on st
     assert.deepEqual(env.server.posts, [], 'nothing was submitted');
     for (const p of [p2, s1, s2]) assert.deepEqual(await env.ogxErrors(p), []);
     assert.deepEqual(env.errors, []);
+  } finally { await env.close(); }
+});
+
+T.test('parseResult: two own fleets to the same target a second apart -> the newest id, never one that flew before the send (core-fleet-13)', async () => {
+  const env = await launch();
+  try {
+    const p = await env.open('page=fleetStep3');
+    const r = await p.evaluate(() => {
+      // the real result page lists our colony ship 396901 (arrival 10:20:01 = table). Add an OLDER fleet 396899 to the same target
+      // whose arrival equals the table time, and move 396901 one second later (the server stores round(T), the table prints floor)
+      const doc = document.cloneNode(true);
+      const box = doc.querySelector('#OvfleetEvents');
+      const older = box.cloneNode(true);
+      for (const s of older.querySelectorAll('[id="fleettime_1793348401396901"]')) s.id = 'fleettime_1793348401396899';
+      box.parentNode.insertBefore(older, box);
+      for (const s of doc.querySelectorAll('[id="fleettime_1793348401396901"]')) { s.id = 'fleettime_1793348402396901'; s.setAttribute('data-fleet-end-time', '1793348402'); }
+      const ids = OGX.flights.parseGz(doc, {}).filter((f) => !f.returnFlight && f.to === '2:68:9').map((f) => f.fleetId).sort();
+      const pick = (o) => { const x = OGX.fleet.gz.parseResult(doc, o); return [x.fleetId, x.arrival]; };
+      return { ids, plain: pick(), known: pick({ knownIds: [396899] }), knownNew: pick({ knownIds: [396901] }) };
+    });
+    assert.deepEqual(r.ids, [396899, 396901], 'both fleets parsed');
+    assert.deepEqual(r.plain, [396901, 1793348402000], 'the newest id wins over the closer arrival');
+    assert.deepEqual(r.known, [396901, 1793348402000]);
+    assert.deepEqual(r.knownNew, [396899, 1793348401000], 'a fleet that flew before the send is skipped');
+    assert.deepEqual(await env.ogxErrors(p), []);
   } finally { await env.close(); }
 });

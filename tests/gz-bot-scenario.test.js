@@ -30,7 +30,7 @@ const MOON = 254110;     // moon of 254102: 3 Battle Recyclers 219 (+ 60 x 209 t
 const COL7 = 254104;     // [2:68:7] 100 light fighters, attacked at noon
 const JON = 3843;
 const GROWER = 3903;     // empty inactive [2:68:14] that grows a defense fleet after our attack left
-const MODS = ['botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo'];
+const MODS = ['botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo', 'botmissiles'];
 const SLOTS_MAX = 8;     // 1 + research 108 (7) at the start; botbuild may research 108 during the day (maxAt below)
 const EXPO_MAX = 2;      // floor(sqrt(124 = 4))
 const RESERVE = 1;
@@ -44,11 +44,13 @@ function settings() {
     'botcore.maxActionsPerHour': 2000, 'botcore.maxFleetSendsPerHour': 300, 'botcore.maxBuildsPerHour': 200, 'botcore.slotsReserve': RESERVE,
     'botcore.sleepOn': false, 'botcore.sleepPreventIfFleets': false,
     'botfarm.minLoot': 100000, 'botfarm.escortLeadSec': 40,
+    // botmissiles on: day.json has no silo 4 anywhere, so it plans and journals only; no silo request (the day's build plan stays as is)
+    'botmissiles.buildSilo': false,
     // probes per spy (suite setting, default 1100): the world has 60 probes at home — 1100 would send them all at once and
     // leave none for the escort spy
     'spy.probes': 5,
     'botsave.saveLeadMinSec': 15, 'botsave.saveLeadMaxSec': 20, 'botsave.recallJitterMinSec': 1, 'botsave.recallJitterMaxSec': 3,
-    'botexpo.mode': 'dm', 'botexpo.expoProbes': 1, 'botexpo.probeBuild': false, 'botexpo.dmHunt': false, 'botexpo.stayHours': 0.01, 'botexpo.betweenMinSec': 1, 'botexpo.betweenMaxSec': 2, 'botexpo.afterReturnMinSec': 1, 'botexpo.afterReturnMaxSec': 3,
+    'botexpo.mode': 'dm', 'botexpo.expoProbes': 1, 'botexpo.keepProbes': 0, 'botexpo.probeBuild': false, 'botexpo.dmHunt': false, 'botexpo.stayHours': 0.01, 'botexpo.betweenMinSec': 1, 'botexpo.betweenMaxSec': 2, 'botexpo.afterReturnMinSec': 1, 'botexpo.afterReturnMaxSec': 3,
   }, Object.fromEntries(MODS.map((m) => [m + '.on', true])));
 }
 
@@ -270,6 +272,9 @@ T.test('a compressed day with every bot module on: farming, an attack at noon, a
       if (!J.some((e) => e.k === a.d.module + ':decision' && e.d && e.d.run === a.d.run && e.t <= a.t)) missing.push(a.d.module + ' ' + a.d.type + ' ' + (a.d.why || ''));
     }
     assert.deepEqual(missing, [], 'a decision before every action');
+    // botmissiles: no silo 4 in day.json -> never a launch or a 503 order
+    assert.equal(Wd.log.sent.filter((x) => x.mission === 10).length, 0, 'no missile launched (no silo 4)');
+    assert.equal(Wd.log.builds.filter((b) => b.accepted && b.accepted[503]).length, 0, 'no IPM ordered');
     await clean(env, 'day');
   } finally {
     try {

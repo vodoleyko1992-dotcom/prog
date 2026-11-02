@@ -132,6 +132,46 @@ T.test('M1/M6 fetched lists: subtab aliases per category; combat fetchDetail -> 
   assert.deepEqual(env.ogxErrors(), []);
 });
 
+T.test('expedition flavour: ё folding, no short/empty prefix match, dark-matter fallback, unknown text journaled via learn', async () => {
+  const env = await G.launch();
+  const p = await env.openSaved('messages-spy');
+  const r = await env.evalOgx(p, () => {
+    const one = (html) => {
+      const body = document.createElement('div'); body.innerHTML = html;
+      const x = OGX.messages.gz.expedition({ body, subject: 'Результат экспедиции', wall: null });
+      return x && [x.outcome, x.key, x.textSample || null];
+    };
+    const dm = 'Экспедиции удалось поймать и законсервировать немного Тёмной материи.';
+    const out = {
+      exact: one(dm),
+      yo: one(dm.replace(/ё/g, 'е')),
+      edited: one('Экспедиции удалось поймать немного Тёмной материи!'),
+      empty: one(''),
+      brFirst: one('<br>Экспедиции удалось поймать и законсервировать немного Тёмной материи.'),
+      short: one('Часть<br>'),
+      hole: one('Часть Вашего флота засосало в чёрную дыру.'),
+      unknown: one('Совершенно новый текст сервера Aeternum про экспедицию.'),
+      ships: one('Ваша экспедиция обнаружила несколько кораблей в отличном состоянии. К флоту присоединились:<br><br>Малый транспорт: 3'),
+    };
+    out.alerts = OGX.learn.isActive() ? OGX.learn.state().alertLog.filter((a) => /^expedition-text:/.test(a.key)).map((a) => [a.kind, a.data.text, a.data.fallback]) : null;
+    return out;
+  });
+  assert.deepEqual(r.exact, ['darkmatter', 'sys_expe_found_dm_1_1', null]);
+  assert.deepEqual(r.yo, ['darkmatter', 'sys_expe_found_dm_1_1', null], 'е instead of ё still matches the table');
+  assert.deepEqual(r.edited, ['darkmatter', 'fallback:darkmatter', 'Экспедиции удалось поймать немного Тёмной материи!']);
+  assert.deepEqual(r.empty, [null, null, null], 'an empty body never matches the first table entry (black hole)');
+  assert.deepEqual(r.brFirst.slice(0, 2), ['darkmatter', 'sys_expe_found_dm_1_1'], 'a body starting with <br>: the first non-empty segment');
+  assert.deepEqual(r.short, [null, null, 'Часть'], 'a short first segment is no prefix of «Часть Вашего флота засосало…»');
+  assert.deepEqual(r.hole.slice(0, 2), ['fleet_lost', 'sys_expe_blackholl_1']);
+  assert.deepEqual(r.unknown, [null, null, 'Совершенно новый текст сервера Aeternum про экспедицию.']);
+  assert.deepEqual(r.ships.slice(0, 2), ['ships', 'sys_expe_found_ships']);
+  if (r.alerts) {
+    assert.deepEqual(r.alerts.map((a) => a[0]), ['expedition-text-unknown', 'expedition-text-unknown', 'expedition-text-unknown'], JSON.stringify(r.alerts));
+    assert.deepEqual(r.alerts.map((a) => a[2]), ['darkmatter', null, null]);
+  }
+  assert.deepEqual(env.ogxErrors(), []);
+});
+
 T.test('M2 resolvePlanetId: galaxy page, galaxy cache, own bodies, unresolvable with a suggestion; sendMiniFleet from coords', async () => {
   const env = await G.launch();
   const sys = specFix('galaxy-live-synthetic-system.html');

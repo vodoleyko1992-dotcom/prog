@@ -48,6 +48,7 @@ T.test('lib: redaction, schema, path normalisation, response kind', async () => 
   assert.equal(r.n, 'NaN');
   assert.ok(r.long.length < 600 && r.long.endsWith('…(900)'));
   assert.deepEqual(J(L.formSummary('_token=abc&galaxy=1&am202=5&password=p&email=a%40b.cc')), { _token: '<redacted>', galaxy: '1', am202: '5', password: '<redacted>', email: '<redacted>' });
+  assert.deepEqual(J(L.formSummary('text=hello&subject=s&empfaenger=Bob&galaxy=1')), { text: '<redacted>', subject: '<redacted>', empfaenger: '<redacted>', galaxy: '1' }, 'free text masked');
   assert.equal(L.redactUrl('http://h/ajax/messages?tab=2&_token=zz&csrf_token=1'), '/ajax/messages?tab=2&_token=<redacted>&csrf_token=<redacted>');
   assert.equal(L.normalizePath('/ajax/messages/123/'), '/ajax/messages/:id');
   assert.equal(L.normalizePath('http://h:1/ajax/galaxy?x=1'), '/ajax/galaxy');
@@ -59,6 +60,15 @@ T.test('lib: redaction, schema, path normalisation, response kind', async () => 
   assert.equal(L.responseKind(200, { success: false }), 'err');
   assert.equal(L.responseKind(200, { status: 'failure' }), 'err');
   assert.equal(L.responseKind(500, null), 'err');
+  // GALAXYZ fleetAjax (specs/galaxyz/fixtures/fleet-upstream-fleetAjax-*.json): 600 sent, 6xx refused with its own shape
+  assert.equal(L.responseKind(200, { slots: 2, ships: { 210: 99 }, code: 600, mess: 'Send 3 Spy Probe to 2:70:9 ...' }), 'ok');
+  assert.equal(L.responseKind(200, { slots: 13, code: 612, mess: 'Fault, not enough fleet Slots' }), 'refused:612');
+  assert.equal(L.responseKind(200, { code: '601', mess: 'x' }), 'refused:601');
+  assert.equal(L.responseKind(200, { code: 0, mess: 'x' }), 'ok');
+  assert.equal(L.responseKind(200, { code: 612, success: false }), 'refused:612');
+  // only alerts that mean something is wrong count as L errors
+  const t0 = Date.now();
+  assert.deepEqual(L.errorCounters(['api-new', 'api-key-new', 'ship-speed', 'event-style', 'implausible', 'tokens-gone', 'selector-miss', 'api-key-lost'].map((k) => ({ t: t0, s: 'L', k })), t0).L, 4);
   // the page hook's copy of jsonSchema must give the same result
   const hook = fs.readFileSync(path.join(ROOT, 'shared/main/page-hook.js'), 'utf8');
   const lib = fs.readFileSync(path.join(ROOT, 'shared/core/21-diaglib.js'), 'utf8');
@@ -231,8 +241,13 @@ T.test('lib: one-file export «Выгрузить логи» on the live journal
   // compact HTML, volatile tokens
   assert.equal(L.compactHtml('<p>\n\n   a   b</p><style>x{}</style>'), '<p>\na b</p><style></style>');
   for (const t of ['#OvfleetEvents', '#OvfleetContent', '#eventboxLoading', '#fleettime_#', '.OvfleetButton', '.OvfleetEvents_', '[data-fleet-end-time]', '[data-fleet-time]', '[data-hide]',
-    '.ownattack', '.owndeploy', '.ownexpo', '.ownharvest', '.owntransport', '.ownespionage', '.t_Tooltip', '.t_ContentContainer', '.bi-building-fill-up', '.buildingIco', '.new-msg-count', '.allFleetsEvent', '.res_current_warn']) assert.ok(L.isVolatileToken(t), t);
-  for (const t of ['#planet', '.technology', '[data-technology]', '.galaxy-alliance', '.infobox', '.construction-queue-item', '.build-icon', 'meta:csrf-token', '#galaxy']) assert.ok(!L.isVolatileToken(t), t);
+    '.ownattack', '.owndeploy', '.ownexpo', '.ownharvest', '.owntransport', '.ownespionage', '.t_Tooltip', '.t_ContentContainer', '.bi-building-fill-up', '.buildingIco', '.new-msg-count', '.allFleetsEvent', '.res_current_warn',
+    // queue / officer / galaxy-row state of normal play (parsers-learn-8)
+    '#progressbar', '#progressbars', '#time', '#time#', '#Countdown', '.timer', '.ui-progressbar', '.ui-widget', '.ui-widget-content', '.ui-corner-all', '.ui-progressbar-value',
+    '[data-cancel-message]', '.slide-up', '.commander', '.glows', '.action', '.allytag', '.debris', '.galaxy-short', '.galaxy-username', '.galaxy-username-inactive',
+    '.microplanet#', '.moon', '.planetname#', '.playername', '.spacer##']) assert.ok(L.isVolatileToken(t), t);
+  for (const t of ['#planet', '.technology', '[data-technology]', '.galaxy-alliance', '.infobox', '.construction-queue-item', '.build-icon', 'meta:csrf-token', '#galaxy',
+    '#timer-box', '.moonlink', '.ogx-test-new', '.actions', '[data-status]']) assert.ok(!L.isVolatileToken(t), t);
   // no bot data -> an explicit line
   assert.ok(L.buildFull({ ctx, events: events.slice(0, 5), now }).text.includes('нет данных бота'));
 });
@@ -544,6 +559,11 @@ T.test('learning: tokens/selectors/API drift and implausible values raise dedupl
     out.v1 = OGX.learn.value('probe.metal', NaN);
     out.v2 = OGX.learn.check('probe.res', { metal: { amount: -5, perHour: -3 }, energy: -50 });
     out.v3 = OGX.learn.check('probe.ok', { metal: { amount: 5, perHour: -3 }, energy: -50, tempMin: -40 });
+    // page=resources rows: consumers print negative metal/crystal/deuterium/energy per producer (real: fusion plant -242000 deuterium)
+    out.v4 = OGX.learn.implausible({ rows: [{ metal: 938100934, crystal: 0, deuterium: 0, energy: -14214 }, { deuterium: -242000 }], metal: { amount: 1 } });
+    out.v5 = OGX.learn.implausible({ rows: [{ deuterium: NaN }] });
+    out.v6 = OGX.learn.implausible({ metal: { amount: -1 } }, { allowNegative: /amount$/ });
+    out.v7 = OGX.learn.implausible({ metal: { amount: -1 } });
     out.parseOk = OGX.learn.check('parse.ok', OGX.parse.inlineResources(document));
     await new Promise((res) => setTimeout(res, 300));
     out.all = OGX.diag.recent({ s: 'L' }).map((e) => e.k + '|' + e.w);
@@ -573,6 +593,9 @@ T.test('learning: tokens/selectors/API drift and implausible values raise dedupl
   assert.equal(r.v1, false);
   assert.equal(r.v2, false);
   assert.equal(r.v3, true, 'negative production/energy/temperature are plausible');
+  assert.deepEqual(r.v4, [], 'per-producer rows are signed');
+  assert.deepEqual(r.v5, [{ path: 'rows[0].deuterium', value: 'NaN' }], 'NaN in a row is still implausible');
+  assert.deepEqual([r.v6, r.v7], [[], [{ path: 'metal.amount', value: -1 }]], 'allowNegative per check');
   assert.equal(r.parseOk, true, 'fixture resources are plausible');
   assert.ok(r.all.some((x) => /^implausible\|probe\.metal: /.test(x)));
   assert.ok(r.all.some((x) => /^implausible\|probe\.res: .*metal\.amount=-5/.test(x)));
@@ -595,6 +618,100 @@ T.test('learning: tokens/selectors/API drift and implausible values raise dedupl
   assert.ok(!sn.html.includes(r.tok), 'no CSRF token in the snapshot');
   assert.ok(sn.html.includes('name="csrf-token" content="&lt;csrf&gt;"') || sn.html.includes('name="csrf-token" content="<csrf>"'), sn.html.slice(0, 600));
   assert.ok(!/<script[^>]*>[^<]+<\/script>/.test(sn.html), 'inline scripts emptied: ' + (/<script[^>]*>[^<]+<\/script>/.exec(sn.html) || [''])[0].slice(0, 300));
+  assert.deepEqual(env.ogxErrors(), []);
+});
+
+T.test('learning: GALAXYZ endpoints — known game pages raise no api-new (and api-new takes no snapshot), fleetAjax refusals are no key loss', async () => {
+  const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
+  const page = await env.open('/overview');
+  const r = await env.evalOgx(page, async () => {
+    const out = {};
+    const recent = () => OGX.diag.recent({ s: 'L' }).map((e) => e.k + '|' + e.d.key);
+    out.known = ['GET /Aeternum/game.php?page=galaxy', 'POST /Aeternum/game.php?page=fleetStep2', 'GET /Aeternum/game.php?page=techtree', 'POST /Aeternum/game.php?page=fleetAjax',
+      'GET /Aeternum/game.php?page=messages&mode=view', 'GET /Aeternum/index.php', 'GET /Aeternum/game.php?page=foo', 'GET /t/brand-new', 'POST /Aeternum/game.php?page=fleetAjax&x'].map((ep) => OGX.learn._knownEndpoint(ep));
+    // past newEndpointAfter (30) observations: a game page never seen before is no new endpoint, a page outside the set is (no snapshot)
+    for (let i = 0; i < 31; i++) OGX.learn.api('GET /Aeternum/game.php?page=overview', { status: 200, keys: null });
+    let n = recent().length;
+    for (const ep of ['GET /Aeternum/game.php?page=galaxy', 'POST /Aeternum/game.php?page=fleetStep2', 'GET /Aeternum/game.php?page=techtree', 'GET /Aeternum/index.php']) OGX.learn.api(ep, { status: 200, keys: null });
+    out.knownAlerts = recent().slice(n);
+    OGX.learn.api('GET /Aeternum/game.php?page=foo', { status: 200, keys: null });
+    out.unknownAlerts = recent().slice(n);
+    await OGX.diag.flush();
+    out.snapsAfterNew = (await (await OGX.diag.store()).snaps({})).snaps.map((x) => x.reason);
+    // fleetAjax: 6 sends (code 600, with ships), then 2 refusals (612, no ships) -> no key loss; a code 600 WITHOUT ships is one
+    const spyOk = { slots: 2, ships: { 210: 99 }, code: 600, mess: 'Send 3 Spy Probe to 2:70:9 ...' };
+    const noslots = { slots: 13, code: 612, mess: 'Fault, not enough fleet Slots' };
+    const ep = 'POST /Aeternum/game.php?page=fleetAjax';
+    n = recent().length;
+    for (let i = 0; i < 6; i++) OGX.learn.api(ep, { status: 200, json: spyOk });
+    OGX.learn.api(ep, { status: 200, json: noslots });
+    OGX.learn.api(ep, { status: 200, json: noslots });
+    out.refusedAlerts = recent().slice(n);
+    OGX.learn.api(ep, { status: 200, json: { slots: 2, code: 600, mess: 'ok' } });
+    out.lostAlerts = recent().slice(n);
+    out.epKinds = Object.keys(OGX.learn.state().api[ep].kinds).sort();
+    // past newEndpointKnownAfter (300): a method never seen on a known page is reported once (no snapshot either)
+    OGX.learn.state().apiTotal = 300;
+    n = recent().length;
+    OGX.learn.api('POST /Aeternum/game.php?page=galaxy', { status: 200, keys: null });
+    OGX.learn.api('POST /Aeternum/game.php?page=galaxy', { status: 200, keys: null });
+    out.lateAlerts = recent().slice(n);
+    await OGX.diag.flush();
+    out.snaps = (await (await OGX.diag.store()).snaps({})).snaps.map((x) => x.reason);
+    return out;
+  });
+  assert.deepEqual(r.known, [true, true, true, true, true, true, false, false, false]);
+  assert.deepEqual(r.knownAlerts, []);
+  assert.deepEqual(r.unknownAlerts, ['api-new|api-new:GET /Aeternum/game.php?page=foo']);
+  assert.deepEqual(r.snapsAfterNew, [], 'api-new makes no snapshot');
+  assert.deepEqual(r.lateAlerts, ['api-new|api-new:POST /Aeternum/game.php?page=galaxy']);
+  assert.deepEqual(r.refusedAlerts, [], 'a refusal is its own response kind');
+  assert.deepEqual(r.lostAlerts, ['api-key-lost|api-lost:POST /Aeternum/game.php?page=fleetAjax:ok:ships,ships.#']);
+  assert.deepEqual(r.epKinds, ['ok', 'refused:612']);
+  assert.deepEqual(r.snaps.map((x) => x.replace(/:.*$/, '')), ['learn'], 'one snapshot, for the key loss');
+  assert.match(r.snaps[0], /^learn: api-lost:/);
+  assert.deepEqual(env.ogxErrors(), []);
+});
+
+T.test('learning: the state is written at most once per saveMs (not every 5 s per request); an alert soon, but not sooner than saveMs after the last write', async () => {
+  const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
+  const page = await env.open('/overview');
+  const r = await env.evalOgx(page, async () => {
+    const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+    const L = OGX.learn;
+    if (L.config.saveMs !== 60000 || L.config.alertSaveMs !== 5000) throw new Error('defaults');
+    Object.assign(L.config, { saveMs: 1500, alertSaveMs: 200 });
+    await L.save({ flush: true });
+    const writes = [];
+    const orig = OGX.storage.set;
+    OGX.storage.set = function (k, ...rest) { if (k === 'diag.learn') writes.push(Date.now()); return orig.call(this, k, ...rest); };
+    L.api('GET /Aeternum/game.php?page=overview', { status: 200, keys: null });
+    await L.save({ flush: true });                    // explicit write: the 60 s window starts now
+    const tS = Date.now();
+    for (let i = 0; i < 100; i++) L.api('GET /Aeternum/game.php?page=overview', { status: 200, keys: null });
+    await sleep(700);
+    const after700 = writes.length;
+    L.alert('ogx-test-alert', 'проверка', { kind: 'drift' });   // urgent, but the window since the last write is not over
+    await sleep(500);
+    const afterAlert = writes.length;
+    await sleep(900);
+    const at2100 = writes.length;
+    const firstGap = writes[1] ? writes[1] - tS : null;
+    await sleep(1700);                                // window over, nothing dirty: no write
+    const idle = writes.length;
+    L.alert('ogx-test-alert-2', 'проверка 2', { kind: 'drift' });
+    await sleep(600);
+    const urgent = writes.length;
+    OGX.storage.set = orig;
+    Object.assign(L.config, { saveMs: 60000, alertSaveMs: 5000 });
+    return { after700, afterAlert, at2100, firstGap, idle, urgent };
+  });
+  assert.equal(r.after700, 1, 'only the explicit write: 100 counted requests wait for the window');
+  assert.equal(r.afterAlert, 1, 'an alert does not write sooner than saveMs after the last write');
+  assert.equal(r.at2100, 2, 'one write for requests + alert');
+  assert.ok(r.firstGap >= 1400, 'gap ' + r.firstGap);
+  assert.equal(r.idle, 2, 'nothing changed: no write');
+  assert.equal(r.urgent, 3, 'an alert after a quiet window is written within alertSaveMs');
   assert.deepEqual(env.ogxErrors(), []);
 });
 
@@ -680,11 +797,29 @@ T.test('export: TXT/JSONL/snapshots/learning from the page; "new since last expo
     OGX.diag._ogxNet({ method: 'GET', url: location.origin + '/game.php?page=buildings&cp=254103', finalUrl: location.origin + '/game.php?page=buildings', status: 200, ms: 5 });
     OGX.diag._ogxNet({ method: 'POST', url: location.origin + '/game.php?page=buildings', status: 200, ms: 5, body: 'cmd=insert&building=1&cp=254104' });
     const net = OGX.diag.recent({ s: 'N' }).slice(-2).map((e) => ({ w: e.w, cp: e.d.cp, to: e.d.to || null }));
+    // private texts never reach the journal: messages/notes/ticket/settings keep field names only; free-text keys are masked anywhere
+    OGX.diag._pageNet({ method: 'POST', url: location.origin + '/game.php?page=messages&mode=write', status: 200, ms: 5, body: 'id=4366&subject=hi+there&text=my+secret+plan&empfaenger=Bob' });
+    OGX.diag._ogxNet({ method: 'POST', url: location.origin + '/game.php?page=notes', status: 200, ms: 5, body: 'mode=insert&text=note+text&title=t' });
+    OGX.diag._pageNet({ method: 'POST', url: location.origin + '/game.php', status: 200, ms: 5, body: 'page=ticket&mode=send&message=help+me' });
+    OGX.diag._pageNet({ method: 'POST', url: location.origin + '/game.php?page=settings', status: 200, ms: 5, body: 'timezone=Asia%2FVladivostok&dpath=x' });
+    OGX.diag._pageNet({ method: 'POST', url: location.origin + '/game.php?page=unknownpage', status: 200, ms: 5, body: 'foo=private+words' });
+    OGX.diag._pageNet({ method: 'POST', url: location.origin + '/game.php?page=fleetStep1', status: 200, ms: 5, body: 'galaxy=1&system=2&planet=3&ship210=1100' });
+    OGX.diag._ogxNet({ method: 'POST', url: location.origin + '/game.php?page=planetlayer', status: 200, ms: 5, body: 'name=Base&text=hello&cp=1' });
+    const priv = OGX.diag.recent({ s: 'N' }).slice(-7).map((e) => ({ w: e.w, f: e.d.f || null, fk: e.d.fk || null }));
     const full = await OGX.diag.export('full');
-    return { a, b, today: today.info, last: last.text, lastInfo: last.info, jsonl: jsonl.text, snaps: snaps.text, snapsName: snaps.filename, learn: learnRep.text, learnName: learnRep.filename, quiet, net, full };
+    return { a, b, today: today.info, last: last.text, lastInfo: last.info, jsonl: jsonl.text, snaps: snaps.text, snapsName: snaps.filename, learn: learnRep.text, learnName: learnRep.filename, quiet, net, priv, full };
   });
   assert.deepEqual(r.quiet, ['alert:{"n":0,"title":false}', 'alert:{"n":2,"title":true} same=19', 'alert:{"n":0,"title":false} same=1', 'render:{"reason":"init","rows":6}', 'send:{"ok":true}', 'send:{"ok":true}'], r.quiet.join('\n'));
   assert.deepEqual(r.net, [{ w: 'GET /game.php?page=buildings', cp: 254103, to: '/game.php?page=buildings' }, { w: 'POST /game.php?page=buildings', cp: 254104, to: null }]);
+  assert.deepEqual(r.priv, [
+    { w: 'POST /game.php?page=messages&mode=write', f: null, fk: ['id', 'subject', 'text', 'empfaenger'] },
+    { w: 'POST /game.php?page=notes&mode=insert', f: null, fk: ['mode', 'text', 'title'] },
+    { w: 'POST /game.php?page=ticket&mode=send', f: null, fk: ['page', 'mode', 'message'] },
+    { w: 'POST /game.php?page=settings', f: null, fk: ['timezone', 'dpath'] },
+    { w: 'POST /game.php?page=unknownpage', f: null, fk: ['foo'] },
+    { w: 'POST /game.php?page=fleetStep1', f: { galaxy: '1', system: '2', planet: '3', ship210: '1100' }, fk: null },
+    { w: 'POST /game.php?page=planetlayer', f: { name: 'Base', text: '<redacted>', cp: '1' }, fk: null }]);
+  assert.ok(!JSON.stringify(r.full.text).includes('secret plan') && !r.full.text.includes('my+secret') && !r.full.text.includes('help me') && !r.full.text.includes('private words'), 'no private text in the export');
   assert.match(r.full.filename, /^ogx-live-logs-.*-\d{8}-\d{6}\.txt$/);
   assert.match(r.full.text, /^=== OGX полная выгрузка для разбора/);
   for (const sec of ['=== НАСТРОЙКИ (все, JSON) ===', '=== ОТЧЁТ САМООБУЧЕНИЯ ===', '=== EVENTS ===', '=== СНИМКИ СТРАНИЦ ===']) assert.ok(r.full.text.includes(sec), sec);

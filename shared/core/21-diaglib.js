@@ -15,8 +15,9 @@
   // ------------------------------------------------------------------ redaction
   // Keys whose values are never stored. Matched against the key name (case-insensitive).
   const SENS_EXACT = /^(_token|token|csrf|csrf[-_]?token|x-csrf-token|x-xsrf-token|xsrf[-_]?token|newajaxtoken|ajaxtoken|password|password_confirmation|passwd|pwd|pass|email|e-mail|mail|cookie|cookies|set-cookie|session|sessionid|remember_token|api_key|apikey|secret|authorization|auth)$/i;
-  // 'token' but not a key ending in the plural 'tokens' (the markup token lists of learn alerts: '#id', '.class', ...).
-  const SENS_PART = /(password|passwd|token(?!s$)|cookie|secret|email|csrf|xsrf|session)/i;
+  // 'token' but not a key ending in the plural 'tokens' (the markup token lists of learn alerts: '#id', '.class', ...);
+  // a key ending in 'pass' (botcore.autoLoginPass) is a password too.
+  const SENS_PART = /(password|passwd|pass$|token(?!s$)|cookie|secret|email|csrf|xsrf|session)/i;
   L.isSensitiveKey = (k) => { const s = String(k || ''); return SENS_EXACT.test(s) || SENS_PART.test(s); };
   const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
   const QS_SECRET_RE = /([?&;](?:_token|token|csrf[^=&]*|password[^=&]*|email[^=&]*|session[^=&]*|newAjaxToken)=)[^&#\s"']*/gi;
@@ -76,7 +77,10 @@
       return L.redactString(decodeURIComponent(u.pathname) + (u.search ? decodeURIComponent(u.search) : ''), 300);
     } catch (e) { return L.redactString(String(url), 300); }
   };
-  /** Request body (urlencoded string / object / URLSearchParams) -> { key: value } with secrets masked, values truncated. */
+  // free text a player types (private message, note, ticket, alliance/profile texts): never journaled from a form
+  const FREE_TEXT_KEY = /^(text|subject|message|msg|empfaenger|receiver|recipient|note|notes|body|title|description|signature|ally_text|ally_request|request_text)$/i;
+  L.isFreeTextKey = (k) => FREE_TEXT_KEY.test(String(k || ''));
+  /** Request body (urlencoded string / object / URLSearchParams) -> { key: value } with secrets and free text masked, values truncated. */
   L.formSummary = function (body) {
     if (body === null || body === undefined || body === '') return null;
     const out = {};
@@ -84,7 +88,7 @@
     const put = (k, v) => {
       if (++n > 40) { out['…'] = true; return; }
       const key = String(k);
-      out[key] = L.isSensitiveKey(key) ? '<redacted>' : L.redactString(String(v), 60);
+      out[key] = L.isSensitiveKey(key) || L.isFreeTextKey(key) ? '<redacted>' : L.redactString(String(v), 60);
     };
     try {
       if (typeof body === 'string') {
@@ -140,10 +144,14 @@
     if (json.response && typeof json.response === 'object') { const r = L.safeFields(json.response); if (r && Object.keys(r).length) o.response = r; }
     return Object.keys(o).length ? o : null;
   };
-  /** 'ok' | 'err' for a response: HTTP >= 400, success === false, status 'failure'/'error', or a non-empty errors list. */
+  /** 'ok' | 'err' | 'refused:<code>' for a response: HTTP >= 400, success === false, status 'failure'/'error', or a non-empty errors
+   * list are 'err'; a GALAXYZ fleetAjax answer { code: 6xx } is 'ok' for 600 (sent) and 'refused:<code>' otherwise (601 no ships,
+   * 612 no slot, ...: its own shape { slots, code, mess } without `ships`, never a key loss of the ok shape). */
   L.responseKind = function (status, json) {
     if (status === 0 || status >= 400) return 'err';
     if (json && typeof json === 'object' && !Array.isArray(json)) {
+      const code = json.code === undefined || json.code === null || json.code === '' ? NaN : +json.code;
+      if (Number.isInteger(code) && code >= 600 && code < 700) return code === 600 ? 'ok' : 'refused:' + code;
       if (json.success === false) return 'err';
       if (typeof json.status === 'string' && /^(fail|failure|error)$/i.test(json.status)) return 'err';
       if (Array.isArray(json.errors) && json.errors.length) return 'err';
@@ -378,8 +386,17 @@
   // #OvfleetContent, its rows, buttons and data-fleet-* attributes, #eventboxLoading when no fleet flies), the per-mission
   // classes of fleet rows (.ownattack, .owndeploy, .ownexpo, ...), the tooltip library (.t_Tooltip, .t_Content, ...),
   // the build-queue icon (.bi-building-fill-up / .buildingIco, other bootstrap icons), the unread-messages counter and
-  // the "storage full" resource classes. Learning ignores them: no tokens-new / tokens-gone alerts.
-  L.VOLATILE_TOKEN = /^(?:#(?:OvfleetEvents|OvfleetContent|eventboxLoading|eventboxBlank|eventbox[\w#-]*|fleettime_#)|\.(?:OvfleetButton|OvfleetEvents[\w#-]*|allFleetsEvent|fleet_static_time|textForBlind|fleets|flight|return|own[a-z]+|t_[\w#-]+|bi|bi-[\w#-]+|buildingIco|new-msg-count|res_current_[\w#-]+|visible)|\[data-(?:fleet-[\w#-]+|hide)\])$/;
+  // the "storage full" resource classes. Also the running-queue widgets (#progressbar(s), #time / #time1, #Countdown, .timer,
+  // the jQuery-UI progressbar classes, .slide-up, [data-cancel-message]), the officer-state classes (.commander, .glows) and
+  // the galaxy row cells that an empty system does not have (.playername, .planetname1, .moon, .debris, .action, ...;
+  // 2026-10-31 learn report: 40 tokens alerts in 65 min). The parser-relevant markup (.construction-queue-item,
+  // .build-icon, .galaxy-alliance, #galaxy) stays tracked. Learning ignores them: no tokens-new / tokens-gone alerts.
+  L.VOLATILE_TOKEN = new RegExp('^(?:'
+    + '#(?:OvfleetEvents|OvfleetContent|eventboxLoading|eventboxBlank|eventbox[\\w#-]*|fleettime_#|progressbars?|time#?|Countdown)'
+    + '|\\.(?:OvfleetButton|OvfleetEvents[\\w#-]*|allFleetsEvent|fleet_static_time|textForBlind|fleets|flight|return|own[a-z]+|t_[\\w#-]+|bi|bi-[\\w#-]+'
+    + '|buildingIco|new-msg-count|res_current_[\\w#-]+|visible|timer|ui-[\\w#-]+|slide-up|commander|glows|tooltip_sticky'
+    + '|action|allytag|debris|galaxy-short|galaxy-username(?:-[\\w#-]+)?|microplanet#?|moon|planetname#?|playername|spacer#*)'
+    + '|\\[data-(?:fleet-[\\w#-]+|hide|cancel-message)\\])$');
   L.isVolatileToken = (t) => L.VOLATILE_TOKEN.test(String(t || ''));
 
   // ------------------------------------------------------------------ formatting
@@ -398,8 +415,9 @@
     if (!prev || prev.tab !== e.tab) { d = d || {}; d.tb = e.tab || '-'; }
     return `${L.fmtTime(e.t)} [${e.s}] ${e.k}: ${String(e.w === undefined || e.w === null ? '' : e.w).replace(/\s+/g, ' ')}` + (d && Object.keys(d).length ? ' ' + json1(d) : '');
   };
+  // L: only the alerts that mean something is wrong count as errors (api-new / api-key-new / ship-speed are notes)
   const isErrorEvent = (e) => (e.s === 'S' && /^(error|uncaught|rejection|module-init-fail|boot-fail)$/.test(e.k)) || (e.s === 'N' && e.d && (e.d.err || e.d.st >= 400 || e.d.st === 0))
-    || (e.s === 'G' && e.d && e.d.failed) || (e.s === 'B' && e.d && e.d.ok === false) || e.s === 'L';
+    || (e.s === 'G' && e.d && e.d.failed) || (e.s === 'B' && e.d && e.d.ok === false) || (e.s === 'L' && /^(implausible|selector-miss|tokens-gone|api-key-lost)$/.test(e.k));
   L.isErrorEvent = isErrorEvent;
   /** Error counters of the last `ms` (default 10 min) by source. */
   L.errorCounters = function (events, now = Date.now(), ms = 600000) {

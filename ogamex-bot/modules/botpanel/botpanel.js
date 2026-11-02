@@ -19,18 +19,20 @@ window.OGX = window.OGX || {};
     { name: 'botdebris', label: 'Обломки', order: 12 },
     { name: 'botbuild', label: 'Стройка', order: 13 },
     { name: 'botexpo', label: 'Экспедиции', order: 14 },
+    { name: 'botmissiles', label: 'Ракеты', order: 15 },
   ];
   const TITLES = {
     botsave: 'Бот: сейв флота и защита', botfarm: 'Бот: фарм неактивных', botdebris: 'Бот: обломки и логистика',
     botbuild: 'Бот: стройка и исследования', botexpo: 'Бот: экспедиции и колонизация',
+    botmissiles: 'Бот: ракеты',
   };
   const EXPLAINER = 'Бот работает, пока открыта вкладка с игрой. Лучше всего — закреплённая вкладка в отдельном окне; ' +
     'отключите «Экономию памяти» (Memory Saver) для ogamex.eu. Фоновые вкладки браузер притормаживает: бот использует отдельный ' +
     'таймер (Worker), но держите вкладку видимой для точных отправок.';
   const NO_MODULES = 'Ни один модуль не включён — бот ничего делать не будет. Включите нужные модули ниже.';
   const DRY_LINE = 'Пробный режим: ничего не отправляется';
-  const SAFETY = 'По умолчанию всё выключено: главный выключатель выкл., каждый модуль выкл., «Пробный режим» вкл. ' +
-    'В пробном режиме бот только планирует и пишет в журнал — в игру ничего не отправляется.';
+  const SAFETY = 'С 0.3.2 все функции бота включены по умолчанию (максимальная автономность), «Пробный режим» выключен — бот действует в игре. ' +
+    'Выключайте ненужное: главный выключатель, модули во вкладках ниже; в «Пробном режиме» бот только планирует и пишет в журнал.';
 
   const h = (...a) => OGX.dom.h(...a);
   const sget = (k) => { try { return OGX.settings.get(k); } catch (e) { return undefined; } };
@@ -41,7 +43,7 @@ window.OGX = window.OGX || {};
   const fmtT = (ms) => { try { return OGX.fmt.time(ms); } catch (e) { return '—'; } };
   const fmtDT = (ms) => { try { return OGX.fmt.dateTime(ms); } catch (e) { return '—'; } };
   // user-facing names instead of internal ids (module / worker ids, refusal codes, journal event kinds)
-  const MOD_RU = { botcore: 'Ядро', botpanel: 'Панель', botsim: 'Симулятор', botsave: 'Сейв', botfarm: 'Фарм', botdebris: 'Обломки', botbuild: 'Стройка', botexpo: 'Экспедиции' };
+  const MOD_RU = { botcore: 'Ядро', botpanel: 'Панель', botsim: 'Симулятор', botsave: 'Сейв', botfarm: 'Фарм', botdebris: 'Обломки', botbuild: 'Стройка', botexpo: 'Экспедиции', botmissiles: 'Ракеты' };
   function modRu(id) {
     const s0 = String(id || '');
     const base = s0.split(':')[0];
@@ -49,7 +51,9 @@ window.OGX = window.OGX || {};
   }
   const REFUSED_RU = { dryRun: 'пробный режим', limit: 'лимит в час', slots: 'нет свободных слотов', threat: 'планета под угрозой', sleep: 'режим сна',
     duplicate: 'цель уже занята', expired: 'истёк срок', stopped: 'бот остановлен или на паузе', notLeader: 'не ведущая вкладка', fuel: 'не хватает дейтерия',
-    cargo: 'не хватает места в трюме', ships: 'нет кораблей', userActive: 'вы в игре' };
+    cargo: 'не хватает места в трюме', ships: 'нет кораблей', userActive: 'вы в игре', attackLimit: 'лимит атак в сутки на цель',
+    target: 'цели нет', noob: 'защита новичков', vacation: 'цель в отпуске', admin: 'цель — администратор', holdTime: 'неверное время удержания',
+    blocked: 'отправка заблокирована', ownPlanet: 'своя планета', missionOff: 'миссия отключена' };
   const refusedRu = (r) => REFUSED_RU[r] || r || '';
   const EVENT_RU = {
     start: 'запуск', stop: 'остановка', leader: 'ведущая вкладка', 'leader-lost': 'вкладка больше не ведущая', state: 'состояние', sleep: 'сон', wake: 'пробуждение',
@@ -59,6 +63,7 @@ window.OGX = window.OGX || {};
     slots: 'слоты', threat: 'угроза', 'threat-gone': 'угроза исчезла', lock: 'блокировка', unlock: 'разблокировка', logout: 'выход из игры', captcha: 'капча',
     vacation: 'режим отпуска', 'unknown-page': 'неизвестная страница', settings: 'настройки', 'cp-restore': 'планета возвращена', frozen: 'вкладка заморожена', resumed: 'вкладка ожила',
     decision: 'решение', skip: 'пропуск', ui: 'команда', error: 'ошибка',
+    plan: 'расчёт ракет', build: 'заказ ракет', launch: 'запуск ракет', impact: 'ракеты долетели', cleared: 'оборона снесена', silo: 'нужна шахта',
     'threat-seen': 'угроза замечена', 'threat-ignored': 'угроза пропущена', 'save-planned': 'сейв запланирован', 'save-sent': 'сейв отправлен', 'save-failed': 'сейв не удался',
     'recall-planned': 'отзыв запланирован', 'recall-done': 'флот отозван', 'abm-ordered': 'ракеты заказаны', 'spy-attacker': 'шпионаж нападающего', 'sleep-save': 'сейв на ночь',
     scan: 'сканирование', target: 'цель', 'spy-sent': 'шпионаж отправлен', report: 'доклад', sim: 'симуляция', 'attack-planned': 'атака запланирована', 'attack-sent': 'атака отправлена',
@@ -143,8 +148,9 @@ window.OGX = window.OGX || {};
     root.textContent = '';
     const master = st.master && st.state !== 'stopped';
     const stateText = (st.state === 'off' ? 'Бот выключен' : st.state === 'stopped' ? 'Бот остановлен: ' + stopRu(st.stopReason)
-      : 'Бот ' + stateRu(st.state) + (st.state === 'paused' && st.pauseReason ? ' (' + pauseRu(st.pauseReason) + ')' : '')
+      : 'Бот ' + stateRu(st.state) + (st.state === 'paused' && st.pauseReason ? ' (' + pauseRu(st.pauseReason) + (st.pauseProbeAt ? ', сам проверит игру в ' + fmtT(st.pauseProbeAt) : '') + ')' : '')
         + (st.state !== 'paused' && st.pauseReason === 'limit' ? ' (лимит исчерпан)' : '')
+        + (st.state !== 'paused' && st.pauseReason === 'userActive' ? ' (действия ждут: вы в игре)' : '')
       ) + (st.dryRun ? ' — ' + DRY_LINE : '');
     root.appendChild(h('div', { class: [P + 'state', P + 'state-' + st.state], dataset: { state: st.state } }, stateText));
     if (master && !activeModules().length) root.appendChild(h('div', { class: [P + 'warn', P + 'no-modules'], role: 'alert' }, NO_MODULES));
@@ -174,7 +180,7 @@ window.OGX = window.OGX || {};
       ['Таймер', st.timer ? (st.timer.mode === 'worker' ? 'точный (отдельный поток)' : 'обычный') + (st.timer.degraded ? ' (неточно)' : '') : '—'],
     ];
     for (const x of st.limitsHit || []) info.push(['Лимит исчерпан', '«' + x.label + '» ' + x.used + '/' + x.max + ', действия ждут до ' + fmtT(x.reopensAt) + ' (увеличьте лимит в «Общие»)']);
-    if (st.consecutiveErrors) info.push(['Ошибок подряд', String(st.consecutiveErrors) + (st.backoffUntil ? ', пауза до ' + fmtT(st.backoffUntil) : '')]);
+    if (st.consecutiveErrors) info.push(['Ошибок подряд', String(st.consecutiveErrors) + (st.errors && Object.keys(st.errors).length ? ' (' + Object.entries(st.errors).map(([m, s]) => m + ' ' + s.n).join(', ') + ')' : '') + (st.backoffUntil ? ', откат до ' + fmtT(st.backoffUntil) : '')]);
     if (st.sleepUntil) info.push(['Сон до', fmtT(st.sleepUntil)]);
     if (sget('botcore.autoLogin') === true) {
       const al = OGX.bot.autoLoginInfo ? OGX.bot.autoLoginInfo() : null;
@@ -220,7 +226,7 @@ window.OGX = window.OGX || {};
     if (a.phase === 'refused') return 'отказ: ' + refusedRu(a.refused);
     return 'ошибка' + (a.message ? ': ' + a.message : '');
   }
-  function stopRu(r) { return { logout: 'выход из игры', captcha: 'капча', vacation: 'режим отпуска', unknownPage: 'неизвестная страница', errors: 'ошибки', manual: 'вручную' }[r] || r || '—'; }
+  function stopRu(r) { return { logout: 'выход из игры', captcha: 'капча', vacation: 'режим отпуска', unknownPage: 'неизвестная страница (5 раз подряд)', banned: 'аккаунт заблокирован', errors: 'ошибки', manual: 'вручную' }[r] || r || '—'; }
   function pauseRu(r) { return { user: 'вручную', errors: 'много ошибок подряд', limit: 'лимит', threat: 'угроза', userActive: 'вы в игре', logout: 'вылет из игры, ждёт автовход' }[r] || r; }
 
   let redrawTimer = null;
@@ -255,7 +261,30 @@ window.OGX = window.OGX || {};
     // switches in one tab were easy to confuse
     for (const k of ['on', 'enabled']) for (const el of form.querySelectorAll('[data-key="' + m.name + '.' + k + '"]')) el.remove();
     container.appendChild(h('div', { class: P + 'h' }, 'Настройки'));
+    clampHints(form);
     container.appendChild(form);
+  }
+  // a number typed outside the setting's range is stored clamped (OGX.settings validate): say so next to the field, the input
+  // already shows the stored value after the save (audit rules-5)
+  function clampHints(form) {
+    form.addEventListener('change', (ev) => {
+      const inp = ev.target;
+      if (!inp || inp.type !== 'number') return;
+      const box = inp.closest('[data-key]');
+      const path = box && box.dataset.key;
+      if (!path) return;
+      let sp = null;
+      try { const [ns, ...rest] = path.split('.'); sp = (OGX.settings.schema()[ns] || {})[rest.join('.')] || null; } catch (e) { sp = null; }
+      const typed = Number(String(inp.value).replace(',', '.'));
+      let hint = box.querySelector('.' + P + 'clamp-hint');
+      const out = sp && Number.isFinite(typed) && ((sp.min != null && typed < sp.min) || (sp.max != null && typed > sp.max));
+      if (!out) { if (hint) hint.remove(); return; }
+      const stored = sp.max != null && typed > sp.max ? sp.max : sp.min;
+      const text = 'Введено ' + typed + ' — сохранено ' + stored + ' (' + (typed > sp.max ? 'макс. ' + sp.max : 'мин. ' + sp.min) + ').';
+      if (!hint) { hint = h('div', { class: [P + 'warn', P + 'clamp-hint'] }); box.appendChild(hint); }
+      hint.textContent = text;
+      ui('Значение ограничено: ' + path + ' ' + typed + ' -> ' + stored, { path, typed, stored, min: sp.min != null ? sp.min : null, max: sp.max != null ? sp.max : null });
+    });
   }
   function drawModuleStatus(v) {
     v.el.textContent = '';
@@ -275,6 +304,7 @@ window.OGX = window.OGX || {};
     gapHints.add(hint);
     drawGapHint(hint);
     container.appendChild(hint);
+    clampHints(form);
     container.appendChild(form);
   }
   // max < min: the core uses max = min (OGX.bot.gapRange); say so next to the settings

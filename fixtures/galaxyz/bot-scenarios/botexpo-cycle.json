@@ -12,6 +12,7 @@
   "fleetDebrisPct": 30,
   "defDebrisPct": 0,
   "resourceMultiplier": 22000,
+  "ecoScale": 0.001,
   "storageMultiplier": 5,
   "maxDmMissions": 5,
   "moonFactor": 1,

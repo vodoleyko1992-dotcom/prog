@@ -374,6 +374,7 @@ T.test('UPSTREAM (unverified) shapes: combat message, page=raport, expedition ke
     assert.deepEqual([r.received.from.coords, r.received.to.coords, r.received.resources.metal], [[2, 66, 7], [2, 68, 5], 1000000]);
     assert.deepEqual([r.ret.from.coords, r.ret.resources], [[2, 70, 4], { metal: 2261500000, crystal: 605250000, deuterium: 49000000 }]);
     assert.deepEqual([r.recycle.resources.metal, r.recycle.resources.crystal, r.recycle.to], [1374000, 1260000, null]);
+    assert.deepEqual(r.recycle.harvest, { ship: null, ships: null, capacity: null, field: null, harvested: { metal: 1374000, crystal: 1260000 } }, 'harvest object as on OgameX');
     assert.deepEqual([r.back.kind, r.back.resources.metal, r.back.darkMatter], ['return_expedition', 812000, 0]);
     assert.deepEqual([r.exp.key, r.exp.outcome, r.exp.ships, r.exp.unverified], ['expedition_gain_ships', 'ships', { 202: 1200, 206: 35 }, true]);
     assert.deepEqual([r.detected.from.coords, r.detected.target.coords, r.detected.attackerName], [[2, 66, 7], [2, 68, 6], null]);

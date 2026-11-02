@@ -24,8 +24,9 @@ Never write to `/mnt/project-files`. Commit nothing. Never skip or disable tests
 | `botdebris` | `ogamex-bot/modules/botdebris/botdebris.js` | module agent 3 | «Бот: обломки и логистика» |
 | `botbuild` | `ogamex-bot/modules/botbuild/botbuild.js` | module agent 4 | «Бот: стройка и исследования» |
 | `botexpo` | `ogamex-bot/modules/botexpo/botexpo.js` | module agent 5 | «Бот: экспедиции и колонизация» |
+| `botmissiles` | `ogamex-bot/modules/botmissiles/botmissiles.js` | module agent (0.3.2) | «Бот: ракеты» |
 
-* `ogamex-suite/suite/00-suite.js` `SECTIONS.bot.modules` = exactly `['botcore', 'botsim', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo']`
+* `ogamex-suite/suite/00-suite.js` `SECTIONS.bot.modules` = exactly `['botcore', 'botsim', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo', 'botmissiles']`
   (this order = load and init order), `SECTIONS.bot.title` = `'Полная автоматизация'`, `dev: false`; TITLES get the titles above.
   `ogamex-suite/manifest.json` lists `modules/bot/<m>/<m>.js` in the same order after the Infinity modules and before `loader.js`.
   The runtime agent makes these registry edits and creates a placeholder for every listed file that does not exist yet
@@ -38,6 +39,9 @@ Never write to `/mnt/project-files`. Commit nothing. Never skip or disable tests
   (`OGX.parse.*`, `parse.gz.*`, `OGX.messages.parse.*`, `OGX.flights.parse*`, `OGX.galaxy.parseGz`) on documents returned by actions are fine.
 * Modules talk to each other only through `OGX.bot` registries (C2.7) and bus events (C6), never by reading another
   module's `ctx.store` keys.
+  Sanctioned exception (0.3.2): `OGX.botFarm.api = { targets(), respy(key, at) }` — the read-only view of the farm target DB
+  (clones of the rows: key, coords, target, player, inactive, excluded, gone, state, verdict, intelTs, staleBefore, lootMsu,
+  minLootOk) and the re-spy hand-off after a missile impact; only botmissiles uses it.
 * Russian UI text everywhere the user sees it; code comments English.
 
 ## C2. Runtime API `OGX.bot` (defined by `botcore.js` at load time; live after `botcore` init)
@@ -53,8 +57,8 @@ BotStatus = {
   leader: boolean,               // this tab runs the executor and workers
   leaderTab: string|null,        // storage.tabId of the leader
   state: 'off'|'idle'|'running'|'sleeping'|'paused'|'stopped',
-  pauseReason: null|'user'|'errors'|'limit'|'threat'|'userActive',
-  stopReason: null|'logout'|'captcha'|'vacation'|'unknownPage'|'errors'|'manual',
+  pauseReason: null|'user'|'errors'|'limit'|'threat'|'userActive',   // 'userActive' while not paused: user-first holds queued actions
+  stopReason: null|'logout'|'captcha'|'vacation'|'banned'|'unknownPage'|'errors'|'manual',
   sleepUntil: ServerMs|null, backoffUntil: ServerMs|null, consecutiveErrors: number,
   queue: [{ id, type, module, prio, at, state: 'queued'|'pre'|'running' }],
   limits: { actions: { used, max }, fleetSends: { used, max }, builds: { used, max }, galaxyViews: { used, max } },   // rolling 60 min
@@ -129,15 +133,22 @@ ActionSpec = {
                                       // entry runs, shifted by its queue wait -> refused 'sleep' if it now falls inside
 }
 ActionType =
-  'read.page'        // params { page, mode?, query? }            GET game.php?page=..&cp=bodyId   (free pages only; not galaxy)
+  'read.page'        // params { page, mode?, query?, fresh?, after? } GET game.php?page=..&cp=bodyId   (free pages only; not galaxy)
+                     //   fresh: true = never the shared read cache (same as spec.fresh); after: ServerMs = answered at once with
+                     //   { ok:true, cached:true } and NO request when OGX.bot.lastPageAt() >= after, else one fresh read (non-ajax:
+                     //   GALAXYZ processes arrived fleets / reports only on requests without ajax=1)
 | 'read.fleetTable'  // params {}                                 GET page=fleetTable&cp
 | 'read.messages'    // params { cat, site? }                     GET page=messages&mode=view&messcat&site&ajax=1 (MARKS READ; needs botcore.readMessages)
+                     //   site: list page (default 1), passed through; each site has its own cache key
 | 'read.galaxy'      // params { galaxy, system }                 GET page=galaxy&galaxy&system (COSTS DEUTERIUM; botcore.galaxyViewsPerHour budget)
 | 'read.statistics'  // params { type=1, range=1 }                GET page=statistics&who=1&type&range [UPSTREAM]
 | 'probe.target'     // params { ships, target, speed }            POST fleetStep1 + fleetStep2, no step 3: returns offered missions/staytime/consumption (token discarded)
 | 'fleet.send'       // params SendParams                         fleetTable(cp) -> fleetStep1 -> fleetStep2 -> fleetStep3
 | 'fleet.recall'     // params { fleetId }                        POST page=fleetTable&action=sendfleetback fleetID
 | 'fleet.ajax'       // params { mission: 6|8, planetId }         GET page=fleetAjax&ajax=1&mission&planetID (cp=bodyId)
+| 'fleet.missile'    // params { target, count, primary: 0 }      POST page=fleetMissile { galaxy, system, planet, type, SendMI, Target } (cp=bodyId);
+                      //   counts as fleetSends, threat lock applies, NO fleet slot (mission 10); ok -> data { count, text };
+                      //   a known refusal -> { ok:false, error:'server', code } (bot._missileRefusal), else error 'missile'
 | 'build.building'   // params { id, cmd: 'insert'|'cancel', listid? }  POST page=buildings cmd building (cp)
 | 'build.research'   // params { id }                             POST page=research cmd=insert tech (cp = lab body)
 | 'build.units'      // params { units: { [id]: n } }             POST page=shipyard&mode=fleet|defense fmenge[id]=n (cp)
@@ -146,8 +157,11 @@ SendParams = { target: { galaxy, system, position, type /*1 planet 2 debris 3 mo
                speed /*1..10*/, cargo?: Res, staytime?: number /*hours option for 5/11/15*/, expectArrival?: ServerMs, arrivalTolMs?: number }
 ActionResult = {
   ok: boolean, dry: boolean,          // dry: dry-run, nothing sent (ok true when the plan was valid)
-  refused?: 'dryRun'|'limit'|'slots'|'threat'|'sleep'|'duplicate'|'expired'|'stopped'|'notLeader'|'fuel'|'cargo'|'ships'|'userActive',
-  error?: string, code?: number|string, message?: string,   // server text (info page / fleetAjax mess)
+  refused?: 'dryRun'|'limit'|'slots'|'threat'|'sleep'|'duplicate'|'expired'|'stopped'|'notLeader'|'fuel'|'cargo'|'ships'|'userActive'
+          // game facts (no error streak, message = the server text): fleet.send step 3 and fleet.ajax
+          |'attackLimit'|'noob'|'vacation'|'admin'|'target'|'holdTime'|'blocked'|'ownPlanet'|'missionOff',
+  error?: string, code?: number|string, message?: string,   // server text (info page / fleetAjax mess); build.* info page:
+                                      //   error 'info', code 'resources'|'queueFull'|'requirements'|'maxLevel'|'fields'|'info', noBackoff
   verified: boolean,                  // the post-check (C3.3) confirmed the effect
   data?: object,                      // per type: fleet.send -> { fleetId|null, arrival, back, consumption, missions, result }
                                       //           read.* -> { doc, html } (doc = DOMParser document) ; fleet.ajax -> json ;
@@ -164,7 +178,12 @@ Executor rules (all enforced by botcore, modules rely on them): one action at a 
 `probe.target` is allowed in dry-run (it changes nothing in the game). Limits (C5 `botcore.max*`) refuse with `'limit'`.
 Threat lock (C2.6) refuses any `fleet.send` from a locked body unless `cls:'force'` and module `botsave`. Fuel/cargo/ships
 are checked on the fresh fleetTable/step-1 data before step 1 is posted (`'ships'`, `'fuel'`, `'cargo'`). After any action the
-runtime restores `cp` to the user's current body when the queue drains (plain `GET page=overview&cp=<id>`; never `ajax=1`).
+runtime restores `cp` to the user's current body when the queue drains (plain `GET page=overview&cp=<id>`; never `ajax=1`) —
+only while a user can click (visible tab + user active within 10 min or a forms page, or the user active in another tab), as
+a queue entry; within 15 s of a user click on a forms page actions on another body wait (at most 60 s each), a deadline /
+defense one is followed by an immediate restore. Error streaks and backoffs are per module; prio 'defense' passes pause
+(except 'logout'), backoff, limits (a 0 limit still refuses), user-first, preSoon and the start pause; pause 'errors' ends by
+itself after a successful probe read (every 30-60 min).
 
 ### C2.5 Slots
 
@@ -201,12 +220,18 @@ bus 'bot:battle-planned' Battle ; 'bot:battle-cancelled' { id, reason }
 OGX.bot.needs.set(owner, Need[]) / list() -> Need[]
 Need = { id, owner, bodyKey, res: Res /* missing */, forItem: { id, level }, wantedBy: ServerMs, priority: number }
 bus 'bot:needs' { owner, needs }
+// requests to another module (0.3.2; botmissiles writes, botbuild rule 'wants' reads): persisted, replaced per owner
+OGX.bot.wants.set(owner, Want[]) / list() -> Want[] / get(owner) -> Want[]
+Want = { owner, kind: 'building', id /* 44 */, level /* 4 */, bodyId, why }
+bus 'bot:wants' { owner, wants }
 // resource reservations (any module; read by wctx.available)
 OGX.bot.reservations.list() -> [{ id, module, bodyKey, res, until, label }]
 // spy/report cache (botfarm writes after parsing a spy report; any module reads)
 OGX.bot.intel.put(coordsKey /* 'g:s:p:type' */, Intel) / get(coordsKey) -> Intel|null / list()
 Intel = { coordsKey, reportId, ts: ServerMs /* list date = arrival of probes */, res: Res, ships: Ships|null, defense: Ships|null,
-          buildings: object|null, research: object|null, known: { ships, defense, buildings, research }, probesSent, probesLost: boolean|null }
+          buildings: object|null, research: object|null, known: { ships, defense, buildings, research }, probesSent, probesLost: boolean|null,
+          abm: number|null /* 502 */, ipm: number|null /* 503; both null when the defence is unknown */ }
+// put() emits bus 'bot:intel' { key, ts }
 ```
 Registries are stored in player-scope storage under `botcore.*` keys (single writer: botcore; modules call the methods).
 
@@ -256,8 +281,12 @@ asleep only workers with `allowDuringSleep` run. `wctx.sleepCheck(returnAt)` ref
 are home (+20..50 s).
 
 C3.6 **Stops.** logout (`loggedOut` / redirect to index.php), captcha (any page with a captcha form or text /captcha|recaptcha|hcaptcha/i),
-vacation (`parse.gz.vacation`), unknown page (a game.php answer without `#planetSelector` that is not a known info page) -> state
-`stopped`, all queued actions cancelled, `OGX.bot.notify(..., { level: 'alarm' })`, user must press «Старт» again.
+vacation (`parse.gz.vacation`), ban page (2Moons css_account_banned_message on a page without `#planetSelector`, reason
+`banned`) -> state `stopped`, all queued actions cancelled, `OGX.bot.notify(..., { level: 'alarm' })`, user must press «Старт» again.
+An unknown page (a game.php answer without `#planetSelector` that is not a known info page) is an action error
+`{ ok:false, error:'unknownPage' }` (backoff ladder, journal `unknown-page` with title + 2 KB of text); the stop (`unknownPage`)
+needs 5 unknown pages in a row (no known page between) spanning >= 10 min. An info page without the game layout answering
+`read.page` is `{ ok:false, error:'info', message }`.
 Errors: consecutive failures -> backoff 5–15 s, 40–140 s, 4–6 min, 25–35 min; after `botcore.maxErrors` (default 5) -> `paused('errors')`
 + notify. Success resets the counter.
 
@@ -318,16 +347,18 @@ rand(56,84) %, 6 rounds, loot only when `won === 'a'`); see BOT_DESIGN §4.
 botcore («Бот: общие») — defined by botcore:
 | key | type | default | label (ru) |
 |---|---|---|---|
-| master | bool | false | Бот включён (главный выключатель) |
-| dryRun | bool | true | Пробный режим: планировать и писать в журнал, ничего не отправлять |
-| maxActionsPerHour | int 1..2000 | 120 | Действий в час, не больше |
-| maxFleetSendsPerHour | int 0..500 | 30 | Отправок флота в час, не больше |
-| maxBuildsPerHour | int 0..500 | 30 | Заказов построек в час, не больше |
-| galaxyViewsPerHour | int 0..300 | 0 | Просмотров галактики в час (стоят дейтерий; 0 = никогда) |
+| master | bool | true (0.3.2) | Бот включён (главный выключатель) |
+| dryRun | bool | false (0.3.2) | Пробный режим: планировать и писать в журнал, ничего не отправлять |
+| maxActionsPerHour | int 1..20000 | 5000 | Действий в час, не больше |
+| maxFleetSendsPerHour | int 0..2000 | 500 | Отправок флота в час, не больше |
+| maxBuildsPerHour | int 0..20000 | 5000 | Заказов построек в час, не больше |
+| galaxyViewsPerHour | int 0..3600 | 300 | Просмотров галактики в час (стоят дейтерий; 0 = никогда) |
 | slotsReserve | int 0..10 | 1 | Свободных слотов флота держать в резерве |
-| minGapMs | int 300..60000 | 1500 | Пауза между запросами, мин. (мс) |
-| maxGapMs | int 500..120000 | 4000 | Пауза между запросами, макс. (мс) |
-| userIdleSec | int 0..600 | 20 | Ждать после действий пользователя в игре (с) |
+| minGapMs | int 300..60000 | 300 | Пауза между запросами, мин. (мс) |
+| maxGapMs | int 300..120000 | 600 | Пауза между запросами, макс. (мс) |
+| readGapMs | int 100..60000 | 150 | Пауза перед чтением страницы (мс) |
+| readCacheSec | int 0..600 | 10 | Одинаковое чтение не чаще (с; галактика 60 с, флот 30 с) |
+| userIdleSec | int 0..600 | 5 | Ждать после действий пользователя в игре (с) |
 | maxErrors | int 1..50 | 5 | Ошибок подряд до паузы |
 | threatLockSec | int 0..86400 | 3600 | Блокировать отправки с атакуемого тела за (с) до удара |
 | readMessages | bool | true | Бот может открывать сообщения (они станут прочитанными) |
@@ -371,6 +402,10 @@ botexpo («Бот: экспедиции и колонизация»): `on` false
 `afterReturnMinSec` 30; `afterReturnMaxSec` 300; `dmValueMsu` 0; `colonize` false; `colonizeTargets` json [];
 `colonizeMinFields` json {}; `colonizePayload` true; `buildColonizers` false.
 
+botmissiles («Ракеты»): `on` true; `buildMissiles` true; `buildSilo` true; `targets` json []; `exclude` json [];
+`maxReportAgeMin` int 180 (5..1440); `reservePct` int 10 (0..100); `defTech` enum ['110','111'] '110'; `maxPerTarget` int 2000;
+`maxPerDay` int 5000.
+
 Every module also has the core-added `<module>.enabled` (true): it only loads the code; `<module>.on` is the bot switch.
 
 ## C6. Journal events (OGX.log.rec src 'B', kind '<module>:<event>', what = short ru text)
@@ -392,6 +427,7 @@ botdebris: `debris-predicted`, `recyclers-planned`, `recyclers-sent`, `recyclers
 `transport-sent`, `repatriate`.
 botbuild: `candidates`, `choose`, `build-start`, `build-verify`, `research-start`, `energy`, `storage`, `fields`, `wait`, `stage` (tactic).
 botexpo: `expo-ev`, `expo-sent`, `expo-result`, `colonize-target`, `colonize-sent`, `colonize-result`, `colonizer-build`.
+botmissiles: `plan`, `build`, `launch`, `impact`, `cleared`, `silo`, `state`, `refused` (plus `decision` / `skip`).
 
 ## C6b. Bus events (OGX.bus, emitted in every tab where the runtime runs; payloads JSON-safe)
 
@@ -405,6 +441,8 @@ botexpo: `expo-ev`, `expo-sent`, `expo-result`, `colonize-target`, `colonize-sen
 | `bot:battle-planned` | OGX.bot.battles.put | Battle |
 | `bot:battle-cancelled` | OGX.bot.battles.remove | `{ id, reason }` |
 | `bot:needs` | OGX.bot.needs.set | `{ owner, needs }` |
+| `bot:wants` | OGX.bot.wants.set | `{ owner, wants }` |
+| `bot:intel` | OGX.bot.intel.put | `{ key, ts }` |
 
 ## C7. Mock helper API (`tests/gz-bot-lib.js`, owner: mock agent)
 
@@ -495,8 +533,13 @@ Runtime (`botcore`):
   returns `ok:true, verified:false` (journal `botcore:action-verify-fail`, counts as an error). Upstream charges a building only
   when it starts: a 2nd+ queued item is accepted without resources — botbuild must check affordability itself.
 * **A8 Deploy (mission 4)**: the outward row is not in the event box [UPSTREAM]; the executor verifies it with a fleetTable read.
-* Extra API (additive): `OGX.bot.recentActions(n)`, `OGX.bot.recentLines(n)`; underscored `OGX.bot._*` hooks are test-only, modules
-  must not use them. Extra storage keys `botcore.stopped|paused|recent|lines|notify` (botcore-owned).
+* Extra API (additive): `OGX.bot.recentActions(n)`, `OGX.bot.recentLines(n)`; `OGX.bot.limits.remaining(kind)` = the allowance left
+  in the rolling hour for `'actions'|'fleetSends'|'builds'|'galaxyViews'` (0 when that limit is 0 = off; a module checks it before it
+  plans a paid read or a send instead of reading the setting), `OGX.bot.limits.snapshot()` = `{ [kind]: { used, max } }`;
+  `OGX.bot.lastPageAt()` = ServerMs of the last successful non-fragment, non-ajax document request of this tab (a bot page read or
+  the page load itself), 0 = none — a module that needs the server to process fleet events (spy reports, returns) uses
+  `read.page { page: 'overview', after: arrival }`;
+  underscored `OGX.bot._*` hooks are test-only, modules must not use them. Extra storage keys `botcore.stopped|paused|recent|lines|notify` (botcore-owned).
 
 Simulator (`botsim`):
 * **A9 `bonusPct`** (fleetTable «Bonus») maps as upstream ShowFleetTablePage: `attack` -> attack multiplier, `defense` (alias

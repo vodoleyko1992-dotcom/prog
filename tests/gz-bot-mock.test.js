@@ -59,6 +59,21 @@ T.test('world: formulas, missions, staytime, scenarios', async () => {
   const e = W.createWorld('botexpo-slots');
   assert.deepEqual(e.staytimeOptions([15]).slice(0, 3).map((o) => o.hours), [0.5, 1, 1.5], 'haltSpeed 2');
   assert.deepEqual(e.staytimeOptions([5]).map((o) => o.value), [1, 2, 4, 8, 12, 16, 32]);
+  // economy = the live account: resources page 2026-10-31 (eu/pages/resources.html) — Metal Mine (38) 938.100.934, Crystal Mine (35)
+  // 432.777.527, basic income 440.000 / 220.000 (x 22000); the officers / premium bonus row comes on top (Total 1.932.927.923)
+  const live = JSON.parse(JSON.stringify(W.loadScenario('basic')));
+  live.bodies[0].levels = Object.assign({}, live.bodies[0].levels, { 1: 38, 2: 35, 3: 33 }); live.bodies[0].tempMax = 72; delete live.bodies[0].perHour;
+  live.universe.ecoScale = 1;        // basic pins the old x22 incomes (0.001); the default is the live economy
+  const ph = W.createWorld(live).perHour(W.createWorld(live).body(254102));
+  assert.ok(Math.abs(ph.metal - (938100934 + 440000)) / 938100934 < 0.001, 'metal/h of a level-38 mine: ' + ph.metal);
+  assert.ok(Math.abs(ph.crystal - (432777527 + 220000)) / 432777527 < 0.001, 'crystal/h of a level-35 mine: ' + ph.crystal);
+  assert.ok(ph.deuterium > 1e8 && ph.deuterium < 5e8, 'deuterium/h of a level-33 synthesizer at 72 °C: ' + ph.deuterium);
+  const tiny = JSON.parse(JSON.stringify(live)); tiny.universe.ecoScale = 0.001;
+  assert.ok(Math.abs(W.createWorld(tiny).perHour(W.createWorld(tiny).body(254102)).metal - ph.metal / 1000) < 1, 'ecoScale knob');
+  // the stock grows with that income and stops at the storage
+  const g = W.createWorld(live); const hb = g.body(254102); hb.res.metal = 0; hb.levels[22] = 28;
+  g.clock.advance(3600);
+  assert.ok(Math.abs(hb.res.metal - ph.metal) < 1000, 'one hour of production: ' + hb.res.metal);
 });
 
 T.test('world: send, arrive, return, recall, refusals, determinism', async () => {
@@ -107,6 +122,105 @@ T.test('world: send, arrive, return, recall, refusals, determinism', async () =>
   assert.equal(run(), run());
 });
 
+T.test('world: bash rule [UPSTREAM CheckBash]: the 7th attack on one target within 24 h is refused (fl_bash_protection en / ru), recalled fleets and other targets do not count, the window slides', async () => {
+  const atk = (x, pos = 10, ships = { 204: 1 }) => x.send({ originId: 254102, ships, target: { galaxy: 2, system: 68, position: pos, type: 1 }, mission: 1, speed: 10 });
+  const w = W.createWorld('botfarm-three');            // GALAXYZ defaults: bashOn, 6 attacks per 86400 s
+  assert.deepEqual([w.universe.bashOn, w.universe.bashCount, w.universe.bashTime], [true, 6, 86400]);
+  for (let i = 0; i < 6; i++) assert.ok(atk(w).ok, 'attack ' + (i + 1));
+  const r7 = atk(w);
+  assert.equal(r7.ok, false); assert.equal(r7.code, 'bash'); assert.equal(r7.error, 'Bash Rule', 'en text (language/en/INGAME.php fl_bash_protection)');
+  assert.equal(w.log.refusals.filter((r) => r.code === 'bash').length, 1);
+  assert.equal(w.bashCount(302000), 6);
+  // another target and a spy on the same target are not affected; the rule counts the target BODY (a moon has its own id)
+  assert.ok(atk(w, 13).ok, 'another target');
+  assert.ok(w.send({ originId: 254102, ships: { 210: 1 }, target: { galaxy: 2, system: 68, position: 10, type: 1 }, mission: 6 }).ok, 'espionage is not an attack');
+  // a recalled attack does not count (LOG_FLEETS fleet_state 2)
+  const w2 = W.createWorld('botfarm-three');
+  for (let i = 0; i < 6; i++) { const r = atk(w2); assert.ok(r.ok); if (i === 0) assert.ok(w2.recall(r.fleet.id)); }
+  assert.ok(atk(w2).ok, 'the recalled one does not count');
+  assert.equal(atk(w2).code, 'bash');
+  // the window slides: a day later the first six are out of it (returned fleets still count until then)
+  w.clock.advance(86401);
+  assert.ok(atk(w).ok, 'after 24 h');
+  // knobs: lang ru text, bashCount, bashOn false
+  const ru = JSON.parse(JSON.stringify(W.loadScenario('botfarm-three'))); ru.lang = 'ru'; ru.universe.bashCount = 1;
+  const w3 = W.createWorld(ru);
+  assert.ok(atk(w3).ok);
+  assert.equal(atk(w3).error, 'Превышен лимит количества атак в сутки на данный пункт назначения.', 'ru text (language/ru/INGAME.php fl_bash_protection)');
+  const off = JSON.parse(JSON.stringify(W.loadScenario('botfarm-three'))); off.universe.bashOn = false;
+  const w4 = W.createWorld(off);
+  for (let i = 0; i < 8; i++) assert.ok(atk(w4).ok, 'bashOn false: attack ' + (i + 1));
+  // through HTTP: step 3 answers the info page with the text (what botcore.mapStep3Text reads)
+  const srv = await startGzServer({ world: W.createWorld(ru) });
+  try {
+    const get = http(srv);
+    const ok = await send3(get, { cp: 254102, ships: { 204: 1 }, target: { galaxy: 2, system: 68, position: 10 }, mission: 1 });
+    assert.match(ok, /class="success">Fleet sent/, 'first raid accepted');
+    const no = await send3(get, { cp: 254102, ships: { 204: 1 }, target: { galaxy: 2, system: 68, position: 10 }, mission: 1 });
+    assert.ok(!/class="success"/.test(no) && no.includes('<p>Превышен лимит количества атак в сутки на данный пункт назначения.</p>'), 'second raid: info page with the ru text');
+    assert.equal(srv.world.log.refusals.filter((r) => r.code === 'bash').length, 1);
+  } finally { await srv.close(); }
+});
+
+T.test('world: lang ru [UPSTREAM language/ru] — event box sentences, fleet refusals, ship names; queueMarkup live [REAL queue/*-live.html]', async () => {
+  const spec = JSON.parse(JSON.stringify(W.loadScenario('botsave-attack'))); spec.lang = 'ru'; spec.queueMarkup = 'live'; spec.hostile = [];
+  const srv = await startGzServer({ world: spec });
+  try {
+    const w = srv.world; const get = http(srv);
+    assert.equal(w.name(204), 'Лёгкий истребитель');
+    const hp = w.addHostile({ toBodyId: 254102, ownerId: 3843, mission: 1, ships: { 204: 100 }, flightSec: 600 });
+    const hm = w.addHostile({ toBodyId: 254110, ownerId: 3843, mission: 1, ships: { 204: 50 }, flightSec: 700 });
+    const ov = (await get('page=overview&cp=254102')).text;
+    const plain = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+    const box = plain(ov.slice(ov.indexOf('<div id="messages_collapsed"'), ov.indexOf('<div id="messages_collapsed"') + 20000));
+    assert.match(box, /Чужой флот \(\d+ Лёгкий истребитель\) игрока Jon Snow \[ЛС\] летит с Планета Winterfell \[2:69:4\] на Планета [^[]+\[2:68:5\]\. Задание: Атака/, 'hostile to the planet (cff_mission_target_bad ru): ' + box.slice(0, 600));
+    assert.match(box, /на Луна [^[]+\[2:68:5\]\. Задание: Атака/, 'hostile to the moon: type word «Луна»');
+    assert.ok(ov.includes(`fleettime_${hp.arrival}${hp.id}`) && ov.includes(`fleettime_${hm.arrival}${hm.id}`));
+    // spy tech below 8: only the size of the hostile fleet
+    w.player.research[106] = 4;
+    assert.match(plain((await get('page=overview&cp=254102')).text), /\(Флот состоит из 100 кораблей\.\)/, 'cff_aproaching + cff_ships ru');
+    w.player.research[106] = 12;
+    // own fleets: «Ваш флот … летит с … на … Задание: Транспорт»
+    const ok = await send3(get, { cp: 254102, ships: { 202: 1 }, target: { galaxy: 2, system: 68, position: 6 }, mission: 3, cargo: { metal: 1000 } });
+    assert.match(ok, /class="success"/);
+    assert.match(plain((await get('page=overview&cp=254102')).text), /Ваш флот \([^)]*\) \([^)]*\) летит с Планета [^[]+\[2:68:5\] на Планета [^[]+\[2:68:6\]\. Задание: Транспорт/);
+    // fleet refusals in ru (FLEET.php): not all ships present
+    const no = await send3(get, { cp: 254102, ships: { 202: 999999 }, target: { galaxy: 2, system: 68, position: 6 }, mission: 3, cargo: { metal: 1000 } });
+    assert.ok(no.includes('Не все корабли доступны.') || no.includes('Нет свободных слотов.'), 'ru refusal text: ' + plain(no).slice(0, 300));
+    // live queue markup: running item + queued ones, no building/tech inputs (what the 0.3.2 parser reads)
+    assert.ok(w.order('buildings', 254102, { cmd: 'insert', id: 1 }).ok && w.order('buildings', 254102, { cmd: 'insert', id: 2 }).ok);
+    const bp = (await get('page=buildings&cp=254102')).text;
+    const lb = bp.slice(bp.indexOf('<div class="largebox">'), bp.indexOf('<!-- closes .content -->'));
+    assert.match(lb, /<img class="build-icon" src="\.\/styles\/theme\/gow\/gebaeude\/1\.png">/);
+    assert.match(lb, /<span class="build-level">Улучшить уровень\s*<span>\d+<\/span>/);
+    assert.match(lb, /class="construction-queue-item tooltip"[^>]*gebaeude\/2\.png/);
+    assert.ok(!/name="(building|tech)"/.test(lb) && !/id="buildlist"/.test(lb), 'no upstream #buildlist / building inputs');
+    assert.ok(w.order('research', 254102, { cmd: 'insert', id: 106 }).ok);
+    const rp = (await get('page=research&cp=254102')).text;
+    assert.match(rp, /<div id="progressbars" data-time="\d+"/);
+    assert.equal((rp.match(/gebaeude\/106\.png/g) || []).length, 2, 'the research page repeats the running item in the queued row');
+  } finally { await srv.close(); }
+});
+
+T.test('world: fleetHandlerOnAjax false [UPSTREAM common.php:125-127] — an arrived spy reports only with the next full page, not on a messages ajax read', async () => {
+  const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
+  for (const onAjax of [false, true]) {
+    const spec = JSON.parse(JSON.stringify(W.loadScenario('basic'))); spec.fleetHandlerOnAjax = onAjax; spec.speedup = 2000;
+    const srv = await startGzServer({ world: spec });
+    try {
+      const w = srv.world; const get = http(srv);
+      const r = w.send({ originId: 254102, ships: { 210: 1 }, target: { galaxy: 2, system: 68, position: 10, type: 1 }, mission: 6, speed: 10 });
+      assert.ok(r.ok, JSON.stringify(r));
+      await sleepMs(Math.ceil((r.fleet.arrival - w.clock.nowUnix() + 5) * 1000 / 2000));     // world time passes, nothing processed it
+      assert.ok(w.clock.nowUnix() > r.fleet.arrival);
+      await get('page=messages&mode=view&messcat=0&site=1&ajax=1');
+      assert.equal(w.log.events.some((e) => e.kind === 'spy'), onAjax, `onAjax ${onAjax}: the ajax read ${onAjax ? 'ran' : 'did not run'} the fleet handler`);
+      await get('page=overview&cp=254102');
+      assert.ok(w.log.events.some((e) => e.kind === 'spy'), 'a full page runs it');
+    } finally { await srv.close(); }
+  }
+});
+
 T.test('world: hostile attack with botsim, expedition outcomes, colonize, recycle', async () => {
   const w = W.createWorld('botsave-attack');
   w.clock.advance(20);
@@ -142,6 +256,104 @@ T.test('world: hostile attack with botsim, expedition outcomes, colonize, recycl
   const got = d.log.events.find((ev) => ev.kind === 'recycle').got;
   assert.equal(got.metal + got.crystal <= 10 * 20000 + 2, true, 'harvest limited by the recycler capacity');
   assert.ok(d.debris.get('2:70:1').metal > 0, 'residual debris left');
+});
+
+T.test('world: mission 11 dark matter search [UPSTREAM MissionCaseFoundDM] — default [GUESS] always finds 100..300; dmMission upstream / never / scrap false; ru texts', async () => {
+  // tests-mock-10: botexpo's DM stats and stop rules must also meet trips that find nothing and collectors that come home
+  const HOME = 254102; const MOON = 254190;
+  const mk = (dmMission, lang, collectors = 40) => {
+    const s = JSON.parse(JSON.stringify(W.loadScenario('botexpo-dm')));
+    s.universe.dmStayHours = 0.01;
+    if (dmMission !== undefined) s.universe.dmMission = dmMission;
+    if (lang) s.lang = lang;
+    const home = s.bodies.find((b) => b.id === HOME);
+    home.ships[220] = collectors;
+    s.bodies.push({ id: MOON, type: 'moon', name: 'Луна', coords: home.coords, planetId: HOME, fieldsMax: 1, res: { metal: 0, crystal: 0, deuterium: 0 }, levels: {}, ships: {} });
+    return W.createWorld(s);
+  };
+  const trip = (w, n) => {
+    const r = w.send({ originId: HOME, ships: { 220: n }, target: { galaxy: 2, system: 68, position: 5, type: 3 }, mission: 11, staytime: 1 });
+    assert.ok(r.ok, r.error);
+    w.clock.advance(r.fleet.back - w.clock.nowUnix() + 1);
+    const dm = w.log.events.filter((e) => e.kind === 'dm').pop();
+    const back = w.messages.filter((m) => m.cat === 4).pop();
+    return { dm, back, home220: w.body(HOME).ships[220] || 0, dmTotal: w.player.darkMatter };
+  };
+  // default: the old model (every trip a find, collectors scrapped), unchanged for the existing tests
+  const g = mk(undefined);
+  const g1 = trip(g, 2);
+  assert.ok(g1.dm.found >= 100 && g1.dm.found <= 300 && g1.dm.chance === null, JSON.stringify(g1.dm));
+  assert.equal(g1.home220, 38, 'scrapped');
+  assert.match(g1.back.body, /They found \(Dark Matter\)[\d.]+ but the ships were scrapped/);
+  // never finds: the collectors come home, nothing is credited, the upstream «nothing» / «without dm» texts
+  const n = mk({ base: -1, max: -1 });
+  const n1 = trip(n, 5);
+  assert.deepEqual([n1.dm.found, n1.home220], [0, 40], 'no find, all collectors back');
+  assert.equal(n1.back.body, 'Your fleet has returned from the expedition.');
+  assert.ok(n.messages.some((m) => m.cat === 15 && /nothing exciting/.test(m.body)), 'sys_expe_nothing_1');
+  // always finds with the upstream amounts; scrap false keeps the collectors
+  const a = mk({ base: 100, max: 100, scrap: false });
+  const a1 = trip(a, 4);
+  assert.ok(a1.dm.found >= 423 && a1.dm.found <= 1278 && a1.dm.chance === 100, JSON.stringify(a1.dm));
+  assert.equal(a1.home220, 40, 'scrap false: collectors back');
+  // upstream chance: min(50, 30 + 0.25 x ships) — 40 collectors in one fleet = 40 %; over 40 seeded trips of 1 collector
+  // (30.25 %) both outcomes occur
+  const u = mk('upstream', undefined, 400);
+  const finds = []; for (let i = 0; i < 40; i++) finds.push(trip(u, 1).dm);
+  assert.ok(finds.every((d) => d.chance === 30.25), 'chance 30 + 0.25 x 1');
+  const won = finds.filter((d) => d.found > 0).length;
+  assert.ok(won > 0 && won < 40, 'some finds, some empty: ' + won + '/40');
+  // ru: the upstream ru texts (botexpo reads «Тёмная материя (N)» from them)
+  const r = mk({ base: 100, max: 100 }, 'ru');
+  const r1 = trip(r, 2);
+  assert.match(r1.back.body, /^Ваш флот вернулся из экспедиции\.<br>Найдено Тёмная материя \([\d.]+\), но корабли были сильно повреждены/);
+  assert.equal(r1.home220, 38);
+  const r0 = mk({ base: -1, max: -1 }, 'ru');
+  assert.equal(trip(r0, 2).back.body, 'Ваш флот вернулся из экспедиции ни с чем.');
+});
+
+T.test('world: expeditionModel upstream [UPSTREAM MissionCaseExpedition] — tiers, found ships of the fleet\'s own types, battles with losses, lost fleets, return time changes', async () => {
+  // tests-mock-20: the default model stays as it was (other tests rely on it); 'upstream' gives botexpo damaged and lost fleets
+  const mk = (outcomes) => {
+    const s = JSON.parse(JSON.stringify(W.loadScenario('botexpo-slots')));
+    s.universe.expeditionModel = 'upstream';
+    s.expeditionOutcomes = outcomes || [];
+    s.player.research[124] = 16;   // 4 expedition slots
+    const b = s.bodies.find((x) => x.id === 254102);
+    Object.assign(b.ships, { 202: 1000, 203: 1000, 209: 50, 210: 500 });
+    return W.createWorld(s);
+  };
+  const go = (w, ships) => {
+    const r = w.send({ originId: 254102, ships, target: { galaxy: 2, system: 68, position: 16, type: 1 }, mission: 15, staytime: 1 });
+    assert.ok(r.ok, r.error);
+    return r.fleet;
+  };
+  // forced battle without lossPct: a tier loss is drawn, the losses are logged, survivors come home
+  const w = mk([{ type: 'battle' }, { type: 'ships' }, { type: 'battle', lossPct: 100 }, { type: 'time' }]);
+  const f1 = go(w, { 202: 100, 210: 10 }); const f2 = go(w, { 202: 100, 209: 10 }); const f3 = go(w, { 203: 10 }); const f4 = go(w, { 202: 1 });
+  w.clock.advance(f1.stayEnd - w.clock.nowUnix() + 1);
+  const ev = w.log.events.filter((e) => e.kind === 'expedition').map((e) => e.outcome);
+  assert.equal(ev.length, 4);
+  assert.ok(ev[0].model === 'upstream' && ev[0].lossPct >= 10 && ev[0].lossPct <= 100 && ev[0].lost[202] > 0, 'battle loss: ' + JSON.stringify(ev[0]));
+  assert.equal(f1.ships[202], 100 - ev[0].lost[202], 'survivors fly home');
+  assert.ok(Object.keys(ev[1].ships).length >= 1 && !ev[1].ships[209], 'found ships of the fleet\'s own types, never recyclers: ' + JSON.stringify(ev[1].ships));
+  assert.equal(f3.state, 'done', 'lossPct 100: the fleet is lost'); assert.equal(f3.endReason, 'expedition battle');
+  assert.ok(ev[3].delaySec !== 0 && f4.back !== f1.back, 'return time changed: ' + ev[3].delaySec);
+  // seeded draws over many trips: every type and both resource / DM tiers above 1 show up, DM reaches past 300
+  const u = mk([]);
+  const seen = {}; const dm = []; let tiers = new Set();
+  for (let round = 0; round < 30; round++) {
+    [0, 1, 2, 3].forEach(() => go(u, { 202: 5 }));
+    for (let i = 0; i < 100 && u.missionCount(15) > 0; i++) u.clock.advance(1800);   // a slower return takes longer
+  }
+  for (const e of u.log.events.filter((x) => x.kind === 'expedition')) {
+    seen[e.outcome.type] = (seen[e.outcome.type] || 0) + 1;
+    if (e.outcome.tier) tiers.add(e.outcome.type + e.outcome.tier);
+    if (e.outcome.type === 'darkMatter') dm.push(e.outcome.amount);
+  }
+  for (const k of ['resources', 'darkMatter', 'ships', 'battle', 'blackHole', 'time', 'nothing']) assert.ok(seen[k] > 0, k + ' never drawn: ' + JSON.stringify(seen));
+  assert.ok(dm.every((x) => x >= 100 && x <= 3000), JSON.stringify(dm));
+  assert.ok([...tiers].some((x) => /2$|3$/.test(x)), 'a tier above 1 was drawn: ' + [...tiers]);
 });
 
 T.test('world: a moon created by a battle erases the whole debris field [UPSTREAM debris_moon 1, the default]; debrisMoon 0 keeps it', async () => {
@@ -343,6 +555,44 @@ T.test('bot env: spy report parsed exactly, hostile event, galaxy view', async (
   } finally { await env.close(); }
 });
 
+/** The bot's threats once the page with the event box was read (a few seconds after the load). */
+async function threatsAfter(env, page, n) {
+  let th = [];
+  await env.until(async () => { th = await env.evalOgx(page, () => (OGX.bot && OGX.bot.threats ? OGX.bot.threats() : [])); return th.length >= n; }, { timeoutMs: 30000, label: n + ' threats' });
+  return th;
+}
+/** The core's body key of a body id (OGX.state.bodies). */
+const keyOf = async (env, page, id) => env.evalOgx(page, async (bid) => { const b = (await OGX.state.bodies()) || {}; const x = Object.values(b).find((v) => +v.id === +bid); return x ? x.key : null; }, id);
+
+T.test('bot env (lang ru, live queue markup): hostile event parsed, threat keyed to the planet with the full owner name, live queues parsed', async () => {
+  const spec = JSON.parse(JSON.stringify(W.loadScenario('botsave-attack'))); spec.lang = 'ru'; spec.queueMarkup = 'live'; spec.hostile = [];
+  const env = await B.launchBot({ world: spec });
+  try {
+    const W0 = env.world;
+    const h = W0.addHostile({ toBodyId: 254102, ownerId: 3843, mission: 1, ships: { 204: 100, 205: 20 }, flightSec: 600 });
+    const ov = await env.game('overview');
+    const hev = (await env.evalOgx(ov, () => OGX.parse.gz.events(document))).find((x) => x.fleetId === h.id);
+    assert.ok(hev, 'hostile event shown');
+    assert.deepEqual([hev.own, hev.hostile, hev.mission, hev.ownerId, hev.from, hev.to, hev.endUnix], [false, true, 1, 3843, '2:69:4', '2:68:5', h.arrival]);
+    const th = (await threatsAfter(env, ov, 1)).find((x) => x.fleetId === h.id);
+    assert.ok(th, 'threat registered');
+    assert.deepEqual([th.toType, th.ownerName, th.ships && th.ships[204], th.ships && th.ships[205], th.units], [1, 'Jon Snow', 100, 20, 120], 'ru: planet, owner name before «[ЛС]», ru ship names: ' + JSON.stringify(th));
+    assert.equal(th.bodyKey, await keyOf(env, ov, 254102), 'keyed to the home planet');
+    // live queue markup through the core parser (what botbuild reads)
+    assert.ok(W0.order('buildings', 254102, { cmd: 'insert', id: 1 }).ok && W0.order('buildings', 254102, { cmd: 'insert', id: 2 }).ok);
+    const bp = await env.game('buildings', { cp: 254102 });
+    const qb = await env.evalOgx(bp, () => { const x = OGX.parse.gz.queueBox(document); return x && { empty: x.empty, items: x.items.map((i) => [i.id, i.level, i.restSec]) }; });
+    const lv = W0.body(254102).buildQueue.map((x) => [x.id, x.level]);
+    assert.deepEqual(qb.items.map((i) => [i[0], i[1]]), lv, 'buildings queue: ' + JSON.stringify(qb));
+    assert.ok(qb.items[0][2] > 0, 'rest seconds of the running item');
+    assert.ok(W0.order('research', 254102, { cmd: 'insert', id: 106 }).ok);
+    const rp = await env.game('research', { cp: 254102 });
+    const rq = await env.evalOgx(rp, () => OGX.parse.gz.queueBox(document).items.map((i) => [i.id, i.level]));
+    assert.deepEqual(rq, [[106, W0.researchQueue[0].level]], 'research queue (the repeated running row dropped)');
+    assert.deepEqual(env.ogxErrors().map((e) => e.text), [], 'no [OGX errors');
+  } finally { await env.close(); }
+});
+
 T.test('bot env: step 2 missions + staytime by haltSpeed, empty debris error, buildings queue', async () => {
   const env = await B.launchBot({ world: 'botexpo-slots' });
   try {
@@ -407,5 +657,14 @@ T.test('bot env: journal, botStatus, setSettings, mutating', async () => {
     await env.setSettings({ 'botcore.master': false });
     await env.until(async () => true, { timeoutMs: 1000 });
     assert.ok(Array.isArray(env.mutating()));
+    // tests-mock-16: a journal that cannot be read (here: the page is closed) fails waitJournal fast with the cause, it does
+    // not wait out timeoutMs and report «no events».
+    assert.equal(env.journalErr.n, 0, 'good reads leave no journal error');
+    const p = await env.page(false);
+    await p.close();
+    const t0 = Date.now();
+    await assert.rejects(env.waitJournal('never-such-kind', { timeoutMs: 120000, failMs: 2000, stepMs: 200 }),
+      (e) => /journal cannot be read for \d+ s/.test(e.message) && /last journal read error \(\d+ in a row\): \S/.test(e.message));
+    assert.ok(Date.now() - t0 < 30000, 'failed fast: ' + (Date.now() - t0) + ' ms');
   } finally { await env.close(); }
 });

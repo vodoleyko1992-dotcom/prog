@@ -20,6 +20,13 @@
     if (a.length > 16) a.splice(0, a.length - 16);
     lastWritten.set(fk, a);
   }
+  function unmarkWritten(fk, json) {
+    const a = lastWritten.get(fk);
+    if (!a) return;
+    const i = a.lastIndexOf(json);
+    if (i >= 0) a.splice(i, 1);
+    if (!a.length) lastWritten.delete(fk);
+  }
   /** True (and forgets it plus every older entry) when json is one of our own recent writes of fk. */
   function takeEcho(fk, json) {
     const a = lastWritten.get(fk);
@@ -33,8 +40,14 @@
   const subs = new Map();           // fullKey -> Set(fn)
   const chains = new Map();         // fullKey -> Promise (update serialization)
   const mergers = [];               // [{prefix, fn}]
+  const exportFilters = new Map();  // key -> fn(value, { local, mode }) -> value to export/import (undefined = leave the key out)
   let flushTimer = null;
   let flushWaiters = [];
+  // failed backend writes (quota, MAX_WRITE_OPERATIONS_PER_MINUTE, invalidated context during an extension reload): the batch
+  // goes back to pending and is retried with a backoff; one journal line per failure episode, 'storage:degraded' after 3
+  const RETRY_MS = [1000, 2000, 5000, 10000, 30000, 60000];
+  let retryTimer = null;
+  let failStreak = 0;
   const tabId = util.uid();
   S.tabId = tabId;
 
@@ -130,7 +143,8 @@
     const set = subs.get(fk);
     if (set) for (const fn of [...set]) fn(util.clone(value), { remote });
     const sk = splitFull(fk);
-    if (sk && OGX.bus) OGX.bus.emit('storage:changed', { key: sk.key, scope: sk.scope, value, remote });
+    // the bus event carries the exportable form of a filtered key (no secrets); subscribers of the key get the stored value
+    if (sk && OGX.bus) OGX.bus.emit('storage:changed', { key: sk.key, scope: sk.scope, value: exportFilters.has(sk.key) ? filtered(sk.key, value, { local: null, mode: 'export' }) : value, remote });
   }
   function onBackendChanged(changes) {
     for (const [fk, ch] of Object.entries(changes || {})) {
@@ -194,12 +208,38 @@
     if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
     const waiters = flushWaiters; flushWaiters = [];
     if (!pending.size) { waiters.forEach((w) => w()); return; }
-    const obj = {};
-    for (const [fk, v] of pending) { obj[fk] = v; markWritten(fk, JSON.stringify(v)); }
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+    const obj = {}; const jsons = {};
+    // marked before the write: the change event can arrive before set() resolves
+    for (const [fk, v] of pending) { obj[fk] = v; jsons[fk] = JSON.stringify(v); markWritten(fk, jsons[fk]); }
     pending.clear();
-    try { await backend.set(obj); } catch (e) { OGX._log && OGX._log.error('storage write failed', e); }
+    try {
+      await backend.set(obj);
+      if (failStreak) {
+        failStreak = 0;
+        try { OGX.log && OGX.log.rec && OGX.log.rec('S', 'storage', 'write-ok', { keys: Object.keys(obj).length }); } catch (e) { /* ignore */ }
+        try { OGX.bus && OGX.bus.emit('storage:recovered', {}); } catch (e) { /* ignore */ }
+      }
+    } catch (e) {
+      // keep what failed unless a newer set()/remove() replaced it meanwhile (cache holds the very object we tried to write)
+      for (const fk of Object.keys(obj)) {
+        unmarkWritten(fk, jsons[fk]);
+        if (!pending.has(fk) && cache.get(fk) === obj[fk]) pending.set(fk, obj[fk]);
+      }
+      failStreak++;
+      if (failStreak === 1) {
+        OGX._log && OGX._log.error('storage write failed (will retry)', e);
+        try { OGX.log && OGX.log.rec && OGX.log.rec('S', 'storage', 'write-failed', { err: String((e && e.message) || e).slice(0, 200), keys: Object.keys(obj).length }); } catch (e2) { /* ignore */ }
+      }
+      if (failStreak === 3) { try { OGX.bus && OGX.bus.emit('storage:degraded', { err: String((e && e.message) || e).slice(0, 200) }); } catch (e2) { /* ignore */ } }
+      if (pending.size && !retryTimer) {
+        retryTimer = setTimeout(() => { retryTimer = null; S.flush(); }, RETRY_MS[Math.min(failStreak, RETRY_MS.length) - 1]);
+      }
+    }
     waiters.forEach((w) => w());
   };
+  /** Consecutive failed backend writes (0 = healthy). */
+  S.failStreak = () => failStreak;
   S.update = function (key, fn, def = null, opts) {
     const fk = full(key, opts);
     const prev = chains.get(fk) || Promise.resolve();
@@ -255,6 +295,14 @@
     mergers.push({ prefix: String(keyPrefix), fn });
     mergers.sort((a, b) => b.prefix.length - a.prefix.length);
   };
+  /** A key whose value must not leave or enter the browser as stored (passwords inside 'settings', credentials in a pending
+   *  record): fn(value, { local, mode: 'export' | 'import' }) returns what is exported / imported instead, undefined drops the key. */
+  S.registerExportFilter = function (key, fn) { if (typeof fn === 'function') exportFilters.set(String(key), fn); };
+  function filtered(key, value, ctx) {
+    const f = exportFilters.get(key);
+    if (!f) return value;
+    try { return f(util.clone(value), ctx); } catch (e) { OGX._log && OGX._log.error('export filter failed for ' + key, e); return undefined; }
+  }
   S.exportAll = async function ({ scopes = ['player', 'server'], prefixes = null } = {}) {
     need();
     const all = await allRaw();
@@ -267,7 +315,9 @@
         const key = fk.slice(p.length);
         if (key.startsWith('lock.')) continue;
         if (prefixes && !prefixes.some((x) => key.startsWith(x))) continue;
-        data[scope][key] = v;
+        const out = filtered(key, v, { local: null, mode: 'export' });
+        if (out === undefined) continue;
+        data[scope][key] = out;
       }
     }
     const now = OGX.time && OGX.time.serverNow ? OGX.time.serverNow() : Date.now();
@@ -290,6 +340,10 @@
           if (m) {
             try { value = m.fn(util.clone(old), util.clone(imported)); } catch (e) { OGX._log && OGX._log.error('merger failed for ' + key, e); value = imported; }
           }
+        }
+        if (exportFilters.has(key)) {
+          value = filtered(key, value, { local: old, mode: 'import' });
+          if (value === undefined) { skipped++; continue; }
         }
         if (JSON.stringify(value) === JSON.stringify(old)) { skipped++; continue; }
         S.set(key, value, opts);

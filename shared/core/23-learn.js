@@ -13,9 +13,13 @@
   learn.config = {
     sel: { minVisits: 6, minRate: 0.85, missStreak: 3, maxPerPage: 400 },
     tok: { minVisits: 5, presentRate: 0.9, goneStreak: 2, newCount: 2, maxPerPage: 1500, maxPerVisit: 1500 },
-    api: { minN: 5, keyRate: 0.95, newEndpointAfter: 30, maxKeys: 300, maxEndpoints: 300 },
+    api: { minN: 5, keyRate: 0.95, newEndpointAfter: 30, newEndpointKnownAfter: 300, maxKeys: 300, maxEndpoints: 300 },
     dedupMs: 6 * 3600 * 1000,
-    saveMs: 5000,
+    // persistence: every request changes a counter, so a save every 5 s ran ~720 times an hour (clone + stringify of the whole
+    // state). Counters and new entries are written at most once per saveMs; an alert within alertSaveMs, but never sooner
+    // than saveMs after the previous write; pagehide writes at once.
+    saveMs: 60000,
+    alertSaveMs: 5000,
     visitEndMs: 20000,
     alertLog: 200,
   };
@@ -26,6 +30,8 @@
   const pendingApi = [];       // observations before the state is loaded
   let dirty = false;
   let saveTimer = null;
+  let saveDue = 0;             // when the pending saveTimer fires
+  let lastSaveT = 0;           // last write of the state
   let lastSnapT = 0;
 
   const enabled = () => { try { return OGX.settings.get('diag.learn') !== false; } catch (e) { return true; } };
@@ -124,16 +130,18 @@
     const t = now();
     for (const [k, v] of Object.entries(state.alerts)) if (t - v > learn.config.dedupMs * 4) delete state.alerts[k];
   }
+  // alert kinds that carry their facts in the event itself: no DOM snapshot for them
+  const NO_SNAPSHOT = new Set(['api-new', 'api-key-new', 'ship-speed', 'expedition-text-unknown']);
   function emitAlerts() {
     if (!alerts.length) return;
     const batch = alerts.splice(0, alerts.length);
     for (const a of batch) OGX.log.rec('L', a.kind, a.what, Object.assign({ key: a.key }, a.data || {}));
     try { OGX.bus.emit('learn:alert', batch); } catch (e) { /* ignore */ }
-    if (OGX.diag && OGX.diag.snapshot && now() - lastSnapT > 5000) {
+    if (OGX.diag && OGX.diag.snapshot && now() - lastSnapT > 5000 && batch.some((a) => !NO_SNAPSHOT.has(a.kind))) {
       lastSnapT = now();
       OGX.diag.snapshot('learn: ' + batch.map((a) => a.key).join(' | '), { force: false });
     }
-    markDirty();
+    markDirty(true);
   }
 
   // ------------------------------------------------------------------ visit commit
@@ -223,12 +231,28 @@
     emitAlerts();
     markDirty();
   };
+  // GALAXYZ: every request is game.php?page=X, so a page of the game is no "new endpoint" however rarely it is opened (page=alliance
+  // after a week). Known: the routed pages (05-page GZ_ROUTES) plus the pages the suite and the game itself call, and index.php;
+  // a METHOD never seen on a known page alerts only after newEndpointKnownAfter observations, a page outside the set after
+  // newEndpointAfter like any other endpoint.
+  const KNOWN_GZ_EXTRA = ['bonus', 'fleetajax', 'raport', 'ressprem', 'premium', 'techtree', 'tournament', 'statistics', 'battlesimulator',
+    'technologydetailsajax', 'researchdetailsajax', 'shipdetailsajax', 'fleetmissile', 'records', 'search', 'playercard'];
+  function knownEndpoint(ep) {
+    const m = /^[A-Z]+ (\S*?)(?:\?page=([^&\s]+))?(?:&mode=\S+)?$/.exec(String(ep));
+    if (!m) return false;
+    if (!m[2]) return /\/index\.php$/i.test(m[1]);
+    const pg = m[2].toLowerCase();
+    const routes = (OGX.page && OGX.page.GZ_ROUTES) || {};
+    return Object.prototype.hasOwnProperty.call(routes, pg) || KNOWN_GZ_EXTRA.includes(pg);
+  }
+  learn._knownEndpoint = knownEndpoint;
   function applyApi(o) {
     const cfg = learn.config.api;
     let e = state.api[o.ep];
     if (!e) {
       if (Object.keys(state.api).length >= cfg.maxEndpoints) return;
-      if (state.apiTotal >= cfg.newEndpointAfter) alert('api-new:' + o.ep, 'api-new', `новый эндпоинт ${o.ep}`, { ep: o.ep, kind: o.kind, keys: o.keys ? o.keys.slice(0, 30) : null });
+      const after = knownEndpoint(o.ep) ? cfg.newEndpointKnownAfter : cfg.newEndpointAfter;
+      if (state.apiTotal >= after) alert('api-new:' + o.ep, 'api-new', `новый эндпоинт ${o.ep}`, { ep: o.ep, kind: o.kind, keys: o.keys ? o.keys.slice(0, 30) : null });
       e = state.api[o.ep] = { n: 0, first: now(), last: 0, kinds: {} };
     }
     const k = e.kinds[o.kind] || (e.kinds[o.kind] = { n: 0, keys: {} });
@@ -261,15 +285,21 @@
 
   // ------------------------------------------------------------------ plausibility
   const NONNEG = /^(amount|storage|metal|crystal|deuterium|darkMatter|darkmatter|fieldsUsed|fieldsMax|diameter|level|value|target|current|count|points|rank|capacity|cargo)$/;
-  /** Scans numeric leaves: NaN/Infinity anywhere, negatives on resource/level keys. -> [{ path, value }] */
-  learn.implausible = function (obj, maxDepth = 6) {
+  // per-producer rows of the resource settings (page=resources) print consumption as negative metal/crystal/deuterium/energy
+  const SIGNED_PATH = /(^|\.)rows\[\d+\]\.(metal|crystal|deuterium|energy)$/;
+  /** Scans numeric leaves: NaN/Infinity anywhere, negatives on resource/level keys except rows[].<resource> and the paths of
+   * opts.allowNegative. opts: a number = maxDepth (compat) | { maxDepth = 6, allowNegative: RegExp | null }. -> [{ path, value }] */
+  learn.implausible = function (obj, opts = 6) {
+    const o = typeof opts === 'number' ? { maxDepth: opts } : opts || {};
+    const maxDepth = o.maxDepth || 6;
+    const allow = o.allowNegative instanceof RegExp ? o.allowNegative : null;
     const bad = [];
     const walk = (v, path, d) => {
       if (bad.length >= 10 || d > maxDepth || v === null || v === undefined) return;
       if (typeof v === 'number') {
         const leaf = path.split('.').pop().replace(/\[\d+\]$/, '');
         if (!Number.isFinite(v)) bad.push({ path, value: String(v) });
-        else if (v < 0 && NONNEG.test(leaf)) bad.push({ path, value: v });
+        else if (v < 0 && NONNEG.test(leaf) && !SIGNED_PATH.test(path) && !(allow && allow.test(path))) bad.push({ path, value: v });
         return;
       }
       if (typeof v !== 'object' || (typeof Node !== 'undefined' && v instanceof Node)) return;
@@ -279,10 +309,10 @@
     try { walk(obj, '', 0); } catch (e) { /* ignore */ }
     return bad;
   };
-  /** Checks a parser/derived result; raises 'implausible' when it has NaN or negative resource values. -> boolean ok */
-  learn.check = function (name, obj) {
+  /** Checks a parser/derived result; raises 'implausible' when it has NaN or negative resource values (opts as in implausible). -> boolean ok */
+  learn.check = function (name, obj, opts) {
     if (!active || !state) return true;
-    const bad = learn.implausible(obj);
+    const bad = learn.implausible(obj, opts);
     if (!bad.length) return true;
     alert('implausible:' + name + ':' + bad[0].path.replace(/\[\d+\]/g, '[]'), 'implausible', `${name}: неправдоподобные значения ${bad.slice(0, 3).map((b) => b.path + '=' + b.value).join(', ')}`, { name, bad, page: visitPage() });
     emitAlerts();
@@ -296,6 +326,13 @@
       emitAlerts();
     }
     return ok;
+  };
+  /** Drift alert raised by a parser or a module: deduplicated per key (6 h), journaled L/<kind>, snapshot with the batch. -> raised */
+  learn.alert = function (key, what, { kind = 'drift', data = null } = {}) {
+    if (!active || !state || !key) return false;
+    const raised = alert(String(key), kind, String(what || key), Object.assign({ page: visitPage() }, data || {}));
+    if (raised) emitAlerts();
+    return raised;
   };
   // Core parsers are checked automatically (results only, the parsers are unchanged).
   if (OGX.parse) {
@@ -313,15 +350,24 @@
   }
 
   // ------------------------------------------------------------------ persistence
-  function markDirty() {
+  /** urgent (alerts): within alertSaveMs; otherwise within saveMs. Never more often than once per saveMs. */
+  function markDirty(urgent = false) {
     dirty = true;
-    if (saveTimer || !active) return;
-    saveTimer = setTimeout(() => { saveTimer = null; learn.save(); }, learn.config.saveMs);
+    if (!active) return;
+    const cfg = learn.config;
+    const t = now();
+    const due = Math.max(t + (urgent ? cfg.alertSaveMs : cfg.saveMs), lastSaveT ? lastSaveT + cfg.saveMs : 0);
+    if (saveTimer && saveDue <= due) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveDue = due;
+    saveTimer = setTimeout(() => { saveTimer = null; learn.save(); }, Math.max(0, due - t));
   }
   /** Writes the state now (throttled automatically; pagehide calls it). */
   learn.save = function ({ flush = false } = {}) {
     if (!active || !state || !dirty) return Promise.resolve();
     dirty = false;
+    lastSaveT = now();
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     pruneAlertKeys();
     const p = OGX.storage.set(KEY, state, OPTS);
     if (flush) OGX.storage.flush();

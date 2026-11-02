@@ -158,6 +158,18 @@ window.OGX = window.OGX || {};
     }
     return null;
   }
+  /** Mode dm: expoProbes probes per slot (Aeternum: expedition DM grows with the fleet points), the last keepProbes stay home for
+   *  spying — a body below the reserve sends nothing (null → the «нет кораблей» skip; probeBuild restores the stock), never a single
+   *  probe out of the reserve. Another ship (step 2 did not offer mission 15 to a probe): one ship — the documented 1×202 fallback. */
+  function dmComposition(have, { want = 5000, keep = 2000, probeOk = {}, cat } = {}) {
+    const id = dmShip(have || {}, { probeOk, cat });
+    if (!id) return null;
+    if (id !== 210) return { [id]: 1 };
+    const w = Math.max(1, Math.floor(num(want, 5000)));
+    const free = Math.floor(num(have[210]) - Math.max(0, num(keep, 2000)));
+    if (free < 1) return null;
+    return { 210: Math.min(w, free) };
+  }
   /**
    * Mode resources: Battle Transporters 217 only (a user's list is cut to them: no other resource carrier), sized
    * floor(count x share / slots), plus 1 x 210 when present (addCheapTypes, probes are exempt) for ship finds; never any cargo on board.
@@ -413,9 +425,9 @@ window.OGX = window.OGX || {};
     try { const f = OGX.bot.flightTime({ from, to, ships, speed: 10 }); return Number.isFinite(f.duration) ? f : { duration: 0, fuel: 0, distance: f.distance }; } catch (e) { return { duration: 0, fuel: 0, distance: null }; }
   }
   /** decide + read.fleetTable of a body: { ships: { id: n }, slots, flights } | null. */
-  async function readFleetTable(wctx, body, why) {
+  async function readFleetTable(wctx, body, why, { fresh = false } = {}) {
     wctx.decide(`Читаю флот и слоты на ${body.coords}${isMoon(body) ? ' (луна)' : ''}`, { why, inputs: { bodyId: body.id }, chosen: 'read.fleetTable', alternatives: [] });
-    const r = await wctx.act({ type: 'read.fleetTable', bodyId: body.id, prio: 'read', params: {}, why: 'Экспедиции: слоты и корабли на ' + body.coords });
+    const r = await wctx.act(Object.assign({ type: 'read.fleetTable', bodyId: body.id, prio: 'read', params: {}, why: 'Экспедиции: слоты и корабли на ' + body.coords }, fresh ? { fresh: true } : {}));
     if (!r || !r.ok || !r.data || !r.data.fleetTable) return null;
     const ft = r.data.fleetTable;
     sampleDm(wctx.now(), r.data.doc);
@@ -426,7 +438,36 @@ window.OGX = window.OGX || {};
     const ast = (ft.extraCounters || []).find((c) => c && /asteroid|астероид/i.test(c.label || '')) || (ft.extraCounters || [])[0] || null;
     if (slots && ast && Number.isFinite(+ast.max)) slots.asteroids = { used: +ast.used, max: +ast.max };
     if (slots) M.lastSlots = Object.assign({ t: wctx.now() }, slots);
-    return { ships, slots, flights: ft.flights || [] };
+    // returning expeditions of this body confirm / correct the return time of our trips (a «сдвиг времени» seen before its report)
+    noteFleetRows(wctx, body, ft.flights || []);
+    return { t: wctx.now(), ships, slots, flights: ft.flights || [] };
+  }
+  const VIEW_MS = 60000;                     // a view derived from the last send serves the next fleet of the round this long
+  /** The fleet table after a send, without a page read: the sent ships gone, the fleet slot (and the expedition slot) taken. */
+  function viewAfterSend(ft, comp, { expedition = false, t = 0 } = {}) {
+    const ships = Object.assign({}, (ft && ft.ships) || {});
+    for (const [id, k] of Object.entries(comp || {})) { ships[id] = Math.max(0, num(ships[id]) - num(k)); if (!ships[id]) delete ships[id]; }
+    let slots = null;
+    if (ft && ft.slots) {
+      slots = { fleet: { used: num(ft.slots.fleet.used) + 1, max: num(ft.slots.fleet.max) },
+        expedition: { used: num(ft.slots.expedition && ft.slots.expedition.used) + (expedition ? 1 : 0), max: num(ft.slots.expedition && ft.slots.expedition.max) } };
+      if (ft.slots.asteroids) slots.asteroids = ft.slots.asteroids;
+    }
+    return { t: t || (ft && ft.t) || 0, ships, slots, flights: (ft && ft.flights) || [], view: true };
+  }
+  /** The view kept after the last successful send (M.view / M.dmView) of body o, while younger than VIEW_MS; null = read the page. */
+  function viewOf(v, o, now, roundId) {
+    if (!v || !v.ok || !v.ft || !v.ft.slots || +v.originId !== +o.id || !(now - v.t < VIEW_MS)) return null;
+    if (roundId !== undefined && v.round !== roundId) return null;
+    return v.ft;
+  }
+  /** After a 'limit' refusal of botcore: the reopen time of the hit limit (bot.status().limitsHit) + 2..10 s, else 4-6 min. */
+  function limitRetryAt(wctx) {
+    let at = 0;
+    try { for (const l of OGX.bot.status().limitsHit || []) if (l && (l.limit === 'fleetSends' || l.limit === 'actions') && +l.reopensAt > at) at = +l.reopensAt; } catch (e) { at = 0; }
+    const now = wctx.now();
+    if (at > now) return Math.min(at, now + H) + OGX.bot.randMs([2000, 10000]);
+    return now + OGX.bot.randMs(OGX.bot.INTERVALS.m6);
   }
   /** DM counter of the top bar of a page read by the bot -> M.meta.dmSamples (one sample per 5 min, 48 h kept). */
   function sampleDm(t, doc) {
@@ -475,89 +516,271 @@ window.OGX = window.OGX || {};
   const evShort = (e) => (e ? { perTrip: Math.round(e.perTrip), perSlotHour: Math.round(e.perSlotHour), evMsu: Math.round(e.evMsu), evDm: Math.round(e.evDm), fleetMsu: Math.round(e.fleetMsu), findMax: e.find ? e.find.max : null } : null);
 
   // ------------------------------------------------------------------ expeditions: results (messages)
+  // GALAXYZ (2Moons includes/common.php) runs the fleet handler only for requests WITHOUT ajax=1, and the bot reads messages with
+  // ajax=1: the bot's own reads never create the report of a stay end (cat 15, dated fleet_end_stay) or of a return (cat 4, dated
+  // fleet_end_time). A report is therefore read only after a full-page request made after its event (botcore's lastPageAt: the
+  // step's fleetTable GET, a build order, this page's own load; after RESULT_FORCE_MS without one the module reads the origin's
+  // fleetTable itself), first RESULT_DELAY after the event, retried RESULT_RETRY x tries later, at most RESULT_TRIES times within
+  // RESULT_WINDOW; a trip whose report never shows up is closed as unread (counted apart, never «flying» forever).
+  const RESULT_DELAY = 20000;
+  const RESULT_RETRY = 30000;
+  const RESULT_TRIES = 6;
+  const RESULT_WINDOW = 15 * 60000;
+  const RESULT_FORCE_MS = 45000;            // no full-page request this long after the event: the module makes one
+  const MATCH_MS = 5000;                     // message date (1-s resolution) vs the trip's event time
+  const PAGE_SKEW_MS = 2000;                 // lastPageAt is the estimated server time (about ±1 s): a page counts only this long after the event
   function liveTrips() { return Object.values(M.trips).filter((x) => !x.dry); }
+  /** ServerMs of the last full-page request known: botcore's (bot.lastPageAt) or this page's own load; 0 = unknown (no page rule). */
+  function lastPageAt() {
+    let t = 0;
+    try { if (OGX.bot && typeof OGX.bot.lastPageAt === 'function') t = Math.max(t, num(OGX.bot.lastPageAt())); } catch (e) { /* none */ }
+    try {
+      if (typeof performance !== 'undefined' && performance && +performance.timeOrigin > 0 && OGX.time && OGX.time.serverNow) t = Math.max(t, OGX.time.serverNow() - (Date.now() - +performance.timeOrigin));
+    } catch (e) { /* no page clock */ }
+    return t;
+  }
+  /**
+   * Pure: is the report of an event (stayEnd for cat 15, back for cat 4) to be read now? tries / nextAt = reads so far and the planned
+   * retry, pageAt = last full-page request (0 = unknown, no page rule). -> { read, force (read the origin's fleetTable first), giveUp,
+   * nextAt (the next check) }
+   */
+  function resultDue({ eventAt, tries = 0, nextAt = 0, now, pageAt = 0 }) {
+    if (!(eventAt > 0)) return { read: false, force: false, giveUp: false, nextAt: null };
+    if (num(tries) >= RESULT_TRIES || now > eventAt + RESULT_WINDOW) return { read: false, force: false, giveUp: true, nextAt: null };
+    const at = Math.max(num(nextAt), eventAt + RESULT_DELAY);
+    if (now < at) return { read: false, force: false, giveUp: false, nextAt: at };
+    if (pageAt > 0 && pageAt < eventAt + PAGE_SKEW_MS) {
+      // no full-page request since the event: the report does not exist yet — wait for one, after RESULT_FORCE_MS make one
+      if (now >= eventAt + RESULT_FORCE_MS) return { read: true, force: true, giveUp: false, nextAt: at };
+      return { read: false, force: false, giveUp: false, nextAt: Math.min(now + RESULT_RETRY, eventAt + RESULT_FORCE_MS) };
+    }
+    return { read: true, force: false, giveUp: false, nextAt: at };
+  }
+  /** Pure: messages (ascending date) assigned to trips, each message to the nearest trip within MATCH_MS of timeOf(trip), so a missing
+   *  report never lets a trip claim its neighbour's; extra(trip, msg) may widen the match. -> Map(trip -> message) */
+  function assignByTime(rows, trips, timeOf, extra) {
+    const out = new Map();
+    for (const r of rows.slice().sort((a, b) => a.ts - b.ts)) {
+      let best = null; let bd = Infinity;
+      for (const x of trips) {
+        if (out.has(x)) continue;
+        const d = Math.abs(r.ts - timeOf(x));
+        if ((d <= MATCH_MS || (extra && extra(x, r))) && d < bd) { best = x; bd = d; }
+      }
+      if (best) out.set(best, r);
+    }
+    return out;
+  }
+  /** Upstream MissionCaseExpedition event 6 («сдвиг времени»): a delay returns at end_stay + back leg + stay + 2..5 s (fleet_start_time
+   *  is the arrival, so the stay is the pure stay); a speed-up sets fleet_end_time = max(1, …): the fleet lands at the next run of the
+   *  fleet handler. -> { back, tol, kind } */
+  function shiftedBack(x, raw, now) {
+    const backLeg = x.back && x.stayEnd ? Math.max(0, x.back - x.stayEnd) : 0;
+    const stay = x.stayEnd && x.arrival ? Math.max(0, x.stayEnd - x.arrival) : Math.round(num(x.stayHours, 1) * H);
+    if (/speed|fast/i.test(String(raw || ''))) return { back: Math.max(num(now), num(x.stayEnd)) + 1000, tol: 120000, kind: 'speedup' };
+    return { back: num(x.stayEnd) + backLeg + stay + 2000, tol: 5000, kind: 'delay' };
+  }
+  /** A read at t that showed no report of an event counts as a miss when the report had to exist: a full-page request after the event
+   *  (or none known) and RESULT_DELAY passed — so the neighbour's read serves a trip too and no second read follows 5 s later. */
+  const missedAt = (eventAt, t, pageAt) => t >= eventAt + RESULT_DELAY && (!(pageAt > 0) || pageAt >= eventAt + PAGE_SKEW_MS);
+  function setBack(x, back, tol, kind) {
+    x.backPlanned = x.backPlanned || x.back || null;
+    x.back = back; x.backTol = tol; x.timeShift = kind; x.returnSeen = false; x.tries4 = 0; x.next4At = 0;
+  }
+  function applyTimeShift(wctx, x, raw) {
+    const s = shiftedBack(x, raw, wctx.now());
+    const old = x.back;
+    setBack(x, s.back, s.tol, s.kind);
+    wctx.rec('decision', `Экспедиция ${x.fleetId}: ${s.kind === 'delay' ? 'задержка' : 'ускорение'} — возврат ${fmtT(x.back)} вместо ${fmtT(old)}`,
+      { why: 'сдвиг времени (2Moons: задержка = конец удержания + обратный путь + удержание + 2..5 с; ускорение = ближайшая обработка событий)',
+        inputs: { fleetId: x.fleetId, raw, oldBack: old }, chosen: { back: x.back, tol: s.tol }, alternatives: [] });
+  }
+  /** page=fleetTable rows of returning expeditions (mission 15, «(R)», timerUnix = the server's return time) confirm or correct the
+   *  return time of our trips: the exact back of a known trip, a delay seen before its report, the corrected back after one. */
+  function noteFleetRows(wctx, body, flights) {
+    const rows = (flights || []).filter((f) => f && +f.missionId === 15 && f.returning === true && +f.timerUnix > 0 && (!f.origin || !body || !body.coords || f.origin === body.coords))
+      .map((f) => ({ t: +f.timerUnix * 1000, f }));
+    if (!rows.length) return;
+    const trips = liveTrips().filter((x) => !x.done && x.outcome !== 'blackHole' && x.back && (!body || x.origin === body.id)).sort((a, b) => a.back - b.back);
+    const used = new Set();
+    const pick = (t, tol) => { let best = null; let bd = Infinity; for (const r of rows) { if (used.has(r)) continue; const d = Math.abs(r.t - t); if (d <= tol && d < bd) { best = r; bd = d; } } return best; };
+    // two passes: every row at a trip's expected return first, only the rows left may show a delay — so a trip that came home on time
+    // never takes the row of its delayed neighbour (their shifted and real return times are seconds apart)
+    const hit = new Map();
+    for (const x of trips) { const r = pick(x.back, 20000); if (r) { used.add(r); hit.set(x, { r, shifted: false }); } }
+    // the rows left go to the unmatched trips by the smallest distance to their shifted return (not in trip order)
+    const pairs = [];
+    for (const x of trips) {
+      // only a trip that can still be delayed: no report yet, or a report that said «сдвиг времени» / an unknown text
+      if (hit.has(x) || x.timeShift || (x.outcome && x.outcome !== 'time' && x.outcome !== 'unknown')) continue;
+      const sb = shiftedBack(x, 'delay', wctx.now()).back;
+      for (const r of rows) if (!used.has(r) && Math.abs(r.t - sb) <= 20000) pairs.push({ x, r, d: Math.abs(r.t - sb) });
+    }
+    for (const p of pairs.sort((a, b) => a.d - b.d)) if (!hit.has(p.x) && !used.has(p.r)) { used.add(p.r); hit.set(p.x, { r: p.r, shifted: true }); }
+    for (const x of trips) {
+      if (!hit.has(x)) continue;
+      const { r, shifted } = hit.get(x);
+      const old = x.back;
+      if (shifted) {
+        setBack(x, r.t, 5000, 'delay');
+        x.shiftSeen = 'fleetTable';
+        wctx.rec('decision', `Экспедиция ${x.fleetId}: по странице флота возврат ${fmtT(x.back)} вместо ${fmtT(old)} (задержка)`,
+          { why: 'строка возвращающейся экспедиции на page=fleetTable', inputs: { fleetId: x.fleetId, oldBack: old }, chosen: { back: x.back }, alternatives: [] });
+      } else if (Math.abs(r.t - x.back) > 1000) x.back = r.t;
+      x.backConfirmed = true;
+    }
+  }
+  function closeUnread(wctx, x, cat) {
+    // no report (cat 15) but the fleet is still away or its return not read yet: the trip stays open for its return message (cat 4,
+    // the found resources / DM); it is closed by that read or by the cat-4 give-up
+    x.done = cat !== 15 || !x.back || !!x.amounts;
+    if (cat === 15) { x.unread15 = true; M.stats.unread15 = num(M.stats.unread15) + 1; } else { x.unread4 = true; M.stats.unread4 = num(M.stats.unread4) + 1; }
+    wctx.rec('expo-result', `Экспедиция ${x.fleetId} с ${x.originCoords}: ${cat === 15 ? 'отчёт' : 'сообщение о возврате'} не найдено за ${Math.round(RESULT_WINDOW / 60000)} мин (чтений: ${cat === 15 ? num(x.tries15) : num(x.tries4)})`,
+      { fleetId: x.fleetId, unread: cat, outcome: x.outcome || null, tries: cat === 15 ? num(x.tries15) : num(x.tries4), ships: x.ships, stats: statsShort() });
+  }
+  /** Text of a message row (GALAXYZ: the body td; OgameX: the li), one line, 240 chars. */
+  function msgText(it) {
+    try {
+      let el = null;
+      if (it && it.body && it.body.textContent !== undefined) el = it.body;
+      else if (it && it.li) el = it.li.nextElementSibling && /messages_body/.test(String(it.li.nextElementSibling.className || '')) ? it.li.nextElementSibling : it.li;
+      return el ? String(el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240) : '';
+    } catch (e) { return ''; }
+  }
+  /** An expedition text the texts table does not know: a learn line in the journal (once a day per text) so the table can be fixed. */
+  function noteUnknownText(x, text, messageId) {
+    if (!text) return;
+    const key = text.slice(0, 80);
+    const seen = M.meta.unknownTexts && typeof M.meta.unknownTexts === 'object' ? M.meta.unknownTexts : (M.meta.unknownTexts = {});
+    const t = OGX.time.serverNow();
+    for (const [k, v] of Object.entries(seen)) if (!(v > t - 7 * DAY)) delete seen[k];
+    if (seen[key] > t - DAY) return;
+    seen[key] = t;
+    try { OGX.log.rec('L', 'botexpo:expedition-text', 'Неизвестный текст отчёта экспедиции: ' + text, { key: 'expedition-text-unknown:' + key, text, messageId, fleetId: x.fleetId, ships: x.ships }); } catch (e) { /* no journal */ }
+  }
+  /** No full-page request since the event for RESULT_FORCE_MS: one read of the origin's fleetTable (it runs the server's fleet
+   *  handler and shows the fleet's real return time). */
+  async function forcePage(wctx, x, why) {
+    let body = null;
+    try { body = bodyById(await wctx.bodies(), x.origin); } catch (e) { body = null; }
+    if (body) await readFleetTable(wctx, body, why, { fresh: true });   // a cached answer would not reach the server
+  }
   async function readResults(wctx) {
     const now = wctx.now();
     const canRead = wctx.core('readMessages') !== false;
-    // a trip whose results cannot be read any more is closed after its return
     for (const x of liveTrips()) {
       if (x.done) continue;
+      // nothing can be read: closed 60 s after the return; a safety net for very old trips (never «flying» forever)
       const end = x.back || (x.stayEnd ? x.stayEnd + H : null);
-      const noMore = !canRead || ((x.tries15 || 0) >= 3 && (x.outcome || (x.tries4 || 0) >= 3));
-      if (end && now > end + 60000 && (noMore || (x.outcome && (x.amounts || (x.tries4 || 0) >= 3 || x.outcome === 'blackHole')))) x.done = true;
+      if (!canRead && end && now > end + 60000) x.done = true;
+      else if (x.sentAt && now - x.sentAt > 2 * DAY) x.done = true;
     }
     if (!canRead) return;
-    const due15 = liveTrips().filter((x) => !x.done && !x.outcome && x.stayEnd && now > x.stayEnd + 3000 && (x.tries15 || 0) < 3);
-    if (due15.length) {
-      wctx.decide('Читаю отчёты экспедиций', { why: 'узнать исход и проверить статистику (F5)', inputs: { fleets: due15.map((x) => x.fleetId) }, chosen: 'read.messages cat 15', alternatives: [] });
-      const r = await readMessages(wctx, 15, 'Экспедиции: отчёты', { fresh: due15.some((x) => (x.tries15 || 0) > 0), notBefore: Math.max(...due15.map((x) => num(x.stayEnd))) + 1000 });
-      for (const x of due15) x.tries15 = (x.tries15 || 0) + 1;
+    const pageAt = lastPageAt();
+    // cat 15: the outcome, dated at the stay end
+    const plan15 = []; let force = null;
+    for (const x of liveTrips()) {
+      if (x.done || x.outcome || x.unread15 || !x.stayEnd) continue;
+      const d = resultDue({ eventAt: x.stayEnd, tries: x.tries15, nextAt: x.next15At, now, pageAt });
+      if (d.giveUp) closeUnread(wctx, x, 15);
+      else if (d.read) { plan15.push(x); if (d.force && !force) force = x; }
+    }
+    if (plan15.length) {
+      if (force) await forcePage(wctx, force, 'отчёт экспедиции появляется только после обычного (не ajax) запроса к серверу');
+      wctx.decide('Читаю отчёты экспедиций', { why: 'узнать исход и проверить статистику (F5); отчёт есть только после обычного (не ajax) запроса', inputs: { fleets: plan15.map((x) => x.fleetId), pageAt }, chosen: 'read.messages cat 15', alternatives: [] });
+      const r = await readMessages(wctx, 15, 'Экспедиции: отчёты', { fresh: plan15.some((x) => (x.tries15 || 0) > 0), notBefore: Math.max(...plan15.map((x) => num(x.stayEnd))) + 1000 });
+      const t = wctx.now();
+      const rows = [];
       if (r && r.ok && r.data && r.data.doc) {
         let items = [];
         try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; }
         const used = new Set(Object.values(M.trips).map((x) => x.msg15).filter(Boolean));
-        const rows = [];
         for (const it of items) {
           if (!it || !it.ts || used.has(it.id)) continue;
           let p = null;
           try { p = OGX.messages.parse.expedition(it.li); } catch (e) { p = null; }
-          rows.push({ id: it.id, ts: it.ts, parsed: p });
-        }
-        for (const x of due15.sort((a, b) => a.stayEnd - b.stayEnd)) {
-          const hit = rows.filter((m) => !used.has(m.id) && Math.abs(m.ts - x.stayEnd) <= 5000).sort((a, b) => Math.abs(a.ts - x.stayEnd) - Math.abs(b.ts - x.stayEnd))[0];
-          if (!hit) continue;
-          used.add(hit.id);
-          x.msg15 = hit.id;
-          x.outcome = outcomeOf(hit.parsed);
-          x.outcomeRaw = hit.parsed ? hit.parsed.outcome || null : null;
-          if (hit.parsed && hit.parsed.ships) x.foundShips = hit.parsed.ships;
-          addOutcome(M.stats, x, x.outcome);
-          if (x.outcome === 'blackHole') {
-            x.done = true;
-            if (x.learnKey) learnAdd(learnStats(), x.learnKey, { dm: 0, hours: x.back && x.sentAt ? (x.back - x.sentAt) / H : num(x.stayHours, 1), lost: true });
-          }
-          wctx.rec('expo-result', `Экспедиция ${x.fleetId} с ${x.originCoords}: ${OUTCOME_RU[x.outcome] || x.outcome}`,
-            { fleetId: x.fleetId, outcome: x.outcome, raw: x.outcomeRaw, messageId: hit.id, ships: x.ships, foundShips: x.foundShips || null, stats: statsShort() });
+          rows.push({ id: it.id, ts: it.ts, parsed: p, it });
         }
       }
+      // every unresolved trip whose stay ended may take a report (one read serves them all); a miss counts only for the planned ones
+      const cands = liveTrips().filter((x) => !x.done && !x.outcome && !x.unread15 && x.stayEnd && x.stayEnd <= t + MATCH_MS).sort((a, b) => a.stayEnd - b.stayEnd);
+      const hits = assignByTime(rows, cands, (x) => x.stayEnd);
+      const page15 = lastPageAt();
+      for (const x of cands) if (!hits.has(x) && (plan15.includes(x) || missedAt(x.stayEnd, t, page15))) { x.tries15 = (x.tries15 || 0) + 1; x.next15At = t + RESULT_RETRY * x.tries15; }
+      for (const [x, hit] of hits) {
+        x.msg15 = hit.id;
+        x.outcome = outcomeOf(hit.parsed);
+        x.outcomeRaw = hit.parsed ? hit.parsed.outcome || null : null;
+        if (hit.parsed && hit.parsed.ships) x.foundShips = hit.parsed.ships;
+        const text = x.outcome === 'unknown' ? msgText(hit.it) : null;
+        if (text) noteUnknownText(x, text, hit.id);
+        addOutcome(M.stats, x, x.outcome);
+        if (x.outcome === 'blackHole') {
+          x.done = true;
+          if (x.learnKey) learnAdd(learnStats(), x.learnKey, { dm: 0, hours: x.back && x.sentAt ? (x.back - x.sentAt) / H : num(x.stayHours, 1), lost: true });
+        } else if (x.amounts) x.done = true;   // the return was read before the report
+        // a delay the fleet page showed already (x.back = the server's return time) is not shifted a second time
+        if (x.outcome === 'time' && !x.shiftSeen) applyTimeShift(wctx, x, x.outcomeRaw);
+        // the fleet page row was taken for a delay but the report says otherwise: back to the planned return
+        if (x.outcome !== 'time' && x.shiftSeen && x.backPlanned) { x.back = x.backPlanned; x.backTol = 0; x.timeShift = null; x.shiftSeen = null; x.tries4 = 0; x.next4At = 0; }
+        wctx.rec('expo-result', `Экспедиция ${x.fleetId} с ${x.originCoords}: ${OUTCOME_RU[x.outcome] || x.outcome}`,
+          Object.assign({ fleetId: x.fleetId, outcome: x.outcome, raw: x.outcomeRaw, messageId: hit.id, ships: x.ships, foundShips: x.foundShips || null, stats: statsShort() }, text ? { text } : {}));
+      }
     }
-    const due4 = liveTrips().filter((x) => !x.done && x.outcome && x.outcome !== 'blackHole' && !x.amounts && x.back && now > x.back + 3000 && (x.tries4 || 0) < 3);
-    if (!due4.length) return;
-    wctx.decide('Читаю сообщения о возврате экспедиций', { why: 'найденные ресурсы и ТМ приходят в сообщении о возврате (кат. 4)', inputs: { fleets: due4.map((x) => x.fleetId) }, chosen: 'read.messages cat 4', alternatives: [] });
-    const r = await readMessages(wctx, 4, 'Экспедиции: возврат флота', { fresh: due4.some((x) => (x.tries4 || 0) > 0), notBefore: Math.max(...due4.map((x) => num(x.back))) + 1000 });
-    for (const x of due4) x.tries4 = (x.tries4 || 0) + 1;
-    if (!r || !r.ok || !r.data || !r.data.doc) return;
-    let items = [];
-    try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; }
-    const used = new Set(Object.values(M.trips).map((x) => x.msg4).filter(Boolean));
+    // cat 4: the return with the amounts, dated at the return (the corrected one after a time shift); read even before the report
+    const now4 = wctx.now();
+    const page4 = Math.max(pageAt, lastPageAt());
+    const plan4 = []; force = null;
+    for (const x of liveTrips()) {
+      if (x.done || x.outcome === 'blackHole' || x.amounts || !x.back) continue;
+      const d = resultDue({ eventAt: x.back, tries: x.tries4, nextAt: x.next4At, now: now4, pageAt: page4 });
+      if (d.giveUp) closeUnread(wctx, x, 4);
+      else if (d.read) { plan4.push(x); if (d.force && !force) force = x; }
+    }
+    if (!plan4.length) return;
+    if (force) await forcePage(wctx, force, 'сообщение о возврате появляется только после обычного (не ajax) запроса к серверу');
+    wctx.decide('Читаю сообщения о возврате экспедиций', { why: 'найденные ресурсы и ТМ приходят в сообщении о возврате (кат. 4)', inputs: { fleets: plan4.map((x) => x.fleetId), pageAt: page4 }, chosen: 'read.messages cat 4', alternatives: [] });
+    const r = await readMessages(wctx, 4, 'Экспедиции: возврат флота', { fresh: plan4.some((x) => (x.tries4 || 0) > 0), notBefore: Math.max(...plan4.map((x) => num(x.back))) + 1000 });
+    const t = wctx.now();
     const rows = [];
-    for (const it of items) {
-      if (!it || !it.ts || used.has(it.id)) continue;
-      if (it.kind && !/^return_expedition/.test(it.kind)) continue;
-      let fm = null;
-      try { fm = OGX.messages.parse.fleetMessage(it.li); } catch (e) { fm = null; }
-      if (!fm) continue;
-      const kind = fm.kind || it.kind || '';
-      if (kind && !/^return_expedition/.test(kind)) continue;
-      const raw = (fm.gz && fm.gz.resources) || {};
-      const res = fm.resources || {};
-      rows.push({ id: it.id, ts: it.ts, amounts: { metal: num(res.metal), crystal: num(res.crystal), deuterium: num(res.deuterium), darkMatter: num(raw[921]) } });
+    if (r && r.ok && r.data && r.data.doc) {
+      let items = [];
+      try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; }
+      const used = new Set(Object.values(M.trips).map((x) => x.msg4).filter(Boolean));
+      for (const it of items) {
+        if (!it || !it.ts || used.has(it.id)) continue;
+        if (it.kind && !/^return_expedition/.test(it.kind)) continue;
+        let fm = null;
+        try { fm = OGX.messages.parse.fleetMessage(it.li); } catch (e) { fm = null; }
+        if (!fm) continue;
+        const kind = fm.kind || it.kind || '';
+        if (kind && !/^return_expedition/.test(kind)) continue;
+        const raw = (fm.gz && fm.gz.resources) || {};
+        const res = fm.resources || {};
+        rows.push({ id: it.id, ts: it.ts, amounts: { metal: num(res.metal), crystal: num(res.crystal), deuterium: num(res.deuterium), darkMatter: num(raw[921]) } });
+      }
     }
-    for (const x of due4.sort((a, b) => a.back - b.back)) {
-      const hit = rows.filter((m) => !used.has(m.id) && m.ts >= (x.stayEnd || 0) - 5000 && Math.abs(m.ts - x.back) <= (x.outcome === 'time' ? 6 * H : 5000))
-        .sort((a, b) => Math.abs(a.ts - x.back) - Math.abs(b.ts - x.back))[0];
-      if (!hit) continue;
-      used.add(hit.id);
+    const cands = liveTrips().filter((x) => !x.done && x.outcome !== 'blackHole' && !x.amounts && x.back && x.back <= t + MATCH_MS).sort((a, b) => a.back - b.back);
+    // a time-shifted trip has its own tolerance; a sped-up fleet's message may carry the engine's bogus date (fleet_end_time = 1)
+    const hits = assignByTime(rows, cands, (x) => x.back, (x, m) => (num(x.backTol) > MATCH_MS && Math.abs(m.ts - x.back) <= num(x.backTol)) || (x.timeShift === 'speedup' && m.ts < num(x.sentAt)));
+    const page4b = lastPageAt();
+    for (const x of cands) if (!hits.has(x) && (plan4.includes(x) || missedAt(x.back, t, page4b))) { x.tries4 = (x.tries4 || 0) + 1; x.next4At = t + RESULT_RETRY * x.tries4; }
+    for (const [x, hit] of hits) {
       x.msg4 = hit.id;
       x.amounts = hit.amounts;
+      // an outcome the texts table did not know: the amounts tell (a DM find / a resource find)
+      if (x.outcome === 'unknown') {
+        const by = num(hit.amounts.darkMatter) > 0 ? 'darkMatter' : num(hit.amounts.metal) + num(hit.amounts.crystal) + num(hit.amounts.deuterium) > 0 ? 'resources' : null;
+        if (by) { M.stats.outcomes.unknown = Math.max(0, num(M.stats.outcomes.unknown) - 1); M.stats.outcomes[by] = num(M.stats.outcomes[by]) + 1; x.outcome = by; x.reclassified = true; }
+      }
       addAmounts(M.stats, x, hit.amounts);
-      x.done = true;
+      x.done = !!x.outcome || !!x.unread15;   // without the report (cat 15 still pending) the trip stays open for it
       if (x.learnKey) learnAdd(learnStats(), x.learnKey, { dm: hit.amounts.darkMatter, hours: x.sentAt && hit.ts > x.sentAt ? (hit.ts - x.sentAt) / H : num(x.stayHours, 1) });
       const got = num(hit.amounts.metal) + num(hit.amounts.crystal) + num(hit.amounts.deuterium);
       const exp = x.expectedFind;
       wctx.rec('expo-result', `Экспедиция ${x.fleetId} вернулась: ${fmtN(hit.amounts.metal)} / ${fmtN(hit.amounts.crystal)} / ${fmtN(hit.amounts.deuterium)}, ТМ ${fmtN(hit.amounts.darkMatter)}`
-        + (x.outcome === 'resources' && exp ? ` (по формуле 2Moons ${fmtN(exp.max)})` : ''),
-        { fleetId: x.fleetId, outcome: x.outcome, amounts: hit.amounts, messageId: hit.id, expectedFind: exp || null,
+        + (x.outcome === 'resources' && exp ? ` (по формуле 2Moons ${fmtN(exp.max)})` : '') + (x.reclassified ? ` — исход уточнён по возврату: ${OUTCOME_RU[x.outcome]}` : ''),
+        { fleetId: x.fleetId, outcome: x.outcome, amounts: hit.amounts, messageId: hit.id, expectedFind: exp || null, reclassified: !!x.reclassified,
           f5: x.outcome === 'resources' && exp ? { got, expected: exp.max, match: got === exp.max } : null, stats: statsShort() });
     }
   }
@@ -626,7 +849,7 @@ window.OGX = window.OGX || {};
     }
     return { nextAt: now + OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: why + '; возвратов не видно, повтор через 4-6 мин' };
   }
-  function closeRound(why) { if (M.meta.round && !M.meta.round.closed) { M.meta.round.closed = true; M.meta.round.closeWhy = why; } }
+  function closeRound(why) { if (M.meta.round && !M.meta.round.closed) { M.meta.round.closed = true; M.meta.round.closeWhy = why; } M.view = null; }
 
   async function expoStep(wctx) {
     const now = wctx.now();
@@ -646,11 +869,15 @@ window.OGX = window.OGX || {};
     let reads = 0;
     let lastWhy = 'нет подходящих кораблей';
     for (const o of origins) {
-      if (reads >= 3) break;
       const lock = wctx.locked(o.key);
-      if (lock) { wctx.rec('skip', `Экспедиции с ${o.coords}: тело под угрозой (удар ${fmtT(lock.arrival)})`, { reason: 'threat', body: o.id, threat: lock.key }); lastWhy = 'угроза'; continue; }
-      reads++;
-      const ft = await readFleetTable(wctx, o, round ? 'перед каждым флотом слоты перечитываются' : 'начало раунда экспедиций: свободные слоты');
+      if (lock) { wctx.rec('skip', `Экспедиции с ${o.coords}: тело под угрозой (удар ${fmtT(lock.arrival)})`, { reason: 'threat', body: o.id, threat: lock.key }); lastWhy = 'угроза'; M.view = null; continue; }
+      // within a round the view derived from the last successful send (ships minus that fleet, both slot counters + 1) serves the next
+      // fleet for VIEW_MS: one page=fleetTable GET per expedition (the send's own step 0), not two
+      const view = round ? viewOf(M.view, o, now, round.id) : null;
+      if (!view && reads >= 3) break;
+      if (!view) reads++;
+      else wctx.decide(`Слоты и корабли на ${o.coords} — по снимку после прошлой отправки`, { why: 'внутри раунда страница флота не перечитывается перед каждым флотом (отправка сама читает её шагом 0)', inputs: { bodyId: o.id, ageMs: now - M.view.t }, chosen: 'view', alternatives: ['read.fleetTable'] });
+      const ft = view || await readFleetTable(wctx, o, 'начало раунда экспедиций: свободные слоты');
       if (!ft || !ft.slots) { lastWhy = 'слоты неизвестны'; continue; }
       if (mode === 'dm' || mode === 'learn') await probeBuild(wctx, o, ft, mode);
       // slots other modules hold for a coming send (botfarm escorts) count as used (runtime slot holds)
@@ -713,14 +940,7 @@ window.OGX = window.OGX || {};
     // compositions
     const roundSlots = round && round.n0 ? round.n0 : n;
     // mode dm: expoProbes probes (Xterium: expedition DM = fleet points x 0.5..1.5), never below 1, the last keepProbes stay home
-    const dmComp = (() => {
-      const id = dmShip(have, { probeOk });
-      if (!id) return null;
-      if (id !== 210) return { [id]: 1 };
-      const want = Math.max(1, Math.floor(num(wctx.cfg('expoProbes'), 5000)));
-      const free = Math.floor(num(have[210]) - Math.max(0, num(wctx.cfg('keepProbes'), 2000)));
-      return { 210: Math.max(1, Math.min(want, free)) };
-    })();
+    const dmComp = dmComposition(have, { want: wctx.cfg('expoProbes'), keep: wctx.cfg('keepProbes'), probeOk });
     let resIds = wctx.cfg('ships');
     if (typeof resIds === 'string') { try { resIds = JSON.parse(resIds); } catch (e) { resIds = []; } }
     const sizing = round && round.sizes && round.sizes[o.id] ? round.sizes[o.id] : null;
@@ -757,7 +977,8 @@ window.OGX = window.OGX || {};
     if (chosen === 'resources' && resComp && !round.sizes[o.id]) { const s = {}; for (const [id, k] of Object.entries(resComp)) s[id] = k; round.sizes[o.id] = s; }
     if (!comp) {
       wctx.rec('skip', `Экспедиции с ${o.coords}: нет кораблей для режима «${MODE_RU[chosen] || chosen}»` + (chosen === 'resources' ? ' (нужны Ул. трансп.: на теле ' + num(have[CARGO_SHIPS[0]]) + ')' : '')
-        + (chosen === 'learn' ? ` (ни один вариант не помещается: зондов ${num(have[210])}, оставляю ${num(wctx.cfg('keepProbes'), 2000)})` : ''), { reason: 'ships', body: o.id, have, mode: chosen });
+        + (chosen === 'learn' ? ` (ни один вариант не помещается: зондов ${num(have[210])}, оставляю ${num(wctx.cfg('keepProbes'), 2000)})` : '')
+        + (chosen === 'dm' ? ` (зондов ${num(have[210])}, резерв для шпионажа ${num(wctx.cfg('keepProbes'), 2000)} не трогаю)` : ''), { reason: 'ships', body: o.id, have, mode: chosen, keepProbes: num(wctx.cfg('keepProbes'), 2000) });
       return { why: 'нет кораблей' };
     }
     // staytime by the option text (F6); unknown options (dry-run without a cached probe): the configured hours, the server picks
@@ -791,6 +1012,7 @@ window.OGX = window.OGX || {};
     if (r && r.dry) {
       round.sent++;
       round.drySent = num(round.drySent) + 1;
+      M.view = { originId: o.id, round: round.id, t: wctx.now(), ok: true, ft };   // nothing left the body: the same view serves the next dry send
       const id = 'dry:' + round.id + ':' + round.sent;
       M.trips[id] = { id, dry: true, fleetId: null, origin: o.id, originCoords: o.coords, ships: comp, mode: chosen, sentAt: now, stayHours: stayH, done: true };
       wctx.rec('expo-sent', `[пробный режим] Экспедиция с ${o.coords}: ${shipsLabel(comp)}, удержание ${stayH} ч`, { dry: true, origin: o.id, ships: comp, mode: chosen, staytime: stay ? stay.option : null, stayHours: stayH, target: tcoords, round: round.id });
@@ -800,12 +1022,19 @@ window.OGX = window.OGX || {};
     if (!r || !r.ok) {
       const why = r ? r.message || r.error || r.refused : 'нет ответа';
       wctx.rec('skip', `Экспедиция с ${o.coords} не отправлена: ${why}`, { reason: r ? r.refused || r.error : 'none', body: o.id, ships: comp });
-      if (r && r.refused === 'slots') { closeRound('слоты'); return { stop: true, result: afterRound(wctx, wctx.flights(), 'нет слота') }; }
-      if (r && ['limit', 'stopped', 'notLeader', 'expired', 'threat', 'sleep', 'userActive'].includes(r.refused)) return { stop: true, result: { nextAt: wctx.now() + OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'отказ: ' + r.refused } };
+      M.view = null;
+      // 'expeditionLimit' = the server's «Вы не можете отправить больше экспедиций.» (fl_no_expedition_slot): its count of the
+      // expedition slots differs from ours — like 'slots', wait for a return
+      if (r && (r.refused === 'slots' || r.refused === 'expeditionLimit')) { closeRound('слоты'); return { stop: true, result: afterRound(wctx, wctx.flights(), r.refused === 'expeditionLimit' ? 'сервер: слотов экспедиций нет' : 'нет слота') }; }
+      // an hourly limit of botcore: the retry when it reopens, not a blind 4-6 min
+      if (r && r.refused === 'limit') { closeRound('лимит'); return { stop: true, result: { nextAt: limitRetryAt(wctx), reason: 'отказ: лимит действий/отправок в час, повтор после его открытия' } }; }
+      if (r && ['stopped', 'notLeader', 'expired', 'threat', 'sleep', 'userActive'].includes(r.refused)) return { stop: true, result: { nextAt: wctx.now() + OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'отказ: ' + r.refused } };
       return { why };
     }
     round.sent++;
     M.stepSent = true;
+    M.view = { originId: o.id, round: round.id, t: wctx.now(), ok: true, ft: viewAfterSend(ft, comp, { expedition: true, t: wctx.now() }) };
+    if (M.view.ft.slots) M.lastSlots = Object.assign({ t: wctx.now() }, M.view.ft.slots);
     const d = r.data || {};
     const arrival = d.arrival || now + ft1.duration * 1000;
     const stayEnd = arrival + Math.round(stayH * 3600) * 1000;
@@ -832,7 +1061,6 @@ window.OGX = window.OGX || {};
     M.lastRun = now;
     let out = { nextAt: now + OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'ожидание' };
     try {
-      await readResults(wctx);
       noteReturns(wctx);
       const cfgSig = cfgSigOf(wctx);
       const gate = M.meta.gate || null;
@@ -856,11 +1084,17 @@ window.OGX = window.OGX || {};
         }
         M.meta.gate = { at: t, nextAt: out.nextAt, reason: out.reason, cfgSig };
       }
-      // results due earlier than the next send
-      for (const x of liveTrips()) {
-        if (x.done || wctx.core('readMessages') === false) continue;
-        if (!x.outcome && x.stayEnd && (x.tries15 || 0) < 3) out.nextAt = Math.min(out.nextAt, Math.max(x.stayEnd + 5000 + (x.tries15 || 0) * 60000, wctx.now() + 2000));
-        else if (x.outcome && !x.amounts && x.back && (x.tries4 || 0) < 3) out.nextAt = Math.min(out.nextAt, Math.max(x.back + 5000 + (x.tries4 || 0) * 60000, wctx.now() + 2000));
+      // the results after the step: its page=fleetTable GET made the server process the events due by then (the reports exist)
+      await readResults(wctx);
+      // results due earlier than the next send: the schedule of resultDue (RESULT_DELAY after the event, retries, the page rule)
+      if (wctx.core('readMessages') !== false) {
+        const t = wctx.now(); const pageAt = lastPageAt();
+        for (const x of liveTrips()) {
+          if (x.done) continue;
+          const d15 = !x.outcome && !x.unread15 && x.stayEnd ? resultDue({ eventAt: x.stayEnd, tries: x.tries15, nextAt: x.next15At, now: t, pageAt }) : null;
+          const d4 = x.outcome !== 'blackHole' && !x.amounts && x.back ? resultDue({ eventAt: x.back, tries: x.tries4, nextAt: x.next4At, now: t, pageAt }) : null;
+          for (const d of [d15, d4]) if (d && d.nextAt) out.nextAt = Math.min(out.nextAt, Math.max(d.nextAt, t + 2000));
+        }
       }
     } finally { await save(); }
     return { nextAt: Math.max(out.nextAt, wctx.now() + 1000), reason: out.reason };
@@ -885,17 +1119,46 @@ window.OGX = window.OGX || {};
   }
   function dmNext(wctx, why, ms = OGX.bot.INTERVALS.m16) { M.dmState = why; return { nextAt: wctx.now() + OGX.bot.randMs(ms), reason: why }; }
 
+  function dmSigOf(wctx, bodies) {
+    return JSON.stringify([!!wctx.dryRun, wctx.cfg('dmHunt') !== false, wctx.cfg('dmTargets') || [], num(wctx.cfg('dmMaxFleets'), 0), num(wctx.cfg('dmShipsPerFleet'), 60),
+      wctx.cfg('expeditions') !== false, num(wctx.core('slotsReserve'), 1), Object.values(bodies || {}).map((b) => String(b.key || b.id) + ':' + (isMoon(b) ? 'm' : 'p')).sort()]);
+  }
+  /** A DM search of ours came home in (since, now]? (also an own mission-11 flight of the flight cache) */
+  function dmReturnedSince(since, now, flights) {
+    for (const x of dmTrips()) if (x.back && x.back > since && x.back <= now) return true;
+    for (const f of flights || []) if (f && f.own && +f.missionType === 11 && +f.arrival > since && +f.arrival <= now) return true;
+    return false;
+  }
   async function dmRun(wctx) {
     if (!OGX.bot.isActive(NAME)) return { nextInMs: OGX.bot.randMs(OGX.bot.INTERVALS.m16), reason: 'off' };
     await load();
     if (wctx.cfg('dmHunt') === false) { M.dmState = 'выключен'; return { nextInMs: OGX.bot.randMs(OGX.bot.INTERVALS.m16), reason: 'поиск ТМ выключен' }; }
     let out;
     try {
-      await dmResults(wctx);
-      out = await dmStep(wctx);
-      // a fleet comes back: its result (and a free «Asteroids» slot) right after the return
       const now = wctx.now();
-      for (const x of dmTrips()) if (!x.done && x.back) out.nextAt = Math.min(out.nextAt, Math.max(x.back + 4000 + num(x.tries) * 60000, now + 2000));
+      // the gate (expoGate): a wake — every bot:fleet-returned of any module — runs the step only when its planned time came, a DM
+      // search of ours returned, the bodies (a new moon) or the settings changed: no fleetTable read and no skip line per wake
+      let bodies = {};
+      try { bodies = await wctx.bodies(); } catch (e) { bodies = {}; }
+      const cfgSig = dmSigOf(wctx, bodies);
+      const gate = M.meta.dmGate || null;
+      const g = expoGate(gate, { now, cfgSig, settingsAt: M.settingsAt, returned: !!gate && dmReturnedSince(num(gate.at), now, wctx.flights()) });
+      if (!g.run) out = { nextAt: g.nextAt, reason: g.reason };
+      else {
+        out = await dmStep(wctx);
+        M.meta.dmGate = { at: wctx.now(), nextAt: out.nextAt, reason: out.reason, cfgSig };
+      }
+      // the results after the step (its page read made the server process the returns due by then)
+      await dmResults(wctx);
+      // a fleet comes back: its result (and a free place) by the result schedule
+      if (wctx.core('readMessages') !== false) {
+        const t = wctx.now(); const pageAt = lastPageAt();
+        for (const x of dmTrips()) {
+          if (x.done || !x.back) continue;
+          const d = resultDue({ eventAt: x.back, tries: x.tries, nextAt: x.nextAt, now: t, pageAt });
+          if (d.nextAt) out.nextAt = Math.min(out.nextAt, Math.max(d.nextAt, t + 2000));
+        }
+      }
     } finally { await save(); }
     return { nextAt: Math.max(out.nextAt, wctx.now() + 1000), reason: out.reason };
   }
@@ -921,9 +1184,17 @@ window.OGX = window.OGX || {};
         if (ok) routes = [{ origin: o, target: t, tkey: coordsOf(t) + ':1', moon: null }];
       }
       if (!routes.length) {
-        wctx.rec('skip', 'Поиск ТМ: нет своей луны (миссия 11 летит только на свою луну и только «Сборщиками ТМ»)', { reason: 'noMoon' });
-        return dmNext(wctx, 'нужна своя луна', [45 * 60000, 75 * 60000]);
+        // no moon: the panel shows «нужна своя луна»; one journal line per PROBE_TTL and the next check after about that long (a new
+        // moon changes the gate's signature through bot:bodies-changed: the step runs at once)
+        if (!(num(M.meta.dmSkipAt) > now - PROBE_TTL)) { M.meta.dmSkipAt = now; wctx.rec('skip', 'Поиск ТМ: нет своей луны (миссия 11 летит только на свою луну и только «Сборщиками ТМ»)', { reason: 'noMoon' }); }
+        return dmNext(wctx, 'нужна своя луна', [PROBE_TTL - 30 * 60000, PROBE_TTL + 30 * 60000]);
       }
+    }
+    // every place taken by our own searches: no page read until the first comes back
+    const flyingAll = dmTrips().filter((x) => !x.done && x.back && x.back > now);
+    if (flyingAll.length >= dmLimit(wctx)) {
+      M.dmState = `в полёте ${flyingAll.length}`;
+      return { nextAt: Math.min(...flyingAll.map((x) => x.back)) + OGX.bot.randMs([3000, 15000]), reason: `все места поиска ТМ заняты (${flyingAll.length}/${dmLimit(wctx)})` };
     }
     const reserve = num(wctx.core('slotsReserve'), 1);
     const perFleet = Math.max(1, num(wctx.cfg('dmShipsPerFleet'), 60));
@@ -931,11 +1202,16 @@ window.OGX = window.OGX || {};
     for (const rt of routes.slice(0, 3)) {
       const o = rt.origin;
       const lock = wctx.locked(o.key);
-      if (lock) { lastWhy = 'угроза'; wctx.rec('skip', `Поиск ТМ с ${o.coords}: тело под угрозой`, { reason: 'threat', body: o.id }); continue; }
-      const ft = await readFleetTable(wctx, o, 'поиск ТМ: сборщики и слоты флота');
+      if (lock) { lastWhy = 'угроза'; wctx.rec('skip', `Поиск ТМ с ${o.coords}: тело под угрозой`, { reason: 'threat', body: o.id }); M.dmView = null; continue; }
+      // the fleets of one round: the view after the last send instead of a page read per fleet (VIEW_MS)
+      // (not after a return of ours since that view: the collectors back home are not in it)
+      const view = M.dmView && !dmReturnedSince(num(M.dmView.t), now, []) ? viewOf(M.dmView, o, now) : null;
+      if (view) wctx.decide(`Сборщики и слоты на ${o.coords} — по снимку после прошлой отправки`, { why: 'в одном раунде поиска ТМ страница флота читается один раз', inputs: { bodyId: o.id, ageMs: now - M.dmView.t }, chosen: 'view', alternatives: ['read.fleetTable'] });
+      const ft = view || await readFleetTable(wctx, o, 'поиск ТМ: сборщики и слоты флота');
       if (!ft || !ft.slots) { lastWhy = 'слоты неизвестны'; continue; }
       const have = num(ft.ships[DM_SHIP]);
-      const flying = dmTrips().filter((x) => !x.done && x.origin === o.id).reduce((a, x) => a + num(x.n), 0);
+      // away = searches not back yet; a returned one is home (in «have») or scrapped by its find, even before its message is read
+      const flying = dmTrips().filter((x) => !x.done && x.origin === o.id && !(x.back && x.back <= now)).reduce((a, x) => a + num(x.n), 0);
       // keep the stock: order collectors on the launch planet (cheap; the shipyard queue decides when they are ready)
       await dmBuild(wctx, o, have + flying);
       if (have < 1) { lastWhy = 'нет сборщиков (220) на ' + o.coords; continue; }
@@ -959,7 +1235,7 @@ window.OGX = window.OGX || {};
         continue;
       }
       const alloc = allocateCollectors(have, k, perFleet);
-      return dmSend(wctx, o, rt, alloc[0], { k, have, slots: ft.slots, alloc });
+      return dmSend(wctx, o, rt, alloc[0], { k, have, slots: ft.slots, alloc, ft });
     }
     return dmNext(wctx, lastWhy, OGX.bot.INTERVALS.m6);
   }
@@ -974,7 +1250,8 @@ window.OGX = window.OGX || {};
     const keep = Math.max(0, num(wctx.cfg('keepProbes'), 2000));
     const target = probeTarget({ stock: num(wctx.cfg('probeStock'), 0), slots: num(ft.slots && ft.slots.expedition && ft.slots.expedition.max), perSlot, keep });
     const home = num(ft.ships && ft.ships[210]);
-    const flying = liveTrips().filter((x) => !x.done && x.origin === o.id && x.ships).reduce((a, x) => a + num(x.ships[210]), 0);
+    const fl = probesFlying(o, ft, now, wctx.flights());
+    const flying = fl.total;
     const want = target - home - flying;
     if (want < 1) return;
     M.meta.probeBuildAt = Object.assign({}, M.meta.probeBuildAt || {}, { [o.id]: now });
@@ -989,8 +1266,45 @@ window.OGX = window.OGX || {};
       inputs: { target, home, flying, perSlot, keep, cost, avail }, chosen: 'build.units 210 x' + n, alternatives: [] });
     const r = await wctx.act({ type: 'build.units', bodyId: o.id, prio: 'build', params: { units: { 210: n } }, why: 'Экспедиции: постройка зондов на ' + o.coords });
     if (!(r && r.ok && !r.dry)) wctx.release(resId);
-    wctx.rec('probe-build', (r && r.dry ? '[пробный режим] ' : '') + `Зонды ×${n} заказаны на ${o.coords} (держать ${target}, дома ${home}, в полёте ${flying})` + (r && !r.ok && !r.dry ? ': ' + (r.message || r.error || r.refused) : ''),
-      { body: o.id, n, target, home, flying, ok: !!(r && r.ok), dry: !!(r && r.dry) });
+    wctx.rec('probe-build', (r && r.dry ? '[пробный режим] ' : '') + `Зонды ×${n} заказаны на ${o.coords} (держать ${target}, дома ${home}, в полёте ${flying}${fl.spy ? ', из них в шпионаже ' + fl.spy : ''})` + (r && !r.ok && !r.dry ? ': ' + (r.message || r.error || r.refused) : ''),
+      { body: o.id, n, target, home, flying, flyingExpo: fl.expo, flyingSpy: fl.spy, ok: !!(r && r.ok), dry: !!(r && r.dry) });
+  }
+  /** Probes of a fleet row (page=fleetTable: ships by name) or of a flight-cache entry (ships by id). */
+  function probesIn(f) {
+    if (!f) return 0;
+    const ships = f.ships || {};
+    if (ships[210] !== undefined) return num(ships[210]);
+    let n = 0; let named = false;
+    for (const [name, k] of Object.entries(ships)) {
+      named = true;
+      let id = null;
+      try { if (OGX.catalog && typeof OGX.catalog.idByName === 'function') id = OGX.catalog.idByName(name); } catch (e) { id = null; }
+      if (+id === 210 || (id === null && /зонд|probe|sonde|spion/i.test(String(name)))) n += num(k);
+    }
+    // no ship list (a hidden tooltip): a spy fleet is probes only
+    if (!named && +f.missionId === 6) return num(f.amount);
+    return n;
+  }
+  /** Probes of body o away from home: our live expeditions until their (possibly corrected) return or the mission-15 rows of the fleet
+   *  table / flight cache, whichever is larger (a closed or unknown trip still shows there), plus the body's spy flights (mission 6). */
+  function probesFlying(o, ft, now, flights) {
+    const mine = liveTrips().filter((x) => !x.done && x.origin === o.id && x.ships && x.outcome !== 'blackHole' && (!x.back || x.back > now)).reduce((a, x) => a + num(x.ships[210]), 0);
+    const rows = ((ft && ft.flights) || []).filter((f) => f && (!f.origin || !o.coords || f.origin === o.coords));
+    // the flight cache lists a fleet up to three times (outward, hold end, return): one entry per fleet, its home = the origin of the
+    // outward leg or the destination of the return leg
+    const seen = new Set();
+    const cache = (flights || []).filter((f) => {
+      if (!f || !f.own) return false;
+      const home = f.returnFlight ? f.destKey : f.originKey;
+      if (home && o.key && home !== o.key) return false;
+      const id = f.realMissionId !== undefined && f.realMissionId !== null ? f.realMissionId : f.fleetId;
+      if (id !== undefined && id !== null) { if (seen.has(String(id))) return false; seen.add(String(id)); }
+      return true;
+    });
+    const sum = (list, mission) => list.filter((f) => +(f.missionId !== undefined ? f.missionId : f.missionType) === mission).reduce((a, f) => a + probesIn(f), 0);
+    const expo = Math.max(mine, sum(rows, 15), sum(cache, 15));
+    const spy = Math.max(sum(rows, 6), sum(cache, 6));
+    return { total: expo + spy, expo, spy };
   }
   /** Max DM searches at once: the setting, else the limit learnt from a refusal, else 5. */
   function dmLimit(wctx) {
@@ -1019,7 +1333,7 @@ window.OGX = window.OGX || {};
     wctx.rec('dm-build', (r && r.dry ? '[пробный режим] ' : '') + `Сборщики ТМ ×${n} заказаны на ${o.coords}` + (r && !r.ok && !r.dry ? ': ' + (r.message || r.error || r.refused) : ''), { body: o.id, n, ok: !!(r && r.ok), dry: !!(r && r.dry) });
   }
 
-  async function dmSend(wctx, o, rt, n, { k, have, slots, alloc }) {
+  async function dmSend(wctx, o, rt, n, { k, have, slots, alloc, ft }) {
     const now = wctx.now();
     const ships = { [DM_SHIP]: n };
     const tcoords = coordsOf(rt.target);
@@ -1059,7 +1373,10 @@ window.OGX = window.OGX || {};
     if (!r || !r.ok) {
       const why = r ? r.message || r.error || r.refused : 'нет ответа';
       wctx.rec('skip', `Поиск ТМ не отправлен: ${why}`, { reason: r ? r.refused || r.error : 'none', origin: o.id, n });
-      if (r && /expedition|экспедиц|slot|слот/i.test(String(r.message || ''))) {
+      M.dmView = null;
+      if (r && r.refused === 'limit') return { nextAt: limitRetryAt(wctx), reason: 'отказ: лимит действий/отправок в час, повтор после его открытия' };
+      // botcore's 'expeditionLimit' («Вы не можете отправить больше экспедиций.» = fl_no_expedition_slot, also for mission 11)
+      if (r && (r.refused === 'expeditionLimit' || /expedition|экспедиц|slot|слот/i.test(String(r.message || '')))) {
         // fl_no_expedition_slot: the server limit (max_dm_missions) is the number flying now
         const flying = dmTrips().filter((x) => !x.done && x.back && x.back > wctx.now()).length;
         if (!(num(wctx.cfg('dmMaxFleets'), 0) > 0) && flying > 0) { M.meta.dmLimit = flying; wctx.rec('dm-limit', `Поиск ТМ: сервер разрешает ${flying} флотов одновременно`, { limit: flying }); }
@@ -1076,6 +1393,7 @@ window.OGX = window.OGX || {};
       arrival, stayEnd: arrival + Math.round(stayH * 3600) * 1000, back: d.back || backAt, done: false, found: null };
     wctx.rec('dm-sent', `Поиск ТМ ${d.fleetId || '?'}: ${n}×220 с ${o.coords} на [${tcoords}], шанс ≈ ${Math.round(chance * 100)} %, возврат ${fmtT(d.back || backAt)}`,
       { fleetId: d.fleetId, origin: o.id, n, target: tcoords, chance, back: d.back || backAt, verified: !!r.verified });
+    M.dmView = ft ? { originId: o.id, t: wctx.now(), ok: true, ft: viewAfterSend(ft, ships, { expedition: false, t: wctx.now() }) } : null;
     const flyingNow = dmTrips().filter((x) => !x.done).length;
     if (flyingNow > num(M.meta.dmLimit, 0) && num(M.meta.dmLimit, 0) > 0) M.meta.dmLimit = flyingNow;
     M.dmState = `в полёте ${flyingNow}`;
@@ -1083,44 +1401,68 @@ window.OGX = window.OGX || {};
     return { nextAt: Math.min(...dmTrips().filter((x) => !x.done && x.back).map((x) => x.back)) + OGX.bot.randMs([3000, 15000]), reason: 'все места поиска ТМ заняты' };
   }
 
-  /** Result of a returned DM search: the return message (cat 4) at the return time carries the DM, no DM = nothing found. */
+  /** Result of a returned DM search: the return message at the return time carries the DM (cat 4; Xterium files it under the
+   *  expeditions, cat 15), no DM = nothing found. Read by the result schedule (resultDue: after a full-page request, retries 30 s × n,
+   *  RESULT_TRIES within RESULT_WINDOW; one trip never «flying» forever); the category that answered is learnt (M.meta.dmResultCat), the
+   *  other one is tried only on the first and the last read, not twice per try. */
   async function dmResults(wctx) {
     const now = wctx.now();
-    const due = dmTrips().filter((x) => !x.done && x.back && now > x.back + 3000);
-    if (!due.length) return;
-    if (wctx.core('readMessages') === false) { for (const x of due) { x.done = true; x.found = null; } return; }
-    wctx.decide('Читаю сообщения о возврате поиска ТМ', { why: 'найденная ТМ приходит в сообщении о возврате (кат. 4)', inputs: { fleets: due.map((x) => x.fleetId) }, chosen: 'read.messages cat 4', alternatives: [] });
-    const notBefore = Math.max(...due.map((x) => num(x.back))) + 1000;
-    const r = await readMessages(wctx, 4, 'Поиск ТМ: возврат флота', { fresh: due.some((x) => num(x.tries) > 0), notBefore });
-    for (const x of due) x.tries = num(x.tries) + 1;
-    let items = [];
-    if (r && r.ok && r.data && r.data.doc) { try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; } }
-    // Xterium files the return of mission 11 under expeditions (cat 15): look there when cat 4 has nothing at the return time
-    if (!due.every((x) => items.some((m) => m && m.ts && Math.abs(m.ts - x.back) <= 5000))) {
-      const r15 = await readMessages(wctx, 15, 'Поиск ТМ: отчёты', { fresh: due.some((x) => num(x.tries) > 1), notBefore });
-      if (r15 && r15.ok && r15.data && r15.data.doc) { try { items = items.concat(OGX.messages.parse.list(r15.data.doc) || []); } catch (e) { /* keep cat 4 */ } }
-    }
-    const used = new Set(dmTrips().map((x) => x.msg).filter(Boolean).concat(Object.values(M.trips).map((x) => x.msg4).filter(Boolean)));
+    if (wctx.core('readMessages') === false) { for (const x of dmTrips()) if (!x.done && x.back && now > x.back + 60000) { x.done = true; x.found = null; } return; }
     M.dmStats = M.dmStats || { trips: 0, wins: 0, dm: 0, ships: 0, lostShips: 0 };
-    for (const x of due.sort((a, b) => a.back - b.back)) {
-      const hit = items.filter((m) => m && m.ts && !used.has(m.id) && Math.abs(m.ts - x.back) <= 5000).sort((a, b) => Math.abs(a.ts - x.back) - Math.abs(b.ts - x.back))
-        .map((m) => {
-          let text = ''; let parsed = null;
-          try { text = (m.li && m.li.nextElementSibling ? m.li.nextElementSibling.textContent : m.li ? m.li.textContent : '') || ''; } catch (e) { text = ''; }
-          try { const fm = OGX.messages.parse.fleetMessage(m.li); const raw = fm && fm.gz && fm.gz.resources; if (raw && Number.isFinite(+raw[921])) parsed = +raw[921]; } catch (e) { parsed = null; }
-          const fromText = dmFromText(text);
-          return { m, dm: Math.max(num(parsed), num(fromText)), text,
-            // an expedition (mission 15) return lists «delivers Metal …» — never ours [UPSTREAM sys_expe_back_home vs sys_expe_back_home_with_dm]
-            foreign: /доставил груз|deliver/i.test(text) };
-        }).filter((x) => !x.foreign)[0];
-      if (!hit && num(x.tries) < 3) continue;
-      x.done = true;
-      if (hit) { used.add(hit.m.id); x.msg = hit.m.id; }
-      x.found = hit ? num(hit.dm) : 0;
+    const pageAt = lastPageAt();
+    const plan = []; let force = null;
+    for (const x of dmTrips()) {
+      if (x.done || !x.back) continue;
+      const d = resultDue({ eventAt: x.back, tries: x.tries, nextAt: x.nextAt, now, pageAt });
+      if (d.giveUp) {
+        // counted apart (not as a loss): the win rate of the hunt stays honest
+        x.done = true; x.found = null; x.unread = true;
+        M.dmStats.unread = num(M.dmStats.unread) + 1;
+        wctx.rec('dm-result', `Поиск ТМ ${x.fleetId || '?'} вернулся: сообщение не найдено за ${Math.round(RESULT_WINDOW / 60000)} мин (чтений: ${num(x.tries)})`,
+          { fleetId: x.fleetId, n: x.n, found: null, unread: true, tries: num(x.tries), chance: x.chance, messageId: null, stats: Object.assign({}, M.dmStats) });
+      } else if (d.read) { plan.push(x); if (d.force && !force) force = x; }
+    }
+    if (!plan.length) return;
+    if (force) await forcePage(wctx, force, 'сообщение о возврате появляется только после обычного (не ajax) запроса к серверу');
+    const first = num(M.meta.dmResultCat) === 15 ? 15 : 4;
+    const other = first === 4 ? 15 : 4;
+    wctx.decide('Читаю сообщения о возврате поиска ТМ', { why: `найденная ТМ приходит в сообщении о возврате (кат. ${first})`, inputs: { fleets: plan.map((x) => x.fleetId), pageAt }, chosen: 'read.messages cat ' + first, alternatives: ['cat ' + other] });
+    const notBefore = Math.max(...plan.map((x) => num(x.back))) + 1000;
+    const fresh = plan.some((x) => num(x.tries) > 0);
+    const used = new Set(dmTrips().map((x) => x.msg).filter(Boolean).concat(Object.values(M.trips).map((x) => x.msg4).filter(Boolean)));
+    const rows = [];
+    const readCat = async (cat) => {
+      const r = await readMessages(wctx, cat, cat === 4 ? 'Поиск ТМ: возврат флота' : 'Поиск ТМ: отчёты', { fresh, notBefore });
+      let items = [];
+      if (r && r.ok && r.data && r.data.doc) { try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; } }
+      for (const m of items) {
+        if (!m || !m.ts || used.has(m.id)) continue;
+        let text = ''; let parsed = null;
+        try { text = (m.li && m.li.nextElementSibling ? m.li.nextElementSibling.textContent : m.li ? m.li.textContent : '') || ''; } catch (e) { text = ''; }
+        try { const fm = OGX.messages.parse.fleetMessage(m.li); const raw = fm && fm.gz && fm.gz.resources; if (raw && Number.isFinite(+raw[921])) parsed = +raw[921]; } catch (e) { parsed = null; }
+        // an expedition (mission 15) return lists «delivers Metal …» — never ours [UPSTREAM sys_expe_back_home vs sys_expe_back_home_with_dm]
+        if (/доставил груз|deliver/i.test(text)) continue;
+        rows.push({ id: m.id, ts: m.ts, cat, dm: Math.max(num(parsed), num(dmFromText(text))), text });
+      }
+    };
+    await readCat(first);
+    const t = wctx.now();
+    const cands = dmTrips().filter((x) => !x.done && x.back && x.back <= t + MATCH_MS).sort((a, b) => a.back - b.back);
+    let hits = assignByTime(rows, cands, (x) => x.back);
+    // the other category: when the learnt one answered nothing, on the first read of a trip and on its last
+    if (plan.some((x) => !hits.has(x)) && (!M.meta.dmResultCat || plan.some((x) => !hits.has(x) && (num(x.tries) === 0 || num(x.tries) >= RESULT_TRIES - 1)))) {
+      await readCat(other);
+      hits = assignByTime(rows, cands, (x) => x.back);
+    }
+    const pageNow = lastPageAt();
+    for (const x of cands) if (!hits.has(x) && (plan.includes(x) || missedAt(x.back, t, pageNow))) { x.tries = num(x.tries) + 1; x.nextAt = wctx.now() + RESULT_RETRY * x.tries; }
+    for (const [x, hit] of hits) {
+      x.done = true; x.msg = hit.id; x.found = num(hit.dm);
+      M.meta.dmResultCat = hit.cat;
       M.dmStats.trips += 1; M.dmStats.ships += num(x.n);
       if (x.found > 0) { M.dmStats.wins += 1; M.dmStats.dm += x.found; M.dmStats.lostShips += num(x.n); }
-      wctx.rec('dm-result', `Поиск ТМ ${x.fleetId || '?'} вернулся: ${x.found > 0 ? 'найдено ' + fmtN(x.found) + ' ТМ (сборщики израсходованы)' : hit ? 'ничего не найдено' : 'сообщение не найдено'}`,
-        { fleetId: x.fleetId, n: x.n, found: x.found, chance: x.chance, messageId: hit ? hit.m.id : null, stats: Object.assign({}, M.dmStats) });
+      wctx.rec('dm-result', `Поиск ТМ ${x.fleetId || '?'} вернулся: ${x.found > 0 ? 'найдено ' + fmtN(x.found) + ' ТМ (сборщики израсходованы)' : 'ничего не найдено'}`,
+        { fleetId: x.fleetId, n: x.n, found: x.found, chance: x.chance, messageId: hit.id, cat: hit.cat, stats: Object.assign({}, M.dmStats) });
     }
   }
 
@@ -1162,18 +1504,46 @@ window.OGX = window.OGX || {};
     const now = wctx.now();
     M.lastColRun = now;
     let out;
-    try { out = await colonizeStep(wctx); } finally { await save(); }
+    try {
+      // the gate (expoGate): a wake runs the step only when its planned time came, a colonizer of ours arrived, the bodies or the
+      // settings changed — not on every fleet return of the other modules
+      let bodies = {};
+      try { bodies = await wctx.bodies(); } catch (e) { bodies = {}; }
+      const cfgSig = colSigOf(wctx, bodies);
+      const gate = M.meta.colGate || null;
+      const arrived = !!gate && Object.values(M.colo || {}).some((c) => !c.dry && !c.done && c.arrival && c.arrival > num(gate.at) && c.arrival <= now);
+      const g = expoGate(gate, { now, cfgSig, settingsAt: M.settingsAt, returned: arrived });
+      if (!g.run) out = { nextAt: g.nextAt, reason: g.reason };
+      else {
+        out = await colonizeStep(wctx);
+        // a colonizer of ours in flight or just landed: the step again right after its arrival (its result needs the overview)
+        for (const c of Object.values(M.colo || {})) if (!c.dry && !c.done && c.arrival) out.nextAt = Math.min(out.nextAt, Math.max(c.arrival + 4000, wctx.now() + 30000));
+        M.meta.colGate = { at: wctx.now(), nextAt: out.nextAt, reason: out.reason, cfgSig };
+      }
+    } finally { await save(); }
     return { nextAt: Math.max(out.nextAt, wctx.now() + 1000), reason: out.reason };
+  }
+  function colSigOf(wctx, bodies) {
+    return JSON.stringify([!!wctx.dryRun, !!wctx.cfg('colonize'), wctx.cfg('colonizeTargets') || [], wctx.cfg('origins') || [], !!wctx.cfg('buildColonizers'),
+      Object.values(bodies || {}).map((b) => String(b.key || b.id)).sort()]);
   }
   function colNext(wctx, why) { return { nextAt: wctx.now() + OGX.bot.randMs([30 * 60000, 60 * 60000]), reason: why }; }
 
   async function colonizeStep(wctx) {
     const now = wctx.now();
     const targets = parseJson(wctx.cfg('colonizeTargets'), []);
+    const pending = Object.values(M.colo || {}).some((c) => !c.dry && !c.done);
+    // an empty list and no colonizer in flight: nothing to read (the overview GET per run was the whole cost of the default «on»);
+    // the skip is journaled once per 6 h
+    if ((!Array.isArray(targets) || !targets.length) && !pending) {
+      M.colState = 'нет целей';
+      if (!(num(M.meta.colSkipAt) > now - 6 * H)) { M.meta.colSkipAt = now; wctx.rec('skip', 'Колонизация: список целей пуст', { reason: 'noTargets' }); }
+      return colNext(wctx, 'нет целей');
+    }
     const pc = await planetCount(wctx, 'свободные места под планеты и проверка прилетевших колонизаторов');
     // results of colonizers that arrived
     await colonizeResults(wctx, pc);
-    if (!Array.isArray(targets) || !targets.length) { M.colState = 'нет целей'; wctx.rec('skip', 'Колонизация: список целей пуст', { reason: 'noTargets' }); return colNext(wctx, 'нет целей'); }
+    if (!Array.isArray(targets) || !targets.length) { M.colState = 'нет целей'; return colNext(wctx, 'нет целей'); }
     if (!pc || !pc.count) { M.colState = 'число планет неизвестно'; wctx.rec('skip', 'Колонизация: число планет «[x / y]» не прочитано', { reason: 'count' }); return colNext(wctx, 'число планет неизвестно'); }
     const flights = wctx.flights();
     const inFlight = new Set();
@@ -1393,6 +1763,7 @@ window.OGX = window.OGX || {};
           h('td', null, (100 * (s.outcomes[k] || 0) / s.trips).toFixed(1) + ' %'), h('td', null, k === 'nothing' ? '33.3 %' : k === 'unknown' ? '—' : '11.1 %'))))));
       const ok = s.finds.filter((f) => f.ratio !== null && Math.abs(f.ratio - 1) < 1e-9).length;
       container.appendChild(h('div', { class: 'ogx-b-bot-muted' }, `Находки ресурсов: ${s.finds.length}, из них равны min(трюм, Σ(M+C)): ${ok}. Найдено ${fmtN(s.found.metal)} / ${fmtN(s.found.crystal)} / ${fmtN(s.found.deuterium)}, ТМ ${fmtN(s.dm)}.`));
+      if (num(s.unread15) || num(s.unread4)) container.appendChild(h('div', { class: 'ogx-b-bot-muted ogx-b-expo-unread' }, `Без сообщения (не найдено за 15 мин): отчётов ${num(s.unread15)}, возвратов ${num(s.unread4)}.`));
     }
     // learn mode: DM per hour of every tried expedition fleet
     const ls = learnSummary();
@@ -1409,7 +1780,7 @@ window.OGX = window.OGX || {};
     const dmFly = dmTrips().filter((x) => !x.done);
     container.appendChild(h('div', { class: 'ogx-b-expo-dm' }, OGX.settings.get('botexpo.dmHunt') === false ? 'Выключен.'
       : (M.dmState || 'ещё не запускался') + (dmFly.length ? `; в полёте ${dmFly.length}: ` + dmFly.map((x) => `${x.n}×220 (возврат ${left(x.back)})`).join(', ') : '')));
-    if (ds && ds.trips) container.appendChild(h('div', { class: 'ogx-b-bot-muted' }, `Полётов ${ds.trips}, удачных ${ds.wins} (${Math.round(100 * ds.wins / ds.trips)} %), найдено ${fmtN(ds.dm)} ТМ, израсходовано сборщиков ${fmtN(ds.lostShips)}.`));
+    if (ds && ds.trips) container.appendChild(h('div', { class: 'ogx-b-bot-muted' }, `Полётов ${ds.trips}, удачных ${ds.wins} (${Math.round(100 * ds.wins / ds.trips)} %), найдено ${fmtN(ds.dm)} ТМ, израсходовано сборщиков ${fmtN(ds.lostShips)}.` + (num(ds.unread) ? ` Без сообщения: ${num(ds.unread)}.` : '')));
     const g = dmGain(M.meta.dmSamples, now);
     container.appendChild(h('div', { class: 'ogx-b-bot-muted ogx-b-expo-dmgain' }, g && g.hours >= 0.5 ? `Прирост ТМ по счётчику в шапке: +${fmtN(g.gain)} за ${g.hours.toFixed(1)} ч (≈ ${fmtN(g.perHour || 0)} в час; все источники).` : 'Прирост ТМ в час появится после часа работы бота.'));
     container.appendChild(h('div', { class: 'ogx-b-bot-h' }, 'Колонизация'));
@@ -1436,7 +1807,8 @@ window.OGX = window.OGX || {};
       try { OGX.bus.on('settings:changed', (p) => { if (p && /^(botcore|botexpo)\./.test(String(p.key || ''))) M.settingsAt = OGX.time.serverNow(); }); } catch (e) { /* no bus */ }
       M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'fleet', startJitter: [20000, 50000], wakeOn: ['bot:fleet-returned'], run: expoRun });
       M.dmHandle = OGX.bot.register({ id: DM_ID, module: NAME, prio: 'fleet', startJitter: [25000, 55000], wakeOn: ['bot:bodies-changed', 'bot:fleet-returned'], run: dmRun });
-      M.colHandle = OGX.bot.register({ id: COL_ID, module: NAME, prio: 'fleet', startJitter: [20000, 50000], wakeOn: ['bot:bodies-changed', 'bot:fleet-returned'], run: colonizeRun });
+      // colonizer arrivals are known from M.colo (nextAt = arrival + 4 s): no wake per fleet return
+      M.colHandle = OGX.bot.register({ id: COL_ID, module: NAME, prio: 'fleet', startJitter: [20000, 50000], wakeOn: ['bot:bodies-changed'], run: colonizeRun });
       OGX.bot.panelSection(NAME, renderPanel);
       // the panel copy in non-leader tabs follows the stored state
       const follower = () => { try { return !OGX.bot.status().leader; } catch (e) { return false; } };
@@ -1451,5 +1823,6 @@ window.OGX = window.OGX || {};
   });
 
   // Pure helpers for tests (tests/gz-bot-mod-botexpo.test.js); not an API for other modules.
-  OGX.botExpo = { version: '1.1.2', _lib: { probeTarget, learnCandidates, learnPick, learnAdd, learnRate, dmChance, allocateCollectors, dmExpected, dmFromText, dmGain, dmRoutes, readMessages, idleDelay, expoGate, allowedPosition, pickStay, slotsToSend, dmShip, resourcesFleet, outcomeOf, emptyStats, addOutcome, addAmounts, colonizeCandidates, colonizePayload, coordsOf, expoTarget }, _M: M, SETTINGS };
+  OGX.botExpo = { version: '1.1.2', _lib: { probeTarget, learnCandidates, learnPick, learnAdd, learnRate, dmChance, allocateCollectors, dmExpected, dmFromText, dmGain, dmRoutes, readMessages, idleDelay, expoGate, allowedPosition, pickStay, slotsToSend, dmShip, dmComposition, resourcesFleet, outcomeOf, emptyStats, addOutcome, addAmounts, colonizeCandidates, colonizePayload, coordsOf, expoTarget,
+    resultDue, assignByTime, shiftedBack, noteFleetRows, viewAfterSend, probesIn, probesFlying, limitRetryAt }, _M: M, SETTINGS };
 })(window.OGX);

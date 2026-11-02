@@ -120,11 +120,23 @@
       async extras(host) {
         const a = await all();
         const out = { settings: {}, bot: {} };
+        // 'secret' settings (passwords) never leave the browser: every page context lists their keys (22-diag.js context())
+        const secret = new Set();
+        for (const [k, v] of Object.entries(a)) if (/\|diag\.ctx$/.test(k) && v && Array.isArray(v.secretKeys)) for (const s of v.secretKeys) secret.add(String(s));
+        const stripSecrets = (v) => {
+          if (!v || typeof v !== 'object' || Array.isArray(v) || !secret.size) return v;
+          const o = {};
+          for (const [ns, x] of Object.entries(v)) {
+            if (ns.includes('.')) { if (!secret.has(ns)) o[ns] = x; continue; }
+            if (x && typeof x === 'object' && !Array.isArray(x)) { o[ns] = {}; for (const [kk, y] of Object.entries(x)) if (!secret.has(ns + '.' + kk)) o[ns][kk] = y; } else o[ns] = x;
+          }
+          return o;
+        };
         for (const [k, v] of Object.entries(a)) {
           const m = /^([^|]*)\|([^|]*)\|(.*)$/.exec(k);
           if (!m) continue;
           if (m[1] === '*' && /^suite\./.test(m[3])) out.settings[k] = v;
-          else if (host && m[1] === host && m[3] === 'settings') out.settings[k] = v;
+          else if (host && m[1] === host && m[3] === 'settings') out.settings[k] = stripSecrets(v);
           else if ((!host || m[1] === host) && BOT_KEY.test(m[3])) out.bot[k] = v;
         }
         return out;

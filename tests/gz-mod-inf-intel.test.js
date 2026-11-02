@@ -291,15 +291,18 @@ T.test('spy: «Рейд» sends Battle Transporters (217) only, even with an old
     const btns = await p.evaluate(() => [...document.querySelectorAll('.ogx-i-spy-badge .ogx-i-spy-b-raid')].map((b) => ({ disabled: b.disabled, title: b.title })));
     assert.ok(btns.length >= 1, 'raid buttons');
     let clicked = 0;
+    let dialogs = 0;
     for (let i = 0; i < btns.length; i++) {
       if (btns[i].disabled) { assert.doesNotMatch(btns[i].title, /Бол\. трансп|Мал\. трансп/, btns[i].title); continue; }
       await p.evaluate((k) => document.querySelectorAll('.ogx-i-spy-badge .ogx-i-spy-b-raid')[k].click(), i);
       clicked++;
       await p.waitForTimeout(400);
-      if (await p.$('.ogx-modal-overlay .ogx-modal')) { await answerModal(p, true); await p.waitForTimeout(300); }
+      if (await p.$('.ogx-modal-overlay .ogx-modal')) { dialogs++; await answerModal(p, true); await p.waitForTimeout(300); }
     }
     const sent = await env.evalOgx(p, () => window.__sent);
     assert.equal(sent.length, clicked, 'one dispatch per click');
+    // both real reports are risky (defence / fleet not seen): the confirmRisky dialog comes first, with core.confirmActions at its default (on)
+    assert.equal(dialogs, clicked, 'risk dialog before every raid, independent of core.confirmActions');
     assert.ok(clicked >= 1, 'at least one raid could be sent');
     for (const r of sent) { assert.deepEqual(Object.keys(r.ships), ['217'], JSON.stringify(r.ships)); assert.equal(r.mission, 1); }
   } finally { await env.close(); }
@@ -611,6 +614,39 @@ T.test('spy: older reports of the same target are removed automatically (planet 
     let ids = [];
     for (let i = 0; i < 30; i++) { ids = Object.keys((await env.get('spy.reports')).items).sort(); if (ids.length === 3) break; await p.waitForTimeout(150); }
     assert.deepEqual(ids, ['102', '103', '105']);
+    // The pass over the whole store ran once and left its stamp. A duplicate written behind the module's back (another
+    // writer, an import) is NOT chased on the next page load within the hour — onReport keeps its own writes clean — and
+    // is removed again once the stamp is older than an hour.
+    const st1 = await env.get('spy.dedupedAt');
+    assert.ok(st1 >= now && st1 <= Date.now(), 'dedupedAt stamp stored in its own key: ' + st1);
+    assert.equal((await env.get('spy.reports')).dedupedAt, undefined, 'no stamp inside the reports store');
+    const dup = rep(106, [2, 63, 7], 1, now - 1800000);     // older than 103
+    await env.evalOgx(p, async (d) => { await OGX.storage.update('spy.reports', (o) => { o.items[106] = d; return o; }); await OGX.storage.flush(); }, dup);
+    const p2 = await env.game('overview');
+    await p2.waitForTimeout(600);
+    const st2 = await env.get('spy.reports');
+    assert.deepEqual(Object.keys(st2.items).sort(), ['102', '103', '105', '106'], 'no second pass within the hour');
+    assert.equal(await env.get('spy.dedupedAt'), st1, 'stamp untouched');
+    await env.evalOgx(p2, async () => { await OGX.storage.set('spy.dedupedAt', Date.now() - 2 * 3600000); await OGX.storage.flush(); });
+    const p3 = await env.game('overview');
+    let ids3 = [];
+    for (let i = 0; i < 30; i++) { ids3 = Object.keys((await env.get('spy.reports')).items).sort(); if (ids3.length === 3) break; await p3.waitForTimeout(150); }
+    assert.deepEqual(ids3, ['102', '103', '105'], 'stale stamp -> the pass runs again');
+    const st3 = await env.get('spy.dedupedAt');
+    assert.ok(st3 > st1, 'stamp refreshed');
+    // a stale stamp over a clean store: only the stamp is written, the big reports key is left alone (no change in other tabs)
+    await env.evalOgx(p3, async () => {
+      window.__repWrites = 0;
+      OGX.storage.subscribe('spy.reports', () => { window.__repWrites++; });
+      await OGX.storage.set('spy.dedupedAt', Date.now() - 2 * 3600000); await OGX.storage.flush();
+    });
+    const p4 = await env.game('overview', { newPage: true });
+    for (let i = 0; i < 30; i++) { if ((await env.get('spy.dedupedAt')) > st3) break; await p4.waitForTimeout(150); }
+    assert.ok((await env.get('spy.dedupedAt')) > st3, 'stamp refreshed by the clean pass');
+    await p4.waitForTimeout(300);
+    assert.equal(await env.evalOgx(p3, () => window.__repWrites), 0, 'clean pass: reports not rewritten');
+    const dedupeEvents = await env.evalOgx(p3, () => OGX.diag.recent({ s: 'B', k: 'spy' }).filter((e) => e.w === 'dedupe').map((e) => e.d));
+    assert.deepEqual(dedupeEvents.map((d) => d.removed), [1], 'the pass of this page is journaled (1 removed), the stamped page loads are silent');
     assert.deepEqual(env.ogxErrors(), []);
   } finally { await env.close(); }
 });

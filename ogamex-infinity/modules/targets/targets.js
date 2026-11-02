@@ -70,10 +70,11 @@
     async init(ctx) {
       const t = new Targets(ctx);
       ctx._targets = t;
-      await t.start();
+      await t.start();             // start() publishes the instance (OGX.targets) once the marks are loaded
     },
     dispose(ctx) {
       if (ctx._targets) ctx._targets.dispose();
+      if (instance === ctx._targets) instance = null;
     },
   });
 
@@ -194,6 +195,7 @@
     return prune(out);
   }
   let mergerRegistered = false;
+  let instance = null;           // the module on this page (OGX.targets read API below)
 
   // ------------------------------------------------------------------ module
   class Targets {
@@ -230,6 +232,10 @@
       ctx.css(CSS);
       if (!mergerRegistered) { OGX.storage.registerMerger(NAME + '.' + KEY, mergeMarks); mergerRegistered = true; }
       this.data = normalize(await ctx.store.get(KEY, null));
+      // OGX.targets answers from this instance only now that the marks are loaded (before: active() false, «unknown», not
+      // «no marks»), and a consumer that caches marks gets one event for the initial load
+      instance = this;
+      try { OGX.bus.emit('targets:changed', { local: false, initial: true, planets: Object.keys(this.data.planets).length, players: Object.keys(this.data.players).length }); } catch (e) { /* ignore */ }
       this.updateColorCss();
 
       // other tabs / imports (local writes already refresh through mutate)
@@ -367,6 +373,8 @@
       return this.mutate((d) => { delete d.planets[key]; }, 'remove');
     }
     changed(local) {
+      // other modules (the bot's farm filter): re-read OGX.targets.marks() / markOf() on this event
+      try { OGX.bus.emit('targets:changed', { local: !!local, planets: Object.keys(this.data.planets).length, players: Object.keys(this.data.players).length }); } catch (e) { /* ignore */ }
       this.updateBadge();
       OGX.safe(() => this.refreshGalaxy(), 'targets:refreshGalaxy')();
       if (OGX.page.is('highscore')) OGX.safe(() => this.applyHighscore(), 'targets:hs')();
@@ -1277,4 +1285,37 @@ input.${P}f-text, input.${P}q { padding: 3px 6px; }
 
   // exposed for tests and other modules (read-only helpers)
   OGX.targetsLib = { normalize, mergeMarks, pkey, parsePkey };
+
+  // ------------------------------------------------------------------ read API for other modules (the bot's farm filter)
+  // Every answer is a deep copy of the normalized store, never the live object. Without the module on this page (switched
+  // off, not started yet) active() is false and everything is empty / null: a consumer must read that as «marks unknown», not
+  // «no marks». active() turns true only after the marks are loaded, with one OGX.bus 'targets:changed' { initial: true }.
+  // Changes: OGX.bus 'targets:changed' { local, planets, players } (own writes, other tabs, imports, colour settings).
+  const copy = (v) => JSON.parse(JSON.stringify(v));
+  const liveData = () => (instance ? instance.data : emptyData());
+  OGX.targets = {
+    active: () => !!instance,
+    /** All marks: { v: 1, planets: { 'g:s:p:type': { color, note, isTarget, playerId, playerName, planetName, updatedAt, addedAt, … } },
+     *  players: { '<id>' | 'n:<name>': { color, note, name, updatedAt } } }. color: an id of colors() or null. */
+    marks: () => copy(liveData()),
+    /** The mark of one body. coords: 'g:s:p' | '[g:s:p]' | [g, s, p] | { galaxy, system, position }; type: 1 / 'planet' (default) or 3 / 'moon'. null when unmarked. */
+    markOf(coords, type) {
+      const c = normCoords(coords);
+      const e = c ? liveData().planets[pkey(c, type)] : null;
+      return e ? copy(e) : null;
+    },
+    /** The mark of a player by numeric id or by name (GALAXYZ rows without an id are stored as 'n:<name>'). null when unmarked. */
+    playerMark(idOrName) {
+      const d = liveData();
+      const sKey = String(idOrName === undefined || idOrName === null ? '' : idOrName).trim();
+      if (!sKey) return null;
+      const k = /^n:/.test(sKey) ? sKey : (playerKey(sKey, null) || playerKey(null, sKey));
+      const e = (k && d.players[k]) || d.players['n:' + sKey] || null;
+      return e ? copy(e) : null;
+    },
+    /** The colour palette of the marks: [{ id, label, color }] (setting markColors, DEFAULT_COLORS when unset). */
+    colors() {
+      try { const v = instance ? instance.ctx.settings.get('markColors') : null; return copy(Array.isArray(v) && v.length ? v : DEFAULT_COLORS); } catch (e) { return copy(DEFAULT_COLORS); }
+    },
+  };
 })(window.OGX);

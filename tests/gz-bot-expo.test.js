@@ -16,7 +16,8 @@ const COL6 = 254103;   // [2:68:6] 20 light cargo, 10 probes
 const OTHER_BOT = ['botsave', 'botfarm', 'botdebris', 'botbuild'];
 const FAST = { 'botcore.minGapMs': 300, 'botcore.maxGapMs': 500, 'botcore.userIdleSec': 0 };
 const LIVE = { 'botcore.master': true, 'botcore.dryRun': false, 'botexpo.on': true };
-const QUICK = { 'botexpo.mode': 'dm', 'botexpo.expoProbes': 1, 'botexpo.probeBuild': false, 'botexpo.dmHunt': false, 'botexpo.betweenMinSec': 1, 'botexpo.betweenMaxSec': 2, 'botexpo.afterReturnMinSec': 1, 'botexpo.afterReturnMaxSec': 3 };
+// keepProbes 0: the scenarios have 50 probes at home and mode dm never takes a probe out of the spying reserve (default 2000)
+const QUICK = { 'botexpo.mode': 'dm', 'botexpo.expoProbes': 1, 'botexpo.keepProbes': 0, 'botexpo.probeBuild': false, 'botexpo.dmHunt': false, 'botexpo.betweenMinSec': 1, 'botexpo.betweenMaxSec': 2, 'botexpo.afterReturnMinSec': 1, 'botexpo.afterReturnMaxSec': 3 };
 const settings = (extra = {}) => Object.assign(Object.fromEntries(OTHER_BOT.map((m) => [m + '.enabled', false])), FAST, QUICK, extra);
 
 function spec(name, mutate) {
@@ -49,7 +50,7 @@ const reqs = (env, since = env.launchedAt) => env.server.requests.filter((r) => 
 /** server wall clock 'HH:MM' (UTC+2) of a unix time */
 const wall = (unix) => { const d = new Date((unix + 7200) * 1000); return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0'); };
 
-T.test('mode dm, 2 expedition slots: two 1-probe expeditions to g:s:16 (mission 15, 100 %), staytime option chosen by its hour text, slots re-read before each fleet, EV journaled', async () => {
+T.test('mode dm, 2 expedition slots: two 1-probe expeditions to g:s:16 (mission 15, 100 %), staytime option chosen by its hour text, one fleetTable GET per fleet (the send\'s own step 0, no re-read before the second), EV journaled', async () => {
   const env = await B.launchBot({ world: spec('botexpo-dm'), settings: settings(LIVE) });
   try {
     await leader(env);
@@ -68,11 +69,11 @@ T.test('mode dm, 2 expedition slots: two 1-probe expeditions to g:s:16 (mission 
     // the probe (steps 1-2 without step 3) offered mission 15 and the staytime texts
     const probe = (await env.journal({ kind: 'botcore:action-done' })).find((e) => e.d && e.d.module === 'botexpo' && e.d.type === 'probe.target');
     assert.ok(probe, 'probe.target before the first send');
-    // slots re-read: a page=fleetTable GET of the origin between the two step-3 posts
+    // no slot re-read between the fleets: the only page=fleetTable GET between the two step-3 posts is the second send's own step 0
     const step3 = reqs(env).filter((r) => r.method === 'POST' && /fleetStep3/i.test(r.page || ''));
     assert.equal(step3.length, 2);
     const ftBetween = reqs(env).filter((r) => r.method === 'GET' && /^fleetTable$/i.test(r.page || '') && r.t > step3[0].t && r.t < step3[1].t);
-    assert.ok(ftBetween.length >= 1, 'fleetTable read between the two fleets');
+    assert.equal(ftBetween.length, 1, 'exactly one fleetTable GET between the two fleets (the send\'s step 0): ' + ftBetween.length);
     const gap = (s[1].t - s[0].t);
     assert.ok(gap >= 1, 'a pause between the fleets (' + gap + ' s)');
     const ev = await env.waitJournal('botexpo:expo-ev', { timeoutMs: 5000 });
@@ -230,3 +231,81 @@ T.test('slot reserve: 2 fleet slots, reserve 1 -> one expedition only, then «р
     await clean(env, 'reserve');
   } finally { await env.close(); }
 }, { timeout: 240000 });
+
+const msgViews = (env, cat) => reqs(env).filter((r) => /^messages$/i.test(r.page || '') && String(r.mode || '').toLowerCase() === 'view' && (cat === undefined || String((r.query || {}).messcat) === String(cat)));
+
+T.test('GALAXYZ ajax lag + wake storm: the server processes fleet events only on non-ajax requests and another own fleet lands every 5 s; every expedition still gets its report and its return (one messages read per round and category, no trip closed as unread)', async () => {
+  const env = await B.launchBot({ world: spec('botexpo-cycle', (s) => {
+    s.fleetHandlerOnAjax = false;
+    s.expeditionOutcomes = [{ type: 'darkMatter', amount: 250 }, { type: 'nothing' }, { type: 'darkMatter', amount: 100 }, { type: 'nothing' }];
+    s.player.research['108'] = 30;   // fleet slots for the storm
+    // 20 own deploy fleets landing on the colony every 5 s from +25 s: a bot:fleet-returned wake each (botfarm-like)
+    s.flights = Array.from({ length: 20 }, (_, i) => ({ fromBodyId: HOME, mission: 4, ships: { 202: 1 }, to: '2:68:6', duration: 600, arrivalIn: 25 + 5 * i, state: 'out' }));
+  }), settings: settings(Object.assign({}, LIVE, { 'botexpo.stayHours': 0.01 })) });
+  try {
+    await leader(env);
+    await env.until(() => expoSends(env).length >= 2, { timeoutMs: 120000, label: 'first round' });
+    const ids = expoSends(env).slice(0, 2).map((x) => x.fleetId);
+    // both reports and both returns are read although the bot's own message reads (ajax=1) never process the fleet events
+    await env.until(async () => { const ev = await env.journal({ kind: 'botexpo:expo-result' }); return ids.every((id) => ev.some((e) => e.d && e.d.fleetId === id && e.d.amounts)); }, { timeoutMs: 240000, label: 'both returns read' });
+    const ev = await env.journal({ kind: 'botexpo:expo-result' });
+    for (const id of ids) {
+      const rep = ev.find((e) => e.d && e.d.fleetId === id && e.d.outcome && !e.d.amounts);
+      assert.ok(rep, 'report of ' + id + ': ' + JSON.stringify(ev.map((e) => e.d)));
+      assert.ok(['darkMatter', 'nothing'].includes(rep.d.outcome), rep.d.outcome);
+    }
+    assert.equal(ev.filter((e) => e.d && e.d.unread).length, 0, 'no trip closed as unread');
+    assert.ok(ev.some((e) => e.d && e.d.amounts && e.d.amounts.darkMatter === 250), 'the 250 DM return read: ' + JSON.stringify(ev.map((e) => e.d && e.d.amounts)));
+    // the storm happened: deploy fleets landed (one every 5 s from +25 s) while the round was out
+    const left = env.world.snapshot().fleets.filter((f) => f.mission === 4 && f.state !== 'done').length;
+    assert.ok(20 - left >= 5, 'deploy fleets landed during the round: ' + (20 - left));
+    // reads: one cat-15 and one cat-4 read per round (+ at most two retries); each after a full-page request made after the event
+    const rounds = Math.ceil(expoSends(env).length / 2);
+    const v15 = msgViews(env, 15); const v4 = msgViews(env, 4);
+    assert.ok(v15.length <= rounds + 2 && v4.length <= rounds + 2, `messages reads cat 15 ${v15.length}, cat 4 ${v4.length} for ${rounds} rounds`);
+    const stayEnds = env.world.log.events.filter((e) => e.kind === 'expedition').map((e) => e.t * 1000);
+    for (const v of v15) {
+      const pageBefore = reqs(env).filter((r) => r.t < v.t && r.method === 'GET' && String((r.query || {}).ajax || '') !== '1' && !/^messages$/i.test(r.page || '')).pop();
+      const ev15 = stayEnds.filter((t) => t <= v.t).pop();
+      if (ev15 && pageBefore) assert.ok(pageBefore.t >= ev15, `cat-15 read at ${v.t}: last full page ${pageBefore.t} after the stay end ${ev15}`);
+    }
+    let stats = null;
+    await env.until(async () => { stats = await env.evalOgx(await env.page(), async () => OGX.storage.get('botexpo.stats', null)); return stats && stats.trips >= 2 && stats.dm >= 250; }, { timeoutMs: 20000, label: 'stats saved' });
+    assert.ok(!stats.unread15 && !stats.unread4, 'nothing unread: ' + JSON.stringify(stats));
+    await decisionsFirst(env, 'ajax-lag');
+    await clean(env, 'ajax-lag');
+  } finally { await env.close(); }
+}, { timeout: 480000 });
+
+T.test('«сдвиг времени»: the delayed expedition returns one stay later (upstream end_stay + back leg + stay + 2 s); the bot moves its return there, reads the return message after the real return and keeps the trip with its amounts', async () => {
+  const env = await B.launchBot({ world: spec('botexpo-cycle', (s) => { s.fleetHandlerOnAjax = false; s.expeditionOutcomes = [{ type: 'time' }, { type: 'nothing' }, { type: 'nothing' }, { type: 'nothing' }]; }),
+    settings: settings(Object.assign({}, LIVE, { 'botexpo.stayHours': 0.01 })) });
+  try {
+    const Wd = env.world;
+    await leader(env);
+    await env.until(() => expoSends(env).length >= 2, { timeoutMs: 120000, label: 'first round' });
+    const first = expoSends(env).slice(0, 2);
+    const rep = await env.waitJournal('botexpo:expo-result', { pred: (e) => e.d && e.d.outcome === 'time', timeoutMs: 150000 });
+    const id = rep.d.fleetId;
+    const sentA = first.find((x) => x.fleetId === id);
+    assert.ok(sentA, 'the delayed trip is one of the first round: ' + JSON.stringify(first));
+    const dec = await env.waitJournal('botexpo:decision', { pred: (e) => e.d && e.d.inputs && e.d.inputs.fleetId === id && /задержка/.test(e.w || ''), timeoutMs: 10000 });
+    let ret = null;
+    await env.until(() => { ret = Wd.log.events.find((e) => e.kind === 'return' && e.fleetId === id); return !!ret; }, { timeoutMs: 180000, label: 'delayed return' });
+    assert.ok(ret.t >= sentA.back + 30, 'the real return is one stay (36 s) after the planned one: ' + (ret.t - sentA.back));
+    // the first estimate (upstream formula or the fleet page row) is within the formula's 2..5 s; the fleet page row then sets the exact time
+    assert.ok(Math.abs(dec.d.chosen.back - ret.t * 1000) <= 8000, `corrected return ${dec.d.chosen.back} vs real ${ret.t * 1000} (planned ${sentA.back * 1000})`);
+    const back = await env.waitJournal('botexpo:expo-result', { pred: (e) => e.d && e.d.fleetId === id && e.d.amounts, timeoutMs: 150000 });
+    assert.ok(back.t >= ret.t * 1000, 'read after the real return');
+    assert.equal(back.d.outcome, 'time');
+    const trip = await env.evalOgx(await env.page(), async (fid) => Object.values(OGX.botExpo._M.trips).find((t) => String(t.fleetId) === String(fid)) || null, id);
+    assert.ok(trip && trip.done && trip.amounts, JSON.stringify(trip));
+    assert.equal(trip.timeShift, 'delay');
+    assert.ok(Math.abs(trip.back - ret.t * 1000) <= 2000, `the trip's return = the real one: ${trip.back} vs ${ret.t * 1000}`);
+    assert.ok(!trip.unread4, 'not closed without its amounts');
+    const rounds = Math.ceil(expoSends(env).length / 2);
+    assert.ok(msgViews(env, 4).length <= rounds + 3, 'no cat-4 reads wasted at the planned return: ' + msgViews(env, 4).length);
+    await decisionsFirst(env, 'time-shift');
+    await clean(env, 'time-shift');
+  } finally { await env.close(); }
+}, { timeout: 480000 });

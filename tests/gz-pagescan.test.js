@@ -96,12 +96,18 @@ T.test('«Скан страниц»: tab in «Логи», full scan of 4 planets
     }
     assert.match(files[`${dirs[1]}/buildings.html`], /^<!-- ogx-pagescan url=\S+page=buildings\S*cp=254103/, 'header with the requested URL');
     assert.match(files[`${dirs[0]}/shipyard-fleet.html`], /data-technology="217"/, 'saved page body');
-    for (const g of ['imperium', 'techtree', 'premium', 'officier', 'GiveBonus']) assert.ok(names.includes(`00-global/${g}.html`), g);
+    for (const g of ['imperium', 'techtree', 'premium', 'officier', 'settings']) assert.ok(names.includes(`00-global/${g}.html`), g);
+    // privacy: private pages are neither requested nor saved, no e-mail address in any saved file
+    const PRIVATE = ['notes', 'ticket', 'buddyList', 'GiveBonus', 'satinal'];
+    assert.deepEqual(reqs.filter((r) => PRIVATE.some((pg) => new RegExp('[?&]page=' + pg + '(&|$)').test(r))), [], 'no private page requested');
+    assert.deepEqual(names.filter((n) => PRIVATE.some((pg) => n.includes('/' + pg))), [], 'no private page saved');
+    for (const [n, data] of Object.entries(files)) assert.doesNotMatch(data, /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/, 'e-mail in ' + n);
     for (const d of ['TechnologyDetailsAjax-1', 'ResearchDetailsAjax-199', 'ShipDetailsAjax-217', 'ShipDetailsAjax-503']) assert.ok(names.includes(`details/${d}.json`), d);
     assert.deepEqual(JSON.parse(files['details/ShipDetailsAjax-217.json']), { technology: '217', page: 'ShipDetailsAjax' });
     assert.ok(names.some((n) => n.startsWith('01-discovered/statistics')), 'discovered statistics&range=');
     assert.ok(!names.some((n) => n.startsWith('messages/')), 'no mail by default');
     const index = JSON.parse(files['index.json']);
+    assert.deepEqual(index.privacy.excludedPages, PRIVATE);
     assert.equal(index.tool, 'ogx-pagescan'); assert.equal(index.startCp, '254102'); assert.equal(index.stopped, false);
     assert.match(files['log.txt'], /planets: \[/);
     // requests: GET only, nothing that acts, no mail, every per-planet page with its cp, planet restored at the end
@@ -130,4 +136,27 @@ T.test('discoverLinks keeps only safe read-only game.php links (node, no browser
     'game.php?page=messages&mode=view&messcat=0', 'game.php?page=ShipDetailsAjax&technology=1', 'game.php?page=overview&cp=254103',
     'game.php?page=premium&id=5'].map((u) => `<a href="${u}">x</a>`).join('');
   assert.deepEqual([...S.discoverLinks(html, new Set(['page=overview']))].sort(), ['page=alliance&mode=memberList', 'page=statistics&range=194']);
+});
+
+T.test('scrub empties e-mail / password values and textarea, replaces e-mail addresses; private pages are never discovered (node)', async () => {
+  const vm = require('vm');
+  const src = fs.readFileSync(path.join(ROOT, 'shared', 'core', '24-pagescan.js'), 'utf8');
+  const ctx = { window: { OGX: {} }, URLSearchParams, console };
+  vm.runInNewContext(src, ctx);
+  const S = ctx.window.OGX.pagescan;
+  const html = '<input name="username" value="John"><input name="email" type="text" value="john@example.com">'
+    + '<input type="text" value="perm@example.org" name="permanentEmail"><input type="password" name="newpass" value="hunter2">'
+    + '<input type=hidden name=db_email value=x@y.zz><input name="spycount" value="3"><textarea name="sig">secret text</textarea><p>mail: a.b+c@sub.example.co.uk</p>';
+  const out = S.scrub(html);
+  assert.doesNotMatch(out, /@|hunter2|secret text/, out);
+  assert.match(out, /name="email" type="text" value=""/);
+  assert.match(out, /value="" name="permanentEmail"/);
+  assert.match(out, /name="newpass" value=""/);
+  assert.match(out, /name=db_email value=""/);
+  assert.match(out, /name="username" value="John"/);
+  assert.match(out, /name="spycount" value="3"/);
+  assert.match(out, /<textarea name="sig"><\/textarea>/);
+  assert.match(out, /mail: <email>/);
+  const links = ['notes', 'ticket', 'buddyList', 'GiveBonus', 'satinal', 'chat', 'records'].map((pg) => `<a href="game.php?page=${pg}">x</a>`).join('');
+  assert.deepEqual([...S.discoverLinks(links)], ['page=records']);
 });

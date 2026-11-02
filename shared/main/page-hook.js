@@ -2,7 +2,9 @@
  * fetch/XHR of the game with method, url, status, duration, size, error, JSON key schema and small safe fields — never the
  * body) and command bridge (ogx:call/ogx:reply).
  * Owner: core. Idempotent (ogx:hook-probe; window.__ogxHook only on game pages): with both extensions installed the first one serves both.
- * Harmless elsewhere: fetch/XHR are patched only once the page is a game page (patchWhenGame); other sites keep native ones.
+ * Cheap elsewhere: fetch/XHR are patched only once the page is a game page (patchWhenGame), the command bridge listens only
+ * then (ensureMarker), and the detection watches the direct children of <head> until <body> starts: another site costs a
+ * handful of childList records and two querySelector calls per record batch, no subtree observer, no timers.
  * GALAXYZ (ogamex.eu, meta generator "GALAXYZ ..." + /game.php): relays the game's jQuery XHRs of whitelisted
  * ?page=[&mode=] (details panels, fleetAjax, messages view/action, checkTarget); page-world method gz.globals.
  * All CustomEvent details are strings (objects do not cross worlds in Firefox). */
@@ -24,6 +26,8 @@
     if (marked) return;
     marked = true;
     try { Object.defineProperty(window, '__ogxHook', { value: { version: VERSION }, configurable: false, enumerable: false }); } catch (e) { try { window.__ogxHook = { version: VERSION }; } catch (x) { /* ignore */ } }
+    // the command bridge exists on game pages only (onCall below); other sites have no ogx:call listener at all
+    try { document.addEventListener('ogx:call', onCall); } catch (e) { /* ignore */ }
   }
 
   const WHITELIST = [
@@ -245,10 +249,13 @@
   }
   }
 
-  /** Patches fetch/XHR once the page is known to be a game page. At document_start the metas are usually not parsed yet: a
-   * MutationObserver re-checks on every parsed node until DOMContentLoaded. Its records are delivered at the microtask
-   * checkpoint the parser performs before running each parser-inserted script, so the game's own scripts (after the
-   * generator / ogame-version meta in <head>) already see the patched fetch/XHR. */
+  /** Patches fetch/XHR once the page is known to be a game page. At document_start the metas are usually not parsed yet.
+   * The detection metas (generator / ogame-version) live in <head>, so a MutationObserver watches the document (for <html>),
+   * <html> (for <head> and <body>) and <head> itself — direct children only, no subtree — and re-checks per record batch.
+   * It stops at the first sign of <body> (the head is parsed by then: a page that still does not look like a game is left
+   * alone, nothing observed any more) or at DOMContentLoaded, which also covers a meta outside <head>. Records are delivered
+   * at the microtask checkpoint the parser performs before running each parser-inserted script, so the game's own scripts
+   * (after the meta in <head>) already see the patched fetch/XHR. */
   let patched = false;
   function patchNow() {
     if (patched) return;
@@ -260,8 +267,18 @@
     try {
       if (isGamePage()) { patchNow(); return; }
       if (document.readyState !== 'loading' || typeof MutationObserver !== 'function') return;
-      const mo = new MutationObserver(function () { if (isGamePage()) { mo.disconnect(); patchNow(); } });
-      mo.observe(document, { childList: true, subtree: true });
+      let root = null; let head = null;
+      const watch = () => {
+        if (!root && document.documentElement) { root = document.documentElement; mo.observe(root, { childList: true }); }
+        if (!head && document.head) { head = document.head; mo.observe(head, { childList: true }); }
+      };
+      const mo = new MutationObserver(function () {
+        if (isGamePage()) { mo.disconnect(); patchNow(); return; }
+        if (document.body) { mo.disconnect(); return; }
+        watch();
+      });
+      mo.observe(document, { childList: true });
+      watch();
       document.addEventListener('DOMContentLoaded', function () { mo.disconnect(); if (isGamePage()) patchNow(); }, { once: true });
     } catch (e) { /* ignore */ }
   })();
@@ -421,8 +438,9 @@
     return out;
   }
 
-  // Commands are answered on game pages only (checked lazily per call: the isolated world calls after the DOM is parsed).
-  document.addEventListener('ogx:call', function (ev) {
+  // Commands are answered on game pages only: the listener is installed by ensureMarker() once the page is known to be one
+  // (the isolated world calls after the DOM is parsed); the check per call stays as a guard.
+  function onCall(ev) {
     if (!isGamePage()) return;
     let msg;
     try { msg = JSON.parse(ev.detail); } catch (e) { return; }
@@ -436,5 +454,5 @@
       reply = { id: msg.id, ok: false, error: String(e && e.message || e) };
     }
     try { document.dispatchEvent(new CustomEvent('ogx:reply', { detail: JSON.stringify(reply) })); } catch (e) { /* ignore */ }
-  });
+  }
 })();

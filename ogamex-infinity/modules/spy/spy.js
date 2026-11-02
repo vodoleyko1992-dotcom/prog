@@ -56,6 +56,7 @@
   const CAP_REPORTS = 500;
   const CAP_RAIDS = 200;
   const HOUR = 3600000;
+  const DEDUPE_EVERY = HOUR;       // the start-time duplicate pass over the whole report store, at most this often
   const RAID_SHIP = 217;   // «Улучшенный транспорт» (Battle Transporter): the only raid / loot carrier
   const DEFAULT_SIM = 'https://trashsim.oplanet.eu/ru#prefill=';
   const CLASS_NUM = { miner: 1, warrior: 2, explorer: 3, none: 0 }; // TrashSim / OGame API class ids
@@ -92,7 +93,7 @@
       minLootToShow: { type: 'int', default: 0, min: 0, label: 'Показывать доклады с добычей от' },
       simUrl: { type: 'string', default: DEFAULT_SIM, label: 'Адрес симулятора боя', hint: 'Данные добавляются в конец или вместо {prefill}. В GALAXYZ открывается симулятор игры (TrashSim не знает кораблей 2Moons)' },
       showBadges: { type: 'bool', default: true, label: 'Значки с добычей в списке сообщений' },
-      confirmRisky: { type: 'bool', default: true, label: 'Спрашивать перед рейдом на цель с флотом/обороной (если подтверждения выключены)' },
+      confirmRisky: { type: 'bool', default: true, label: 'Спрашивать перед рейдом на цель с флотом / обороной или с невидимыми в докладе данными', hint: 'Независимо от общего подтверждения отправки флота' },
       filter: { type: 'string', default: '', hidden: true, label: 'Фильтр таблицы' },
     },
     async init(ctx) {
@@ -178,10 +179,7 @@
     const ctx = this.ctx;
     ctx.css(CSS);
     this.reports = migrateReports(await ctx.store.get('reports', null));
-    // reports stored before keepLatestOnly existed (or while it was off): drop the older duplicates once at start
-    if (this.set('keepLatestOnly') !== false && dedupeReports(JSON.parse(JSON.stringify(this.reports)))) {
-      this.reports = await ctx.store.update('reports', (old) => { const o = migrateReports(old); dedupeReports(o); return o; }, null);
-    }
+    await this.dedupeStore(false);
     this.raids = migrateRaids(await ctx.store.get('raids', null));
     await this.loadEnv();
     try { this.spycount = isGz() ? await OGX.api.gzSpyCount() : null; } catch (e) { this.spycount = null; }
@@ -195,7 +193,10 @@
     if (isGz()) this.offs.push(OGX.storage.subscribe('gz.spycount', (v) => { this.spycount = v && +v.value > 0 ? v : null; this.refreshSoon(); }, { scope: 'server' }));
     this.offs.push(ctx.store.subscribe('raids', (v) => { this.raids = migrateRaids(v); this.refreshSoon(); }));
     this.offs.push(OGX.state.onChange(['bodies', 'shipStats', 'research', 'player', 'server'], async () => { await this.loadEnv(); this.refreshSoon(); }));
-    this.offs.push(ctx.settings.onChange((key) => { if (!/filter$/.test(String(key))) this.refreshSoon(); }));
+    this.offs.push(ctx.settings.onChange((key) => {
+      if (/keepLatestOnly$/.test(String(key)) && this.set('keepLatestOnly') !== false) OGX.safe(() => this.dedupeStore(true), NAME + ':dedupe')();
+      if (!/filter$/.test(String(key))) this.refreshSoon();
+    }));
 
     // Reports opened in the game's own detail overlay (page XHR GET /ajax/messages/<id>).
     // GALAXYZ has no per-message endpoint (the report is in the list row; rows the game inserts are seen by messages.watch).
@@ -206,6 +207,26 @@
       this.offs.push(OGX.messages.watch((item) => this.onItem(item)));
     }
     rec('B', 'init', { reports: Object.keys(this.reports.items).length, page: OGX.page.info().name });
+  };
+
+  /** Reports stored before keepLatestOnly existed (or while it was off): drops the older duplicates. A pass over the whole
+   * store (up to CAP_REPORTS full reports) — not on every page load: at most once per DEDUPE_EVERY per account. The stamp lives
+   * in its own small key 'dedupedAt', and the big 'reports' key is written only when the pass really removed something (a write
+   * of it reaches every open tab); every later write (onReport → pruneReports) keeps duplicates out on its own.
+   * force = the setting was just switched on. */
+  Spy.prototype.dedupeStore = async function (force) {
+    if (this.set('keepLatestOnly') === false) return 0;
+    const nowMs = Date.now();
+    const stamp = +(await this.ctx.store.get('dedupedAt', 0)) || 0;
+    if (!force && nowMs - stamp < DEDUPE_EVERY && stamp < nowMs + HOUR) return 0;
+    let removed = 0;
+    // a dry run on a shallow copy (dedupeReports only deletes entries of items) decides whether the store is written at all
+    if (dedupeReports({ items: Object.assign({}, this.reports.items) }) > 0) {
+      this.reports = await this.ctx.store.update('reports', (old) => { const o = migrateReports(old); removed = dedupeReports(o); delete o.dedupedAt; return o; }, null);
+    }
+    await this.ctx.store.set('dedupedAt', nowMs);
+    if (removed > 0) rec('B', 'dedupe', { removed, left: Object.keys(this.reports.items).length, force: !!force });
+    return removed;
   };
 
   Spy.prototype.stop = function () {
@@ -536,11 +557,10 @@
     const d = this.derive(r);
     rec('U', 'raid', { id, coords: d.tc, type: d.target && d.target.type, n: d.n, ship: d.cs });
     if (!d.canRaid) { OGX.dom.toast(d.reason || 'Рейд невозможен', { type: 'warn' }); return; }
-    let confirmOn = true;
-    try { confirmOn = OGX.settings.get('core.confirmActions') !== false; } catch (e) { confirmOn = true; }
+    // the risk dialog applies whatever core.confirmActions says (the core dialog lists ships and speed, never the target's defence)
     if (d.flags.risky) {
       const what = [d.flags.hasFleet && 'флот', d.flags.hasDefense && 'оборона', (d.flags.unknownFleet || d.flags.unknownDefense) && 'неизвестные данные'].filter(Boolean).join(', ');
-      if (!confirmOn && this.set('confirmRisky')) {
+      if (this.set('confirmRisky') !== false) {
         const ok = await OGX.dom.confirm(`У цели ${OGX.fmt.coords(d.tc, d.target.type)}: ${what}. Транспорты могут быть уничтожены. Отправить рейд?`, { okLabel: 'Отправить', danger: true, title: 'Рейд' });
         rec('U', 'raid:risk-confirm', { id, ok });
         if (!ok) return;

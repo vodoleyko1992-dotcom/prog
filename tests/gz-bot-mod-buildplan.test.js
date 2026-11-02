@@ -627,3 +627,227 @@ T.test('queue depth + fields: queued items count once (Σ built levels + queue),
   assert.ok(a && a.step.id === 33, 'the last field: terraformer, got ' + (a && a.step.id));
   assert.equal(v[1].fieldsUsed, built, 'the real view keeps Σ built levels');
 });
+
+// ---------------------------------------------------------------------------------------------- independent audit 2026-11-02
+T.test('audit botbuild-1: astrophysics for expeditions past the planet cap ranks after the techs the stage needs; a level that adds no slot is priced as the whole way to the next slot', () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib;
+  const ctx1 = { stage: L.stageAt(1), tc: L.tacticCfg({}), irnTarget: 0 };   // S1 research targets 132 15 / 131 18 / 133 18
+  const ctx3 = { stage: L.stageAt(3), tc: L.tacticCfg({}), irnTarget: 0 };   // S3: 23 / 23 / 23
+  const mc = (id, l) => { const c = sb.OGX.calc.cost(id, l); return c.metal + c.crystal; };
+  const ids = (o) => o.map((x) => x.id + ':' + x.level + '[' + x.sub[0] + ']').join(' ');
+  // John 2026-11-02: techs 20/20/20 (above S1), astrophysics 18 (4 slots, the next slot at 25): 131-133 L21 first (tier 3 by price),
+  // astrophysics priced as the 7 levels up to L25 (not the cheap L19 alone, which put it first in 0.3.2 for good)
+  let o = L.researchOrder({ 124: 18, 131: 20, 132: 20, 133: 20 }, ctx1, true, true);
+  const a = o.find((x) => x.id === 124);
+  assert.ok(a && a.level === 19 && a.sub[0] === 3, 'tier 3: ' + J(a && a.sub));
+  let path = 0; for (let l = 19; l <= 25; l++) path += mc(124, l);
+  assert.ok(Math.abs(a.sub[1] - path) < 1, 'priced as the way to the next slot: ' + a.sub[1] + ' vs ' + path);
+  assert.ok([131, 132, 133].includes(o[0].id) && o[o.length - 1].id === 124, 'production techs first, astrophysics last: ' + ids(o));
+  assert.match(a.why, /следующий слот на уровне 25/);
+  assert.deepEqual(J([a.astro.slots, a.astro.nextSlot, a.astro.slotNow, a.astro.tier]), [4, 25, false, 3]);
+  // the techs the stage still needs (tier 2) always go first
+  o = L.researchOrder({ 124: 18, 131: 10, 132: 10, 133: 10 }, ctx1, true, true);
+  assert.equal(o.findIndex((x) => x.id === 124), 3, 'after the three stage techs: ' + ids(o));
+  // the very next level adds a slot (24 -> 25) and costs no more than a step the stage still needs (S3: 133 23) -> tier 2, priced as that level
+  o = L.researchOrder({ 124: 24, 131: 20, 132: 20, 133: 20 }, ctx3, true, true);
+  const s = o.find((x) => x.id === 124);
+  assert.equal(s.sub[0], 2, J(s)); assert.ok(Math.abs(s.sub[1] - mc(124, 25)) < 1); assert.equal(s.astro.slotNow, true);
+  assert.match(s.why, /даёт слот экспедиций \(4 → 5\), не дороже техов этапа S3/);
+  assert.ok(o.indexOf(s) > 0 && o.indexOf(s) === 3, 'still after the cheaper stage techs (price order inside tier 2): ' + ids(o));
+  // ... but tier 3 when the slot level is dearer than the stage's steps (S1 targets cost ~3e8, astrophysics 25 costs 8e9)
+  o = L.researchOrder({ 124: 24, 131: 17, 132: 14, 133: 17 }, ctx1, true, true);
+  assert.equal(o.find((x) => x.id === 124).sub[0], 3, 'dearer than the stage steps: tier 3 ' + ids(o));
+  assert.match(o.find((x) => x.id === 124).why, /дороже техов этапа S1/);
+  // nothing below target: a slot level competes by price with the techs above target
+  o = L.researchOrder({ 124: 24, 131: 20, 132: 20, 133: 20 }, ctx1, true, true);
+  assert.equal(o.find((x) => x.id === 124).sub[0], 3);
+  // expeditions off / cap not reached: unchanged
+  assert.ok(!L.researchOrder({ 124: 18, 131: 20, 132: 20, 133: 20 }, ctx1, true, false).some((x) => x.id === 124), 'expo off: no astrophysics at the cap');
+  assert.equal(L.researchOrder({ 124: 18, 131: 20, 132: 20, 133: 20 }, ctx1, false, true)[0].id, 124, 'cap not reached: astrophysics first');
+  // the planner: the research order goes to a production tech, the candidate label and a note carry the reasoning
+  const v = empire(sb, { a: BUILT, b: BUILT });
+  const out = sb.OGX.botBuild.plan(Object.assign(input(sb, v, { research: Object.assign({}, BR, { 124: 18, 131: 20, 132: 20, 133: 20 }), astroCapped: true }), { expoOn: true }));
+  const n = out.notes.find((x) => x.event === 'research');
+  assert.ok(n && /следующий слот на уровне 25/.test(n.what) && n.data.nextSlot === 25, J(out.notes.map((x) => x.what)));
+  const c = out.candidates.find((x) => x.item === 124);
+  assert.ok(c && /слот/.test(c.label), c && c.label);
+  assert.ok([131, 132, 133].includes(researchAct(out).step.id), 'a production tech is ordered: ' + researchAct(out).cand.label);
+});
+
+T.test('audit (lab planet): the research planet is the highest lab, ties by the lowest id — the same whatever the (shuffled) planet order', () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib;
+  const mk = () => empire(sb, { a: Object.assign({}, BUILT, { 31: 22 }), b: BUILT });   // main and colony A both lab 22
+  for (const order of [[MAIN, COL_A, COL_B], [COL_A, MAIN, COL_B], [COL_B, COL_A, MAIN]]) {
+    const v = mk();
+    const out = sb.OGX.botBuild.plan(Object.assign(input(sb, v, { research: BR, astroCapped: true }), { order }));
+    assert.equal(out.lab, MAIN, 'order ' + J(order) + ': lab planet = the lowest id among the lab-22 planets');
+    const r = out.actions.concat(out.waits).find((x) => x.step.kind === 'research');
+    assert.ok(r && r.step.bodyId === MAIN, 'the research is paid by / ordered on that planet');
+  }
+  // a higher lab wins regardless of the order
+  for (const order of [[MAIN, COL_A, COL_B], [COL_B, COL_A, MAIN]]) {
+    const v = empire(sb, { a: Object.assign({}, BUILT, { 31: 23 }), b: BUILT });
+    assert.equal(sb.OGX.botBuild.plan(Object.assign(input(sb, v, { research: BR, astroCapped: true }), { order })).lab, COL_A);
+  }
+  assert.equal(L.labPlanetOf([{ id: 9, levels: { 31: 5 } }, { id: 3, levels: { 31: 5 } }, { id: 4, levels: { 31: 5 }, isMoon: true }]).id, 3);
+  assert.equal(L.labPlanetOf([{ id: 9, levels: { 31: 5 } }, { id: 3, levels: { 31: 4 } }]).id, 9);
+  // the long-term plan uses the same planet
+  const lt = ltp(sb, mk(), { research: BR, astroCapped: true });
+  assert.ok(lt.research.path.every((s) => s.kind === 'research' || /2:68:5/.test(s.label)), J(lt.research.path.map((s) => s.label)));
+});
+
+T.test('audit botbuild-2: a research the lab planet saves for no longer freezes its surplus mines — the same par_tol test as for the stage mines; delivery needs stay in stock only on planets that can ship (217)', () => {
+  const sb = sandbox();
+  const C = sb.OGX.calc;
+  const S = { 1: 46, 2: 46, 3: 42, 14: 10, 15: 10, 21: 14, 22: 30, 23: 30, 24: 30, 31: 22 };   // above S1 (45/45/41): surplus mines
+  const research = Object.assign({}, BR, { 124: 34, 131: 20, 132: 20, 133: 20 });
+  const c35 = C.cost(124, 35);   // astrophysics 35 (tier 1: the cap is not reached): 7.3e11 / 1.47e12 / 7.3e11 — the lab planet waits for crystal
+  const mk = (crystalWaitH) => {
+    const main = view(sb, MAIN, '2:68:5', S, { research });
+    const col = view(sb, COL_A, '2:68:6', S, { research });
+    const fresh = view(sb, COL_B, '2:68:7', { 1: 3, 2: 1, 3: 0, 14: 2, 21: 0, 22: 9, 23: 9, 24: 9 }, { stock: 0, research });
+    main.res.metal.amount = 1e12; main.res.deuterium.amount = 1e12;
+    main.res.crystal.amount = Math.floor(c35.crystal - crystalWaitH * main.res.crystal.perHour);
+    col.res.metal.amount = 2e10; col.res.crystal.amount = 1e10; col.res.deuterium.amount = 1e10;
+    return [col, fresh, main];
+  };
+  const run = (views, extra) => sb.OGX.botBuild.plan(Object.assign(input(sb, views, { research, cfg: { queueDepth: 1 } }), extra || {}));
+  const delayH = (v, id) => { const c = C.cost(id, v.levels[id] + 1); return Math.max(...['metal', 'crystal', 'deuterium'].map((r) => (c[r] > 0 ? c[r] / v.res[r].perHour : 0))); };
+  // wait 25 h: the metal mine 47 (2.2 h of production) would delay it by more than par_tol (0.0133 x 25 h = 20 min) -> skipped with the numbers
+  let v = mk(25);
+  let out = run(v);
+  assert.equal(out.stage.id, 'S1'); assert.equal(out.lab, MAIN);
+  const w = out.waits.find((x) => x.step.kind === 'research');
+  assert.ok(w && w.step.id === 124 && Math.abs(w.T / 3600 - 25) < 0.5, 'the lab planet waits ~25 h for the research: ' + J(out.waits.map((x) => [x.cand.label, x.T])));
+  assert.ok(delayH(v[2], 1) > 0.0133 * 25, 'scenario: the mine costs more than par_tol x the wait');
+  const sk = out.skipped.find((s) => s.cand.bodyId === MAIN && s.cand.rule === 'mineSurplus' && s.cand.item === 1);
+  assert.ok(sk && /копит на «Астрофизика 35/.test(sk.reason) && /задержка .* > par_tol/.test(sk.reason), sk && sk.reason);
+  assert.ok(!out.actions.some((a) => a.step.bodyId === MAIN), 'nothing ordered on the saving planet');
+  assert.ok(out.actions.some((a) => a.step.bodyId === COL_A && a.cand.rule === 'mineSurplus'), 'the other surplus planet builds: ' + J(out.actions.map((a) => a.cand.label)));
+  // wait 457 h (19 days): par_tol allows 6 h of delay -> the surplus mine is ordered, the claim is explained in why
+  v = mk(457);
+  out = run(v);
+  const a = out.actions.find((x) => x.step.bodyId === MAIN);
+  assert.ok(a && a.cand.rule === 'mineSurplus' && a.step.id === 1, 'surplus mine on the saving planet: ' + J(out.actions.map((x) => x.cand.label)));
+  assert.ok(a.why.some((x) => /копит на «Астрофизика 35/.test(x) && /≤ par_tol/.test(x)), J(a.why));
+  assert.ok(!out.skipped.some((s) => s.cand.rule === 'mineSurplus' && /планета копит/.test(s.reason)));
+  // the main's research need (5.6e10 crystal) is published as exportKeep: a colony that cannot ship (no 217) keeps nothing for it
+  const keep = { exportKeep: { [MAIN]: { metal: 0, crystal: 5.6e10, deuterium: 0 } } };
+  out = run(mk(457), keep);   // exporters unknown: every planet keeps it (as before)
+  assert.ok(out.skipped.some((s) => s.cand.bodyId === COL_A && s.cand.rule === 'mineSurplus' && /своих ресурсов не хватает/.test(s.reason) && /ждут другие планеты/.test(s.reason)), J(out.skipped.filter((s) => s.cand.bodyId === COL_A).map((s) => s.reason)));
+  out = run(mk(457), Object.assign({ exporters: [MAIN] }, keep));   // only the main has 217
+  assert.ok(out.actions.some((x) => x.step.bodyId === COL_A && x.cand.rule === 'mineSurplus'), 'colony A (no 217) builds from its own stock: ' + J(out.actions.map((x) => x.cand.label)));
+  out = run(mk(457), Object.assign({ exporters: [MAIN, COL_A] }, keep));
+  assert.ok(!out.actions.some((x) => x.step.bodyId === COL_A && x.cand.rule === 'mineSurplus'), 'colony A with 217 keeps the delivery need');
+  // exportersOf(): from the views' 217 counts and botdebris.logisticsOrigin; null while nothing is known
+  const M = sb.OGX.botBuild._M; const L = sb.OGX.botBuild._lib;
+  M.views = { [MAIN]: { id: MAIN, coords: '2:68:5' }, [COL_A]: { id: COL_A, coords: '2:68:6' } };
+  assert.equal(L.exportersOf(), null, 'no ship count known: null (keep everywhere)');
+  M.views[COL_A].ships217 = 0; M.views[MAIN].ships217 = 120;
+  assert.deepEqual(J(L.exportersOf()), [MAIN]);
+  sb.OGX.settings = { get: (k) => (k === 'botdebris.logisticsOrigin' ? '2:68:6' : undefined) };
+  assert.deepEqual(J(L.exportersOf()).sort(), [MAIN, COL_A].sort(), 'the configured logistics origin counts as an exporter');
+  delete sb.OGX.settings;
+  // rev-botbuild-2: the counts are ships at home — a main whose 217 are out still ships (seen within 24 h, or a flight carries them)
+  const T0 = 1793347417000;
+  M.views = { [MAIN]: { id: MAIN, key: 'p' + MAIN, coords: '2:68:5', ships217: 120 }, [COL_A]: { id: COL_A, key: 'p' + COL_A, coords: '2:68:6', ships217: 0 } };
+  assert.deepEqual(J(L.exportersOf(T0, [])), [MAIN]);
+  M.views[MAIN].ships217 = 0;   // the snapshot taken while the fleet is away
+  assert.deepEqual(J(L.exportersOf(T0 + 600000, [])), [MAIN], 'seen with 217 10 min ago: still an exporter');
+  assert.deepEqual(J(L.exportersOf(T0 + 25 * 3600000, [])), [], 'nothing seen for 25 h: no longer');
+  const fl = [{ own: true, returnFlight: false, originKey: 'p' + MAIN, destKey: 'p999', ships: { 217: 50 } }];
+  assert.deepEqual(J(L.exportersOf(T0 + 25 * 3600000, fl)), [MAIN], 'an own flight carrying 217 from the main');
+  M.views = {};
+});
+
+T.test('audit botbuild-10: need priority is deterministic (largest missing share of the step first, then the planet order), needs carry until; an off module and the first run of a session publish an empty list', async () => {
+  const sb = sandbox();
+  const B = sb.OGX.botBuild; const L = B._lib; const M = B._M;
+  const col = view(sb, COL_A, '2:68:6', Object.assign({}, BUILT, { 1: 28, 2: 23, 3: 22, 15: 5, 31: 22 }), { stock: 1000, perHour: 10 });
+  const main = view(sb, MAIN, '2:68:5', Object.assign({ 1: 45, 2: 40, 3: 39, 31: 22 }, BUILT));
+  const sets = [];
+  sb.OGX.bot = { needs: { set: (owner, list) => sets.push(J(list)) }, reservations: { list: () => [] }, isActive: () => true, randMs: (a) => a[0], INTERVALS: { m6: [360000, 360000] } };
+  const wctx = { reserve: () => 'r1', rec: () => {}, flights: () => [], now: () => NOW, store: null, release: () => {}, cfg: (k) => B.SETTINGS[k].default };
+  M.views = { [MAIN]: main, [COL_A]: col }; M.research = { levels: RESEARCH }; M.planets = { used: 2, max: 9 }; M.factors = sb.OGX.calc.factors({}); M.resIds = []; M.needSince = {};
+  M.bodies = [{ id: COL_A, coords: '2:68:6' }, { id: MAIN, coords: '2:68:5' }];   // the game's planet order: the colony (lower id) first
+  const cost = (m, c, d) => ({ metal: m, crystal: c, deuterium: d, energy: 0 });
+  const wait = (bodyId, id, level, c, missing, rule) => ({ step: { kind: id > 100 ? 'research' : 'building', id, level, bodyId, cost: c }, missing, avail: null, T: 3600, cand: { label: rule + ' ' + id, rule, bodyId, payback: null } });
+  const wCol = wait(COL_A, 22, 24, cost(1e9, 2e8, 0), { metal: 1e8, crystal: 2e7, deuterium: 0 }, 'storageLate');   // 10 % of the step missing
+  const wMain = wait(MAIN, 131, 21, cost(8e8, 5e8, 2e8), { metal: 7e8, crystal: 5e8, deuterium: 2e8 }, 'research');  // 93 % missing
+  const out = { actions: [], waits: [wCol, wMain], skipped: [] };
+  const cfg = Object.assign({}, CFG, { research: true, needAheadMin: 0 });
+  const pol = L.policyParams('tactic');
+  M.needSig = null;
+  L.publishNeeds(wctx, cfg, pol, out, new Map([[COL_A, [wCol]], [MAIN, [wMain]]]), {}, NOW);
+  assert.equal(sets.length, 1);
+  const byKey = (list) => Object.fromEntries(list.filter((x) => x.kind !== 'keep').map((x) => [x.bodyKey, x]));
+  let n = byKey(sets[0]);
+  assert.equal(Object.keys(n).length, 2, J(sets[0]));
+  assert.ok(n['p' + MAIN].priority > n['p' + COL_A].priority, 'the main misses 93 % of its research, the colony 10 % of its storage: the main first although the colony comes first in the planet order: ' + J(n));
+  assert.equal(n['p' + MAIN].share, 0.933); assert.equal(n['p' + COL_A].share, 0.1);
+  assert.ok(Object.values(n).every((x) => x.until === NOW + 2 * 3600000 && x.bodyId === undefined), 'until = now + 2 h, no helper fields: ' + J(n));
+  assert.ok(Object.values(n).every((x) => x.priority >= 1 && x.priority <= 2));
+  // equal shares: the planet order decides (the colony is listed first in the game), not the rule or the id
+  wMain.missing = { metal: 8e7, crystal: 5e7, deuterium: 2e7 };   // 10 % too
+  M.needSig = null;
+  L.publishNeeds(wctx, cfg, pol, out, new Map([[COL_A, [wCol]], [MAIN, [wMain]]]), {}, NOW + 1000);
+  n = byKey(sets[sets.length - 1]);
+  assert.equal(n['p' + MAIN].share, n['p' + COL_A].share);
+  assert.ok(n['p' + COL_A].priority > n['p' + MAIN].priority, 'same share: the planet order: ' + J(n));
+  M.bodies = [{ id: MAIN, coords: '2:68:5' }, { id: COL_A, coords: '2:68:6' }];
+  M.needSig = null;
+  L.publishNeeds(wctx, cfg, pol, out, new Map([[COL_A, [wCol]], [MAIN, [wMain]]]), {}, NOW + 2000);
+  n = byKey(sets[sets.length - 1]);
+  assert.ok(n['p' + MAIN].priority > n['p' + COL_A].priority, 'planet order reversed: the main first: ' + J(n));
+  // the same list again: no re-publish within the hour, re-published after an hour (until moves on)
+  const k = sets.length;
+  L.publishNeeds(wctx, cfg, pol, out, new Map([[COL_A, [wCol]], [MAIN, [wMain]]]), {}, NOW + 3000);
+  assert.equal(sets.length, k, 'unchanged: not re-published');
+  L.publishNeeds(wctx, cfg, pol, out, new Map([[COL_A, [wCol]], [MAIN, [wMain]]]), {}, NOW + 2000 + 3600000);
+  assert.equal(sets.length, k + 1, 're-published after an hour');
+  assert.equal(byKey(sets[k])['p' + MAIN].until, NOW + 2000 + 3 * 3600000, 'until refreshed');
+  // the module is off: the persisted needs are replaced by an empty list once (botcore keeps the last list across reloads)
+  sb.OGX.bot.isActive = () => false;
+  const r = await L.mainRun({});
+  assert.equal(r.reason, 'off');
+  assert.deepEqual(sets[sets.length - 1], [], 'empty list published');
+  assert.deepEqual(Object.keys(M.needTotals), []);
+  const k2 = sets.length;
+  await L.mainRun({});
+  assert.equal(sets.length, k2, 'cleared once, no storm');
+  // first run of a session (M.needSig undefined, e.g. a reload or a new leader): the previous session's needs go first
+  sb.OGX.bot.isActive = () => true;
+  M.needSig = undefined; M.needTotals = { [COL_A]: { metal: 1 } };
+  await L.mainRun(wctx).catch(() => {});   // the stub has no pages: the run fails after the clear
+  assert.deepEqual(sets[sets.length - 1], [], 'first run: the list of the previous session cleared');
+  assert.equal(M.needSig, '[]'); assert.deepEqual(Object.keys(M.needTotals), []);
+  M.views = {}; M.bodies = [];
+});
+
+T.test('audit botbuild-11: the keep covers the queued-but-unpaid items (building queue items 2..n, the research queue behind its head) even with an empty chain', () => {
+  const sb = sandbox();
+  const B = sb.OGX.botBuild; const L = B._lib; const M = B._M; const C = sb.OGX.calc;
+  const main = view(sb, MAIN, '2:68:5', Object.assign({ 1: 45, 2: 40, 3: 39, 31: 22 }, BUILT));
+  main.queue = { known: true, busy: true, items: [{ id: 1, level: 46, end: NOW + 60000 }, { id: 2, level: 41, end: null }, { id: 3, level: 40, end: null }], end: NOW + 60000 };
+  const sets = [];
+  sb.OGX.bot = { needs: { set: (owner, list) => sets.push(J(list)) }, reservations: { list: () => [] } };
+  const wctx = { reserve: () => 'r', rec: () => {}, flights: () => [] };
+  M.views = { [MAIN]: main }; M.research = { levels: RESEARCH, cp: MAIN, queue: { known: true, busy: true, items: [{ id: 124, level: 13, end: NOW + 30000 }, { id: 131, level: 9, end: null }], end: NOW + 30000 } };
+  M.planets = { used: 1, max: 9 }; M.factors = C.factors({}); M.resIds = []; M.needSince = {}; M.needSig = null; M.bodies = [{ id: MAIN }];
+  const cfg = Object.assign({}, CFG, { needAheadMin: 0 });
+  const empty = () => ({ actions: [], waits: [], skipped: [] });
+  L.publishNeeds(wctx, cfg, L.policyParams('tactic'), empty(), new Map(), {}, NOW);
+  const keep = sets[0].find((x) => x.kind === 'keep' && x.bodyKey === 'p' + MAIN);
+  assert.ok(keep, 'a keep although nothing waits and the chain is empty: ' + J(sets[0]));
+  const want = [C.cost(2, 41), C.cost(3, 40), C.cost(131, 9)].reduce((s, c) => ({ metal: s.metal + c.metal, crystal: s.crystal + c.crystal, deuterium: s.deuterium + c.deuterium }), { metal: 0, crystal: 0, deuterium: 0 });
+  for (const r of ['metal', 'crystal', 'deuterium']) assert.ok(keep.keep[r] >= want[r] && keep.keep[r] > 0 === want[r] > 0, r + ': keep ' + keep.keep[r] + ' >= unpaid items ' + want[r]);
+  assert.deepEqual(keep.queued.map((s) => s.id + ':' + s.level), ['2:41', '3:40', '131:9'], 'the heads (paid) are not in it');
+  // the heads alone: no keep from the queues
+  main.queue = { known: true, busy: true, items: [{ id: 1, level: 46, end: NOW + 60000 }], end: NOW + 60000 }; M.research.queue.items = M.research.queue.items.slice(0, 1);
+  M.needSig = null;
+  L.publishNeeds(wctx, cfg, L.policyParams('tactic'), empty(), new Map(), {}, NOW + 1000);
+  assert.ok(!sets[sets.length - 1].some((x) => x.kind === 'keep' && x.bodyKey === 'p' + MAIN), 'the paid heads need no keep: ' + J(sets[sets.length - 1]));
+  M.views = {}; M.research = null; M.bodies = [];
+});

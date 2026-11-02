@@ -228,16 +228,22 @@
     return cp && /^\d{1,12}$/.test(cp) ? +cp : null;
   }
   diag._cpOf = cpOf;
+  const PRIVATE_PAGES = /^(messages|notes|ticket|support|settings|alliance|buddylist|buddy|chat|playercard|search|banned)$/;
+  const PRIVATE_PATH = /\/(messages?|notes?|tickets?|support|settings|alliance|buddies|buddylist|chat)(\/|$)/i;
+  const FORM_VALUE_PAGES = /^(overview|buildings|research|shipyard|defense|resources|galaxy|fleettable|fleetstep[123]|fleetajax|fleetmissile|imperium|empire|trader|fleetdealer|officier|premium|bonus|raport)$/;
+  diag._formPolicy = { PRIVATE_PAGES, PRIVATE_PATH, FORM_VALUE_PAGES };
   function netEvent({ method, url, finalUrl, status, ms, size, error, json, keys, safe, body, by }) {
     // url = the URL as requested (with cp); finalUrl = where a redirect ended (2Moons drops cp when it redirects)
     const u = sameOriginUrl(url);
     if (!u) return;
     const m = String(method || 'GET').toUpperCase();
     let ep = m + ' ' + L.normalizePath(u.pathname);
+    let gzPage = null;
     // GALAXYZ: every request is /<Universe>/game.php -> the endpoint is page (+ mode) from the query or the form body
     if (/\/game\.php$/i.test(u.pathname)) {
       let pg = u.searchParams.get('page'); let md = u.searchParams.get('mode');
-      if ((!pg || !md) && body) { try { const b = new URLSearchParams(String(body)); pg = pg || b.get('page'); md = md || b.get('mode'); } catch (e) { /* ignore */ } }
+      if ((!pg || !md) && body && !/^\s*[{[]/.test(String(body))) { try { const b = new URLSearchParams(String(body)); pg = pg || b.get('page'); md = md || b.get('mode'); } catch (e) { /* ignore */ } }
+      gzPage = String(pg || 'overview').toLowerCase();
       ep += '?page=' + (pg || 'overview') + (md ? '&mode=' + md : '');
     }
     const d = { st: status, ms: Number.isFinite(ms) ? Math.round(ms) : null, sz: Number.isFinite(size) ? size : null, by };
@@ -248,7 +254,17 @@
       const f = sameOriginUrl(finalUrl);
       if (f && (f.pathname + f.search) !== (u.pathname + u.search)) d.to = L.redactUrl(f.pathname + f.search);
     }
-    if (m !== 'GET' && body) { const f = L.formSummary(body); if (f) d.f = f; }
+    if (m !== 'GET' && body) {
+      const f = L.formSummary(body);
+      // the journal is what John exports and sends away: field VALUES only for forms made of numbers/ids. Private pages
+      // (messages, notes, tickets, settings, alliance, buddies) and the game's own POSTs to pages outside FORM_VALUE_PAGES
+      // keep the field names only.
+      if (f && typeof f === 'object' && !Array.isArray(f)) {
+        const priv = gzPage !== null ? PRIVATE_PAGES.test(gzPage) : PRIVATE_PATH.test(u.pathname);
+        if (priv || (gzPage !== null && by === 'page' && !FORM_VALUE_PAGES.test(gzPage))) d.fk = Object.keys(f).slice(0, 40);
+        else d.f = f;
+      } else if (f) d.f = f;
+    }
     const sf = safe !== undefined ? safe : L.safeFields(json);
     if (sf) d.r = sf;
     if (error) d.err = String(error).slice(0, 200);
@@ -262,6 +278,7 @@
     if (status === 401 || (status === 419 && by === 'page')) OGX.log.rec('S', 'session', status === 401 ? 'logged-out' : 'csrf-expired', { ep });
   }
   /** Called by OGX.http for every request it makes (core 12-http). */
+  diag._pageNet = function (info) { try { netEvent(Object.assign({ by: 'page' }, info)); } catch (e) { /* ignore */ } };   // tests
   diag._ogxNet = function (info) { try { netEvent(Object.assign({ by: 'ogx' }, info)); } catch (e) { /* ignore */ } };
   function onPageNet(ev) {
     if (typeof ev.detail !== 'string') return;
@@ -378,6 +395,7 @@
     const d = { el: describe(el), mod: moduleOf(el) };
     if (el.type === 'checkbox' || el.type === 'radio') d.v = !!el.checked;
     else if (el.tagName === 'SELECT' || el.type === 'number' || el.type === 'range') d.v = L.isSensitiveKey(name) ? '<redacted>' : String(el.value).slice(0, 40);
+    else if (el.type === 'password' || (el.classList && el.classList.contains('ogx-secret'))) d.secret = true; // not even the length of a secret
     else d.len = String(el.value || '').length; // free text (notes, search) is never stored
     OGX.log.rec('U', 'change', name || labelOf(el), d);
   }
@@ -487,6 +505,8 @@
       });
     } catch (e) { /* ignore */ }
     try { ctx.core = OGX.settings.all('core'); ctx.diag = OGX.settings.all('diag'); } catch (e) { /* ignore */ }
+    // the popup builds its export from the raw stored 'settings': it leaves these keys (type 'secret', e.g. a password) out
+    try { if (OGX.settings.secretKeys) ctx.secretKeys = OGX.settings.secretKeys(); } catch (e) { /* ignore */ }
     // Suite: popup-level switches (host allow-list '*|*|suite.hosts', global module switches '*|*|suite.modules').
     try {
       const S = OGX.suite;
@@ -528,7 +548,7 @@
    * 'botsave.*', ... — one prefix per bot module). */
   diag.extras = async function () {
     const out = { settings: null, bot: {} };
-    const botPrefixes = ['bot.', 'botcore.', 'botsim.', 'botpanel.', 'botsave.', 'botfarm.', 'botdebris.', 'botbuild.', 'botexpo.'];
+    const botPrefixes = ['bot.', 'botcore.', 'botsim.', 'botpanel.', 'botsave.', 'botfarm.', 'botdebris.', 'botbuild.', 'botexpo.', 'botmissiles.'];
     const B = OGX.bot;
     if (B && typeof B.status === 'function') {
       try {

@@ -12,7 +12,11 @@
  *     older than N hours, delete the whole category; row actions: Рейд (Battle Transporters only, OGX.fleet.send, core
  *     confirmation), Шпионить (OGX.api.sendMiniFleet mission 6), Симулятор (the report's own link), Атака (native link),
  *     Ракеты (OGX.missiles.openLaunch when the missiles module is loaded), Удалить,
- *   - hotkeys: ↑/↓ (j/k) move, Space/x select, Enter/o expand, Del delete, r raid, s spy, a select all, Esc clear.
+ *   - hotkeys: ↑/↓ (j/k) move, Space/x select, Enter/o expand, Del delete, r raid, s spy, a select all, Esc clear. The row keys
+ *     act only on a row the user focused himself (a click or ↑↓ / j k): the preview of the newest message in the full layout is
+ *     not a focus. r / s and the row buttons always open a dialog with the plan first, whatever core.confirmActions says: one
+ *     stray key or click must never send a fleet (a single raid then goes out through fleet.sendBatch(confirmed), bulk raids
+ *     have their own summary dialog).
  *
  * Network: nothing on open (the page already carries the list of its category). A tab click = GET page=messages&mode=view
  * &messcat=N&site=S&ajax=1 (the game's own Message.getMessages request), pages 1..maxPages, more on «Загрузить ещё».
@@ -69,12 +73,13 @@
       onlyNew: { type: 'bool', default: false, hidden: true, label: 'Фильтр: только новые' },
       ageHours: { type: 'int', default: 24, hidden: true, label: 'Удалять старше, ч' },
       latestOnly: { type: 'bool', default: false, hidden: true, label: 'Фильтр: только свежий доклад по каждой цели' },
-      autoClean: { type: 'bool', default: false, label: 'Автоочистка почты', hint: 'После загрузки вкладки сразу удаляет на сервере сообщения по включённым правилам' },
+      autoClean: { type: 'bool', default: false, label: 'Автоочистка почты', hint: 'После загрузки вкладки сразу удаляет на сервере сообщения по включённым правилам. Бот сам читает шпионаж (0), бои (3) и экспедиции (15): пока он включён, свежие письма этих категорий не трогаются (запас ниже)' },
       autoCheap: { type: 'bool', default: true, label: 'Автоочистка: шпионские доклады с добычей меньше «Добыча от»' },
       autoOldDup: { type: 'bool', default: true, label: 'Автоочистка: старые доклады по той же цели (остаётся свежий)' },
       autoExpEmpty: { type: 'bool', default: true, label: 'Автоочистка: пустые экспедиции (ничего, задержка, ускорение)' },
       autoSpyDetected: { type: 'bool', default: false, label: 'Автоочистка: «у нас шпионили»' },
       autoReturns: { type: 'bool', default: false, label: 'Автоочистка: возвраты флота без ресурсов' },
+      autoBotGraceMin: { type: 'int', default: 15, min: 0, max: 1440, label: 'Автоочистка: пока бот включён, не трогать письма бота моложе, мин', hint: 'Категории 0, 3 и 15 (шпионаж, бои, экспедиции) бот читает и чистит сам; письма без читаемого времени тоже остаются ему. 0 = без запаса' },
     },
     async init(ctx) {
       if (!isGz()) return;
@@ -86,6 +91,12 @@
   });
 
   // ================================================================== helpers (pure)
+  // Categories the bot (botcore, when loaded) reads itself: spy reports, combat reports, expedition results.
+  const BOT_CATS = new Set([0, 3, 15]);
+  /** The bot's main switch (OGX.bot.status().master): on = it reads and deletes its own mail, whatever its current state. */
+  function botOn() {
+    try { const b = OGX.bot; const s = b && typeof b.status === 'function' ? b.status() : null; return !!(s && s.master === true); } catch (e) { return false; }
+  }
   /** "1,5 млрд", "500m", "2kkk", "3 трлн", "1.000.000" -> number | null. */
   function parseAmount(s) {
     s = String(s || '').trim().toLowerCase().replace(/\s+/g, '');
@@ -115,12 +126,16 @@
     this.sel = new Set();
     this.open = new Set();
     this.focus = null;             // id
+    this.focusByUser = false;      // focus set by a click or ↑↓ / j k: only then the row hotkeys (r, s, Space, Del, Enter) act
     this.busy = false;
     this.ui = { v: 1, sort: 'ts', dir: -1 };
     this.env = { cargo: 0, reserve: 0.1 };
     this.offs = [];
     this.hidden = [];
-    this.wSend = OGX.log.wrap(NAME, (req) => OGX.fleet.send(req), 'raid:send');
+    // One raid = fleet.sendBatch with ONE flight after the module's own dialog (confirmed: true): the plan and the risk warning are
+    // in that dialog, so the core's confirmActions dialog is not asked a second time. Result = the flight's own result.
+    this.wSend = OGX.log.wrap(NAME, (flight) => OGX.fleet.sendBatch([flight], { confirmed: true })
+      .then((b) => (b && b.results && b.results[0]) || { success: false, message: (b && (b.message || b.abortReason)) || 'нет ответа' }), 'raid:send');
     this.wSpy = OGX.log.wrap(NAME, (q) => OGX.api.sendMiniFleet(q), 'spy:mini');
     this.wList = OGX.log.wrap(NAME, (cat, page) => OGX.api.messagesList(cat, null, page), 'list');
     this.wAction = OGX.log.wrap(NAME, (form) => OGX.http.post('messages', form, { expect: 'text' }), 'action');
@@ -396,7 +411,7 @@
             btn('⟳', 'Обновить вкладку', () => this.openCat(this.cat, { force: true }), 'ogx-btn-icon'),
             this.statusEl),
           this.listEl, this.moreEl,
-          h('div', { class: P + 'keys' }, 'Клавиши: ↑↓ / j k — следующее / предыдущее, Пробел — отметить, Enter — раскрыть, Del — удалить, r — рейд, s — шпионить, a — отметить все, / — поиск, Esc — снять выбор')),
+          h('div', { class: P + 'keys' }, 'Клавиши: ↑↓ / j k — следующее / предыдущее, Пробел — отметить, Enter — раскрыть, Del — удалить, r — рейд (с подтверждением), s — шпионить (с подтверждением), a — отметить все, / — поиск, Esc — снять выбор')),
         this.previewEl));
     this.oldBtn = h('button', { class: 'ogx-btn ogx-root ' + P + 'back', hidden: true, onClick: () => this.ctx.settings.set('replace', true) }, 'Новое меню почты');
     const first = this.native[0] || this.content.firstChild;
@@ -449,7 +464,8 @@
     } else {
       this.listEl.appendChild(h('table', { class: [P + 'table', spyMode && P + 'spy'] }, h('thead', null, head), tbody));
     }
-    if (this.isFull() && vis.length && !vis.some((r) => r.id === this.focus)) this.focus = vis[0].id;
+    // a focused row that is gone (deleted, filtered out) drops the focus; nothing is focused on the user's behalf
+    if (this.focus !== null && !vis.some((r) => r.id === this.focus)) { this.focus = null; this.focusByUser = false; }
     this.renderPreview();
     this.renderSummary(vis);
     this.moreEl.textContent = '';
@@ -463,7 +479,7 @@
     return {
       class: [P + 'row', r.unread && P + 'unread', this.sel.has(r.id) && P + 'sel', this.focus === r.id && P + 'focus', extra],
       dataset: { id: r.id, kind: r.kind },
-      onClick: (e) => { if (e.target.closest('a, button, input, select')) return; this.focus = r.id; if (this.isFull()) this.render(); else this.toggleOpen(r.id); },
+      onClick: (e) => { if (e.target.closest('a, button, input, select')) return; this.focus = r.id; this.focusByUser = true; if (this.isFull()) this.render(); else this.toggleOpen(r.id); },
     };
   };
   Mail.prototype.cb = function (r) {
@@ -572,23 +588,36 @@
     return stale;
   };
 
-  /** Ids the enabled auto-clean rules match (loaded rows only). */
+  /** Ids the enabled auto-clean rules match (loaded rows only). While the bot is on, rows of its categories (BOT_CATS)
+   * younger than autoBotGraceMin — or without a readable time — are left to it (it matches reports by time and deletes
+   * what it processed; a result removed between two of its reads never arrives): their count goes to this.keptForBot. */
   Mail.prototype.autoMatches = function () {
     const ids = new Set();
+    const kept = new Set();
     const min = parseAmount(this.set('minLoot'));
+    const grace = botOn() ? Math.max(0, +this.set('autoBotGraceMin') || 0) * 60000 : 0;
+    const nowTs = OGX.time.serverNow();
+    const catOf = (r) => (Number.isFinite(+r.cat) && r.cat !== null && r.cat !== '' ? +r.cat : (this.cat === null ? NaN : +this.cat));
+    const add = (r) => { if (grace > 0 && BOT_CATS.has(catOf(r)) && (!r.ts || nowTs - r.ts < grace)) kept.add(r.id); else ids.add(r.id); };
     for (const r of this.rows.values()) {
-      if (this.set('autoCheap') && min && r.spy && r.spy.loot.total < min) ids.add(r.id);
-      if (this.set('autoExpEmpty') && r.exp && ['nothing', 'delay', 'speedup'].includes(r.exp.outcome)) ids.add(r.id);
-      if (this.set('autoSpyDetected') && r.kind === 'spy_detected') ids.add(r.id);
-      if (this.set('autoReturns') && r.kind === 'return_empty') ids.add(r.id);
+      if (this.set('autoCheap') && min && r.spy && r.spy.loot.total < min) add(r);
+      if (this.set('autoExpEmpty') && r.exp && ['nothing', 'delay', 'speedup'].includes(r.exp.outcome)) add(r);
+      if (this.set('autoSpyDetected') && r.kind === 'spy_detected') add(r);
+      if (this.set('autoReturns') && r.kind === 'return_empty') add(r);
     }
-    if (this.set('autoOldDup')) for (const id of this.staleIds()) ids.add(id);
+    if (this.set('autoOldDup')) for (const id of this.staleIds()) { const r = this.rows.get(id); if (r) add(r); }
+    this.keptForBot = kept.size;
     return [...ids];
   };
   /** Runs the rules (explicit click, or after a load when autoClean is on). One POST. */
   Mail.prototype.autoClean = async function ({ auto = false } = {}) {
     const ids = this.autoMatches();
-    if (!ids.length) { if (!auto) OGX.dom.toast('Под правила очистки ничего не попало', { type: 'info' }); return 0; }
+    const kept = this.keptForBot || 0;
+    if (kept) rec('B', 'autoclean:bot-grace', { kept, auto, graceMin: +this.set('autoBotGraceMin') || 0 });
+    if (!ids.length) {
+      if (!auto) OGX.dom.toast(kept ? 'Под правила попали только свежие письма бота (' + kept + ') — оставлены ему' : 'Под правила очистки ничего не попало', { type: 'info', ms: 6000 });
+      return 0;
+    }
     if (!auto && !(await this.ask('Очистка по правилам: удалить ' + ids.length + ' сообщ.?'))) return 0;
     if (!(await this.post('deletemarked', ids))) return 0;
     this.dropRows(ids);
@@ -682,7 +711,8 @@
     const el = this.previewEl;
     el.textContent = '';
     if (!this.isFull()) return;
-    const r = this.focus !== null ? this.rows.get(this.focus) : null;
+    // the focused row, else the newest visible message as a preview (a preview is not a focus: the hotkeys do not act on it)
+    const r = this.focus !== null ? this.rows.get(this.focus) : (this.vis && this.vis.length ? this.vis[0] : null);
     if (!r) { el.appendChild(h('div', { class: P + 'empty' }, 'Выберите сообщение')); return; }
     el.dataset.id = r.id;
     el.appendChild(h('div', { class: P + 'ph' },
@@ -754,8 +784,8 @@
     if (document.querySelector('.ogx-modal-overlay')) return;
     const vis = this.vis || [];
     const i = vis.findIndex((r) => r.id === this.focus);
-    const cur = i >= 0 ? vis[i] : null;
-    const move = (d) => { const n = vis[Math.max(0, Math.min(vis.length - 1, (i < 0 ? (d > 0 ? -1 : vis.length) : i) + d))]; if (n) { this.focus = n.id; this.render(); this.scrollFocus(); } };
+    const cur = i >= 0 && this.focusByUser ? vis[i] : null;
+    const move = (d) => { const n = vis[Math.max(0, Math.min(vis.length - 1, (i < 0 ? (d > 0 ? -1 : vis.length) : i) + d))]; if (n) { this.focus = n.id; this.focusByUser = true; this.render(); this.scrollFocus(); } };
     let done = true;
     switch (e.key) {
       case 'ArrowDown': case 'j': move(1); break;
@@ -764,14 +794,18 @@
       case 'Enter': case 'o': if (cur && !this.isFull()) this.toggleOpen(cur.id); else if (cur) this.previewEl.querySelector('details') && (this.previewEl.querySelector('details').open ^= 1); else done = false; break;
       case 'Delete': case 'Backspace':
         if (this.sel.size) this.deleteIds([...this.sel], 'выбранные'); else if (cur) this.deleteIds([cur.id], 'это сообщение'); else done = false; break;
-      case 'r': if (cur && cur.spy) this.raid(cur); else done = false; break;
-      case 's': if (cur && cur.spy) this.respy(cur); else done = false; break;
+      // r / s: only on a row the user focused, and always through the dialog of raid() / respy()
+      case 'r': if (cur && cur.spy) this.raid(cur, null, { hotkey: true }); else if (!cur) this.hintFocus(); else done = false; break;
+      case 's': if (cur && cur.spy) this.respy(cur, null, { hotkey: true }); else if (!cur) this.hintFocus(); else done = false; break;
       case 'a': this.selectVisible(!(vis.length && vis.every((r) => this.sel.has(r.id)))); break;
       case '/': this.qInput.focus(); break;
-      case 'Escape': if (this.abort) this.abort.abort(); this.sel.clear(); this.focus = null; this.render(); break;
+      case 'Escape': if (this.abort) this.abort.abort(); this.sel.clear(); this.focus = null; this.focusByUser = false; this.render(); break;
       default: done = false;
     }
     if (done) e.preventDefault();
+  };
+  Mail.prototype.hintFocus = function () {
+    OGX.dom.toast('Сначала выберите доклад: ↑↓ / j k или клик по строке', { type: 'info', ms: 3000 });
   };
   Mail.prototype.scrollFocus = function () {
     const el = this.listEl.querySelector('.' + P + 'focus');
@@ -792,6 +826,8 @@
     try { r = await this.wAction(form); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
     rec('B', 'action', { action, n: (ids || []).length, cat: this.cat, ok: !!(r && r.ok) });
     if (!r || !r.ok) { OGX.dom.toast('Сервер не принял действие: ' + ((r && (r.error || r.status)) || '?'), { type: 'error' }); return false; }
+    // other modules (the bot's read cache of the message lists): the mailbox changed behind their back
+    if (/^delete/i.test(action)) { try { OGX.bus.emit('messages:deleted', { cat: this.cat === null ? 100 : this.cat, ids: (ids || []).map(Number), source: 'infinity/mail' }); } catch (e) { /* ignore */ } }
     return true;
   };
 
@@ -862,36 +898,96 @@
     this.render();
   };
 
-  /** Raid: Battle Transporters only (John's rule), enough for the whole 50 % loot + reserve; OGX.fleet.send asks (core.confirmActions). */
-  Mail.prototype.raid = async function (r, btn, { bulk = false } = {}) {
+  /** Raid: Battle Transporters only (John's rule), enough for the whole 50 % loot + reserve. A single raid (row button, preview
+   * button, hotkey r) first shows its own dialog with the plan — target, transporters, loot, transporters on the planet, fleet /
+   * defence seen or not — whatever core.confirmActions says, and then dispatches through fleet.sendBatch(confirmed) (no second
+   * dialog). Bulk raids (raidSelected) have their one summary dialog instead (bulk: true). */
+  Mail.prototype.raid = async function (r, btn, { bulk = false, hotkey = false } = {}) {
     const s = r && r.spy;
     if (!s || !s.target) return;
     await this.loadEnv();
     const d = this.derive(s.f);
     if (!d || !d.ships) { OGX.dom.toast('Нечего вывозить или неизвестен трюм улучшенного транспорта', { type: 'warn' }); return; }
-    if (!bulk && (d.fleet !== 0 || d.def !== 0)) {
-      const what = [d.fleet === null ? 'флот неизвестен' : d.fleet ? 'флот ' + short(d.fleet) : null, d.def === null ? 'оборона неизвестна' : d.def ? 'оборона ' + short(d.def) : null].filter(Boolean).join(', ');
-      OGX.dom.toast('Внимание: ' + what, { type: 'warn', ms: 6000 });
+    const originId = this.env.cur ? this.env.cur.id : undefined;
+    if (!bulk) {
+      const ok = await this.confirmRaid(d, originId, hotkey);
+      rec('U', 'raid:confirm', { id: r.id, coords: d.coordsStr, n: d.ships, ok, hotkey });
+      if (!ok) return { success: false, cancelled: true, message: 'Отменено' };
     }
-    rec('U', 'raid', { id: r.id, coords: d.coordsStr, n: d.ships, ship: this.env.ship });
+    rec('U', 'raid', { id: r.id, coords: d.coordsStr, n: d.ships, ship: this.env.ship, hotkey });
     if (btn) btn.disabled = true;
     let res;
     try {
       res = await this.wSend({ galaxy: d.target.galaxy, system: d.target.system, position: d.target.position, type: d.target.type,
         mission: 1, ships: { [this.env.ship]: d.ships }, speed: 10, cargo: { metal: 0, crystal: 0, deuterium: 0 },
-        originId: this.env.cur ? this.env.cur.id : undefined, source: 'infinity/mail' });
+        originId, key: 'mail:' + r.id, source: 'infinity/mail' });
     } catch (e) { res = { success: false, message: String(e && e.message || e) }; }
     if (btn) btn.disabled = false;
-    if (res && res.cancelled) return res;
     if (bulk) return res;
     OGX.dom.toast(res && res.success ? 'Рейд отправлен: ' + num(d.ships) + ' ул. трансп. на ' + OGX.fmt.coords(d.coords, d.type) : 'Рейд не отправлен: ' + ((res && res.message) || '?'),
       { type: res && res.success ? 'ok' : 'error', ms: 6000 });
     return res;
   };
 
-  Mail.prototype.respy = async function (r, btn, { bulk = false } = {}) {
+  /** The dialog of a single raid: the plan and the warnings. true = «Отправить». */
+  Mail.prototype.confirmRaid = async function (d, originId, hotkey) {
+    const risky = d.fleet !== 0 || d.def !== 0;
+    const what = [d.fleet === null ? 'флот не виден в докладе' : d.fleet ? 'флот ' + short(d.fleet) : null,
+      d.def === null ? 'оборона не видна в докладе' : d.def ? 'оборона ' + short(d.def) : null].filter(Boolean).join(', ');
+    // transporters on the origin (state of the last read; only when the ships of that body were read at all)
+    // and the deuterium for the flight (the same pre-check as fleet.send, which sendBatch(confirmed) does not run)
+    let have = null;
+    let fuel = null;
+    try {
+      const bodies = await OGX.state.bodies();
+      const origin = originId ? Object.values(bodies || {}).find((b) => b && b.id === originId) : null;
+      if (origin && origin.shipsT && origin.ships) have = +origin.ships[this.env.ship] || 0;
+      if (origin && origin.coords && origin.res) {
+        const est = await OGX.fleet.estimate({ from: origin.coords, to: d.coordsStr, ships: { [this.env.ship]: d.ships }, mission: 1, speedPct: 10 });
+        const p = OGX.state.projected(origin).res;
+        const deut = p && p.deuterium ? p.deuterium.amount : null;
+        if (deut !== null && est && est.fuelBudget > deut) fuel = { need: est.fuelBudget, have: deut };
+      }
+    } catch (e) { fuel = null; }
+    const body = h('div', { class: 'ogx-confirm-text' },
+      h('div', null, 'Рейд → ' + OGX.fmt.coords(d.coords, d.type) + (d.name ? ' ' + d.name : '')),
+      h('div', null, 'Улучшенных транспортов: ' + num(d.ships) + ' × ' + num(this.env.cargo) + ', скорость 100 %'),
+      h('div', null, 'Добыча 50 %: ' + short(d.loot.total) + ' (М ' + short(d.loot.metal) + ' · К ' + short(d.loot.crystal) + ' · Д ' + short(d.loot.deuterium) + ')'),
+      have !== null && have < d.ships ? h('div', { class: 'ogx-warn-text' }, '⚠ На планете ' + num(have) + ' из ' + num(d.ships) + ' транспортов') : null,
+      fuel ? h('div', { class: 'ogx-warn-text' }, '⚠ Дейтерия может не хватить: нужно ~' + num(fuel.need) + ', есть ' + num(fuel.have)) : null,
+      risky ? h('div', { class: 'ogx-warn-text' }, '⚠ У цели: ' + what + '. Транспорты без прикрытия могут быть уничтожены') : null,
+      hotkey ? h('div', { class: P + 'pm' }, 'Вызвано клавишей r') : null);
+    return askSafe(body, { okLabel: 'Отправить', danger: risky, title: 'Рейд' });
+  };
+
+  /** OGX.dom.confirm with the keyboard focus on «Отмена»: dom.modal focuses the primary button, and in the mail Space / Enter are
+   * row keys too, so a stray r or s followed by Space / Enter must cancel, not send. The click on the OK button still sends. */
+  function askSafe(body, opts) {
+    const p = OGX.dom.confirm(body, opts);
+    // queued after dom.modal's own focus timer (same tick), so it wins
+    setTimeout(() => {
+      try {
+        const boxes = document.querySelectorAll('.ogx-modal-overlay .ogx-modal');
+        const box = boxes[boxes.length - 1];
+        const c = box && box.querySelector('[data-role="cancel"]');
+        if (c) c.focus();
+      } catch (e) { /* ignore */ }
+    }, 0);
+    return p;
+  }
+
+  /** Probes to the report's target. A single send (row button, preview button, hotkey s) asks first; bulk sends (spySelected)
+   * had their summary dialog. */
+  Mail.prototype.respy = async function (r, btn, { bulk = false, hotkey = false } = {}) {
     const s = r && r.spy;
     if (!s || !s.target) return;
+    if (!bulk) {
+      const per = OGX.api.spyProbes ? OGX.api.spyProbes() : null;
+      const ok = await askSafe('Отправить зонды на ' + OGX.fmt.coords(s.coords, s.type) + (s.name ? ' ' + s.name : '')
+        + (per ? ' (до ' + num(per) + ' зондов, сколько точно — по настройке игры)' : '') + '?', { okLabel: 'Отправить зонды', title: 'Шпионаж' });
+      rec('U', 'spy:confirm', { id: r.id, coords: s.coordsStr, ok, hotkey });
+      if (!ok) return { success: false, cancelled: true, message: 'Отменено' };
+    }
     if (btn) btn.disabled = true;
     let res;
     try { res = await this.wSpy({ mission: 6, galaxy: s.target.galaxy, system: s.target.system, position: s.target.position, type: s.target.type }); } catch (e) { res = { success: false, message: String(e && e.message || e) }; }

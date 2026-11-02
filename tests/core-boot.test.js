@@ -4,6 +4,7 @@
 // MAIN-world bridge (commands through a fleetDispatcher stub, XHR relay).
 //   node tests/core-boot.test.js
 const T = require('./lib');
+const G = require('./gz-lib');
 const { assert } = T;
 const { coreExt } = require('./core-ext');
 const fs = require('fs');
@@ -213,4 +214,47 @@ T.test('bridge: game XHRs on whitelisted paths are relayed with form + json; oth
   // no extra request from the extension: it only listened
   assert.deepEqual(env.requests().map((q) => q.path), ['/ajax/galaxy', '/ajax/techtree', '/ajax/fleet/eventbox/fetch']);
   assert.deepEqual(env.ogxErrors(), []);
+});
+
+T.test('non-game pages: the suite bundle stays idle (no timers, no storage, no DOM, native fetch/XHR, no bridge, one request)', async () => {
+  // The real suite (manifest, page hook, 29 isolated-world files) on the GALAXYZ mock: /other is a WordPress page with a
+  // #planetSelector look-alike, /Aeternum/index.php the login page. Timer ids are one counter per window shared by every
+  // world (MAIN and the isolated worlds), so the id of the first timer our probe creates is 1 only when neither the page
+  // hook nor any isolated-world file armed a timer before it (about:blank gives 1 too). Storage: boot returns before
+  // storage.init / the gate (the only readers), so OGX.storage.ns stays unset and the journal stays empty.
+  const env = await G.launch();
+  try {
+    for (const p of ['/other', '/Aeternum/index.php']) {
+      env.server.clearLog();
+      const pg = await env.open(p, { waitReady: false });
+      await pg.waitForTimeout(600);
+      const main = await pg.evaluate(async () => {
+        const i = setTimeout(() => {}, 0); clearTimeout(i);
+        // the command bridge is not listening at all: a call gets no reply
+        const reply = await new Promise((res) => {
+          const on = (ev) => res(ev.detail);
+          document.addEventListener('ogx:reply', on, { once: true });
+          document.dispatchEvent(new CustomEvent('ogx:call', { detail: JSON.stringify({ id: 1, method: 'ping' }) }));
+          setTimeout(() => { document.removeEventListener('ogx:reply', on); res(null); }, 150);
+        });
+        const native = (f) => /\[native code\]/.test(Function.prototype.toString.call(f));
+        return { timer: i, hook: typeof window.__ogxHook, fetchNative: native(window.fetch), xhrNative: native(XMLHttpRequest.prototype.open) && native(XMLHttpRequest.prototype.send),
+          ogxDom: document.querySelectorAll('[class*="ogx-"],[id^="ogx-"]').length, attrs: [...document.documentElement.attributes].map((a) => a.name).filter((n) => n.startsWith('data-ogx')),
+          styles: document.querySelectorAll('style').length, reply };
+      });
+      assert.equal(main.timer, 1, p + ': no timer from any world before our probe ' + JSON.stringify(main));
+      assert.deepEqual([main.hook, main.fetchNative, main.xhrNative, main.ogxDom, main.attrs, main.styles, main.reply], ['undefined', true, true, 0, [], 0, null], p + ' ' + JSON.stringify(main));
+      const iso = await env.evalOgx(pg, () => {
+        const i = setTimeout(() => {}, 0); clearTimeout(i);
+        return { timer: i, active: OGX.active, booted: !!OGX._booted, ns: String(OGX.storage.ns), tick: typeof OGX._tickTimer, ctxs: OGX._ctxs.length,
+          recent: OGX.diag.recent().length, inited: OGX.diag.isInited(), modules: Object.keys(OGX.modules).length > 20 };
+      });
+      assert.deepEqual(iso, { timer: 3, active: false, booted: false, ns: 'undefined', tick: 'undefined', ctxs: 0, recent: 0, inited: false, modules: true }, p + ': isolated world ' + JSON.stringify(iso));
+      assert.deepEqual(env.server.requests.map((r) => r.method + ' ' + r.url), ['GET ' + p], p + ': the page itself is the only request');
+      const dbs = await pg.evaluate(async () => (indexedDB.databases ? (await indexedDB.databases()).map((d) => d.name) : []));
+      assert.deepEqual(dbs.filter((n) => /ogx/i.test(n)), [], p);
+      assert.equal(await pg.evaluate(() => Object.keys(localStorage).filter((k) => /ogx/i.test(k)).length), 0, p + ': nothing in localStorage');
+    }
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
 });

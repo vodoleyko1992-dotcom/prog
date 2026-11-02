@@ -16,65 +16,79 @@ const SIM = require(path.join(ROOT, 'ogamex-bot', 'modules', 'botsim', 'botsim.j
 const CAT = SIM.loadCatalog(path.join(ROOT, 'shared', 'core', '08-catalog-data.js'));
 const T0 = Date.UTC(2026, 10, 1, 10, 0, 0);
 
-/** world: { slots: { fleet:[used,max], exp:[used,max] }, ships, flights } — mutated by live sends. */
-async function boot({ world, cfg = {}, dryRun = false }) {
+/** world: { slots: { fleet:[used,max], exp:[used,max] }, ships, flights, messages: { cat: [{ id, ts, outcome | kind, resources, dm }] },
+ *  pageAt (ServerMs of the last full-page request botcore saw) } — mutated by live sends; a fleetTable read is a full-page request. */
+async function boot({ world, cfg = {}, core = {}, dryRun = false, worker = 'botexpo' }) {
   const clock = { t: T0 };
   const defs = [];
   const mods = [];
   const store = new Map();
+  const bodies = { p1: { id: 1, key: 'p1', coords: '2:68:5', order: 1, type: 'planet', ships: world.ships } };
   const OGX = {
     module: (d) => mods.push(d), botSim: SIM, catalog: CAT,
     time: { serverNow: () => clock.t },
     fmt: { short: (n) => String(Math.round(n)), time: (t) => new Date(t).toISOString().slice(11, 19) },
     state: { research: async () => ({ levels: { 109: 1, 110: 1, 111: 1 } }), combatBonus: async () => null },
     storage: { get: async (k, d) => d },
+    log: { rec() {} },
+    messages: { parse: {
+      list: (doc) => ((world.messages || {})[doc.cat] || []).map((m) => ({ id: m.id, ts: m.ts, li: m, kind: m.kind })),
+      expedition: (li) => ({ outcome: li.outcome || null }),
+      fleetMessage: (li) => ({ kind: li.kind || 'return_expedition', resources: li.resources || {}, gz: { resources: { 921: li.dm || 0 } } }),
+    } },
     bot: {
       ready: Promise.resolve(), INTERVALS: { m6: [240000, 360000], m16: [840000, 960000], m35: [1500000, 2100000] },
       randMs: ([a, b]) => Math.round((a + b) / 2), isActive: () => true, isDryRun: () => dryRun, cfg: () => undefined,
       flightTime: () => ({ duration: 600, fuel: 10, distance: 1000 }),
-      register: (d) => { defs.push(d); return {}; }, panelSection: () => {}, status: () => ({ leader: true }),
+      register: (d) => { defs.push(d); return {}; }, panelSection: () => {}, status: () => ({ leader: true, limitsHit: world.limitsHit || [] }),
+      lastPageAt: () => world.pageAt || 0,
     },
   };
   const window = { OGX };
   vm.runInNewContext(fs.readFileSync(FILE, 'utf8'), { window, setTimeout, clearTimeout, console }, { filename: FILE });
   const ctx = { store: { get: async (k, d) => (store.has(k) ? JSON.parse(store.get(k)) : d), set: async (k, v) => { store.set(k, JSON.stringify(v)); }, subscribe: () => {} }, log: { warn() {} } };
   await mods[0].init(ctx);
-  const run = defs.find((d) => d.id === 'botexpo').run;
-  const log = { reads: 0, sends: [], dry: 0, journal: [] };
-  const settings = Object.assign({ mode: 'dm', probeBuild: false, stayHours: 1, betweenMinSec: 5, betweenMaxSec: 15, afterReturnMinSec: 30, afterReturnMaxSec: 300 }, cfg);
+  const run = defs.find((d) => d.id === worker).run;
+  const log = { reads: 0, sends: [], dry: 0, journal: [], msgReads: [], pageReads: 0 };
+  const settings = Object.assign({ mode: 'dm', probeBuild: false, expoProbes: 1, keepProbes: 0, stayHours: 1, betweenMinSec: 5, betweenMaxSec: 15, afterReturnMinSec: 30, afterReturnMaxSec: 300 }, cfg);
+  const coreSettings = Object.assign({ slotsReserve: 1, readMessages: false }, core);
   const wctx = {
     get dryRun() { return dryRun; },
     now: () => clock.t,
     cfg: (k) => settings[k],
-    core: (k) => ({ slotsReserve: 1, readMessages: false }[k]),
-    rec: (ev, what) => log.journal.push({ t: clock.t, ev, what }),
+    core: (k) => coreSettings[k],
+    rec: (ev, what, d) => log.journal.push({ t: clock.t, ev, what, d }),
     decide: () => {},
-    flights: () => [],
-    bodies: async () => ({ p1: { id: 1, key: 'p1', coords: '2:68:5', order: 1, type: 'planet', ships: world.ships } }),
+    flights: () => world.cacheFlights || [],
+    bodies: async () => bodies,
     locked: () => null,
     canSend: async () => ({ ok: true, held: 0 }),
     available: () => ({ metal: 1e6, crystal: 1e6, deuterium: 1e6 }),
+    reserve: () => 'r1', release: () => {},
     sleepCheck: () => ({ ok: true }),
     async act(a) {
       if (a.type === 'read.fleetTable') {
         assert.ok(/^Экспедиции: слоты и корабли на /.test(a.why));
         log.reads++;
+        world.pageAt = clock.t;   // a full-page GET: the server's fleet handler ran (botcore.lastPageAt)
         const s = world.slots;
         return { ok: true, data: { fleetTable: { slots: { used: s.fleet[0], max: s.fleet[1] }, expeditions: { used: s.exp[0], max: s.exp[1] },
           ships: Object.entries(world.ships).map(([id, count]) => ({ id: +id, count })), flights: world.flights || [] } } };
       }
-      if (a.type === 'probe.target') return { ok: true, data: { missions: [15], stayOptions: [{ value: 1, hours: 1 }] } };
+      if (a.type === 'read.messages') { log.msgReads.push({ t: clock.t, cat: a.params.cat, fresh: !!a.fresh }); return { ok: true, at: clock.t, data: { doc: { cat: a.params.cat } } }; }
+      if (a.type === 'read.page') { log.pageReads++; return { ok: true, at: clock.t, data: { doc: {} } }; }
+      if (a.type === 'probe.target') return { ok: true, data: { missions: [15, 11], stayOptions: [{ value: 1, hours: 1 }] } };
       if (a.type === 'fleet.send') {
         if (dryRun) { log.dry++; return { ok: true, dry: true, refused: 'dryRun' }; }
         world.slots.fleet[0]++; world.slots.exp[0]++;
         for (const [id, n] of Object.entries(a.params.ships)) world.ships[id] -= n;
         log.sends.push(clock.t);
-        return { ok: true, verified: true, data: { fleetId: 100 + log.sends.length, arrival: clock.t + 600000, back: clock.t + 2 * 3600000 } };
+        return { ok: true, verified: true, at: clock.t, data: { fleetId: 100 + log.sends.length, arrival: clock.t + 600000, back: clock.t + 2 * 3600000 } };
       }
       return { ok: false, refused: 'unknown' };
     },
   };
-  return { run: () => run(wctx), clock, log, world, setDry: (v) => { dryRun = v; }, M: OGX.botExpo._M, L: OGX.botExpo._lib };
+  return { run: () => run(wctx), clock, log, world, bodies, setDry: (v) => { dryRun = v; }, M: OGX.botExpo._M, L: OGX.botExpo._lib };
 }
 /** Calls the worker every `stepMs` (a wake each time) and also at the times it asked for, for `ms` of server time. */
 async function drive(env, ms, stepMs = 5000) {
@@ -154,3 +168,98 @@ T.test('dry-run switched on mid live round: dry sends use up the round (no endle
 });
 
 
+
+T.test('results (GALAXYZ ajax lag): no messages read until a full-page request followed the stay end (after 45 s one of our own), one cat-15 read serves the round, retries 30 s x n, six reads then the trip is closed as unread (never flying forever)', async () => {
+  const env = await boot({ world: { slots: { fleet: [0, 10], exp: [0, 2] }, ships: { 210: 5 }, messages: {}, pageAt: 0 }, core: { readMessages: true }, cfg: { betweenMinSec: 5, betweenMaxSec: 5 } });
+  await drive(env, 20000);
+  assert.equal(env.log.sends.length, 2, 'the round: two sends');
+  assert.equal(env.log.reads, 1, 'one slot read for the round (the view serves the second fleet)');
+  const trips = Object.values(env.M.trips).sort((a, b) => a.stayEnd - b.stayEnd);
+  const E = trips[0].stayEnd;
+  env.world.pageAt = T0 + 1000;                    // the last full-page request: the step's fleetTable GET, before the stay end
+  env.clock.t = E - 10000;
+  await drive(env, 50000);                         // a wake every 5 s until E + 40 s
+  assert.equal(env.log.msgReads.length, 0, 'no read while no full-page request followed the stay end: ' + JSON.stringify(env.log.msgReads));
+  const reads0 = env.log.reads;
+  await drive(env, 20000);                         // E + 60 s
+  assert.equal(env.log.reads, reads0 + 1, 'one page request of our own 45 s after the event');
+  assert.equal(env.log.msgReads.filter((r) => r.cat === 15).length, 1, 'then one cat-15 read for both trips');
+  assert.ok(env.log.msgReads[0].t >= env.world.pageAt, 'read after the page request');
+  await drive(env, 600000);
+  const r15 = env.log.msgReads.filter((r) => r.cat === 15);
+  assert.equal(r15.length, 6, 'six reads, then no more: ' + JSON.stringify(r15.map((r) => (r.t - E) / 1000)));
+  const gaps = r15.slice(1).map((r, i) => r.t - r15[i].t);
+  assert.ok(gaps.every((g, i) => g >= 30000 * (i + 1) && g <= 30000 * (i + 1) + 5500), 'retries 30 s x n apart: ' + JSON.stringify(gaps));
+  assert.ok(trips.every((x) => x.done && x.unread15), 'both trips closed as unread: ' + JSON.stringify(trips.map((x) => [x.done, x.unread15, x.tries15])));
+  assert.equal(env.M.stats.unread15, 2);
+  assert.ok(env.log.journal.some((j) => j.ev === 'expo-result' && /не найден/.test(j.what)), 'journaled');
+  assert.equal(env.log.msgReads.filter((r) => r.cat === 4).length, 0, 'no return read for a closed trip');
+});
+
+T.test('results: report (cat 15) and return (cat 4) matched by their date; «сдвиг времени» moves the return one stay later (upstream formula), no cat-4 read before it, the trip keeps its amounts; a wake storm costs no reads', async () => {
+  const env = await boot({ world: { slots: { fleet: [0, 10], exp: [0, 2] }, ships: { 210: 5 }, messages: {}, pageAt: 0 }, core: { readMessages: true }, cfg: { betweenMinSec: 5, betweenMaxSec: 5 } });
+  await drive(env, 20000);
+  const [a, b] = Object.values(env.M.trips).sort((x, y) => x.stayEnd - y.stayEnd);
+  env.world.messages[15] = [{ id: 'rA', ts: a.stayEnd, outcome: 'delay' }, { id: 'rB', ts: b.stayEnd, outcome: 'nothing' }];
+  env.clock.t = b.stayEnd + 1000;
+  env.world.pageAt = env.clock.t;                  // a page request of another module after both stay ends
+  await drive(env, 30000);
+  assert.equal(a.outcome, 'time'); assert.equal(b.outcome, 'nothing');
+  assert.equal(env.log.msgReads.filter((r) => r.cat === 15).length, 1, 'one read for both trips');
+  const stay = a.stayEnd - a.arrival;
+  assert.equal(a.back, a.backPlanned + stay + 2000, 'delay: planned back + stay + 2 s');
+  assert.equal(a.returnSeen, false);
+  assert.ok(env.log.journal.some((j) => j.ev === 'decision' && /задержка/.test(j.what)));
+  // B returns: its message; A's is not there yet and must not be taken
+  env.world.messages[4] = [{ id: 'mB', ts: b.back, kind: 'return_expedition', resources: { metal: 0, crystal: 0, deuterium: 0 }, dm: 0 }];
+  env.clock.t = b.back + 1000; env.world.pageAt = env.clock.t;
+  await drive(env, 60000);
+  assert.equal(b.done, true); assert.deepEqual(JSON.parse(JSON.stringify(b.amounts)), { metal: 0, crystal: 0, deuterium: 0, darkMatter: 0 });
+  assert.equal(a.amounts, null, 'A is not matched to B\'s message');
+  // wakes every 5 s across A's corrected return: no cat-4 read before it
+  env.world.messages[4].push({ id: 'mA', ts: a.back, kind: 'return_expedition', resources: { metal: 0, crystal: 0, deuterium: 0 }, dm: 120 });
+  env.clock.t = a.back - 60000;
+  const n4 = env.log.msgReads.filter((r) => r.cat === 4).length;
+  await drive(env, 55000);
+  assert.equal(env.log.msgReads.filter((r) => r.cat === 4).length, n4, 'no cat-4 read before the corrected return');
+  env.world.pageAt = a.back + 2000;
+  await drive(env, 60000);
+  assert.equal(a.done, true); assert.equal(a.amounts && a.amounts.darkMatter, 120);
+  assert.equal(env.M.stats.dm, 120);
+  assert.equal(env.M.stats.outcomes.time, 1); assert.equal(env.M.stats.outcomes.nothing, 1);
+});
+
+T.test('DM hunt without a moon: one «нужна своя луна» line per 6 h and no page read on the wakes (every 5 s); a new moon runs the step within a minute; all places taken -> no fleetTable read until the first return', async () => {
+  const env = await boot({ world: { slots: { fleet: [0, 10], exp: [0, 2] }, ships: {} }, worker: 'botexpo:dm' });
+  await drive(env, 10 * 60000);
+  assert.equal(env.log.journal.filter((j) => j.ev === 'skip' && /луны/.test(j.what)).length, 1, 'one skip line');
+  assert.equal(env.log.reads, 0, 'no fleetTable read');
+  assert.equal(env.M.dmState, 'нужна своя луна');
+  env.bodies.m1 = { id: 2, key: 'm1', coords: '2:68:5', order: 2, type: 'moon', ships: {} };
+  await drive(env, 60000);
+  assert.equal(env.log.reads, 1, 'the moon (bodies changed) opened the gate: one read');
+  assert.equal(env.log.journal.filter((j) => j.ev === 'skip' && /луны/.test(j.what)).length, 1);
+  // five searches of ours in flight (the assumed limit): nothing to read until the first comes back
+  const t = env.clock.t;
+  env.M.dm = {};
+  for (let i = 0; i < 5; i++) env.M.dm['d' + i] = { id: 'd' + i, fleetId: 500 + i, origin: 1, originCoords: '2:68:5', n: 2, sentAt: t, arrival: t + 600000, back: t + 3600000 + i * 1000, done: false };
+  env.M.meta.dmGate = null;
+  const outs = await drive(env, 20 * 60000);
+  assert.equal(env.log.reads, 1, 'no read while all places are taken');
+  assert.ok(outs[outs.length - 1].nextAt >= t + 3600000, 'waits for the first return: ' + (outs[outs.length - 1].nextAt - t));
+});
+
+T.test('colonize with an empty target list: no overview read on the wakes (every 5 s for 10 min), one skip line per 6 h; a colonizer in flight is checked around its arrival only', async () => {
+  const env = await boot({ world: { slots: { fleet: [0, 10], exp: [0, 2] }, ships: {} }, worker: 'botexpo:colonize', cfg: { colonize: true, colonizeTargets: [] } });
+  await drive(env, 10 * 60000);
+  assert.equal(env.log.pageReads, 0, 'no overview read');
+  assert.equal(env.log.journal.filter((j) => j.ev === 'skip' && /целей пуст/.test(j.what)).length, 1, 'one skip line');
+  const arr = env.clock.t + 5 * 60000;
+  env.M.colo = { c1: { key: 'c1', fleetId: 9, coords: '2:68:9', position: 9, origin: 1, originCoords: '2:68:5', cargo: { metal: 0, crystal: 0 }, sentAt: env.clock.t, arrival: arr, done: false } };
+  env.M.meta.colGate = null;
+  await drive(env, 4 * 60000);
+  assert.equal(env.log.pageReads, 1, 'one overview read, then the step waits for the arrival');
+  await drive(env, 3 * 60000);
+  assert.ok(env.log.pageReads >= 2 && env.log.pageReads <= 5, 'reads around the arrival only: ' + env.log.pageReads);
+  assert.equal(env.M.colo.c1.done, true, 'the colonizer is settled (no colony seen: failure journaled)');
+});

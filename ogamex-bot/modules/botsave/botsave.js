@@ -17,6 +17,11 @@
  *     fleet holds Battle Recyclers 219 (debris goes only to 219; 209 alone does not make a harvest save);
  *   - the recall is a persisted OGX.bot.at timer (label 'botsave:recall') at start + oneWay/2 + recallJitter, moved so the fleet
  *     lands home after the last threat on that body + 30 s, strictly before the destination arrival - 5 s;
+ *   - fleets landing on the threatened body before the hit (return legs, Deploys): the save waits for the last landing that still
+ *     leaves time and takes those ships too; a body with nothing at home is planned again at the next landing (never a final
+ *     «нечего спасать» while a landing is due); a fleet landing after a save left gets a save of its own (#2); a send refused for
+ *     slots is retried every ~10 s until arrival - 10 s; every attack on an own body is registered in OGX.bot.battles (side
+ *     'defender', BOT_DESIGN §5.1.8) so botdebris looks at the own field right after the fight.
  *   - spyAttacker (off) and sleepSave (off) as BOT_DESIGN §5.1.9 / §5.2.
  * Every game request goes through wctx.act (the runtime executor); a wctx.decide precedes every action.
  * Off by default (botsave.on false); in dry-run every send comes back dry and no recall is scheduled. */
@@ -60,6 +65,12 @@ window.OGX = window.OGX || {};
   const RECALL_SAFE_MS = 5000;      // recall strictly before the destination arrival - 5 s
   const HOME_AFTER_MS = 30000;      // fleet lands home after the last threat + 30 s
   const DEADLINE_MS = 10000;        // a save not started by arrival - 10 s is useless
+  const PLAN_MS = 8000;             // readSource (fleetTable + probe) before the send is queued
+  const LAND_MARGIN_MS = 2000;      // a landed fleet is on the page this long after its arrival second
+  const SLOT_RETRY = [8000, 12000]; // a send refused for slots is tried again after this long
+  const LAST_TRY_MS = 4000;         // ... and one last time this long before the executor's deadline
+  const MAX_REPLANS = 6;            // «нечего спасать» -> wait for a landing, at most this many times per save
+  const FIGHT_MISSIONS = [1, 2, 9];
   const POLL = [240000, 360000];    // look at the event box when no page was seen for this long (no request when pages flow)
   const SILO_FACTOR = 1;            // 2Moons config silo_factor default [UPSTREAM]; GALAXYZ value unknown -> max(silo_factor, 1)
   const EXPO_POS = 16;              // max_planets + 1 (Aeternum: 15 positions)
@@ -148,6 +159,27 @@ window.OGX = window.OGX || {};
     if (at >= destArrival - RECALL_SAFE_MS) return { at: null, want, need, reason: 'late' };
     return { at, want, need, reason: null };
   }
+  /** The next own fleet landing on `bodyKey` (a return leg or a Deploy arrival) after `now` and before `before` (ServerMs), or null. */
+  function nextLanding(flights, bodyKey, now, before) {
+    let best = null;
+    for (const f of Array.isArray(flights) ? flights : []) {
+      if (!f || !f.own || f.destKey !== bodyKey || !(+f.arrival > now) || !(+f.arrival < before)) continue;
+      if (!(f.returnFlight || +f.missionType === 4)) continue;
+      if (best === null || +f.arrival < best) best = +f.arrival;
+    }
+    return best;
+  }
+  /** The latest moment planning may start so the send still leaves before the deadline: reads + queueing + the landing margin. */
+  const latestPlanAt = (firstArrival) => firstArrival - DEADLINE_MS - SEND_LEAD_MS - PLAN_MS - LAND_MARGIN_MS;
+  /** The fight an attack on an own body produces (BOT_DESIGN §5.1.8), for OGX.bot.battles: side 'defender' (nothing to send before
+   *  the hit; botdebris reads the own field right after it). Probes and missiles make no field -> null. */
+  function battleOf(th, decision) {
+    if (!th || !th.key || !th.bodyKey || th.probesOnly || !FIGHT_MISSIONS.includes(+th.mission) || !(+th.arrival > 0)) return null;
+    const target = coordsObj(th.to, +th.toType === 3 ? 3 : 1);
+    if (!target) return null;
+    return { id: 'save:' + th.key, owner: NAME, side: 'defender', target, arrival: +th.arrival, fleetId: null, status: 'planned', decision: decision || null,
+      threat: th.key, bodyKey: th.bodyKey, debris: null, existingDebris: null };
+  }
   /** Classification of one threat (filters in BOT_DESIGN §5.1 order). ctx: { cfg(k), ourPoints: { fleet, defense, res }|null, catalog } */
   function classify(th, ctx) {
     const cfg = ctx.cfg;
@@ -181,11 +213,13 @@ window.OGX = window.OGX || {};
     }
     return { decision: 'save', filter: 'save', why: 'атака: сейв флота и ресурсов' };
   }
-  OGX.botSave = { version: '1.0.0', pointsOf, payload, siloFree, abmCount, minOneWay, hypotheses, recallAt, classify, spyProbesSetting };
+  OGX.botSave = { version: '1.0.0', pointsOf, payload, siloFree, abmCount, minOneWay, hypotheses, recallAt, classify, spyProbesSetting, nextLanding, battleOf, latestPlanAt, spySource: (...a) => spySource(...a),
+    nearbyFields: (...a) => nearbyFields(...a), candidates: (...a) => candidates(...a) };
 
   // ------------------------------------------------------------------ module
   let view = { threats: {}, saves: {}, t: 0 };   // mirror of botsave.state for the panel (every tab)
   let handle = null;
+  const landed = {};   // body key -> ServerMs of the last own fleet landing seen on the bus (bot:fleet-returned)
 
   OGX.module({
     name: NAME,
@@ -198,6 +232,8 @@ window.OGX = window.OGX || {};
       try { view = (await ctx.store.get('state', null)) || view; } catch (e) { /* empty */ }
       try { ctx.store.subscribe('state', (v) => { if (v) { view = v; repaint(); } }); } catch (e) { /* no subscribe */ }
       OGX.bot.panelSection(NAME, renderPanel);
+      // a fleet landed on a body: a save that found nothing at home (or already left) is planned again for it
+      OGX.bus.on('bot:fleet-returned', (p) => { if (p && p.bodyKey) landed[p.bodyKey] = Math.max(num(landed[p.bodyKey]), num(p.at) || now()); });
       OGX.bot.onTimer('botsave:recall', (p) => { if (handle) handle.wake('recall', now()); return p; });
       handle = OGX.bot.register({
         id: NAME, module: NAME, prio: 'defense', allowDuringSleep: true, startJitter: [5000, 15000],
@@ -260,6 +296,11 @@ window.OGX = window.OGX || {};
         decision: c.decision, filter: c.filter, why: c.why, updated: t,
       });
       st.threats[th.key] = rec;
+      // the fight itself (attack on an own body, whatever we do about it) goes to the battle registry for botdebris (§5.1.8)
+      const fight = battleOf(th, c.decision);
+      if (fight && OGX.bot.battles && (rec.battleAt !== th.arrival || rec.battleDecision !== c.decision)) {
+        try { OGX.bot.battles.put(fight); rec.battleAt = th.arrival; rec.battleDecision = c.decision; rec.battleGone = false; } catch (e) { /* registry missing */ }
+      }
       const info = { threat: th.key, to: th.to, bodyKey: th.bodyKey, mission: th.mission, arrival: th.arrival, from: th.from, owner: th.ownerName, ownerId: th.ownerId, ships: th.ships, units: th.units, decision: c.decision, filter: c.filter, why: c.why, changed };
       if (c.decision === 'ignore') w.rec('threat-ignored', 'Угроза на ' + (th.to || '?') + ' без реакции: ' + c.why, info);
       else w.rec('threat-seen', (changed ? 'Угроза изменилась: ' : 'Угроза: ') + (MISSION_RU[th.mission] || th.mission) + ' на ' + (th.to || '?') + ' в ' + fmtT(th.arrival) + ' — ' + c.why, info);
@@ -270,6 +311,15 @@ window.OGX = window.OGX || {};
         const text = (+th.mission === 10 ? 'Ракетная атака' : +th.mission === 6 ? 'Шпионаж' : 'Атака') + ' на [' + (th.to || '?') + '] через ' + fmtDur(left) + ' от ' + (th.ownerName || 'неизвестного') + ': решение — ' + dec;
         try { OGX.bot.notify(text, { level: c.decision === 'ignore' ? 'info' : 'alarm', sound: c.decision !== 'ignore' }); } catch (e) { /* ignore */ }
       }
+    }
+    // registered fights whose threat vanished before the hit (recalled attack) are withdrawn; past ones are dropped after 10 min
+    for (const rec of Object.values(st.threats)) {
+      if (!rec.battleAt || rec.battleGone) continue;
+      const vanished = !live.has(rec.key) && rec.arrival > t + 5000;
+      const over = rec.arrival < t - 10 * 60000;
+      if (!vanished && !over) continue;
+      rec.battleGone = true;
+      try { OGX.bot.battles.remove('save:' + rec.key, vanished ? 'угроза исчезла' : 'done'); } catch (e) { /* ignore */ }
     }
     await save(w, st);
 
@@ -312,17 +362,56 @@ window.OGX = window.OGX || {};
         await save(w, st);
       }
       sv.threatKeys = [...new Set((sv.threatKeys || []).concat(recs.map((r) => r.key)))];
+      // «нечего спасать» was final only while no fleet landed: a landing since then re-plans the save while there is time
+      if (sv.state === 'skipped' && sv.noShips && num(landed[bodyKey]) > num(sv.skippedAt) && t < latestPlanAt(first) && num(sv.replans) <= MAX_REPLANS) {
+        sv.state = 'waiting'; sv.notBefore = t; sv.waitFor = null;
+        w.rec('save-planned', 'Сейв ' + bodyLabel(bodies[bodyKey], bodyKey) + ': флот сел — планирую заново (удар в ' + fmtT(first) + ')', { bodyKey, firstArrival: first, startAt: sv.startAt, replan: true, landedAt: landed[bodyKey] });
+      }
       if (sv.state === 'waiting') {
         sv.firstArrival = first; sv.lastArrival = last;
         if (sv.startAt > first - DEADLINE_MS - 5000) sv.startAt = Math.max(t, first - DEADLINE_MS - 5000);
-        if (t >= sv.startAt - PREP_MS) {
+        // a fleet landing on the body while a save after it still makes the deadline: the save waits for it (the landed ships go too;
+        // a body with nothing at home now is saved then). Planning starts right after the landing, the send keeps its lead window.
+        const landing = nextLanding(w.flights(), bodyKey, t, latestPlanAt(first));
+        if (landing && landing !== sv.waitFor) {
+          sv.waitFor = landing; sv.notBefore = Math.max(num(sv.notBefore), landing + LAND_MARGIN_MS);
+          w.rec('save-planned', 'Сейв ' + bodyLabel(bodies[bodyKey], bodyKey) + ': жду посадку флота в ' + fmtT(landing) + ' — успеваем спасти и его (удар в ' + fmtT(first) + ')', { bodyKey, waitFor: landing, firstArrival: first, startAt: sv.startAt, notBefore: sv.notBefore });
+        }
+        const due = Math.max(sv.startAt - PREP_MS, num(sv.notBefore));
+        if (t >= due) {
           await doSave(w, st, sv, bodies);
-        } else next = Math.min(next, sv.startAt - PREP_MS);
-      } else if (sv.state === 'sent' && last > (sv.lastArrival || 0)) {
-        sv.lastArrival = last;
-        sv.horizon = last + HOME_AFTER_MS;
-        planRecall(w, st, sv, 'новая волна на ' + bodyLabel(bodies[bodyKey], bodyKey));
+        } else next = Math.min(next, due);
+      } else if (sv.state === 'sent') {
+        if (last > (sv.lastArrival || 0)) {
+          sv.lastArrival = last;
+          sv.horizon = last + HOME_AFTER_MS;
+          planRecall(w, st, sv, 'новая волна на ' + bodyLabel(bodies[bodyKey], bodyKey));
+        }
+        // a fleet landing on the body after the save left (or due before the deadline): a save of its own
+        const latest = latestPlanAt(first);
+        const due = nextLanding(w.flights(), bodyKey, t, latest);
+        const at = due || (num(landed[bodyKey]) > num(sv.sentAt) && t < latest ? num(landed[bodyKey]) : null);
+        if (at && at > num(sv.sentAt)) {
+          const key = bodyKey + '#' + Math.floor(at / 1000);
+          if (!st.saves[key]) {
+            const lmin = Math.max(10, num(w.cfg('saveLeadMinSec'), 30)); const lmax = Math.max(lmin, num(w.cfg('saveLeadMaxSec'), 90));
+            st.saves[key] = { key, bodyKey, kind: 'threat', extra: true, state: 'waiting', created: t, firstArrival: first, lastArrival: last, threatKeys: sv.threatKeys.slice(),
+              startAt: Math.max(first - randInt(lmin, lmax) * 1000, at + LAND_MARGIN_MS + SEND_LEAD_MS), notBefore: at + LAND_MARGIN_MS, waitFor: at };
+            w.rec('save-planned', 'Сейв ' + bodyLabel(bodies[bodyKey], bodyKey) + ': ещё один флот ' + (due ? 'сядет в ' + fmtT(at) : 'сел после отправки сейва') + ' — дополнительный сейв (удар в ' + fmtT(first) + ')',
+              { bodyKey, key, extra: true, waitFor: at, firstArrival: first, startAt: st.saves[key].startAt });
+          }
+        }
       }
+      await save(w, st);
+    }
+    // extra saves (a fleet that landed after the body's save left)
+    for (const sv of Object.values(st.saves)) {
+      if (!sv.extra || sv.state !== 'waiting') continue;
+      if (!groups[sv.bodyKey]) { sv.state = 'cancelled'; w.rec('skip', 'Дополнительный сейв ' + sv.bodyKey + ' отменён: угроза исчезла', { reason: 'threatGone', bodyKey: sv.bodyKey, key: sv.key }); continue; }
+      const first = groups[sv.bodyKey][0].arrival;
+      if (sv.startAt > first - DEADLINE_MS - 5000) sv.startAt = Math.max(t, first - DEADLINE_MS - 5000);
+      const due = Math.max(sv.startAt - PREP_MS, num(sv.notBefore));
+      if (t >= due) await doSave(w, st, sv, bodies); else next = Math.min(next, due);
       await save(w, st);
     }
     // waiting saves whose threats vanished
@@ -359,7 +448,7 @@ window.OGX = window.OGX || {};
           .catch(() => {});
       }
     } catch (e) { /* ignore */ }
-    for (const sv of Object.values(st.saves)) if (sv.state === 'waiting') next = Math.min(next, Math.max(w.now() + 1000, sv.startAt - PREP_MS));
+    for (const sv of Object.values(st.saves)) if (sv.state === 'waiting') next = Math.min(next, Math.max(w.now() + 1000, sv.startAt - PREP_MS, num(sv.notBefore)));
     return { nextAt: Math.max(w.now() + 1000, next), reason: Object.keys(groups).length ? 'угрозы: ' + Object.keys(groups).length : 'наблюдение' };
   }
 
@@ -477,6 +566,19 @@ window.OGX = window.OGX || {};
     try { v = OGX.api && typeof OGX.api.spyProbes === 'function' ? +OGX.api.spyProbes() : parseInt(OGX.settings.get('spy.probes'), 10); } catch (e) { v = NaN; }
     return Number.isFinite(v) && v > 0 ? Math.floor(v) : 1100;
   }
+  /** The body that spies the attacker (rules-6): a body with the full spy.probes count first, then an unlocked one (the attacked
+   *  body is locked for normal sends), then the nearest to the attacker, then the most probes. A body with fewer than
+   *  min(setting, 50) probes is never picked while another has more (a 1-probe spy is shot down and wastes the spare slot). */
+  function spySource(bodies, want, isLocked, from) {
+    const list = Object.values(bodies || {}).filter((b) => num(b.ships && b.ships[210]) > 0);
+    if (!list.length) return null;
+    const floor = Math.min(num(want), 50);
+    const most = Math.max(...list.map((b) => num(b.ships[210])));
+    const ok = list.filter((b) => num(b.ships[210]) >= floor || num(b.ships[210]) >= most);
+    const dist = (b) => { try { return from && b.coords && OGX.fleet && OGX.fleet.gz ? num(OGX.fleet.gz.distance(b.coords, from), 0) : 0; } catch (e) { return 0; } };
+    return ok.sort((a, b) => (num(b.ships[210]) >= want ? 1 : 0) - (num(a.ships[210]) >= want ? 1 : 0) || (isLocked(a.key) ? 1 : 0) - (isLocked(b.key) ? 1 : 0)
+      || dist(a) - dist(b) || num(b.ships[210]) - num(a.ships[210]))[0] || null;
+  }
   async function spyAttacker(w, rec, bodies, st) {
     const target = coordsObj(rec.from, 1);
     if (!target) return;
@@ -485,11 +587,9 @@ window.OGX = window.OGX || {};
     const reserve = Math.max(0, num(w.core('slotsReserve')));
     const free = slots && slots.known ? slots.fleet.max - slots.fleet.used : null;
     if (free === null || free - 1 <= reserve) { w.rec('spy-attacker', 'Шпионаж атакующего пропущен: нужен свободный слот сверх резерва и слота для сейва', { threat: rec.key, free, reserve, ok: false }); return; }
-    // probes from an unlocked body first (the attacked one is locked for normal sends)
-    const order = Object.values(bodies).filter((b) => num(b.ships && b.ships[210]) > 0).sort((a, b) => (w.locked(a.key) ? 1 : 0) - (w.locked(b.key) ? 1 : 0));
-    const src = order[0];
-    if (!src) { w.rec('spy-attacker', 'Шпионаж атакующего пропущен: нет зондов', { threat: rec.key, ok: false }); return; }
     // probes per spy = the suite setting spy.probes (OGX.api.spyProbes, default 1100), at most what the body has
+    const src = spySource(bodies, spyProbesSetting(), (k) => !!w.locked(k), rec.from);
+    if (!src) { w.rec('spy-attacker', 'Шпионаж атакующего пропущен: нет зондов', { threat: rec.key, ok: false }); return; }
     const n = Math.min(num(src.ships[210]), spyProbesSetting());
     const r = await act(w, { type: 'fleet.send', prio: 'defense', cls: w.locked(src.key) ? 'force' : 'normal', bodyId: +src.id,
       params: { target, ships: { 210: n }, mission: 6, speed: 10 }, why: 'Шпионаж атакующего ' + rec.from, dedupeKey: 'botsave:spy:' + rec.key },
@@ -552,8 +652,26 @@ window.OGX = window.OGX || {};
     return Math.floor(n * per * 0.98);
   }
 
-  /** Destination candidates in missionOrder (group = rank). */
-  function candidates(w, st, src, bodies, ships, { allowExpedition = true } = {}) {
+  /** Non-empty debris fields within ±span systems of `src` from the galaxy cache (OGX.galaxy.cached is async), the nearest systems
+   *  first, at most `max`. Read once per planning and handed to candidates(). */
+  async function nearbyFields(src, { max = 3, span = 5 } = {}) {
+    const o = coordsObj(src && src.coords);
+    if (!o || !OGX.galaxy || typeof OGX.galaxy.cached !== 'function') return [];
+    const out = [];
+    for (let d = 0; d <= span && out.length < max; d++) {
+      for (const s of d ? [o.system - d, o.system + d] : [o.system]) {
+        if (s < 1 || s > 499) continue;
+        let sys = null;
+        try { sys = await OGX.galaxy.cached(o.galaxy, s); } catch (e) { sys = null; }
+        for (const p of (sys && sys.positions) || []) {
+          if (p && p.debris && num(p.debris.metal) + num(p.debris.crystal) > 0) out.push({ galaxy: o.galaxy, system: s, position: +p.position, type: 2, field: { metal: num(p.debris.metal), crystal: num(p.debris.crystal) } });
+        }
+      }
+    }
+    return out.slice(0, max);
+  }
+  /** Destination candidates in missionOrder (group = rank). opts.fields: nearbyFields() of the source (harvest). */
+  function candidates(w, st, src, bodies, ships, { allowExpedition = true, fields = [] } = {}) {
     const order = Array.isArray(w.cfg('missionOrder')) && w.cfg('missionOrder').length ? w.cfg('missionOrder') : SETTINGS.missionOrder.default;
     const threatened = new Set(Object.values(st.threats).filter((r) => r.arrival > w.now() - 60000 && r.decision !== 'ignore' && +r.mission !== 10 && !r.probesOnly).map((r) => r.bodyKey));
     const own = Object.values(bodies).filter((b) => b.key !== src.key && b.coords && !w.locked(b.key) && !threatened.has(b.key));
@@ -570,17 +688,7 @@ window.OGX = window.OGX || {};
         for (const b of moons.concat(planets)) out.push({ mission, target: tgt(b), label: (isMoon(b) ? 'луна ' : 'планета ') + b.coords, bodyKey: b.key, group: g + (isMoon(b) ? 0 : 0.5) });
       } else if (m === 'harvest') {
         if (!(num(ships[219]) > 0)) { g++; continue; }   // debris only with Battle Recyclers 219 (John's rule, no 209)
-        const o = coordsObj(src.coords);
-        const fields = [];
-        for (let d = 0; d <= 5; d++) {
-          for (const s of d ? [o.system - d, o.system + d] : [o.system]) {
-            if (s < 1 || s > 499) continue;
-            let sys = null;
-            try { sys = OGX.galaxy.cached(o.galaxy, s); } catch (e) { sys = null; }
-            for (const p of (sys && sys.positions) || []) if (p.debris && num(p.debris.metal) + num(p.debris.crystal) > 0) fields.push({ galaxy: o.galaxy, system: s, position: p.position, type: 2 });
-          }
-        }
-        for (const f of fields.slice(0, 3)) out.push({ mission, target: f, label: 'обломки ' + coordsStr(f), group: g, needsProbe: true });
+        for (const f of (fields || []).slice(0, 3)) out.push({ mission, target: { galaxy: f.galaxy, system: f.system, position: f.position, type: 2 }, label: 'обломки ' + coordsStr(f), group: g, needsProbe: true });
       } else if (m === 'expedition' && allowExpedition) {
         const o = coordsObj(src.coords);
         out.push({ mission, target: { galaxy: o.galaxy, system: o.system, position: EXPO_POS, type: 1 }, label: 'экспедиция ' + o.galaxy + ':' + o.system + ':' + EXPO_POS, group: g, staytime: 1, risky: true });
@@ -597,10 +705,14 @@ window.OGX = window.OGX || {};
     sv.state = 'planning'; sv.bodyId = +src.id; sv.coords = src.coords;
     await save(w, st);
     const deutKeep = num(opts.deutToLeave !== undefined ? opts.deutToLeave : w.cfg('deutToLeave')) + Math.max(0, num(w.core('deutReserve')));
+    // debris fields near the body (harvest destination): the galaxy cache is async, read once here, never inside candidates()
+    const order = Array.isArray(w.cfg('missionOrder')) ? w.cfg('missionOrder') : SETTINGS.missionOrder.default;
+    const fields = order.includes('harvest') ? await nearbyFields(src) : [];
+    const copts = Object.assign({}, opts, { fields });
     let tries = 0; let lastFail = null;
     for (let round = 0; round < 2; round++) {
       const shipsGuess = src.ships || {};
-      const cands0 = candidates(w, st, src, bodies, shipsGuess);
+      const cands0 = candidates(w, st, src, bodies, shipsGuess, copts);
       const s = await readSource(w, src, cands0.length ? cands0[0].target : null, sv.kind === 'sleep' ? 'ночной сейв' : 'удар в ' + fmtT(sv.firstArrival));
       if (s.error) {
         sv.state = 'failed';
@@ -609,11 +721,20 @@ window.OGX = window.OGX || {};
         return;
       }
       if (!Object.keys(s.ships).length) {
+        // nothing at home now: a fleet landing before the deadline is saved after it lands; otherwise the save waits for a landing
+        // (re-planned from run() on bot:fleet-returned) instead of ending for good
+        sv.noShips = true; sv.skippedAt = w.now(); sv.replans = num(sv.replans) + 1;
+        const landing = sv.kind === 'threat' && sv.firstArrival ? nextLanding(w.flights(), sv.bodyKey, w.now(), latestPlanAt(sv.firstArrival)) : null;
+        if (landing && sv.replans <= MAX_REPLANS) {
+          sv.state = 'waiting'; sv.waitFor = landing; sv.notBefore = landing + LAND_MARGIN_MS;
+          w.rec('skip', 'Сейв ' + bodyLabel(src) + ': сейчас нечего спасать (нет летающих кораблей) — флот садится в ' + fmtT(landing) + ', сейв после посадки', { reason: 'noShips', bodyKey: sv.bodyKey, stock: s.stock, retryAt: sv.notBefore, landing });
+          return;
+        }
         sv.state = 'skipped';
-        w.rec('skip', 'Сейв ' + bodyLabel(src) + ': нечего спасать (нет летающих кораблей)', { reason: 'noShips', bodyKey: sv.bodyKey, stock: s.stock });
+        w.rec('skip', 'Сейв ' + bodyLabel(src) + ': нечего спасать (нет летающих кораблей' + (sv.kind === 'threat' ? '; посадок до удара не видно — при посадке флота сейв планируется заново' : '') + ')', { reason: 'noShips', bodyKey: sv.bodyKey, stock: s.stock, replans: sv.replans });
         return;
       }
-      const cands = candidates(w, st, src, bodies, s.ships, opts);
+      const cands = candidates(w, st, src, bodies, s.ships, copts);
       // harvest fields need a probe (step 2 offers 8 only for a non-empty field)
       for (const c of cands.filter((x) => x.needsProbe)) {
         if (w.dryRun) { c.unverified = true; continue; }
@@ -651,7 +772,7 @@ window.OGX = window.OGX || {};
           params: { target: h.target, ships: s.ships, mission: h.mission, speed: h.speed, cargo: h.cargo, staytime: h.staytime },
           why: (sv.kind === 'sleep' ? 'Ночной сейв ' : 'Сейв ') + bodyLabel(src) + ': ' + (MISSION_RU[h.mission] || h.mission) + ' → ' + h.label + ' на ' + (h.speed * 10) + '%',
           plan: { oneWay: Math.round(h.duration), fuel: h.fuel, minFlightSec: Math.round(minFlightSec), landing: h.landing, horizon },
-          deadline: sv.kind === 'sleep' ? undefined : sv.firstArrival - DEADLINE_MS, dedupeKey: 'botsave:save:' + sv.bodyKey };
+          deadline: sv.kind === 'sleep' ? undefined : sv.firstArrival - DEADLINE_MS, dedupeKey: 'botsave:save:' + (sv.key || sv.bodyKey) };
         const atMs = (sv.startAt || 0) - SEND_LEAD_MS;
         if (atMs > w.now()) spec.at = atMs;
         const res = await act(w, spec, {
@@ -684,7 +805,19 @@ window.OGX = window.OGX || {};
           i--; continue;
         }
         if (['ships', 'fuel', 'cargo'].includes(res.refused) && round === 0) { retry = true; break; }   // stock changed: read again once
-        if (res.refused === 'slots') break;
+        if (res.refused === 'slots') {
+          // a transiently full slot table (John flies 10-15 fleets): the same save again in ~10 s, one last time before the deadline
+          if (sv.kind === 'threat' && sv.firstArrival) {
+            const limit = sv.firstArrival - DEADLINE_MS - LAST_TRY_MS;
+            const at = Math.min(w.now() + randInt(SLOT_RETRY[0], SLOT_RETRY[1]), limit);
+            if (at > w.now() + 1000) {
+              sv.state = 'waiting'; sv.notBefore = at; sv.slotTries = num(sv.slotTries) + 1; sv.waitFor = null;
+              w.rec('save-planned', 'Сейв ' + bodyLabel(src) + ': нет свободного слота — повтор в ' + fmtT(at) + ' (крайний срок ' + fmtT(limit) + ')', { bodyKey: sv.bodyKey, retryAt: at, slotTries: sv.slotTries, deadline: limit, message: res.message || null });
+              return;
+            }
+          }
+          break;
+        }
       }
       if (!retry) break;
     }
@@ -711,7 +844,7 @@ window.OGX = window.OGX || {};
     const r = recallAt({ start: sv.sentAt, destArrival: sv.destArrival, jitterMs, horizon: sv.horizon });
     if (old && old.state === 'armed' && old.at === r.at) return;
     const gen = ((old && old.gen) || 0) + 1;
-    if (old && old.state === 'armed') { const h = timerHandles.get(sv.bodyKey); if (h) { try { h.cancel(); } catch (e) { /* stale */ } } }
+    if (old && old.state === 'armed') { const h = timerHandles.get(sv.key || sv.bodyKey); if (h) { try { h.cancel(); } catch (e) { /* stale */ } } }
     if (r.at === null) {
       sv.recall = { state: 'skipped', at: null, reason: 'late', gen, jitterMs };
       const self = sv.mission === 4 ? 'флот останется на ' + coordsStr(sv.target) : 'флот вернётся сам в ' + fmtT(sv.back || 0);
@@ -719,8 +852,8 @@ window.OGX = window.OGX || {};
       return;
     }
     sv.recall = { state: 'armed', at: r.at, gen, jitterMs, want: Math.round(r.want), need: Number.isFinite(r.need) ? Math.round(r.need) : null };
-    const h = OGX.bot.at(r.at, (p) => { if (handle) handle.wake('recall', now()); return p; }, { label: 'botsave:recall', payload: { bodyKey: sv.bodyKey, fleetId: sv.fleetId, gen } });
-    timerHandles.set(sv.bodyKey, h);
+    const h = OGX.bot.at(r.at, (p) => { if (handle) handle.wake('recall', now()); return p; }, { label: 'botsave:recall', payload: { bodyKey: sv.bodyKey, key: sv.key || sv.bodyKey, fleetId: sv.fleetId, gen } });
+    timerHandles.set(sv.key || sv.bodyKey, h);
     w.rec('recall-planned', 'Отзыв флота ' + sv.fleetId + ' в ' + fmtT(r.at) + ' (дома ≈ ' + fmtT(2 * r.at - sv.sentAt) + ')' + (why ? ' — ' + why : ''),
       { bodyKey: sv.bodyKey, fleetId: sv.fleetId, at: r.at, homeAt: 2 * r.at - sv.sentAt, horizon: sv.horizon, gen, destArrival: sv.destArrival });
   }

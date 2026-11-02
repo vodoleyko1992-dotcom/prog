@@ -2,7 +2,7 @@
 // «Бонус за онлайн» (botcore.onlineBonus, John 2026-11-01) against the GALAXYZ mock: the game shows a star (.infobox «Online bonus.»
 // -> game.php?page=bonus) while the bonus can be taken; his own claim was page=bonus, then page=bonus&action=claim.
 //   (a) the star on the page: the botcore:bonus worker reads page=bonus and follows its claim link once; journal «получен»
-//   (b) setting off, or no star: no request to page=bonus
+//   (b) setting off, or no star: no request to page=bonus (checked once the worker has run: OGX.bot.status() lastRun / lastResult)
 //   node tests/gz-bot-bonus.test.js
 const T = require('./lib');
 const G = require('./gz-lib');
@@ -37,6 +37,24 @@ function bonusRoutes(env) {
   });
   return hits;
 }
+/** Runs the botcore:bonus worker now (as its 20..60 s start jitter would, via the worker's own wake handle once this tab leads)
+ *  and returns its result: the decision the test checks instead of a fixed 70 s sleep. A claim it decided on is an action queued
+ *  before lastRun is set, so a short settle follows. */
+async function bonusWorkerRan(env, page) {
+  await until(() => env.evalOgx(page, () => {
+    const R = OGX.bot && OGX.bot._R;
+    if (!R || !R.leader || !R.inited || !R.bonusWorker) return false;
+    R.bonusWorker.wake('test');            // at = now (an atMs of 0 would read as «not armed»)
+    return true;
+  }), { timeoutMs: 60000, stepMs: 500, what: 'leader + bonus worker' });
+  const w = await until(async () => {
+    const st = await env.evalOgx(page, () => (OGX.bot && OGX.bot.status ? OGX.bot.status() : null));
+    const x = st && (st.workers || []).find((v) => v.id === 'botcore:bonus');
+    return x && x.lastRun ? x : null;
+  }, { timeoutMs: 90000, stepMs: 500, what: 'botcore:bonus worker run' });
+  await sleep(2000);
+  return w;
+}
 /** The overview served with the star, as the game renders it while the bonus can be taken. */
 const STAR = '<div class="infobox tooltip" data-tooltip-content="Online bonus."><a href="game.php?page=bonus"><img src="./styles/theme/gow/img/navigation/star.ico" alt=""></a></div>';
 const starRoute = (env) => env.server.route('GET', 'overview', (req, res, ctx) => ctx.sendPage('overview', (html) => html.replace('</body>', STAR + '</body>')));
@@ -61,15 +79,17 @@ T.test('(b) setting off with the star, or no star: no request to page=bonus', as
   try {
     const hits = bonusRoutes(env);
     starRoute(env);
-    await env.game('overview');
-    await sleep(70000);
+    const page = await env.game('overview');
+    const w = await bonusWorkerRan(env, page);
+    assert.equal(w.lastResult, 'выключено', 'the worker ran and saw the setting off: ' + JSON.stringify(w));
     assert.equal(hits.length, 0, 'off: nothing');
   } finally { await env.close(); }
   const env2 = await G.launch({ settings: isolate() });
   try {
     const hits = bonusRoutes(env2);
-    await env2.game('overview');
-    await sleep(70000);
+    const page2 = await env2.game('overview');
+    const w = await bonusWorkerRan(env2, page2);
+    assert.equal(w.lastResult, 'бонуса нет', 'the worker ran and found no star: ' + JSON.stringify(w));
     assert.equal(hits.length, 0, 'no star: nothing');
   } finally { await env2.close(); }
 }, { timeout: 200000 });

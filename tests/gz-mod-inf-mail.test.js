@@ -7,6 +7,8 @@
 //    (GET page=messages&mode=view&messcat=N&site=1&ajax=1), with the kind summary;
 //  - bulk actions: the native form POST (mode=action, actionTop, messageID[id]=1), the confirm dialog, rows dropped;
 //  - «Старый вид» brings the native table back; spy module still stores reports from the hidden rows;
+//  - hotkeys r / s and the row «Рейд» never send without the module's own dialog, also with core.confirmActions off, and only
+//    on a row the user focused (the preview of the newest message right after the load is not a focus);
 //  - no console errors, no 'NaN' / 'undefined' in the widget. Screenshots: tests/out/gz-mail-*.png.
 //   node tests/gz-mod-inf-mail.test.js
 const fs = require('fs');
@@ -357,6 +359,122 @@ T.test('mail: «Зонды по отмеченным» asks first (batch rule); 
     await answerModal(p, true);
     await p.waitForFunction(() => [...document.querySelectorAll('.ogx-toast')].some((t) => /Зонды отправлены на|Остановлено на/.test(t.textContent)), null, { timeout: 15000 });
     // the saved reports carry no planet ids: the spy may stop at «unresolved»; reaching the send step is what matters here
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
+});
+
+T.test('mail: r / s and the row «Рейд» ask first even with core.confirmActions off; nothing is focused on load; one raid = one dispatch after «Отправить»', async () => {
+  const env = await G.launch({ settings: { 'core.confirmActions': false, 'core.cpConfirmed': true } });
+  try {
+    await env.openSaved('overview');
+    const p = await env.openSaved('messages-spy');
+    await p.waitForSelector('#ogx-mail.ogx-i-mail-full .ogx-i-mail-preview .ogx-i-mail-card');
+    env.server.clearLog();
+    const posts = () => env.server.requests.filter((x) => x.method === 'POST').map((x) => x.page);
+    const spies = () => env.server.requests.filter((x) => x.page === 'fleetAjax').length;
+    const modal = () => p.$('.ogx-modal-overlay .ogx-modal');
+    const toastSeen = (re) => p.evaluate((src) => [...document.querySelectorAll('.ogx-toast')].some((t) => new RegExp(src).test(t.textContent)), re.source);
+    // the newest report is previewed, but no row is focused: a stray r / s right after the load does nothing but a hint
+    assert.ok(await p.$('.ogx-i-mail-preview[data-id]'), 'preview of the newest message');
+    assert.equal(await p.$('.ogx-i-mail-focus'), null, 'no row focused on load');
+    await p.keyboard.press('r');
+    await p.keyboard.press('s');
+    await p.waitForTimeout(400);
+    assert.equal(await modal(), null, 'no dialog without a focused row');
+    assert.ok(await toastSeen(/Сначала выберите доклад/), 'hint toast');
+    assert.deepEqual([posts(), spies()], [[], 0], 'nothing sent');
+    // j focuses the first row (the user navigated): r opens the raid dialog with the plan and the risk line, nothing is posted
+    await p.keyboard.press('j');
+    await p.waitForSelector('.ogx-i-mail-focus');
+    await p.keyboard.press('r');
+    await p.waitForSelector('.ogx-modal-overlay .ogx-modal');
+    let text = await p.textContent('.ogx-modal-overlay .ogx-modal');
+    assert.match(text, /Рейд → \[2:\d+:\d+\]/, text);
+    assert.match(text, /Улучшенных транспортов: [\d\s ]+ × [\d\s ]+/, text);
+    assert.match(text, /⚠ У цели: .*(не видна|не виден)/, text);
+    assert.match(text, /клавишей r/, text);
+    await p.waitForTimeout(200);
+    assert.deepEqual(posts(), [], 'nothing posted while the dialog is open');
+    await answerModal(p, false);
+    await p.waitForTimeout(400);
+    assert.deepEqual(posts(), [], 'cancel = nothing sent');
+    // s: the probe dialog, cancel = no fleetAjax
+    await p.keyboard.press('s');
+    await p.waitForSelector('.ogx-modal-overlay .ogx-modal');
+    text = await p.textContent('.ogx-modal-overlay .ogx-modal');
+    assert.match(text, /Отправить зонды на \[2:\d+:\d+\]/, text);
+    await p.waitForTimeout(200);
+    assert.equal(spies(), 0, 'no fleetAjax while the dialog is open');
+    await answerModal(p, false);
+    await p.waitForTimeout(400);
+    assert.equal(spies(), 0, 'cancel = no probes');
+    // a stray r / s followed by Enter / Space (row keys of the mail) lands on «Отмена»: the dialog closes, nothing is sent
+    for (const [key, then] of [['r', 'Enter'], ['s', ' '], ['r', ' '], ['s', 'Enter']]) {
+      await p.keyboard.press(key);
+      await p.waitForSelector('.ogx-modal-overlay .ogx-modal');
+      await p.waitForFunction(() => document.activeElement && document.activeElement.dataset && document.activeElement.dataset.role === 'cancel', null, { timeout: 5000 });
+      await p.keyboard.press(then === ' ' ? 'Space' : then);
+      await p.waitForFunction(() => !document.querySelector('.ogx-modal-overlay'), null, { timeout: 5000 });
+      await p.waitForTimeout(300);
+      assert.deepEqual([posts(), spies()], [[], 0], key + ' then ' + JSON.stringify(then) + ': nothing sent');
+    }
+    // the row button: the same dialog; «Отправить» = exactly one dispatch (fleetStep1 with Battle Transporters only, no second dialog)
+    await p.click('.ogx-i-mail-focus .ogx-i-mail-raid');
+    await p.waitForSelector('.ogx-modal-overlay .ogx-modal');
+    assert.deepEqual(posts(), [], 'row button: nothing posted before the dialog is answered');
+    await answerModal(p, true);
+    await p.waitForFunction(() => [...document.querySelectorAll('.ogx-toast')].some((t) => /Рейд (не )?отправлен/.test(t.textContent)), null, { timeout: 15000 });
+    assert.equal(await modal(), null, 'no second (core) dialog');
+    const step1 = env.server.requests.filter((x) => x.method === 'POST' && x.page === 'fleetStep1').map((x) => new URLSearchParams(x.raw));
+    assert.equal(step1.length, 1, 'one fleetStep1 POST: ' + posts().join(','));
+    assert.deepEqual([...step1[0].keys()].filter((k) => /^ship\d+$/.test(k)), ['ship217'], 'Battle Transporters only');
+    assert.equal(step1[0].get('target_mission'), '1');
+    const ev = await env.evalOgx(p, () => OGX.diag.recent({ s: 'U' }).filter((e) => e.k === 'mail').map((e) => e.w + ':' + (e.d && e.d.ok)));
+    assert.ok(ev.includes('raid:confirm:false') && ev.includes('spy:confirm:false') && ev.includes('raid:confirm:true'), ev.join(' '));
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
+});
+
+T.test('mail: while the bot is on, autoClean leaves it its fresh mail (categories 0/3/15, grace in minutes); messages:deleted on the bus after a delete', async () => {
+  // every loaded row is made one minute old (the saved page is older than any grace); the bot's main switch is read
+  // through OGX.bot.status()
+  const env = await G.launch({ settings: { 'mail.autoBotGraceMin': 15 } });
+  try {
+    const p = await env.openSaved('messages-all');
+    await p.waitForSelector('.ogx-i-mail-table');
+    await clickTab(p, 15);
+    await p.waitForFunction(() => document.querySelectorAll('.ogx-i-mail-row').length > 0);
+    env.server.clearLog();
+    await env.evalOgx(p, () => {
+      const m = OGX._ctxs.find((c) => c.def.name === 'mail').ctx._mail;
+      const t = OGX.time.serverNow() - 60000;
+      for (const r of m.rows.values()) r.ts = t;
+      OGX.bot = OGX.bot || {};
+      const orig = typeof OGX.bot.status === 'function' ? OGX.bot.status : () => ({});
+      window.__botMaster = true;
+      OGX.bot.status = () => Object.assign({}, orig(), { master: window.__botMaster });
+      window.__deleted = [];
+      OGX.bus.on('messages:deleted', (e) => window.__deleted.push(e));
+    });
+    await p.click('.ogx-i-mail-clean');
+    await p.waitForFunction(() => [...document.querySelectorAll('.ogx-toast')].some((t) => /оставлены ему/.test(t.textContent)), null, { timeout: 8000 });
+    assert.deepEqual(env.server.requests.filter((x) => x.method === 'POST').map((x) => x.page), [], 'no POST: the fresh results belong to the bot');
+    const grace = await env.evalOgx(p, () => OGX.diag.recent({ s: 'B', k: 'mail' }).filter((e) => e.w === 'autoclean:bot-grace').map((e) => e.d));
+    assert.equal(grace.length, 1, JSON.stringify(grace));
+    assert.ok(grace[0].kept >= 1 && grace[0].auto === false && grace[0].graceMin === 15, JSON.stringify(grace));
+    // bot off: the same click deletes them after the confirm, and the bus hears which ids of which category went
+    await env.evalOgx(p, () => { window.__botMaster = false; });
+    await p.click('.ogx-i-mail-clean');
+    await p.waitForSelector('.ogx-modal-overlay .ogx-modal');
+    assert.match(await p.textContent('.ogx-modal-overlay .ogx-modal'), /Очистка по правилам: удалить \d+ сообщ/);
+    await answerModal(p, true);
+    await p.waitForFunction(() => [...document.querySelectorAll('.ogx-toast')].some((t) => /^Очистка: удалено/.test(t.textContent)), null, { timeout: 8000 });
+    const posts = env.server.requests.filter((x) => x.method === 'POST' && x.page === 'messages');
+    assert.equal(posts.length, 1);
+    const ids = [...new URLSearchParams(posts[0].raw).keys()].filter((k) => /^messageID/.test(k)).map((k) => +k.slice(10, -1));
+    assert.equal(ids.length, grace[0].kept, 'the rows kept for the bot are exactly the ones deleted now');
+    const ev = await env.evalOgx(p, () => window.__deleted);
+    assert.deepEqual(ev, [{ cat: 15, ids, source: 'infinity/mail' }]);
     assert.deepEqual(env.ogxErrors(), []);
   } finally { await env.close(); }
 });

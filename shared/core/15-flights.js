@@ -286,8 +286,9 @@
   }
   flights._gzCargo = gzCargo;
 
-  /** Target type from the mission (event links carry no planet type): Recycle -> debris (2), Expedition -> deep space (4), else planet. */
-  const gzTargetType = (mission) => (mission === 8 ? 2 : mission === 15 ? 4 : mission === 9 ? 3 : 1);
+  /** Target type from the mission where the text prints no type word (fleetTable rows never do): Recycle -> debris (2),
+   * Expedition / mission 11 -> deep space (4), Destroy -> moon (3), else planet. */
+  const gzTargetType = (mission) => (mission === 8 ? 2 : mission === 15 || mission === 11 ? 4 : mission === 9 ? 3 : 1);
 
   /** parse.gz.events rows (+ parse.gz.fleetTable flights) -> Flight[]; rowId = 'fleettime_<end><fleetId>' (the event id). */
   function gzFlights(events, table, opts = {}) {
@@ -295,9 +296,11 @@
     const recallIds = table ? new Set(table.filter((r) => r.recallable && r.fleetId).map((r) => r.fleetId)) : null;
     const out = (events || []).map((e) => {
       const ret = e.status === 'return';
-      const tType = gzTargetType(e.mission);
+      // body types from the type word before each coordinate link (Planet / Moon / Debris Field in any language), the mission rule
+      // only where the sentence prints none: an attack on a moon keys the moon, a fleet leaving a moon keys the moon
+      const tType = e.toType || gzTargetType(e.mission), oType = e.fromType || 1;
       const from = ret ? e.to : e.from, to = ret ? e.from : e.to;
-      const fromType = ret ? tType : 1, toType = ret ? 1 : tType;
+      const fromType = ret ? tType : oType, toType = ret ? oType : tType;
       const sh = gzShips(e.shipsText, opts.titles);
       const own = !!e.own;
       return {
@@ -370,6 +373,7 @@
 
   // ------------------------------------------------------------------ cache
   let inflight = null;
+  let inflightBg = false;     // the shared fetch went through the background queue
   async function store(list, src, t) {
     const T = t || OGX.time.serverNow();
     await OGX.storage.set('flights', { t: T, flights: list, src });
@@ -389,15 +393,19 @@
   flights.get = async function ({ maxAgeMs = 60000, force = false, background = false } = {}) {
     const cached = await OGX.storage.get('flights', null);
     if (!force && cached && cached.t && OGX.time.serverNow() - cached.t < maxAgeMs) return { t: cached.t, flights: cached.flights || [] };
+    const run = () => (async () => {
+      const html = await OGX.api.eventList({ background });   // GALAXYZ: page=fleetTable (event box + recall ids)
+      if (typeof html !== 'string') return { error: html && html.error || 'eventlist' };
+      const list = flights.fixOutboundFuel(flights.parseEventList(html, await ctxOpts()), await fuelCtx());
+      const T = OGX.time.serverNow();
+      await store(list, 'eventlist', T);
+      return { t: T, flights: list };
+    })().catch((e) => { log.error('get', e); return { error: String(e.message || e) }; });
+    // a direct call never joins a background fetch: that one waits in the polite queue (up to a minute while the tab is hidden)
+    if (inflight && inflightBg && !background) return run();
     if (!inflight) {
-      inflight = (async () => {
-        const html = await OGX.api.eventList({ background });   // GALAXYZ: page=fleetTable (event box + recall ids)
-        if (typeof html !== 'string') return { error: html && html.error || 'eventlist' };
-        const list = flights.fixOutboundFuel(flights.parseEventList(html, await ctxOpts()), await fuelCtx());
-        const T = OGX.time.serverNow();
-        await store(list, 'eventlist', T);
-        return { t: T, flights: list };
-      })().catch((e) => { log.error('get', e); return { error: String(e.message || e) }; }).finally(() => { inflight = null; });
+      inflightBg = !!background;
+      inflight = run().finally(() => { inflight = null; inflightBg = false; });
     }
     return inflight;
   };

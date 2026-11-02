@@ -9,7 +9,9 @@
  *       free -> skip + journal. A planet without a moon may get one from the battle and a new moon erases the whole field
  *       [UPSTREAM MissionCaseAttack:341-386, debris_moon 1]: the expectation is field x (1 - moonChance/100); a pre-send whose
  *       expectation is below minBattleDf is not made (post-battle sees the real field);
- *       origin = nearest body with enough recyclers and fuel, moon first on ties; slot class 'force'.
+ *       origin = nearest body with enough recyclers and fuel, moon first on ties; slot class 'deadline' (never 'force': the slot
+ *       botcore keeps in reserve belongs to the fleet save). Flight times use the ship speeds of page=fleetTable (the server's
+ *       numbers, learned once and kept for every body; the catalog base speed of 219 is far off on GALAXYZ).
  *       Mode pre-send (F1: mission 8 is offered only while the field is NOT empty [UPSTREAM ShowFleetStep2Page:50-60]): the field
  *       exists now (battle.existingDebris) and probe.target to the debris (type 2) offers mission 8 (free, no galaxy view); departure
  *       D = battle + rand(arriveMinSec..arriveMaxSec) - duration(speed), the cheapest-fuel speed with D >= now + 90 s; fleet.send with
@@ -24,12 +26,18 @@
  *       read in the last checkMinMin: one read per system, planets of a system share it; a bot scan never wakes the module), field >= minOwnDf, origin order moon full -> moon any -> planet full
  *       -> planet any, duplicate guard by value 'g:s:p:2' against own flying recycle fleets (and this module's own sends).
  *   (c) logistics (off by default): OGX.bot.needs (botbuild chain needs, BOT_DESIGN §8.8) -> ONE Transport (mission 3) per planet
- *       for the whole chain from logisticsOrigin (or the body with the largest spare; bodies with an open need never give) in Battle
+ *       for the whole chain from logisticsOrigin (or the body with the largest spare; a body never gives a resource it waits for) in Battle
  *       Transporters 217 only (John's rule, «не хватает N Ул. трансп.» when short), (cargo + fuel) <= capacity; spare = available minus
  *       the body's botbuild 'keep' minus deutReserveH hours of its deuterium production; at least the waiting step (need.min);
  *       skipped when the target produces it within the one-way time (and it fits its storage) or an own transport already flies
- *       there. repatriate / overflow (off) move stock to the main body (D > C > M when the hold is short), leaving each body's 'keep'
- *       and never from a body with an open need. Normal slot class, threat-lock aware (wctx.locked), sleep aware (wctx.sleepCheck).
+ *       there. repatriate / overflow move stock to the main body (D > C > M when the hold is short), leaving each body's 'keep' and
+ *       the deuterium reserve (the planner and transport() share repatriateLoad(), so a plan is never refused by its own rule), never
+ *       from a body with an open need, only what fits the main's storage; a colony without 217 gets them by a Deploy (ferry, John's
+ *       rule: 217 only) and is emptied on the next pass; a refused body is left alone for a cooldown (no fleetTable read, one journal
+ *       line per situation). Normal slot class, threat-lock aware (wctx.locked), sleep aware (wctx.sleepCheck).
+ *   (d) a fight on an own body (hostile mission 1/2/9 seen in the threats, or a defender-side battle botsave registered): the own
+ *       field of that system is checked right after the arrival (one galaxy read regardless of checkMinMin) — the attacker's
+ *       recyclers usually follow the attack (BOT_DESIGN §7.2).
  * Every game request goes through wctx.act (C1); a wctx.decide precedes every action; journal kinds 'botdebris:<event>' (C6).
  * Code comments English, user-visible text Russian. */
 window.OGX = window.OGX || {};
@@ -38,6 +46,7 @@ window.OGX = window.OGX || {};
   const NAME = 'botdebris';
   const SEC = 'Бот: обломки и логистика';
   const RES = ['metal', 'crystal', 'deuterium'];
+  const RU = { metal: 'металл', crystal: 'кристалл', deuterium: 'дейтерий' };
   // John's rules: debris ONLY in Battle Recyclers 219, transports ONLY in Battle Transporters 217; no fallback ships
   const REC = 219;
   const TRANSPORT = (OGX.catalog && OGX.catalog.transportShip) || 217;
@@ -46,6 +55,15 @@ window.OGX = window.OGX || {};
   const PRE_ENQUEUE_MS = 150000;     // the precise send is queued when D is this close (the executor prepares 60..300 s ahead)
   const SHIPS_MAX_AGE = 10 * 60000;  // re-read page=fleetTable of a body when its ship counts are older
   const TERMINAL = new Set(['done', 'dry', 'skipped', 'cancelled', 'failed', 'recalled', 'lost']);
+  const FIGHT_SETTLE_MS = 3000;      // a fight on an own body: the field is looked at this long after the arrival second
+  const FIGHT_MISSIONS = new Set([1, 2, 9]);
+  const POST_RETRY_MS = [30000, 60000];   // post-battle send refused for slots: try again while the field is fresh
+  const POST_RETRY_MAX_MS = 15 * 60000;
+  const FERRY_MAX = 5000;            // at most this many 217 are deployed to a colony without transporters per ferry
+  const LOG_REPEAT_MS = H;           // the same repatriation situation is journaled again after an hour at most
+  // repatriation cooldowns per skip reason [min, max] ms: nothing is re-planned (and no fleetTable is read) for a body until then
+  const REP_COOLDOWN = { stock: [15 * 60000, 30 * 60000], destFull: [15 * 60000, 30 * 60000], slots: [5 * 60000, 10 * 60000], ships: [60 * 60000, 60 * 60000],
+    threat: [10 * 60000, 10 * 60000], sleep: [30 * 60000, 30 * 60000], cargo: [30 * 60000, 30 * 60000], error: [10 * 60000, 20 * 60000] };
 
   const SETTINGS = {
     on: { type: 'bool', default: true, label: 'Обломки и логистика включены', section: SEC },
@@ -62,11 +80,12 @@ window.OGX = window.OGX || {};
     checkMaxMin: { type: 'int', default: 60, min: 1, max: 1440, label: 'Проверять свои поля раз в, макс. (мин)', section: SEC },
     minBattleDf: { type: 'int', default: 1000000, min: 0, label: 'Пред-отправка к бою: ожидаемое поле (с учётом шанса луны) не меньше', section: SEC },
     logistics: { type: 'bool', default: true, label: 'Довозить ресурсы под постройки (логистика)', section: SEC },
-    logisticsOrigin: { type: 'string', default: '', label: 'Склад: id или координаты тела (пусто = самое богатое)', section: SEC },
+    logisticsOrigin: { type: 'string', default: '', label: 'Склад: id или координаты тела (пусто: довоз — с тела с наибольшим излишком, своз — на первую планету списка)', section: SEC },
     deutReserveH: { type: 'float', default: 2, min: 0, max: 240, step: 0.5, label: 'Оставлять на складе дейтерий на (ч производства)', section: SEC },
     repatriate: { type: 'bool', default: true, label: 'Свозить ресурсы с колоний на склад', section: SEC },
     repatriateMin: { type: 'int', default: 500000000, min: 0, label: 'Свозить, когда на колонии ресурсов не меньше', section: SEC },
     overflowPct: { type: 'int', default: 90, min: 10, max: 100, label: 'Вывозить излишек при заполнении хранилища (%)', section: SEC },
+    ferry: { type: 'bool', default: true, label: 'Перегонять Ул. трансп. на колонию без них под вывоз (передислокация, не больше 5000 за раз)', section: SEC },
   };
 
   // ------------------------------------------------------------------ small helpers (pure)
@@ -193,6 +212,34 @@ window.OGX = window.OGX || {};
     for (const r of ['deuterium', 'crystal', 'metal']) { const take = Math.max(0, Math.min(left, Math.floor(num(stock[r])))); out[r] = take; left -= take; }
     return out;
   }
+  /**
+   * Repatriation load (pure, the same rule transport() enforces): a colony gives its available stock minus its own botbuild `keep`,
+   * minus the deuterium reserve `keepD` (deutReserveH hours of production) and minus the fuel of the trip (deuterium), D > C > M into
+   * the hold `room` (n x cap - fuel). A resource flagged in `over` (storage >= overflowPct) is exported down to half its storage even
+   * when keep/keepD would hold more: a full tank wastes its production. -> { load, spare } (spare = exportable before the hold limit).
+   */
+  function repatriateLoad({ avail, keep, keepD = 0, fuel = 0, room = Infinity, over = null, storage = null }) {
+    const spare = res0();
+    for (const r of RES) {
+      let floor = num(keep && keep[r]) + (r === 'deuterium' ? num(keepD) : 0);
+      if (over && over[r] && storage && num(storage[r]) > 0) floor = Math.min(floor, Math.floor(num(storage[r]) / 2));
+      spare[r] = Math.max(0, Math.floor(num(avail && avail[r]) - floor - (r === 'deuterium' ? num(fuel) : 0)));
+    }
+    return { load: payloadDCM(spare, room), spare };
+  }
+  /** Free storage of a destination per resource (null = unknown) and whether it is already at the cap; `pending` = cargo already
+   *  on its way there (or landed since the destination's amount was last read) counts as stored. */
+  function destRoom(dest, pending = null) {
+    const out = {}; const full = {};
+    for (const r of RES) {
+      const stg = storageOf(dest, r); const am = amountOf(dest, r);
+      if (stg === null || !(stg > 0) || am === null) { out[r] = null; full[r] = false; continue; }
+      const have = am + num(pending && pending[r]);
+      out[r] = Math.max(0, Math.floor(stg - have));
+      full[r] = have >= stg;
+    }
+    return { room: out, full };
+  }
   /** Recycling report text -> harvested { metal, crystal } (upstream sys_recy_gotten, core harvest parser as a fallback). */
   function harvestFromText(text) {
     const s = String(text || '').replace(/\s+/g, ' ');
@@ -211,6 +258,8 @@ window.OGX = window.OGX || {};
     logi: [],        // logistics sends { id, kind, to, fleetId, arrival, back, cargo, needId }
     meta: {},        // { nextOwnAt, recRoom }
     pending: new Set(), timers: {}, cancelled: {}, ships: {},
+    stale: new Set(),   // body keys a fleet landed on since their counts were read (bot:fleet-returned): re-read before use
+    raw: {},            // the state's own stock per body key { t, amt } (rawStock, refreshed every run; see unsynced)
     seen: {},        // 'g:s' -> { t, positions } of the last galaxy:system seen on the bus (in memory)
     lastRun: null,
   };
@@ -231,6 +280,9 @@ window.OGX = window.OGX || {};
     for (const [k, o] of Object.entries(M.own)) if (t - (o.back || o.sentAt || 0) > 24 * H) delete M.own[k];
     for (const [k, c] of Object.entries(M.cancelled)) if (t - c.t > 24 * H) delete M.cancelled[k];
     M.logi = M.logi.filter((x) => t - (x.back || x.arrival || 0) < 24 * H).slice(-100);
+    for (const [k, v] of Object.entries(M.meta.repLog || {})) if (t - num(v.t) > 24 * H) delete M.meta.repLog[k];
+    for (const [k, v] of Object.entries(M.meta.repSkip || {})) if (t > num(v.until)) delete M.meta.repSkip[k];
+    for (const [k, v] of Object.entries(M.meta.fights || {})) if (t - num(v.arrival) > H) delete M.meta.fights[k];
     await st.set('plans', clone(M.plans));
     await st.set('own', clone(M.own));
     await st.set('logi', clone(M.logi));
@@ -246,6 +298,52 @@ window.OGX = window.OGX || {};
   function amountOf(body, r) { return body && body.res && body.res[r] ? Math.max(0, Math.floor(num(body.res[r].amount))) : null; }
   function perHourOf(body, r) { return body && body.res && body.res[r] ? num(body.res[r].perHour, null) : null; }
   function storageOf(body, r) { return body && body.res && body.res[r] ? num(body.res[r].storage, null) : null; }
+  /** Production of a body with memory: the core's perHour drops to null/0 after some page merges (a buildings page carries no
+   *  production), so the last positive value seen in the last 3 h stands in — the deuterium reserve must not vanish for one pass. */
+  function prodOf(body, r) {
+    const v = perHourOf(body, r);
+    const k = body && body.key;
+    if (!k) return v;
+    M.meta.prod = M.meta.prod || {};
+    const mem = M.meta.prod[k] || (M.meta.prod[k] = {});
+    let t; try { t = OGX.time.serverNow(); } catch (e) { t = Date.now(); }
+    if (v !== null && v > 0) { mem[r] = { v, t }; return v; }
+    const m = mem[r];
+    if (m && t - num(m.t) < 3 * H) return Math.max(num(v, 0), num(m.v));
+    return v;
+  }
+  /** Deuterium reserve of a body: deutReserveH hours of its (remembered) production. */
+  function keepDOf(wctx, body) { return Math.ceil(Math.max(0, num(prodOf(body, 'deuterium'), 0)) * num(wctx.cfg('deutReserveH'), 2)); }
+  /** The state's own stock of a body (time of the last page that showed it + amounts): wctx.bodies() projects every body to now
+   *  (res.t = now), so whether a page was read since a send or a landing is only visible here. -> { t, amt } | null */
+  async function rawStock(key) {
+    let all = null;
+    try { all = OGX.state && OGX.state.bodies ? await OGX.state.bodies() : null; } catch (e) { all = null; }
+    const out = {};
+    for (const [k, b] of Object.entries(all || {})) if (b && b.res && b.res.t) out[k] = { t: num(b.res.t), amt: { metal: amountOf(b, 'metal'), crystal: amountOf(b, 'crystal'), deuterium: amountOf(b, 'deuterium') } };
+    return key ? out[key] || null : out;
+  }
+  /** Cargo + fuel of own transports that left `body` while the state still shows the stock they were taken from (no page of the body
+   *  read since, and no core update of its amounts): the bot's sends do not lower the state's stock, so without this every pass
+   *  re-planned the same stock (the server then loads only what is left — the deuterium reserve included). */
+  function unsynced(body) {
+    const out = res0();
+    const raw = M.raw && body ? M.raw[body.key] : null;
+    if (!raw) return out;
+    for (const x of M.logi) {
+      if (x.dry || +x.from !== +body.id || !x.srcAmt || !(num(x.sentAt) >= num(raw.t))) continue;
+      if (RES.some((r) => num(raw.amt[r]) !== num(x.srcAmt[r]))) continue;   // the state moved since the send: it already shows it
+      for (const r of RES) out[r] += num(x.cargo && x.cargo[r]) + (r === 'deuterium' ? num(x.fuel) : 0);
+    }
+    return out;
+  }
+  /** wctx.available minus unsynced own sends (see unsynced). */
+  function availOf(wctx, body) {
+    const a = wctx.available(body.key);
+    const u = unsynced(body);
+    for (const r of RES) a[r] = Math.max(0, num(a[r]) - u[r]);
+    return a;
+  }
   function bodyById(env, id) { return Object.values(env.bodies).find((b) => +b.id === +id) || null; }
   function bodyByRef(env, ref) {
     if (ref === null || ref === undefined || ref === '') return null;
@@ -257,9 +355,14 @@ window.OGX = window.OGX || {};
     return Object.values(env.bodies).find((b) => b.coords === c && isMoon(b) === wantMoon) || Object.values(env.bodies).find((b) => b.coords === c) || null;
   }
   /** Ship counts of a body: this module's fresh read, else the core state when fresh, else page=fleetTable (free GET). */
+  /** This module's last fleetTable read of a body, dropped once a fleet landed there (the counts changed). */
+  function myShips(body) {
+    if (body && M.stale.has(body.key)) { M.stale.delete(body.key); delete M.ships[body.id]; }
+    return body ? M.ships[body.id] : undefined;
+  }
   async function shipsOf(wctx, env, body, why, { needSpeeds = false } = {}) {
     const t = wctx.now();
-    const mine = M.ships[body.id];
+    const mine = myShips(body);
     if (mine && t - mine.t < SHIPS_MAX_AGE) return mine.ships;
     if (!needSpeeds && body.ships && body.shipsT && t - body.shipsT < SHIPS_MAX_AGE) return body.ships;
     wctx.decide(`Читаю флот на ${body.coords}${isMoon(body) ? ' (луна)' : ''}`, { why: why || 'нужны свежие данные о кораблях', inputs: { bodyId: body.id, shipsT: body.shipsT || null }, chosen: 'read.fleetTable', alternatives: [] });
@@ -268,9 +371,23 @@ window.OGX = window.OGX || {};
       const ships = {}; const speeds = {};
       for (const s of r.data.fleetTable.ships || []) { ships[s.id] = +s.count || 0; if (+s.speed > 0) speeds[s.id] = +s.speed; }
       M.ships[body.id] = { ships, speeds, t: wctx.now() };
+      learnSpeeds(speeds, wctx.now());
       return ships;
     }
     return body.ships || {};
+  }
+  /** Ship speeds are account-wide (drive techs): every speed seen on any fleetTable is kept (persisted) for every body. The catalog's
+   *  base speed of the GALAXYZ ships may be far off (219: catalog ~30 000 with John's drives, server 6 000 — a 2.2x shorter estimate). */
+  function learnSpeeds(speeds, t) {
+    if (!speeds) return;
+    M.meta.speeds = M.meta.speeds || {};
+    for (const [id, v] of Object.entries(speeds)) if (+v > 0) M.meta.speeds[id] = { speed: +v, t };
+  }
+  function speedKnown(body, id) {
+    const mine = body && M.ships[body.id] && M.ships[body.id].speeds;
+    if (mine && +mine[id] > 0) return +mine[id];
+    const s = M.meta.speeds && M.meta.speeds[id];
+    return s && +s.speed > 0 ? +s.speed : 0;
   }
   function forgetShips(bodyId, ships) {
     const s = M.ships[bodyId];
@@ -279,12 +396,12 @@ window.OGX = window.OGX || {};
   }
   /**
    * fleetStep1-shaped `data` for ships leaving `body`: ship speeds from that body's page=fleetTable (the server's own numbers: drive
-   * techs included), fuel from state.shipStats, game speed from state.server (fleetStep1 data.gamespeed once a fleetStep1 page was seen).
+   * techs included), else the speed of that ship seen on any fleetTable (learnSpeeds), fuel from state.shipStats, game speed from
+   * state.server (fleetStep1 data.gamespeed once a fleetStep1 page was seen).
    */
   function dataFor(env, body, ships) {
     const stats = Object.assign({}, env.stats || {});
-    const seen = body && M.ships[body.id] && M.ships[body.id].speeds;
-    if (seen) for (const id of Object.keys(ships || {})) if (+seen[id] > 0) stats[id] = Object.assign({}, stats[id] || {}, { speed: +seen[id] });
+    for (const id of Object.keys(ships || {})) { const v = speedKnown(body, id); if (v > 0) stats[id] = Object.assign({}, stats[id] || {}, { speed: v }); }
     return OGX.fleet.gz.dataFor(ships, stats, env.server || { fleetSpeed: 7 }, env.factors || null);
   }
   /** { duration (s, server rounding), fuel, distance } from `body` to 'g:s:p' (data: exact fleetStep1 data when at hand). */
@@ -327,9 +444,19 @@ window.OGX = window.OGX || {};
     }
     return out;
   }
+  const ZERO_MAX_AGE = 60 * 60000;   // a body that showed none of a ship type is looked at again after an hour at most
+  /** Ship counts of every body for one ship type. A body whose counts (this module's read, or the core state's with a parse time)
+   *  showed none of that ship within the last hour is not re-read: a fleetTable read per body per battle was 8.5 % of all bot
+   *  actions in the 0.3.1 journal. Bodies never parsed, or with the ship, go through shipsOf (fresh within 10 min). */
   async function shipsAll(wctx, env, shipId, why) {
     const out = {};
-    for (const b of Object.values(env.bodies)) out[b.id] = await shipsOf(wctx, env, b, why);
+    const t = wctx.now();
+    for (const b of Object.values(env.bodies)) {
+      const mine = myShips(b);
+      const src = mine ? mine : (b.shipsT > 0 && b.ships ? { ships: b.ships, t: b.shipsT } : null);
+      if (src && !(num(src.ships[shipId]) > 0) && t - num(src.t) < ZERO_MAX_AGE) { out[b.id] = src.ships; continue; }
+      out[b.id] = await shipsOf(wctx, env, b, why);
+    }
     return out;
   }
 
@@ -446,6 +573,9 @@ window.OGX = window.OGX || {};
     applyBallast(wctx, P, o.body, o.fuel, o.have);
     if (P.n <= 0) { setStatus(P, 'skipped', 'остаток поля: ' + P.ballastNote); wctx.rec('skip', `[${tcoords}]: собрать без потери остатка нельзя (${P.ballastNote})`, { reason: 'residualOnly', battle: b.id, total }); return; }
     const alternatives = cands.map((c) => ({ id: c.body.id, coords: c.body.coords, moon: isMoon(c.body), have: c.have, distance: c.distance, fuelOk: c.fuelOk }));
+    // the flight time needs the server's speed of the recyclers (drive techs; the catalog base speed of 219 is 5x off on GALAXYZ):
+    // one fleetTable read of the origin now, before the battle, when no fleetTable has shown that ship yet
+    if (!speedKnown(o.body, shipId)) await shipsOf(wctx, env, o.body, 'скорость переработчиков (fleetTable) для расчёта полёта', { needSpeeds: true });
     // mode: pre-send needs an existing field now (F1) and time for steps 1-2
     // the flight time needs the server's fleetStep1 data (the core may not know the game speed yet): the probe returns it
     const preTime = P.battleArrival + num(wctx.cfg('arriveMinSec'), 1) * 1000 - 5000 >= now + PRE_LEAD_MS;
@@ -531,7 +661,7 @@ window.OGX = window.OGX || {};
       chosen: { mode: 'pre', ships, speed: P.speed, departAt: P.departAt, wantArrival: P.wantArrival }, alternatives: P.decision ? P.decision.alternatives : [] });
     setStatus(P, 'queued');
     M.pending.add(P.id);
-    const p = wctx.act({ type: 'fleet.send', bodyId: P.originId, prio: 'deadline', cls: 'force',
+    const p = wctx.act({ type: 'fleet.send', bodyId: P.originId, prio: 'deadline', cls: 'deadline',
       params: Object.assign({ target: P.target, ships, mission: 8, speed: P.speed, expectArrival: P.wantArrival, arrivalTolMs: 1000 }, P.ballast > 0 ? { cargo: { metal: P.ballast, crystal: 0, deuterium: 0 } } : {}),
       precise: { at: P.departAt, tolMs }, deadline: P.departAt + tolMs,
       why: `Обломки: переработчики к [${P.coords}] (бой ${fmtT(P.battleArrival)} + ${(+P.k).toFixed(1)} с)`, plan: { battle: P.battleId, mode: 'pre', field: P.field, n: P.n }, dedupeKey: 'botdebris:' + P.id });
@@ -620,9 +750,17 @@ window.OGX = window.OGX || {};
       chosen: { mode: 'post', ships, speed: 10, origin: o.body.id }, alternatives: cands.map((c) => ({ id: c.body.id, have: c.have, distance: c.distance })) });
     setStatus(P, 'sending');
     Object.assign(P, { originId: o.body.id, originKey: o.body.key, originCoords: o.body.coords, n });
-    const r = await wctx.act({ type: 'fleet.send', bodyId: o.body.id, prio: 'deadline', cls: 'force', params: Object.assign({ target: P.target, ships, mission: 8, speed: 10, expectArrival: now + ft.duration * 1000, arrivalTolMs: 30000 }, P.ballast > 0 ? { cargo: { metal: P.ballast, crystal: 0, deuterium: 0 } } : {}),
+    const r = await wctx.act({ type: 'fleet.send', bodyId: o.body.id, prio: 'deadline', cls: 'deadline', params: Object.assign({ target: P.target, ships, mission: 8, speed: 10, expectArrival: now + ft.duration * 1000, arrivalTolMs: 30000 }, P.ballast > 0 ? { cargo: { metal: P.ballast, crystal: 0, deuterium: 0 } } : {}),
       why: `Обломки: переработчики к [${P.coords}] после боя`, plan: { battle: P.battleId, mode: 'post', field: P.field, n, ballast: P.ballast || 0 }, dedupeKey: 'botdebris:' + P.id, returnAt: now + 2 * ft.duration * 1000 });
     if (r.dry) { setStatus(P, 'dry', 'пробный режим: отправка только запланирована'); return; }
+    if (!r.ok && r.refused === 'slots' && wctx.now() < P.battleArrival + POST_RETRY_MAX_MS) {
+      // the reserve slot is the save's: wait for a slot while the field is fresh instead of giving the field up
+      P.postTries = (P.postTries || 0) + 1;
+      P.retryAt = wctx.now() + OGX.bot.randMs(POST_RETRY_MS);
+      setStatus(P, 'duePost', 'нет слота, повтор ' + fmtT(P.retryAt));
+      wctx.rec('skip', `[${P.coords}]: отправка после боя: нет свободного слота (${r.message || 'резерв'}) — повтор через ${Math.round((P.retryAt - wctx.now()) / 1000)} с`, { reason: 'slots', battle: P.battleId, retryAt: P.retryAt, tries: P.postTries, message: r.message || null });
+      return;
+    }
     if (!r.ok && r.error === 'noDebris') { setStatus(P, 'skipped', 'поля нет: бой без обломков'); wctx.rec('skip', `[${P.coords}]: после боя поля нет (сервер: ${r.message || 'пусто'}) — бой без обломков`, { reason: 'noDebris', battle: P.battleId, message: r.message || null }); return; }
     if (!r.ok) { setStatus(P, 'failed', r.message || r.error || r.refused); wctx.rec('skip', `[${P.coords}]: отправка после боя не удалась: ${r.message || r.error || r.refused}`, { reason: r.refused || r.error, battle: P.battleId }); return; }
     const d = r.data || {};
@@ -676,6 +814,7 @@ window.OGX = window.OGX || {};
     if (wctx.cfg('followBattles')) {
       for (const b of list) {
         if (M.plans[b.id] || !(b.status === 'planned' || b.status === 'flying') || !b.target) continue;
+        if (b.side === 'defender') continue;   // a fight on an own body (botsave stays): the real field is read after it (fightsStep)
         if (+b.arrival < now - 30 * 60000) continue;
         await planBattle(wctx, env, b);
       }
@@ -690,7 +829,10 @@ window.OGX = window.OGX || {};
         if (now >= P.battleArrival + 1000) setStatus(P, 'duePost');
         else next = Math.min(next, P.battleArrival + 1000);
       }
-      if (P.status === 'duePost') await sendPost(wctx, env, P);
+      if (P.status === 'duePost') {
+        if (!(P.retryAt && now < P.retryAt)) await sendPost(wctx, env, P);
+        if (P.status === 'duePost' && P.retryAt) next = Math.min(next, P.retryAt);   // refused for slots: wake for the retry
+      }
       if (P.status === 'result') await handlePreResult(wctx, P);
       if (P.status === 'queued' && !M.pending.has(P.id) && now > P.departAt + 30000) {
         // reload / leader change lost the promise: find the fleet in the event box
@@ -742,6 +884,51 @@ window.OGX = window.OGX || {};
     }
   }
 
+  // ------------------------------------------------------------------ (d) fights on own bodies -> own field right after (§7.2)
+  /** Hostile attacks on own bodies (threats with mission 1/2/9) and defender-side battles botsave registered are remembered until
+   *  their arrival passed; then the own field of that system is looked at once (ownStep with M.meta.ownForce[gs]). -> next wake */
+  function fightsStep(wctx, env) {
+    const now = wctx.now();
+    M.meta.fights = M.meta.fights || {};
+    const own = (coords) => Object.values(env.bodies).some((x) => x.coords === coords);
+    const live = new Set();
+    for (const th of wctx.threats() || []) {
+      if (!th || !th.bodyKey || th.probesOnly || !FIGHT_MISSIONS.has(+th.mission) || !(th.arrival > 0)) continue;
+      const b = env.bodies[th.bodyKey];
+      const coords = (b && b.coords) || coordsOf(th.to);
+      if (!coords) continue;
+      live.add(th.key);
+      const f = M.meta.fights[th.key] || (M.meta.fights[th.key] = { key: th.key, bodyKey: th.bodyKey, coords, t: now, src: 'threat' });
+      f.arrival = th.arrival; f.mission = +th.mission;
+    }
+    // an attack that vanished well before its arrival was recalled: no fight, no field to look for
+    for (const [k, f] of Object.entries(M.meta.fights)) if (f.src === 'threat' && !f.done && !live.has(k) && now < num(f.arrival) - 5000) delete M.meta.fights[k];
+    let list = [];
+    try { list = OGX.bot.battles.list() || []; } catch (e) { list = []; }
+    for (const b of list) {
+      if (!b || b.side !== 'defender' || !b.target || !(b.arrival > 0)) continue;
+      const coords = coordsOf(b.target);
+      if (!coords || !own(coords)) continue;
+      const key = b.threat || b.id;   // botsave's entry names its threat: one fight, one look
+      if (b.threat && !live.has(b.threat) && now < +b.arrival - 5000) continue;
+      const f = M.meta.fights[key] || (M.meta.fights[key] = { key, coords, t: now, src: 'battle' });
+      f.arrival = +b.arrival;
+    }
+    let next = Infinity;
+    for (const [k, f] of Object.entries(M.meta.fights)) {
+      if (now - num(f.arrival) > H) { delete M.meta.fights[k]; continue; }
+      if (f.done) continue;
+      if (now < num(f.arrival) + FIGHT_SETTLE_MS) { next = Math.min(next, num(f.arrival) + FIGHT_SETTLE_MS); continue; }
+      f.done = true;
+      const gs = f.coords.split(':').slice(0, 2).join(':');
+      M.meta.ownForce = M.meta.ownForce || {};
+      M.meta.ownForce[gs] = Math.max(num(M.meta.ownForce[gs]), num(f.arrival));
+      M.meta.nextOwnAt = now;
+      wctx.rec('harvest-own', `Бой у [${f.coords}] (${fmtT(f.arrival)}) прошёл: проверяю поле обломков у своих планет в ${gs}`, { kind: 'fight', coords: f.coords, arrival: f.arrival, threat: k });
+    }
+    return next;
+  }
+
   // ------------------------------------------------------------------ (b) own debris fields
   async function ownStep(wctx, env) {
     const now = wctx.now();
@@ -751,6 +938,7 @@ window.OGX = window.OGX || {};
     const budget = num(wctx.core('galaxyViewsPerHour'), 0);
     let views = 0;
     const fields = [];
+    const missing = [];   // systems with no data at all (neither the cache nor a view seen on the bus) and when they may be read
     const minMs = num(wctx.cfg('checkMinMin'), 30) * 60000;
     const maxMs = Math.max(minMs, num(wctx.cfg('checkMaxMin'), 60) * 60000);
     M.meta.ownRead = M.meta.ownRead || {};
@@ -764,23 +952,34 @@ window.OGX = window.OGX || {};
       if (seen && seen.positions && (!sys || num(seen.t) > num(sys.t))) sys = seen;
       // [root cause of the 4–5 s loop, preview 2] the bot's own read never refreshed the cache and its galaxy:system event woke this
       // module again: now at most one read per system per checkMinMin (and only when the data is older than checkMaxMin)
-      const stale = !sys || now - num(sys.t) > maxMs;
+      // a fight on an own body of this system just ended (fightsStep): data older than the fight is stale and one read is allowed
+      // regardless of checkMinMin (budget permitting) — the attacker's recyclers are on their way
+      const force = M.meta.ownForce && num(M.meta.ownForce[gs]) > 0 ? num(M.meta.ownForce[gs]) : 0;
+      const stale = !sys || now - num(sys.t) > maxMs || (force > 0 && num(sys.t) < force);
       const lastRead = num(M.meta.ownRead[gs]);
-      if (stale && budget > 0 && views < 2 && now - lastRead >= minMs) {
-        wctx.decide(`Смотрю галактику ${gs} (свои поля)`, { why: sys ? 'кэш устарел' : 'системы нет в кэше', inputs: { budget, cacheT: sys ? sys.t : null, lastRead: lastRead || null }, chosen: 'read.galaxy', alternatives: ['ждать кэш'] });
+      if (stale && budget > 0 && views < 2 && (force > 0 || now - lastRead >= minMs)) {
+        wctx.decide(`Смотрю галактику ${gs} (свои поля)`, { why: force ? 'бой у своего тела прошёл: поле могло появиться' : sys ? 'кэш устарел' : 'системы нет в кэше', inputs: { budget, cacheT: sys ? sys.t : null, lastRead: lastRead || null, fightAt: force || null }, chosen: 'read.galaxy', alternatives: ['ждать кэш'] });
         M.meta.ownRead[gs] = now;
+        if (force) delete M.meta.ownForce[gs];
+        // persisted at once: the player navigating in the bot tab ends this run before save() and the next leader (with an empty
+        // M.seen, bot reads are not in the galaxy cache) would read the same system again
+        try { await M.ctx.store.set('meta', clone(M.meta)); } catch (e) { /* ignore */ }
         const r = await wctx.act({ type: 'read.galaxy', prio: 'read', params: { galaxy: g, system: s }, why: 'Обломки: свои поля в ' + gs });
         views++;
         if (r && r.ok && r.data && r.data.system) { sys = r.data.system; M.seen[gs] = { t: num(sys.t, now), positions: sys.positions }; }
-      }
-      if (!sys || !Array.isArray(sys.positions)) continue;
+      } else if (force > 0 && (!stale || budget <= 0)) delete M.meta.ownForce[gs];   // fresh data already / no galaxy budget: one shot
+      if (!sys || !Array.isArray(sys.positions)) { missing.push({ gs, readAt: budget > 0 ? num(M.meta.ownRead[gs]) + minMs : null }); continue; }
       for (const pl of planets.filter((b) => b.coords.startsWith(gs + ':'))) {
         const pos = +pl.coords.split(':')[2];
         const row = sys.positions.find((x) => +x.position === pos);
         if (row && row.debris && fieldSum(row.debris) > 0) fields.push({ coords: pl.coords, field: { metal: num(row.debris.metal), crystal: num(row.debris.crystal) }, t: sys.t, src: 'galaxy' });
       }
     }
-    wctx.rec('harvest-own', `Свои поля: ${fields.length ? fields.map((f) => '[' + f.coords + '] ' + fmtN(fieldSum(f.field))).join(', ') : 'нет в кэше галактики'}`, { kind: 'scan', systems, fields, views });
+    // the real reason when nothing is found: no fields in the data / no data for a system (and when it may be read) / no galaxy budget
+    const missTxt = missing.length ? (budget > 0 ? `нет данных по ${missing.map((m) => m.gs + (m.readAt > now ? ' (чтение после ' + fmtT(m.readAt) + ')' : '')).join(', ')}`
+      : `нет данных по ${missing.map((m) => m.gs).join(', ')}, просмотр галактики запрещён (лимит просмотров в час 0)`) : '';
+    const found = fields.length ? fields.map((f) => '[' + f.coords + '] ' + fmtN(fieldSum(f.field))).join(', ') : (missing.length < systems.length ? 'полей нет' : '');
+    wctx.rec('harvest-own', `Свои поля: ${[found, missTxt].filter(Boolean).join('; ')}`, { kind: 'scan', systems, fields, views, missing: missing.map((m) => m.gs), budget });
     let sent = 0;
     let nextAt = null;
     // [SPEC §5] next check: return of the nearest own recycle fleet (duplicate) / any own fleet (no slot) + 20..50 s
@@ -805,7 +1004,13 @@ window.OGX = window.OGX || {};
       const shipsBy = await shipsAll(wctx, env, REC, 'выбор тела для сбора своего поля');
       const cands = originsWithRecyclers(wctx, env, shipsBy, REC, F.coords, need, need);
       const pick = pickOwnOrigin(cands, need);
-      if (!pick) { wctx.rec('skip', `[${F.coords}]: нет свободных боевых переработчиков (219), нужно ${need}`, { reason: 'noRecyclers', coords: F.coords, need, shipId: REC }); continue; }
+      if (!pick) {
+        // recyclers exist but their body is under a threat lock (a fight just ended there: the lock holds a minute after the hit): again after it
+        const lockedHave = Object.values(env.bodies).filter((b) => wctx.locked(b.key) && num((shipsBy[b.id] || {})[REC]) > 0);
+        if (lockedHave.length) soon(now + 65000);
+        wctx.rec('skip', `[${F.coords}]: нет свободных боевых переработчиков (219), нужно ${need}` + (lockedHave.length ? ` (${lockedHave.map((b) => b.coords).join(', ')} под угрозой — повтор через минуту)` : ''), { reason: 'noRecyclers', coords: F.coords, need, shipId: REC, locked: lockedHave.map((b) => b.id) });
+        continue;
+      }
       const o = pick.origin; const n = Math.min(need, o.have);
       const ships = { [REC]: n };
       wctx.decide(`Проверяю свободные слоты флота`, { why: 'сбор своего поля идёт обычным классом (резерв слотов)', inputs: { reserve: wctx.core('slotsReserve') }, chosen: 'slots', alternatives: [] });
@@ -837,27 +1042,36 @@ window.OGX = window.OGX || {};
   }
 
   // ------------------------------------------------------------------ (c) logistics
-  function richest(env, exclude) {
-    return Object.values(env.bodies).filter((b) => b.key !== exclude && b.res).sort((a, b) => OGX.bot.msu({ metal: amountOf(b, 'metal'), crystal: amountOf(b, 'crystal'), deuterium: amountOf(b, 'deuterium') })
-      - OGX.bot.msu({ metal: amountOf(a, 'metal'), crystal: amountOf(a, 'crystal'), deuterium: amountOf(a, 'deuterium') }))[0] || null;
-  }
-  async function transport(wctx, env, { source, dest, load, kind, needId, why }) {
+  async function transport(wctx, env, { source, dest, load: loadIn, kind, needId, why }) {
     const now = wctx.now();
     const cargoType = TRANSPORT;
     const cap = capOf(env.stats, cargoType);
-    const plan = transportShips({ load, cap, fuelOf: (n) => flightTime(env, source, dest.coords, { [cargoType]: n }, 10).fuel });
+    const fuelOf = (n) => flightTime(env, source, dest.coords, { [cargoType]: n }, 10).fuel;
+    const load = Object.assign(res0(), loadIn);
+    let plan = transportShips({ load, cap, fuelOf });
     if (!plan) return { skip: 'cargo', text: 'не удаётся рассчитать транспорт' };
-    const ft = flightTime(env, source, dest.coords, { [cargoType]: plan.n }, 10);
-    const ships = await shipsOf(wctx, env, source, 'транспорт: корабли на складе');
-    if (num(ships[cargoType]) < plan.n) return { skip: 'ships', text: `не хватает ${plan.n - num(ships[cargoType])} Ул. трансп. (на ${source.coords} ${num(ships[cargoType])}, нужно ${plan.n})` };
-    const avail = wctx.available(source.key);
-    const keepD = Math.ceil(num(perHourOf(source, 'deuterium'), 0) * num(wctx.cfg('deutReserveH'), 2));
+    // the stock check comes before any request: the deuterium reserve (deutReserveH of production, remembered when the core's
+    // perHour drops out) and the fuel come first; a deuterium load above that is trimmed (the planner applies the same rule, this
+    // catches a stock that moved since), never refused as a whole
+    const avail = availOf(wctx, source);
+    const keepD = keepDOf(wctx, source);
+    let deutTrimmed = 0;
+    const dMax = Math.max(0, Math.floor(avail.deuterium - keepD - plan.fuel));
+    if (num(load.deuterium) > dMax) {
+      deutTrimmed = num(load.deuterium) - dMax;
+      load.deuterium = dMax;
+      plan = transportShips({ load, cap, fuelOf });
+      if (!plan) return { skip: 'stock', text: 'на складе не хватает: дейтерий ' + fmtN(avail.deuterium) + ' − запас ' + fmtN(keepD) + ' не покрывает даже топливо' };
+    }
     const lacks = [];
     if (amountOf(source, 'metal') === null) lacks.push('запас склада неизвестен');
     if (avail.metal < num(load.metal)) lacks.push('металл ' + fmtN(avail.metal) + ' < ' + fmtN(load.metal));
     if (avail.crystal < num(load.crystal)) lacks.push('кристалл ' + fmtN(avail.crystal) + ' < ' + fmtN(load.crystal));
     if (avail.deuterium - keepD < num(load.deuterium) + plan.fuel) lacks.push('дейтерий ' + fmtN(avail.deuterium) + ' − запас ' + fmtN(keepD) + ' < ' + fmtN(num(load.deuterium) + plan.fuel));
     if (lacks.length) return { skip: 'stock', text: 'на складе не хватает: ' + lacks.join('; ') };
+    const ft = flightTime(env, source, dest.coords, { [cargoType]: plan.n }, 10);
+    const ships = await shipsOf(wctx, env, source, 'транспорт: корабли на складе');
+    if (num(ships[cargoType]) < plan.n) return { skip: 'ships', text: `не хватает ${plan.n - num(ships[cargoType])} Ул. трансп. (на ${source.coords} ${num(ships[cargoType])}, нужно ${plan.n})` };
     if (wctx.locked(source.key)) return { skip: 'threat', text: 'склад под угрозой' };
     const arrival = now + ft.duration * 1000;
     const dl = wctx.locked(dest.key);
@@ -868,11 +1082,12 @@ window.OGX = window.OGX || {};
     const sc = wctx.sleepCheck(now + 2 * ft.duration * 1000);
     if (!sc.ok) return { skip: 'sleep', text: 'возврат попадает в сон' };
     const cargo = { metal: Math.ceil(num(load.metal)), crystal: Math.ceil(num(load.crystal)), deuterium: Math.ceil(num(load.deuterium)) };
-    wctx.rec('transport-planned', `${kind === 'need' ? 'Довоз' : 'Перевоз'} ${fmtN(plan.total)} на ${dest.coords} с ${source.coords}: ${plan.n} × ${cargoType} (топливо ${fmtN(plan.fuel)})`,
-      { kind, needId: needId || null, from: source.id, to: dest.id, cargo, ships: { [cargoType]: plan.n }, fuel: plan.fuel, duration: ft.duration, keepDeut: keepD });
+    wctx.rec('transport-planned', `${kind === 'need' ? 'Довоз' : 'Перевоз'} ${fmtN(plan.total)} на ${dest.coords} с ${source.coords}: ${plan.n} × ${cargoType} (топливо ${fmtN(plan.fuel)})` + (deutTrimmed ? ` (дейтерий урезан на ${fmtN(deutTrimmed)}: запас ${fmtN(keepD)} + топливо)` : ''),
+      { kind, needId: needId || null, from: source.id, to: dest.id, cargo, ships: { [cargoType]: plan.n }, fuel: plan.fuel, duration: ft.duration, keepDeut: keepD, deutTrimmed });
     const resId = wctx.reserve(source.key, { metal: cargo.metal, crystal: cargo.crystal, deuterium: cargo.deuterium + plan.fuel }, { ttlMs: 10 * 60000, label: 'транспорт' });
     wctx.decide(`Транспорт на ${dest.coords}: ${fmtN(cargo.metal)} / ${fmtN(cargo.crystal)} / ${fmtN(cargo.deuterium)}`, { why, inputs: { need: needId || null, load, avail, keepDeut: keepD, cap },
       chosen: { from: source.id, ships: { [cargoType]: plan.n }, cargo, speed: 10 }, alternatives: [] });
+    const srcRaw = await rawStock(source.key);   // the stock the state shows right before the send (see unsynced)
     const r = await wctx.act({ type: 'fleet.send', bodyId: source.id, prio: 'fleet', cls: 'normal', params: { target: targetOf(dest.coords, isMoon(dest) ? 3 : 1), ships: { [cargoType]: plan.n }, mission: 3, speed: 10, cargo, expectArrival: arrival, arrivalTolMs: 30000 },
       why: `Логистика: ${kind === 'need' ? 'довоз под постройку' : kind} на ${dest.coords}`, plan: { needId: needId || null, kind }, dedupeKey: 'botdebris:logi:' + dest.key, returnAt: now + 2 * ft.duration * 1000 });
     wctx.release(resId);
@@ -880,15 +1095,16 @@ window.OGX = window.OGX || {};
     if (!r.ok) return { skip: r.refused || r.error || 'error', text: r.message || r.error || r.refused };
     const d = r.data || {};
     forgetShips(source.id, { [cargoType]: plan.n });
-    const rec = { id: kind + ':' + (needId || dest.key) + ':' + now, kind, needId: needId || null, to: dest.key, toCoords: dest.coords, from: source.id, fleetId: d.fleetId, arrival: d.arrival, back: d.back, cargo, ships: { [cargoType]: plan.n }, sentAt: r.at || now };
+    const rec = { id: kind + ':' + (needId || dest.key) + ':' + now, kind, needId: needId || null, to: dest.key, toCoords: dest.coords, from: source.id, fleetId: d.fleetId, arrival: d.arrival, back: d.back, cargo, ships: { [cargoType]: plan.n }, sentAt: r.at || now,
+      fuel: plan.fuel, srcAmt: srcRaw ? srcRaw.amt : null };
     M.logi.push(rec);
     return { sent: rec };
   }
   /** What a source body can give: its available stock (other modules' reservations off) minus what its own build plan keeps for the
    *  next needAheadMin (botbuild 'keep' need) and the deuterium reserve (deutReserveH hours of its production). */
   function spareOf(wctx, body, keep) {
-    const avail = wctx.available(body.key);
-    const keepD = Math.ceil(num(perHourOf(body, 'deuterium'), 0) * num(wctx.cfg('deutReserveH'), 2));
+    const avail = availOf(wctx, body);
+    const keepD = keepDOf(wctx, body);
     const out = res0();
     for (const r of RES) out[r] = Math.max(0, Math.floor(num(avail[r]) - num(keep && keep[r]) - (r === 'deuterium' ? keepD : 0)));
     return out;
@@ -907,14 +1123,92 @@ window.OGX = window.OGX || {};
     }
     return { load: Object.keys(short).length ? null : load, short };
   }
-  /** Sources for a delivery: the configured store, else every other body without an open need, the largest spare first (all of
-   *  John's planets share one system: flight times are alike, the largest spare saves trips). */
-  function sourcesFor(wctx, env, dest, origin, needKeys, keeps) {
-    if (origin) return origin.key !== dest.key ? [{ body: origin, spare: spareOf(wctx, origin, keeps[origin.key]) }] : [];
-    return Object.values(env.bodies).filter((b) => b.key !== dest.key && b.res && !needKeys.has(b.key) && !wctx.locked(b.key))
-      .map((b) => ({ body: b, spare: spareOf(wctx, b, keeps[b.key]) }))
+  /** Sources for a delivery: the configured store, else every other body, the largest spare first (all of John's planets share
+   *  one system: flight times are alike, the largest spare saves trips). A body with an open need of its own gives only the
+   *  resources it does not wait for (needRes: bodyKey -> { metal, crystal, deuterium } still missing there); before, any open need
+   *  excluded the body and with chain needs on every planet there was no source at all (debris-save-9). */
+  function sourcesFor(wctx, env, dest, origin, needRes, keeps) {
+    const sourceOf = (b) => {
+      const spare = spareOf(wctx, b, keeps[b.key]);
+      const own = needRes && needRes[b.key];
+      if (own) for (const r of RES) if (num(own[r]) > 0) spare[r] = 0;
+      return { body: b, spare };
+    };
+    if (origin) return origin.key !== dest.key ? [sourceOf(origin)] : [];
+    return Object.values(env.bodies).filter((b) => b.key !== dest.key && b.res && !wctx.locked(b.key))
+      .map(sourceOf)
       .filter((c) => RES.some((r) => c.spare[r] > 0))
       .sort((a, b) => OGX.bot.msu(b.spare) - OGX.bot.msu(a.spare));
+  }
+  /** One journal line per key and signature; the same situation is written again after LOG_REPEAT_MS (M.meta.repLog, persisted). */
+  function recOnce(wctx, key, sig, kind, text, data) {
+    M.meta.repLog = M.meta.repLog || {};
+    const now = wctx.now();
+    const prev = M.meta.repLog[key];
+    if (prev && prev.sig === sig && now - num(prev.t) < LOG_REPEAT_MS) return false;
+    M.meta.repLog[key] = { sig, t: now };
+    wctx.rec(kind, text, data);
+    return true;
+  }
+  /** A refused repatriation: journal once per situation and (with `cooldown`, a REP_COOLDOWN key) leave the body alone — no plan,
+   *  no fleetTable read — until the cooldown ends or a fleet lands on it (bot:fleet-returned clears it). */
+  function repSkip(wctx, b, reason, text, data, cooldown) {
+    const now = wctx.now();
+    if (cooldown) {
+      M.meta.repSkip = M.meta.repSkip || {};
+      const cd = REP_COOLDOWN[cooldown] || REP_COOLDOWN.error;
+      M.meta.repSkip[b.key] = { reason, until: now + OGX.bot.randMs(cd), t: now };
+    }
+    recOnce(wctx, 'rep:' + b.key, reason + '|' + String(text || ''), 'skip', text, Object.assign({ reason }, data || {}));
+  }
+  /**
+   * A colony with something to export and no Battle Transporters: Deploy (mission 4) the 217 it needs (at most FERRY_MAX) from the
+   * body with the most known spare ones (the main first); the next pass repatriates with them. John's rule: 217 only, nothing else
+   * ever ferries resources. -> { sent } | { dry: true } | { skip, text }
+   */
+  async function ferry(wctx, env, { b, main, spare, cap, over }) {
+    const now = wctx.now();
+    if (!wctx.cfg('ferry')) return { skip: 'ships', text: 'перегон транспортов выключен' };
+    const total = RES.reduce((s, r) => s + num(spare[r]), 0);
+    // worth a trip: a full hold (or the repatriation threshold when lower) is exportable, or the colony's storage is at the cap
+    const worth = Math.min(num(wctx.cfg('repatriateMin'), cap), cap);
+    if (!over && total < worth) return { skip: 'stock', text: `вывозить всего ${fmtN(total)} — меньше трюма одного Ул. трансп. (${fmtN(worth)}), перегон не окупится` };
+    const need = Math.min(FERRY_MAX, Math.max(1, Math.ceil(total / Math.max(1, cap))));
+    const cands = [];
+    for (const s of Object.values(env.bodies)) {
+      if (s.key === b.key || wctx.locked(s.key)) continue;
+      // known counts only (no reads for a ferry): this module's read, else the core state's once a page showed the ships
+      const mine = myShips(s);
+      const known = (mine && mine.ships) || (s.shipsT !== null && s.shipsT !== undefined ? s.ships : null) || null;
+      const have = known ? num(known[TRANSPORT]) : 0;
+      if (have > 0) cands.push({ body: s, have, main: s.key === main.key });
+    }
+    cands.sort((x, y) => (y.main ? 1 : 0) - (x.main ? 1 : 0) || y.have - x.have);
+    if (!cands.length) return { skip: 'ships', text: 'перегонять нечего: Ул. трансп. нет ни на одном теле' };
+    const src = cands[0];
+    const n = Math.min(need, src.have);
+    const ships = { [TRANSPORT]: n };
+    const ft = flightTime(env, src.body, b.coords, ships, 10);
+    if (amountOf(src.body, 'deuterium') !== null && availOf(wctx, src.body).deuterium < ft.fuel) return { skip: 'ships', text: `перегон с ${src.body.coords}: нет дейтерия на топливо (${fmtN(ft.fuel)})` };
+    wctx.decide(`Проверяю свободные слоты флота`, { why: 'перегон транспортов идёт обычным классом (резерв слотов)', inputs: { reserve: wctx.core('slotsReserve') }, chosen: 'slots', alternatives: [] });
+    const can = await wctx.canSend('normal');
+    if (!can.ok) return { skip: 'slots', text: `перегон: нет слота (свободно ${can.free}, резерв ${can.reserve})` };
+    const sc = wctx.sleepCheck(now + ft.duration * 1000);
+    if (!sc.ok) return { skip: 'sleep', text: 'перегон попадает в сон' };
+    wctx.decide(`Перегон ${n} Ул. трансп. с ${src.body.coords} на ${b.coords} под вывоз ${fmtN(total)}`, { why: over ? 'хранилище колонии почти заполнено, транспортов на ней нет' : 'запас колонии ≥ порога, транспортов на ней нет',
+      inputs: { need, have: src.have, spare, cap }, chosen: { from: src.body.id, ships, mission: 4, speed: 10 }, alternatives: cands.map((c) => ({ id: c.body.id, have: c.have })) });
+    const srcRaw = await rawStock(src.body.key);
+    const r = await wctx.act({ type: 'fleet.send', bodyId: src.body.id, prio: 'fleet', cls: 'normal', params: { target: targetOf(b.coords, isMoon(b) ? 3 : 1), ships, mission: 4, speed: 10, expectArrival: now + ft.duration * 1000, arrivalTolMs: 30000 },
+      why: `Логистика: перегон ${n} Ул. трансп. на ${b.coords} под вывоз`, plan: { kind: 'ferry', n, need, spare }, dedupeKey: 'botdebris:ferry:' + b.key, returnAt: now + ft.duration * 1000 });
+    if (r.dry) { M.logi.push({ id: 'dry:ferry:' + b.key, kind: 'ferry', to: b.key, dry: true, sentAt: now }); return { dry: true }; }
+    if (!r.ok) return { skip: r.refused || r.error || 'error', text: 'перегон не удался: ' + (r.message || r.error || r.refused) };
+    const d = r.data || {};
+    forgetShips(src.body.id, ships);
+    const rec = { id: 'ferry:' + b.key + ':' + now, kind: 'ferry', to: b.key, toCoords: b.coords, from: src.body.id, fleetId: d.fleetId, arrival: d.arrival, back: d.arrival, cargo: res0(), ships, sentAt: r.at || now,
+      fuel: ft.fuel, srcAmt: srcRaw ? srcRaw.amt : null };
+    M.logi.push(rec);
+    wctx.rec('transport-sent', `Перегон ${n} Ул. трансп. с ${src.body.coords} на ${b.coords} под вывоз, прибытие ${fmtT(d.arrival)}`, Object.assign({ action: 'ferry', need, spare }, rec));
+    return { sent: rec };
   }
   async function logisticsStep(wctx, env) {
     const now = wctx.now();
@@ -925,6 +1219,8 @@ window.OGX = window.OGX || {};
     for (const n of all) if (n && n.kind === 'keep' && n.bodyKey && n.keep) keeps[n.bodyKey] = addRes(keeps[n.bodyKey], n.keep);
     const needs = all.filter((n) => n && n.kind !== 'keep' && n.bodyKey && n.res).sort((a, b) => num(b.priority) - num(a.priority) || num(a.wantedBy) - num(b.wantedBy));
     const needKeys = new Set(needs.map((n) => n.bodyKey));
+    const needRes = {};
+    for (const n of needs) needRes[n.bodyKey] = addRes(needRes[n.bodyKey], n.res);
     const origin = bodyByRef(env, wctx.cfg('logisticsOrigin'));
     if (wctx.cfg('logistics')) for (const need of needs) {
       const dest = env.bodies[need.bodyKey];
@@ -942,7 +1238,7 @@ window.OGX = window.OGX || {};
         wctx.rec('skip', `Логистика: на ${dest.coords} уже летит наш транспорт`, { reason: 'inFlight', needId: need.id, to: dest.key });
         continue;
       }
-      const cands = sourcesFor(wctx, env, dest, origin, needKeys, keeps);
+      const cands = sourcesFor(wctx, env, dest, origin, needRes, keeps);
       if (!cands.length) { wctx.rec('skip', `Логистика на ${dest.coords}: нет склада с излишком`, { reason: 'noSource', needId: need.id }); continue; }
       const what = need.forItem ? need.forItem.id + ' ур. ' + need.forItem.level : 'постройку';
       const chainTxt = Array.isArray(need.chain) && need.chain.length > 1 ? ` (цепочка ${need.chain.length} шаг., на ${num(need.aheadMin)} мин стройки)` : '';
@@ -973,35 +1269,90 @@ window.OGX = window.OGX || {};
     if (wctx.cfg('repatriate')) {
       const main = origin || Object.values(env.bodies).filter((b) => !isMoon(b)).sort((a, b) => num(a.order, 99) - num(b.order, 99))[0];
       if (!main) return 0;
+      const cargoType = TRANSPORT;
+      const cap = Math.max(1, capOf(env.stats, cargoType));
+      // deliveries to the main still flying, or landed after its stock was last read (the state's own time, not the projected one),
+      // already take its room
+      const mainRaw = M.raw && M.raw[main.key];
+      const mainT = mainRaw ? num(mainRaw.t) : 0;
+      const pending = res0();
+      for (const x of M.logi) if (x.to === main.key && !x.dry && x.cargo && x.arrival && (now < x.arrival || (mainT ? x.arrival > mainT : now < x.arrival + 30 * 60000))) for (const r of RES) pending[r] += num(x.cargo[r]);
+      const dest = destRoom(main, pending);
+      // a trip is worth it from one full hold (or the threshold when it is lower); an overflowing colony always
+      const worth = Math.min(num(wctx.cfg('repatriateMin'), cap), cap);
       for (const b of Object.values(env.bodies)) {
         if (b.key === main.key || !b.res) continue;
         // a body waiting for a delivery is never emptied (no ping-pong: deliveries main -> colony, repatriation colony -> main)
-        if (needKeys.has(b.key)) { wctx.rec('skip', `Репатриация ${b.coords}: ждёт довоз под стройку`, { reason: 'openNeed', body: b.id }); continue; }
+        if (needKeys.has(b.key)) { repSkip(wctx, b, 'openNeed', `Репатриация ${b.coords}: ждёт довоз под стройку`, { body: b.id }); continue; }
         const stock = { metal: amountOf(b, 'metal'), crystal: amountOf(b, 'crystal'), deuterium: amountOf(b, 'deuterium') };
         const sum = RES.reduce((s, r) => s + num(stock[r]), 0);
-        const over = RES.some((r) => storageOf(b, r) > 0 && num(stock[r]) >= storageOf(b, r) * num(wctx.cfg('overflowPct'), 90) / 100);
-        if (sum < num(wctx.cfg('repatriateMin')) && !over) continue;
-        if (ownTransportTo(env, b.coords).length || M.logi.some((x) => x.to === b.key && x.arrival && now < x.arrival)) { wctx.rec('skip', `Репатриация ${b.coords}: к телу летит транспорт`, { reason: 'incoming', body: b.id }); continue; }
+        const storage = { metal: storageOf(b, 'metal'), crystal: storageOf(b, 'crystal'), deuterium: storageOf(b, 'deuterium') };
+        const over = {}; let anyOver = false;
+        for (const r of RES) { over[r] = num(storage[r]) > 0 && num(stock[r]) >= num(storage[r]) * num(wctx.cfg('overflowPct'), 90) / 100; anyOver = anyOver || over[r]; }
+        if (sum < num(wctx.cfg('repatriateMin')) && !anyOver) continue;
+        if (ownTransportTo(env, b.coords).length || M.logi.some((x) => x.to === b.key && x.kind !== 'ferry' && x.arrival && now < x.arrival)) { repSkip(wctx, b, 'incoming', `Репатриация ${b.coords}: к телу летит транспорт`, { body: b.id }); continue; }
         if (M.logi.some((x) => x.kind === 'repatriate' && x.fromKey === b.key && (x.dry ? now - x.sentAt < 20 * 60000 : x.back && now < x.back))) continue;
-        const cargoType = TRANSPORT;
+        if (M.logi.some((x) => x.kind === 'ferry' && x.to === b.key && (x.dry ? now - x.sentAt < 20 * 60000 : x.arrival && now < x.arrival + 5000))) continue;   // its transporters are on the way
+        // a refused pass is not re-planned (nor its fleetTable re-read) before its cooldown; a fleet landing on the body clears it
+        const cd = M.meta.repSkip && M.meta.repSkip[b.key];
+        if (cd && now < num(cd.until)) continue;
+        // what the body gives: available minus its own plan for the next needAheadMin (botbuild 'keep') minus the deuterium reserve
+        // (deutReserveH of production) — the same rule transport() checks, so the plan cannot be refused by it (0.3.1: 421 'stock' skips)
+        const keep = keeps[b.key] || res0();
+        const keepD = keepDOf(wctx, b);
+        const avail = availOf(wctx, b);
+        const { spare } = repatriateLoad({ avail, keep, keepD, over, storage });
+        if (!RES.some((r) => spare[r] > 0)) {
+          repSkip(wctx, b, 'stock', `Репатриация ${b.coords}: вывозить нечего — всё под свою стройку (${fmtN(keep.metal)} / ${fmtN(keep.crystal)} / ${fmtN(keep.deuterium)}) и запас дейтерия ${fmtN(keepD)}`, { body: b.id, keep, keepD, avail, overflow: anyOver }, 'stock');
+          continue;
+        }
+        // the main's storage: below its cap it takes only what fits; at the cap it takes an overflowing colony's load (nothing more is
+        // lost there and the colony's production restarts) and nothing else
+        const fits = res0(); const cut = {};
+        for (const r of RES) {
+          if (dest.room[r] === null) { fits[r] = spare[r]; continue; }
+          fits[r] = dest.full[r] ? (over[r] ? spare[r] : 0) : Math.min(spare[r], dest.room[r]);
+          if (fits[r] < spare[r]) cut[r] = spare[r] - fits[r];
+        }
+        if (!RES.some((r) => fits[r] > 0)) {
+          repSkip(wctx, b, 'destFull', `Репатриация ${b.coords}: склад ${main.coords} полон (${RES.filter((r) => cut[r]).map((r) => RU[r]).join(', ')}) — вывоз подождёт`, { body: b.id, to: main.id, cut, room: dest.room }, 'destFull');
+          continue;
+        }
+        const fitsTotal = RES.reduce((s, r) => s + fits[r], 0);
+        if (!anyOver && fitsTotal < worth) {
+          repSkip(wctx, b, 'stock', `Репатриация ${b.coords}: вывозить всего ${fmtN(fitsTotal)} — меньше трюма одного Ул. трансп. (${fmtN(worth)}), подожду`, { body: b.id, total: fitsTotal, worth, keep, keepD }, 'stock');
+          continue;
+        }
+        // a ferry landed since the last read: that read showed no transporters
+        const landed = M.logi.find((x) => x.kind === 'ferry' && x.to === b.key && !x.dry && x.arrival && now >= x.arrival && !x.credited);
+        if (landed) { landed.credited = true; delete M.ships[b.id]; }
+        // only now the ships (page=fleetTable when the counts are older than 10 min): something is exportable
         const ships = await shipsOf(wctx, env, b, 'репатриация: транспорты на колонии');
         const have = num(ships[cargoType]);
-        if (!have) { wctx.rec('skip', `Репатриация ${b.coords}: нет Ул. трансп.`, { reason: 'ships', body: b.id, shipId: cargoType }); continue; }
-        const ft = flightTime(env, b, main.coords, { [cargoType]: have }, 10);
-        const avail = wctx.available(b.key);
-        // the body's own plan for the next needAheadMin stays there (botbuild 'keep')
-        const keep = keeps[b.key] || res0();
-        for (const r of RES) avail[r] = Math.max(0, num(avail[r]) - num(keep[r]));
-        avail.deuterium = Math.max(0, avail.deuterium - ft.fuel);
-        const load = payloadDCM(avail, have * capOf(env.stats, cargoType) - ft.fuel);
-        if (!RES.some((r) => load[r] > 0)) continue;
-        const left = RES.reduce((s, r) => s + Math.max(0, num(avail[r]) - load[r]), 0);
-        const shortN = left > 0 ? Math.ceil(left / Math.max(1, capOf(env.stats, cargoType))) : 0;
-        wctx.rec('repatriate', `Репатриация ${b.coords} → ${main.coords}: ${fmtN(load.metal)} / ${fmtN(load.crystal)} / ${fmtN(load.deuterium)}` + (RES.some((r) => keep[r] > 0) ? ` (оставляю под свою стройку ${fmtN(keep.metal)} / ${fmtN(keep.crystal)} / ${fmtN(keep.deuterium)})` : '') + (shortN ? ` (на весь запас не хватает ${shortN} Ул. трансп.)` : ''), { from: b.id, to: main.id, load, keep, overflow: over, sum, short: shortN });
-        const out = await transport(wctx, env, { source: b, dest: main, load, kind: 'repatriate', why: over ? 'хранилище почти заполнено' : 'запас колонии ≥ порога' });
+        if (!have) {
+          const f = await ferry(wctx, env, { b, main, spare: fits, cap, over: anyOver });
+          if (f.dry || f.sent) return 1;
+          repSkip(wctx, b, 'ships', `Репатриация ${b.coords}: нет Ул. трансп. (${f.text})`, { body: b.id, shipId: cargoType, ferry: f.skip }, f.skip === 'ships' ? 'ships' : f.skip);
+          continue;
+        }
+        const n0 = Math.min(have, Math.max(1, Math.ceil(RES.reduce((s, r) => s + fits[r], 0) / cap)));
+        const ft = flightTime(env, b, main.coords, { [cargoType]: n0 }, 10);
+        // the fuel comes from the deuterium above keep + reserve, like the load (transport() refuses it otherwise)
+        if (spare.deuterium < ft.fuel) { repSkip(wctx, b, 'stock', `Репатриация ${b.coords}: дейтерия сверх запаса ${fmtN(keepD)} нет даже на топливо (${fmtN(ft.fuel)})`, { body: b.id, fuel: ft.fuel, keepD }, 'stock'); continue; }
+        const stockD = Object.assign({}, fits, { deuterium: Math.max(0, Math.min(fits.deuterium, spare.deuterium - ft.fuel)) });
+        const load = payloadDCM(stockD, n0 * cap - ft.fuel);
+        if (!RES.some((r) => load[r] > 0)) { repSkip(wctx, b, 'stock', `Репатриация ${b.coords}: после топлива (${fmtN(ft.fuel)}) вывозить нечего`, { body: b.id, fuel: ft.fuel }, 'stock'); continue; }
+        const left = RES.reduce((s, r) => s + Math.max(0, stockD[r] - load[r]), 0);
+        const shortN = left > 0 ? Math.ceil(left / cap) : 0;
+        const cutTxt = Object.keys(cut).length ? ` (на складе ${main.coords} не поместится ${RES.filter((r) => cut[r]).map((r) => RU[r] + ' ' + fmtN(cut[r])).join(', ')})` : '';
+        recOnce(wctx, 'rep:plan:' + b.key, [fmtN(load.metal), fmtN(load.crystal), fmtN(load.deuterium), shortN, Object.keys(cut).join('')].join('|'), 'repatriate',
+          `Репатриация ${b.coords} → ${main.coords}: ${fmtN(load.metal)} / ${fmtN(load.crystal)} / ${fmtN(load.deuterium)}` + (RES.some((r) => keep[r] > 0) ? ` (оставляю под свою стройку ${fmtN(keep.metal)} / ${fmtN(keep.crystal)} / ${fmtN(keep.deuterium)})` : '')
+          + (keepD > 0 ? ` (запас дейтерия ${fmtN(keepD)})` : '') + (shortN ? ` (на весь запас не хватает ${shortN} Ул. трансп.)` : '') + cutTxt,
+          { from: b.id, to: main.id, load, keep, keepD, overflow: anyOver, sum, short: shortN, cut, fuel: ft.fuel });
+        const out = await transport(wctx, env, { source: b, dest: main, load, kind: 'repatriate', why: anyOver ? 'хранилище почти заполнено' : 'запас колонии ≥ порога' });
         if (out.dry) { M.logi.push({ id: 'dry:rep:' + b.key, kind: 'repatriate', fromKey: b.key, to: main.key, dry: true, sentAt: now }); return 1; }
-        if (out.sent) { out.sent.fromKey = b.key; wctx.rec('transport-sent', `Репатриация ${b.coords} → ${main.coords} в пути`, Object.assign({ action: 'repatriate' }, out.sent)); return 1; }
-        wctx.rec('skip', `Репатриация ${b.coords}: ${out.text}`, { reason: out.skip, body: b.id });
+        if (out.sent) { out.sent.fromKey = b.key; if (M.meta.repSkip) delete M.meta.repSkip[b.key]; wctx.rec('transport-sent', `Репатриация ${b.coords} → ${main.coords} в пути`, Object.assign({ action: 'repatriate' }, out.sent)); return 1; }
+        repSkip(wctx, b, out.skip, `Репатриация ${b.coords}: ${out.text}`, { body: b.id }, out.skip);
       }
     }
     return 0;
@@ -1019,10 +1370,12 @@ window.OGX = window.OGX || {};
     try { server = await OGX.state.server(); } catch (e) { server = null; }
     try { factors = OGX.state.factors ? await OGX.state.factors() : null; } catch (e) { factors = null; }
     const env = { bodies: await wctx.bodies(), stats, server, factors, flights: [] };
+    M.raw = await rawStock();
     loadFlights(wctx, env);
     let next = now + OGX.bot.randMs(OGX.bot.INTERVALS.m6);
     try {
       next = Math.min(next, await battlesStep(wctx, env));
+      next = Math.min(next, fightsStep(wctx, env));
       if (wctx.cfg('ownDf')) {
         let dirty = 0;
         try { dirty = num(await M.ctx.store.get('ownDirty', 0)); } catch (e) { dirty = 0; }
@@ -1086,6 +1439,12 @@ window.OGX = window.OGX || {};
       M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'deadline', startJitter: [20000, 50000],
         wakeOn: ['bot:battle-planned', 'bot:battle-cancelled', 'bot:threat', 'bot:fleet-returned', 'bot:needs'], run: mainRun });
       OGX.bus.on('bot:battle-cancelled', (p) => { if (p && p.id) M.cancelled[p.id] = { reason: p.reason || 'отменён', t: OGX.time.serverNow() }; });
+      // a fleet landed on a body: its repatriation cooldown ('no transporters', 'stock', ...) is over, the next pass looks again
+      OGX.bus.on('bot:fleet-returned', (p) => {
+        if (!p || !p.bodyKey) return;
+        M.stale.add(p.bodyKey);   // its ship counts changed: the next shipsOf re-reads (a colony whose transporters came home is not ferried)
+        if (M.meta.repSkip && M.meta.repSkip[p.bodyKey]) delete M.meta.repSkip[p.bodyKey];
+      });
       const wakeFor = (label) => (payload) => {
         const P = payload && M.plans[payload.id];
         if (P && P.timerLabel === label) delete M.timers[P.id];
@@ -1118,5 +1477,5 @@ window.OGX = window.OGX || {};
   });
 
   // Pure helpers for tests (tests/gz-bot-mod-botdebris.test.js); not an API for other modules.
-  OGX.botDebris = { version: '1.0.0', _ownStep: ownStep, _sourcesFor: sourcesFor, _lib: { recyclersFor, ballastFor, simRecyclers, aimSec, chooseSpeed, preTolMs, pickBattleOrigin, pickOwnOrigin, transportShips, payloadDCM, harvestFromText, battleField, coordsOf, moonPctOf, preWorthIt, preMinOk, needLoad, REC, TRANSPORT }, _M: M, SETTINGS };
+  OGX.botDebris = { version: '1.0.0', _ownStep: ownStep, _sourcesFor: sourcesFor, _logisticsStep: logisticsStep, _fightsStep: fightsStep, _rawStock: rawStock, _availOf: availOf, _lib: { recyclersFor, ballastFor, simRecyclers, aimSec, chooseSpeed, preTolMs, pickBattleOrigin, pickOwnOrigin, transportShips, payloadDCM, repatriateLoad, destRoom, harvestFromText, battleField, coordsOf, moonPctOf, preWorthIt, preMinOk, needLoad, REC, TRANSPORT }, _M: M, SETTINGS };
 })(window.OGX);

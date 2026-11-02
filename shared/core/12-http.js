@@ -170,13 +170,31 @@
   let pumping = false;
   let lastEnd = 0;
   function gapMs() { try { return +OGX.settings.get('core.httpGapMs') || 400; } catch (e) { return 400; } }
-  function mayRunHidden() { try { return !!OGX.settings.get('core.backgroundWhenHidden'); } catch (e) { return false; } }
+  let hiddenAllowed = false;      // set by a runtime that already paces its own requests in a hidden tab (botcore with runHidden)
+  function mayRunHidden() { if (hiddenAllowed) return true; try { return !!OGX.settings.get('core.backgroundWhenHidden'); } catch (e) { return false; } }
+  /** Lets background requests run while the tab is hidden (still gapped by core.httpGapMs). */
+  http.allowHidden = (flag) => { hiddenAllowed = !!flag; };
+  const HIDDEN_TIMEOUT_MS = 60000;
+  // While the tab is hidden a background job waits at most opts.hiddenTimeoutMs (default 60 s), then resolves with
+  // { ok: false, error: 'hidden' }: before, a job queued just before the tab went hidden hung for hours (and flights.get's
+  // shared promise with it), then everything fired back to back when John came back.
+  function dropStaleHidden() {
+    const t = Date.now();
+    for (let i = queue.length - 1; i >= 0; i--) {
+      const job = queue[i];
+      const lim = Number.isFinite(+job.opts.hiddenTimeoutMs) ? +job.opts.hiddenTimeoutMs : HIDDEN_TIMEOUT_MS;
+      if (t - job.t < lim) continue;
+      queue.splice(i, 1);
+      job.resolve({ ok: false, status: 0, url: job.path, redirected: false, loggedOut: false, error: 'hidden' });
+    }
+  }
   async function pump() {
     if (pumping) return;
     pumping = true;
     try {
       while (queue.length) {
-        while (document.hidden && !mayRunHidden()) await OGX.util.sleep(500);
+        while (queue.length && document.hidden && !mayRunHidden()) { dropStaleHidden(); if (queue.length) await OGX.util.sleep(500); }
+        if (!queue.length) break;
         const wait = lastEnd + gapMs() - Date.now();
         if (wait > 0) await OGX.util.sleep(wait);
         const job = queue.shift();
@@ -191,7 +209,7 @@
   http.request = function (path, opts = {}) {
     const o = Object.assign({ method: 'GET', expect: 'auto', timeout: 20000 }, opts);
     if (o.background) {
-      return new Promise((resolve) => { queue.push({ path, opts: o, resolve }); pump(); });
+      return new Promise((resolve) => { queue.push({ path, opts: o, resolve, t: Date.now() }); pump(); });
     }
     return doRequest(path, o, false);
   };
@@ -324,32 +342,15 @@
     return r.json;
   };
   /**
-   * GALAXYZ dispatch = three form POSTs (fleet.md §2): fleetStep1 (ships, target) -> token, fleetStep2 (token, speed) -> missions,
-   * fleetStep3 (mission, cargo, staytime) -> th.success. cp (origin) is sent on every step. Same result shape as OgameX + step.
+   * GALAXYZ dispatch = three form POSTs (fleet.md §2) by OGX.fleet.gz.dispatch: step1 (ships, target) -> token, step2 (speed)
+   * -> missions + room, step3 (mission, cargo, staytime = the option whose HOURS match holdingtime) -> parseResult with the
+   * fleet id from the event box. The cargo is fitted to the step-2 room and stock unless req.fit === false. There was a second,
+   * older chain here that posted holdingtime as the option VALUE and let step 3 trim the cargo silently (core-fleet-12).
    */
   async function sendFleetGz(req, cp) {
-    const fail = (step, message, extra) => Object.assign({ success: false, step, message: message || 'error', errors: [{ message: message || 'error', error: step }] }, extra || {});
-    const P = OGX.parse.gz;
-    const tgt = { galaxy: req.galaxy, system: req.system, planet: req.position, type: req.type || 1 };
-    const f1 = Object.assign({ target_mission: req.mission || 0 }, tgt);
-    for (const [id, n] of Object.entries(req.ships || {})) if (+n > 0) f1['ship' + id] = Math.floor(+n);
-    const r1 = await http.post('fleetStep1', f1, { cp, expect: 'doc' });
-    if (!r1.ok || !r1.doc) return fail(1, r1.error);
-    const s1 = P.fleetStep1(r1.doc);
-    if (!s1 || !s1.token) return fail(1, P.infoMessage(r1.doc) || 'fleetStep1: no form (no ships?)', { url: r1.url });
-    const r2 = await http.post('fleetStep2', Object.assign({ token: s1.token, fleet_group: req.union || 0, target_mission: req.mission || 0, speed: Math.max(1, Math.min(10, Math.round(+req.speed || 10))) }, tgt), { cp, expect: 'doc' });
-    if (!r2.ok || !r2.doc) return fail(2, r2.error);
-    const s2 = P.fleetStep2(r2.doc);
-    if (!s2) return fail(2, P.infoMessage(r2.doc) || 'fleetStep2: no form', { url: r2.url });
-    if (!s2.missions.some((m) => m.id === +req.mission)) return fail(2, 'mission ' + req.mission + ' not available', { missions: s2.missions.map((m) => m.id) });
-    const c = req.cargo || {};
-    const f3 = { token: s1.token, mission: +req.mission, metal: Math.max(0, Math.floor(c.metal || 0)), crystal: Math.max(0, Math.floor(c.crystal || 0)), deuterium: Math.max(0, Math.floor(c.deuterium || 0)) };
-    if (s2.stayOptions.length) f3.staytime = req.holdingtime || s2.stayOptions[0].value;
-    const r3 = await http.post('fleetStep3', f3, { cp, expect: 'doc' });
-    if (!r3.ok || !r3.doc) return fail(3, r3.error);
-    const s3 = P.fleetStep3(r3.doc);
-    if (!s3.success) return fail(3, s3.message);
-    return { success: true, step: 3, message: s3.title || '', errors: [], result: s3 };
+    const F = OGX.fleet && OGX.fleet.gz;
+    if (!F || typeof F.dispatch !== 'function') return { success: false, step: 0, message: 'fleet module not loaded', errors: [{ message: 'fleet module not loaded', error: 0 }] };
+    return F.dispatch(req, { cp, fit: req.fit !== false });
   }
   api.sendFleet = async function (req, { cp } = {}) {
     if (gzMode()) return sendFleetGz(req, cp);

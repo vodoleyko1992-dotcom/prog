@@ -38,7 +38,7 @@ window.OGX = window.OGX || {};
     infinity: { label: 'Infinity', title: 'OgameX Infinity: панель, империя, цели, шпионаж, статистика, слежка',
       modules: ['panel', 'empire', 'targets', 'spy', 'missiles', 'stats', 'stalk', 'flights', 'fleethelp', 'todo', 'mail', 'prefs'] },
     bot: { label: 'Бот', title: 'Полная автоматизация', dev: false,
-      modules: ['botcore', 'botsim', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo'] },
+      modules: ['botcore', 'botsim', 'botpanel', 'botsave', 'botfarm', 'botdebris', 'botbuild', 'botexpo', 'botmissiles'] },
   };
   const ORDER = ['live', 'infinity', 'bot'];          // load order (= manifest content_scripts order)
   const DISPLAY_ORDER = ['infinity', 'live', 'bot'];  // order shown to the user (panel groups, popup): Infinity first
@@ -51,7 +51,7 @@ window.OGX = window.OGX || {};
     fleethelp: 'Резерв, сбор ресурсов и помощь при отправке флота', todo: 'План построек', mail: 'Почта: новое меню сообщений', prefs: 'Настройки, горячие клавиши, экспорт/импорт',
     botcore: 'Бот: ядро', botsim: 'Бот: симулятор боя', botpanel: 'Бот: панель', botsave: 'Бот: сейв флота и защита',
     botfarm: 'Бот: фарм неактивных', botdebris: 'Бот: обломки и логистика', botbuild: 'Бот: стройка и исследования',
-    botexpo: 'Бот: экспедиции и колонизация',
+    botexpo: 'Бот: экспедиции и колонизация', botmissiles: 'Бот: ракеты',
   };
 
   OGX.suite = {

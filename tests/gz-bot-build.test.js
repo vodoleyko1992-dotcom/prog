@@ -350,3 +350,40 @@ T.test('master switch off (botbuild.on, dry-run off): nothing at all; sleep wind
     await clean(env, 'off/sleep');
   } finally { await env.close(); }
 }, { timeout: 150000 });
+
+// ---------------------------------------------------------------------------------------------- independent audit 2026-11-02
+T.test('audit journal-6 / botbuild-3: a slow shipyard (6 s per satellite) — one satellite batch per deficit, none while it builds (also after a forced page re-read); the mine is ordered on the pending energy', async () => {
+  // 0.3.1 log: «Солнечный спутник ×3 [2:68:10]» 130x every 7 s and ×596 twice on 2:68:12 — queued satellites were never credited
+  const s = spec('botbuild-energy', (x) => { x.universe.unitTimeSec = 6; x.universe.buildTimeSec = 5; });
+  const env = await B.launchBot({ world: s, settings: settings(Object.assign({}, LIVE, { 'botbuild.policy': 'custom', 'botbuild.policyJson': { w_sat: 0.01 }, 'botbuild.satAheadLevels': 2, 'botbuild.research': false })) });
+  try {
+    await leader(env);
+    const sats = () => posts(env).filter((r) => r.page.toLowerCase() === 'shipyard' && +r.form['fmenge[212]'] > 0);
+    await env.until(() => sats().length >= 1, { timeoutMs: 60000, label: 'satellite order' });
+    const first = sats()[0];
+    const n = +first.form['fmenge[212]'];
+    assert.ok(n >= 16 && n <= 1800, 'deficit 600 / 38.67 = 16 plus two levels of headroom, capped by yard time: ' + n);
+    assert.ok(env.world.body(HOME).shipyardQueue.some((q) => q.id === 212), 'world: the satellites are queued (6 s each)');
+    const ev = await env.waitJournal('botbuild:build-start', { pred: (e) => e.d && e.d.step && e.d.step.id === 212 && !e.d.dry });
+    assert.ok(ev);
+    // several passes later (the next run comes 5-10 s after an order): still one order; a mine went on HOME on the pending energy
+    await new Promise((r) => setTimeout(r, 25000));
+    assert.equal(sats().length, 1, 'one satellite order: ' + JSON.stringify(sats().map((r) => [r.t - first.t, r.form])));
+    const mine = posts(env).find((r) => r.page.toLowerCase() === 'buildings' && +r.cp === HOME && [1, 2, 3].includes(formId(r)));
+    assert.ok(mine, 'a mine ordered on HOME: ' + JSON.stringify(posts(env).map((r) => [r.page, r.cp, r.form])));
+    assert.ok(mine.t < first.t + n * 6000, 'ordered while the satellites were still building (their energy counted as pending)');
+    // a forced page=buildings re-read of HOME while the batch builds: the page still shows the deficit — no second order
+    const page = await env.page();
+    await env.evalOgx(page, (id) => { const v = OGX.botBuild._M.views[id]; v.readAt = 1; v.stale = true; v.mustRead = true; }, HOME);
+    const reads = () => env.server.requests.filter((r) => r.t >= env.launchedAt && r.method === 'GET' && /^buildings$/i.test(r.page || '') && +r.cp === HOME).length;
+    const before = reads();
+    await env.until(() => reads() > before, { timeoutMs: 40000, label: 're-read of HOME' });
+    await new Promise((r) => setTimeout(r, 15000));
+    assert.equal(sats().length, 1, 'still one satellite order after the re-read: ' + JSON.stringify(sats().map((r) => [r.t - first.t, r.form])));
+    assert.ok(env.world.body(HOME).shipyardQueue.some((q) => q.id === 212), 'world: the batch is still building');
+    const fails = await env.journal({ kind: 'botcore:action-verify-fail' });
+    assert.deepEqual(fails.map((e) => e.w), [], 'no failed verification');
+    await decisionsFirst(env, 'sats');
+    await clean(env, 'sats');
+  } finally { await env.close(); }
+}, { timeout: 200000 });

@@ -177,6 +177,33 @@ T.test('gz core: every real page is detected, routed and parsed (all modules, no
   assert.deepEqual(env.server.unhandled.map((r) => r.method + ' ' + r.url), []);
 });
 
+T.test('gz core: Russian overview (live snapshot #56): «км» diameter and fields, temperature words, planet-list tooltip, construction boxes', async () => {
+  const env = await G.launch();
+  const page = await env.game('overview');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'galaxyz', 'live', 'overview-ru.html'), 'utf8');
+  const r = await env.evalOgx(page, (html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const ov = OGX.parse.gz.overview(doc);
+    const en = OGX.parse.gz.overview(document);
+    const pick = (o) => ({ planetName: o.planetName, diameter: o.diameter, fieldsUsed: o.fieldsUsed, fieldsMax: o.fieldsMax, tempMin: o.tempMin, tempMax: o.tempMax, coords: o.coords, points: o.points, rank: o.rank, players: o.players, onlinePlayers: o.onlinePlayers });
+    return {
+      ov: pick(ov), boxes: ov.constructions.map((b) => [b.title, b.idle, b.restSec]), shipyardBox: ov.constructions[2].box, enBoxes: en.constructions.map((b) => [b.idle, b.restSec]),
+      tip: OGX.parse.gz.bodies(doc).list.find((b) => b.id === 254102).tip,
+      tips: [OGX.parse.gz.tooltip('32°C до 72°C<br>20.000 км (288 / 405)'), OGX.parse.gz.tooltip('-12°C to 28°C<br>12.750 km (163 / 188)'), OGX.parse.gz.tooltip('Главная планета [2:68:5]')],
+      en: [en.diameter, en.fieldsUsed, en.fieldsMax, en.tempMin, en.tempMax],
+    };
+  }, html);
+  assert.deepEqual(r.ov, { planetName: 'Планета', diameter: 18027, fieldsUsed: 112, fieldsMax: 325, tempMin: -39, tempMax: 1, coords: '2:68:11', points: 426961, rank: 107, players: 547, onlinePlayers: 6 });
+  assert.deepEqual(r.boxes, [['Постройки', false, 1], ['Исследования', false, 2819], ['Верфь', true, null]], 'remaining seconds from #progressbar / #progressbars data-time');
+  assert.deepEqual(r.enBoxes, [[true, null], [true, null], [true, null]]);
+  assert.equal(r.shipyardBox, 'shipyard');
+  const tip = { tempMin: 32, tempMax: 72, diameter: 20000, fieldsUsed: 288, fieldsMax: 405 };
+  assert.deepEqual(r.tip, tip, 'planet-list title «20.000 км (288 / 405)»');
+  assert.deepEqual(r.tips, [tip, { tempMin: -12, tempMax: 28, diameter: 12750, fieldsUsed: 163, fieldsMax: 188 }, null]);
+  assert.deepEqual(r.en, [20000, 259, 405, 32, 72], 'the English page reads the same as before');
+  assert.deepEqual(env.ogxErrors(), []);
+});
+
 T.test('gz core: non-game pages stay untouched', async () => {
   const env = await G.launch();
   for (const p of ['/other', '/Aeternum/index.php']) {
@@ -225,5 +252,37 @@ T.test('gz core: inject mode loads the suite on GALAXYZ too', async () => {
   assert.deepEqual(got, { engine: 'galaxyz', name: 'overview', metal: expectedHeader(savedHtml('overview')).metal.amount });
   await env.setStorage({ [env.key('probe')]: 1 });
   assert.equal(await env.get('probe'), 1);
+  assert.deepEqual(env.ogxErrors(), []);
+});
+
+T.test('gz core: a background request waits at most hiddenTimeoutMs while the tab is hidden; a direct flights.get never joins it (core-fleet-11)', async () => {
+  const env = await G.launch();
+  const page = await env.game('overview');
+  await page.waitForTimeout(500);
+  env.server.clearLog();
+  const r = await env.evalOgx(page, async () => {
+    Object.defineProperty(document, 'hidden', { get: () => true, configurable: true });
+    const t0 = Date.now();
+    const bg = OGX.http.get('overview', { background: true, hiddenTimeoutMs: 800 });
+    const fbg = OGX.flights.get({ force: true, background: true });   // default 60 s: still waiting below
+    const direct = await OGX.flights.get({ force: true });             // direct: its own request now
+    const tDirect = Date.now() - t0;
+    const res = await bg;
+    const tBg = Date.now() - t0;
+    const queued = OGX.http.queueLength();
+    // a runtime that paces its own requests may let the queue run hidden
+    OGX.http.allowHidden(true);
+    const f = await fbg;
+    OGX.http.allowHidden(false);
+    delete document.hidden;
+    return { direct: Array.isArray(direct.flights), tDirect, res: { ok: res.ok, error: res.error }, tBg, queued, fbg: Array.isArray(f.flights) };
+  });
+  assert.equal(r.direct, true);
+  assert.ok(r.tDirect < 3000, 'direct get does not wait for the hidden queue: ' + r.tDirect);
+  assert.deepEqual(r.res, { ok: false, error: 'hidden' });
+  assert.ok(r.tBg >= 750 && r.tBg < 3000, 'timed out after ~0.8 s: ' + r.tBg);
+  assert.equal(r.queued, 1, 'the background flights fetch still waits');
+  assert.equal(r.fbg, true, 'allowHidden lets it run');
+  assert.equal(env.requests('GET', 'overview').length, 0, 'the timed-out request never reached the server');
   assert.deepEqual(env.ogxErrors(), []);
 });

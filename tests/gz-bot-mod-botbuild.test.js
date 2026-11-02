@@ -55,7 +55,7 @@ T.test('module definition: name, title, contract C5 settings with defaults (tact
   const def = sb.OGX.modules.botbuild;
   assert.equal(def.title, 'Бот: стройка и исследования');
   const want = { on: true, policy: 'tactic', policyJson: {}, buildings: true, research: true, energy: true, storageHours: 0, labTarget: 22, shipyardTarget: 14,
-    fieldsReserve: 1, maxRetries: 3, ensureExpoSlots: true, university: true, randomOrder: true, moons: true, defense: true, queueDepth: 5, satAheadLevels: 10, surplusMines: true, needAheadMin: 45 };
+    fieldsReserve: 1, maxRetries: 3, ensureExpoSlots: true, university: true, randomOrder: true, moons: true, defense: true, queueDepth: 5, satAheadLevels: 10, satBatchMaxMin: 30, surplusMines: true, needAheadMin: 45 };
   assert.deepEqual(Object.keys(def.settings).sort(), Object.keys(want).sort());
   for (const [k, v] of Object.entries(want)) assert.deepEqual(J(def.settings[k].default), v, k);
   assert.deepEqual(J(def.settings.policy.options.map((o) => o.value)), ['tactic', 'col_mine90', 'dis_exp90', 'custom']);
@@ -442,4 +442,235 @@ T.test('0.3.2 satellites: one order covers the deficit plus satAheadLevels level
   out = plan(sb, [mk([1e9, 1000, 1e9])], Object.assign({}, col, { cfg: { satAheadLevels: 10 } }));
   const small = out.actions.find((a) => a.step.kind === 'units' && a.step.id === 212) || out.waits.find((w) => w.step.kind === 'units');
   assert.equal(small.step.n, 20, 'no crystal for the big order: the deficit only (600 / 30)');
+});
+
+// ---------------------------------------------------------------------------------------------- independent audit 2026-11-02
+T.test('audit satellites (botbuild-3/4/5, journal-6): a batch is capped by yard time, none while the yard holds satellites, queued satellites count for the energy price and for the mines', () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib; const C = sb.OGX.calc;
+  const col = { policy: 'col_mine90' };
+  const rich = { levels: { 1: 45, 2: 45, 3: 41, 21: 14, 15: 10 }, perSat: { value: 30 }, stock: [1e12, 1e12, 1e12], storage: [1e13, 1e13, 1e13] };
+  const satAct = (out) => out.actions.find((a) => a.step.kind === 'units' && a.step.id === 212);
+  // (a) deficit 1 000 + 10 levels x 3 mines = thousands of satellites (hours of yard at 1 s / unit): capped at 30 min = 1 800
+  const unit = Math.max(1, C.unitTime(212, { shipyard: 14, nanite: 10, gameSpeed: L.SEED_SPEED, factors: C.factors({}) }));
+  assert.equal(unit, 1, 'Aeternum: one satellite per second (the 1 s floor)');
+  let out = plan(sb, [view(254102, Object.assign({ energy: { production: 2000, consumption: 3000 } }, rich))], Object.assign({}, col, { cfg: { satAheadLevels: 10, research: false } }));
+  let a = satAct(out);
+  assert.ok(a, 'satellites ordered');
+  assert.equal(a.step.n, 1800, 'capped at 30 min of yard: ' + a.step.n);
+  const e = out.notes.find((n) => n.event === 'energy');
+  assert.ok(e.data.fix.partial && e.data.fix.cap === 1800 && e.data.fix.nWanted > 1800, J(e.data.fix));
+  assert.match(e.what, /партия не дольше 30 мин верфи \(1 с\/шт\.\) → ×1800/);
+  assert.ok(a.why.some((w) => /нехватка 1000 → ×34/.test(w) && /\+10 ур\. всех шахт/.test(w) && /×1800/.test(w)), 'the order explains itself: ' + J(a.why));
+  out = plan(sb, [view(254102, Object.assign({ energy: { production: 2000, consumption: 3000 } }, rich))], Object.assign({}, col, { cfg: { satAheadLevels: 10, satBatchMaxMin: 10, research: false } }));
+  assert.equal(satAct(out).step.n, 600, '10 min -> 600');
+  out = plan(sb, [view(254102, Object.assign({ energy: { production: 2000, consumption: 3000 } }, rich))], Object.assign({}, col, { cfg: { satAheadLevels: 10, satBatchMaxMin: 0, research: false } }));
+  assert.ok(satAct(out).step.n > 1800, '0 = no cap: ' + satAct(out).step.n);
+  // the deficit alone above the cap: the cap now, the rest in the next batch (the candidate is the satellites alone)
+  out = plan(sb, [view(254102, Object.assign({ energy: { production: 0, consumption: 100000 } }, rich))], Object.assign({}, col, { cfg: { satAheadLevels: 1, research: false } }));
+  a = satAct(out);
+  assert.equal(a.step.n, 1800); assert.ok(a.cand.rule === 'energy' && a.cand.steps.length === 1);
+  assert.ok(a.why.some((w) => /остальное следующим заказом/.test(w)), J(a.why));
+  // (b) satellites still in the yard: no second batch, the deficit candidate says why (the tactic: satellites only; the payback
+  // policies fall back to the solar plant there)
+  out = plan(sb, [view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 30 }, shipyard: { known: true, items: [{ id: 212, count: 10 }], t: NOW, end: NOW + 60000 } })], { policy: 'tactic', cfg: { research: false } });
+  assert.ok(!satAct(out), 'no new batch while 10 are queued');
+  const sk = out.skipped.find((s) => s.cand.rule === 'energy');
+  assert.ok(sk && /ждём спутники из очереди верфи \(×10\)/.test(sk.reason), sk && sk.reason);
+  out = plan(sb, [view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 30 }, shipyard: { known: true, items: [{ id: 212, count: 10 }], t: NOW, end: NOW + 60000 } })], Object.assign({}, col, { cfg: { research: false } }));
+  assert.ok(!satAct(out) && out.actions.some((x) => x.step.id === 4), 'payback policy: the solar plant instead of a second batch');
+  // (c) the queued batch covers the deficit and the next mine: the mine is ordered now, without a satellite step (energy credited as pending)
+  out = plan(sb, [view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 30 }, shipyard: { known: true, items: [{ id: 212, count: 25 }], t: NOW, end: NOW + 60000 } })], Object.assign({}, col, { cfg: { research: false } }));
+  assert.ok(!out.notes.some((n) => n.event === 'energy'), 'no deficit: the queue covers it');
+  const m = out.actions.find((x) => x.step.kind === 'building' && [1, 2, 3].includes(x.step.id));
+  assert.ok(m && !m.cand.fix, 'a mine ordered in the same pass, no satellite step: ' + J(out.actions.map((x) => [x.step.kind, x.step.id, x.step.n])));
+  // (d) energy price (terraformer 9 = 256 000 > production 130 000): satellites already queued count — the step waits for them instead of a new batch
+  const terra = (shipyard, cfg) => plan(sb, [view(254102, { fieldsUsed: 162, levels: { 15: 1, 33: 8, 21: 14 }, energy: { production: 130000, consumption: 500 }, stock: [1e12, 1e12, 1e12], storage: [1e13, 1e13, 1e13], shipyard })], { cfg: Object.assign({ research: false }, cfg || {}) });
+  out = terra({ known: true, items: [{ id: 212, count: 3780 }], t: NOW, end: NOW + 3780000 });
+  assert.ok(!satAct(out), 'no new batch');
+  assert.ok(out.skipped.some((s) => s.cand.item === 33 && /ждём спутники из очереди верфи \(×3780\)/.test(s.reason)), J(out.skipped.map((s) => s.reason)));
+  out = terra({ known: true, items: [], t: NOW }, { satBatchMaxMin: 0 });
+  a = satAct(out);
+  assert.ok(a && a.step.n === Math.ceil(126000 / (200 / 6)), 'empty yard: one batch for the missing 126 000: ' + (a && a.step.n));
+  assert.equal(out.actions.filter((x) => x.step.kind === 'units').length, 1);
+  out = terra({ known: true, items: [], t: NOW });
+  assert.equal(satAct(out).step.n, 1800, 'with the default cap: 1 800 now');
+  // (e) advanceViews: a yard queue that ended is credited to the production, not dropped (energyBalance stays >= 0); the yard is not fresh
+  const M = sb.OGX.botBuild._M;
+  const w = view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 38.67 }, shipyard: { known: true, items: [{ id: 212, count: 16 }], t: NOW, end: NOW + 10000 } });
+  M.views = { 254102: w };
+  assert.ok(L.energyBalance(w, C.factors({})) >= 0);
+  L.advanceViews(NOW + 20000);
+  assert.deepEqual(J(w.shipyard.items), []); assert.equal(w.shipyard.t, 0);
+  assert.ok(Math.abs(w.energy.production - (2000 + 16 * 38.67)) < 1e-6, 'credited: ' + w.energy.production);
+  assert.equal(w.energy.credited, 16);
+  assert.ok(L.energyBalance(w, C.factors({})) >= 0, 'no deficit after the queue end: no re-order');
+  M.views = {};
+});
+
+T.test('audit (missed-2): after a satellite order the answer page\'s queue time is the yard end — the x3000 estimate is not added on top; no premature energy credit', async () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib; const M = sb.OGX.botBuild._M; const C = sb.OGX.calc;
+  const v = view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 38.67 } });
+  M.views = { 254102: v }; M.retries = {}; M.cooldowns = {}; M.factors = C.factors({});
+  let parsed = { items: [{ id: 212, count: 30 }], totalSecs: 180 };
+  sb.OGX.parse = { gz: { shipyardQueue: () => parsed } };
+  const recs = [];
+  const wctx = { decide() {}, rec: (k, w, d) => recs.push({ k, w, d }), now: () => NOW, store: { set: async () => {} }, act: async () => ({ ok: true, verified: true, at: NOW, data: { doc: {}, how: 'test' } }) };
+  const step = { kind: 'units', id: 212, n: 30, bodyId: 254102, cost: { metal: 0, crystal: 60000, deuterium: 0 }, queue: 's:254102' };
+  const cand = { label: 'Энергия [2:68:5]: спутники ×30', rule: 'energy', steps: [step], cost: step.cost, costMsu: 1, payback: -1, fix: { kind: 'sat', n: 30, why: 'спутники ×30: нехватка 600 → ×16, +2 ур. всех шахт → ×30' } };
+  let r = await L.execute(wctx, { cand, step, why: [cand.fix.why] }, { maxRetries: 3 });
+  assert.equal(r.ok, true);
+  assert.equal(v.shipyard.end, NOW + 180000, 'end = the page\'s remaining time (30 x 6 s), not + the 30 s estimate: ' + (v.shipyard.end - NOW));
+  assert.deepEqual(J(v.shipyard.items), [{ id: 212, count: 30 }]); assert.equal(v.shipyard.t, NOW);
+  assert.equal(v.energy.production, 2000, 'nothing credited while the satellites are queued');
+  assert.ok(L.energyBalance(v, C.factors({})) > 0, 'the queue is the pending credit');
+  assert.ok(recs.some((x) => x.k === 'build-start' && x.d.step.n === 30));
+  // the answer did not parse: the estimate (1 s per unit at x3040) from the order time
+  parsed = null;
+  const v2 = view(254103, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 38.67 } });
+  M.views[254103] = v2;
+  r = await L.execute(wctx, { cand, step: Object.assign({}, step, { bodyId: 254103, queue: 's:254103' }), why: [] }, { maxRetries: 3 });
+  assert.equal(r.ok, true);
+  assert.equal(v2.shipyard.end, NOW + 30000, 'estimate: 30 x 1 s');
+  assert.deepEqual(J(v2.shipyard.items), [{ id: 212, count: 30 }]);
+  M.views = {}; delete sb.OGX.parse;
+});
+
+T.test('audit journal-18: a busy queue of unknown content wakes the bot for its 60 s re-read (not the 10–20 min pause); a known end wakes at the end; the research queue alike', async () => {
+  const sb = sandbox();
+  const B = sb.OGX.botBuild; const L = B._lib; const M = B._M;
+  const v = view(254102, {});
+  v.key = 'p254102'; v.readAt = NOW - 20000; v.t = NOW - 20000; v.queue = { known: false, busy: true, items: [], end: null };
+  M.views = { 254102: v }; M.bodies = [{ id: 254102, coords: '2:68:5' }]; M.research = null; M.factors = sb.OGX.calc.factors({}); M.resIds = []; M.needSig = null; M.needSince = {}; M.plan = null;
+  sb.OGX.bot = { needs: { set: () => {} }, reservations: { list: () => [] }, randMs: (a) => a[0], isActive: () => true };
+  const wctx = { rec: () => {}, flights: () => [], now: () => NOW, reserve: () => 'r', release: () => {} };
+  const out = { notes: [], candidates: [], skipped: [], actions: [], waits: [], reads: [], lab: null, stage: null };
+  const cfg = { research: true, queueDepth: 1 };
+  const pol = L.policyParams('tactic');
+  let r = await L.act(wctx, cfg, pol, out);
+  assert.equal(r.nextAt, NOW - 20000 + 60000 + 1000, 'wake at readAt + UNKNOWN_Q_MS (+ 1 s jitter): ' + J(r));
+  // the read was due in this run and did not happen (failed / refused): retried UNKNOWN_Q_MS later, never every 2-3 s (rev-botbuild-1)
+  v.readAt = NOW - 90000; v.t = NOW - 90000;
+  r = await L.act(wctx, cfg, pol, out);
+  assert.equal(r.nextAt, NOW + 60000 + 1000, 'overdue re-read: +60 s, not +1 s: ' + J(r));
+  // a moon with a busy queue of unknown content while moons are off: refresh() never reads it, no wake for it
+  v.isMoon = true; v.readAt = NOW - 20000; v.t = NOW - 20000;
+  r = await L.act(wctx, cfg, pol, out);
+  assert.ok(r.nextAt >= NOW + 600000, 'moon with moons off: the 10–20 min pause: ' + J(r));
+  r = await L.act(wctx, Object.assign({}, cfg, { moons: true }), pol, out);
+  assert.equal(r.nextAt, NOW - 20000 + 60000 + 1000, 'moons on: the re-read wake');
+  v.isMoon = false;
+  // a known end: wake at the end
+  v.queue = { known: true, busy: true, items: [{ id: 1, level: 30, end: NOW + 300000 }], end: NOW + 300000 };
+  r = await L.act(wctx, cfg, pol, out);
+  assert.equal(r.nextAt, NOW + 300000 + 1000);
+  // the research queue: busy without end -> the 60 s re-read; not with research off; with an end -> the end
+  v.queue = { known: true, busy: false, items: [], end: null };
+  M.research = { levels: {}, queue: { known: false, busy: true, items: [], end: null }, t: NOW - 50000, readAt: NOW - 50000 };
+  r = await L.act(wctx, cfg, pol, out);
+  assert.equal(r.nextAt, NOW - 50000 + 60000 + 1000, 'research re-read wake: ' + J(r));
+  r = await L.act(wctx, Object.assign({}, cfg, { research: false }), pol, out);
+  assert.ok(r.nextAt >= NOW + 600000, 'research off: no re-read wake, the 10–20 min pause: ' + J(r));
+  // research known only from the imperium, no read since long ago: one retry per UNKNOWN_Q_MS; without a lab no wake at all
+  M.research = { src: 'imperium', levels: {}, queue: { known: false, busy: null, items: [], end: null }, t: NOW - 600000, readAt: NOW - 600000 };
+  r = await L.act(wctx, cfg, pol, out);
+  assert.ok(r.nextAt >= NOW + 60000, 'imperium research, overdue: >= 60 s: ' + J(r));
+  v.levels[31] = 0;
+  r = await L.act(wctx, cfg, pol, out);
+  assert.ok(r.nextAt >= NOW + 600000, 'no lab: page=research is never read, no re-read wake: ' + J(r));
+  v.levels[31] = 8;
+  M.research = { levels: {}, queue: { known: false, busy: true, items: [], end: null }, t: NOW - 50000, readAt: NOW - 50000 };
+  M.research.queue = { known: true, busy: true, items: [{ id: 108, level: 10, end: NOW + 120000 }], end: NOW + 120000 };
+  r = await L.act(wctx, cfg, pol, out);
+  assert.equal(r.nextAt, NOW + 120000 + 1000, 'a running research with a known end: wake at the end, no read before it');
+  M.views = {}; M.research = null; M.bodies = [];
+});
+
+T.test('review rev-botbuild-3: a page=buildings read in the middle of a satellite batch keeps only the unbuilt rest pending; advanceViews credits only that rest', async () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib; const M = sb.OGX.botBuild._M; const C = sb.OGX.calc;
+  M.factors = C.factors({});
+  const T0 = NOW - 60000;
+  const old = view(254102, { energy: { production: 1000, consumption: 1600 }, perSat: { value: 38.7 }, shipyard: { known: true, items: [{ id: 212, count: 20 }], t: T0, end: T0 + 120000 } });
+  M.views = { 254102: old };
+  // the page at T0 + 60 s: 10 of 20 built, already in its production (1000 + 10 x 38.7)
+  sb.OGX.parse = { gz: { bodies: () => ({ list: [{ id: 254102, coords: '2:68:5', name: 'P', isMoon: false, selected: true, tip: {} }] }), techItems: () => [{ id: 1, value: 12 }, { id: 21, value: 4 }],
+    resources: () => ({ energy: { production: 1387, consumption: 1600 }, metal: { amount: 1, storage: 1e6, perHour: 1 }, crystal: { amount: 1, storage: 1e6, perHour: 1 }, deuterium: { amount: 1, storage: 1e6, perHour: 1 } }),
+    queueBox: () => ({ empty: true }) } };
+  sb.OGX.state = { bodies: async () => ({}) };
+  const wctx = { rec() {}, now: () => NOW };
+  const v = await L.viewFromDoc(wctx, 254102, { doc: {}, at: NOW });
+  assert.equal(L.queuedSats(v), 10, 'half the batch time passed: 10 left pending, not 20: ' + J(v.shipyard));
+  assert.equal(v.shipyard.t, T0, 'freshness of the yard view unchanged'); assert.equal(v.shipyard.end, T0 + 120000);
+  assert.ok(Math.abs(L.energyBalance(v, M.factors) - (1387 - 1600 + 10 * 38.7)) < 1e-6, 'balance = page + rest: ' + L.energyBalance(v, M.factors));
+  // a second read 30 s later: from the last base, 5 left
+  const v2 = await L.viewFromDoc(wctx, 254102, { doc: {}, at: NOW + 30000 });
+  assert.equal(L.queuedSats(v2), 5, J(v2.shipyard));
+  // queue end: advanceViews credits the 5 still pending on top of the last page value
+  L.advanceViews(T0 + 130000);
+  assert.ok(Math.abs(v2.energy.production - (1387 + 5 * 38.7)) < 1e-6, 'credited only the rest: ' + v2.energy.production);
+  assert.deepEqual(J(v2.shipyard.items), []);
+  // mixed queue: the earlier item is built first
+  const mixed = L.yardLeftAt({ known: true, items: [{ id: 202, count: 10 }, { id: 212, count: 10 }], t: T0, end: T0 + 100000 }, T0 + 10000, { 21: 4 });
+  assert.equal(L.queuedSats({ shipyard: mixed }), 10, 'satellites behind small cargos: none built yet ' + J(mixed));
+  M.views = {}; delete sb.OGX.parse; delete sb.OGX.state;
+});
+
+T.test('review rev-botbuild-4: a yard queue listed without a time gets the unit-time estimate; satellites queued without an end ask for a shipyard re-read instead of blocking for good', async () => {
+  const sb = sandbox();
+  const L = sb.OGX.botBuild._lib; const M = sb.OGX.botBuild._M; const C = sb.OGX.calc;
+  M.factors = C.factors({});
+  const v = view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 30 } });
+  M.views = { 254102: v };
+  sb.OGX.parse = { gz: { bodies: () => ({ list: [{ id: 254102, selected: true }] }), shipyardQueue: () => ({ items: [{ id: 212, count: 40 }], totalSecs: 0 }), techItems: () => [] } };
+  const wctx = { decide() {}, rec() {}, now: () => NOW, act: async () => ({ ok: true, at: NOW, data: { doc: {} } }) };
+  await L.readShipyard(wctx, 254102, 'test');
+  assert.ok(v.shipyard.end > NOW, 'estimated end: ' + J(v.shipyard));
+  delete sb.OGX.parse;
+  // a stale yard view holding satellites without an end: blocked, but the shipyard page is asked for
+  const stuck = view(254102, { energy: { production: 2000, consumption: 2600 }, perSat: { value: 30 }, shipyard: { known: true, items: [{ id: 212, count: 10 }], t: NOW - 3600000, end: null } });
+  let out = plan(sb, [stuck], { policy: 'tactic', cfg: { research: false } });
+  assert.ok(out.skipped.some((s) => s.cand.rule === 'energy' && /ждём спутники из очереди верфи/.test(s.reason)), J(out.skipped.map((s) => s.reason)));
+  assert.ok(out.reads.some((r) => r.page === 'shipyard' && r.bodyId === 254102), 'shipyard re-read asked: ' + J(out.reads));
+  // with a known end: no extra read (advanceViews clears it at the end)
+  stuck.shipyard.end = NOW + 60000;
+  out = plan(sb, [stuck], { policy: 'tactic', cfg: { research: false } });
+  assert.ok(!out.reads.some((r) => r.page === 'shipyard'), J(out.reads));
+  M.views = {};
+});
+
+T.test('audit botbuild-12: research times count the IRN labs (calc.effectiveLab) — calibration sample, queued research end', async () => {
+  const sb = sandbox();
+  const B = sb.OGX.botBuild; const L = B._lib; const M = B._M; const C = sb.OGX.calc;
+  const factors = C.factors({});
+  const lab = view(254102, { levels: { 31: 22, 6: 0 } });
+  const others = [254103, 254104, 254105, 254106].map((id) => view(id, { levels: { 31: 22 } }));
+  M.views = Object.fromEntries([lab].concat(others).map((v) => [v.id, v])); M.research = { levels: { 123: 12, 124: 18 } }; M.factors = factors; M.gameSpeed = null; M.retries = {}; M.cooldowns = {};
+  const eff = C.effectiveLab(124, 22, [22, 22, 22, 22], 12);
+  assert.equal(eff, 22 * 5, 'four labs 22 join the network (IRN 12 allows up to 12)');
+  assert.equal(L.effLabOf(124, lab, M.views, M.research.levels), eff);
+  assert.equal(L.effLabOf(124, lab, Object.values(M.views), M.research.levels), eff, 'array of views');
+  assert.equal(L.effLabOf(124, lab, M.views, { 123: 0 }), 22, 'no network: the lab alone');
+  assert.equal(L.effLabOf(124, lab, M.views, null), 22, 'network level unknown: the lab alone');
+  assert.equal(L.effLabOf(124, lab, M.views, { 123: 2 }), 22 * 3, 'IRN 2: the two best other labs');
+  const step = { kind: 'research', id: 124, level: 19, bodyId: 254102, cost: C.cost(124, 19) };
+  const t1 = L.stepTime1(step, lab, factors);
+  assert.equal(t1, C.researchTime(124, 19, { labLevel: eff, university: 0, gameSpeed: 1, factors }));
+  assert.ok(t1 < C.researchTime(124, 19, { labLevel: 22, university: 0, gameSpeed: 1, factors }) / 4, 'about 5x shorter than the lab-22 formula: ' + t1);
+  // calibrate: the answer page shows the rest at x3040 with the network -> the sample is ~3040, not ~14 700
+  const rest = Math.round(C.researchTime(124, 19, { labLevel: eff, university: 0, gameSpeed: 3040, factors }));
+  assert.ok(rest >= 5, 'rest ' + rest);
+  sb.OGX.parse = { gz: { queueBox: () => ({ items: [{ id: 124, level: 19, restSec: rest }] }) } };
+  sb.OGX.state = { player: async () => ({}), factors: async () => factors };
+  const recs = [];
+  const wctx = { rec: (k, w, d) => recs.push({ k, w, d }), now: () => NOW, store: { set: async () => {} } };
+  await L.calibrate(wctx, step, {}, NOW);
+  assert.ok(M.gameSpeed && Math.abs(M.gameSpeed.value - 3040) / 3040 < 0.05, 'sample ~3040: ' + J(M.gameSpeed));
+  // estimateQueue: a queued research without an end (second item) ends after the IRN time at the game speed
+  const gs = L.speedOf();
+  const q = L.estimateQueue({ known: true, busy: true, items: [{ id: 124, level: 19, end: NOW + 60000 }, { id: 131, level: 21, end: null }], end: NOW + 60000 }, lab, 'research', NOW, M.research.levels);
+  const want = NOW + 60000 + Math.max(1, C.researchTime(131, 21, { labLevel: C.effectiveLab(131, 22, [22, 22, 22, 22], 12), university: 0, gameSpeed: gs, factors })) * 1000;
+  assert.equal(q.items[1].end, want, 'end with the network labs');
+  M.views = {}; M.research = null; M.gameSpeed = null;
 });

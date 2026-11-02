@@ -357,3 +357,120 @@ T.test('gates: sleep runs nothing; the slot reserve stops own-field sends (norma
     await clean(env, 'gates');
   } finally { await env.close(); }
 }, { timeout: 360000 });
+
+T.test('repatriation: the 2 h deuterium reserve stays on the colony (no self-refusal), the load is capped by the main\'s free storage, a colony without 217 gets them by a Deploy and is emptied on the next pass', async () => {
+  const COL6 = 254103;   // [2:68:6] gets 10 x 217 and a deuterium production of 100 000/h (reserve 200 000 for deutReserveH 2)
+  const env = await B.launchBot({ world: spec([], (s) => {
+    s.bodies.find((b) => b.id === HOME).storage = { metal: 52000000, crystal: 1e12, deuterium: 1e12 };   // 2 M metal room on the main
+    const c6 = s.bodies.find((b) => b.id === COL6); c6.ships[217] = 10; c6.perHour = { metal: 0, crystal: 0, deuterium: 100000 };
+    s.bodies.find((b) => b.id === MOON).res.deuterium = 0;   // the moon has nothing to repatriate in this test
+  }), settings: settings(Object.assign({}, LIVE, { 'botdebris.repatriate': true, 'botdebris.repatriateMin': 1000000, 'botdebris.logisticsOrigin': String(HOME), 'botdebris.followBattles': false })) });
+  try {
+    const Wd = env.world;
+    await learnGameSpeed(env);
+    // as on the live server: the colony's page was open (production, storage known) and the main's fleet page (its 217 known)
+    await env.game('overview', { cp: COL6 });
+    await env.game('overview', { cp: COL7 });
+    await env.game('fleetTable', { cp: HOME });
+    await env.game('overview', { cp: HOME });
+    await leader(env);
+    const transports = () => Wd.log.sent.filter((x) => x.mission === 3);
+    await env.until(async () => { await wakeBot(env); return transports().some((t) => t.originId === COL6); }, { timeoutMs: 150000, stepMs: 3000, label: 'repatriation of 2:68:6' });
+    const x = transports().find((t) => t.originId === COL6);
+    assert.equal(x.to, '2:68:5');
+    assert.deepEqual(Object.keys(x.ships).map(Number), [217], 'Battle Transporters only: ' + JSON.stringify(x.ships));
+    assert.equal(x.cargo.metal, 2000000, 'metal capped to the main\'s free storage (52 M − 50 M)');
+    assert.equal(x.cargo.crystal, 3000000, 'all the crystal');
+    const left = Wd.body(COL6).res.deuterium;
+    assert.ok(left >= 200000 - 2000 && left <= 200000 + 40000, `the 2 h reserve stays on the colony: ${left} left (cargo ${x.cargo.deuterium}, fuel ${x.consumption})`);
+    const plan = (await env.journal({ kind: 'botdebris:repatriate' })).find((e) => e.d && e.d.from === COL6);
+    assert.equal(plan.d.keepD, 200000, 'the reserve in the plan: ' + plan.w);
+    assert.deepEqual(plan.d.cut, { metal: 3000000 }, 'the cut (main storage) in the plan: ' + plan.w);
+    assert.deepEqual((await env.journal({ kind: 'botdebris:skip' })).filter((e) => e.d && e.d.body === COL6 && e.d.reason === 'stock').map((e) => e.w), [], 'no stock skip for the colony');
+    // colony 2:68:7 (no 217, 6.9 M): one Deploy of 217 from the main, then its stock comes over (no metal: the main's metal room is taken)
+    await env.until(async () => { await wakeBot(env); return transports().some((t) => t.originId === COL7); }, { timeoutMs: 180000, stepMs: 3000, label: 'ferry + repatriation of 2:68:7' });
+    const ferries = Wd.log.sent.filter((t) => t.mission === 4);
+    const f7 = ferries.find((t) => t.to === '2:68:7');
+    assert.ok(f7, 'a Deploy to 2:68:7: ' + JSON.stringify(ferries));
+    assert.equal(f7.originId, HOME, 'from the main');
+    assert.deepEqual(f7.ships, { 217: 1 }, 'ceil(2.9 M / 40 M) = 1 transporter');
+    const x7 = transports().find((t) => t.originId === COL7);
+    assert.ok(x7.t >= f7.arrival, `repatriation ${x7.t - f7.arrival} s after the ferry landed`);
+    assert.deepEqual(x7.ships, { 217: 1 });
+    assert.equal(x7.cargo.metal, 0, 'the main has no metal room left (the first delivery counted)');
+    assert.equal(x7.cargo.crystal, 2000000);
+    assert.ok(x7.cargo.deuterium > 800000, JSON.stringify(x7.cargo));
+    for (const t of ferries) { assert.deepEqual(Object.keys(t.ships).map(Number), [217], 'ferries carry only 217'); assert.ok(t.ships[217] <= 5000, 'capped'); }
+    const sent = await env.journal({ kind: 'botdebris:transport-sent' });
+    assert.ok(sent.some((e) => e.d && e.d.action === 'ferry' && e.d.toCoords === '2:68:7'), 'the ferry in the journal');
+    await decisionsFirst(env, 'repatriation');
+    await clean(env, 'repatriation');
+  } finally { await env.close(); }
+}, { timeout: 420000 });
+
+T.test('post-battle recyclers never take the slot botcore keeps for the fleet save: refused and retried while the reserve is the last free slot, sent once a slot frees', async () => {
+  const BATTLE_IN = 45;
+  const env = await B.launchBot({ world: spec([{ at: BATTLE_IN, do: 'setDebris', args: { coords: '2:69:9', metal: 2000000 * K, crystal: 1000000 * K } }], (s) => { s.player.research[108] = 1; }), settings: settings(LIVE) });
+  try {
+    const Wd = env.world;
+    await learnGameSpeed(env);
+    // 2 fleet slots (computer 1): an expedition takes one; slotsReserve 1 leaves none for anything but the save
+    const exp = Wd.send({ originId: HOME, ships: { 202: 1 }, target: { galaxy: 2, system: 68, position: 16, type: 1 }, mission: 15, speed: 10, staytime: 1 });
+    assert.ok(exp.ok, JSON.stringify(exp));
+    await env.game('overview', { cp: HOME });
+    await leader(env);
+    const battleAt = Wd.spec.startUnix + BATTLE_IN;
+    await putBattle(env, battle('farm:2:69:9:1:' + battleAt, '2:69:9', battleAt, { existing: null, p50: { metal: 2000000 * K, crystal: 1000000 * K } }));
+    const planned = await env.waitJournal('botdebris:recyclers-planned', { timeoutMs: 40000 });
+    assert.equal(planned.d.mode, 'post');
+    const skip = await env.waitJournal('botdebris:skip', { pred: (e) => e.d && e.d.reason === 'slots' && e.d.battle === planned.d.battle, timeoutMs: (BATTLE_IN + 60) * 1000 });
+    assert.ok(/повтор/.test(skip.w) && skip.d.retryAt > battleAt * 1000, 'retry planned: ' + skip.w);
+    assert.equal(recycleSends(env).length, 0, 'the last free slot (the reserve) is not taken');
+    // the expedition comes home: a slot frees, the retry sends
+    assert.ok(Wd.recall(exp.fleet.id), 'recalled');
+    await env.until(() => { Wd.process(Wd.clock.nowUnix()); return exp.fleet.state === 'done'; }, { timeoutMs: 150000, stepMs: 1000, label: 'expedition home' });
+    const sentEv = await env.waitJournal('botdebris:recyclers-sent', { pred: (e) => e.d && e.d.battle === planned.d.battle, timeoutMs: 150000 });
+    const s = recycleSends(env);
+    assert.equal(s.length, 1, JSON.stringify(s));
+    assert.deepEqual(s[0].ships, { 219: 150 }); assert.equal(s[0].to, '2:69:9'); assert.equal(s[0].type, 2);
+    assert.equal(sentEv.d.fleetId, s[0].fleetId);
+    assert.ok(s[0].t >= battleAt + 20, `sent by a retry ${s[0].t - battleAt} s after the battle`);
+    assert.ok(s[0].t >= exp.fleet.back, 'after the slot freed');
+    await decisionsFirst(env, 'slots');
+    await clean(env, 'slots');
+  } finally { await env.close(); }
+}, { timeout: 420000 });
+
+T.test('a fight on an own planet: the field is checked right after the hit (one galaxy view, no 30-min wait) and harvested from the moon while the planet is still locked', async () => {
+  const env = await B.launchBot({ world: spec([], (s) => { s.debris = s.debris.filter((d) => d.coords !== '2:68:7'); }),
+    settings: settings(Object.assign({}, LIVE, { 'botdebris.ownDf': true, 'botdebris.followBattles': false, 'botdebris.minOwnDf': 1000, 'botcore.galaxyViewsPerHour': 10 })) });
+  try {
+    const Wd = env.world;
+    await learnGameSpeed(env);
+    await viewOwnSystem(env);   // fresh cache without a field: the regular check reads nothing for checkMaxMin
+    await leader(env);
+    await env.waitJournal('botdebris:harvest-own', { pred: (e) => e.d && e.d.kind === 'scan', timeoutMs: 90000 });
+    const viewsBefore = galaxyGets(env).length;
+    // 50 light fighters hit the home planet in 60 s: the defence destroys them, 30 % of their value becomes a field at 2:68:5
+    const h = Wd.addHostile({ toBodyId: HOME, mission: 1, ships: { 204: 50 }, ownerId: 3843, flightSec: 60 });
+    await env.game('overview', { cp: HOME });
+    await env.until(async () => Object.keys(await env.evalOgx(await env.page(), () => OGX.bot.lockedBodies())).length > 0, { timeoutMs: 30000, label: 'lock' });
+    const fight = await env.waitJournal('botdebris:harvest-own', { pred: (e) => e.d && e.d.kind === 'fight', timeoutMs: 120000 });
+    assert.equal(fight.d.coords, '2:68:5');
+    assert.ok(fight.t >= h.arrival * 1000 - 5000, 'after the hit');
+    const sentEv = await env.waitJournal('botdebris:harvest-own', { pred: (e) => e.d && e.d.kind === 'own-sent' && e.d.coords === '2:68:5', timeoutMs: 90000 });
+    const s = recycleSends(env);
+    assert.equal(s.length, 1, JSON.stringify(s));
+    const x = s[0];
+    assert.equal(x.to, '2:68:5'); assert.equal(x.type, 2);
+    assert.equal(x.originId, MOON, 'the planet is locked for a minute after the hit: the moon sends');
+    assert.deepEqual(Object.keys(x.ships).map(Number), [219]);
+    assert.equal(sentEv.d.fleetId, x.fleetId);
+    assert.ok(x.t - h.arrival <= 60, `sent ${x.t - h.arrival} s after the hit (not after checkMinMin)`);
+    assert.ok(sentEv.d.field.metal + sentEv.d.field.crystal >= 50000, 'the fight\'s field: ' + JSON.stringify(sentEv.d.field));
+    assert.equal(galaxyGets(env).length, viewsBefore + 1, 'exactly one galaxy view: the one after the fight');
+    assert.ok(galaxyGets(env)[viewsBefore].t >= fight.t - 1000, 'the view came after the hit');
+    await decisionsFirst(env, 'fight');
+    await clean(env, 'fight');
+  } finally { await env.close(); }
+}, { timeout: 360000 });

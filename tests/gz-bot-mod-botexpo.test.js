@@ -140,3 +140,115 @@ T.test('messages: a (cached) list read before the awaited message is read again 
   await readMessages(wctx, 4, 'x', { notBefore: t });
   assert.equal(acts.length, 1, 'dry-run / refusal: no second read');
 });
+
+T.test('mode dm composition: expoProbes probes above keepProbes, never a probe out of the reserve (null -> skip), 1x202 only when no probe is there at all or step 2 refused 15 to a probe', () => {
+  const { L } = load();
+  assert.equal(L.dmComposition({ 210: 1500 }, { want: 5000, keep: 2000 }), null, 'below the reserve: nothing (was 1 probe)');
+  assert.deepEqual(L.dmComposition({ 210: 7000 }, { want: 5000, keep: 2000 }), { 210: 5000 });
+  assert.deepEqual(L.dmComposition({ 210: 3000 }, { want: 5000, keep: 2000 }), { 210: 1000 });
+  assert.equal(L.dmComposition({ 210: 2000 }, { want: 5000, keep: 2000 }), null, 'exactly the reserve: nothing');
+  assert.deepEqual(L.dmComposition({ 210: 1 }, { want: 1, keep: 0 }), { 210: 1 });
+  assert.deepEqual(L.dmComposition({ 210: 50 }, { want: 1, keep: 0 }), { 210: 1 }, 'expoProbes 1');
+  assert.equal(L.dmComposition({ 210: 1500, 202: 5 }, { want: 5000, keep: 2000 }), null, 'reserved probes are not replaced by a 202');
+  assert.deepEqual(L.dmComposition({ 202: 5 }, { want: 5000, keep: 2000 }), { 202: 1 }, 'no probe at all: the documented 1x202 fallback');
+  assert.deepEqual(L.dmComposition({ 210: 5, 202: 3 }, { want: 5000, keep: 0, probeOk: { 210: false } }), { 202: 1 }, 'step 2 refused 15 to the probe: 1x202');
+  assert.equal(L.dmComposition({ 203: 9 }, { want: 5000, keep: 0 }), null);
+});
+
+T.test('result schedule (resultDue): first read 20 s after the event and only after a full-page request since it (else wait 30 s, after 45 s a page request of our own), retries 30 s x n, give up after 6 reads or 15 min', () => {
+  const { L } = load();
+  const E = 1800000000000;
+  const d = (o) => L.resultDue(Object.assign({ eventAt: E }, o));
+  assert.deepEqual(d({ now: E + 5000 }), { read: false, force: false, giveUp: false, nextAt: E + 20000 }, 'too early');
+  assert.deepEqual(d({ now: E + 20000 }), { read: true, force: false, giveUp: false, nextAt: E + 20000 }, 'no page clock known: read');
+  assert.deepEqual(d({ now: E + 20000, pageAt: E + 1000 }), { read: true, force: false, giveUp: false, nextAt: E + 20000 }, 'a page request after the event: read');
+  assert.deepEqual(d({ now: E + 20000, pageAt: E - 1000 }), { read: false, force: false, giveUp: false, nextAt: E + 45000 }, 'no page request since the event: the report does not exist yet, wait (30 s, at most until 45 s after it)');
+  assert.deepEqual(d({ now: E + 30000, pageAt: E - 1000 }), { read: false, force: false, giveUp: false, nextAt: E + 45000 }, '... until 45 s after the event');
+  assert.deepEqual(d({ now: E + 45000, pageAt: E - 1000 }), { read: true, force: true, giveUp: false, nextAt: E + 20000 }, 'then a page request of our own first');
+  assert.deepEqual(d({ now: E + 40000, tries: 1, nextAt: E + 50000 }), { read: false, force: false, giveUp: false, nextAt: E + 50000 }, 'a retry not before its time');
+  assert.equal(d({ now: E + 50000, tries: 1, nextAt: E + 50000 }).read, true);
+  assert.equal(d({ now: E + 50000, tries: 6, nextAt: E + 50000 }).giveUp, true, 'six reads: give up (the trip is closed as unread, never flying forever)');
+  assert.equal(d({ now: E + 15 * 60000 + 1, tries: 2 }).giveUp, true, '15 min after the event: give up');
+  assert.equal(d({ now: E, eventAt: 0 }).nextAt, null, 'no event time: nothing to plan');
+});
+
+T.test('message <-> trip matching: by date FIFO, the nearest unresolved trip within +-5 s; a missing report never lets a trip claim its neighbour\'s (trips 4 s apart)', () => {
+  const { OGX } = load();
+  const assign = OGX.botExpo._lib.assignByTime;
+  const A = { id: 'a', stayEnd: 1000000 }; const Bt = { id: 'b', stayEnd: 1004000 };
+  let m = assign([{ ts: 1004000, id: 'm2' }], [A, Bt], (x) => x.stayEnd);
+  assert.equal(m.get(Bt).id, 'm2'); assert.ok(!m.has(A), 'only B\'s report present: A stays unresolved');
+  m = assign([{ ts: 1004000, id: 'm2' }, { ts: 1000000, id: 'm1' }], [A, Bt], (x) => x.stayEnd);
+  assert.equal(m.get(A).id, 'm1'); assert.equal(m.get(Bt).id, 'm2');
+  m = assign([{ ts: 1002000, id: 'm1' }], [A, Bt], (x) => x.stayEnd);
+  assert.equal(m.get(A).id, 'm1', 'equal distance: the earlier trip');
+  m = assign([{ ts: 1010000, id: 'x' }], [A, Bt], (x) => x.stayEnd);
+  assert.equal(m.size, 0, 'outside +-5 s: nobody');
+  m = assign([{ ts: 1010000, id: 'x' }], [A, Bt], (x) => x.stayEnd, (x, r) => x === Bt && Math.abs(r.ts - x.stayEnd) <= 10000);
+  assert.equal(m.get(Bt).id, 'x', 'a trip with its own wider tolerance (time shift)');
+});
+
+T.test('time shift (upstream MissionCaseExpedition event 6): a delay returns at end_stay + back leg + stay + 2 s (one stay later than planned); a speed-up lands at the next run of the fleet handler', () => {
+  const { L } = load();
+  const H = 3600000;
+  const x = { arrival: 10 * H, stayEnd: 11 * H, back: 11.5 * H, stayHours: 1, sentAt: 9.5 * H };
+  const d = L.shiftedBack(x, 'delay', 11 * H + 10000);
+  assert.equal(d.kind, 'delay'); assert.equal(d.back, 11 * H + 0.5 * H + 1 * H + 2000, 'planned back + stay + 2 s'); assert.equal(d.tol, 5000);
+  const s = L.shiftedBack(x, 'speedup', 11 * H + 10000);
+  assert.equal(s.kind, 'speedup'); assert.equal(s.back, 11 * H + 10000 + 1000); assert.equal(s.tol, 120000);
+  const noTimes = L.shiftedBack({ stayEnd: 11 * H, stayHours: 2 }, 'delay', 0);
+  assert.equal(noTimes.back, 11 * H + 2 * H + 2000, 'without the exact times: the configured stay, no back leg known');
+});
+
+T.test('view after a send (no page read before the next fleet): ships minus the fleet, the fleet slot (+ the expedition slot) taken; probes of fleet rows by name, by id, spy amount', () => {
+  const { L } = load();
+  const ft = { t: 5, ships: { 210: 7000, 202: 3 }, slots: { fleet: { used: 2, max: 10 }, expedition: { used: 1, max: 4 } }, flights: [1] };
+  assert.deepEqual(L.viewAfterSend(ft, { 210: 5000 }, { expedition: true }), { t: 5, ships: { 210: 2000, 202: 3 }, slots: { fleet: { used: 3, max: 10 }, expedition: { used: 2, max: 4 } }, flights: [1], view: true });
+  assert.deepEqual(L.viewAfterSend(ft, { 202: 3 }, { expedition: false, t: 9 }).slots, { fleet: { used: 3, max: 10 }, expedition: { used: 1, max: 4 } }, 'mission 11: no expedition slot');
+  assert.equal(L.viewAfterSend(ft, { 202: 3 }).ships[202], undefined, 'none left: the type disappears');
+  assert.equal(L.probesIn({ missionId: 15, ships: { 'Espionage Probe': 30, 'Light Cargo': 2 } }), 30);
+  assert.equal(L.probesIn({ missionId: 6, ships: { 'Шпионский зонд': 1100 } }), 1100);
+  assert.equal(L.probesIn({ missionId: 6, amount: 50, ships: {} }), 50, 'no ship list: a spy fleet is probes only');
+  assert.equal(L.probesIn({ missionId: 15, amount: 50, ships: {} }), 0);
+  assert.equal(L.probesIn({ missionType: 15, ships: { 210: 12 } }), 12, 'flight cache: by id');
+});
+
+T.test('fleet page rows of returning expeditions: a trip home on time keeps its return, the row of a delayed neighbour goes to the delayed trip (smallest distance to the shifted return), never to a trip that already came home', () => {
+  const { OGX } = load();
+  const M = OGX.botExpo._M;
+  const S = 1000;
+  // A (sent first) came home on time at 585 s; B is delayed: planned 588 s, real return 588 + stay 36 + 2 = 626 s
+  const mk = (id, arrival) => ({ id, fleetId: id, origin: 1, originCoords: '2:68:5', ships: { 210: 1 }, arrival: arrival * S, stayEnd: (arrival + 36) * S, back: (arrival + 41) * S, done: false });
+  M.trips = { a: mk('a', 544), b: mk('b', 547) };
+  const recs = [];
+  const wctx = { now: () => 600 * S, rec: (k, w, d) => recs.push({ k, w, d }) };
+  const row = (t) => ({ missionId: 15, returning: true, timerUnix: t, origin: '2:68:5', ships: {} });
+  OGX.botExpo._lib.noteFleetRows(wctx, { id: 1, coords: '2:68:5' }, [row(626)]);
+  assert.equal(M.trips.a.back, 585 * S, 'A keeps its planned return (it is home)');
+  assert.equal(M.trips.a.timeShift, undefined);
+  assert.equal(M.trips.b.back, 626 * S, 'B takes the row: ' + M.trips.b.back);
+  assert.equal(M.trips.b.timeShift, 'delay'); assert.equal(M.trips.b.shiftSeen, 'fleetTable');
+  // a row at the expected return of a trip is that trip's (first pass), the delayed one gets the other row
+  M.trips = { a: mk('a', 544), b: mk('b', 547) };
+  OGX.botExpo._lib.noteFleetRows({ now: () => 580 * S, rec() {} }, { id: 1, coords: '2:68:5' }, [row(626), row(585)]);
+  assert.equal(M.trips.a.back, 585 * S); assert.ok(!M.trips.a.timeShift, 'A confirmed on time');
+  assert.equal(M.trips.b.back, 626 * S, 'B delayed');
+});
+
+T.test('probes away from an origin: live trips until their return or the fleet rows (whichever is larger) + spy flights; the flight cache counts a fleet once (outward, hold end and return legs) and only for its home', () => {
+  const { OGX } = load();
+  const M = OGX.botExpo._M;
+  const pf = OGX.botExpo._lib.probesFlying;
+  const o = { id: 1, key: 'p1', coords: '2:68:5' };
+  M.trips = { a: { id: 'a', origin: 1, ships: { 210: 30 }, back: 2000, done: false }, b: { id: 'b', origin: 1, ships: { 210: 30 }, back: 500, done: false },
+    c: { id: 'c', origin: 2, ships: { 210: 99 }, back: 2000, done: false } };
+  assert.deepEqual(JSON.parse(JSON.stringify(pf(o, null, 1000, []))), { total: 30, expo: 30, spy: 0 }, 'b is back (its probes are home), c is another origin');
+  const spy = [
+    { own: true, realMissionId: 7, fleetId: 7, missionType: 6, returnFlight: false, originKey: 'p1', destKey: null, ships: { 210: 20 } },
+    { own: true, realMissionId: 7, fleetId: 7, missionType: 6, returnFlight: true, originKey: null, destKey: 'p1', ships: { 210: 20 } },
+    { own: true, realMissionId: 8, fleetId: 8, missionType: 6, returnFlight: false, originKey: 'p2', destKey: null, ships: { 210: 500 } },
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(pf(o, null, 1000, spy))), { total: 50, expo: 30, spy: 20 }, 'the spy fleet once, another planet\'s not');
+  const ft = { flights: [{ missionId: 15, origin: '2:68:5', ships: { 'Шпионский зонд': 60 } }, { missionId: 6, origin: '2:68:5', amount: 20, ships: {} }] };
+  assert.deepEqual(JSON.parse(JSON.stringify(pf(o, ft, 1000, spy))), { total: 80, expo: 60, spy: 20 }, 'fleet rows show more expedition probes than the live trips (a closed trip)');
+});

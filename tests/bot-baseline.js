@@ -10,6 +10,7 @@ const BOT_TEST_BASE = {
   'botexpo.on': false, 'botexpo.colonize': false, 'botexpo.buildColonizers': false,
   'botdebris.on': false, 'botdebris.logistics': false, 'botdebris.repatriate': false,
   'botfarm.on': false, 'botfarm.scanGalaxy': false, 'botfarm.buildShips': false, 'botfarm.useFleetAjax': false, 'botfarm.deleteReports': false,
+  'botmissiles.on': false, 'botmissiles.buildMissiles': false, 'botmissiles.buildSilo': false,
 };
 /** Nested settings object { ns: { key: v } } with the baseline under the stored object and the flat test settings on top. */
 function withBaseline(env, opts, stored, flat) {

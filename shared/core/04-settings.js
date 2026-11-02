@@ -1,6 +1,8 @@
 /* shared/core/04-settings.js — settings registry with schema, defaults, validation and change events. Owner: core.
  * Stored in the player-scope key 'settings' as nested objects { ns: { key: value } } (HARNESS.md §4 seeds this shape).
- * Internally values are kept flat ('ns.key' -> value). */
+ * Internally values are kept flat ('ns.key' -> value).
+ * Type 'secret' (a password): get() returns the value, everything else carries only a mask — all(), the change events,
+ * the storage export/import (OGX.storage export filter on 'settings'), the diagnostics header and «НАСТРОЙКИ (все, JSON)». */
 (function (OGX) {
   'use strict';
   const st = (OGX.settings = OGX.settings || {});
@@ -59,6 +61,7 @@
         return hit ? { ok: true, value: hit.value } : { ok: false, value: sp.default };
       }
       case 'string':
+      case 'secret':
         return { ok: true, value: v == null ? '' : String(v) };
       case 'color':
         return /^#[0-9a-f]{3,8}$/i.test(String(v)) ? { ok: true, value: String(v) } : { ok: false, value: sp.default };
@@ -134,6 +137,7 @@
     fire(path, v);
   };
   function fire(path, value) {
+    value = mask(path, value);   // a secret never travels on the bus or into a generic listener (read it with get())
     OGX.bus.emit('settings:changed', { key: path, value });
     const [ns] = split(path);
     for (const l of listeners.slice()) {
@@ -145,12 +149,12 @@
       const out = {};
       const keys = new Set(Object.keys(schemas[ns] || {}));
       for (const k of Object.keys(values)) if (k.startsWith(ns + '.')) keys.add(k.slice(ns.length + 1));
-      for (const k of keys) out[k] = st.get(ns + '.' + k);
+      for (const k of keys) out[k] = mask(ns + '.' + k, st.get(ns + '.' + k));
       return out;
     }
     const out = {};
-    for (const n of Object.keys(schemas)) for (const k of Object.keys(schemas[n])) out[n + '.' + k] = st.get(n + '.' + k);
-    for (const k of Object.keys(values)) if (!(k in out)) out[k] = st.get(k);
+    for (const n of Object.keys(schemas)) for (const k of Object.keys(schemas[n])) out[n + '.' + k] = mask(n + '.' + k, st.get(n + '.' + k));
+    for (const k of Object.keys(values)) if (!(k in out)) out[k] = mask(k, st.get(k));
     return out;
   };
   st.schema = function (ns) {
@@ -159,6 +163,45 @@
     for (const n of Object.keys(schemas)) out[n] = Object.assign({}, schemas[n]);
     return out;
   };
+  // ------------------------------------------------------------------ secrets (type 'secret')
+  st.SECRET_MASK = '<secret>';
+  st.isSecret = (path) => { const sp = spec(path); return !!sp && sp.type === 'secret'; };
+  /** 'ns.key' of every secret setting defined so far. */
+  st.secretKeys = function () {
+    const out = [];
+    for (const n of Object.keys(schemas)) for (const k of Object.keys(schemas[n])) if (schemas[n][k] && schemas[n][k].type === 'secret') out.push(n + '.' + k);
+    return out;
+  };
+  function mask(path, v) { return st.isSecret(path) ? (v ? st.SECRET_MASK : '') : v; }
+  st.mask = mask;
+  /** Copy of a stored settings object (nested { ns: { key } } or flat 'ns.key') without the secret keys. */
+  st.stripSecrets = function (obj) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+    const out = {};
+    for (const [ns, v] of Object.entries(obj)) {
+      if (ns.includes('.')) { if (!st.isSecret(ns)) out[ns] = v; continue; }
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        const o = {};
+        for (const [k, x] of Object.entries(v)) if (!st.isSecret(ns + '.' + k)) o[k] = x;
+        out[ns] = o;
+      } else out[ns] = v;
+    }
+    return out;
+  };
+  /** Export: the secrets are left out. Import: the file's secrets are ignored and the local ones kept. */
+  function exportFilter(v, { local } = {}) {
+    const out = st.stripSecrets(v);
+    if (!local || typeof local !== 'object' || !out || typeof out !== 'object') return out;
+    const flat = flatten(local);
+    for (const key of st.secretKeys()) {
+      if (flat[key] === undefined || flat[key] === '') continue;
+      const [ns, k] = split(key);
+      out[ns] = Object.assign({}, out[ns] && typeof out[ns] === 'object' ? out[ns] : {}, { [k]: flat[key] });
+    }
+    return out;
+  }
+  try { if (OGX.storage && typeof OGX.storage.registerExportFilter === 'function') OGX.storage.registerExportFilter(STORE_KEY, exportFilter); } catch (e) { /* storage missing */ }
+
   st.onChange = function (sel, fn) {
     const l = { sel, fn: OGX.safe(fn, 'settings:' + sel) };
     listeners.push(l);

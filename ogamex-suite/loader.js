@@ -1,7 +1,9 @@
 /* ogamex-suite/loader.js — bootstrap of «OgameX Suite». Owner: integration. Runs last in the isolated world.
  * OGX.boot first detects the game (OGX.page.detect: GALAXYZ / 2Moons by meta generator + /game.php + serverTime +
- * #planetSelector, or lanedirt OgameX by metas + #planetList + marker) and returns at once anywhere else, so the
- * all-hosts match costs nothing on other sites. Then the gate applies the optional host allow-list from the popup
+ * #planetSelector, or lanedirt OgameX by metas + #planetList + marker) and returns at once anywhere else: the all-hosts
+ * match costs another site the parse of the bundle, one detect() and nothing more (no storage, no timers, no DOM; the
+ * page hook watches <head> until <body> starts, see shared/main/page-hook.js). Then the gate applies the optional host
+ * allow-list from the popup
  * ('*|*|suite.hosts'; the built-in hosts in BUILTIN_HOSTS always pass, so ogamex.eu works without any setup), and the
  * filter applies the popup's global module switches ('*|*|suite.modules': { <name>: false }). The per-account switches
  * (<name>.enabled in settings) apply on top. */

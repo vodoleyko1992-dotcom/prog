@@ -62,14 +62,20 @@
     return { wall, userOffsetSec: off ? +off[1] : null, renderUnix };
   };
 
+  // "20.000 km (288 / 405)" in any language: the unit word after the diameter is optional and never matched by name ("км" on the
+  // Russian UI); the temperature words between the two °C values are skipped the same way ("32°C до 72°C", "-12°C to 28°C").
+  const DIAMETER_RE = /([\d.,]+)\s*(?:[^\d\s()/]{1,12}\s*)?\(\s*(\d+)\s*\/\s*(\d+)/;
+  const TEMP_RE = /(-?\d+)\s*°C\D+?(-?\d+)\s*°C/;
+  /** Planet tooltip / title text -> { tempMin, tempMax, diameter, fieldsUsed, fieldsMax } | null when it holds neither. */
   function gzTooltip(t) {
     if (!t) return null;
-    const temp = /(-?\d+)\s*°C\D+?(-?\d+)\s*°C/.exec(t);
-    const dia = /([\d.,]+)\s*km\s*\(\s*(\d+)\s*\/\s*(\d+)\s*\)/.exec(t);
+    const temp = TEMP_RE.exec(t);
+    const dia = DIAMETER_RE.exec(t);
     if (!temp && !dia) return null;
     return { tempMin: temp ? +temp[1] : null, tempMax: temp ? +temp[2] : null,
       diameter: dia ? gzNum(dia[1]) : null, fieldsUsed: dia ? +dia[2] : null, fieldsMax: dia ? +dia[3] : null };
   }
+  gz.tooltip = gzTooltip;
   /** All bodies: #planetSelector (authoritative, incl. moons "(Moon)") merged with the planet list (#rechts .smallplanet). */
   gz.bodies = function (doc = document) {
     doc = toDoc(doc);
@@ -222,13 +228,59 @@
     };
   };
 
-  // Event style class -> mission id [UPSTREAM class.FlyingFleetsTable.php:155-173]; expeditions render as *transport to position 16.
-  const STYLE_MISSION = { attack: 1, federation: 2, transport: 3, deploy: 4, hold: 5, espionage: 6, colony: 7, harvest: 8, destroy: 9, missile: 10 };
+  /** Drift alert through the learning module when it is loaded and active (parsers never depend on it). */
+  const learnAlert = (key, kind, what, data) => { try { if (OGX.learn && OGX.learn.alert) OGX.learn.alert(key, what, { kind, data }); } catch (e) { /* ignore */ } };
+  // Event style class -> mission id [UPSTREAM class.FlyingFleetsTable.php:155-173]. GALAXYZ styles expeditions 'expo' (REAL,
+  // fixtures/galaxyz/queue/buildings-queue5-live.html); vanilla 2Moons styles missions 11 and 15 'transport' (to position 16).
+  const STYLE_MISSION = { attack: 1, federation: 2, transport: 3, deploy: 4, hold: 5, espionage: 6, colony: 7, harvest: 8, destroy: 9, missile: 10, expo: 15 };
   gz.STYLE_MISSION = STYLE_MISSION;
+  // Body type word printed before each coordinate link ($LNG['type_planet_1|2|3'] in every FlyingFleetsTable sentence, before the
+  // body name). Case-sensitive on purpose: the lower-case sentence words ("back to planet", "к полю обломков") are no label.
+  const BODY_TYPE_LABELS = {
+    1: ['Planet', 'Планета', 'Planeta', 'Planète', 'Pianeta', 'Gezegen', 'Πλανήτης'],
+    2: ['Debris Field', 'Debris field', 'Debris', 'Поле обломков', 'Trümmerfeld', 'Campo de escombros', 'Champ de débris', 'Campo detriti', 'Puinveld'],
+    3: MOON_LABELS,
+  };
+  gz.BODY_TYPE_LABELS = BODY_TYPE_LABELS;
+  const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const bodyTypeRes = Object.entries(BODY_TYPE_LABELS).map(([type, labels]) => [+type, new RegExp('(?<![\\p{L}\\p{N}])(?:' + labels.map(reEsc).join('|') + ')(?![\\p{L}\\p{N}])', 'u')]);
+  /** Body type 1|2|3 of the FIRST type label in a sentence segment (the type word precedes the body name), null when none. */
+  function gzBodyTypeIn(text) {
+    let best = null;
+    for (const [type, re] of bodyTypeRes) {
+      const m = re.exec(text || '');
+      if (m && (!best || m.index < best.index)) best = { index: m.index, type };
+    }
+    return best ? best.type : null;
+  }
+  gz.bodyTypeIn = gzBodyTypeIn;
+  /** Coordinate links of an event sentence with the body type word before each: [{ coords, type|null }] in document order.
+   * The text buffer restarts at every link (fleet tooltip, Dialog.PM, coordinates) and skips the .textForBlind ship/cargo lists. */
+  function gzEventLinks(span) {
+    const out = []; let buf = '';
+    const walk = (node) => {
+      for (const n of Array.from(node.childNodes)) {
+        if (n.nodeType === 3) { buf += n.nodeValue; continue; }
+        if (n.nodeType !== 1) continue;
+        if (n.classList.contains('textForBlind')) { buf = ''; continue; }
+        if (n.tagName === 'A') {
+          const t = n.textContent;
+          if (/page=galaxy/.test(n.getAttribute('href') || '') && COORD_RE.test(t)) out.push({ coords: U().coords(t), type: gzBodyTypeIn(buf) });
+          buf = '';
+          continue;
+        }
+        walk(n);
+      }
+    };
+    walk(span);
+    return out.filter((l) => l.coords);
+  }
   /**
    * Fleet events of the event box (on every full page, layout.md §7), de-duplicated, sorted by end:
-   * [{ key, fleetId, endUnix, restSec, status: 'flight'|'return'|'holding', own, style, mission, from, to, hostile, ownerId, shipsText, cargoText, text }]
-   * from = origin, to = target (the sentence order flips on return legs).
+   * [{ key, fleetId, endUnix, restSec, status: 'flight'|'return'|'holding', own, style, mission, from, fromType, to, toType, hostile, ownerId, shipsText, cargoText, text }]
+   * from = origin, to = target (the sentence order flips on return legs); fromType/toType = 1 planet | 2 debris | 3 moon from the type
+   * word before each link, null when the sentence prints none (expedition positions, "reached the debris"). mission from the span
+   * class (null + L-alert 'event-style:<class>' for an unknown class); a vanilla 'transport' to position 16 counts as mission 11.
    */
   gz.events = function (doc = document) {
     doc = toDoc(doc);
@@ -243,19 +295,24 @@
       const status = cls.find((c) => c === 'flight' || c === 'return' || c === 'holding');
       const type = cls.find((c) => c !== status) || '';
       const own = /^own/.test(type); const style = type.replace(/^own/, '');
-      // only links whose text is a coordinate (the "Fleets" tooltip link points at page=galaxy# on the galaxy page)
-      const coords = qa(span, 'a[href*="page=galaxy"]').map((a) => (COORD_RE.test(a.textContent) ? U().coords(a.textContent) : null)).filter(Boolean);
-      const from = status === 'return' ? coords[1] : coords[0]; const to = status === 'return' ? coords[0] : coords[1];
+      // only links whose text is a coordinate (the "Fleets" tooltip link points at page=galaxy# on the galaxy page), each with the
+      // body type word printed before it
+      const links = gzEventLinks(span);
+      const o = status === 'return' ? links[1] : links[0]; const tg = status === 'return' ? links[0] : links[1];
+      const from = o ? o.coords : null, to = tg ? tg.coords : null;
       const blind = qa(span, '.textForBlind').map((s) => s.textContent.trim().replace(/^\(|\)$/g, ''));
       const pm = /Dialog\.PM\((\d+)\)/.exec(span.innerHTML);
       const key = el.id.slice('fleettime_'.length);
       const end = +el.getAttribute('data-fleet-end-time');
       let mission = STYLE_MISSION[style] ?? null;
-      if (style === 'transport' && to && +to.split(':')[2] >= 16) mission = 15;
+      const sample = () => ({ style: type, text: span.textContent.replace(/\s+/g, ' ').trim().slice(0, 200) });
+      // vanilla style of missions 11 and 15: a 'transport' to position 16 is no transport (GALAXYZ styles 15 'expo', so 11 remains)
+      if (style === 'transport' && to && +to.split(':')[2] >= 16) { mission = 11; learnAlert('event-style:transport16', 'event-style', 'событие флота: класс transport на позицию 16 (принято за задание 11)', sample()); }
+      if (mission === null && style) learnAlert('event-style:' + style, 'event-style', 'событие флота: неизвестный класс ' + type, sample());
       const endStr = String(end);
       out.push({
         key, fleetId: key.length > endStr.length && key.startsWith(endStr) ? +key.slice(endStr.length) : null, endUnix: end,
-        restSec: +el.getAttribute('data-fleet-time'), status, own, style, mission, from: from || null, to: to || null,
+        restSec: +el.getAttribute('data-fleet-time'), status, own, style, mission, from: from || null, fromType: o ? o.type : null, to: to || null, toType: tg ? tg.type : null,
         hostile: !own && [1, 2, 6, 9, 10].includes(mission), ownerId: pm ? +pm[1] : null,
         shipsText: blind[0] ?? null, cargoText: blind[1] ?? null, text: span.textContent.replace(/\s+/g, ' ').trim(),
       });
@@ -267,16 +324,21 @@
   gz.overview = function (doc = document) {
     doc = toDoc(doc);
     const t = (sel) => txt(q(doc, sel)).replace(/\s+/g, ' ');
-    const d = /([\d.]+)\s*km\s*\(\s*(\d+)\s*\/\s*(\d+)/.exec(t('#diameterContentField'));
-    const tp = /(-?\d+)\s*°C\D+?(-?\d+)\s*°C/.exec(t('#temperatureContentField'));
+    const d = DIAMETER_RE.exec(t('#diameterContentField'));
+    const tp = TEMP_RE.exec(t('#temperatureContentField'));
     const st = /^([\d.]+)\s*\(\D*?(\d+)\D+?([\d.]+)\)/.exec(t('#scoreContentField'));
     const moonA = q(doc, '#moon a[href*="cp="]');
     const boxes = qa(doc, '.content-box-s').map((b) => {
       const link = q(b, 'a[href*="page="]');
       let pg = null;
       try { pg = link ? new URL(link.getAttribute('href'), 'http://x/').searchParams.get('page') : null; } catch (e) { pg = null; }
-      const timer = q(b, '.timer[data-time], .countdown[data-time]');   // active markup: [UPSTREAM] guess
-      return { box: pg, title: txt(q(b, 'h3')) || null, idle: !!q(b, 'td.idle'), restSec: timer ? +timer.getAttribute('data-time') : null,
+      // remaining seconds: the progress bar's data-time (#progressbar buildings, #progressbars research; REAL ru snapshot #56) or the
+      // countdown's secs attribute (#time / #time1, whose data-time is the TOTAL time); .countdown[data-time] = [UPSTREAM] guess
+      const bar = q(b, '#progressbar[data-time], #progressbars[data-time], .countdown[data-time]');
+      const cd = q(b, '[secs]');
+      const restSec = bar && Number.isFinite(+bar.getAttribute('data-time')) ? +bar.getAttribute('data-time')
+        : cd && Number.isFinite(+cd.getAttribute('secs')) ? +cd.getAttribute('secs') : null;
+      return { box: pg, title: txt(q(b, 'h3')) || null, idle: !!q(b, 'td.idle'), restSec,
         text: (q(b, '.content') || b).textContent.replace(/\s+/g, ' ').trim() };
     });
     return {
@@ -319,7 +381,7 @@
   };
   /** "... under construction" box of a list page (first #technologies without ul.icons). REAL only empty.
    * items [UPSTREAM page.buildings.default.tpl / page.research.default.tpl]: one per queue form with a `building`/`tech` input:
-   * { id, level (trailing number of the button) | null, restSec (head only: #time / #progressbar data-time) | null,
+   * { id, level (trailing number of the button) | null, restSec (head only: #progressbar(s) data-time, else the countdown's secs) | null,
    *   endUnix (span.timer data-time of that row) | null }. */
   gz.queueBox = function (doc = document) {
     doc = toDoc(doc);
@@ -359,8 +421,16 @@
         if (!items.some((x) => x.id === it.id && x.level === it.level)) items.push(it);
       }
     }
-    const restEl = q(box, '#time[data-time], #progressbar[data-time], #progressbars[data-time]');
-    if (items.length && restEl && Number.isFinite(+restEl.getAttribute('data-time'))) items[0].restSec = +restEl.getAttribute('data-time');
+    // remaining seconds of the head: the progress bar's data-time, else the countdown's secs. Never #time's data-time: on GALAXYZ
+    // it is the TOTAL build time (live: #progressbar data-time 461, span#time data-time 640 secs 461), so a selector list that
+    // matched it first (template order, a re-render without the bar) put the queue end up to a full build time too late.
+    if (items.length) {
+      const bar = q(box, '#progressbar[data-time], #progressbars[data-time]');
+      const cd = q(box, '.build-time[secs], #time[secs], #time1[secs]');
+      const rest = bar && Number.isFinite(+bar.getAttribute('data-time')) ? +bar.getAttribute('data-time')
+        : cd && Number.isFinite(+cd.getAttribute('secs')) ? +cd.getAttribute('secs') : null;
+      if (rest !== null) items[0].restSec = rest;
+    }
     qa(box, 'span.timer[data-time]').forEach((e, i) => { const u = +e.getAttribute('data-time'); if (items[i] && Number.isFinite(u)) items[i].endUnix = u; });
     return { title: txt(q(box, 'h3')) || null, empty, items,
       timers: qa(large, '[data-time]').map((e) => ({ cls: e.className, dataTime: +e.getAttribute('data-time'), text: txt(e) })) };
@@ -835,11 +905,21 @@
   /** Queue boxes: exact seconds from inline CountdownTimer calls (buildings.md §4.2-4.3). */
   parse.queueTimers = function (x = document) {
     if (isGz(toDoc(x))) {
-      // GALAXYZ: the list-page "under construction" box was only seen empty -> building/research stay null (and
-      // out.known says whether the box was readable); the shipyard queue comes from the inline data.Queue.
+      // GALAXYZ: the list-page "under construction" box (gz.queueBox: the running item with the head countdown, the queued ones)
+      // gives the building or the research queue by the running item's id (100-199 = research); the shipyard queue comes from the
+      // inline data.Queue. out.known.box: an empty box, or a box whose running item and countdown were read (unknown markup keeps
+      // the stored queues). Before 0.3.2-audit a busy box always read as unknown: botbuild waited 15 min per planet.
       const d = toDoc(x);
       const box = gz.queueBox(d); const sq = gz.shipyardQueue(d);
-      const out = { building: null, research: null, unit: null, cancelIds: [], known: { box: !!(box && box.empty), unit: !!sq } };
+      const first = box && box.items.length ? box.items[0] : null;
+      let secs = first && first.restSec !== null ? first.restSec : null;
+      if (first && secs === null && first.endUnix) { const now = gz.serverTime(d).renderUnix; if (now) secs = Math.max(0, first.endUnix - now); }
+      const out = { building: null, research: null, unit: null, cancelIds: [], known: { box: !!box && (box.empty || (!!first && secs !== null)), unit: !!sq } };
+      if (first && secs !== null) {
+        const kind = first.id >= 100 && first.id < 200 ? 'research' : 'building';
+        out[kind] = { secs, objectId: first.id, targetLevel: first.level, title: box.title, downgrade: false, listId: null,
+          queued: box.items.slice(1).map((i) => ({ objectId: i.id, targetLevel: i.level, listId: null })) };
+      }
       if (sq && sq.items.length) {
         const first = sq.items[0];
         out.unit = { totalSecs: sq.totalSecs, nextSecs: Math.max(0, first.secsPerUnit - sq.firstUnitElapsed), remaining: sq.items.reduce((n, i) => n + i.count, 0),

@@ -832,20 +832,48 @@
       const idx = [];
       for (const lang of Object.keys(texts)) {
         const e = texts[lang] && texts[lang].expedition;
-        if (e) for (const [key, v] of Object.entries(e)) idx.push({ key, lang, outcome: v.outcome, text: norm(v.text).toLowerCase() });
+        if (e) for (const [key, v] of Object.entries(e)) idx.push({ key, lang, outcome: v.outcome, text: expKey(v.text) });
       }
       Object.defineProperty(texts, '__idx', { value: idx, enumerable: false });
       return idx;
+    }
+    // comparison form of a flavour text: no tags/punctuation, lower case, ё folded to е (an edited ru text often drops the ё)
+    const expKey = (s) => norm(String(s || '').replace(/<[^>]*>/g, ' ')).toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    // a prefix match needs this many characters on the shorter side: an empty/short first segment (body starting with <br>)
+    // must never match the first table entry (sys_expe_blackholl_1 -> 'fleet_lost' -> botexpo counts the ships as lost)
+    const EXP_PREFIX_MIN = 20;
+    // keyword fallback for a flavour text the table does not know (edited/Aeternum-specific variant), ru/en. Only dark matter:
+    // over the 142 table texts any wider keyword list misfires (a "deserted pirate base" is a ships find, a "black hole" word is
+    // not the only fleet loss), and a wrong 'fleet_lost' closes a live trip in botexpo — an unmatched text stays null instead.
+    const EXP_FALLBACK = [['darkmatter', /темн\p{L}* матери|dark matter/u]];
+    function expeditionFallback(flavor) {
+      if (flavor.length < EXP_PREFIX_MIN) return null;
+      const f = EXP_FALLBACK.find(([, re]) => re.test(flavor));
+      return f ? f[0] : null;
     }
     function parseExpedition(item, texts) {
       texts = texts || TEXTS;
       const b = item.body;
       const parts = b.innerHTML.split(/<br\s*\/?>/i);
-      const flavor = norm(parts[0]).toLowerCase();
-      const hit = expeditionIndex(texts).find((x) => x.text === flavor) || expeditionIndex(texts).find((x) => x.text && (flavor.startsWith(x.text) || x.text.startsWith(flavor)));
-      const out = { outcome: hit ? hit.outcome : null, key: hit ? hit.key : null, lang: hit ? hit.lang : null, wall: item.wall, ships: null, shipsByName: null };
+      const fi = Math.max(0, parts.findIndex((p) => expKey(p)));   // a body may start with <br>: the flavour is the first non-empty segment
+      const flavor = expKey(parts[fi]);
+      const idx = expeditionIndex(texts);
+      const hit = (flavor && idx.find((x) => x.text === flavor)) || idx.find((x) => x.text && Math.min(x.text.length, flavor.length) >= EXP_PREFIX_MIN && (flavor.startsWith(x.text) || x.text.startsWith(flavor)));
+      const fb = hit ? null : expeditionFallback(flavor);
+      const out = { outcome: hit ? hit.outcome : fb, key: hit ? hit.key : fb ? 'fallback:' + fb : null, lang: hit ? hit.lang : null, wall: item.wall, ships: null, shipsByName: null };
+      if (!hit) {
+        // the raw text is the only way to complete the table: keep a sample and raise one learn alert per text
+        out.textSample = norm(String(parts[fi] || '').replace(/<[^>]*>/g, ' ')).slice(0, 160);
+        if (out.textSample && typeof OGX !== 'undefined' && OGX.learn && OGX.learn.alert) {
+          let h = 0; for (const ch of flavor) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+          try {
+            OGX.learn.alert('expedition-text:' + h.toString(36), `неизвестный текст экспедиции${fb ? ' (по ключевым словам: ' + fb + ')' : ''}: «${out.textSample}»`,
+              { kind: 'expedition-text-unknown', data: { text: out.textSample, fallback: fb } });
+          } catch (e) { /* learn is optional */ }
+        }
+      }
       // ships found: "<br>NAME: N" lines; nothing repairable: "<br><br>No ships could be found." (Expedition:194-213)
-      const lines = parts.slice(1).map(norm).filter(Boolean);
+      const lines = parts.slice(fi + 1).map(norm).filter(Boolean);
       const shipLines = lines.map((l) => /^(.+?):\s*(\d{1,3}(?:\.\d{3})*)$/.exec(l)).filter(Boolean);
       if (shipLines.length || out.outcome === 'ships') {
         out.outcome = out.outcome || 'ships';
@@ -1152,6 +1180,7 @@
     const date = it && it.date ? it.date : null;
     const out = { id: it && it.id ? it.id : null, ts: date ? gameMs(date) : null, key: gzKey('expedition', r), outcome: r.outcome || 'unknown',
       textKey: r.key, lang: r.lang, unverified: true, gz: r };
+    if (r.textSample) out.textSample = r.textSample;
     if (r.ships) out.ships = r.ships;
     if (r.shipsByName) out.shipsByName = r.shipsByName;
     return out;
@@ -1169,6 +1198,11 @@
     if (r.resources) {
       out.resources = byRes(r.resources);
       if (r.resources[921] !== undefined) out.darkMatter = r.resources[921];
+    }
+    // recycle report (sys_recy_gotten: "... collect M metal and C crystal", ru «... переработал M металла и C кристалла»): the same
+    // harvest object as OgameX, so botdebris' own-harvest calibration works in any UI language (its text regex is English-only)
+    if (r.kind === 'recycle' && r.resources && Number.isFinite(r.resources[901]) && Number.isFinite(r.resources[902])) {
+      out.harvest = { ship: null, ships: null, capacity: null, field: null, harvested: { metal: r.resources[901], crystal: r.resources[902] } };
     }
     if (r.kind === 'missile') Object.assign(out, { missiles: r.missiles, intercepted: r.intercepted, destroyed: Object.assign({}, r.destroyed || {}), unknownTitles: r.unknownTitles || [] });
     return out;

@@ -1,6 +1,6 @@
 'use strict';
 // botexpo 1.1 end to end against the WORLD mock: DM search with collectors (mission 11 to the own moon, collectors split over
-// the free places, result from the return message) and the learn mode of expeditions (untried candidates first, keepProbes respected).
+// the free places, result from the return message; with universe.dmMission also trips that find nothing) and the learn mode of expeditions (untried candidates first, keepProbes respected).
 //   node tests/gz-bot-expo-dmworld.test.js
 const T = require('./lib');
 const B = require('./gz-bot-lib');
@@ -66,6 +66,28 @@ T.test('DM search: the server allows 3 -> the 4th fleet is refused, the bot lear
   } finally { await env.close(); }
 }, { timeout: 300000 });
 
+T.test('DM search, upstream rule with no find (universe.dmMission never): the return «without dm» is read as 0, the collectors come home and are not re-ordered, the next round goes out again', async () => {
+  // tests-mock-10: the old mock found DM on every trip; here every trip comes home with all collectors and nothing found
+  const w = withMoon(10);
+  w.universe.dmMission = { base: -1, max: -1 };
+  const env = await B.launchBot({ world: w, settings: settings(Object.assign({}, LIVE, { 'botexpo.expeditions': false, 'botexpo.dmStock': 10 })) });
+  try {
+    await leader(env);
+    const res = await env.waitJournal('botexpo:dm-result', { pred: (e) => e.d && e.d.messageId, timeoutMs: 150000 });
+    assert.equal(res.d.found, 0, 'nothing found: ' + JSON.stringify(res.d));
+    assert.match(res.w, /ничего не найдено/);
+    const dmEv = env.world.log.events.filter((e) => e.kind === 'dm');
+    assert.ok(dmEv.length >= 1 && dmEv.every((e) => e.found === 0), 'the world found nothing');
+    // a second round after the returns: the same collectors fly again (they were never scrapped)
+    const first = env.world.log.sent.filter((x) => x.mission === 11).length;
+    await env.until(() => env.world.log.sent.filter((x) => x.mission === 11).length > first, { timeoutMs: 150000, label: 'next DM round' });
+    const st = await env.evalOgx(await env.page(), async () => JSON.parse(JSON.stringify(OGX.botExpo._M.dmStats || null)));
+    assert.ok(st && st.trips >= 1 && st.wins === 0 && st.dm === 0 && st.lostShips === 0, 'stats: trips, no wins, no lost collectors: ' + JSON.stringify(st));
+    assert.equal(env.world.log.builds.filter((b) => b.accepted && b.accepted[220]).length, 0, 'no collector re-ordered (none was lost)');
+    assert.deepEqual(env.ogxErrors().map((e) => e.text), []);
+  } finally { await env.close(); }
+}, { timeout: 360000 });
+
 T.test('mode dm (default): expoProbes probes per expedition, the last keepProbes stay home, DM per hour table keyed by the fleet', async () => {
   const s = JSON.parse(JSON.stringify(W.loadScenario('botexpo-dm')));
   const env = await B.launchBot({ world: s, settings: settings(Object.assign({}, LIVE, { 'botexpo.dmHunt': false, 'botexpo.expoProbes': 30, 'botexpo.keepProbes': 10 })) });
@@ -87,6 +109,8 @@ T.test('probes re-built: below the stock (2 x slots x probes per slot + keep) th
   const s = JSON.parse(JSON.stringify(W.loadScenario('botexpo-dm')));
   const home = s.bodies.find((b) => b.id === HOME);
   home.res.crystal = Math.max(num0(home.res.crystal), 10000000);
+  // 20 probes away on a spy mission from HOME: away, not to be re-ordered on top of the stock (stock 130, 50 at home)
+  s.flights = [{ fromBodyId: HOME, mission: 6, ships: { 210: 20 }, to: '2:69:4', duration: 3000, state: 'out' }];
   const env = await B.launchBot({ world: s, settings: settings(Object.assign({}, LIVE, { 'botexpo.dmHunt': false, 'botexpo.probeBuild': true, 'botexpo.expoProbes': 30, 'botexpo.keepProbes': 10 })) });
   try {
     await leader(env);
@@ -95,6 +119,8 @@ T.test('probes re-built: below the stock (2 x slots x probes per slot + keep) th
     assert.ok(e.d.ok, JSON.stringify(e.d));
     assert.equal(e.d.target % 60, 10, '2 x slots x 30 + keep 10: ' + e.d.target);
     assert.equal(e.d.n, e.d.target - e.d.home - e.d.flying, 'orders exactly the missing probes: ' + JSON.stringify(e.d));
+    assert.equal(e.d.flyingSpy, 20, 'the spy probes count as flying: ' + JSON.stringify(e.d));
+    assert.equal(e.d.flying, e.d.flyingExpo + 20);
     assert.ok(e.d.n > 0);
     const orders = env.world.log.builds.filter((b) => b.accepted && b.accepted[210] > 0);
     assert.equal(orders.length, 1, 'one order (next one not before 3 min)');

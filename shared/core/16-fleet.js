@@ -309,8 +309,9 @@
   };
 
   /** Step-3 result page -> { success, message, missionId, missionName, distance, maxSpeed, consumption, from, to,
-   * arrival, back (ServerMs | null; the event box's stored times when it lists the fleet), fleetId?, ships: { id: n }, unknownShips? }. */
-  gz.parseResult = function (doc) {
+   * arrival, back (ServerMs | null; the event box's stored times when it lists the fleet), fleetId?, ships: { id: n }, unknownShips? }.
+   * opts.knownIds: fleet ids that flew before this send (the step-2 page's event box, botcore's pre-send fleetTable): never ours. */
+  gz.parseResult = function (doc, { knownIds = null } = {}) {
     if (typeof doc === 'string') doc = new DOMParser().parseFromString(doc, 'text/html');
     const r = OGX.parse.gz.fleetStep3(doc);
     if (!r.success) return { success: false, message: r.message || 'fleetStep3: no result' };
@@ -324,11 +325,14 @@
     try {
       if (out.arrival !== null && OGX.flights && OGX.flights.parseGz) {
         const fl = OGX.flights.parseGz(doc, {});
+        const known = new Set((knownIds || []).map((x) => +x));
+        // two sends to one target a second apart have arrivals within the 5 s window: a fleet that flew before this send is not
+        // ours, and among the rest the newest (fleet ids grow) is, then the closest arrival
         let best = null;
         for (const f of fl) {
-          if (!f.own || f.returnFlight || f.fleetId === null || f.from !== r.from || f.to !== r.to) continue;
+          if (!f.own || f.returnFlight || f.fleetId === null || f.from !== r.from || f.to !== r.to || known.has(+f.fleetId)) continue;
           const d = Math.abs(f.arrival - out.arrival);
-          if (d <= 5000 && (!best || d < best.d)) best = { d, f };
+          if (d <= 5000 && (!best || +f.fleetId > +best.f.fleetId || (+f.fleetId === +best.f.fleetId && d < best.d))) best = { d, f };
         }
         if (best) {
           out.fleetId = best.f.fleetId;
@@ -410,8 +414,11 @@
     // the POST answer is a full page of the origin: its header stock is the stock now
     const d = s.data || {};
     const room = { fleetroom: d.fleetroom !== undefined ? +d.fleetroom : null, consumption: d.consumption !== undefined ? +d.consumption : (Number.isFinite(+s.consumption) ? +s.consumption : null) };
+    // fleets already flying (this page's event box): parseResult never takes one of them for the fleet step 3 sends
+    let knownIds = null;
+    try { knownIds = OGX.flights && OGX.flights.parseGz ? OGX.flights.parseGz(r.doc, {}).filter((f) => f.own && f.fleetId !== null).map((f) => +f.fleetId) : null; } catch (e) { knownIds = null; }
     // one token per dispatch: the step-2 form repeats the step-1 token [REAL fleetStep1/2.html]
-    return Object.assign({ ok: true, step: 2, url: r.url }, s, { token: s.token || step1.token, stock: gz.stock(r.doc), room });
+    return Object.assign({ ok: true, step: 2, url: r.url }, s, { token: s.token || step1.token, stock: gz.stock(r.doc), room, knownIds });
   };
   /** POST fleetStep3 (mission, cargo, staytime) -> parseResult(...) & { ok, step: 3 } | failure. */
   gz.step3 = async function (step2, req, { cp } = {}) {
@@ -419,7 +426,7 @@
     try { form = gz.step3Form(step2, req); } catch (e) { return stepFail(3, e.message, { missions: (step2 && step2.missions || []).map((m) => m.id) }); }
     const r = await post('fleetStep3', form, cp);
     if (!r.ok || !r.doc) return stepFail(3, r.error || (r.loggedOut ? 'logged out' : 'http ' + r.status), { r, posted: true, kind: 'http' });
-    const res = gz.parseResult(r.doc);
+    const res = gz.parseResult(r.doc, { knownIds: step2 && step2.knownIds });
     if (!res.success) {
       let info = null;
       try { info = OGX.parse.gz.infoMessage(r.doc); } catch (e) { info = null; }

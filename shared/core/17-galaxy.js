@@ -117,18 +117,29 @@
       .filter((k) => f.has(k) && !(k === 'inactive' && f.has('longinactive'))).map((k) => FLAG_LETTER[k]).join('');
   };
 
-  /** Header of the system view: { galaxy, system, probes, recyclers, gigaRecyclers, missiles, slotsUsed, slotsMax, existingPlanets } (null = not found). */
+  /** Header of the system view: { galaxy, system, probes, recyclers, gigaRecyclers, missiles, slotsUsed, slotsMax, existingPlanets } (null = not found).
+   * Counts by the stable span ids (#probes, span#recycler twice = recyclers then giga recyclers, #rockets), whose leading number is
+   * exact ("102") or the server's short form for big counts ("33K", "37.5K" -> parseGzNumber); the labels differ per UI language
+   * (REAL ru: «33K Шпионские зонды») and are matched only where the ids are missing (English regexes). */
   gz.header = function (doc = document) {
     const form = doc.querySelector('form#galaxy_form');
     const field = (n) => { const i = form && form.querySelector(`input[name="${n}"]`); return i ? gzInt(i.value) : null; };
-    const info = gzText(doc.querySelector('#galaxytableHead tr.info_header'));
+    const head = doc.querySelector('#galaxytableHead tr.info_header');
+    const info = gzText(head);
     const pick = (re) => { const m = info.match(re); return m ? gzInt(m[1]) : null; };
+    const spans = (id) => (head ? Array.from(head.querySelectorAll(`span[id="${id}"]`)) : []);
+    const lead = (el) => { const m = /^(-?\d[\d.,]*(?:\s?[KMBT](?!\p{L}))?)/iu.exec(gzText(el)); return m ? OGX.util.parseGzNumber(m[1]) : null; };
+    const count = (id, re) => (spans(id).length ? lead(spans(id)[0]) : pick(re));
+    const rec = spans('recycler');
     const slots = gzText(doc.querySelector('#slotValue')).match(/(\d+)\s*\/\s*(\d+)/);
+    // sanitized snapshots blank the form values: the system's own row links (planet=N of this galaxy/system) name it too
+    const rowLink = (n) => { const a = doc.querySelector('#galaxytableHead tr.row a[href*="galaxy="][href*="system="]'); const m = a && new RegExp(`[?&]${n}=(\\d+)`).exec(a.getAttribute('href') || ''); return m ? +m[1] : null; };
     return {
-      galaxy: field('galaxy'), system: field('system'),
-      // labels are English on the saved pages; numbers before them may carry '.' thousands
-      probes: pick(/([\d.]+)\s+Spy Probes?/i), recyclers: pick(/([\d.]+)\s+Recyclers?(?![\w-])/), gigaRecyclers: pick(/([\d.]+)\s+Giga Recyclers?/i),
-      missiles: pick(/([\d.]+)\s+Available Missiles/i),
+      galaxy: field('galaxy') ?? rowLink('galaxy'), system: field('system') ?? rowLink('system'),
+      probes: count('probes', /([\d.]+)\s+Spy Probes?/i),
+      recyclers: rec.length ? lead(rec[0]) : pick(/([\d.]+)\s+Recyclers?(?![\w-])/),
+      gigaRecyclers: rec.length > 1 ? lead(rec[1]) : rec.length ? null : pick(/([\d.]+)\s+Giga Recyclers?/i),
+      missiles: count('rockets', /([\d.]+)\s+Available Missiles/i),
       slotsUsed: slots ? +slots[1] : null, slotsMax: slots ? +slots[2] : null,
       existingPlanets: gzInt(gzText(doc.querySelector('#colonized'))),   // NOT the row count (galaxy.md §0.6)
     };
@@ -143,12 +154,14 @@
       const a = posCell && posCell.querySelector('a[href*="target_mission=7"]');
       const t = a ? (a.getAttribute('title') || '') : '';
       const f = t.match(/fields:\s*(\d+)\s*-\s*(\d+)/i);
-      const c = t.match(/(-?\d+)\s*°C\s*to\s*(-?\d+)\s*°C/i);
+      const c = t.match(/(-?\d+)\s*°C\D*?(-?\d+)\s*°C/);   // "Approximately20°Cto60°C", REAL ru "от220°Cдо260°C"
       return { position, empty: true, el: tr, colonize: !!a,
         fieldsMin: f ? +f[1] : null, fieldsMax: f ? +f[2] : null, tempMin: c ? +c[1] : null, tempMax: c ? +c[2] : null };
     }
     const pTip = gzTip(planetCell.querySelector('a'));
-    const links = (doc) => Array.from(doc.querySelectorAll('ul.ListLinks a')).map((a) => {
+    // GALAXYZ planet tooltips list their actions in ul.ListLinks (REAL); the upstream moon / debris tooltips are a table with the
+    // links in plain cells (page.galaxy.default.tpl:112,119): those two read every link of the tooltip (all = true)
+    const links = (doc, all) => Array.from(doc.querySelectorAll(all ? 'a' : 'ul.ListLinks a')).map((a) => {
       const href = a.getAttribute('href') || '';
       const doit = /doit\(\s*(\d+)\s*,\s*(\d+)/.exec(href);
       const q = gzParams(href);
@@ -172,10 +185,12 @@
     let moon = null;
     if (moonA || tr.querySelector('td.moon img')) {
       const mTip = gzTip(moonA);
-      const mLinks = links(mTip);
+      const mLinks = links(mTip, true);
       const spy = mLinks.find((l) => l.targetId !== null);
-      const dia = Array.from(mTip.querySelectorAll('tr')).find((r) => /diam|диам/i.test(gzText(r)));
-      moon = { id: spy ? spy.targetId : null, name: gzText(mTip.querySelector('h1')).replace(/^(Moon|Луна)\s*/i, '').replace(/\s*\[\d+:\d+:\d+\]\s*$/, '') || null,
+      // the innermost row (the upstream tooltip nests the features table in a row of the outer one)
+      const dia = Array.from(mTip.querySelectorAll('tr')).find((r) => !r.querySelector('tr') && /diam|диам/i.test(gzText(r)));
+      const mHead = gzText(mTip.querySelector('h1')) || gzText(mTip.querySelector('th'));
+      moon = { id: spy ? spy.targetId : null, name: mHead.replace(/^(Moon|Mond|Луна)\s*/i, '').replace(/\s*\[\d+:\d+:\d+\]\s*$/, '') || null,
         size: dia ? gzInt(gzText(dia.lastElementChild)) : null, destroyed: false, activity: null };
     }
     // debris: tooltip "Metal: N" / "Crystal: N" + doit(8, PLANETID)
@@ -186,7 +201,7 @@
       const dt = gzText(dTip.body);
       const dm = dt.match(/Metal:?\s*(-?[\d.]+)/i) || dt.match(/Металл:?\s*(-?[\d.]+)/i);
       const dc = dt.match(/Crystal:?\s*(-?[\d.]+)/i) || dt.match(/Кристалл:?\s*(-?[\d.]+)/i);
-      const rec = links(dTip).find((l) => l.mission === 8 && l.targetId !== null);
+      const rec = links(dTip, true).find((l) => l.mission === 8 && l.targetId !== null);
       debris = { metal: dm ? gzInt(dm[1]) : null, crystal: dc ? gzInt(dc[1]) : null, deuterium: 0, requiredShips: null, recycleId: rec ? rec.targetId : null };
     }
     // alliance: span.galaxy-alliance[-member|-friend|-enemy] tag; tooltip "Alliance NAME N Members", ?page=alliance&mode=info&id=ID
@@ -197,7 +212,7 @@
     if (allyTag) {
       const aTip = gzTip(allyA);
       const info = aTip.querySelector('a[href*="mode=info"]');
-      const h1 = gzText(aTip.querySelector('h1'));
+      const h1 = gzText(aTip.querySelector('h1')) || gzText(aTip.querySelector('th'));
       const mm = h1.match(/^(?:Alliance|Альянс)\s+(.*?)(?:\s+(\d+)\s+\S+)?$/i);
       alliance = { id: info ? gzInt(gzParams(info.getAttribute('href')).get('id')) : null, tag: allyTag, name: mm ? mm[1] : null,
         members: mm && mm[2] ? +mm[2] : null,
@@ -707,4 +722,7 @@
       OGX.safe(() => galaxy.indexHighscore(OGX.parse.highscorePlayers(document)), 'galaxy:highscorePage')();
     }
   };
+  /** Public wrapper of remember(): a system the BOT read (botcore read.galaxy -> parseGz) enters the galaxy cache like a user view
+   *  (botfarm scan feeding discovery; before this only user views and the OgameX XHR relay were stored). */
+  galaxy.rememberSystem = (sys) => remember(sys);
 })(window.OGX);

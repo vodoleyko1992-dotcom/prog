@@ -604,3 +604,56 @@ T.test('tab «Цели»: «Атака» on the REAL messages-spy report prefill
     assert.ok(left < 1, 'the prefilled fleet carries the whole loot, left behind: ' + left);
   } finally { await env.close(); }
 });
+
+T.test('OGX.targets read API for other modules (the bot): marks() / markOf() / playerMark() / colors() hand out copies; targets:changed on the bus', async () => {
+  const seed = { '{ns}|targets.marks': { v: 1, planets: { '2:68:2:1': { color: 'red', note: 'фарм', playerId: FR[2].playerId, playerName: FR[2].name, isTarget: true, updatedAt: 1, addedAt: 1 } },
+    players: { [FR[1].playerId]: { color: 'blue', note: 'опасен', name: FR[1].name, updatedAt: 1 }, 'n:Безымянный': { color: 'green', note: 'без id', name: 'Безымянный', updatedAt: 1 } } } };
+  const env = await G.launch({ storage: seed });
+  try {
+    env.server.route('GET', 'galaxy', (req, res, ctx) => ctx.send(200, ctx.rewrite(SYNTH)));
+    const p = await env.game('galaxy');
+    await p.waitForSelector('.ogx-i-targets-star');
+    const r = await env.evalOgx(p, (a) => {
+      const api = OGX.targets;
+      const out = { active: api.active(), keys: Object.keys(api).sort() };
+      out.byStr = api.markOf('2:68:2');
+      out.byBracket = api.markOf('[2:68:2]', 'planet');
+      out.byArr = api.markOf([2, 68, 2], 1);
+      out.byObj = api.markOf({ galaxy: 2, system: 68, position: 2 });
+      out.moon = api.markOf('2:68:2', 3);
+      out.none = api.markOf('2:68:3');
+      out.bad = api.markOf('x');
+      out.player = api.playerMark(a.p1);
+      out.playerStr = api.playerMark(String(a.p1));
+      out.byName = api.playerMark('Безымянный');
+      out.byNKey = api.playerMark('n:Безымянный');
+      out.unknownPlayer = api.playerMark(999999);
+      out.colors = api.colors().map((c) => c.id);
+      const snap = api.marks();
+      snap.planets['2:68:2:1'].color = 'green'; delete snap.players[String(a.p1)];
+      const again = api.marks();
+      out.copy = [again.planets['2:68:2:1'].color, Object.keys(again.players).length];
+      window.__tc = [];
+      OGX.bus.on('targets:changed', (e) => window.__tc.push(e));
+      return out;
+    }, { p1: FR[1].playerId });
+    assert.equal(r.active, true);
+    assert.deepEqual(r.keys, ['active', 'colors', 'markOf', 'marks', 'playerMark']);
+    assert.deepEqual([r.byStr.color, r.byStr.note, r.byStr.isTarget, +r.byStr.playerId], ['red', 'фарм', true, +FR[2].playerId]);
+    assert.deepEqual(r.byBracket, r.byStr); assert.deepEqual(r.byArr, r.byStr); assert.deepEqual(r.byObj, r.byStr);
+    assert.deepEqual([r.moon, r.none, r.bad, r.unknownPlayer], [null, null, null, null]);
+    assert.deepEqual([r.player.color, r.player.note, r.playerStr.color], ['blue', 'опасен', 'blue']);
+    assert.deepEqual([r.byName.color, r.byNKey.color], ['green', 'green']);
+    assert.deepEqual(r.colors, ['red', 'orange', 'yellow', 'green', 'blue', 'purple']);
+    assert.deepEqual(r.copy, ['red', 2], 'marks() hands out copies');
+    // a change through the UI (star on row 9) -> targets:changed, the API sees the new mark
+    await p.click('#galaxytableHead tr.row:nth-child(9) .ogx-i-targets-star');
+    await p.waitForSelector('#galaxytableHead tr.row:nth-child(9) .ogx-i-targets-star-on');
+    await flush(env, p);
+    const after = await env.evalOgx(p, () => ({ events: window.__tc, mark: OGX.targets.markOf('2:68:9', 1) }));
+    assert.ok(after.events.length >= 1 && after.events.every((e) => e.planets === 2 && e.players === 2), JSON.stringify(after.events));
+    assert.equal(after.events[0].local, true);
+    assert.deepEqual([after.mark.isTarget, +after.mark.playerId], [true, +FR[9].playerId]);
+    assert.deepEqual(env.ogxErrors(), []);
+  } finally { await env.close(); }
+});

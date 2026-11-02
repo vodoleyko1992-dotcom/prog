@@ -37,6 +37,9 @@ Environment variables:
 | `OGX_TEST_TIMEOUT` | Timeout per test in ms (default 90000) |
 | `OGX_NO_SYNC=1` | Skip `sync.sh` (run-all sets this for the child processes) |
 | `OGX_HEADED=1` | Headed Chromium |
+| `OGX_FILE_TIMEOUT` | run-all: wall-time budget per test file in ms |
+| `OGX_WORLD_LANG=ru` | GALAXYZ world mode: every world of the run answers with John's Russian texts (§7.4), unless a spec sets `lang` |
+| `OGX_QUEUE_MARKUP=live` | GALAXYZ world mode: every world renders the live Aeternum queue box (§7.4), unless a spec sets `queueMarkup` |
 
 ## 2. Loading modes (verified in this environment)
 
@@ -281,3 +284,74 @@ env.server.route('GET', /^\/ajax\/messages$/, (req, res, ctx) => ctx.send(200, '
 - the automatic fallback
 
 Run it after any change to the harness: `node tests/harness.test.js` (5 tests, about 12 s).
+
+## 7. GALAXYZ mock, world mode and bot tests
+
+Sections 4–6 describe the OgameX mock (`tests/server.js`). The suite's target server is GALAXYZ (ogamex.eu/Aeternum, a 2Moons
+fork); its tests use `tests/gz-server.js` and `tests/gz-lib.js` (static mode) or `tests/gz-world.js` and `tests/gz-bot-lib.js`
+(world mode). The binding API is BOT_CONTRACT §C7 (C7 helper, C7.1 WorldSpec, C7.2 World) with the amendments A12–A14; the
+scenario files and every spec extension are listed in `fixtures/galaxyz/bot-scenarios/README.md`. This section states the rules a
+new test must follow.
+
+### 7.1 Static mode (`tests/gz-server.js`, `G.launch()` of `tests/gz-lib.js`)
+
+The REAL pages saved on Aeternum (`fixtures/galaxyz/pages`) are served as they are; `srv.state` knobs (`fleetError`,
+`fleetErrorAt`, `bodyShips`, `bodyRes`, `planets`, `missions`, `buildError`, `spycount`, `lang`, `latencyMs`, …; the list with
+comments is `defaultState()` in the file) change the answers. Fleet dispatch follows upstream: step 1 accepts any posted count,
+step 3 refuses with an info page (`Not all ships present.` / `Не все корабли доступны.` by `state.lang`; the en/ru texts of the
+other refusals are exported as `STEP3_TEXTS`). Every page shows the same saved body: use it for parser and UI tests, not for
+bot behaviour.
+
+### 7.2 World mode (`B.launchBot()` of `tests/gz-bot-lib.js`)
+
+`launchBot({ world: '<scenario>' | WorldSpec, settings, page, clock, botDefaults })` starts `gz-server` with a stateful `World`
+built from the scenario and a browser with the suite. Pages are the same REAL pages with their dynamic parts regenerated from the
+world (bodies, stock, event box, fleetTable, steps 1–3, galaxy, messages, spy reports, queues). Fleets fly, arrive, fight (via
+`OGX.botSim`), return and write messages on the world clock; `env.world` is the live World of the server.
+
+* **Clock.** `clock: 'now'` (default, A13) starts the world at the real time; `'spec'` keeps `startUnix`. Use the world clock for
+  anything time based: `env.world.clock.nowUnix()`, `env.world.clock.advance(sec)`, `setSpeedup`, scenario `script[]`. Never
+  compute game times from `Date.now()` — that only works with `'now'` and breaks as soon as a test advances the clock.
+* **Journal.** `env.journal({ kind, since })` reads the bot journal (stored + recent events); `env.waitJournal(kind, { pred,
+  timeoutMs, failMs })` polls it. A journal that cannot be read (closed page, CDP session gone, store errors) fails
+  `waitJournal` after `failMs` (15 s) with the error, and every timeout text names the last read error and OGX console errors
+  (`env.journalErr`). Prefer `waitJournal` + `clock.advance` over fixed sleeps.
+* **Requests.** `env.mutating()` = POSTs, fleetAjax, galaxy views and message reads since launch; `env.server.requests` has
+  everything. `env.world.log` has `events`, `refusals` (step-3 and build refusals with their reason) and `script`.
+* **Ground truth.** Assert on the world (fleets, `world.snapshot()`, refusals) and on the journal, not on the bot's own status.
+
+### 7.3 Bot switches: the test baseline and `botDefaults: 'auto'`
+
+Since 0.3.2 every bot function is ON by default. `tests/bot-baseline.js` therefore seeds the pre-0.3.2 values (master off,
+dry-run on, autoLogin off, `galaxyViewsPerHour` 0, every module switch off) into the profile of every `G.launch` / `T.launch` /
+`launchBot` that loads the suite; a test's own `settings` override them. Such a test proves one module with the switches it turns
+on — it does NOT prove the packaged defaults.
+
+`botDefaults: 'auto'` skips the baseline: the profile starts with the packaged defaults, exactly as John's install. It is
+mandatory for any test that claims "works with the defaults" — default limits (`maxFleetSendsPerHour`, `maxBuildsPerHour`,
+`galaxyViewsPerHour`), default module switches, the 0.3.1 → 0.3.2 migration. Do not add limit overrides to such a test. Current
+users: `gz-bot-autoall` (c), `gz-bot-defaults` (scenario `aeternum-day`, one simulated day with every module on).
+
+### 7.4 World options worth knowing
+
+* `lang: 'ru'` — event box sentences, ship and mission names and step-3 refusals in Russian (John's UI) [UPSTREAM language/ru].
+* `queueMarkup: 'live'` — the build/research queue box in the live Aeternum markup (`fixtures/galaxyz/queue/*-live.html`)
+  instead of the upstream `#buildlist`.
+* `fleetHandlerOnAjax: false` — like upstream, an ajax request does not process fleets (arrivals show with the next full page).
+* `universe.resourceMultiplier` 22000 and `universe.ecoScale` (1 = the live economy; old scenarios pin 0.001 = the former ×22),
+  `universe.bashOn/bashCount/bashTime` (6 attacks per target per 24 h), `player.spyProbes` (account spycount).
+* `universe.expeditionModel: 'upstream'` / `universe.dmMission: 'upstream'` — the upstream expedition tiers, battle losses and lost
+  fleets, and the upstream mission-11 chance (trips that find nothing, collectors that come home).
+* `expeditionOutcomes` forces expedition results in order; the random draw is seeded (`spec.seed`), so a run is deterministic.
+
+### 7.5 What the mocks guess
+
+Parts never captured live and built from upstream 2Moons or invented: the hostile/holding event texts (the en/ru upstream
+sentences), the queue boxes of the upstream markup, shipyard queue data, the staytime block, the settings page
+([HYPOTHETICAL]), the login form, captcha and info pages ([HYPOTHETICAL]: a real logged-out `index.php` was never saved, so
+`gz-bot-autologin` proves autoLogin only against an invented `form#login`), the details panels, foreign galaxy rows, expedition
+and dark-matter mission outcomes ([GUESS] by default: one amount per type, DM 100–300, collectors always scrapped; the upstream
+rules are opt-in through `universe.expeditionModel` / `universe.dmMission` 'upstream'; no real GALAXYZ text was captured),
+and every Russian text except the saved pages. A test passing against these parts proves the bot against upstream, not against
+GALAXYZ; when a live page is captured, replace the guess and keep the old markup only as an extra variant.
+

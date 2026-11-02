@@ -18,13 +18,16 @@ window.OGX = window.OGX || {};
     ['shipyard-fleet', 'page=shipyard&mode=fleet'], ['shipyard-defense', 'page=shipyard&mode=defense'], ['fleetTable', 'page=fleetTable'],
     ['galaxy', 'page=galaxy'], ['transport', 'page=transport'],
   ];
-  const GLOBAL = ['imperium', 'techtree', 'premium', 'ressprem', 'officier', 'trader', 'fleetDealer', 'statistics', 'alliance', 'buddyList',
-    'search', 'records', 'battleHall', 'banList', 'rules', 'questions', 'notes', 'settings', 'tournament', 'satinal', 'battleSimulator',
-    'ticket', 'GiveBonus'];
+  // settings stays (game settings such as the probe count): its e-mail / password values are emptied by scrub().
+  const GLOBAL = ['imperium', 'techtree', 'premium', 'ressprem', 'officier', 'trader', 'fleetDealer', 'statistics', 'alliance',
+    'search', 'records', 'battleHall', 'banList', 'rules', 'questions', 'settings', 'tournament', 'battleSimulator'];
+  // Never opened, neither from the list nor through discovered links: private (notes, support tickets, buddy list) or a GET
+  // with an unknown side effect (GiveBonus voucher, satinal purchase).
+  const PRIVATE = ['notes', 'ticket', 'buddyList', 'GiveBonus', 'satinal'];
   const MSG_CATS = [[0, 'spy'], [1, 'player'], [2, 'alliance'], [3, 'combat'], [4, 'system'], [5, 'transport'], [15, 'expedition'],
     [50, 'game'], [99, 'construction'], [100, 'all'], [999, 'outbox']];
   const DETAILS = [['buildings', 'TechnologyDetailsAjax'], ['research', 'ResearchDetailsAjax'], ['shipyard-fleet', 'ShipDetailsAjax'], ['shipyard-defense', 'ShipDetailsAjax']];
-  const DENY_PAGES = /^(logout|vote|donatebis|relocate|fleetStep\d*|fleetAjax|messages|.*Ajax|sendFleet|admin|changelog|disclamer)$/i;
+  const DENY_PAGES = /^(logout|vote|donatebis|relocate|fleetStep\d*|fleetAjax|messages|.*Ajax|sendFleet|admin|changelog|disclamer|notes|ticket|buddyList|GiveBonus|satinal|chat)$/i;
   const SAFE_KEYS = new Set(['page', 'cp', 'mode', 'galaxy', 'system', 'range', 'type', 'who', 'site', 'tab']);
   const SAFE_MODES = /^(fleet|defense|view|info|stats|overview|memberList|list)?$/i;
   const MAX_DISCOVER = 60;
@@ -42,6 +45,17 @@ window.OGX = window.OGX || {};
   const safeName = (s) => String(s).replace(/[^\p{L}\p{N}._-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'x';
   S._pauseMs = () => 300 + Math.random() * 300;
   const universe = () => { try { return location.pathname.split('/').filter(Boolean)[0] || 'uni'; } catch (e) { return 'uni'; } };
+
+  /** Privacy scrub of every saved page (exported for tests): values of e-mail / password inputs and all textarea contents
+   * emptied, any e-mail address replaced by <email>. */
+  const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
+  const MAILPASS = /(?:name|id)=["']?[^"'>\s]*(?:mail|pass)[^"'>\s]*/i;
+  S.scrub = function (text) {
+    let t = String(text);
+    t = t.replace(/<input\b[^>]*>/gi, (tag) => (MAILPASS.test(tag) ? tag.replace(/\bvalue=(["'])[^"']*\1/i, 'value=$1$1').replace(/\bvalue=(?!["'])[^\s>]+/i, 'value=""') : tag));
+    t = t.replace(/(<textarea\b[^>]*>)[\s\S]*?(<\/textarea>)/gi, '$1$2');
+    return t.replace(EMAIL_RE, '<email>');
+  };
 
   S.planetsFrom = function (doc) {
     const out = [];
@@ -89,7 +103,7 @@ window.OGX = window.OGX || {};
     const text = r.text !== undefined ? r.text : r.json !== undefined ? JSON.stringify(r.json) : '';
     const reqUrl = r.reqUrl || r.url;
     const head = ajax ? '' : `<!-- ogx-pagescan url=${reqUrl} final=${r.url} status=${r.status} time=${iso()} -->\n`;
-    if (text || r.ok) st.files.push({ name: file, data: head + text });
+    if (text || r.ok) st.files.push({ name: file, data: head + S.scrub(text) });
     st.log.push(`${iso()} ${r.status}${r.error ? ' ' + r.error : ''} ${query}${cp ? '&cp=' + cp : ''} -> ${file} (${text.length} chars)`);
     say(`${st.done}/${st.total}: ${file}`);
     await sleep(S._pauseMs());
@@ -216,7 +230,8 @@ window.OGX = window.OGX || {};
   };
   S.zip = function () {
     const index = { tool: 'ogx-pagescan', suite: OGX.version || null, universe: universe(), startedAt: st.startedAt, finishedAt: st.finishedAt,
-      stopped: st.stop, startCp: st.startCp, files: st.files.map((f) => ({ name: f.name, chars: f.data.length })) };
+      stopped: st.stop, startCp: st.startCp, files: st.files.map((f) => ({ name: f.name, chars: f.data.length })),
+      privacy: { excludedPages: PRIVATE.slice(), scrubbed: ['email addresses', 'values of mail/password inputs', 'textarea contents'] } };
     return S.makeZip([...st.files, { name: 'index.json', data: JSON.stringify(index, null, 1) }, { name: 'log.txt', data: st.log.join('\n') + '\n' }]);
   };
   S.download = async function () {
@@ -257,7 +272,7 @@ window.OGX = window.OGX || {};
     c.textContent = '';
     c.appendChild(root = h('div', { class: 'ogx-pagescan ogx-root' },
       h('div', { style: 'font-weight:bold;margin-bottom:4px' }, 'Скан страниц игры'),
-      h('div', { style: 'opacity:.8;margin-bottom:6px' }, 'Обходит страницы всех планет и лун и сохраняет их одним ZIP для разбора. Только чтение, пауза 0.3–0.6 с, около 150 запросов. Бот на время скана ставится на паузу и потом продолжает.'),
+      h('div', { style: 'opacity:.8;margin-bottom:6px' }, 'Обходит страницы всех планет и лун и сохраняет их одним ZIP для разбора. Только чтение, пауза 0.3–0.6 с, около 150 запросов. Бот на время скана ставится на паузу и потом продолжает. Не открываются заметки, тикеты, список друзей и ваучеры; из страниц вырезаются e-mail, значения полей почты и пароля и все textarea.'),
       box('planets', 'Все планеты и луны'), box('details', 'Детали построек, исследований и кораблей (JSON)'),
       box('discover', 'Искать новые страницы по ссылкам'), box('messages', 'Почта по категориям', '(пометит письма прочитанными)'),
       h('div', { style: 'display:flex;gap:6px;margin-top:8px' }, go, stop, dl),

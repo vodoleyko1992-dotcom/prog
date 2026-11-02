@@ -29,12 +29,16 @@ const kindMatch = (kind, k) => (kind === undefined || kind === null ? true : kin
  * server, so the core's timezone guess (server wall clock - local clock, CORE_API §7) is right before the first fleet countdown
  * calibrates it; a fixed startUnix far from the real clock leaves the core uncalibrated (ServerMs off by tzOffsetSec) until then.
  * opts.clock 'spec' keeps the scenario's startUnix. A ready World object is used as given. */
+/* Whole-run variants (no test change): OGX_WORLD_LANG=ru renders John's Russian texts (event box, fleet refusals, names) and
+ * OGX_QUEUE_MARKUP=live the GALAXYZ live queue box in every world of the run, unless a spec sets lang / queueMarkup itself:
+ *   OGX_WORLD_LANG=ru OGX_QUEUE_MARKUP=live bash tests/run-all.sh gz-bot-save */
 function worldFor(opts) {
   const w = opts.world || 'basic';
   if (w && typeof w === 'object' && w.clock && typeof w.process === 'function') return w;
-  if ((opts.clock || 'now') === 'spec') return w;
   const spec = JSON.parse(JSON.stringify(typeof w === 'string' ? W.loadScenario(w) : w));
-  spec.startUnix = Math.floor(Date.now() / 1000);
+  if (process.env.OGX_WORLD_LANG && spec.lang === undefined) spec.lang = process.env.OGX_WORLD_LANG;
+  if (process.env.OGX_QUEUE_MARKUP && spec.queueMarkup === undefined) spec.queueMarkup = process.env.OGX_QUEUE_MARKUP;
+  if ((opts.clock || 'now') !== 'spec') spec.startUnix = Math.floor(Date.now() / 1000);
   return spec;
 }
 
@@ -57,10 +61,21 @@ async function launchBot(opts = {}) {
   /** Current page of the env (the one env.game / env.open used last), or null. */
   const current = async () => { try { return await env.page(false); } catch (e) { return null; } };
 
+  /* Journal read failures (tests-mock-16): a read that throws (CDP session gone, page closed, store query error) is kept in
+   * env.journalErr { n consecutive failures, since: first failure (ms), message } instead of silently reading as «no events»;
+   * waitJournal fails fast when the reads keep failing and names the error in its timeout text. A single failure during a
+   * navigation ("Execution context was destroyed") is normal and clears with the next good read. */
+  env.journalErr = { n: 0, since: 0, message: '' };
+  const journalFail = (msg) => {
+    if (!env.journalErr.n) env.journalErr.since = Date.now();
+    env.journalErr.n++;
+    env.journalErr.message = String(msg || 'unknown error');
+  };
+
   /** Journal events: OGX.diag.recent() of the open page + the stored events (deduplicated), filtered by kind (e.k) and since (id or t). */
   env.journal = async ({ kind, since } = {}) => {
     const page = await current();
-    if (!page) return [];
+    if (!page) { journalFail('no page open'); return []; }
     let list = [];
     try {
       list = await env.evalOgx(page, async () => {
@@ -68,14 +83,20 @@ async function launchBot(opts = {}) {
         const D = OGX.diag;
         if (!D) return out;
         try { if (D.flush) await D.flush(); } catch (e) { /* ignore */ }
+        let storeErr = null;
         try {
           const b = D.store ? await D.store() : null;
           if (b && b.query) { const r = await b.query({ last: 3000 }); for (const e of (r && r.events) || []) out.push(e); }
-        } catch (e) { /* ignore */ }
+        } catch (e) { storeErr = 'journal store: ' + ((e && e.message) || e); }
         for (const e of (D.recent ? D.recent() : [])) out.push(e);
-        return JSON.parse(JSON.stringify(out));
+        return { events: JSON.parse(JSON.stringify(out)), storeErr };
       });
-    } catch (e) { list = []; }
+    } catch (e) { list = null; journalFail((e && e.message) || e); }
+    if (list) {
+      if (list.storeErr) journalFail(list.storeErr);
+      else env.journalErr.n = 0;
+      list = list.events;
+    }
     const seen = new Set(); const out = [];
     for (const e of list || []) {
       const key = [e.t, e.k, e.s, e.w, e.tab].join('|');
@@ -88,18 +109,29 @@ async function launchBot(opts = {}) {
   };
 
   /** Polls the journal until an event of `kind` (and pred) shows up; throws with the last 30 events. */
-  env.waitJournal = async (kind, { pred, timeoutMs = 30000, stepMs = 300 } = {}) => {
+  /* Fails fast (tests-mock-16) when every journal read for failMs (default 15 s, at least 3 reads) threw: the run is broken
+   * (closed page, dead CDP session, store errors) and waiting out timeoutMs would only hide the cause. */
+  env.waitJournal = async (kind, { pred, timeoutMs = 30000, stepMs = 300, failMs = 15000 } = {}) => {
     const end = Date.now() + timeoutMs;
     let last = [];
+    const diag = () => {
+      const je = env.journalErr.n ? `\nlast journal read error (${env.journalErr.n} in a row): ${env.journalErr.message}` : '';
+      const oe = (env.ogxErrors ? env.ogxErrors() : []).slice(-5).map((l) => l.text || l.stack || '').filter(Boolean);
+      return je + (oe.length ? '\nOGX errors:\n  ' + oe.map((x) => String(x).slice(0, 300)).join('\n  ') : '');
+    };
     for (;;) {
-      last = await env.journal();
-      const hit = last.find((e) => kindMatch(kind, e.k) && (!pred || pred(e)));
+      const got = await env.journal();
+      if (!env.journalErr.n) last = got;
+      const hit = got.find((e) => kindMatch(kind, e.k) && (!pred || pred(e)));
       if (hit) return hit;
+      if (env.journalErr.n >= 3 && Date.now() - env.journalErr.since >= failMs) {
+        throw new Error(`waitJournal(${kind}): the journal cannot be read for ${Math.round((Date.now() - env.journalErr.since) / 1000)} s${diag()}`);
+      }
       if (Date.now() > end) break;
       await sleep(stepMs);
     }
     const tail = last.slice(-30).map((e) => `${e.s || '?'} ${e.k} ${e.w || ''}${e.d ? ' ' + JSON.stringify(e.d).slice(0, 160) : ''}`).join('\n  ');
-    throw new Error(`waitJournal(${kind}) timed out after ${timeoutMs} ms; last events:\n  ${tail}`);
+    throw new Error(`waitJournal(${kind}) timed out after ${timeoutMs} ms; last events:\n  ${tail || '(none)'}${diag()}`);
   };
 
   /** OGX.bot.status() of the open page, or null when OGX.bot is absent. */

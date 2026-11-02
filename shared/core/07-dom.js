@@ -626,7 +626,9 @@
   function fieldFor(path, sp, onChange) {
     const val = OGX.settings.get(path);
     const id = 'ogx-set-' + path.replace(/[^a-z0-9]+/gi, '-');
-    const save = async (v) => { await OGX.settings.set(path, v); if (onChange) OGX.safe(onChange, 'settingsForm:onChange')(path, OGX.settings.get(path)); };
+    // a 'secret' value never reaches the caller's onChange (prefs/menu journal the new value): a mask says whether it is set
+    const shown = () => (sp.type === 'secret' ? (OGX.settings.get(path) ? OGX.settings.SECRET_MASK || '<secret>' : '') : OGX.settings.get(path));
+    const save = async (v) => { await OGX.settings.set(path, v); if (onChange) OGX.safe(onChange, 'settingsForm:onChange')(path, shown()); };
     let input;
     switch (sp.type) {
       case 'bool':
@@ -659,6 +661,17 @@
         input = h('textarea', { id, rows: '4', onChange: (e) => { try { save(JSON.parse(e.target.value)); e.target.classList.remove('ogx-invalid'); } catch (err) { e.target.classList.add('ogx-invalid'); } } },
           JSON.stringify(val, null, 1));
         break;
+      case 'secret': {
+        // a password: <input type=password> (the value is a DOM property only, never an attribute: snapshots and outerHTML
+        // stay clean), autocomplete off so the browser neither fills the game password in nor offers to save this one
+        input = h('input', { type: 'password', id, autocomplete: 'new-password', spellcheck: 'false', class: 'ogx-secret',
+          value: val == null ? '' : String(val), onChange: (e) => save(e.target.value) });
+        const toggle = h('button', { type: 'button', class: 'ogx-btn ogx-secret-toggle', title: 'Показать или скрыть значение' }, 'показать');
+        toggle.addEventListener('click', () => { const show = input.type === 'password'; input.type = show ? 'text' : 'password'; toggle.textContent = show ? 'скрыть' : 'показать'; });
+        return h('div', { class: 'ogx-field ogx-field-secret', dataset: { key: path } },
+          h('label', { for: id, title: sp.hint }, sp.label || path), h('span', { class: 'ogx-secret-wrap' }, input, ' ', toggle),
+          sp.hint ? h('div', { class: 'ogx-hint' }, sp.hint) : null);
+      }
       default:
         input = h('input', { type: 'text', id, value: val == null ? '' : String(val), onChange: (e) => save(e.target.value) });
     }

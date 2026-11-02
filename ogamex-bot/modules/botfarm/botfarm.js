@@ -6,10 +6,12 @@
  *      botfarm.scanGalaxy and the deuterium budget botcore.galaxyViewsPerHour allow (F12); filter inactive i / I, never v / b /
  *      admin, rank >= minRank, not excluded (F8: inactive players have no noob protection in 2Moons);
  *   2. a persisted state machine per target (botfarm.targets, key 'g:s:p:type'):
- *        new -> probing -> reported -> (attack: flying -> new) | needMoreProbes | waitShips | notSuitable / vacation / gone / probesLost (cooldown);
+ *        new -> probing -> reported -> (attack: flying -> new) | needMoreProbes | waitShips | notSuitable / vacation / gone / noReport / probesLost / active (cooldown);
  *   3. espionage with the probe count of 2Moons MissionCaseSpy (OGX.botSim.spyNeeded, F7), from the nearest origin with probes
  *      (moon wins ties) by fleet.send mission 6, or fleet.ajax mission 6 when useFleetAjax and the planet id is known (F11);
- *      the report is read with read.messages cat 0 (marks read; needs botcore.readMessages) matched by coordinates and list date,
+ *      GALAXYZ creates the report only in a page load after the arrival (2Moons AJAX gate, kickServer: one plain GET page=overview
+ *      before the first read), then read.messages cat 0 (pages 2-3 when the batch overflows page 1) at arrival + 5/30/90/300/900 s,
+ *      matched by coordinates and list date; still missing -> 1 h 'noReport' (a late report in any later list ends the pause);
  *      parsed by OGX.messages.parse.espionageFull and stored with OGX.bot.intel.put; missing fleet/defense sections -> more probes
  *      by raising the estimate of the target's espionage level (<= maxProbeRetries);
  *   4. the attack decision: expected resources at arrival (calc.production from section-0 levels at x22000, capped by storage),
@@ -26,7 +28,8 @@
  *   6. buildShips (off by default): optimizeRaid.missing -> build.units on the origin when affordable after reservations, the
  *      shipyard has no 15/21 upgrade queued and the calibrated unit time + flight fit buildMaxWaitMin; then waitShips -> attack;
  *   7. spy escort (requirement 2): timer 'botfarm:escort' at arrival - escortLeadSec; a second worker 'botfarm:escort'
- *      (prio deadline) sends probes to arrive 20-30 s before the attack, reads the report, re-simulates with the flying fleet;
+ *      (prio deadline) sends probes to arrive escortLeadSec..+30 s before the attack, loads a page and reads the report at
+ *      +5/+30/+90 s (until the hit - 20 s; none -> fly on with intel < 30 min, else recall), re-simulates with the flying fleet;
  *      new ships/defense (win < winMin or losses > maxLossShare), resources dropped (net <= 0), vacation (step-3 text
  *      'Target planet' [UPSTREAM fl_target_exists] / fleetAjax 605), planet gone (mission 6 not offered), a moon in the galaxy
  *      cache -> fleet.recall before arrival - 3 s (recallOnChange) + OGX.bot.battles.remove -> bot:battle-cancelled;
@@ -47,7 +50,12 @@ window.OGX = window.OGX || {};
   const COMBAT_IDS = [204, 205, 206, 207, 211, 213, 215];
   const NO_FIGHT = new Set([502, 503]);
   const H = 3600000;
-  const COOLDOWN = { shortage: 20 * 60000, notSuitable: 3 * H, vacation: 24 * H, gone: 24 * H, probesLost: 24 * H, attackLimit: 24 * H, needFleet: 6 * H, noReport: 30 * 60000, error: 30 * 60000 };
+  const COOLDOWN = { shortage: 20 * 60000, notSuitable: 3 * H, vacation: 24 * H, gone: 24 * H, probesLost: 2 * H, attackLimit: 24 * H, needFleet: 6 * H, noReport: H, active: 24 * H, error: 30 * 60000 };
+  const REPORT_READS = [5, 30, 90, 300, 900];  // report reads: seconds after the fleet's arrival; a read counts only after a page load (kickServer)
+  const REPORT_GIVEUP_MS = 20 * 60000;        // no counted read possible for this long (page loads refused): the report is given up anyway
+  const ESCORT_READS = [5, 30, 90];           // escort report reads: seconds after the escort probes' arrival, bounded by the hit - ESCORT_DECIDE_MS
+  const ESCORT_DECIDE_MS = 20000;             // no escort report this close to the hit: fly on with intel < 30 min, else recall
+  const MSG_PAGE = 10;                        // MESSAGES_PER_PAGE of 2Moons (includes/constants.php:91)
   const REGROW_MIN = 30 * 60000;               // a poor target is re-spied when its stock should pass minLoot again ...
   const REGROW_MAX = 7 * 24 * H;               // ... but not sooner than 30 min and not later than a week
   const DB_REPORTS = 10;                       // reports kept per target in the target database
@@ -55,6 +63,8 @@ window.OGX = window.OGX || {};
   // server answer «Превышен лимит количества атак в сутки на данный пункт назначения.» (attacks per day on one target)
   const ATTACK_LIMIT_RE = /лимит\s+количества\s+атак|attacks?\s+per\s+day|attack\s+limit/i;
 
+  const MARK_OPTIONS = [{ value: '', label: 'не использовать' }, { value: 'red', label: 'красный' }, { value: 'orange', label: 'оранжевый' }, { value: 'yellow', label: 'жёлтый' },
+    { value: 'green', label: 'зелёный' }, { value: 'blue', label: 'голубой' }, { value: 'purple', label: 'фиолетовый' }];
   const SETTINGS = {
     on: { type: 'bool', default: true, label: 'Фарм неактивных включён', section: SEC },
     origins: { type: 'json', default: [], label: 'Планеты/луны отправки (id или координаты; пусто = все)', section: SEC },
@@ -71,7 +81,7 @@ window.OGX = window.OGX || {};
     maxFuelShare: { type: 'float', default: 0.1, min: 0, max: 1, step: 0.01, label: 'Топливо не больше доли добычи', section: SEC },
     maxReportAgeMin: { type: 'int', default: 30, min: 1, max: 1440, label: 'Доклад старше (мин) — шпионить заново', section: SEC },
     escort: { type: 'bool', default: true, label: 'Шпионское сопровождение атаки', section: SEC },
-    escortLeadSec: { type: 'int', default: 60, min: 10, max: 3600, label: 'Сопровождение: за сколько секунд до удара', section: SEC },
+    escortLeadSec: { type: 'int', default: 90, min: 10, max: 3600, label: 'Сопровождение: зонды прилетают за столько секунд до удара (и до 30 с раньше)', section: SEC },
     recallOnChange: { type: 'bool', default: true, label: 'Отзывать атаку, если обстановка изменилась', section: SEC },
     winMin: { type: 'float', default: 0.99, min: 0.5, max: 1, step: 0.01, label: 'Вероятность не проиграть (победа или ничья), не меньше', section: SEC },
     minWin: { type: 'float', default: 0.8, min: 0.3, max: 1, step: 0.01, label: 'Вероятность победы, не меньше (ничья: флот цел, но без добычи)', section: SEC },
@@ -81,17 +91,23 @@ window.OGX = window.OGX || {};
     surplusPct: { type: 'int', default: 10, min: 0, max: 200, label: 'Запас трюма (%)', section: SEC },
     partialLoot: { type: 'bool', default: true, label: 'Не хватает Ул. трансп.: отправлять сколько есть (неполная добыча)', section: SEC },
     minLootShare: { type: 'float', default: 0.5, min: 0, max: 1, step: 0.05, label: 'Неполная добыча: вывезти не меньше доли ожидаемой', section: SEC },
-    maxSlots: { type: 'int', default: 3, min: 0, max: 50, label: 'Атак фарма в полёте одновременно, не больше', section: SEC },
+    maxSlots: { type: 'int', default: 0, min: 0, max: 50, label: 'Атак фарма в полёте одновременно, не больше (0 = авто: свободные слоты минус резерв и 4 для других модулей, не меньше 3)', section: SEC },
     buildShips: { type: 'bool', default: true, label: 'Достраивать недостающие корабли', section: SEC },
     buildMaxWaitMin: { type: 'int', default: 30, min: 1, max: 1440, label: 'Достройка + полёт не дольше (мин)', section: SEC },
     regrowRespy: { type: 'bool', default: true, label: 'Бедная цель: шпионить снова, когда ресурсы отрастут (по её добыче)', section: SEC },
     needFleetPauseH: { type: 'int', default: 6, min: 1, max: 168, label: 'Цели нужен флот больше, чем есть: пауза (ч)', section: SEC },
     dbKeepDays: { type: 'int', default: 14, min: 1, max: 365, label: 'База целей: хранить пропавшие цели (дней)', section: SEC },
     maxProbeRetries: { type: 'int', default: 2, min: 0, max: 10, label: 'Повторов шпионажа с бо́льшим числом зондов', section: SEC },
+    probeReserve: { type: 'int', default: 0, min: 0, label: 'Зонды: оставлять на теле для сопровождения сверх резерва экспедиций «Не брать в экспедиции последние N зондов»', section: SEC },
+    probeBuild: { type: 'bool', default: true, label: 'Зонды: достраивать на главной планете, когда запаса не хватит на следующий проход', section: SEC },
+    probeBuildPerHour: { type: 'int', default: 50000, min: 0, label: 'Зонды: заказывать не больше (шт. в час)', section: SEC },
     useFleetAjax: { type: 'bool', default: true, label: 'Шпионить быстрой отправкой (fleetAjax), если известен id планеты', section: SEC },
     deleteReports: { type: 'bool', default: true, label: 'Удалять обработанные шпионские доклады', section: SEC },
+    attacksPerDay: { type: 'int', default: 6, min: 0, max: 100, label: 'Атак на одну цель за сутки, не больше (лимит сервера 2Moons — 6; 0 = только узнанный по отказу)', section: SEC },
     targetsPerCycle: { type: 'int', default: 10, min: 1, max: 200, label: 'Целей за один проход, не больше', section: SEC },
     exclude: { type: 'json', default: [], label: 'Исключить (координаты, имена или id игроков)', section: SEC },
+    markAvoid: { type: 'enum', default: 'red', label: 'Метка «Цели» (Infinity): никогда не атаковать и не шпионить', section: SEC, options: MARK_OPTIONS },
+    markPrefer: { type: 'enum', default: 'green', label: 'Метка «Цели» (Infinity): оценивать первыми (и отмеченные «цель»)', section: SEC, options: MARK_OPTIONS },
   };
 
   // ------------------------------------------------------------------ small helpers (pure)
@@ -100,6 +116,7 @@ window.OGX = window.OGX || {};
   const num = (v, d = 0) => (v === undefined || v === null || v === '' || !Number.isFinite(+v) ? d : +v);
   const cleanUnits = (o) => { const out = {}; for (const [k, v] of Object.entries(o || {})) if (Math.floor(+v) > 0 && !NO_FIGHT.has(+k)) out[+k] = Math.floor(+v); return out; };
   const sumUnits = (o) => Object.values(o || {}).reduce((s, n) => s + (+n || 0), 0);
+  const typeOf = (T) => +((T && T.target) || {}).type || +String((T && T.key) || '').split(':')[3] || 1;
   const coordsStr = (t) => [t.galaxy, t.system, t.position].join(':');
   const keyOf = (t) => [+t.galaxy, +t.system, +t.position, +(t.type || 1)].join(':');
   const tgtOf = (key) => { const a = String(key).split(':').map(Number); return { galaxy: a[0], system: a[1], position: a[2], type: a[3] || 1 }; };
@@ -168,7 +185,9 @@ window.OGX = window.OGX || {};
     try { v = OGX.api && typeof OGX.api.spyProbes === 'function' ? +OGX.api.spyProbes() : parseInt(OGX.settings.get('spy.probes'), 10); } catch (e) { v = NaN; }
     return Number.isFinite(v) && v > 0 ? Math.floor(v) : 1100;
   }
-  /** Intel object (C2.7) from an espionageFull result. */
+  /** Intel object (C2.7) from an espionageFull result. defense = fighting defence only (cleanUnits drops 502 / 503); abm / ipm =
+   * the target's interceptors (502) and interplanetary missiles (503) from section 400 (null when the defence is not known) —
+   * botmissiles plans its waves with them. */
   function intelFrom(rep, coordsKey, { ts, probesSent } = {}) {
     const known = rep.known || {};
     const units = (o, isKnown) => (isKnown ? cleanUnits(o) : null);
@@ -177,6 +196,7 @@ window.OGX = window.OGX || {};
       coordsKey, reportId: rep.id || null, ts: +ts || +rep.ts || null,
       res: { metal: num(r.metal), crystal: num(r.crystal), deuterium: num(r.deuterium) },
       ships: units(rep.ships, known.ships), defense: units(rep.defense, known.defense),
+      abm: known.defense ? Math.max(0, Math.floor(num((rep.defense || {})[502]))) : null, ipm: known.defense ? Math.max(0, Math.floor(num((rep.defense || {})[503]))) : null,
       buildings: known.buildings ? Object.fromEntries(Object.entries(rep.buildings || {}).map(([k, v]) => [+k, +v || 0])) : null,
       research: known.research ? Object.fromEntries(Object.entries(rep.research || {}).map(([k, v]) => [+k, +v || 0])) : null,
       known: { ships: !!known.ships, defense: !!known.defense, buildings: !!known.buildings, research: !!known.research },
@@ -307,7 +327,19 @@ window.OGX = window.OGX || {};
     return hi;
   }
 
+  const PAYBACK_DAYS = 7;          // buildShips: the ships built for a target must pay back within a week of its loot ...
+  const BUILD_MAX_SECS = 2 * 3600; // ... and take at most 2 h in the shipyard (botfarm-10)
+  /** Loot the target can give in PAYBACK_DAYS (MSU): the half now plus half of its production for the week, at most
+   *  attacksPerDay full raids a day. The cap of a build for it (botfarm-10). */
+  function lootWeek(intel, lootNow, { server, perDay = 6 } = {}) {
+    const ph = msu(halvesOf(perHourOf(intel, { server })));
+    const grow = Math.max(0, num(lootNow)) + ph * 24 * PAYBACK_DAYS;
+    return Math.min(grow, Math.max(0, num(lootNow)) * Math.max(1, perDay) * PAYBACK_DAYS);
+  }
+
   // ------------------------------------------------------------------ module state (shared by the two workers of this tab)
+  // Target record T (M.targets[key]) fields beyond the discovery row include state / stateAt / cooldownUntil / spy / plan / db,
+  // lastAttackAt (raid impact) and staleBefore (missile impact set by botmissiles via api.respy: older reports are stale).
   const M = { targets: {}, attacks: {}, cal: {}, scanAt: {}, loaded: false, busy: 0, ctx: null, handle: null, escortHandle: null, lastRun: null };
   async function load(force) {
     if (M.loaded && !force) return;
@@ -318,11 +350,21 @@ window.OGX = window.OGX || {};
     M.attacks = a && typeof a === 'object' ? a : {};
     M.cal = c && typeof c === 'object' ? c : {};
     M.scanAt = s && typeof s === 'object' ? s : {};
+    M._saved = {};
+    for (const k of ['targets', 'attacks', 'cal', 'scanAt']) M._saved[k] = JSON.stringify(M[k]);
     M.loaded = true;
   }
+  /** Writes only the keys whose content changed since the last load/save (botfarm-13): the target database is large and every
+   *  write fans out to all open game tabs (storage.onChanged); an unchanged key costs one JSON.stringify, no write. */
   async function save(...keys) {
     const st = M.ctx.store;
-    for (const k of keys.length ? keys : ['targets', 'attacks', 'cal', 'scanAt']) await st.set(k, clone(M[k]));
+    M._saved = M._saved || {};
+    for (const k of keys.length ? keys : ['targets', 'attacks', 'cal', 'scanAt']) {
+      const json = JSON.stringify(M[k] === undefined ? null : M[k]);
+      if (M._saved[k] === json) continue;
+      await st.set(k, JSON.parse(json));
+      M._saved[k] = json;
+    }
   }
   function setState(wctx, T, state, why, extra) {
     const from = T.state;
@@ -334,7 +376,7 @@ window.OGX = window.OGX || {};
   }
   function stateRu(s) {
     return { new: 'новая', probing: 'шпионаж', reported: 'есть доклад', needMoreProbes: 'нужно больше зондов', waitShips: 'ждёт корабли',
-      attackFlying: 'атака в полёте', notSuitable: 'не подходит', vacation: 'отпуск', gone: 'нет планеты', probesLost: 'нет доклада', attackLimit: 'лимит атак в сутки',
+      attackFlying: 'атака в полёте', notSuitable: 'не подходит', vacation: 'отпуск', gone: 'нет планеты', probesLost: 'зонды уничтожены', noReport: 'нет доклада', active: 'игрок активен', attackLimit: 'лимит атак в сутки',
       needFleet: 'нужен флот больше', poor: 'мало ресурсов' }[s] || s || '—';
   }
   function cooldown(wctx, T, state, why, ms) {
@@ -445,11 +487,26 @@ window.OGX = window.OGX || {};
     const b2 = env.bodies && env.bodies[bodyKey(body)];
     if (b2 && b2 !== body) sub(b2.ships);
   }
-  /** Ships came home to a body: the next freshShips() reads its fleetTable again. */
-  function markReturned(bodyId, t) {
+  /** Ships came home to a body: the next freshShips() reads its fleetTable again. mission: the fleet's mission when known —
+   *  a fleet that can carry raid ships (attack / transport / deploy / hold, not probes / expeditions / recyclers / DM collectors)
+   *  also relieves the 'shortage' targets planned from that body (shortageRelief). */
+  const SHIP_MISSIONS = new Set([1, 2, 3, 4, 5, 9]);
+  function markReturned(bodyId, t, mission) {
     if (!(+bodyId > 0)) return;
-    (M.returnedAt = M.returnedAt || {})[+bodyId] = Math.max(+((M.returnedAt || {})[+bodyId]) || 0, +t || Date.now());
+    const at = +t || Date.now();
+    (M.returnedAt = M.returnedAt || {})[+bodyId] = Math.max(+((M.returnedAt || {})[+bodyId]) || 0, at);
+    if (mission !== undefined && mission !== null && SHIP_MISSIONS.has(+mission)) (M.returnedShips = M.returnedShips || {})[+bodyId] = Math.max(+((M.returnedShips || {})[+bodyId]) || 0, at);
     if (M.shipsSeen) delete M.shipsSeen[+bodyId];
+  }
+  /** A 'shortage' target (own ships away / too few) is re-planned only when a fleet with ships came home to one of the origins
+   *  that lacked them (T.shortageOrigins; unknown -> any origin) after the pause began, and at most once per 10 min — not on
+   *  every probe / expedition return of any body (K2 loop: 253 flips in 40 min in the 0.3.1 journal). -> body id | null */
+  function shortageRelief(T, origins, now) {
+    if (!T.shortage || T.state !== 'notSuitable') return null;
+    if (T.shortageResetAt && now - T.shortageResetAt < 10 * 60000) return null;
+    const ids = Array.isArray(T.shortageOrigins) && T.shortageOrigins.length ? T.shortageOrigins : (origins || []).map((o) => o.id);
+    for (const id of ids) if (+((M.returnedShips || {})[+id]) > (+T.stateAt || 0)) return +id;
+    return null;
   }
   function forgetShips(env, bodyId) {
     if (M.shipsSeen) delete M.shipsSeen[bodyId];
@@ -471,6 +528,90 @@ window.OGX = window.OGX || {};
 
   // ------------------------------------------------------------------ discovery
   /** Cached galaxy row of g:s, reading the galaxy key once per pass (`gal` memo). Falls back to OGX.galaxy.cached. */
+  // ------------------------------------------------------------------ inactivity re-check (botfarm-6, missed [botfarm] 2)
+  const VERIFY_MS = H;   // a raid leaves only on a galaxy row at most this old
+  /** A newer galaxy row of target T -> null (still an inactive target of the same player) | { kind, why }:
+   *  'gone' (no player there), 'owner' (another player), 'vacation', 'active' (the i/I flag is gone). */
+  function rowVerdict(T, row, { includeShort = true } = {}) {
+    if (!row || !row.playerName) return { kind: 'gone', why: 'планеты больше нет в галактике' };
+    const idChanged = T.playerId !== null && T.playerId !== undefined && row.playerId !== null && row.playerId !== undefined && +row.playerId !== +T.playerId;
+    const nameChanged = (T.playerId === null || T.playerId === undefined || row.playerId === null || row.playerId === undefined) && T.playerName && row.playerName !== T.playerName;
+    if (idChanged || nameChanged) return { kind: 'owner', why: `позиция сменила владельца: ${T.playerName || '?'} → ${row.playerName}` };
+    const st = String(row.status || '');
+    if (/v/.test(st)) return { kind: 'vacation', why: 'игрок в режиме отпуска (галактика)' };
+    if (!inactiveClass(st, { includeShort })) return { kind: 'active', why: `игрок ${row.playerName} снова активен (статус «${st || 'активен'}» в галактике)` };
+    return null;
+  }
+  /** Applies a newer row (time sysT) to T: fields, then the verdict - 'active' 24 h pause (never attacked while the player
+   *  plays), vacation / gone pauses, a new owner resets the target (older intel no longer counts: T.ownerAt) and pauses it when the
+   *  new owner is not inactive. Returns the verdict (null: still a target). */
+  function applyRow(wctx, T, row, sysT, { includeShort = true } = {}) {
+    const v = rowVerdict(T, row, { includeShort });
+    const t = num(sysT, wctx.now());
+    if (!v || v.kind === 'active' || v.kind === 'vacation') {
+      Object.assign(T, { status: (row && row.status) || '', cls: row ? inactiveClass(row.status, { includeShort }) : null, galaxyT: Math.max(num(T.galaxyT), t), lastSeen: Math.max(num(T.lastSeen), t) });
+      if (row && row.planetId) T.planetId = row.planetId;
+    }
+    if (!v || T.state === 'attackFlying') return v;
+    if (v.kind === 'active') { cooldown(wctx, T, 'active', v.why, COOLDOWN.active); dbVerdict(T, 'active', v.why); }
+    else if (v.kind === 'vacation') { if (T.state !== 'vacation') cooldown(wctx, T, 'vacation', v.why); }
+    else if (v.kind === 'gone') { if (T.state !== 'gone') { cooldown(wctx, T, 'gone', v.why, COOLDOWN.gone); dbVerdict(T, 'gone', 'планеты нет в галактике'); } T.galaxyT = t; }
+    else if (v.kind === 'owner') {
+      const cls = inactiveClass(row.status, { includeShort });
+      Object.assign(T, { playerId: row.playerId ?? null, playerName: row.playerName, status: row.status || '', cls, rank: row.rank ?? null, planetId: row.planetId || null,
+        galaxyT: t, lastSeen: t, ownerAt: t, theirSpy: null, theirSpyKnown: false, tries: 0, spyPending: null, shortage: false });
+      dbVerdict(T, 'owner', v.why);
+      if (cls && !/v/.test(String(row.status || ''))) setState(wctx, T, 'new', v.why + ' (тоже неактивен): цель заново', { cooldownUntil: null });
+      else cooldown(wctx, T, 'active', v.why, COOLDOWN.active);
+    }
+    return v;
+  }
+  /** Galaxy views left this hour for the farm (OGX.bot.limits.remaining when the core has it). */
+  function galaxyViewsLeft(wctx) {
+    const per = num(wctx.core('galaxyViewsPerHour'), 0);
+    if (per <= 0) return 0;
+    try { if (OGX.bot.limits && typeof OGX.bot.limits.remaining === 'function') { const n = +OGX.bot.limits.remaining('galaxyViews'); if (Number.isFinite(n)) return n; } } catch (e) { /* fallback */ }
+    let used = 0;
+    try { const st = OGX.bot.status(); used = st && st.limits && st.limits.galaxyViews ? num(st.limits.galaxyViews.used) : 0; } catch (e) { used = 0; }
+    return per - used;
+  }
+  /** Before a raid: the target's galaxy row must be at most VERIFY_MS old - the cache when it has one, else one read.galaxy of
+   *  the system (rememberSystem feeds the cache). No row (budget / refusal) -> no raid now (20-min pause). { ok }. */
+  async function verifyInactive(wctx, T) {
+    const now = wctx.now();
+    const includeShort = wctx.cfg('includeShortInactive') !== false;
+    const g = +T.target.galaxy; const s = +T.target.system; const pos = +T.target.position;
+    const rowOf = (sys) => (sys && Array.isArray(sys.positions) ? sys.positions.find((x) => x && +x.position === pos) || null : null);
+    if (now - num(T.galaxyT) <= VERIFY_MS) {
+      if (inactiveClass(T.status, { includeShort })) return { ok: true };
+      const v = applyRow(wctx, T, { playerId: T.playerId, playerName: T.playerName, status: T.status, planetId: T.planetId }, T.galaxyT, { includeShort });
+      return { ok: !v, verdict: v };
+    }
+    let sys = null;
+    try { sys = await cachedSystem({}, g, s); } catch (e) { sys = null; }
+    if (!(sys && num(sys.t) > num(T.galaxyT) && now - num(sys.t) <= VERIFY_MS)) {
+      const left = galaxyViewsLeft(wctx);
+      let r = null;
+      if (left > 0) {
+        wctx.decide(`Проверка активности [${T.coords}] перед атакой`, { why: `строка галактики ${T.galaxyT ? Math.round((now - num(T.galaxyT)) / 60000) + ' мин назад' : 'неизвестна'} (> ${VERIFY_MS / 60000} мин): игрок мог вернуться`, inputs: { key: T.key, galaxyT: T.galaxyT || null, left }, chosen: 'read.galaxy', alternatives: ['атаковать по старой строке — нельзя'] });
+        r = await wctx.act({ type: 'read.galaxy', prio: 'read', params: { galaxy: g, system: s }, why: 'Фарм: активность цели [' + T.coords + '] перед атакой' });
+      }
+      if (r && r.dry) return { ok: true, dry: true };
+      sys = r && r.ok && r.data && r.data.system && Array.isArray(r.data.system.positions) ? r.data.system : null;
+      if (!sys) {
+        const why = left > 0 ? 'просмотр галактики не удался (' + ((r && (r.refused || r.message || r.error)) || '?') + ')' : 'лимит просмотров галактики исчерпан';
+        skip(wctx, `[${T.coords}] атака: активность игрока не проверена — ${why}`, 'galaxyStale', { key: T.key, galaxyT: T.galaxyT || null });
+        cooldown(wctx, T, 'notSuitable', 'активность не проверена: ' + why, COOLDOWN.shortage);
+        return { ok: false };
+      }
+      if (!num(sys.t)) sys = Object.assign({}, sys, { t: num(r.at, now) });
+      try { if (OGX.galaxy && typeof OGX.galaxy.rememberSystem === 'function') await OGX.galaxy.rememberSystem(sys); } catch (e) { /* the cache is a view */ }
+    }
+    const v = applyRow(wctx, T, rowOf(sys), num(sys.t, now), { includeShort });
+    if (v) wctx.rec('verify', `[${T.coords}] перед атакой: ${v.why} — не атакую`, { key: T.key, kind: v.kind, galaxyT: num(sys.t, now) });
+    return { ok: !v, verdict: v };
+  }
+
   async function cachedSystem(gal, g, s) {
     if (OGX.galaxy && typeof OGX.galaxy._expand === 'function' && OGX.storage && typeof OGX.storage.get === 'function') {
       if (!(g in gal)) { try { gal[g] = await OGX.storage.get('galaxy.g' + g, null, { scope: 'server' }); } catch (e) { gal[g] = null; } }
@@ -493,8 +634,8 @@ window.OGX = window.OGX || {};
       const lo = whole ? 1 - s : -radius; const hi = whole ? maxSys - s : radius;
       for (let d = lo; d <= hi; d++) { const ss = s + d; if (ss >= 1 && ss <= maxSys) { const k = g + ':' + ss; const dist = Math.abs(d); if (!systems.has(k) || systems.get(k) > dist) systems.set(k, dist); } }
     }
-    // optional galaxy scan (costs deuterium; budget botcore.galaxyViewsPerHour)
-    if (wctx.cfg('scanGalaxy') === true) await scanSystems(wctx, systems);
+    // optional galaxy scan (costs deuterium; budget botcore.galaxyViewsPerHour); the systems read this pass feed this very run
+    const scanned = wctx.cfg('scanGalaxy') === true ? await scanSystems(wctx, systems) : {};
     const now = wctx.now();
     let seen = 0; let fresh = 0;
     const found = [];
@@ -502,8 +643,8 @@ window.OGX = window.OGX || {};
     const seenPos = new Set();
     for (const k of systems.keys()) {
       const [g, s] = k.split(':').map(Number);
-      let sys = null;
-      try { sys = await cachedSystem(gal, g, s); } catch (e) { sys = null; }
+      let sys = scanned[k] || null;
+      if (!sys) { try { sys = await cachedSystem(gal, g, s); } catch (e) { sys = null; } }
       if (!sys || !Array.isArray(sys.positions)) continue;
       seen++;
       for (const p of sys.positions) if (p && p.position) seenPos.add([g, s, p.position].join(':') + ':1');
@@ -523,6 +664,11 @@ window.OGX = window.OGX || {};
         const key = coords + ':1';
         const cls = inactiveClass(p.status, { includeShort });
         const T = M.targets[key];
+        // a newer row of a known target: the player came back / another player owns the position (botfarm-6)
+        if (T && sys.t && +sys.t >= num(T.galaxyT) && T.state !== 'attackFlying') {
+          const v = rowVerdict(T, p, { includeShort });
+          if (v && (v.kind === 'active' || v.kind === 'owner') && !(T.state === 'active' && v.kind === 'active')) { applyRow(wctx, T, p, +sys.t, { includeShort }); if (!inactiveClass(T.status, { includeShort })) continue; }
+        }
         if (!cls) {
           if (T && /v/.test(String(p.status || '')) && T.state !== 'vacation' && T.state !== 'attackFlying') cooldown(wctx, T, 'vacation', 'игрок в режиме отпуска (галактика)');
           else if (/v/.test(String(p.status || '')) && /[iI]/.test(String(p.status || ''))) {
@@ -555,47 +701,108 @@ window.OGX = window.OGX || {};
     }
     return found;
   }
+  /** Systems read this pass -> { 'g:s': system } for discover() (the same run sees the rows); every ok read also enters the galaxy
+   *  cache through OGX.galaxy.rememberSystem (botcore only parses and emits galaxy:system; before 0.3.2-audit the bot's own views
+   *  never reached the cache and the whole-galaxy scan found nothing). M.scanAt[k] is set only for a read that succeeded; a mark
+   *  without a cached row (left by the build that discarded its reads) does not count, so such systems are read again. */
+  const SCAN_BATCH_MS = 5 * 60000;   // at most one scan batch per 5 min ...
+  const SCAN_KEEP_SHARE = 0.2;       // ... and 20 % of galaxyViewsPerHour stay with the other modules
   async function scanSystems(wctx, systems) {
+    const fresh = {};
     const per = num(wctx.core('galaxyViewsPerHour'), 0);
-    if (per <= 0) { if (!M._scanOff) { M._scanOff = 1; skip(wctx, 'Сканирование галактики выключено лимитом (0 просмотров в час)', 'galaxyBudget'); } return; }
-    const st = OGX.bot.status();
-    const used = st && st.limits && st.limits.galaxyViews ? st.limits.galaxyViews.used : 0;
-    let budget = Math.min(per - used, num(wctx.cfg('scanPerCycle'), 40));
+    if (per <= 0) { if (!M._scanOff) { M._scanOff = 1; skip(wctx, 'Сканирование галактики выключено лимитом (0 просмотров в час)', 'galaxyBudget'); } return fresh; }
+    // pacing (botfarm-11): one batch per SCAN_BATCH_MS of at most a twelfth of the farm's share of the hour, and >= 20 % of
+    // galaxyViewsPerHour always left to the other modules (botdebris' own-debris checks, the raid's inactivity re-check)
+    if (M.scanBatchAt && wctx.now() - M.scanBatchAt < SCAN_BATCH_MS) return fresh;
+    const keep = Math.ceil(per * SCAN_KEEP_SHARE);
+    const left = galaxyViewsLeft(wctx) - keep;
+    const share = per - keep;
+    let budget = Math.min(left, num(wctx.cfg('scanPerCycle'), 40), Math.max(1, Math.ceil(share * SCAN_BATCH_MS / H)));
+    if (budget <= 0) return fresh;
     const gal = {};
     const every = num(wctx.cfg('scanEveryH'), 24) * H;
     const order = [...systems.entries()].sort((a, b) => a[1] - b[1]).map(([k]) => k);
+    let changed = false;
     for (const k of order) {
       if (budget <= 0) break;
       const [g, s] = k.split(':').map(Number);
       let sys = null;
       try { sys = await cachedSystem(gal, g, s); } catch (e) { sys = null; }
-      const last = Math.max(+(M.scanAt[k] || 0), sys && sys.t ? +sys.t : 0);
+      const cachedT = sys && sys.t ? +sys.t : 0;
+      const mark = +(M.scanAt[k] || 0);
+      if (mark && !cachedT) { delete M.scanAt[k]; changed = true; }   // migration: a scan the old build never stored
+      const last = cachedT ? Math.max(mark, cachedT) : 0;
       if (last && wctx.now() - last < every) continue;
+      if (!M.scanBatchAt || wctx.now() - M.scanBatchAt >= SCAN_BATCH_MS) M.scanBatchAt = wctx.now();
       wctx.decide(`Просмотр галактики ${k}`, { why: 'поиск неактивных (стоит дейтерий)', inputs: { system: k, lastSeen: last || null, budgetLeft: budget }, chosen: 'read.galaxy', alternatives: ['кэш галактики'] });
       const r = await wctx.act({ type: 'read.galaxy', prio: 'read', params: { galaxy: g, system: s }, why: 'Фарм: поиск целей в ' + k });
-      M.scanAt[k] = wctx.now();
       budget--;
       if (r && r.dry) continue;
       if (!r || !r.ok) { skip(wctx, 'Просмотр галактики не удался: ' + ((r && (r.refused || r.message || r.error)) || '?'), 'galaxy', { system: k }); break; }
+      M.scanAt[k] = wctx.now();
+      changed = true;
+      const read = r.data && r.data.system;
+      if (read && Array.isArray(read.positions)) {
+        fresh[k] = read;
+        try { if (OGX.galaxy && typeof OGX.galaxy.rememberSystem === 'function') await OGX.galaxy.rememberSystem(read); } catch (e) { wctx.rec('error', 'Кэш галактики не записан (' + k + '): ' + errText(e)); }
+      }
     }
-    await save('scanAt');
+    if (changed) await save('scanAt');
+    return fresh;
+  }
+
+  // ------------------------------------------------------------------ fleet events need a page load (2Moons AJAX gate)
+  /** GALAXYZ (2Moons) runs its FleetHandler only in page requests WITHOUT ajax=1 (includes/common.php:67 AJAX_REQUEST, :126):
+   *  the bot's report reads (page=messages&ajax=1) and fleetAjax sends never make the server process an arrived fleet, so between
+   *  them a spy report (or a battle) never appears - log 0.3.2: 30 of 30 found reports followed a page load, all 6 «lost» ones had
+   *  none. One plain GET page=overview after the arrival, before the first message read, creates the report. The core's read cache
+   *  never answers it (fresh, no bodyId); a core with OGX.bot.lastPageAt() tells when a page was loaded anyway (another module's
+   *  read, the user), and read.page { after } lets such a core skip the request itself. Returns the ServerMs of the page load that
+   *  covers `afterMs` (0: none happened - refused, dry run). */
+  async function kickServer(wctx, afterMs, why) {
+    const after = Math.max(0, num(afterMs));
+    let known = 0;
+    try { if (typeof OGX.bot.lastPageAt === 'function') known = num(OGX.bot.lastPageAt()); } catch (e) { known = 0; }
+    if (known > after) return known;
+    wctx.decide('Загружаю страницу обзора: сервер обрабатывает прилёт флота только при загрузке страницы', { why, inputs: { after, lastPageAt: known || null }, chosen: 'read.page overview (без ajax)', alternatives: ['ждать чужую загрузку страницы'] });
+    const r = await wctx.act({ type: 'read.page', prio: 'read', fresh: true, params: { page: 'overview', fresh: true, after }, why: 'Фарм: обработка прилёта — ' + why });
+    if (!r || r.dry || !r.ok) { skip(wctx, 'Страница обзора не загружена (' + ((r && (r.refused || r.error)) || 'пробный режим') + '): доклада может ещё не быть', 'kick', { refused: (r && r.refused) || null, error: (r && r.error) || null }); return 0; }
+    return Math.max(after + 1, num(r.at, wctx.now()));
   }
 
   // ------------------------------------------------------------------ reports (spy cat 0, combat cat 3)
   /** One message category. fresh: never the core's cached list (a retry, the escort right before a recall decision);
-   *  notBefore (ServerMs): a cached list older than this (read before the report could exist) is read again. */
-  async function readCategory(wctx, cat, why, { fresh = false, notBefore = 0 } = {}) {
+   *  notBefore (ServerMs): a cached list older than this (read before the report could exist / before the page load that created
+   *  it) is read again. sinceMs + found: 2Moons lists MSG_PAGE messages per page; while the oldest row read is still newer than the
+   *  oldest expected report (sinceMs - 5 s) and found(items) is not yet true, pages 2 and 3 are read too (botfarm-8: a burst of
+   *  spies plus others' reports pushes the due report to page 2). */
+  async function readCategory(wctx, cat, why, { fresh = false, notBefore = 0, sinceMs = 0, found = null } = {}) {
     if (wctx.core('readMessages') === false) { if (!M._rmOff || wctx.now() - M._rmOff > 30 * 60000) { M._rmOff = wctx.now(); skip(wctx, 'Чтение сообщений выключено (botcore.readMessages): доклады не читаются', 'readMessagesOff'); } return null; }
-    wctx.decide(`Читаю сообщения (категория ${cat})`, { why, inputs: { cat, fresh: !!fresh }, chosen: 'read.messages', alternatives: [] });
+    wctx.decide(`Читаю сообщения (категория ${cat})`, { why, inputs: { cat, fresh: !!fresh, notBefore: notBefore || null }, chosen: 'read.messages', alternatives: [] });
     let r = await wctx.act({ type: 'read.messages', prio: 'read', fresh: !!fresh, params: { cat, site: 1 }, why: 'Фарм: ' + why });
     if (!fresh && notBefore && r && r.ok && !r.dry && +r.at > 0 && +r.at < notBefore) r = await wctx.act({ type: 'read.messages', prio: 'read', fresh: true, params: { cat, site: 1 }, why: 'Фарм: ' + why });
     if (!r || r.dry || !r.ok || !r.data || !r.data.doc) return { dry: !!(r && r.dry), items: [] };
     let items = [];
     try { items = OGX.messages.parse.list(r.data.doc) || []; } catch (e) { items = []; }
-    return { items, doc: r.data.doc };
+    let pages = 1;
+    for (let site = 2; site <= 3 && sinceMs && items.length >= MSG_PAGE * (site - 1); site++) {
+      if (typeof found === 'function' && found(items)) break;
+      const oldest = items.reduce((mn, it) => Math.min(mn, +it.ts || Infinity), Infinity);
+      if (!(oldest > sinceMs - 5000)) break;   // the pages read already reach past the expected reports: nothing older is missing
+      wctx.decide(`Читаю сообщения (категория ${cat}, страница ${site})`, { why: `на странице ${site - 1} только более новые сообщения: ожидаемый доклад может быть дальше`, inputs: { cat, site, oldest, sinceMs }, chosen: 'read.messages', alternatives: [] });
+      const r2 = await wctx.act({ type: 'read.messages', prio: 'read', fresh: true, params: { cat, site }, why: 'Фарм: ' + why + ' (стр. ' + site + ')' });
+      if (!r2 || r2.dry || !r2.ok || !r2.data || !r2.data.doc) break;
+      let more = [];
+      try { more = OGX.messages.parse.list(r2.data.doc) || []; } catch (e) { more = []; }
+      if (!more.length) break;
+      items = items.concat(more);
+      pages = site;
+    }
+    return { items, doc: r.data.doc, pages };
   }
-  /** Spy report rows of a list for the coordinates, not older than sinceMs (list date = probes' arrival). */
-  function spyReportsFor(list, coords, sinceMs) {
+  /** Spy report rows of a list for the coordinates AND the body type (1 planet, 3 moon: a report on the moon of a farm planet is
+   *  not the planet's intel - botfarm-16), not older than sinceMs (list date = probes' arrival). */
+  function spyReportsFor(list, coords, sinceMs, type = 1) {
     const out = [];
     for (const it of list.items || []) {
       if (it.kind && it.kind !== 'spy_report') continue;
@@ -605,6 +812,8 @@ window.OGX = window.OGX || {};
       const ap = rep.attackParams;
       const c = ap ? [ap.galaxy, ap.system, ap.position].join(':') : (rep.target && rep.target.coordsStr);
       if (c !== coords) continue;
+      const rt = ap ? (+ap.type || 1) : ((rep.target && +rep.target.type) || 1);
+      if (rt !== (+type || 1)) continue;
       const ts = +it.ts || +rep.ts || 0;
       if (sinceMs && ts && ts < sinceMs - 5000) continue;
       out.push({ rep, ts, id: it.id || rep.id });
@@ -612,54 +821,102 @@ window.OGX = window.OGX || {};
     out.sort((a, b) => b.ts - a.ts);
     return out;
   }
+  /** One spy report (list row h = { rep, ts, id }) of target T: intel, target database, next state; h.id joins `processed`
+   *  (deleted when deleteReports). A report saying the probes were destroyed is the only evidence of lost probes: a complete one
+   *  makes the target 'reported' all the same (the loss is a cost in the database), an incomplete one gets the 2 h 'probesLost'
+   *  pause instead of a retry with more probes (they would be destroyed again). */
+  function applyReport(wctx, env, T, h, processed, { probes = null } = {}) {
+    const intel = intelFrom(h.rep, T.key, { ts: h.ts, probesSent: probes });
+    OGX.bot.intel.put(T.key, intel);
+    try { dbReport(T, intel, env && env.server); } catch (x) { /* the database is a view: never blocks the farm */ }
+    if (h.id) processed.push(h.id);
+    T.lastReportAt = intel.ts; T.reportId = intel.reportId;
+    if (intel.probesLost && probes) noteProbeLoss(wctx.now(), probes);
+    if (intel.research && intel.research[106] !== undefined) { T.theirSpy = +intel.research[106]; T.theirSpyKnown = true; }
+    const units = { ships: intel.ships, defense: intel.defense };
+    wctx.rec('report', `Доклад [${T.coords}]: ${fmtN(msu(intel.res))} МСУ; флот ${intel.known.ships ? shipsRu(intel.ships) : '?'}; оборона ${intel.known.defense ? shipsRu(intel.defense) : '?'}${intel.probesLost ? '; зонды уничтожены' : ''}`,
+      { key: T.key, reportId: intel.reportId, ts: intel.ts, res: intel.res, known: intel.known, units, research: intel.research, probes, probesLost: intel.probesLost, exact: intel.exact, counterEspionage: intel.counterEspionage });
+    if (!intel.known.ships || !intel.known.defense) {
+      T.tries = (T.tries || 0) + 1;
+      if (intel.probesLost) cooldown(wctx, T, 'probesLost', 'зонды уничтожены, доклад неполный (повтор с бо́льшим числом зондов потерял бы их снова)');
+      else if (T.tries > num(wctx.cfg('maxProbeRetries'), 2)) cooldown(wctx, T, 'notSuitable', 'флот/оборона не видны даже после ' + (T.tries - 1) + ' повторов');
+      else setState(wctx, T, 'needMoreProbes', 'в докладе нет ' + (!intel.known.ships ? 'флота' : 'обороны') + ': больше зондов');
+    } else {
+      T.tries = 0;
+      setState(wctx, T, 'reported', 'доклад получен');
+    }
+    T.spy = null; T.spyPending = null;
+    return intel;
+  }
+  /** The due report is not in the list: the next read of the schedule - a read counts only when a page load followed the probes'
+   *  arrival (else the server has not processed them and the list says nothing) - and after the last one a 1 h 'noReport' pause
+   *  with spyPending kept for a late report; never the 24 h 'probesLost' ban of 0.3.1 (journal-2 / botfarm-2). */
+  function missingReport(wctx, T, now, kickedAt) {
+    const S = T.spy;
+    const arrival = num(S.arrival, now);
+    if (kickedAt > arrival) S.reads = (S.reads || 0) + 1;
+    const n = S.reads || 0;
+    if (n < REPORT_READS.length && now < arrival + REPORT_GIVEUP_MS) {
+      S.reportAt = Math.max(arrival + REPORT_READS[n] * 1000 + rnd(0, 3000), now + (kickedAt > arrival ? 2000 : rnd(15000, 30000)));
+      return;
+    }
+    giveUpSpy(wctx, T, `доклад не появился за ${Math.round((now - arrival) / 60000)} мин после прилёта зондов (${n} чтений после загрузки страницы)`);
+  }
+  function giveUpSpy(wctx, T, why) {
+    const S = T.spy || {};
+    T.spyPending = { sentAt: S.sentAt || null, arrival: S.arrival || null, probes: S.probes || null, origin: S.origin || null, fleetId: S.fleetId || null, t: wctx.now() };
+    cooldown(wctx, T, 'noReport', why);
+    T.spy = null;
+  }
+  /** Late reports: a list read for other targets (or the escort) may hold the report of a target paused as 'noReport' (or
+   *  'probesLost' by the old build): it is processed and the pause ends. */
+  function rescuePending(wctx, env, list, processed) {
+    for (const T of Object.values(M.targets)) {
+      if (!T.spyPending || T.state === 'probing' || T.state === 'attackFlying') continue;
+      const P = T.spyPending;
+      const hits = spyReportsFor(list, T.coords, P.sentAt, typeOf(T));
+      if (!hits.length) continue;
+      T.cooldownUntil = null;
+      wctx.rec('report-late', `[${T.coords}] доклад пришёл с опозданием ${Math.round((wctx.now() - num(P.arrival, wctx.now())) / 60000)} мин: пауза снята`, { key: T.key, reportId: hits[0].id || null, arrival: P.arrival });
+      applyReport(wctx, env, T, hits[0], processed, { probes: P.probes });
+    }
+  }
+  async function deleteProcessed(wctx, processed) {
+    if (!processed.length || wctx.cfg('deleteReports') !== true) return;
+    wctx.decide('Удаляю обработанные доклады', { why: 'настройка «удалять доклады»; только свои обработанные шпионские доклады (и доклады сопровождения)', inputs: { ids: processed }, chosen: 'messages.delete', alternatives: [] });
+    await wctx.act({ type: 'messages.delete', prio: 'read', params: { ids: processed, cat: 0 }, why: 'Фарм: удалить ' + processed.length + ' докладов' });
+  }
   async function processSpyReports(wctx, env) {
     const now = wctx.now();
     const due = Object.values(M.targets).filter((T) => T.state === 'probing' && T.spy && T.spy.reportAt && T.spy.reportAt <= now);
     if (!due.length) return;
-    const list = await readCategory(wctx, 0, 'шпионские доклады (' + due.map((T) => T.coords).join(', ') + ')',
-      { fresh: due.some((T) => (T.spy.reads || 0) > 0), notBefore: Math.max(...due.map((T) => num(T.spy.arrival))) + 1000 });
+    const names = due.map((T) => T.coords).join(', ');
+    // the server creates the report only in a page load after the probes' arrival: one before the first read
+    const lastArrival = Math.max(...due.map((T) => num(T.spy.arrival)));
+    const kickedAt = await kickServer(wctx, lastArrival, 'шпионские доклады (' + names + ')');
+    const list = await readCategory(wctx, 0, 'шпионские доклады (' + names + ')', {
+      fresh: due.some((T) => (T.spy.reads || 0) > 0), notBefore: Math.max(lastArrival + 1000, kickedAt),
+      sinceMs: Math.min(...due.map((T) => num(T.spy.sentAt, now))), found: (items) => due.every((T) => spyReportsFor({ items }, T.coords, T.spy.sentAt, typeOf(T)).length > 0) });
     if (!list) { for (const T of due) cooldown(wctx, T, 'notSuitable', 'чтение сообщений выключено', COOLDOWN.noReport); await save('targets'); return; }
     if (list.dry) return;
     const processed = [];
     for (const T of due) {
-      const hits = spyReportsFor(list, T.coords, T.spy.sentAt);
-      if (!hits.length) {
-        T.spy.reads = (T.spy.reads || 0) + 1;
-        if (T.spy.reads >= 3 || now > (T.spy.arrival || now) + 10 * 60000) cooldown(wctx, T, 'probesLost', 'доклад не найден (зонды не вернулись или сообщение не пришло)');
-        else T.spy.reportAt = now + rnd(20000, 50000);
-        continue;
-      }
-      const h = hits[0];
-      const intel = intelFrom(h.rep, T.key, { ts: h.ts, probesSent: T.spy.probes });
-      OGX.bot.intel.put(T.key, intel);
-      try { dbReport(T, intel, env && env.server); } catch (x) { /* the database is a view: never blocks the farm */ }
-      processed.push(h.id);
-      T.lastReportAt = intel.ts; T.reportId = intel.reportId;
-      if (intel.research && intel.research[106] !== undefined) { T.theirSpy = +intel.research[106]; T.theirSpyKnown = true; }
-      const units = { ships: intel.ships, defense: intel.defense };
-      wctx.rec('report', `Доклад [${T.coords}]: ${fmtN(msu(intel.res))} МСУ; флот ${intel.known.ships ? shipsRu(intel.ships) : '?'}; оборона ${intel.known.defense ? shipsRu(intel.defense) : '?'}`,
-        { key: T.key, reportId: intel.reportId, ts: intel.ts, res: intel.res, known: intel.known, units, research: intel.research, probes: T.spy.probes, probesLost: intel.probesLost, exact: intel.exact, counterEspionage: intel.counterEspionage });
-      if (!intel.known.ships || !intel.known.defense) {
-        T.tries = (T.tries || 0) + 1;
-        if (T.tries > num(wctx.cfg('maxProbeRetries'), 2)) cooldown(wctx, T, 'notSuitable', 'флот/оборона не видны даже после ' + (T.tries - 1) + ' повторов');
-        else setState(wctx, T, 'needMoreProbes', 'в докладе нет ' + (!intel.known.ships ? 'флота' : 'обороны') + ': больше зондов');
-      } else {
-        T.tries = 0;
-        setState(wctx, T, 'reported', 'доклад получен');
-      }
-      T.spy = null;
+      const hits = spyReportsFor(list, T.coords, T.spy.sentAt, typeOf(T));
+      if (!hits.length) { missingReport(wctx, T, now, kickedAt); continue; }
+      applyReport(wctx, env, T, hits[0], processed, { probes: T.spy.probes });
     }
+    rescuePending(wctx, env, list, processed);
     await save('targets');
-    if (processed.length && wctx.cfg('deleteReports') === true) {
-      wctx.decide('Удаляю обработанные доклады', { why: 'настройка «удалять доклады»; только свои обработанные шпионские доклады', inputs: { ids: processed }, chosen: 'messages.delete', alternatives: [] });
-      await wctx.act({ type: 'messages.delete', prio: 'read', params: { ids: processed, cat: 0 }, why: 'Фарм: удалить ' + processed.length + ' докладов' });
-    }
+    await deleteProcessed(wctx, processed);
   }
   async function processCombatReports(wctx) {
     const now = wctx.now();
-    const due = Object.values(M.attacks).filter((A) => (A.status === 'flying' || A.status === 'done') && !A.combatRead && A.arrival + 5000 <= now && now - A.arrival < 6 * H);
+    const due = Object.values(M.attacks).filter((A) => (A.status === 'flying' || A.status === 'done') && !A.combatRead && num(A.combatReadAt, A.arrival + REPORT_READS[0] * 1000) <= now && now - A.arrival < 6 * H);
     if (!due.length || wctx.core('readMessages') === false) { for (const A of due) A.combatRead = 'skipped'; return; }
-    const list = await readCategory(wctx, 3, 'боевые доклады для сверки добычи', { fresh: due.some((A) => (A.combatTries || 0) > 0), notBefore: Math.max(...due.map((A) => num(A.arrival))) + 1000 });
+    // the battle too happens only in a page load after the fleet's arrival (kickServer), then the same read schedule as the spies
+    const lastArrival = Math.max(...due.map((A) => num(A.arrival)));
+    const kickedAt = await kickServer(wctx, lastArrival, 'боевые доклады (' + due.map((A) => A.coords).join(', ') + ')');
+    const list = await readCategory(wctx, 3, 'боевые доклады для сверки добычи', { fresh: due.some((A) => (A.combatTries || 0) > 0), notBefore: Math.max(lastArrival + 1000, kickedAt) });
     if (!list || list.dry) return;
     for (const A of due) {
       let hit = null;
@@ -671,8 +928,14 @@ window.OGX = window.OGX || {};
         if (ts && Math.abs(ts - A.arrival) > 120000) continue;
         hit = b; break;
       }
-      A.combatRead = hit ? 'yes' : (A.combatTries = (A.combatTries || 0) + 1) >= 2 ? 'missing' : null;
-      if (!hit) continue;
+      if (!hit) {
+        if (kickedAt > A.arrival) A.combatTries = (A.combatTries || 0) + 1;
+        const n = A.combatTries || 0;
+        if (n < REPORT_READS.length && now < A.arrival + REPORT_GIVEUP_MS) A.combatReadAt = Math.max(A.arrival + REPORT_READS[n] * 1000 + rnd(0, 3000), now + (kickedAt > A.arrival ? 2000 : rnd(15000, 30000)));
+        else { A.combatRead = 'missing'; skip(wctx, `[${A.coords}] боевой доклад не найден (${n} чтений после загрузки страницы): добыча рейда не сверена`, 'noCombatReport', { key: A.key, battle: A.id, reads: n }); }
+        continue;
+      }
+      A.combatRead = 'yes';
       const actual = { metal: num(hit.loot && hit.loot.metal), crystal: num(hit.loot && hit.loot.crystal), deuterium: num(hit.loot && hit.loot.deuterium) };
       const pred = A.predictedLoot || res0();
       const ratio = msu(pred) > 0 ? msu(actual) / msu(pred) : null;
@@ -691,25 +954,170 @@ window.OGX = window.OGX || {};
   }
 
   // ------------------------------------------------------------------ espionage
+  // ------------------------------------------------------------------ probe stock (journal-1, botfarm-9)
+  /** botexpo's «keepProbes» (read through OGX.settings) while botexpo runs: expeditions never take them, the farm does not
+   *  take them either. */
+  function expoKeep() {
+    let on = false; let v = NaN;
+    try { on = typeof OGX.bot.isActive === 'function' && OGX.bot.isActive('botexpo'); } catch (e) { on = false; }
+    if (!on) return 0;
+    try { v = +OGX.settings.get('botexpo.keepProbes'); } catch (e) { v = NaN; }
+    return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+  }
+  /** Probes a body keeps after a farm spy (the escorts' stock): botexpo's keepProbes + the farm's own probeReserve (default 0). */
+  function probeReserve(wctx) {
+    return expoKeep() + Math.max(0, Math.floor(num(wctx.cfg('probeReserve'), 0)));
+  }
+  /** The main planet (the probe yard): the planet with the highest mines, like botbuild's main. */
+  function mainBody(env) {
+    let best = null; let bs = -1;
+    for (const b of Object.values(env.bodies || {})) {
+      if (!b || !b.id || b.type === 'moon') continue;
+      const lv = b.levels || {};
+      const sc = num(lv[1]) + num(lv[2]) + num(lv[3]) + num(lv[21]) / 1000;
+      if (sc > bs) { bs = sc; best = b; }
+    }
+    return best;
+  }
+  /** Probes lost per day (reports saying the probes were destroyed, last 24 h; a shorter history is scaled up). */
+  function probeLossPerDay(now) {
+    const log = (M.cal.probeLost || []).filter((x) => x[0] > now - 24 * H);
+    const lost = log.reduce((a, x) => a + num(x[1]), 0);
+    const span = Math.max(H, Math.min(24 * H, now - num(M.cal.probeT0, now)));
+    return Math.round(lost * 24 * H / span);
+  }
+  function noteProbeLoss(now, n) {
+    if (!M.cal.probeT0) M.cal.probeT0 = now;
+    M.cal.probeLost = (M.cal.probeLost || []).filter((x) => x[0] > now - 24 * H).concat([[now, Math.max(0, Math.round(num(n)))]]);
+  }
+  /** OGX.bot.probeDemand: module -> probes per day it is expected to lose; botexpo's probeBuild can add it to its stock. */
+  function publishProbeDemand(perDay) {
+    try {
+      if (!OGX.bot.probeDemand) {
+        const reg = {};
+        OGX.bot.probeDemand = {
+          set: (mod, n) => { reg[mod] = { perDay: Math.max(0, Math.round(num(n))), t: Date.now() }; },
+          get: (mod) => (reg[mod] ? reg[mod].perDay : 0),
+          total: () => Object.values(reg).reduce((a, x) => a + x.perDay, 0),
+          all: () => JSON.parse(JSON.stringify(reg)),
+        };
+      }
+      OGX.bot.probeDemand.set(NAME, perDay);
+    } catch (e) { /* the registry is a hint */ }
+  }
+  const PROBE_YARD_MS = 10 * 60000;   // the main's shipyard is read for a probe order at most this often
+  /** Probes for the next cycle: the spy missions it will fly (spies) from the stock above the reserves on all origins; short ->
+   *  one build.units 210 on the main planet (probeBuild, capped by probeBuildPerHour, never while the yard already builds probes:
+   *  botexpo's own order or ours). Returns the order { n } or null. */
+  async function ensureProbes(wctx, env, origins, spies) {
+    const now = wctx.now();
+    const lossDay = probeLossPerDay(now);
+    publishProbeDemand(lossDay);
+    if (wctx.cfg('probeBuild') === false || !(spies > 0)) return null;
+    const per = spyProbesSetting();
+    const reserve = probeReserve(wctx);
+    const stock = origins.reduce((a, b) => a + Math.max(0, num(((env.bodies && env.bodies[bodyKey(b)]) || b).ships && ((env.bodies && env.bodies[bodyKey(b)]) || b).ships[PROBE]) - reserve), 0);
+    const need = per * spies;
+    if (stock >= need) return null;
+    let main = mainBody(env);
+    if (!main) return null;
+    const bk = bodyKey(main);
+    if (wctx.locked(bk)) { skip(wctx, `Зонды: главная ${main.coords} под угрозой — заказ отложен`, 'threat', { body: main.id, stock, need }); return null; }
+    const yardHasProbes = (b) => {
+      const uq = b && b.queues && b.queues.unit;
+      if (!uq || !(num(uq.endsAt) > now)) return false;
+      return +uq.techId === PROBE || (uq.queued || []).some((x) => +(x && (x.id || x.techId || x.objectId)) === PROBE);
+    };
+    const last = M.cal.probeOrder;
+    if (last && num(last.readyAt) > now) return null;                       // our order is still in the yard
+    if (yardHasProbes(main)) return null;
+    const y = (M.yard || {})[main.id];
+    if (!y || now - y.t > PROBE_YARD_MS) {
+      main = await readYard(wctx, env, main, { fresh: true, why: `зондов на следующий проход не хватает (${stock} < ${need}): нет ли зондов в очереди верфи` });
+      if (yardHasProbes(main)) { skip(wctx, `Зонды: верфь ${main.coords} уже строит зонды — не заказываю`, 'probeQueued', { stock, need }); return null; }
+    }
+    const hourAgo = now - H;
+    M.cal.probeOrders = (M.cal.probeOrders || []).filter((x) => x[0] > hourAgo);
+    const cap = Math.floor(num(wctx.cfg('probeBuildPerHour'), 50000));
+    const left = cap - M.cal.probeOrders.reduce((a, x) => a + num(x[1]), 0);
+    const home = num(main.ships && main.ships[PROBE]);
+    let n = Math.min(need - stock + Math.max(0, reserve - home), left);
+    if (n < 1) { if (!M._probeCapT || now - M._probeCapT > H) { M._probeCapT = now; skip(wctx, `Зонды: лимит заказов ${cap}/ч исчерпан (нужно ещё ${need - stock})`, 'probeCap', { cap, need, stock }); } return null; }
+    let cost = res0();
+    try { cost = OGX.calc.unitCost(PROBE, n); } catch (e) { cost = { metal: 0, crystal: 1000 * n, deuterium: 0 }; }
+    const av = wctx.available(bk) || {};
+    for (const r of RES) {
+      const unit = num(cost[r]) / n;
+      if (unit > 0) n = Math.min(n, Math.floor(num(av[r]) / unit));
+    }
+    if (n < 1) { skip(wctx, `Зонды на ${main.coords}: не хватает ресурсов`, 'resources', { body: main.id, need, stock }); return null; }
+    try { cost = OGX.calc.unitCost(PROBE, n); } catch (e) { cost = { metal: 0, crystal: 1000 * n, deuterium: 0 }; }
+    const resId = wctx.reserve(bk, cost, { ttlMs: 10 * 60000, label: 'фарм: зонды' });
+    wctx.decide(`Строю ${n} зондов на ${main.coords}`, { why: `на следующий проход нужно ${need} зондов (${spies} × ${per}), сверх резерва ${reserve} на телах есть ${stock}; потери ≈ ${lossDay} в сутки`,
+      inputs: { need, stock, reserve, spies, per, lossDay, cap, left, body: main.id }, chosen: 'build.units 210 x' + n, alternatives: ['ждать — шпионаж остановится'] });
+    const r = await wctx.act({ type: 'build.units', bodyId: main.id, prio: 'build', params: { units: { [PROBE]: n } }, why: 'Фарм: постройка зондов на ' + main.coords });
+    if (!r || r.dry || !r.ok) {
+      wctx.release(resId);
+      if (r && !r.dry) skip(wctx, `Зонды на ${main.coords}: заказ не принят (${r.refused || r.error || ''} ${r.message || ''})`, 'probeBuild', { n, refused: r.refused || null, error: r.error || null });
+      return null;
+    }
+    let readyAt = now + 60000;
+    try { const sq = r.data && r.data.doc ? OGX.parse.gz.shipyardQueue(r.data.doc) : null; if (sq && sq.totalSecs > 0) readyAt = now + sq.totalSecs * 1000; } catch (e) { /* estimate */ }
+    M.cal.probeOrders.push([now, n]);
+    M.cal.probeOrder = { t: now, n, readyAt, body: main.id };
+    (M.yard = M.yard || {})[main.id] = { t: now, endsAt: readyAt };
+    wctx.rec('probe-build', `Зонды ×${n} заказаны на ${main.coords} (нужно ${need}, есть ${stock} сверх резерва ${reserve})`, { body: main.id, n, need, stock, reserve, readyAt, action: r.id });
+    await save('cal');
+    return { n };
+  }
+
+  // ------------------------------------------------------------------ fast spy count (rules-4)
+  /** fleetAjax sends min(the game's «Зондов на шпионаж» = spio_anz, probes on the planet) [UPSTREAM ShowFleetAjaxPage:75]: the
+   *  bot cannot pass a count. Once the game sent fewer than needed, M.cal.ajaxShort = { sent, n, t } and every spy (and escort)
+   *  that needs more than `sent` goes through fleet.send with the exact count for 24 h (then fleetAjax is tried again). */
+  const AJAX_SHORT_MS = 24 * H;
+  function ajaxAllowed(wctx, T, n) {
+    if (wctx.cfg('useFleetAjax') !== true || !T || !T.planetId) return false;
+    const a = M.cal.ajaxShort;
+    if (a && wctx.now() - num(a.t) < AJAX_SHORT_MS && n > num(a.sent)) return false;
+    return true;
+  }
+  /** After a fleetAjax spy: the game's count below the need -> ajaxShort, journaled at most once per hour. */
+  function checkAjaxCount(wctx, r, n, what) {
+    const sent = r && r.data && r.data.shipsSent ? +r.data.shipsSent[PROBE] : NaN;
+    if (!Number.isFinite(sent)) return;
+    const now = wctx.now();
+    if (sent >= n) { if (M.cal.ajaxShort && sent >= num(M.cal.ajaxShort.n)) M.cal.ajaxShort = null; return; }
+    const first = !M.cal.ajaxShort || now - num(M.cal.ajaxShortRecT) > H;
+    M.cal.ajaxShort = { sent, n, t: now };
+    if (first) {
+      M.cal.ajaxShortRecT = now;
+      skip(wctx, `Быстрый шпионаж (${what}) отправил ${sent} зонд(ов) вместо ${n}: в настройках игры «Зондов на шпионаж» должно быть ${n}. Пока шпионю обычной отправкой с точным числом`, 'ajaxShort', { sent, need: n });
+    }
+  }
+
   async function spyTarget(wctx, env, T, origins, { reason }) {
     const ourSpy = num(env.research[106], 0);
     const spyPower = env.factors && Number.isFinite(+env.factors.SpyPower) ? +env.factors.SpyPower : 0;
     const p = probesFor({ ourSpy, theirSpy: T.theirSpy, theirSpyKnown: !!T.theirSpyKnown, spyPower, tries: T.tries || 0 });
     // spy.probes from the nearest origin that has them (moon wins ties), not locked; a body with fewer sends what it has (like
     // the game's spycount: min(setting, probes there)) when that still meets the formula minimum
+    // the body keeps probeReserve(): botexpo's keepProbes + the farm's reserve for escorts (journal-1)
+    const reserve = probeReserve(wctx);
     const cands = [];
     for (const b of origins) {
       const bk = bodyKey(b);
       if (wctx.locked(bk)) { cands.push({ b, why: 'угроза' }); continue; }
       const ships = await freshShips(wctx, env, b);
       const have = +ships[PROBE] || 0;
-      if (have < p.min) { cands.push({ b, why: 'зондов ' + have + ' < ' + p.min }); continue; }
-      cands.push({ b, ok: true, n: Math.min(p.probes, have), dist: OGX.fleet.gz.distance(b.coords, T.coords) });
+      const free = have - reserve;
+      if (free < p.min) { cands.push({ b, why: 'зондов ' + have + ', резерв ' + reserve }); continue; }
+      cands.push({ b, ok: true, n: Math.min(p.probes, free), dist: OGX.fleet.gz.distance(b.coords, T.coords) });
     }
     const ok = cands.filter((c) => c.ok).sort((a, b) => (b.n >= p.probes) - (a.n >= p.probes) || a.dist - b.dist || (a.b.type === 'moon' ? -1 : 0) - (b.b.type === 'moon' ? -1 : 0));
     if (!ok.length) {
       const locked = cands.filter((c) => c.why === 'угроза').length;
-      skip(wctx, `[${T.coords}] шпионаж: нет тела с ${p.min} зондами` + (locked ? ` (под угрозой: ${locked})` : ''), locked && locked === cands.length ? 'threat' : 'noProbes', { key: T.key, probes: p.probes, min: p.min, origins: cands.map((c) => ({ id: c.b.id, why: c.why || null })) });
+      skip(wctx, `[${T.coords}] шпионаж: нет тела с ${p.min} зондами сверх резерва ${reserve}` + (locked ? ` (под угрозой: ${locked})` : ''), locked && locked === cands.length ? 'threat' : 'noProbes', { key: T.key, probes: p.probes, min: p.min, reserve, origins: cands.map((c) => ({ id: c.b.id, why: c.why || null })) });
       return { stop: false };
     }
     const o = ok[0].b;
@@ -725,7 +1133,7 @@ window.OGX = window.OGX || {};
     const ownHolds = Object.values(M.attacks).filter((a) => a.status === 'flying' && a.arrival > wctx.now() && a.escort && a.escort.hold).length;
     const room = Number.isFinite(+cs.free) ? +cs.free - num(cs.held) - ownHolds : -1;
     if (!cs.ok || room <= num(cs.reserve)) { skip(wctx, `Шпионаж: нет свободного слота (свободно ${cs.free}, резерв ${cs.reserve}${ownHolds ? ', держу ' + ownHolds + ' для сопровождений' : ''})`, 'slots', { key: T.key, free: cs.free, reserve: cs.reserve, ownHolds, slotsReason: cs.reason }); return { stop: true }; }
-    const ajax = wctx.cfg('useFleetAjax') === true && T.planetId;
+    const ajax = ajaxAllowed(wctx, T, n);
     wctx.decide(`Шпионаж [${T.coords}] ${n} зонд(ов) с ${o.coords}`, {
       why: reason + `; зондов по настройке «Зондов на шпионаж» ${p.probes}` + (n < p.probes ? ` (на ${o.coords} только ${n})` : '') + `, минимум по формуле 2Moons ${p.min}: наш шпионаж ${ourSpy}, их ${T.theirSpyKnown ? T.theirSpy : '≈' + p.theirSpyEstimate}`,
       inputs: { key: T.key, probes: n, want: p.probes, min: p.min, ourSpy, theirSpy: T.theirSpyKnown ? T.theirSpy : null, theirSpyEstimate: p.theirSpyEstimate, tries: T.tries || 0, spyPower, origin: o.id, duration: e.duration, slotsFree: cs.free },
@@ -740,14 +1148,51 @@ window.OGX = window.OGX || {};
     if (r.ok) {
       const arrival = (r.data && r.data.arrival) || (sentAt + (Number.isFinite(e.duration) ? e.duration : 30) * 1000);
       const probes = ajax ? (num(r.data && r.data.shipsSent && r.data.shipsSent[PROBE], n) || n) : n;
+      if (ajax) checkAjaxCount(wctx, r, n, 'шпионаж [' + T.coords + ']');
       dbOf(T).totals.spies++;
-      T.spy = { sentAt: r.at || sentAt, arrival, probes, origin: o.id, fleetId: (r.data && r.data.fleetId) || null, reportAt: arrival + rnd(5000, 15000), via: ajax ? 'fleetAjax' : 'fleetStep3' };
+      T.spy = { sentAt: r.at || sentAt, arrival, probes, origin: o.id, fleetId: (r.data && r.data.fleetId) || null, reportAt: arrival + REPORT_READS[0] * 1000 + rnd(0, 3000), via: ajax ? 'fleetAjax' : 'fleetStep3' };
+      T.spyPending = null;
       setState(wctx, T, 'probing', `${probes} зонд(ов), прибытие ${fmtT(arrival)}`);
       wctx.rec('spy-sent', `Шпионаж [${T.coords}]: ${probes} зонд(ов) с ${o.coords}, прибытие ${fmtT(arrival)}`, { key: T.key, probes, origin: o.id, arrival, fleetId: T.spy.fleetId, via: T.spy.via, action: r.id });
-      if (!ajax) deduct(env, o, { [PROBE]: n });
+      // fleetAjax too (botfarm-17): the game's own count (shipsSent) leaves the body, so the next spy of this cycle plans from
+      // what is left there instead of the stale fleetTable count
+      deduct(env, o, { [PROBE]: probes });
       return { stop: false };
     }
+    // the game says the probes are not there (fleetAjax 611 «Нет свободных шпионских зондов», step 3): the cached count is wrong
+    if (r.refused === 'ships' || +r.code === 610 || +r.code === 611) forgetShips(env, o.id);
     return handleRefusal(wctx, T, r, 'шпионаж');
+  }
+  /** Server answers that are facts about the target (botfarm-12 / journal-16): { kind, state, why, ms } or null. ru texts of GALAXYZ
+   *  (language/ru/INGAME.php fl_* / fa_*) and the en ones; fleetAjax codes 601 (no planet), 603 (weak), 604 (strong), 605
+   *  (vacation), 619 (admin). An other info text of step 2 (botcore error 'target') pauses 3 h instead of 30 min. */
+  const FACTS = [
+    { kind: 'gone', state: 'gone', re: /пункт\s+назначения\s+не\s+существует|данного\s+пункта\s+назначения\s+не\s+существует|(?:заданная\s+)?планета\s+не\s+существует|цель\s+не\s+существует|нет\s+доступных\s+заданий|does\s+not\s+exist|no\s+available\s+target|planet\s+not\s+exist|without\s+mission\s+available/i, codes: [601], why: 'сервер: цели нет', ms: COOLDOWN.gone },
+    { kind: 'vacation', state: 'vacation', re: /отпуск|vacation|urlaub|target\s+planet/i, codes: [605], why: 'сервер: цель в режиме отпуска', ms: COOLDOWN.vacation },
+    { kind: 'admin', state: 'notSuitable', re: /администратор|administrator|действие\s+запрещено|action\s+not\s+allowed/i, codes: [619], why: 'сервер: полёты на администраторов запрещены', ms: 7 * 24 * H },
+    { kind: 'protected', state: 'notSuitable', re: /слишком\s+слаб|слишком\s+сил|защитой\s+новичков|noob|too\s+weak|too\s+strong|weak\s+player/i, codes: [603, 604], why: 'сервер: игрок под защитой (слишком слаб / силён)', ms: 24 * H },
+  ];
+  function targetFact(r) {
+    if (!r || r.ok) return null;
+    const msg = String(r.message || '') + ' ' + (typeof r.error === 'string' ? r.error : '');
+    const code = +r.code;
+    for (const f of FACTS) if (f.re.test(msg) || f.codes.includes(code)) return f;
+    // own-side texts (fuel, slots, ships) are not about the target: they keep the short retry
+    if (r.error === 'target' && String(r.message || '').trim() && !/топлив|fuel|слот|slot|флот|fleet|кораб|ship|зонд|probe/i.test(String(r.message))) return { kind: 'other', state: 'notSuitable', why: 'сервер отказал по цели', ms: COOLDOWN.notSuitable };
+    return null;
+  }
+  /** Own attacks on T in the last 24 h at the cap (the limit learned from a refusal, else attacksPerDay = 2Moons BASH_COUNT 6):
+   *  the target pauses until the oldest of them is 24 h old - no simulation, no fleetTable/step 1-3 for a send the server refuses. */
+  function atAttackCap(wctx, T, now) {
+    const learned = num(M.cal.attackLimit, 0);
+    const cfg = num(wctx.cfg('attacksPerDay'), 6);
+    const lim = learned > 0 && cfg > 0 ? Math.min(learned, cfg) : (learned > 0 ? learned : cfg);
+    if (!(lim > 0)) return false;
+    const n = attacks24(T, now);
+    if (n < lim) return false;
+    const first = dbOf(T).raids.filter((r) => r.t > now - 24 * H && r.result !== 'refused').map((r) => r.t).sort((a, b) => a - b)[0] || now;
+    cooldown(wctx, T, 'attackLimit', `уже ${n} атак за сутки (лимит ${lim}${learned > 0 ? ', узнан по отказу сервера' : ''})`, Math.max(10 * 60000, first + 24 * H - now));
+    return true;
   }
   function isAttackLimit(r) { return !!r && ATTACK_LIMIT_RE.test(String(r.message || '') + ' ' + String(r.error || '')); }
   /** Common handling of refused / failed sends. Returns { stop } (stop = no more sends in this cycle). */
@@ -767,8 +1212,15 @@ window.OGX = window.OGX || {};
     if (r.refused === 'duplicate') return { stop: false };
     // botcore could not tell whether the fleet left (lost step-3 answer, the check failed): never send to this target again soon
     if (r.error === 'uncertain') { cooldown(wctx, T, 'notSuitable', what + ': неизвестно, улетел ли флот (ответ сервера потерян) — не повторяю', Math.max(COOLDOWN.notSuitable, 2 * num(wctx.cfg('maxFlightSec'), 7200) * 1000)); return { stop: true }; }
-    if (/Target planet|vacation|отпуск|urlaub/i.test(msg) || +r.code === 605) { cooldown(wctx, T, 'vacation', 'сервер: цель в режиме отпуска / недоступна (' + msg + ')'); return { stop: false }; }
-    if (r.error === 'mission' || /Invalid mission|No available target|не предложена/i.test(msg)) { cooldown(wctx, T, 'gone', 'миссия недоступна: планеты нет? (' + msg + ')'); return { stop: false }; }
+    // game facts about the target (GALAXYZ ru / 2Moons en texts of step 2/3 and fleetAjax codes 601-605/619): a long pause with the
+    // server's text in the verdict, never the 30-min error retry that repeats fleetTable + step 1 + step 2 every half hour
+    const fact = targetFact(r);
+    if (fact) {
+      cooldown(wctx, T, fact.state, fact.why + ' (' + msg + ')', fact.ms);
+      try { dbVerdict(T, fact.state, 'сервер: ' + msg); } catch (x) { /* view only */ }
+      return { stop: false, fact: fact.kind };
+    }
+    if (r.error === 'mission' || /Invalid mission|не предложена/i.test(msg)) { cooldown(wctx, T, 'gone', 'миссия недоступна: планеты нет? (' + msg + ')'); return { stop: false }; }
     if (r.refused) { skip(wctx, `[${T.coords}] ${what}: ${r.refused} ${msg}`, r.refused, { key: T.key, message: msg }); T.note = what + ': ' + r.refused; return { stop: false }; }
     cooldown(wctx, T, 'notSuitable', what + ': ошибка ' + (r.error || '') + ' ' + msg, COOLDOWN.error);
     return { stop: false };
@@ -822,7 +1274,7 @@ window.OGX = window.OGX || {};
     const cost = loss + fuel;
     d.profit = { t: Date.now(), lootMsu: Math.round(lootOf(P)), netMsu: Math.round(P.net), perHourMsu: Math.round(P.perHour), lossMsu: Math.round(loss), fuelMsu: Math.round(fuel),
       roi: cost > 0 ? Math.round((lootOf(P) / cost) * 10) / 10 : null, win: P.sim ? P.sim.win : 1, ships: P.ships, origin: P.origin.coords, mixed: !!(P.sim && P.mixed) };
-    T.need = null;
+    T.need = null; T.tooStrong = null;
     dbVerdict(T, 'farm', `выгодно: ≈ ${fmtN(P.net)} МСУ за рейд` + (P.sim ? `, победа ${Math.round(P.sim.win * 100)} %` : ', без защиты'));
   }
   /** Loot below minLoot: wait until the stock regrows (the target's own production, capped by storage), not a fixed 3 h. */
@@ -840,6 +1292,35 @@ window.OGX = window.OGX || {};
     }
     cooldown(wctx, T, 'poor', why, until - now);
     dbVerdict(T, 'poor', why, { regrowAt: until });
+  }
+  /** Own combat + 217 fleet value (MSU) over all bodies as last seen (no request): the yardstick of a 'tooStrong' target. */
+  function ownFleetMsu(env) {
+    let sum = 0;
+    for (const b of Object.values((env && env.bodies) || {})) {
+      const sh = (b && b.ships) || {};
+      const u = {};
+      for (const id of COMBAT_IDS.concat([TRANSPORT])) if (+sh[id] > 0) u[id] = +sh[id];
+      sum += unitsMsu(u);
+    }
+    return sum;
+  }
+  const TOO_STRONG_MS = 24 * H;
+  /** Undefeatable target (journal-9): our whole fleet loses, or the ships it needs take more than 24 h to build. 24 h pause, then
+   *  doubling up to a week WITHOUT a re-spy (1100 probes per round, often lost) while our fleet has not doubled since. */
+  function tooStrong(wctx, env, T, why) {
+    const prev = T.tooStrong;
+    const ms = Math.min(REGROW_MAX, prev ? Math.max(TOO_STRONG_MS, 2 * num(prev.ms, TOO_STRONG_MS)) : TOO_STRONG_MS);
+    T.tooStrong = { t: wctx.now(), ms, fleetMsu: Math.round(ownFleetMsu(env)), why };
+    cooldown(wctx, T, 'notSuitable', 'не по силам: ' + why + ` — пауза ${Math.round(ms / H)} ч без повторного шпионажа, пока наш флот не вырастет вдвое`, ms);
+    dbVerdict(T, 'tooStrong', 'защита сильнее флота: ' + why);
+  }
+  /** End of a 'tooStrong' pause: own fleet doubled -> evaluate again (spy); else the next, longer pause without any request. */
+  function tooStrongExpired(wctx, env, T) {
+    const S = T.tooStrong;
+    const now0 = ownFleetMsu(env);
+    if (num(S.fleetMsu) > 0 && now0 < 2 * num(S.fleetMsu)) { tooStrong(wctx, env, T, S.why || 'флот не вырос'); T.tooStrong.fleetMsu = S.fleetMsu; return false; }
+    T.tooStrong = null;
+    return true;
   }
   /** opts.noBuild: own ships only (the fallback when the build allowance would take longer than buildMaxWaitMin). */
   async function planAttack(wctx, env, T, origins, opts = {}) {
@@ -859,6 +1340,16 @@ window.OGX = window.OGX || {};
     const rates = { c: num(wctx.core('rateC'), 1.5), d: num(wctx.core('rateD'), 3) };
     const defender = defenderSide(intel, env.research);
     const undefended = isUndefended(intel);
+    // loot gate first (botfarm-3 / rules-8 / journal-4): the half of the expected stock at the earliest possible arrival (nearest
+    // origin, 100 %) decides «бедная цель» before any fleetTable read, so a poor target never turns into a 'shortage' one that
+    // every fleet return re-simulates; only targets past this gate may produce «нет кораблей» rejects
+    {
+      let soonest = Infinity;
+      for (const o of origins) { const e = est(env, o.coords, T.coords, { [TRANSPORT]: 1 }, 10); if (Number.isFinite(e.duration) && e.duration < soonest) soonest = e.duration; }
+      const planet0 = expectedAt(intel, now + (Number.isFinite(soonest) ? soonest : 0) * 1000, { tempMax: tempOf(T), server: env.server });
+      const loot0 = msu(halvesOf(planet0));
+      if (loot0 < lootMin) return { skip: 'noPlan', rejects: [{ why: `добыча ${fmtN(loot0)} < ${fmtN(lootMin)} МСУ`, loot: true, lootMsu: loot0 }], intel };
+    }
     const plans = [];
     const rejects = [];
     for (const o of origins) {
@@ -879,21 +1370,27 @@ window.OGX = window.OGX || {};
       let maxShips = null;
       if (canBuild) {
         const av = wctx.available(bk);
+        const week = lootWeek(intel, lootMsu, { server: env.server, perDay: num(wctx.cfg('attacksPerDay'), 6) || 6 });
         maxShips = {};
         for (const id of CARGO_IDS.concat(COMBAT_IDS)) {
           if (!reqMet(id, o, env.research)) continue;
           let c;
           try { c = OGX.calc.unitCost(id, 1); } catch (x) { c = null; }
           if (!c) continue;
-          const n = Math.min(...RES.map((r) => (+c[r] > 0 ? Math.floor(av[r] / c[r]) : Infinity)));
+          // what the body can afford, and never more than a week of this target's loot pays for (no 27.9 M fighters for one raid)
+          const per = msu(c);
+          const n = Math.min(...RES.map((r) => (+c[r] > 0 ? Math.floor(av[r] / c[r]) : Infinity)), per > 0 ? Math.floor(week / per) : Infinity);
           if (Number.isFinite(n) && n > 0) maxShips[id] = n;
         }
       }
       const fuelOf = (s) => { const x = est(env, o.coords, T.coords, s, 10); return Number.isFinite(x.fuel) ? x.fuel : 1e12; };
       const timeOf = (s) => { const x = est(env, o.coords, T.coords, s, 10); return Number.isFinite(x.duration) ? 2 * x.duration : 1e9; };
       const att = attackerSide({}, env);
+      // a body without any listed warship (John's secondary planets: 217 / 219 only) fights with its Battle Transporters — on
+      // Aeternum 217 is a combat ship (attack 50, shield 120); botSim.optimizeRaid applies the same rule on its own
+      const combatIds = COMBAT_IDS.some((id) => available[id] > 0) ? COMBAT_IDS : COMBAT_IDS.concat([TRANSPORT]);
       const runOpt = (allow) => S.optimizeRaid({ defender, planet, available, attackerTech: att.bonusPct ? { bonusPct: att.bonusPct } : { tech: att.tech },
-        storageFactor: env.storageFactor, cargoIds: CARGO_IDS, combatIds: COMBAT_IDS, winMin, minWin, maxDefeat: 1 - winMin, mixed, maxLossShare, runs, seed: T.key + ':' + intel.ts,
+        storageFactor: env.storageFactor, cargoIds: CARGO_IDS, combatIds, winMin, minWin, maxDefeat: 1 - winMin, mixed, maxLossShare, runs, seed: T.key + ':' + intel.ts,
         fuelOf, timeOf, rates, surplusPct, maxShips: allow || undefined, fleetDebrisPct: 30, defDebrisPct: 0,
         targetType: +((T.target || {}).type || 1), hasMoon: !!T.moon });
       let opt = null;
@@ -1002,30 +1499,39 @@ window.OGX = window.OGX || {};
     } catch (e) { return false; }
   }
   function farmFlying() { return Object.values(M.attacks).filter((A) => A.status === 'flying' && A.arrival > (OGX.time.serverNow() - 60000)).length; }
+  /** Farm attacks that may fly at once: the setting, or (0 = auto) the farm's share of the fleet slots — the free slots plus the
+   *  ones its raids already hold, minus botcore.slotsReserve and 4 kept for the other modules, at least 3 (slots unknown -> 3).
+   *  John has 22 slots: the old fixed 3 capped the farm at ~3 raids per round trip. */
+  function maxFarmSlots(wctx, cs) {
+    const want = num(wctx.cfg('maxSlots'), 0);
+    if (want > 0) return want;
+    const free = cs && Number.isFinite(+cs.free) ? +cs.free : null;
+    if (free === null) return 3;
+    return Math.max(3, Math.floor(free + farmFlying() - num(cs.reserve) - 4));
+  }
 
   async function attack(wctx, env, T, P, intel) {
     const now = wctx.now();
     const o = P.origin;
-    const maxSlots = num(wctx.cfg('maxSlots'), 3);
-    if (farmFlying() >= maxSlots) { skip(wctx, `[${T.coords}] атака: уже ${farmFlying()} атак фарма в полёте (максимум ${maxSlots})`, 'maxSlots', { key: T.key, flying: farmFlying(), maxSlots }); return { stop: true }; }
-    const lim = num(M.cal.attackLimit, 0);
-    if (lim > 0 && attacks24(T, now) >= lim) {
-      const first = dbOf(T).raids.filter((r) => r.t > now - 24 * H).map((r) => r.t).sort((a, b) => a - b)[0] || now;
-      cooldown(wctx, T, 'attackLimit', `уже ${attacks24(T, now)} атак за сутки (лимит сервера ≈ ${lim})`, Math.max(10 * 60000, first + 24 * H - now));
-      return { stop: false };
-    }
+    const cs = await wctx.canSend('normal');
+    const maxSlots = maxFarmSlots(wctx, cs);
+    // full: no more attacks this run, but espionage goes on (fresh intel for the next round trip)
+    if (farmFlying() >= maxSlots) { skip(wctx, `[${T.coords}] атака: уже ${farmFlying()} атак фарма в полёте (максимум ${maxSlots})`, 'maxSlots', { key: T.key, flying: farmFlying(), maxSlots }); return { stop: false, full: true }; }
+    if (atAttackCap(wctx, T, now)) return { stop: false };
     const age = now - (+intel.ts || 0);
     const maxAge = num(wctx.cfg('maxReportAgeMin'), 30) * 60000;
     if (age > maxAge) { setState(wctx, T, 'new', 'доклад старше ' + Math.round(age / 60000) + ' мин: шпионить заново'); return { stop: false, respy: true }; }
     const delayMs = Math.max(0, num(P.delayMs));
     if (delayMs > 0 && age + delayMs > maxAge + 10 * 60000) { setState(wctx, T, 'new', 'доклад устареет к отложенному вылету: шпионить заново'); return { stop: false, respy: true }; }
+    // the player must still be inactive: a galaxy row at most 1 h old (botfarm-6; John: never raid an active player)
+    const ver = await verifyInactive(wctx, T);
+    if (!ver.ok) { await save('targets'); return { stop: false }; }
     const departAt = now + delayMs;
     const back = departAt + 2 * P.duration * 1000;
     const sl = wctx.sleepCheck(back);
     if (!sl.ok) { skip(wctx, `[${T.coords}] атака: возврат ${fmtT(back)} попадает в сон`, 'sleep', { key: T.key, back, sleepReason: sl.reason }); return { stop: true }; }
     const rl = returnLocked(wctx, bodyKey(o), back);
     if (rl) { skip(wctx, `[${T.coords}] атака: возврат на ${o.coords} в окно угрозы (${fmtT(rl.arrival)})`, 'threat', { key: T.key, back, threat: rl.key }); return { stop: false }; }
-    const cs = await wctx.canSend('normal');
     // the attack needs its own slot plus one for its escort probe (held for it right after the send), and the slots already held
     // for the escorts of flying attacks stay free too
     const escortOn = wctx.cfg('escort') !== false;
@@ -1064,7 +1570,7 @@ window.OGX = window.OGX || {};
     const A = { id, key: T.key, coords: T.coords, target: T.target, origin: o.id, originCoords: o.coords, originKey: bodyKey(o), ships: P.ships, speed: P.speed,
       fleetId: (r.data && r.data.fleetId) || null, sentAt: r.at || now, arrival, back: backAt, status: 'flying', verified: !!r.verified,
       predictedLoot: P.sim ? roundRes(P.sim.loot.mean) : roundRes(stealOf(P)), planet: P.planet, lootMsu: Math.round(lootOf(P)), lootHalvesMsu: Math.round(P.lootMsu), lootExpMsu: Math.round(lootOf(P)), debrisP50: debris.p50,
-      plan: summary, defUnits: P.defender && P.defender.units ? Object.assign({}, P.defender.units) : null, moonAtSend: !!T.moon, escort: { state: wctx.cfg('escort') === false ? 'off' : 'pending', at: arrival - num(wctx.cfg('escortLeadSec'), 60) * 1000 } };
+      plan: summary, defUnits: P.defender && P.defender.units ? Object.assign({}, P.defender.units) : null, moonAtSend: !!T.moon, escort: { state: wctx.cfg('escort') === false ? 'off' : 'pending', at: escortPlanAt(wctx, env, o, T, arrival) } };
     // one fleet slot held for the escort probe until it is sent (other modules' normal sends cannot take it)
     if (A.escort.state === 'pending' && typeof wctx.holdSlot === 'function') A.escort.hold = wctx.holdSlot({ until: arrival, label: 'сопровождение [' + T.coords + ']' });
     M.attacks[id] = A;
@@ -1136,6 +1642,11 @@ window.OGX = window.OGX || {};
       const c = OGX.calc.unitCost(+id, n);
       for (const r of RES) cost[r] += +c[r] || 0;
     }
+    if (secs > BUILD_MAX_SECS) return { skip: [`[${T.coords}] достройка: ${Math.round(secs / 60)} мин на верфи > ${BUILD_MAX_SECS / 3600} ч`, 'buildTooLong', { key: T.key, secs, queued, missing }] };
+    // payback (botfarm-10): the build costs at most a week of this target's loot
+    const lootNow = Number.isFinite(+P.lootExp) && P.lootExp !== null ? +P.lootExp : (Number.isFinite(+P.lootMsu) && P.lootMsu !== null ? +P.lootMsu : null);
+    const week = lootNow === null ? Infinity : lootWeek(OGX.bot.intel.get(T.key), lootNow, { server: env.server, perDay: num(wctx.cfg('attacksPerDay'), 6) || 6 });
+    if (msu(cost) > week) return { skip: [`[${T.coords}] достройка: стоит ${fmtN(msu(cost))} МСУ > добыча за ${PAYBACK_DAYS} дн. ≈ ${fmtN(week)} МСУ — не окупится`, 'buildPayback', { key: T.key, cost: msu(cost), week, missing }] };
     const waitMs = (queued + secs + P.duration) * 1000;
     if (waitMs > maxWait) return { skip: [`[${T.coords}] достройка: ${Math.round(waitMs / 60000)} мин > ${Math.round(maxWait / 60000)} мин`, 'buildTooLong', { key: T.key, secs, queued, missing }] };
     const av = wctx.available(bodyKey(o));
@@ -1157,19 +1668,19 @@ window.OGX = window.OGX || {};
         // the same answer every cycle: a short pause for the target (re-evaluated when a fleet returns), no shipyard read per cycle
         skip(wctx, `[${T.coords}] достройка: скорость верфи неизвестна — откройте верфь во время постройки, бот её запомнит`, 'unitTimeUnknown', { key: T.key, missing });
         cooldown(wctx, T, 'notSuitable', 'достройка: скорость верфи неизвестна', COOLDOWN.shortage);
-        T.shortage = true;
+        T.shortage = true; T.shortageOrigins = [o.id];
         return { stop: false };
       }
     }
     // 2. everything decidable from known data (the queue end only grows by new orders: a too long wait stays too long)
     let chk = buildCheck(wctx, env, T, P, body, speed);
-    if (chk.skip) { skip(wctx, ...chk.skip); return { stop: false, skipped: chk.skip[1], why: chk.skip[0] }; }
+    if (chk.skip) { skip(wctx, ...chk.skip); return { stop: false, skipped: chk.skip[1], why: chk.skip[0], data: chk.skip[2] }; }
     // 3. the shipyard queue right before the order (reused only from this very minute: several plans of one cycle)
     const y = (M.yard || {})[o.id];
     if (!y || wctx.now() - y.t > YARD_REUSE_MS) {
       body = await readYard(wctx, env, o, { fresh: true, why: 'перед заказом достройки: очередь верфи и стройка 15/21' });
       chk = buildCheck(wctx, env, T, P, body, speed);
-      if (chk.skip) { skip(wctx, ...chk.skip); return { stop: false, skipped: chk.skip[1], why: chk.skip[0] }; }
+      if (chk.skip) { skip(wctx, ...chk.skip); return { stop: false, skipped: chk.skip[1], why: chk.skip[0], data: chk.skip[2] }; }
     }
     const { secs, queued, cost, waitMs, av } = chk;
     const intel = OGX.bot.intel.get(T.key);
@@ -1205,6 +1716,14 @@ window.OGX = window.OGX || {};
   }
 
   // ------------------------------------------------------------------ escort (requirement 2) — worker 'botfarm:escort'
+  const escortLead = (wctx) => Math.max(10, num(wctx.cfg('escortLeadSec'), 90));
+  /** Planning wake of the escort worker: the probes must arrive escortLeadSec..+30 s before the hit, so the send is planned
+   *  their flight time plus half a minute before that. */
+  function escortPlanAt(wctx, env, o, T, arrival) {
+    let probeSec = 30;
+    try { const d = est(env, o.coords, T.coords, { [PROBE]: 1 }, 10).duration; if (Number.isFinite(d)) probeSec = d; } catch (e) { /* estimate */ }
+    return arrival - (escortLead(wctx) + 30) * 1000 - probeSec * 1000 - 30000;
+  }
   function armEscort(A) {
     try {
       const at = Math.max(A.escort.at, OGX.time.serverNow() + 1000);
@@ -1249,6 +1768,7 @@ window.OGX = window.OGX || {};
     const min = Math.max(1, theirKnown ? p.min : Math.max(p.min, Math.min(p.probes, num(intel.probesSent, 1))));
     const bodies = env.bodies;
     const origins = originList(wctx, env).filter((b) => !wctx.locked(bodyKey(b)) && !exclude.has(+b.id));
+    // the escort may use the reserve the spies leave (botexpo keepProbes is the espionage reserve: this is what it is for)
     let best = null;
     for (const b of origins) {
       const ships = (bodies[bodyKey(b)] || b).ships || {};
@@ -1264,15 +1784,18 @@ window.OGX = window.OGX || {};
     if (!best) { releaseHold(wctx, A); A.escort.state = 'skipped'; A.escort.why = 'нет зондов'; skip(wctx, `[${A.coords}] сопровождение: нет тела с ${min} зондами`, 'noProbes', { battle: A.id, probes: p.probes, min }); return; }
     const n = best.n;
     const probeSec = Number.isFinite(best.e.duration) ? best.e.duration : 10;
-    let sendAt = A.arrival - rnd(20000, 30000) - probeSec * 1000;
+    // the probes arrive lead..lead+30 s before the hit (default 90-120 s): a page load and up to three reads fit before the
+    // decision point (hit - 20 s); any later than 30 s before the hit the escort is useless
+    const lead = escortLead(wctx);
+    let sendAt = A.arrival - (lead + rnd(0, 30)) * 1000 - probeSec * 1000;
     if (sendAt < now) sendAt = now;
-    const latest = A.arrival - probeSec * 1000 - 8000;
+    const latest = A.arrival - probeSec * 1000 - ESCORT_DECIDE_MS - 10000;
     if (sendAt > latest) { releaseHold(wctx, A); A.escort.state = 'skipped'; A.escort.why = 'поздно'; skip(wctx, `[${A.coords}] сопровождение: поздно (зонды не успеют до удара)`, 'tooLate', { battle: A.id, arrival: A.arrival, probeSec }); return; }
     const cs = await wctx.canSend('normal');
     if (!cs.ok) { releaseHold(wctx, A); A.escort.state = 'skipped'; A.escort.why = 'нет слота'; skip(wctx, `[${A.coords}] сопровождение: нет слота`, 'slots', { battle: A.id, free: cs.free, reserve: cs.reserve }); return; }
-    const ajax = wctx.cfg('useFleetAjax') === true && T.planetId;
+    const ajax = ajaxAllowed(wctx, T, n);
     wctx.decide(`Сопровождение [${A.coords}]: ${n} зонд(ов) к ${fmtT(sendAt + probeSec * 1000)}`, {
-      why: `доразведка перед ударом в ${fmtT(A.arrival)}: зонды прибудут за 20–30 с до атаки`,
+      why: `доразведка перед ударом в ${fmtT(A.arrival)}: зонды прибудут за ${lead}–${lead + 30} с до атаки (полёт ${Math.round(probeSec)} с)`,
       inputs: { battle: A.id, arrival: A.arrival, probeSec, origin: best.b.id, sendAt }, chosen: ajax ? 'fleet.ajax 6' : 'fleet.send 6', alternatives: [],
     });
     const spec = ajax
@@ -1297,13 +1820,16 @@ window.OGX = window.OGX || {};
       A.escort.state = 'failed'; A.escort.why = r.refused || msg;
       wctx.rec('escort-spy', `[${A.coords}] сопровождение не отправлено: ${r.refused || ''} ${msg}`, { battle: A.id, refused: r.refused || null, error: r.error || null, message: msg, code: r.code ?? null });
       let change = null;
-      if (/Target planet|vacation|отпуск|urlaub/i.test(msg) || +r.code === 605) change = { kind: 'vacation', why: 'цель в режиме отпуска / недоступна (' + msg + ')' };
-      else if (r.error === 'mission' || /Invalid mission|No available target|не предложена/i.test(msg)) change = { kind: 'gone', why: 'планеты больше нет (миссия недоступна: ' + msg + ')' };
+      const fact = targetFact(r);
+      if (fact && fact.kind === 'vacation') change = { kind: 'vacation', why: 'цель в режиме отпуска / недоступна (' + msg + ')' };
+      else if ((fact && fact.kind === 'gone') || r.error === 'mission' || /Invalid mission|не предложена/i.test(msg)) change = { kind: 'gone', why: 'планеты больше нет (миссия недоступна: ' + msg + ')' };
       if (change) await recallAttack(wctx, A, change);
       return;
     }
     const arrival = (r.data && r.data.arrival) || (wctx.now() + probeSec * 1000);
-    A.escort = Object.assign(A.escort, { state: 'sent', sentAt: r.at || wctx.now(), spyArrival: arrival, reportAt: arrival + rnd(1500, 3000), probes: n, origin: best.b.id, fleetId: (r.data && r.data.fleetId) || null });
+    if (ajax) checkAjaxCount(wctx, r, n, 'сопровождение [' + A.coords + ']');
+    deduct(env, best.b, { [PROBE]: ajax ? (num(r.data && r.data.shipsSent && r.data.shipsSent[PROBE], n) || n) : n });
+    A.escort = Object.assign(A.escort, { state: 'sent', sentAt: r.at || wctx.now(), spyArrival: arrival, reportAt: arrival + ESCORT_READS[0] * 1000 + rnd(0, 2000), probes: n, origin: best.b.id, fleetId: (r.data && r.data.fleetId) || null });
     wctx.rec('escort-spy', `Сопровождение [${A.coords}]: ${n} зонд(ов), прибытие ${fmtT(arrival)} (удар ${fmtT(A.arrival)})`, { battle: A.id, probes: n, spyArrival: arrival, arrival: A.arrival, fleetId: A.escort.fleetId, action: r.id });
   }
   /** Frees the slot held for the escort of attack A (sent, failed or no longer needed). */
@@ -1313,25 +1839,49 @@ window.OGX = window.OGX || {};
     A.escort.hold = null;
   }
   async function escortReport(wctx, env, A) {
-    const list = await readCategory(wctx, 0, 'доклад сопровождения [' + A.coords + ']', { fresh: true });
+    const E = A.escort;
+    const deadline = A.arrival - ESCORT_DECIDE_MS;
+    // the server processes the escort probes only in a page load (kickServer), then the list; a read counts only after one
+    const kickedAt = await kickServer(wctx, E.spyArrival, 'доклад сопровождения [' + A.coords + ']');
+    const list = await readCategory(wctx, 0, 'доклад сопровождения [' + A.coords + ']', { fresh: true, sinceMs: E.sentAt, found: (items) => spyReportsFor({ items }, A.coords, E.sentAt, typeOf(A)).length > 0 });
     const now = wctx.now();
-    if (!list || list.dry) { A.escort.state = list ? 'dry' : 'noRead'; return; }
-    const hits = spyReportsFor(list, A.coords, A.escort.sentAt);
+    if (!list || list.dry) { E.state = list ? 'dry' : 'noRead'; return; }
+    const hits = spyReportsFor(list, A.coords, E.sentAt, typeOf(A));
     if (!hits.length) {
-      A.escort.reads = (A.escort.reads || 0) + 1;
-      if (A.escort.reads < 3 && now + 4000 < A.arrival) { A.escort.reportAt = now + 1500; return; }
-      A.escort.state = 'noReport';
-      wctx.rec('escort-report', `[${A.coords}] сопровождение: доклада нет, атака продолжается`, { battle: A.id });
-      return;
+      if (kickedAt > E.spyArrival) E.reads = (E.reads || 0) + 1;
+      const n = E.reads || 0;
+      const next = n < ESCORT_READS.length ? Math.max(now + 2000, Math.min(E.spyArrival + ESCORT_READS[n] * 1000, deadline - 3000)) : Infinity;
+      if (next < deadline - 1000) { E.reportAt = next; return; }
+      return escortNoReport(wctx, env, A, now);
     }
     const h = hits[0];
-    const intel = intelFrom(h.rep, A.key, { ts: h.ts, probesSent: A.escort.probes });
+    const intel = intelFrom(h.rep, A.key, { ts: h.ts, probesSent: E.probes });
     OGX.bot.intel.put(A.key, intel);
-    A.escort.state = 'reported';
+    E.state = 'reported';
     // compare with the plan: re-simulate the flying fleet against what the probes saw
     const change = compareEscort(wctx, env, A, intel);
-    wctx.rec('escort-report', `Сопровождение [${A.coords}]: ${change ? 'ИЗМЕНЕНИЕ — ' + change.why : 'без изменений'}`, Object.assign({ battle: A.id, changed: !!change, kind: change ? change.kind : null, res: intel.res, ships: intel.ships, defense: intel.defense }, change && change.sim ? { sim: change.sim } : {}));
+    wctx.rec('escort-report', `Сопровождение [${A.coords}]: ${change ? 'ИЗМЕНЕНИЕ — ' + change.why : 'без изменений'}`, Object.assign({ battle: A.id, changed: !!change, kind: change ? change.kind : null, res: intel.res, ships: intel.ships, defense: intel.defense, reportId: h.id || null }, change && change.sim ? { sim: change.sim } : {}));
     if (change) await recallAttack(wctx, A, change);
+    // the escort report is deleted like the spy reports (it would pile up in category 0); a late report of another target in the
+    // same list ends that target's pause
+    const processed = h.id ? [h.id] : [];
+    rescuePending(wctx, env, list, processed);
+    await deleteProcessed(wctx, processed);
+  }
+  /** No escort report before the decision point (no page load processed the probes in time, or they died): the raid flies on when
+   *  the plan's intel is younger than 30 min, otherwise it is recalled (botfarm-4 / journal-7). */
+  async function escortNoReport(wctx, env, A, now) {
+    const E = A.escort;
+    E.state = 'noReport';
+    const intel = OGX.bot.intel.get(A.key) || {};
+    const ageMin = intel.ts ? Math.round((now - intel.ts) / 60000) : null;
+    const left = Math.max(0, Math.round((A.arrival - now) / 1000));
+    if (ageMin !== null && ageMin < 30) {
+      wctx.rec('escort-report', `[${A.coords}] сопровождение: доклада нет за ${left} с до удара, атака продолжается по докладу ${ageMin} мин назад`, { battle: A.id, noReport: true, intelAgeMin: ageMin, reads: E.reads || 0, changed: false, kind: null });
+      return;
+    }
+    wctx.rec('escort-report', `[${A.coords}] сопровождение: доклада нет за ${left} с до удара, разведка ${ageMin === null ? 'неизвестна' : ageMin + ' мин назад'} — отзыв`, { battle: A.id, noReport: true, intelAgeMin: ageMin, reads: E.reads || 0, changed: true, kind: 'noReport' });
+    await recallAttack(wctx, A, { kind: 'noReport', why: `сопровождение без доклада, последняя разведка ${ageMin === null ? 'неизвестна' : ageMin + ' мин назад'} (старше 30 мин)` });
   }
   function compareEscort(wctx, env, A, intel) {
     const S = OGX.botSim;
@@ -1378,11 +1928,48 @@ window.OGX = window.OGX || {};
     if (T) {
       if (change.kind === 'vacation') cooldown(wctx, T, 'vacation', change.why);
       else if (change.kind === 'gone') cooldown(wctx, T, 'gone', change.why);
+      else if (change.kind === 'noReport') cooldown(wctx, T, 'noReport', change.why);
       else cooldown(wctx, T, 'notSuitable', change.why);
     }
   }
 
   // ------------------------------------------------------------------ main worker
+  // ------------------------------------------------------------------ Infinity «Цели» marks (addons-9)
+  /** OGX.targets.marks() (Infinity «Цели», when present): { planets: { 'g:s:p:type': { color, isTarget, avoid?, priority? } },
+   *  players: { id: { color, avoid?, priority? } } } -> { avoid: Set(T.key), prefer: Set(T.key) } for the current targets.
+   *  avoid = never spied or attacked; prefer = evaluated and spied first. No API -> empty sets. */
+  async function markSets(wctx) {
+    const out = { avoid: new Set(), prefer: new Set() };
+    let m = null;
+    try { if (OGX.targets && typeof OGX.targets.marks === 'function') m = await OGX.targets.marks(); } catch (e) { m = null; }
+    if (!m || typeof m !== 'object') return out;
+    const planets = m.planets && typeof m.planets === 'object' ? m.planets : {};
+    const players = m.players && typeof m.players === 'object' ? m.players : {};
+    const avoidC = String(wctx.cfg('markAvoid') ?? 'red'); const preferC = String(wctx.cfg('markPrefer') ?? 'green');
+    const isAvoid = (e) => !!e && (e.avoid === true || (!!avoidC && e.color === avoidC));
+    const isPrefer = (e) => !!e && (e.priority === true || e.isTarget === true || (!!preferC && e.color === preferC));
+    for (const T of Object.values(M.targets)) {
+      const pe = planets[T.key] || planets[T.coords + ':' + typeOf(T)];
+      const ue = T.playerId !== undefined && T.playerId !== null ? players[String(T.playerId)] : null;
+      if (isAvoid(pe) || isAvoid(ue)) out.avoid.add(T.key);
+      else if (isPrefer(pe) || isPrefer(ue)) out.prefer.add(T.key);
+    }
+    return out;
+  }
+  const WAKE_MIN_MS = 10000;   // fleet-return wakes: at least this long after the end of the last run (botfarm-14)
+  function wakeAt(nowMs) { return M.busy ? nowMs + WAKE_MIN_MS : Math.max(nowMs, num(M.lastRunEnd) + WAKE_MIN_MS); }
+  const PLAN_CACHE_MS = 60000; // an identical plan (same report, no fleet came home, same settings) is not simulated again
+  const PLAN_CFG = ['minLoot', 'winMin', 'minWin', 'mixedFleet', 'maxLossShare', 'simRuns', 'surplusPct', 'maxFlightSec', 'maxFuelShare', 'partialLoot', 'minLootShare', 'buildShips', 'attacksPerDay'];
+  async function planCached(wctx, env, T, origins) {
+    const intel = OGX.bot.intel.get(T.key);
+    const sig = JSON.stringify([intel && intel.ts, T.state, origins.map((o) => o.id), M.returnedAt || {}, M.staleAt || {}, PLAN_CFG.map((k) => wctx.cfg(k))]);
+    const c = (M.planCache = M.planCache || {})[T.key];
+    if (c && c.sig === sig && wctx.now() - c.t < PLAN_CACHE_MS) { wctx.rec('sim', `[${T.coords}] план из кэша (${Math.round((wctx.now() - c.t) / 1000)} с назад): доклад, корабли и настройки те же`, { key: T.key, ok: !c.pr.skip, cached: true }); return c.pr; }
+    const pr = await planAttack(wctx, env, T, origins);
+    M.planCache[T.key] = { t: wctx.now(), sig, pr };
+    for (const [k, v] of Object.entries(M.planCache)) if (wctx.now() - v.t > PLAN_CACHE_MS) delete M.planCache[k];
+    return pr;
+  }
   async function mainRun(wctx) {
     if (!OGX.bot.isActive(NAME)) return { nextInMs: OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'off' };
     M.busy++;
@@ -1397,7 +1984,7 @@ window.OGX = window.OGX || {};
           const was = A.status;
           A.status = was === 'flying' ? 'done' : 'recalledDone';
           { const T0 = M.targets[A.key]; const rr = T0 && dbOf(T0).raids.find((x) => x.id === A.id); if (rr && rr.result === 'flying') rr.result = 'done'; }
-          markReturned(A.origin, Math.min(now, A.back || now));
+          markReturned(A.origin, Math.min(now, A.back || now), 1);
           M.lastReturnAt = Math.max(+M.lastReturnAt || 0, Math.min(now, A.back || now));
           const T = M.targets[A.key];
           if (T && T.state === 'attackFlying' && T.attackId === A.id) setState(wctx, T, 'new', 'атака вернулась: повторный шпионаж');
@@ -1407,10 +1994,11 @@ window.OGX = window.OGX || {};
         if (now - A.arrival > 24 * H) delete M.attacks[A.id];
       }
       for (const T of Object.values(M.targets)) {
-        if (T.state === 'probing' && T.spy && now > (T.spy.arrival || 0) + 30 * 60000) cooldown(wctx, T, 'probesLost', 'доклад не прочитан вовремя');
+        if (T.state === 'probing' && T.spy && now > (T.spy.arrival || 0) + 30 * 60000) giveUpSpy(wctx, T, 'доклад не прочитан за 30 мин после прилёта зондов');
         if (T.state === 'gone' && now - (+T.stateAt || 0) > num(wctx.cfg('dbKeepDays'), 14) * 24 * H) { delete M.targets[T.key]; wctx.rec('state', `[${T.coords}] удалена из базы: нет в галактике ${num(wctx.cfg('dbKeepDays'), 14)} дн.`, { key: T.key, removed: true }); continue; }
-        if (T.cooldownUntil && T.cooldownUntil <= now && ['notSuitable', 'vacation', 'probesLost', 'attackLimit', 'needFleet', 'poor'].includes(T.state)) setState(wctx, T, 'new', 'пауза закончилась', { cooldownUntil: null, tries: 0, shortage: false });
-        else if (T.shortage && T.state === 'notSuitable' && (+M.lastReturnAt || 0) > (+T.stateAt || 0)) setState(wctx, T, 'new', 'флот вернулся: оцениваю снова', { cooldownUntil: null, shortage: false });
+        if (T.cooldownUntil && T.cooldownUntil <= now && T.tooStrong && T.state === 'notSuitable' && !tooStrongExpired(wctx, env, T)) continue;
+        if (T.cooldownUntil && T.cooldownUntil <= now && ['notSuitable', 'vacation', 'probesLost', 'noReport', 'active', 'attackLimit', 'needFleet', 'poor'].includes(T.state)) setState(wctx, T, 'new', 'пауза закончилась', { cooldownUntil: null, tries: 0, shortage: false });
+        else if (shortageRelief(T, originList(wctx, env), now)) setState(wctx, T, 'new', 'флот вернулся на тело отправки: оцениваю снова', { cooldownUntil: null, shortage: false, shortageResetAt: now });
         if (T.state === 'attackFlying' && (!T.attackId || !M.attacks[T.attackId] || M.attacks[T.attackId].status !== 'flying')) setState(wctx, T, 'new', 'атака завершена');
       }
       // 2. reports
@@ -1426,20 +2014,36 @@ window.OGX = window.OGX || {};
       const maxAge = num(wctx.cfg('maxReportAgeMin'), 30) * 60000;
       const list = Object.values(M.targets).filter((T) => !(T.cooldownUntil && T.cooldownUntil > now));
       const toSpy = []; const toEval = [];
+      const marks = await markSets(wctx);
       for (const T of list) {
         if (T.state === 'probing' || T.state === 'attackFlying') continue;
+        if (marks.avoid.has(T.key)) {
+          if (!T.markSkipAt || now - T.markSkipAt > 6 * H) { T.markSkipAt = now; skip(wctx, `[${T.coords}] метка «не трогать» в «Целях»: не шпионю и не атакую`, 'mark', { key: T.key }); }
+          continue;
+        }
+        if (atAttackCap(wctx, T, now)) continue;   // no spy, no simulation for a target the server would refuse anyway
         if (T.state === 'waitShips') { if (now >= (T.readyAt || 0)) toEval.push(T); continue; }
         const intel = OGX.bot.intel.get(T.key);
-        // a report taken before our last attack shows resources that are gone: never plan from it
-        const fresh = intel && intel.ts && now - intel.ts <= maxAge && intel.known && intel.known.ships && intel.known.defense && !(T.lastAttackAt && intel.ts < T.lastAttackAt);
+        // a report taken before our last attack shows resources that are gone: never plan from it; a report taken before a
+        // missile impact (T.staleBefore, set by botmissiles through OGX.botFarm.api.respy) shows defence that is gone
+        const fresh = intel && intel.ts && now - intel.ts <= maxAge && intel.known && intel.known.ships && intel.known.defense && !(T.lastAttackAt && intel.ts < T.lastAttackAt) && !(T.ownerAt && intel.ts < T.ownerAt)
+          && !(T.staleBefore && intel.ts < T.staleBefore);
         if (fresh && (T.state === 'reported' || T.state === 'new')) toEval.push(T);
         else if (['new', 'needMoreProbes', 'reported'].includes(T.state)) toSpy.push(T);
       }
+      // the farm's attack slots BEFORE any simulation (botfarm-7): no plan is built for a raid that cannot leave this run; the
+      // spy loop below runs anyway, so fresh intel is ready when the raids come home
+      if (marks.prefer.size) toEval.sort((a, b) => (marks.prefer.has(b.key) ? 1 : 0) - (marks.prefer.has(a.key) ? 1 : 0));
+      const cs0 = toEval.length ? await wctx.canSend('normal') : null;
+      const maxSlots = maxFarmSlots(wctx, cs0);
+      M.lastMaxSlots = maxSlots;
+      const room = Math.max(0, maxSlots - farmFlying());
+      if (toEval.length && room <= 0) skip(wctx, `атака: уже ${farmFlying()} атак фарма в полёте (максимум ${maxSlots}) — оценка ${toEval.length} целей отложена, шпионаж продолжается`, 'maxSlots', { flying: farmFlying(), maxSlots, waiting: toEval.length });
       // evaluation (simulation) first: the attack plans
       const plans = [];
-      for (const T of toEval.slice(0, per)) {
+      for (const T of toEval.slice(0, Math.min(per, room))) {
         if (T.state === 'waitShips') forgetShips(env, T.buildOrigin);   // the new ships are only on a fresh fleetTable
-        const pr = await planAttack(wctx, env, T, origins);
+        const pr = await planCached(wctx, env, T, origins);
         if (pr.skip) {
           const lootLow = pr.rejects && pr.rejects.length && pr.rejects.every((x) => x.loot);
           if (pr.skip === 'noIntel') { setState(wctx, T, 'new', 'нет доклада'); continue; }
@@ -1452,11 +2056,12 @@ window.OGX = window.OGX || {};
           else if (shortage) {
             const why = ((pr.rejects || []).find((x) => x.shortage) || {}).why;
             cooldown(wctx, T, 'notSuitable', 'сейчас не хватает кораблей: ' + why, COOLDOWN.shortage); T.shortage = true;
+            T.shortageOrigins = (pr.rejects || []).filter((x) => x.shortage && x.origin).map((x) => x.origin);
             dbVerdict(T, 'shortage', 'не хватает своих кораблей: ' + why);
           } else {
+            // every origin with all its ships (and the build allowance) loses: undefeatable for now (journal-9)
             const why = (pr.rejects || []).map((x) => x.why)[0] || 'нет подходящего состава';
-            cooldown(wctx, T, 'notSuitable', why);
-            dbVerdict(T, 'tooStrong', 'защита сильнее флота: ' + why);
+            tooStrong(wctx, env, T, why);
           }
           continue;
         }
@@ -1499,6 +2104,9 @@ window.OGX = window.OGX || {};
             const need = { ships: P.missing, origin: P.origin.coords, why: b.why, t: now };
             T.need = need;
             dbVerdict(T, 'needFleet', `нужно ещё ${shipsRu(P.missing)} на ${P.origin.coords} (${b.why}); добыча ≈ ${fmtN(lootOf(P))} МСУ за рейд`, { need });
+            // a build of more than 24 h: undefeatable for now, no re-spy (journal-9: «достройка: 465217 мин» every 3 h)
+            const bd = b.data || {};
+            if (b.skipped === 'buildTooLong' && num(bd.secs) + num(bd.queued) > 24 * 3600) { tooStrong(wctx, env, T, `достройка ${shipsRu(P.missing)} ≈ ${Math.round((num(bd.secs) + num(bd.queued)) / 3600)} ч`); continue; }
             // a busy shipyard / resources still coming: short pause; a build that is simply too big: needFleetPauseH
             const pauseMs = ['shipyardBusy', 'buildCost'].includes(b.skipped) ? COOLDOWN.shortage : num(wctx.cfg('needFleetPauseH'), 6) * H;
             cooldown(wctx, T, 'needFleet', `нужно ещё ${shipsRu(P.missing)} (${b.why})`, pauseMs);
@@ -1510,11 +2118,12 @@ window.OGX = window.OGX || {};
         const r = await attack(wctx, env, T, P, intel);
         if (r.stop) stop = true;
         if (r.respy && !toSpy.includes(T)) toSpy.push(T);
+        if (r.full) break;   // farm slots used up: the remaining plans wait, espionage goes on
       }
       // espionage
       let spied = 0;
       if (!stop) {
-        toSpy.sort((a, b) => (a.state === 'needMoreProbes' ? -1 : 0) - (b.state === 'needMoreProbes' ? -1 : 0) || OGX.fleet.gz.distance(origins[0].coords, a.coords) - OGX.fleet.gz.distance(origins[0].coords, b.coords));
+        toSpy.sort((a, b) => (marks.prefer.has(b.key) ? 1 : 0) - (marks.prefer.has(a.key) ? 1 : 0) || (a.state === 'needMoreProbes' ? -1 : 0) - (b.state === 'needMoreProbes' ? -1 : 0) || OGX.fleet.gz.distance(origins[0].coords, a.coords) - OGX.fleet.gz.distance(origins[0].coords, b.coords));
         for (const T of toSpy) {
           if (spied >= per) break;
           if (T.dryAt && now - T.dryAt < 20 * 60000 && OGX.bot.isDryRun()) continue;
@@ -1526,6 +2135,8 @@ window.OGX = window.OGX || {};
           if (r.stop) break;
         }
       }
+      // probes for the next cycle (journal-1): the spies still waiting plus one escort per farm raid slot
+      try { await ensureProbes(wctx, env, origins, Math.min(per, toSpy.filter((T) => T.state !== 'probing').length) + Math.max(0, maxSlots - farmFlying())); } catch (e) { skip(wctx, 'Зонды: ошибка расчёта запаса ' + errText(e), 'probeBuild'); }
       await save();
       // next run
       let next = now + OGX.bot.randMs(OGX.bot.INTERVALS.m6);
@@ -1534,11 +2145,11 @@ window.OGX = window.OGX || {};
         if (T.state === 'waitShips' && T.readyAt) next = Math.min(next, T.readyAt + rnd(5000, 15000));
       }
       for (const A of Object.values(M.attacks)) {
-        if (A.status === 'flying' && !A.combatRead && wctx.core('readMessages') !== false) next = Math.min(next, A.arrival + rnd(5000, 15000));
+        if ((A.status === 'flying' || A.status === 'done') && !A.combatRead && wctx.core('readMessages') !== false) next = Math.min(next, num(A.combatReadAt, A.arrival + REPORT_READS[0] * 1000 + rnd(0, 3000)));
         if (A.status === 'flying') next = Math.min(next, A.back + rnd(20000, 50000));
       }
       return { nextAt: Math.max(next, wctx.now() + 2000), reason: `целей ${Object.keys(M.targets).length}, атак ${farmFlying()}` };
-    } finally { M.busy--; }
+    } finally { M.busy--; M.lastRunEnd = OGX.time && OGX.time.serverNow ? OGX.time.serverNow() : Date.now(); }
   }
 
   // ------------------------------------------------------------------ panel section
@@ -1547,7 +2158,8 @@ window.OGX = window.OGX || {};
     const now = OGX.time.serverNow();
     const targets = Object.values(M.targets).sort((a, b) => (a.coords < b.coords ? -1 : 1));
     const attacks = Object.values(M.attacks).filter((A) => A.status === 'flying' || (A.status === 'recalled' && now - (A.recalledAt || 0) < H)).sort((a, b) => a.arrival - b.arrival);
-    container.appendChild(h('div', { class: 'ogx-b-farm-sum' }, `Целей: ${targets.length}; атак в полёте: ${farmFlying()} из ${num(OGX.settings.get('botfarm.maxSlots'), 3)}` +
+    const msCfg = num(OGX.settings.get('botfarm.maxSlots'), 0);
+    container.appendChild(h('div', { class: 'ogx-b-farm-sum' }, `Целей: ${targets.length}; атак в полёте: ${farmFlying()} из ${msCfg > 0 ? msCfg : 'авто' + (M.lastMaxSlots ? ' (' + M.lastMaxSlots + ')' : '')}` +
       (M.lastRun ? `; последний проход ${fmtT(M.lastRun)}` : '')));
     if (attacks.length) {
       container.appendChild(h('div', { class: 'ogx-b-bot-h' }, 'Атаки в полёте'));
@@ -1628,15 +2240,18 @@ window.OGX = window.OGX || {};
       if (!OGX.bot || !OGX.botSim) { ctx.log.warn('OGX.bot / OGX.botSim missing: botfarm idle'); return; }
       await OGX.bot.ready;
       await load(true);
-      M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'fleet', startJitter: [40000, 140000], wakeOn: ['bot:fleet-returned', 'bot:threat'], run: mainRun });
+      // fleet returns of every module (expeditions, probes, transports: every few seconds) wake the farm at most every WAKE_MIN_MS
+      // (botfarm-14); a threat still wakes it at once
+      M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'fleet', startJitter: [40000, 140000], wakeOn: ['bot:threat'], run: mainRun });
       M.escortHandle = OGX.bot.register({ id: NAME + ':escort', module: NAME, prio: 'deadline', startJitter: [3000, 8000], wakeOn: ['bot:fleet-returned'], run: escortRun });
       OGX.bot.onTimer('botfarm:escort', () => { if (M.escortHandle) M.escortHandle.wake('escort timer'); });
       // ship counts cached for the origin are stale once any own fleet lands there
       OGX.bus.on('bot:fleet-returned', (ev) => {
         const id = ev && ev.bodyKey ? +String(ev.bodyKey).replace(/^[pm]/, '') : 0;
         const t = OGX.time && OGX.time.serverNow ? OGX.time.serverNow() : Date.now();
-        if (id > 0) markReturned(id, t);
+        if (id > 0) markReturned(id, t, ev && ev.mission);
         M.lastReturnAt = t;
+        if (M.handle) M.handle.wake('event:bot:fleet-returned', wakeAt(t));
       });
       OGX.bot.panelSection(NAME, renderPanel);
       // keep the panel's in-memory copy fresh in non-leader tabs
@@ -1645,6 +2260,51 @@ window.OGX = window.OGX || {};
     },
   });
 
+  // ------------------------------------------------------------------ read-only API for botmissiles (BOT_CONTRACT C1 exception)
+  /** Farm DB rows (clones; data, not live records) for botmissiles: who is a target, how fresh its report is, loot worth it. */
+  function apiTargets() {
+    const now = OGX.time && OGX.time.serverNow ? OGX.time.serverNow() : Date.now();
+    let minLoot = 10000000; let exclude = [];
+    try { const v = OGX.settings.get('botfarm.minLoot'); if (v !== undefined && v !== null && v !== '') minLoot = num(v, minLoot); } catch (e) { /* default */ }
+    try { exclude = OGX.settings.get('botfarm.exclude') || []; } catch (e) { exclude = []; }
+    const out = [];
+    for (const T of Object.values(M.targets)) {
+      let intel = null;
+      try { intel = OGX.bot.intel.get(T.key); } catch (e) { intel = null; }
+      let lootMsu = null;
+      try { lootMsu = intel && intel.res ? Math.round(msu(halvesOf(expectedAt(intel, now, { tempMax: tempOf(T) })))) : null; } catch (e) { lootMsu = null; }
+      out.push(clone({
+        key: T.key, coords: T.coords, target: T.target || tgtOf(T.key), playerId: T.playerId ?? null, playerName: T.playerName || null,
+        status: T.status || '', cls: T.cls || null, inactive: T.cls === 'I' || T.cls === 'i', excluded: !!excluded(exclude, T),
+        gone: T.state === 'gone' || T.state === 'vacation', state: T.state, verdict: T.db && T.db.verdict ? T.db.verdict.kind : null,
+        lastReportAt: T.lastReportAt || null, lastAttackAt: T.lastAttackAt || null, staleBefore: T.staleBefore || null,
+        intelTs: intel ? intel.ts || null : null, lootMsu, minLootOk: lootMsu !== null && lootMsu >= minLoot,
+      }));
+    }
+    return out;
+  }
+  /** botmissiles: a missile wave hits `key` at `at` — every report older than that is stale (T.staleBefore) and the target is
+   * spied again after the impact: state new, with a cooldown until `at` while the wave still flies (no spy before the impact,
+   * no raid planned from the pre-impact report). -> true when the target is in the DB. */
+  async function apiRespy(key, at) {
+    const T = M.targets[key];
+    if (!T) return false;
+    const now = OGX.time && OGX.time.serverNow ? OGX.time.serverNow() : Date.now();
+    T.staleBefore = Math.max(num(T.staleBefore), num(at) || now);
+    if (T.state !== 'probing' && T.state !== 'attackFlying') {
+      const from = T.state;
+      const wait = num(at) > now + 1000;
+      T.state = 'new'; T.stateAt = now; T.cooldownUntil = wait ? num(at) : null; T.shortage = false;
+      T.note = wait ? 'ракеты летят: шпионаж после удара в ' + fmtT(num(at)) : 'ракеты: повторный шпионаж после удара';
+      if (from !== 'new' && M.ctx) { try { OGX.log.rec('B', NAME + ':state', `[${T.coords}] ${stateRu(from)} → ${stateRu('new')}: ракеты, повторный шпионаж после удара`, { key, from, to: 'new', why: 'botmissiles' }); } catch (e) { /* ignore */ } }
+    }
+    if (M.ctx) await save('targets');
+    if (M.handle) { try { M.handle.wake('botmissiles: respy ' + key, Math.max(now, num(at)) + 1500); } catch (e) { /* ignore */ } }
+    return true;
+  }
+
   // Pure helpers for tests (tests/gz-bot-mod-botfarm.test.js); not an API for other modules.
-  OGX.botFarm = { _lib: { dbCsv, dbOf, dbReport, dbRaidSent, dbRaidResult, dbNet, attacks24, regrowAt, unitsMsu, profitOf, poorTarget, cachedSystem, discover, buildMissing, buildCheck, readCategory, escortSpy, isAttackLimit, handleRefusal, spyProbesSetting, inactiveClass, excluded, perHourOf, expectedAt, halvesOf, probesFor, intelFrom, defenderSide, isUndefended, attackerSide, reqMet, simSummary, keyOf, tgtOf, transportShort, storageFactorOf, transportCap, TRANSPORT, RECYCLER }, _M: M };
+  OGX.botFarm = { _lib: { dbCsv, dbOf, dbReport, dbRaidSent, dbRaidResult, dbNet, attacks24, regrowAt, unitsMsu, profitOf, poorTarget, cachedSystem, discover, buildMissing, buildCheck, readCategory, escortSpy, isAttackLimit, handleRefusal, targetFact, atAttackCap, tooStrong, tooStrongExpired, ownFleetMsu, lootWeek, planCached, wakeAt, save, load, markSets, scanSystems, spyProbesSetting, inactiveClass, excluded, perHourOf, expectedAt, halvesOf, probesFor, intelFrom, defenderSide, isUndefended, attackerSide, reqMet, simSummary, keyOf, tgtOf, transportShort, storageFactorOf, transportCap, planAttack, shortageRelief, markReturned, maxFarmSlots, farmFlying, kickServer, spyTarget, rowVerdict, applyRow, verifyInactive, galaxyViewsLeft, ajaxAllowed, checkAjaxCount, ensureProbes, probeReserve, expoKeep, probeLossPerDay, mainBody, processSpyReports, processCombatReports, escortReport, rescuePending, spyReportsFor, REPORT_READS, ESCORT_READS, COOLDOWN, TRANSPORT, RECYCLER }, _M: M,
+    // the sanctioned read of the farm DB for botmissiles (BOT_CONTRACT C1): clones only, plus the re-spy hand-off
+    api: { targets: apiTargets, respy: apiRespy } };
 })(window.OGX);

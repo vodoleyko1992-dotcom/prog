@@ -28,13 +28,15 @@
 //   POST page=fleetStep1 ship<ID>=N ... -> real fleetStep1 page with a fresh token and the posted target; no ships -> 302 fleetTable
 //   POST page=fleetStep2 token ... -> real fleetStep2 page (missions from state.missions, default [7] as saved); bad token -> 302
 //   POST page=fleetStep3 token mission ... -> real fleetStep3 result (refresh meta removed unless keepRefresh);
-//        state.fleetError = 'text' -> info page; bad token -> 302 fleetTable [UPSTREAM]
+//        state.fleetError = 'text' -> info page; bad token -> 302 fleetTable; more ships than state.bodyShips[origin] (some of them
+//        present; none present = 302 fleetTable at step 1, as the world) -> info page 'Not all ships present.' / 'Не все корабли доступны.' (state.lang) [UPSTREAM ShowFleetStep3Page:176]
 //   GET  page=fleetAjax&mission=&planetID= -> JSON {slots, ships, code, mess} (state.fleetAjax overrides) [UPSTREAM]
 //   GET  page=settings -> REAL overview chrome + a settings form in the shape of 2Moons settings_default.tpl (spycount =
 //        state.spycount) [HYPOTHETICAL markup: no live settings page saved]; POST page=settings -> recorded, 302 page=settings
+//        (world mode: spycount = world.player.spyProbes, the account's probes per one-click spy; the POST updates it)
 //   GET  page=messages&mode=view&messcat=N&site=S&ajax=1 -> form fragment: 0/100 cut from the REAL pages, others [UPSTREAM]
 //   POST page=messages mode=action -> 302 page=messages [UPSTREAM]
-//   /<Universe>/index.php -> login page (not a game page) ; /other -> unrelated site
+//   /<Universe>/index.php -> login page (not a game page) [HYPOTHETICAL: never captured live] ; /other -> unrelated site
 // Everything else on game.php is recorded as unhandled (404 info page).
 //
 // Inspection endpoints (never recorded): GET /__ogx/requests, GET /__ogx/unhandled, GET /__ogx/state,
@@ -140,6 +142,17 @@ function settingsForm(st) {
 <tr><td colspan="2"><input type="submit" value="Save"></td></tr></table></form></div>`;
 }
 
+// Step-3 refusal texts of the static mock by state.lang [UPSTREAM language/en|ru/INGAME.php]; tests that set fleetError /
+// fleetErrorAt pass their own text. STEP3_TEXTS is exported so tests assert botcore's mapping on the exact strings.
+const STEP3_TEXTS = {
+  en: { ships: 'Not all ships present.', slots: 'Without slots avaliable', fuel: 'Not enough deuterium available.',          // en:358, 322, 369
+    cargo: 'You have not enough cargo space available.', attackLimit: 'Bash Rule', noResource: 'No raw materials loaded!' },   // en:370, 361, 356
+  ru: { ships: 'Не все корабли доступны.', slots: 'Нет свободных слотов.', fuel: 'Не хватает дейтерия.',                     // ru:343, 306, 354
+    cargo: 'Недостаточная грузоподъёмность.', attackLimit: 'Превышен лимит количества атак в сутки на данный пункт назначения.',   // ru:355, 346
+    noResource: 'Ресурсы не погружены.' },                                                                                    // ru:341
+};
+const step3Text = (st, code) => (STEP3_TEXTS[st.lang] || STEP3_TEXTS.en)[code] || STEP3_TEXTS.en[code];
+
 function defaultState() {
   return {
     scenario: 'galaxyz',
@@ -158,7 +171,9 @@ function defaultState() {
     cargoPerShip: null,   // { id: cargo }: fleetStep1/2 inline data computed from the posted ships (fleetroom = sum n x cargo)
     consumption: null,    // fleetStep2 consumption (data.consumption and #consumption) when cargoPerShip is set (default 118)
     enforceRoom: false,   // fleetStep3: cargo > fleetroom - consumption -> info 'Not enough cargo space', nothing sent [UPSTREAM]
-    bodyShips: null,      // { cp: { id: n } }: fleetTable rows of that body, imperium ship rows, step 1 refuses more ships than that
+    bodyShips: null,      // { cp: { id: n } }: fleetTable rows of that body, imperium ship rows; more ships than that are accepted at
+                          // step 1 (unless none of them is there: 302 fleetTable, as the world) and refused at step 3 with fl_not_all_ship_avalible
+    lang: 'en',           // 'en' | 'ru': the step-3 refusal texts of the mock (STEP3_TEXTS) [UPSTREAM language/<lang>/INGAME.php]
     bodyRes: null,        // { cp: { metal, crystal, deuterium } }: header stock of pages shown for that cp, imperium resource rows
     planets: null,        // [{ id, name, coords, moon?: { id, name } }]: #planetSelector, planet list and imperium columns of every page
     fleetErrorAt: null,   // { n: 'text' }: the n-th fleetStep3 POST (1-based) is refused with that info text
@@ -181,7 +196,7 @@ async function startGzServer(opts = {}) {
   if (opts.world) {
     const W = require('./gz-world');
     world = opts.world && typeof opts.world === 'object' && opts.world.clock && typeof opts.world.process === 'function' ? opts.world : W.createWorld(opts.world);
-    worldHandle = W.worldHandler(world, { pageFile, infoPage, messagesFragment });
+    worldHandle = W.worldHandler(world, { pageFile, infoPage, messagesFragment, settingsForm });
   }
   const srv = {
     origin: null,
@@ -317,6 +332,9 @@ async function startGzServer(opts = {}) {
 
     if (p === '/' || p === `/${universe}` || p === `/${universe}/`) return send(res, 302, '', HTML, { Location: `${origin}/${universe}/index.php` });
     if (world && method === 'POST' && new RegExp(`^/${universe}/index\\.php$`, 'i').test(p)) { world.login(); return send(res, 302, '', HTML, { Location: `${origin}/${universe}/game.php?page=overview` }); }
+    // [HYPOTHETICAL] logged-out page (tests-mock-21): the real GALAXYZ index.php (field names, universe selector, captcha) and the
+    // post-login redirect were never saved; botcore autoLogin (form#login + input[type=password]) is proven only against this.
+    // Capture the live page into fixtures/galaxyz/pages and serve it here before trusting gz-bot-autologin for the live server.
     if (new RegExp(`^/${universe}/index\\.php$`, 'i').test(p)) {
       return send(res, 200, '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Aeternum</title></head><body><form id="login" action="index.php?page=login" method="post"><input name="username"><input name="password" type="password"></form></body></html>');
     }
@@ -352,8 +370,10 @@ async function startGzServer(opts = {}) {
       for (const [k, v] of Object.entries(form)) { const m = /^ship(\d+)$/.exec(k); if (m && Math.round(+v) >= 1 && m[1] !== '212') ships[m[1]] = Math.round(+v); }
       if (!Object.keys(ships).length) return redirect('page=fleetTable');   // FleetFunctions::GotoFleetPage
       const origin = ctx.rec.cp != null ? ctx.rec.cp : st.cp;
+      // as the world (BOT_CONTRACT A14): step 1 goes back to fleetTable only when none of the posted ships is on the body; more
+      // ships than the body holds pass step 1 (upstream ShowFleetStep1Page:39-51 does not count them) and step 3 refuses (below)
       const onBody = st.bodyShips && st.bodyShips[origin];
-      if (onBody && Object.entries(ships).some(([id, n]) => n > (+onBody[id] || 0))) return redirect('page=fleetTable');   // more than the planet holds
+      if (onBody && Object.keys(ships).every((id) => !(+onBody[id] > 0))) return redirect('page=fleetTable');
       st.token = crypto.randomBytes(16).toString('hex');
       const target = { galaxy: num(form.galaxy, 2), system: num(form.system, 68), planet: num(form.planet, 5), type: num(form.type, 1) };
       st.fleet = { ships, target, mission: num(form.target_mission, 0), speed: null, origin };
@@ -378,10 +398,12 @@ async function startGzServer(opts = {}) {
       st.step3Count = (st.step3Count || 0) + 1;
       if (st.fleetError) return info(st.fleetError, [{ url: 'game.php?page=fleetTable', label: 'Back' }]);
       if (st.fleetErrorAt && st.fleetErrorAt[st.step3Count]) return info(st.fleetErrorAt[st.step3Count], [{ url: 'game.php?page=fleetTable', label: 'Back' }]);
+      const onBody0 = st.bodyShips && st.bodyShips[fleet.origin];
+      if (onBody0 && Object.entries(fleet.ships).some(([id, n]) => n > (+onBody0[id] || 0))) return info(step3Text(st, 'ships'), [{ url: 'game.php?page=fleetTable', label: 'Back' }]);
       const cargo = { metal: num(form.metal), crystal: num(form.crystal), deuterium: num(form.deuterium) };
       if (st.enforceRoom) {
         const room = fleetRoom(st, fleet.ships) - consumptionOf(st);
-        if (cargo.metal + cargo.crystal + cargo.deuterium > room) return info('Not enough cargo space', [{ url: 'game.php?page=fleetTable', label: 'Back' }]);
+        if (cargo.metal + cargo.crystal + cargo.deuterium > room) return info(st.lang === 'ru' ? step3Text(st, 'cargo') : 'Not enough cargo space', [{ url: 'game.php?page=fleetTable', label: 'Back' }]);
       }
       st.sent.push({ mission: num(form.mission, 0), cargo, staytime: form.staytime !== undefined ? num(form.staytime) : null, ships: fleet.ships, target: fleet.target, speed: fleet.speed, origin: fleet.origin, t: Date.now() });
       const onBody = st.bodyShips && st.bodyShips[fleet.origin];
@@ -653,7 +675,7 @@ function detailsJson(id, gzPage) {
   };
 }
 
-module.exports = { startGzServer, pageNames, readAccount, fileFor, PAGES, GZ, MISSION_NAMES, infoPage, rewritePlanets, rewriteImperium, fleetTableShips };
+module.exports = { startGzServer, pageNames, readAccount, fileFor, PAGES, GZ, MISSION_NAMES, STEP3_TEXTS, infoPage, rewritePlanets, rewriteImperium, fleetTableShips };
 
 if (require.main === module) {
   const args = process.argv.slice(2);

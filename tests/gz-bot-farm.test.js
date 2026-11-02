@@ -10,6 +10,7 @@
 //       the attack, loot = half of every resource
 //   (d) scripted change after launch (target gains 50 heavy fighters) -> escort sees it -> recall before arrival + battle-cancelled
 //   (e) buildShips -> build.units on the origin, then the attack with the built ships
+//   the server's bash rule (attacks per day on one target) end to end: tests/gz-bot-farm-bash.test.js
 // Every test: no [OGX errors, no bot console errors, a botfarm:decision before every botfarm action.
 //   node tests/gz-bot-farm.test.js
 const path = require('path');
@@ -22,7 +23,7 @@ const { assert } = T;
 if (process.env.OGX_NO_SYNC !== '1') T.sync();
 
 const HOME = 254102;
-const OTHER_BOT = ['botsave', 'botdebris', 'botbuild', 'botexpo'];
+const OTHER_BOT = ['botsave', 'botdebris', 'botbuild', 'botexpo', 'botmissiles'];
 const BASE = Object.assign(Object.fromEntries(OTHER_BOT.map((m) => [m + '.enabled', false])),
   { 'botcore.minGapMs': 300, 'botcore.maxGapMs': 500, 'botcore.userIdleSec': 0, 'botfarm.minLoot': 100000, 'botfarm.escortLeadSec': 40,
     'spy.probes': 5 });   // the suite's probes per spy (default 1100; the home planet has 50)
@@ -143,10 +144,13 @@ T.test('(c) live: formula probes, exact report, cargo-only and simulated attacks
     const ids10 = Object.keys(plan10.d.ships).map(Number);
     assert.deepEqual(ids10, [217], 'cargo only, Battle Transporters only: ' + JSON.stringify(plan10.d.ships));
     const need = Math.ceil(S.minCapacityForLoot(plan10.d.expected) * 1.1 / capOf(ids10[0]));
-    // the other attack may have left first and taken some cargo ships: then the count is capped by what was at home
+    // the other attack may have left first and taken some cargo ships: then the count is capped by what was at home.
+    // Only fleets still AWAY at the send count: a fleet whose return (or recall) landed before the send is home again
+    // (the 2:68:13 raid can land one second before the 2:68:10 raid leaves; the farm re-reads the ships after a landing).
     const wa10s = W.log.sent.find((x) => x.mission === 1 && x.to === '2:68:10');
     const homeShips = (W.spec.bodies.find((b) => +b.id === HOME).ships || {})[ids10[0]] || 0;
-    const takenBefore = W.log.sent.filter((x) => x.fleetId !== wa10s.fleetId && x.t <= wa10s.t && x.originId === HOME).reduce((s2, x) => s2 + (x.ships[ids10[0]] || 0), 0);
+    const backOf = (x) => { const rc = W.log.recalled.find((r) => r.fleetId === x.fleetId); return rc && rc.back ? rc.back : x.back; };
+    const takenBefore = W.log.sent.filter((x) => x.fleetId !== wa10s.fleetId && x.originId === HOME && x.t <= wa10s.t && backOf(x) > wa10s.t).reduce((s2, x) => s2 + (x.ships[ids10[0]] || 0), 0);
     assert.equal(plan10.d.ships[ids10[0]], Math.min(need, homeShips - takenBefore), `exact capacity with 10 % surplus (need ${need}, at home ${homeShips - takenBefore})`);
     if (need > homeShips - takenBefore) assert.ok(plan10.d.lootExpMsu < plan10.d.lootHalvesMsu, 'capped fleet: journal loot is the cargo-limited loot, not the planet half');
     // defended: optimizeRaid composition with combat ships, win >= winMin, the summary in the journal
@@ -175,7 +179,9 @@ T.test('(c) live: formula probes, exact report, cargo-only and simulated attacks
     // escort: probes arrive before the attack, report read, no change
     const esc = await ev(env, 'botfarm:escort-spy', (e) => e.d.spyArrival && e.d.battle === b13.id);
     assert.ok(esc.d.spyArrival < wa13.arrival * 1000, 'escort probes arrive before the attack');
-    assert.ok(wa13.arrival * 1000 - esc.d.spyArrival <= 40000, 'shortly before');
+    // botfarm-4: the probes arrive escortLeadSec (90) .. +30 s before the hit, never later than 30 s before it
+    const escLead = wa13.arrival * 1000 - esc.d.spyArrival;
+    assert.ok(escLead >= 29000 && escLead <= 125000, 'escort lead 90-120 s: ' + escLead);
     const er = await ev(env, 'botfarm:escort-report', (e) => e.d.battle === b13.id);
     assert.equal(er.d.changed, false);
     const wEsc = W.log.sent.filter((x) => x.mission === 6 && x.to === '2:68:13' && x.t * 1000 > sent13.t - 60000 && x.arrival < wa13.arrival);
@@ -201,8 +207,11 @@ T.test('(c) live: formula probes, exact report, cargo-only and simulated attacks
     assert.ok(comb.d.predicted.metal > 0 && comb.d.ratio > 0.5 && comb.d.ratio < 1.5, JSON.stringify(comb.d));
     // after its own attack the farm never plans from a report taken before the IMPACT (the escort report is older than the
     // battle): lastAttackAt = arrival, and once the fleet is home the next step on 2:68:13 is a new espionage, not an attack
+    // (on a slow machine the farm runs its next cycle on 2:68:13 — spy, plan, attack again — before this check: then the two
+    // fields belong to that later attack; either way lastAttackAt is the impact time of a world attack on 2:68:13)
     const T13 = await env.evalOgx(await env.page(), () => { const t = OGX.botFarm._M.targets['2:68:13:1']; return t ? { lastAttackAt: t.lastAttackAt, lastAttackSentAt: t.lastAttackSentAt } : null; });
-    assert.equal(T13.lastAttackAt, wa13.arrival * 1000, 'lastAttackAt = impact time: ' + JSON.stringify(T13));
+    const impacts13 = W.log.sent.filter((x) => x.mission === 1 && x.to === '2:68:13').map((x) => x.arrival * 1000);
+    assert.ok(impacts13.includes(T13.lastAttackAt), `lastAttackAt = impact time of an attack on 2:68:13 (${impacts13.join(', ')}): ` + JSON.stringify(T13));
     assert.ok(T13.lastAttackSentAt < T13.lastAttackAt, 'send time kept separately');
     const nextOf13 = (e) => e.d && e.d.key === '2:68:13:1' && e.t > sent13.t;
     await env.waitJournal(/^botfarm:(spy-sent|attack-planned)$/, { pred: nextOf13, timeoutMs: 240000, stepMs: 1000 });

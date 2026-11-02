@@ -120,11 +120,14 @@
 .ogx-hint { flex-basis: 100%; color: var(--ogx-muted); font-size: 10px; }
 .ogx-root input[type=text], .ogx-root input[type=search], .ogx-root input[type=number], .ogx-root select, .ogx-root textarea,
 .ogx-panel input[type=search],
-.ogx-settings-form input[type=text], .ogx-settings-form input[type=search], .ogx-settings-form input[type=number], .ogx-settings-form select, .ogx-settings-form textarea,
+.ogx-settings-form input[type=text], .ogx-settings-form input[type=search], .ogx-settings-form input[type=number], .ogx-settings-form input[type=password], .ogx-settings-form select, .ogx-settings-form textarea,
 .ogx-input { min-height: 20px; padding: 1px 4px; border: 1px solid var(--ogx-border); border-radius: 2px; background: var(--ogx-bg); color: var(--ogx-text); font: inherit; }
 .ogx-root input[type=checkbox], .ogx-root input[type=radio] { margin: 0 4px 0 0; vertical-align: middle; }
 .ogx-settings-form input[type=number] { width: 90px; }
 .ogx-settings-form textarea { width: 100%; font-family: monospace; }
+.ogx-secret-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.ogx-settings-form input.ogx-secret { width: 150px; }
+.ogx-secret-toggle { min-height: 18px; padding: 0 5px; font-size: 10px; }
 .ogx-invalid { border-color: var(--ogx-bad) !important; }
 
 /* banner (fleet prefill and module notices) */

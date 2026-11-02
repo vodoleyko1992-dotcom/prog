@@ -64,6 +64,54 @@ T.test('coalescing: many set() calls -> one backend write; update() is serialise
   assert.deepEqual(env.ogxErrors(), []);
 });
 
+T.test('failed backend write: the batch stays pending and is retried; a newer value wins; one journal line; degraded after 3 failures', async () => {
+  const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
+  const page = await env.open('/overview');
+  const r = await env.evalOgx(page, async () => {
+    const S = OGX.storage;
+    const area = chrome.storage.local;
+    const realSet = area.set.bind(area);
+    let fail = 1; let calls = 0;
+    const fake = function (obj, cb) { calls++; if (fail > 0) { fail--; return Promise.reject(new Error('QUOTA_BYTES quota exceeded')); } return realSet(obj, cb); };
+    try { area.set = fake; } catch (e) { /* read-only */ }
+    if (area.set !== fake) Object.defineProperty(area, 'set', { value: fake, configurable: true, writable: true });
+    const fk = S.fullKey('t.retry');
+    const events = [];
+    OGX.bus.on('storage:degraded', () => events.push('degraded'));
+    OGX.bus.on('storage:recovered', () => events.push('recovered'));
+    await S.set('t.retry', { v: 1 });                                // the write fails
+    const afterFail = { disk: (await chrome.storage.local.get([fk]))[fk] || null, get: await S.get('t.retry'), streak: S.failStreak() };
+    await new Promise((res) => setTimeout(res, 1400));                // retried after 1 s
+    const afterRetry = { disk: (await chrome.storage.local.get([fk]))[fk] || null, streak: S.failStreak() };
+    // three failures in a row -> degraded once; a newer set() meanwhile is what lands
+    fail = 3;
+    await S.set('t.retry', { v: 2 });
+    S.set('t.retry', { v: 3 });
+    await new Promise((res) => setTimeout(res, 1300));
+    await new Promise((res) => setTimeout(res, 2300));
+    const midStreak = S.failStreak();
+    await new Promise((res) => setTimeout(res, 5500));
+    const final = { disk: (await chrome.storage.local.get([fk]))[fk] || null, streak: S.failStreak() };
+    // a removed key is not resurrected by a failed write
+    fail = 1;
+    S.set('t.gone', 1);
+    const pr = S.flush();
+    await S.remove('t.gone');
+    await pr;
+    await new Promise((res) => setTimeout(res, 1400));
+    const gone = (await chrome.storage.local.get([S.fullKey('t.gone')]))[S.fullKey('t.gone')];
+    const journal = OGX.diag ? OGX.diag.recent({ s: 'S', k: 'storage' }).map((e) => e.w) : null;
+    return { afterFail, afterRetry, midStreak, final, gone: gone === undefined ? null : gone, events, journal, calls };
+  });
+  assert.deepEqual(r.afterFail, { disk: null, get: { v: 1 }, streak: 1 }, 'failed write kept in memory');
+  assert.deepEqual(r.afterRetry, { disk: { v: 1 }, streak: 0 }, 'persisted on the retry');
+  assert.equal(r.midStreak, 3);
+  assert.deepEqual(r.final, { disk: { v: 3 }, streak: 0 }, 'the newest value lands after the failures');
+  assert.equal(r.gone, null, 'a removed key is not written back');
+  assert.deepEqual(r.events.filter((e) => e === 'degraded'), ['degraded']);
+  if (r.journal) assert.deepEqual(r.journal.filter((w) => w === 'write-failed').length, 3, 'one line per failure episode: ' + r.journal.join(','));
+});
+
 T.test('subscribe: a second tab sees the change (remote: true); own writes are local', async () => {
   const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
   const a = await env.open('/overview');
@@ -203,4 +251,98 @@ T.test('localStorage fallback backend: same API, keys prefixed ogx.<ext>.', asyn
   assert.deepEqual(r, { backend: 'localStorage', raw: '{"z":1}', get: { z: 1 }, keys: ['t.ls'], g: 2 });
   await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith('ogx.')) localStorage.removeItem(k); });
   assert.deepEqual(env.ogxErrors(), []);
+});
+
+T.test('a rejected backend write: journaled once (S storage write-failed + toast), the batch stays pending and lands on a later flush', async () => {
+  const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
+  const page = await env.open('/overview');
+  const r = await env.evalOgx(page, async () => {
+    const S = OGX.storage;
+    await S.init({ ext: 'live', host: location.host, playerId: 108, backend: 'localStorage' });
+    S._reset();
+    // the first two writes of the key fail like a full chrome.storage area (QUOTA_BYTES), the third goes through
+    const orig = Storage.prototype.setItem;
+    let fail = 2;
+    Storage.prototype.setItem = function (k, v) {
+      if (fail > 0 && /t\.quota/.test(k)) { fail--; const e = new Error('QUOTA_BYTES quota exceeded'); e.name = 'QuotaExceededError'; throw e; }
+      return orig.call(this, k, v);
+    };
+    const out = {};
+    try {
+      const p1 = S.set('t.quota', { big: 1 });
+      await S.flush();                                   // fails: journaled + toast
+      out.resolved = await Promise.race([p1.then(() => true), new Promise((res) => setTimeout(() => res(false), 300))]);
+      out.cachedAfterFail = await S.get('t.quota');
+      out.rawAfterFail = localStorage.getItem('ogx.live.' + location.host.toLowerCase() + '|108|t.quota');
+      await S.flush();                                   // fails again: debug only
+      out.rawAfterSecond = localStorage.getItem('ogx.live.' + location.host.toLowerCase() + '|108|t.quota');
+      await S.flush();                                   // retry succeeds
+      out.rawAfterRetry = localStorage.getItem('ogx.live.' + location.host.toLowerCase() + '|108|t.quota');
+      out.failures = S._writeFailures();
+      out.events = OGX.diag.recent({ s: 'S', k: 'storage' }).map((e) => [e.w, e.d && e.d.keys, e.d && e.d.sample, e.d && e.d.backend]);
+      out.errorEvents = OGX.diag.recent({ s: 'S', k: 'error' }).filter((e) => /storage write failed/.test(e.d && e.d.msg || '')).length;
+      out.toasts = [...document.querySelectorAll('.ogx-toast')].filter((t) => /Хранилище расширения не принимает запись/.test(t.textContent)).length;
+    } finally { Storage.prototype.setItem = orig; }
+    S._reset();
+    return out;
+  });
+  assert.equal(r.resolved, true, 'set() still resolves after a failed flush (callers never hang)');
+  assert.deepEqual(r.cachedAfterFail, { big: 1 }, 'the page keeps working on the new value');
+  assert.equal(r.rawAfterFail, null);
+  assert.equal(r.rawAfterSecond, null);
+  assert.equal(r.rawAfterRetry, '{"big":1}', 'the pending batch is written by a later flush');
+  assert.equal(r.failures, 2);
+  assert.deepEqual(r.events, [['write-failed', 1, ['t.quota'], 'localStorage']], 'exactly one journal event for two failures');
+  assert.equal(r.errorEvents, 1, 'one error-level log line, the second failure is debug only');
+  assert.equal(r.toasts, 1, 'one toast');
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith('ogx.')) localStorage.removeItem(k); });
+  // the error line of the first failure is expected in the console; nothing else
+  const errs = env.ogxErrors().map((e) => e.text);
+  assert.deepEqual(errs.filter((t) => !/storage write failed/.test(t)), [], errs.join('\n'));
+});
+
+T.test('a key that keeps failing: other keys of its batch still land, a remote write of it reaches subscribers and cancels the retry', async () => {
+  const env = await T.launch({ ext: coreExt(), scenario: 'vega' });
+  const page = await env.open('/overview');
+  const r = await env.evalOgx(page, async () => {
+    const S = OGX.storage;
+    await S.init({ ext: 'live', host: location.host, playerId: 108, backend: 'localStorage' });
+    S._reset();
+    const pre = 'ogx.live.' + location.host.toLowerCase() + '|108|';
+    const orig = Storage.prototype.setItem;
+    let tries = 0;
+    Storage.prototype.setItem = function (k, v) {
+      if (/t\.poison/.test(k)) { tries++; throw new Error('QUOTA_BYTES quota exceeded'); }
+      return orig.call(this, k, v);
+    };
+    const out = {};
+    try {
+      const got = [];
+      S.subscribe('t.poison', (v, meta) => got.push([v, meta.remote]));
+      S.set('t.poison', { n: 1 });
+      S.set('t.ok', { n: 1 });
+      await S.flush();
+      out.okLanded = localStorage.getItem(pre + 't.ok');
+      S.set('t.ok2', 2);
+      await S.flush();                                   // the poison key is retried, the new small write lands anyway
+      out.ok2Landed = localStorage.getItem(pre + 't.ok2');
+      // another tab writes t.poison: the subscriber sees it, the failed older value is no longer retried
+      window.dispatchEvent(new StorageEvent('storage', { key: pre + 't.poison', newValue: '{"n":9}', oldValue: null }));
+      out.got = got.slice();
+      out.now = await S.get('t.poison');
+      const before = tries;
+      await S.flush();
+      out.retriedAfterRemote = tries - before;
+    } finally { Storage.prototype.setItem = orig; }
+    S._reset();
+    return out;
+  });
+  assert.equal(r.okLanded, '{"n":1}', 'the healthy key of the failed batch is written');
+  assert.equal(r.ok2Landed, '2', 'a later small write is not sunk by the failing key');
+  assert.deepEqual(r.got, [[{ n: 1 }, false], [{ n: 9 }, true]], 'the remote write is not masked');
+  assert.deepEqual(r.now, { n: 9 });
+  assert.equal(r.retriedAfterRemote, 0, 'the stale value is dropped, not written over the remote one');
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith('ogx.')) localStorage.removeItem(k); });
+  const errs = env.ogxErrors().map((e) => e.text);
+  assert.deepEqual(errs.filter((t) => !/storage write failed/.test(t)), [], errs.join('\n'));
 });

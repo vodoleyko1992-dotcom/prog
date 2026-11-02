@@ -578,11 +578,15 @@
     const surplus = (o.surplusPct !== undefined ? +o.surplusPct : 0) / 100;
     // loot carriers: John's rule — Battle Transporters (217) only, no fallback ship; callers may still pass their own list
     const cargoIds = (o.cargoIds || [(root && root.OGX && root.OGX.catalog && root.OGX.catalog.transportShip) || 217]).filter((id) => T[id] && T[id].capacity > 0);
-    const combatIds = (o.combatIds || DEFAULT_COMBAT_IDS).filter((id) => T[id] && T[id].attack > 0);
+    let combatIds = (o.combatIds || DEFAULT_COMBAT_IDS).filter((id) => T[id] && T[id].attack > 0);
     const fuelOf = typeof o.fuelOf === 'function' ? o.fuelOf : () => 0;
     const timeOf = typeof o.timeOf === 'function' ? o.timeOf : null;   // ships -> roundtrip seconds
     const att0 = o.attackerTech || {};
     const limit = (id) => (+available[id] || 0) + (+allow[id] || 0);
+    // Aeternum: the Battle Transporter 217 is a warship in the catalog (attack 50, shield 120, hull 5 500). A hangar without any
+    // listed combat ship (John's secondary planets hold 217 / 219 only) fights with its armed cargo ships: the bisection below
+    // finds the smallest winning count, the rest stays home for logistics.
+    if (!combatIds.some((e) => limit(e) > 0)) combatIds = combatIds.concat(cargoIds.filter((c) => T[c].attack > 0 && !combatIds.includes(c)));
     const planet = res(o.planet);
     const needCap = minCapacityForLoot(planet) * (1 + surplus);
     const halves = (planet.metal + planet.crystal + planet.deuterium) / 2;
@@ -696,7 +700,8 @@
     // while the whole hangar wins. Variant 'need': cargo = what the loot needs; variant 'all': every available cargo ship too
     // (2Moons spreads the damage by unit COUNT, so the many Battle Transporters 217 soak shots for the warships). Own ships only.
     if (o.mixed) {
-      const avC = combatIds.filter((e) => (+available[e] || 0) > 0);
+      // armed cargo ships alone (the 217-only hangar) are the single-type case above, not a mixed fleet
+      const avC = combatIds.filter((e) => (+available[e] || 0) > 0 && !cargoIds.includes(e));
       if (avC.length) {
         for (const c of cargoOptions) {
           for (const mode of c === null ? ['need'] : ['need', 'all']) {

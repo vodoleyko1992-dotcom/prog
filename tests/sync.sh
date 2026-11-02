@@ -37,7 +37,9 @@ node -e '
   const dir=process.argv[1], mfPath=path.join(dir,"manifest.json");
   let m; try { m=JSON.parse(fs.readFileSync(mfPath,"utf8")); } catch(e) { console.error("sync: manifest.json:",e.message); process.exit(1); }
   if (m.manifest_version!==3) err("manifest_version must be 3");
-  if (JSON.stringify(m.permissions)!==JSON.stringify(["storage"])) err("permissions must be exactly [\"storage\"]");
+  // specs/DESIGN.md:128 / CORE_API.md §Diagnostics: storage + unlimitedStorage (no install prompt in Chrome or Firefox; without it
+  // chrome.storage.local is capped at 10 MB and the bot state / galaxy cache / spy reports stop persisting silently)
+  if (JSON.stringify(m.permissions)!==JSON.stringify(["storage","unlimitedStorage"])) err("permissions must be exactly [\"storage\",\"unlimitedStorage\"]");
   if (!(m.browser_specific_settings&&m.browser_specific_settings.gecko&&m.browser_specific_settings.gecko.id)) err("gecko id missing");
   const files=[];
   for (const cs of m.content_scripts||[]) files.push(...(cs.js||[]),...(cs.css||[]));

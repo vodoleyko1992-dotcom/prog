@@ -54,6 +54,7 @@ window.OGX = window.OGX || {};
   // a busy queue whose content / end could not be read is read again after this (was 15 min: on Aeternum a level takes seconds,
   // and before the 0.3.2 parser fix every GALAXYZ queue read as unknown — the log of 2026-11-02 had 17-30 min idle gaps)
   const UNKNOWN_Q_MS = 60000;
+  const EXPORTER_STICKY_MS = 24 * 3600000;   // a planet that showed 217 within this window still ships (its 217 may be out)
   const IMPERIUM_EVERY = 60 * MIN;
   const RESOURCES_EVERY = 60 * MIN;
   const COOLDOWN_MS = 30 * MIN;      // after maxRetries failed verifications of one item [SPEC §7]
@@ -65,7 +66,7 @@ window.OGX = window.OGX || {};
   const STORE_OF = { metal: 22, crystal: 23, deuterium: 24 };
   const PROD_RESEARCH = { 131: 'metal', 132: 'crystal', 133: 'deuterium' };
   // forced rules before the payback order (payback = 99); tactic rules (policy 'tactic') in John's order
-  const RULE_RANK = { energy: 0, fields: 1, storageFull: 2, storageNeed: 2.5, storageHours: 3, foundation: 4, lab: 5, nanitesLate: 6, expoSlots: 7, unlock: 8, research: 9, defense: 10, mine: 11, mineSurplus: 12, storageLate: 100 };   // storageLate after the payback order (99) too
+  const RULE_RANK = { energy: 0, fields: 1, storageFull: 2, storageNeed: 2.5, storageHours: 3, wants: 3.5, foundation: 4, lab: 5, nanitesLate: 6, expoSlots: 7, unlock: 8, research: 9, defense: 10, mine: 11, mineSurplus: 12, storageLate: 100 };   // storageLate after the payback order (99) too
 
   /* John's build-up tactic: the rules of /mnt/project-files/ogamex-strategy/galaxyz/planet_buildup_rules.json (schema
    * ogamex-galaxyz-buildup/2, computed 2026-10-31, simulator buildup_sim.py next to it), copied here as data at build time — never
@@ -137,6 +138,7 @@ window.OGX = window.OGX || {};
     defense: { type: 'bool', default: true, label: 'Ставить купола (малый и большой щит)', section: SEC },
     queueDepth: { type: 'int', default: 5, min: 1, max: 5, label: 'Построек в очереди планеты сразу (1 = ставить по одной; дальше — только если склад планеты оплачивает все)', section: SEC },
     satAheadLevels: { type: 'int', default: 10, min: 1, max: 30, label: 'Спутники одним заказом: энергия на столько уровней всех трёх шахт вперёд (если склад планеты оплачивает)', section: SEC },
+    satBatchMaxMin: { type: 'int', default: 30, min: 0, max: 600, label: 'Партия спутников не дольше (мин работы верфи; на Aeternum 1 с/шт. → до 1800 за заказ; 0 = без ограничения)', section: SEC },
     surplusMines: { type: 'bool', default: true, label: 'Шахты выше цели этапа из своих излишков (планета не простаивает, пока колонии догоняют)', section: SEC },
     needAheadMin: { type: 'int', default: 45, min: 0, max: 1440, label: 'Довоз под стройку: на сколько минут стройки вперёд (цепочка шагов одним рейсом; 0 = только текущий шаг)', section: SEC },
   };
@@ -219,11 +221,12 @@ window.OGX = window.OGX || {};
   }
   /** Planet production in MSU per hour (ticker values). */
   function prodMsu(view, P) { let s = 0; for (const r of RES) s += Math.max(0, num(view.res && view.res[r] && view.res[r].perHour)) * (r === 'metal' ? 1 : r === 'crystal' ? P.vC : P.vD); return s; }
+  /** Satellites still in the planet's shipyard queue (cached page / answer page / own order): their energy is pending. */
+  const queuedSats = (view) => ((view && view.shipyard && view.shipyard.items) || []).filter((x) => +x.id === SAT).reduce((s, x) => s + num(x.count), 0);
   function energyBalance(view, factors) {
     if (!view.energy) return null;
     const ps = perSat(view, factors).value;
-    const queued = ((view.shipyard && view.shipyard.items) || []).filter((x) => +x.id === SAT).reduce((s, x) => s + num(x.count), 0);
-    return num(view.energy.production) - num(view.energy.consumption) + queued * ps;
+    return num(view.energy.production) - num(view.energy.consumption) + queuedSats(view) * ps;
   }
 
   // ------------------------------------------------------------------ requirements
@@ -350,6 +353,17 @@ window.OGX = window.OGX || {};
     }
     return best;
   }
+  /** Lab planet (research is started there, its stock pays, its need / claim carry the research): the highest lab level, ties by
+   *  the lowest body id — never by the (shuffled) iteration order (audit 2026-11-02: with five planets at lab 22 the payer, the
+   *  research need's bodyKey and the mineSurplus claim moved to another planet on every run). */
+  function labPlanetOf(list) {
+    let lab = null;
+    for (const v of list || []) {
+      if (!v || v.isMoon || !v.levels) continue;
+      if (!lab || num(v.levels[31]) > num(lab.levels[31]) || (num(v.levels[31]) === num(lab.levels[31]) && +v.id < +lab.id)) lab = v;
+    }
+    return lab;
+  }
   /** Planet cap reached: astrophysics is >= 2 levels above a level that already showed the same planet maximum (y of [x / y];
    *  2Moons adds a planet every 2 levels until the server cap). seen = { astroLevel: y }. */
   function astroCappedOf(seen, astro, max) {
@@ -370,17 +384,40 @@ window.OGX = window.OGX || {};
     return { tc, stage: empireStage(planets), main: mainOf(planets),
       irnTarget: Math.max(0, planets.filter((v) => num(v.levels[31]) >= tc.labTarget).length - 1) };
   }
+  /** Astrophysics past the planet cap while botexpo runs (expedition slots = floor(sqrt(124))): a level pays only when it adds a
+   *  slot, so the price of the NEXT SLOT (every level up to the next perfect square) competes with the production techs ABOVE the
+   *  stage targets (tier 3, cheapest first); tier 2 (with the techs the stage still needs) only when the very next level adds a
+   *  slot and costs no more than a research step the stage needs anyway. Audit 2026-11-02 (botbuild-1): tier 2 by level price
+   *  kept astrophysics in the single research slot for good (1.75^L is cheaper per level than the 2^L techs) — levels of days,
+   *  L >= 34 unaffordable, while 131-133 above the targets never came. */
+  function expoAstro(research, ctx) {
+    const R = BUILDUP.research;
+    const rt = ctx.stage.research || {};
+    const mc = (id, L) => { const c = costOf(id, L); return c.metal + c.crystal; };
+    const L = num(research[R.astro]);
+    const slots = Math.floor(Math.sqrt(L));
+    const nextSlot = (slots + 1) * (slots + 1);
+    const slotNow = L + 1 === nextSlot;
+    let path = 0;
+    for (let l = L + 1; l <= nextSlot; l++) path += mc(R.astro, l);
+    let stageMax = 0;   // the dearest production research level the stage still needs (0: none below target)
+    for (const id of R.pool) if (num(research[id]) < num(rt[id])) stageMax = Math.max(stageMax, mc(id, num(rt[id])));
+    const tier = slotNow && stageMax > 0 && path <= stageMax ? 2 : 3;
+    const why = slotNow
+      ? `астрофизика ${L + 1}: даёт слот экспедиций (${slots} → ${slots + 1})` + (tier === 2 ? `, не дороже техов этапа ${ctx.stage.id}` : stageMax > 0 ? `, но дороже техов этапа ${ctx.stage.id} — после них` : ', наравне с техами добычи выше цели')
+      : `астрофизика: слоты экспедиций — следующий слот на уровне ${nextSlot} (ещё ${nextSlot - L} ур., ${fmtN(path)} М+К), после техов добычи этапа`;
+    return { id: R.astro, level: L + 1, sub: [tier, path], why, astro: { level: L, slots, nextSlot, slotNow, pathCost: Math.round(path), stageMax: Math.round(stageMax), tier } };
+  }
   /** Research order of the tactic: 217 then 219 unlock chains, astrophysics while the planet cap is not reached, then 131-133 below
-   *  the stage targets and the lab network (123, time / 2), shortest (metal + crystal of the next level) first, then the rest. */
+   *  the stage targets and the lab network (123, time / 2), shortest (metal + crystal of the next level) first, then the rest
+   *  (with expeditions on: astrophysics for the next expedition slot among them, expoAstro). */
   function researchOrder(research, ctx, astroCapped, expoOn) {
     const out = [];
     const R = BUILDUP.research;
     const rt = ctx.stage.research || {};
     const mc = (id, L) => { const c = costOf(id, L); return c.metal + c.crystal; };
     if (!astroCapped) out.push({ id: R.astro, level: num(research[R.astro]) + 1, sub: [1, 0], why: 'астрофизика первой до лимита планет' });
-    // 0.3.2: expeditions on — astrophysics also past the planet cap (expedition slots = floor(sqrt(124))), in the tier of the
-    // production research below the stage targets, the cheaper first
-    else if (expoOn) out.push({ id: R.astro, level: num(research[R.astro]) + 1, sub: [2, mc(R.astro, num(research[R.astro]) + 1)], why: 'астрофизика: слоты экспедиций' });
+    else if (expoOn) out.push(expoAstro(research, ctx));
     for (const id of R.pool) {
       const L = num(research[id]);
       const below = L < num(rt[id]);
@@ -490,9 +527,8 @@ window.OGX = window.OGX || {};
     const planets = (input.order || Object.keys(views).map(Number)).map((id) => views[id]).filter((v) => v && !v.isMoon);
     const moons = Object.values(views).filter((v) => v && v.isMoon);
     const researchBusy = !!(input.research && input.research.queue && input.research.queue.busy);
-    // lab planet: highest lab level (research is started there, its stock pays)
-    let lab = null;
-    for (const v of planets) if (!lab || num(v.levels[31]) > num(lab.levels[31])) lab = v;
+    // lab planet: highest lab level, ties by id (research is started there, its stock pays) — stable across the planet order
+    const lab = labPlanetOf(planets);
     const orderIdx0 = new Map(planets.map((v, i) => [v.id, i]));
     const tactic = P.tactic ? tacticContext(planets, cfg) : null;
     const storageH = tactic ? tactic.tc.storageHours : storageHoursOf(cfg);
@@ -523,16 +559,26 @@ window.OGX = window.OGX || {};
 
     /** Cheapest energy fix for `deficit` on v: satellites (w_sat, needs shipyard: its chain counts), solar (x1), fusion (w_fus; the
      *  extra deuterium use is priced for 24 h [NEW]). Returns { kind, steps, cost, costMsu, n?, perSat } or null. */
+    // one satellite batch takes at most satBatchMaxMin minutes of the shipyard (audit 2026-11-02, botbuild-5: the headroom of
+    // 10 levels x 3 mines meant 3 000-8 000 satellites = hours of yard at the measured 1 s per unit, during which 15 / 21 and the
+    // other modules' ship orders are refused); the rest comes in the next batch once the queue drained
+    const satMaxMin = num(cfg.satBatchMaxMin, 30);
+    const satUnitSec = (v) => {
+      try { return Math.max(1, OGX.calc.unitTime(SAT, { shipyard: num(v.levels[21]), nanite: num(v.levels[15]), gameSpeed: num(input.gameSpeed) > 0 ? num(input.gameSpeed) : SEED_SPEED, factors })); } catch (e) { return 1; }
+    };
+    const satCap = (v) => (satMaxMin > 0 ? Math.max(1, Math.floor(satMaxMin * 60 / satUnitSec(v))) : Infinity);
     function energyFix(v, deficit) {
       if (!(deficit > 0)) return null;
       const opts = [];
       const ps = perSat(v, factors);
-      const n = Math.ceil(deficit / ps.value);
+      const nWanted = Math.ceil(deficit / ps.value);
+      const cap = satCap(v);
+      const n = Math.min(nWanted, cap);
       const satChain = reqSteps(SAT, v, research);
       if (satChain) {
         const steps = satChain.map((s) => (s.kind === 'research' ? stepR(s.id, s.level) : stepB(v, s.id, s.level))).concat([stepU(v, SAT, n)]);
         const cost = sumCost(steps);
-        opts.push({ kind: 'sat', steps, cost, costMsu: msuOf(cost, P) * P.w_sat, n, perSat: ps });
+        opts.push({ kind: 'sat', steps, cost, costMsu: msuOf(cost, P) * P.w_sat, n, nWanted, partial: n < nWanted, cap, unitSec: satUnitSec(v), deficit, perSat: ps });
       }
       const L4 = num(v.levels[4]); const e4 = P.tactic ? 0 : energyOf(4, L4, v, research, factors);
       for (let k = 1; k <= (P.tactic ? 0 : 25); k++) {   // the tactic: energy by satellites only, never solar / fusion
@@ -571,7 +617,16 @@ window.OGX = window.OGX || {};
       const more = mineHeadroom(v);
       if (!(more > 0)) return fix;
       const big = energyFix(v, deficit + more);
-      return big && big.kind === 'sat' && big.n > fix.n && stockPays(v, addRes(sumCost(big.steps), extraCost || res0())) ? Object.assign(big, { ahead: satAhead }) : fix;
+      return big && big.kind === 'sat' && big.n > fix.n && stockPays(v, addRes(sumCost(big.steps), extraCost || res0())) ? Object.assign(big, { ahead: satAhead, baseN: fix.nWanted, baseDeficit: deficit }) : fix;
+    };
+    /** Why this many satellites (journal): the deficit, the mine headroom and the yard-time cap. */
+    const satWhy = (f) => {
+      if (!f || f.kind !== 'sat') return null;
+      const baseN = f.baseN !== undefined ? f.baseN : f.nWanted;
+      let s = `спутники ×${f.n}: нехватка ${Math.round(f.baseDeficit !== undefined ? f.baseDeficit : f.deficit)} → ×${baseN}`;
+      if (f.ahead) s += `, +${f.ahead} ур. всех шахт → ×${f.nWanted}`;
+      if (f.partial) s += `; партия не дольше ${satMaxMin} мин верфи (${f.unitSec} с/шт.) → ×${f.n}, остальное следующим заказом`;
+      return s;
     };
 
     for (const v of planets.concat(moons)) syncFields(v);
@@ -592,10 +647,10 @@ window.OGX = window.OGX || {};
       // energy deficit -> fix first
       if (cfg.energy && bal !== null && bal < 0) {
         const fix = bigSat(v, -bal, energyFix(v, -bal));
-        note('energy', `Дефицит энергии ${Math.round(-bal)} на [${v.coords}]` + (fix ? ': ' + (fix.kind === 'sat' ? `спутники ×${fix.n} (по ${Math.round(fix.perSat.value * 100) / 100}, ${fix.perSat.src === 'page' ? 'со страницы ресурсов' : 'по формуле'})` : fix.kind === 'solar' ? 'солнечная' : 'термояд') : ': нечем чинить'),
-          { body: v.id, deficit: Math.round(-bal), balance: bal, fix: fix ? { kind: fix.kind, n: fix.n, perSat: fix.perSat.value, perSatSrc: fix.perSat.src, alternatives: fix.alternatives } : null });
+        note('energy', `Дефицит энергии ${Math.round(-bal)} на [${v.coords}]` + (fix ? ': ' + (fix.kind === 'sat' ? `спутники ×${fix.n} (по ${Math.round(fix.perSat.value * 100) / 100}, ${fix.perSat.src === 'page' ? 'со страницы ресурсов' : 'по формуле'}; ${satWhy(fix)})` : fix.kind === 'solar' ? 'солнечная' : 'термояд') : ': нечем чинить'),
+          { body: v.id, deficit: Math.round(-bal), balance: bal, queuedSats: queuedSats(v), fix: fix ? { kind: fix.kind, n: fix.n, nWanted: fix.nWanted, partial: !!fix.partial, cap: fix.cap, ahead: fix.ahead || 0, perSat: fix.perSat.value, perSatSrc: fix.perSat.src, alternatives: fix.alternatives } : null });
         if (fix) mk({ kind: fix.steps[fix.steps.length - 1].kind, item: fix.kind === 'sat' ? SAT : fix.steps[0].id, label: `Энергия [${v.coords}]: ` + (fix.kind === 'sat' ? `спутники ×${fix.n}` : name(fix.steps[0].id)), bodyId: v.id, rule: 'energy', steps: fix.steps, cost: fix.cost, costMsu: fix.costMsu, gainMsu: 0, weight: 1,
-          fix: { kind: fix.kind, n: fix.n, costMsu: Math.round(fix.costMsu) }, fixOptions: fix.options });
+          fix: { kind: fix.kind, n: fix.n, costMsu: Math.round(fix.costMsu), why: satWhy(fix) }, fixOptions: fix.options });
         if (fix && fix.kind === 'sat' && fix.perSat.src !== 'page' && !(v.perSatT && now - v.perSatT < RESOURCES_EVERY)) needRead('resources', v.id, 'выработка спутника для дефицита энергии');
       }
       if (!cfg.buildings) continue;
@@ -685,14 +740,17 @@ window.OGX = window.OGX || {};
             // the mine now, else the satellites alone: they are cheap and needed anyway)
             const withMine = bigSat(v, -after, fix, costOf(id, g.level));
             fix = withMine !== fix ? withMine : bigSat(v, -after, fix);
-            if (fix) steps = fix.steps.concat(steps);
+            // a batch capped by the yard time that does not cover this level's own use: the satellites alone now, the mine (and the
+            // rest of the energy) once the queue drained
+            const covered = !fix || fix.kind !== 'sat' || fix.n * fix.perSat.value >= -after - 1e-6;
+            if (fix) steps = covered ? fix.steps.concat(steps) : fix.steps;
           }
           if (fix) fixOptions = fix.options;
         }
         const cost = sumCost(steps);
         const costMsu = msuOf(costOf(id, g.level), P) + (fix ? fix.costMsu : 0);
         const c = mk({ kind: 'building', item: id, level: g.level, label: `${name(id)} ${g.level} [${v.coords}]`, bodyId: v.id, steps, cost, costMsu, gainMsu, weight: w,
-          gain: { [g.res]: g.gain }, dCons: g.dCons, fix: fix ? { kind: fix.kind, n: fix.n, costMsu: Math.round(fix.costMsu) } : null, fixOptions });
+          gain: { [g.res]: g.gain }, dCons: g.dCons, fix: fix ? { kind: fix.kind, n: fix.n, costMsu: Math.round(fix.costMsu), why: satWhy(fix) } : null, fixOptions });
         if (tactic) {
           // rank = level + offset (no trader); ties: colonies before the main planet, then the lower production
           c.rule = surplus ? 'mineSurplus' : 'mine'; c.rank = mineRank(id, g.level - 1); c.sub = [c.rank, tactic.main && tactic.main.id === v.id ? 1 : 0, prodMsu(v, P)];
@@ -707,6 +765,18 @@ window.OGX = window.OGX || {};
           if ((v.defense && num(v.defense[id]) > 0) || queuedU || !reqsMet(id, v, research)) continue;
           mk({ kind: 'units', item: id, label: `${name(id)} [${v.coords}]`, bodyId: v.id, rule: 'defense', steps: [stepU(v, id, 1)], cost: stepU(v, id, 1).cost, gainMsu: 0, weight: 1,
             defRead: !v.defense });
+        }
+      }
+      // requests of other modules (OGX.bot.wants, BOT_CONTRACT C2.7): botmissiles asks for a missile silo 4 on its best launcher
+      if (cfg.buildings) {
+        for (const wnt of input.wants || []) {
+          if (!wnt || wnt.kind !== 'building' || +wnt.bodyId !== +v.id || !(+wnt.id > 0)) continue;
+          const L = num(v.levels[wnt.id]);
+          if (L >= num(wnt.level, L + 1)) continue;
+          if (((v.queue && v.queue.items) || []).some((x) => +x.id === +wnt.id)) continue;
+          const steps = chainSteps(+wnt.id, L + 1, v, 'building');
+          if (!steps) { note('wait', `[${v.coords}] ${name(+wnt.id)} ${L + 1} (запрос ${wnt.owner || '?'}): требования не выполнимы сейчас`, { body: v.id, id: +wnt.id, owner: wnt.owner || null }); continue; }
+          mk({ kind: 'building', item: +wnt.id, level: L + 1, label: `${name(+wnt.id)} ${L + 1} [${v.coords}] (запрос: ${wnt.why || wnt.owner})`, bodyId: v.id, rule: 'wants', steps, cost: sumCost(steps), gainMsu: 0, weight: 1 });
         }
       }
     }
@@ -733,6 +803,8 @@ window.OGX = window.OGX || {};
         mk({ kind: f.kind, item: sid, level: null, label: `Открыть «${name(sid)}» (${sid}): ${name(f.id)} ${f.level}` + (miss.length > 1 ? ` (+${miss.length - 1} шаг.)` : ''), bodyId: lab.id, rule: 'unlock', steps, cost: sumCost(steps), gainMsu: 0, weight: 1, sub: [i], unlock: sid });
       });
       for (const o of researchOrder(research, tactic, capReached(input, research[124]), !!input.expoOn)) {
+        // the astrophysics reasoning (expeditions on, planet cap reached) in the journal: once per change (act() dedupes)
+        if (o.astro) note('research', `Астрофизика при включённых экспедициях: уровень ${o.astro.level}, слотов экспедиций ${o.astro.slots}; ${o.why}`, o.astro);
         const steps = chainSteps(o.id, o.level, lab, 'research');
         if (!steps) continue;
         mk({ kind: 'research', item: o.id, level: o.level, label: `${name(o.id)} ${o.level} (${o.why})`, bodyId: lab.id, rule: 'research', steps, cost: sumCost(steps), gainMsu: 0, weight: 1, sub: o.sub });
@@ -822,6 +894,13 @@ window.OGX = window.OGX || {};
       if (!labHold && T <= LAB_HOLD_S && ((tactic && cand.rule === 'lab') || labStep(step))) labHold = cand.label;
     };
     const actions = []; const waits = []; const skipped = [];
+    /** par_tol: another step on a planet that saves for `cl` (its waiting step) may start when it delays that wait by at most
+     *  par_tol x the wait; delayH = how long the planet needs to earn the step's price again. */
+    const parDelay = (step, payer, cl) => {
+      let delayH = 0;
+      for (const r of RES) if (num(step.cost[r]) > 0) { const ph = num(payer.res && payer.res[r] && payer.res[r].perHour); delayH = Math.max(delayH, ph > 0 ? step.cost[r] / ph : Infinity); }
+      return { delayH, ok: delayH <= P.par_tol * cl.T / 3600 };
+    };
     const queueHas = (v, ids) => ((v && v.queue && v.queue.items) || []).some((x) => ids.includes(+x.id));
     const cooldownKey = (s) => (s.kind === 'research' ? 'r' : s.bodyId) + ':' + s.id;
     // shipyard queue: the cached page / own orders decide planning; a fresh page (<= FRESH_MS) is needed only for the order itself
@@ -846,7 +925,11 @@ window.OGX = window.OGX || {};
           if (!yardFresh(v)) yardRead = { page: 'shipyard', bodyId: v.id, why: 'очередь верфи перед ' + name(step.id), mode: 'fleet', queue: 'b:' + v.id };
         }
         if (step.cost.energy > 0 && num(v.energy && v.energy.production) < step.cost.energy) {
-          const fix = energyFix(v, step.cost.energy - num(v.energy && v.energy.production));
+          // satellites already in the shipyard queue count (audit 2026-11-02, botbuild-4: the same batch was re-ordered every run
+          // until the yard held five entries); 2Moons checks the price against the built energy, so the step waits for them
+          const pending = queuedSats(v) * perSat(v, factors).value;
+          if (num(v.energy && v.energy.production) + pending >= step.cost.energy) return { blocked: `ждём спутники из очереди верфи (×${queuedSats(v)}) — цена в энергии ${step.cost.energy}` };
+          const fix = energyFix(v, step.cost.energy - num(v.energy && v.energy.production) - pending);
           let last = null;
           for (const o of (fix && depth < 3 ? fix.options : [])) {
             const t = transform(o.steps[0], cand, depth + 1);
@@ -866,6 +949,13 @@ window.OGX = window.OGX || {};
         if (queueHas(v, [15, 21])) return { blocked: 'в очереди построек верфь/нанитки — верфь не принимает заказы' };
         if (!(num(v.levels[21]) >= 1)) return { blocked: 'нет верфи' };
         if (v.shipyard && (v.shipyard.items || []).length >= MAX_SHIP_QUEUE) return { blocked: 'очередь верфи полна' };
+        // one satellite batch at a time: the next one only once the queue drained (its energy is pending in energyBalance; a
+        // second batch on top doubled the yard time and the satellites, log 2026-11-02 ×596 and ×693 twice)
+        if (+step.id === SAT && queuedSats(v) > 0) {
+          // a queue without an end is never cleared by advanceViews: re-read the yard instead of waiting for good
+          const read = !(num(v.shipyard.end) > 0) && !yardFresh(v) && !(now - num(v.yardFailT) < YARD_RETRY_MS) ? { page: 'shipyard', bodyId: v.id, why: 'спутники в очереди верфи без срока — перечитываю', mode: 'fleet', queue: 's:' + v.id } : null;
+          return { blocked: `ждём спутники из очереди верфи (×${queuedSats(v)})`, read };
+        }
         if (!yardFresh(v) || (cand && cand.defRead && !v.defense)) yardRead = { page: 'shipyard', bodyId: v.id, why: +step.id >= 400 ? 'купола: оборона перед заказом' : 'очередь верфи перед заказом', mode: +step.id >= 400 ? 'defense' : 'fleet', queue: 's:' + v.id };
       }
       if (depth >= 3) return { step, why, yardRead };
@@ -918,7 +1008,7 @@ window.OGX = window.OGX || {};
         // lab / University (rho_L, psi) — needs the game speed
         if (gs > 0 && !P.tactic) {
           const pm = prodMsu(lab, P);
-          const tStepH = OGX.calc.researchTime(step.id, step.level, { labLevel: num(lab.levels[31]), university: num(lab.levels[6]), gameSpeed: gs, factors }) / 3600;
+          const tStepH = OGX.calc.researchTime(step.id, step.level, { labLevel: effLabOf(step.id, lab, planets, research), university: num(lab.levels[6]), gameSpeed: gs, factors }) / 3600;
           const opts = [31];
           if (cfg.university && reqsMet(6, lab, research)) opts.unshift(6);
           for (const id of opts) {
@@ -960,17 +1050,30 @@ window.OGX = window.OGX || {};
       const payer = views[step.bodyId];
       const avail = availOf(payer, now, { reserved: input.reserved && input.reserved[payer.id], spent: spent[payer.id], deutReserve: input.deutReserve });
       const why = t.why.slice();
+      let parChecked = false;
       if (cand.rule === 'mineSurplus') {
-        // surplus only: the planet's own stock after what the other planets wait for (their delivery needs) and after its own
-        // waiting step; never a wait, a reservation or a delivery request of its own
+        // surplus only: the planet's own stock after what the other planets wait for (their delivery needs — kept only on a
+        // planet logistics can ship from: 217 on it or botdebris' origin; a colony without 217 could never deliver them, audit
+        // 2026-11-02) and after its own waiting step; never a wait, a reservation or a delivery request of its own
+        const exporter = !Array.isArray(input.exporters) || input.exporters.some((id) => +id === +payer.id);
         const keep = res0();
-        for (const [bid, r] of Object.entries(input.exportKeep || {})) if (+bid !== +payer.id) for (const k of RES) keep[k] += num(r && r[k]);
+        if (exporter) for (const [bid, r] of Object.entries(input.exportKeep || {})) if (+bid !== +payer.id) for (const k of RES) keep[k] += num(r && r[k]);
         const spare = res0(); for (const k of RES) spare[k] = avail[k] - keep[k];
-        if (claimed[payer.id] || !affordable(step.cost, spare)) { skipped.push({ cand, step, reason: claimed[payer.id] ? `излишки: планета копит на «${claimed[payer.id].cand.label}»` : 'излишки: своих ресурсов не хватает (довоз не заказывается)' }); continue; }
+        if (!affordable(step.cost, spare)) { skipped.push({ cand, step, reason: 'излишки: своих ресурсов не хватает (довоз не заказывается)' + (RES.some((k) => keep[k] > 0) ? ' — часть склада ждут другие планеты' : '') }); continue; }
+        const cl = claimed[payer.id];
+        if (cl && cl.cand !== cand) {
+          // the planet saves for its waiting step (a research): the same par_tol test as for the stage mines, not a hard skip
+          // (audit 2026-11-02, botbuild-2: an unaffordable research froze every surplus mine of the main planet for days)
+          const d = parDelay(step, payer, cl);
+          if (!d.ok) { skipped.push({ cand, step, reason: `излишки: планета копит на «${cl.cand.label}» (задержка ${fmtH(d.delayH)} > par_tol ${P.par_tol} × ${fmtH(cl.T / 3600)})` }); continue; }
+          why.push(`копит на «${cl.cand.label}»: задержка ${fmtH(d.delayH)} ≤ par_tol × ожидание`);
+          parChecked = true;
+        }
         why.push('из излишков планеты');
       }
       if (floorHeld && !affordable(step.cost, avail)) { skipped.push({ cand, step, reason: floorHeld }); continue; }
       if (floorHeld) why.push('своя очередь свободна и свой склад платит — не ждём шахту другой планеты');
+      if (step.kind === 'units' && +step.id === SAT && cand.fix && cand.fix.why) why.push(cand.fix.why);
       if (affordable(step.cost, avail)) {
         // the order needs the shipyard / defense page fresh: read it now (this pass), order in the next plan of the same run
         if (t.yardRead) {
@@ -981,11 +1084,10 @@ window.OGX = window.OGX || {};
           continue;
         }
         const cl = claimed[payer.id];
-        if (cl && cl.cand !== cand) {
-          let delayH = 0;
-          for (const r of RES) if (num(step.cost[r]) > 0) { const ph = num(payer.res && payer.res[r] && payer.res[r].perHour); delayH = Math.max(delayH, ph > 0 ? step.cost[r] / ph : Infinity); }
-          if (!(delayH <= P.par_tol * cl.T / 3600)) { skipped.push({ cand, step, reason: `ждём «${cl.cand.label}»: задержка ${fmtH(delayH)} > par_tol ${P.par_tol} × ${fmtH(cl.T / 3600)}` }); continue; }
-          why.push(`в другой очереди: задержка ${fmtH(delayH)} ≤ par_tol × ожидание`);
+        if (cl && cl.cand !== cand && !parChecked) {
+          const d = parDelay(step, payer, cl);
+          if (!d.ok) { skipped.push({ cand, step, reason: `ждём «${cl.cand.label}»: задержка ${fmtH(d.delayH)} > par_tol ${P.par_tol} × ${fmtH(cl.T / 3600)}` }); continue; }
+          why.push(`в другой очереди: задержка ${fmtH(d.delayH)} ≤ par_tol × ожидание`);
         }
         actions.push({ cand, step, why });
         busyQ[q] = 'занято шагом «' + cand.label + '»'; busyT[q] = 0;
@@ -1268,7 +1370,7 @@ window.OGX = window.OGX || {};
     }
 
     // ---- research path (pooled production of all planets)
-    const lab = planets.reduce((a, v) => (!a || num(v.levels[31]) > num(a.levels[31]) ? v : a), null);
+    const lab = labPlanetOf(planets);
     const sim = Object.assign({}, rlev);
     const labLv = lab ? Object.assign({}, lab.levels) : {};
     const path = [];
@@ -1406,7 +1508,22 @@ window.OGX = window.OGX || {};
   function speedOf() { return M.gameSpeed && num(M.gameSpeed.value) > 0 ? num(M.gameSpeed.value) : SEED_SPEED; }
   /** Fills missing item ends of a busy queue (no timer on the page, or our own order) from the build / research time at the
    *  current game speed; the chain starts at `at`. Items without id / level stop the estimate. */
-  function estimateQueue(q, v, kind, at) {
+  /** botbuild-12: the lab level the server uses for a research time — the lab planet's lab plus the IRN labs (research 123) of the
+   *  other planets (calc.effectiveLab); the lab alone while the network level is unknown. views: array or map of planet views. */
+  function effLabOf(id, labView, views, research) {
+    const lab = num(labView && labView.levels && labView.levels[31]);
+    const irn = num(research && research[123]);
+    if (!(irn > 0) || !labView) return lab;
+    const list = Array.isArray(views) ? views : Object.values(views || {});
+    const others = list.filter((v) => v && v.levels && !v.isMoon && +v.id !== +labView.id).map((v) => num(v.levels[31])).filter((l) => l > 0);
+    try { const e = OGX.calc.effectiveLab(+id, lab, others, irn); return Number.isFinite(e) && e > lab ? e : lab; } catch (e) { return lab; }
+  }
+  /** The x1 time of a step on view v (a research with the IRN labs): the reference of the game-speed calibration. */
+  function stepTime1(step, v, factors) {
+    if (step.kind === 'research') return OGX.calc.researchTime(step.id, step.level, { labLevel: effLabOf(step.id, v, M.views, M.research && M.research.levels), university: num(v && v.levels[6]), gameSpeed: 1, factors });
+    return OGX.calc.buildTime(step.id, step.level, { robotics: num(v && v.levels[14]), nanite: num(v && v.levels[15]), gameSpeed: 1, factors });
+  }
+  function estimateQueue(q, v, kind, at, research) {
     if (!q || !q.busy || !Array.isArray(q.items) || !q.items.length || q.items.every((x) => num(x.end) > 0)) return q;
     const gs = speedOf();
     const factors = M.factors || OGX.calc.factors({});
@@ -1417,7 +1534,7 @@ window.OGX = window.OGX || {};
       if (!(+it.id > 0) || !(+it.level > 0)) return q;
       let sec;
       try {
-        sec = kind === 'research' ? OGX.calc.researchTime(+it.id, +it.level, { labLevel: num(lv[31]), university: num(lv[6]), gameSpeed: gs, factors })
+        sec = kind === 'research' ? OGX.calc.researchTime(+it.id, +it.level, { labLevel: effLabOf(+it.id, v, M.views, research || (M.research && M.research.levels)), university: num(lv[6]), gameSpeed: gs, factors })
           : OGX.calc.buildTime(+it.id, +it.level, { robotics: num(lv[14]), nanite: num(lv[15]), gameSpeed: gs, factors });
       } catch (e) { return q; }
       if (!Number.isFinite(sec)) return q;
@@ -1450,12 +1567,45 @@ window.OGX = window.OGX || {};
         if (res && v.res && v.res[res]) { try { const c = OGX.calc.storageCapacity(level, { factors: M.factors || OGX.calc.factors({}) }); if (c > 0) v.res[res].storage = c; } catch (e) { /* keep */ } }
       });
       if (r.n) { v.queue = r.q; v.stale = true; }
-      if (v.shipyard && num(v.shipyard.end) > 0 && v.shipyard.end <= now && (v.shipyard.items || []).length) { v.shipyard.items = []; v.shipyard.t = 0; }
+      if (v.shipyard && num(v.shipyard.end) > 0 && v.shipyard.end <= now && (v.shipyard.items || []).length) {
+        // the yard queue ended by the page's time / the estimate: the satellites it held are built — their pending energy moves
+        // into the production (an estimate: the next page=buildings read replaces it); the yard is no longer fresh, so a new
+        // satellite batch first reads page=shipyard (a slower yard still shows them queued there: no duplicate order)
+        const n212 = queuedSats(v);
+        if (n212 > 0 && v.energy) v.energy = Object.assign({}, v.energy, { production: num(v.energy.production) + n212 * perSat(v, M.factors || OGX.calc.factors({})).value, credited: num(v.energy.credited) + n212 });
+        v.shipyard.items = []; v.shipyard.t = 0; v.shipyard.end = null;
+      }
     }
     if (M.research && M.research.queue && M.research.levels) {
       const r = advanceQueue(M.research.queue, M.research.levels, now);
       if (r.n) { M.research.queue = r.q; M.research.stale = true; }
     }
+  }
+  /** A yard queue still running when a page=buildings was rendered at `at`: the units built by then are in the page's energy, so
+   *  only the rest stays queued (pending). Items are built in order; each item's share of the queue time is its unit time x count
+   *  (count share when unknown), scaled to the queue's span base..end (review rev-botbuild-3: a mid-batch read counted the built
+   *  satellites twice, and advanceViews a third time). `base` = the time the item list was last true; `t` (freshness) is kept. */
+  function yardLeftAt(sy, at, levels) {
+    if (!sy || !(num(sy.end) > at) || !(sy.items || []).length) return sy || null;
+    const base = num(sy.base) || num(sy.t);
+    if (!(base > 0) || at <= base) return sy;
+    const span = num(sy.end) - base;
+    const w = sy.items.map((x) => {
+      let u = 1;
+      try { u = OGX.calc.unitTime(+x.id, { shipyard: num(levels && levels[21]), nanite: num(levels && levels[15]), gameSpeed: speedOf(), factors: M.factors || OGX.calc.factors({}) }); } catch (e) { u = 1; }
+      return (Number.isFinite(u) && u > 0 ? u : 1) * num(x.count);
+    });
+    const sum = w.reduce((a, b) => a + b, 0);
+    if (!(sum > 0) || !(span > 0)) return sy;
+    let gone = (at - base) / span * sum;
+    const items = [];
+    sy.items.forEach((x, i) => {
+      if (gone >= w[i]) { gone -= w[i]; return; }
+      const left = gone > 0 ? Math.ceil(num(x.count) * (1 - gone / w[i])) : num(x.count);
+      gone = 0;
+      if (left > 0) items.push({ id: x.id, count: left });
+    });
+    return Object.assign({}, sy, { items, base: at });
   }
   /** A view fit for an order: read from its page at most FRESH_MS ago, no queue end and no order since. */
   function freshView(v, now) { return !!v && !v.stale && now - num(v.readAt) <= FRESH_MS; }
@@ -1521,8 +1671,13 @@ window.OGX = window.OGX || {};
       fieldsUsed: tip.fieldsUsed !== null && tip.fieldsUsed !== undefined ? +tip.fieldsUsed : st && Number.isFinite(+st.fieldsUsed) && st.fieldsUsed !== null ? +st.fieldsUsed : null,
       fieldsMax: tip.fieldsMax !== null && tip.fieldsMax !== undefined ? +tip.fieldsMax : st && num(st.fieldsMax) > 0 ? +st.fieldsMax : null,   // null = unknown, never 0
       levels, t: r.at, readAt: r.at, stale: false, res: {}, energy: R.energy ? { production: num(R.energy.production), consumption: num(R.energy.consumption) } : null,
-      queue: estimateQueue(parseQueue(r.doc, r.at), { levels }, 'building', r.at), shipyard: old.shipyard || null, defense: old.defense || null, perSat: old.perSat || null, perSatT: old.perSatT || 0, yardFailT: old.yardFailT || 0,
+      queue: estimateQueue(parseQueue(r.doc, r.at), { levels }, 'building', r.at),
+      // a yard queue whose end passed before this page was rendered is built and in the page's energy: drop it without a credit
+      shipyard: old.shipyard && num(old.shipyard.end) > 0 && old.shipyard.end <= r.at && (old.shipyard.items || []).length ? { known: true, items: [], t: 0, end: null } : yardLeftAt(old.shipyard, r.at, old.levels || levels),
+      defense: old.defense || null, perSat: old.perSat || null, perSatT: old.perSatT || 0, yardFailT: old.yardFailT || 0,
       percents: old.percents || (st && st.percents) || {}, sats: old.sats || null,
+      had217T: old.had217T || 0,
+      ships217: st && st.ships && st.ships[217] !== undefined && st.ships[217] !== null ? num(st.ships[217]) : old.ships217 !== undefined ? old.ships217 : null,
     };
     for (const k of RES) v.res[k] = R[k] ? { amount: num(R[k].amount), storage: R[k].storage, perHour: num(R[k].perHour) } : null;
     if (v.queue.busy === null && cur.building) v.queue = { known: false, busy: true, items: [], end: null };
@@ -1536,7 +1691,7 @@ window.OGX = window.OGX || {};
     noteBodies(bl);
     const levels = {};
     for (const it of OGX.parse.gz.techItems(r.doc)) levels[it.id] = num(it.value);
-    M.research = { levels, queue: estimateQueue(parseQueue(r.doc, r.at), M.views[labId], 'research', r.at), t: r.at, readAt: r.at, stale: false, cp: labId };
+    M.research = { levels, queue: estimateQueue(parseQueue(r.doc, r.at), M.views[labId], 'research', r.at, levels), t: r.at, readAt: r.at, stale: false, cp: labId };
     return M.research;
   }
   async function readShipyard(wctx, bodyId, why, mode = 'fleet', opts) {
@@ -1549,9 +1704,18 @@ window.OGX = window.OGX || {};
     let q = null;
     try { q = OGX.parse.gz.shipyardQueue(r.doc); } catch (e) { q = null; }
     v.shipyard = { known: true, items: q ? q.items.map((x) => ({ id: x.id, count: x.count })) : [], t: r.at, end: q && q.totalSecs ? r.at + q.totalSecs * 1000 : null };
+    if (!v.shipyard.end && v.shipyard.items.length) {
+      // units listed without a time (secsPerUnit 0 on the page): the x3000 estimate, as after an order — a queue without an end
+      // was never cleared and blocked the next satellite batch for good (review rev-botbuild-4)
+      let sec = 0;
+      for (const x of v.shipyard.items) {
+        try { const u = OGX.calc.unitTime(+x.id, { shipyard: num(v.levels && v.levels[21]), nanite: num(v.levels && v.levels[15]), gameSpeed: speedOf(), factors: M.factors || OGX.calc.factors({}) }); if (Number.isFinite(u)) sec += Math.max(1, u) * num(x.count); } catch (e) { /* no estimate */ }
+      }
+      if (sec > 0) v.shipyard.end = r.at + sec * 1000;
+    }
     const items = OGX.parse.gz.techItems(r.doc);
     if (mode === 'defense') { v.defense = {}; for (const it of items) v.defense[it.id] = num(it.value); }
-    else { const s = items.find((x) => +x.id === SAT); if (s) v.sats = num(s.value); }
+    else { const s = items.find((x) => +x.id === SAT); if (s) v.sats = num(s.value); const bt = items.find((x) => +x.id === 217); if (bt) v.ships217 = num(bt.value); }
     return v;
   }
   async function readResources(wctx, bodyId, why) {
@@ -1582,6 +1746,7 @@ window.OGX = window.OGX || {};
     try { e = OGX.parse.gz.empire(r.doc); } catch (x) { e = null; }
     if (!e) return;
     for (const [cp, b] of Object.entries(e.bodies || {})) if (M.views[cp] && b.ships && b.ships[SAT] !== undefined && M.views[cp].sats === null) M.views[cp].sats = num(b.ships[SAT]);
+    for (const [cp, b] of Object.entries(e.bodies || {})) if (M.views[cp] && b.ships && b.ships[217] !== undefined && b.ships[217] !== null) M.views[cp].ships217 = num(b.ships[217]);
     for (const [cp, b] of Object.entries(e.bodies || {})) mergeImperium(M.views[cp], b, (e.columns || []).find((c) => +c.cp === +cp), r.at);
     if (!M.research && e.research && Object.keys(e.research).length) M.research = { levels: e.research, queue: { known: false, busy: null, items: [], end: null }, t: r.at, src: 'imperium' };
     else if (M.research && M.research.src !== 'imperium' && num(M.research.readAt) < r.at && e.research) {
@@ -1659,8 +1824,32 @@ window.OGX = window.OGX || {};
       now: wctx.now(), P: pol.params, policyName: pol.name, cfg, views: M.views, order, research: M.research,
       factors, officers, gameSpeed: speedOf(), planets: M.planets,
       cooldowns: M.cooldowns, reserved: othersReserved(), deutReserve: num(wctx.core('deutReserve')), astroCapped: astroCapped(),
-      exportKeep: M.needTotals || {}, expoOn: (() => { try { return !!OGX.bot.isActive('botexpo'); } catch (e) { return false; } })(),
+      exportKeep: M.needTotals || {}, exporters: exportersOf(wctx.now(), wctx.flights ? wctx.flights() : []), wants: (() => { try { return OGX.bot.wants.list(); } catch (e) { return []; } })(), expoOn: (() => { try { return !!OGX.bot.isActive('botexpo'); } catch (e) { return false; } })(),
     };
+  }
+  /** Planets logistics can ship from (John's rule 1: only 217 battle transporters haul): the ones with 217 per the last shipyard /
+   *  imperium / state read, plus botdebris' configured origin; null while no ship count is known at all (then every planet keeps
+   *  the other planets' delivery needs in stock, as before). The counts are ships parked at home: a planet whose 217 are out on a
+   *  mission still counts while it showed 217 within EXPORTER_STICKY_MS or one of its own flights carries 217 (review
+   *  rev-botbuild-2: the main dropped out whenever its fleet was away and spent the colonies' delivery stock). */
+  function exportersOf(now, flights) {
+    const t = num(now, Date.now());
+    const flying = new Set();
+    for (const f of flights || []) if (f && f.own && f.ships && num(f.ships[217]) > 0) flying.add(f.returnFlight ? f.destKey : f.originKey);
+    let origin = '';
+    try { origin = String(OGX.settings.get('botdebris.logisticsOrigin') || '').trim(); } catch (e) { origin = ''; }
+    const out = [];
+    let known = false;
+    for (const v of Object.values(M.views)) {
+      if (!v || v.isMoon) continue;
+      if (v.ships217 !== undefined && v.ships217 !== null) {
+        known = true;
+        if (num(v.ships217) > 0) v.had217T = t;
+        if (num(v.ships217) > 0 || (num(v.had217T) > 0 && t - num(v.had217T) <= EXPORTER_STICKY_MS) || (v.key && flying.has(v.key))) out.push(v.id);
+      }
+      if (origin && (String(v.id) === origin || String(v.coords) === origin.replace(/[[\]\s]/g, ''))) { known = true; if (!out.includes(v.id)) out.push(v.id); }
+    }
+    return known ? out : null;
   }
   function slimCand(c) {
     return { label: c.label, kind: c.kind, id: c.item, level: c.level || null, bodyId: c.bodyId, rule: c.rule || null,
@@ -1683,9 +1872,7 @@ window.OGX = window.OGX || {};
     if (!head || +head.id !== +step.id || !(num(head.rest) >= 5)) return;
     const v = M.views[step.bodyId];
     const { factors } = await playerFactors();
-    let t1;
-    if (step.kind === 'research') t1 = OGX.calc.researchTime(step.id, step.level, { labLevel: num(v && v.levels[31]), university: num(v && v.levels[6]), gameSpeed: 1, factors });
-    else t1 = OGX.calc.buildTime(step.id, step.level, { robotics: num(v && v.levels[14]), nanite: num(v && v.levels[15]), gameSpeed: 1, factors });
+    const t1 = stepTime1(step, v, factors);
     if (!(t1 > 0)) return;
     const sample = t1 / num(head.rest);
     const g = M.gameSpeed || { samples: [] };
@@ -1719,22 +1906,24 @@ window.OGX = window.OGX || {};
           v.queue = { known: true, busy: true, items: was.concat([{ id: step.id, level: step.level, end: null }]), end: was.length ? v.queue.end || null : null };
         }
         if (step.kind === 'units') {
-          v.shipyard = v.shipyard || { known: true, items: [], t: wctx.now() };
+          const at0 = num(r.at, wctx.now());
+          v.shipyard = v.shipyard || { known: true, items: [], t: at0 };
           v.shipyard.items = (v.shipyard.items || []).concat([{ id: step.id, count: step.n }]);
-          // the answer is page=shipyard of that planet: its queue is as fresh as a read (no read before the next order)
+          v.shipyard.t = at0;
+          // the answer is page=shipyard of that planet rendered AFTER the insert: its queue (with the new batch and the remaining
+          // time) is the truth, as fresh as a read; the x3000 estimate is used only when the page did not parse (audit 2026-11-02,
+          // missed-2: adding the estimate on top of the page's time kept the cached yard busy twice as long). The ordered
+          // satellites stay queued items: energyBalance counts their energy as pending until the queue drains (advanceViews /
+          // the next page then credit the real value), so the next run never re-orders them (journal-6, botbuild-3).
           let yq = null;
           try { yq = r.data && r.data.doc ? OGX.parse.gz.shipyardQueue(r.data.doc) : null; } catch (e) { yq = null; }
-          if (yq) { const at0 = num(r.at, wctx.now()); v.shipyard = { known: true, items: yq.items.map((x) => ({ id: x.id, count: x.count })), t: at0, end: yq.totalSecs ? at0 + yq.totalSecs * 1000 : null }; }
-          // satellites build in a fraction of a second at x3000: credit their energy now (the next page read gives the real value)
-          if (+step.id === SAT && v.energy) {
-            const inQ = (v.shipyard.items || []).filter((x) => +x.id === SAT).reduce((a, x) => a + num(x.count), 0);
-            const done = Math.max(0, num(step.n) - inQ);
-            if (done > 0) v.energy = Object.assign({}, v.energy, { production: num(v.energy.production) + done * perSat(v, M.factors || OGX.calc.factors({})).value });
+          if (yq) v.shipyard = { known: true, items: yq.items.map((x) => ({ id: x.id, count: x.count })), t: at0, end: yq.totalSecs ? at0 + yq.totalSecs * 1000 : null };
+          if (!yq || !(num(v.shipyard.end) > 0)) {
+            try {
+              const sec = OGX.calc.unitTime(step.id, { shipyard: num(v.levels[21]), nanite: num(v.levels[15]), gameSpeed: speedOf(), factors: M.factors || OGX.calc.factors({}) }) * num(step.n);
+              if (Number.isFinite(sec)) v.shipyard.end = Math.max(num(v.shipyard.end), at0) + Math.max(1, sec) * 1000;
+            } catch (e) { /* no estimate */ }
           }
-          try {
-            const sec = OGX.calc.unitTime(step.id, { shipyard: num(v.levels[21]), nanite: num(v.levels[15]), gameSpeed: speedOf(), factors: M.factors || OGX.calc.factors({}) }) * num(step.n);
-            if (Number.isFinite(sec)) v.shipyard.end = Math.max(num(v.shipyard.end), wctx.now()) + Math.max(1, sec) * 1000;
-          } catch (e) { /* no estimate */ }
         }
         for (const k of RES) if (v.res[k]) v.res[k].amount = Math.max(0, OGX.calc.amountAt(Object.assign({ t: v.t }, v.res[k]), wctx.now()) - num(step.cost[k]));
         v.t = wctx.now();
@@ -1772,7 +1961,7 @@ window.OGX = window.OGX || {};
   function ruleRu(r) {
     return { energy: 'энергия', fields: 'последнее поле', storageFull: 'хранилище заполнено', storageNeed: 'хранилище меньше цены шахты', storageHours: 'хранилище по часам добычи (дешевле шахты)', storageLate: 'хранилище по часам (после шахт)', expoSlots: 'слоты экспедиций', defense: 'купола',
       foundation: 'фундамент (роботы, наниты, верфь)', lab: 'лаборатория до цели', nanitesLate: 'наниты: шахты строятся долго', unlock: 'открыть 217/219',
-      research: 'исследования по тактике', mine: 'самая низкая шахта' }[r] || r;
+      research: 'исследования по тактике', mine: 'самая низкая шахта', wants: 'запрос другого модуля (ракеты: шахта)' }[r] || r;
   }
 
   async function refresh(wctx, cfg, { force = [] } = {}) {
@@ -1792,18 +1981,21 @@ window.OGX = window.OGX || {};
     }
     for (const id of Object.keys(M.views)) if (!M.bodies.some((b) => +b.id === +id)) delete M.views[id];
     if (cfg.research) {
-      let lab = null;
-      for (const v of Object.values(M.views)) if (!v.isMoon && (!lab || num(v.levels[31]) > num(lab.levels[31]))) lab = v;
+      const lab = labPlanetOf(Object.values(M.views));
       const R = M.research;
-      const need = !R || R.src === 'imperium' || !R.queue || !R.queue.known || now - num(R.readAt || R.t) > VIEW_MAX_AGE || (R.queue.busy && !R.queue.end && now - num(R.readAt || R.t) > UNKNOWN_Q_MS)
+      // the research view is trusted until its queue end (advanceViews applies the level; a fresh read comes before an order):
+      // an unknown queue is re-read UNKNOWN_Q_MS after the last read, not on every pass (journal-18: 193 GET page=research in 3 h)
+      const rAge = now - num(R && (R.readAt || R.t));
+      const need = !R || R.src === 'imperium' || !R.queue || rAge > VIEW_MAX_AGE || ((!R.queue.known || (R.queue.busy && !R.queue.end)) && rAge > UNKNOWN_Q_MS)
         || (force.includes('research') && !freshResearch(now));
       if (lab && num(lab.levels[31]) > 0 && need) await readResearch(wctx, lab.id, force.includes('research') ? 'свежая очередь исследований перед заказом' : 'уровни и очередь исследований', { fresh: force.includes('research') });
     }
   }
 
   async function mainRun(wctx) {
-    if (!OGX.bot.isActive(NAME)) return { nextInMs: OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'off' };
+    if (!OGX.bot.isActive(NAME)) { if (M.needSig !== '[]') clearNeeds(); return { nextInMs: OGX.bot.randMs(OGX.bot.INTERVALS.m6), reason: 'off' }; }
     await load(wctx.store);
+    if (M.needSig === undefined) clearNeeds();   // first run of this session: botcore restored the previous session's needs — only this run's list counts
     M.lastRun = wctx.now();
     for (const id of M.resIds) wctx.release(id);
     M.resIds = [];
@@ -1857,10 +2049,13 @@ window.OGX = window.OGX || {};
   async function act(wctx, cfg, pol, out) {
     const now = wctx.now();
     for (const n of out.notes) {
-      // the stage only when it changed (or every 6 h): one line per run would be journal noise
-      if (n.event === 'stage') {
-        if (M.lastStage && M.lastStage.id === n.data.stage && now - M.lastStage.t < 6 * HOUR) continue;
-        M.lastStage = { id: n.data.stage, t: now };
+      // the stage and the research reasoning only when they changed (or every 6 h): one line per run would be journal noise
+      if (n.event === 'stage' || n.event === 'research') {
+        const id = n.event === 'stage' ? n.data.stage : n.what;
+        M.lastNotes = M.lastNotes || {};
+        const last = M.lastNotes[n.event];
+        if (last && last.id === id && now - last.t < 6 * HOUR) continue;
+        M.lastNotes[n.event] = { id, t: now };
       }
       wctx.rec(n.event, n.what, n.data);
     }
@@ -1907,11 +2102,26 @@ window.OGX = window.OGX || {};
       if (b && !bodyPlan[b]) bodyPlan[b] = { label: s.cand.label, step: s.step ? stepRu(s.step) : '', payback: s.cand.payback, rule: s.cand.rule || null, state: s.reason, eta: null };
     }
     // wake: queue ends, incoming own transports, expedition returns
+    // a busy queue of unknown content (no end) is re-read UNKNOWN_Q_MS after its last read: wake for that read, not after the
+    // 10–20 min pause (journal-18: the 15–18 min planet stalls of 0.3.1 — every candidate skipped, no event to wake for)
+    // A re-read that was due in this run but did not happen (failed / refused read) is retried UNKNOWN_Q_MS later, not in 1 s:
+    // a wake only for a read the next run will actually do (review rev-botbuild-1: a run every 2-3 s otherwise)
+    const unknownQ = (q, readAt) => {
+      if (!q || !((q.busy && !q.end) || q.known === false)) return Infinity;
+      const due = num(readAt) + UNKNOWN_Q_MS;
+      return due > now ? Math.max(now + 1000, due) : now + UNKNOWN_Q_MS;
+    };
     for (const v of Object.values(M.views)) {
       if (v.queue && v.queue.end && v.queue.end > now) next = Math.min(next, v.queue.end);
       if (v.shipyard && v.shipyard.end && v.shipyard.end > now) next = Math.min(next, v.shipyard.end);
+      // refresh() reads no moon while moons are off: no re-read wake for them
+      if (v.queue && v.queue.busy && !v.queue.end && (!v.isMoon || cfg.moons)) next = Math.min(next, unknownQ(v.queue, v.readAt || v.t));
     }
-    if (M.research && M.research.queue && M.research.queue.end && M.research.queue.end > now) next = Math.min(next, M.research.queue.end);
+    const R = M.research;
+    if (R && R.queue && R.queue.end && R.queue.end > now) next = Math.min(next, R.queue.end);
+    // refresh() reads page=research only on a planet with a lab: no re-read wake without one
+    const labR = labPlanetOf(Object.values(M.views));
+    if (R && R.queue && cfg.research && labR && num(labR.levels && labR.levels[31]) > 0) next = Math.min(next, unknownQ(R.queue, R.readAt || R.t));
     const ownKeys = new Set(Object.values(M.views).map((v) => v.key));
     for (const f of wctx.flights()) {
       if (!f || !f.own || !(+f.arrival > now)) continue;
@@ -1958,6 +2168,20 @@ window.OGX = window.OGX || {};
     for (const p of (L && L.planets) || []) out[p.id] = p.steps || [];
     return out;
   }
+  /** The queued-but-unpaid items of a planet as steps with their price: the building queue behind its head, and the research
+   *  queue behind its head on the planet it was ordered from (2Moons pays items 2..n when they start). */
+  function unpaidQueued(v) {
+    const out = [];
+    const add = (items) => { for (const it of (items || []).slice(1)) { if (!(+it.id > 0) || !(num(it.level) > 0)) continue; try { out.push({ id: +it.id, level: num(it.level), cost: costOf(+it.id, num(it.level)) }); } catch (e) { /* unknown item */ } } };
+    add(v && v.queue && v.queue.items);
+    if (v && M.research && M.research.queue && +M.research.cp === +v.id) add(M.research.queue.items);
+    return out;
+  }
+  /** botbuild-10: an empty list replaces the needs botcore persisted — logistics must not haul for a module that is off or for a previous session. */
+  function clearNeeds() {
+    M.needSig = '[]'; M.needPubT = 0; M.needTotals = {}; M.needSince = {};
+    try { OGX.bot.needs.set(NAME, []); } catch (e) { /* ignore */ }
+  }
   /**
    * Logistics needs (OGX.bot.needs 'botbuild'), one per waiting planet: the chain of its next needAheadMin minutes (at least the
    * waiting step) minus its stock, capped by its storage; none while an own transport flies to it (the chain is being delivered:
@@ -1969,7 +2193,8 @@ window.OGX = window.OGX || {};
     const chains = planChains(cfg, pol, now);
     const gs = speedOf(); const factors = M.factors || OGX.calc.factors({});
     const needs = []; const keeps = [];
-    let prio = 0;
+    // botbuild-10: deterministic priority — the planet missing the largest share of its step first, then the game's planet order
+    const order = (bodyId) => { const i = (M.bodies || []).findIndex((b) => +b.id === +bodyId); return i >= 0 ? i : 1e6 + num(bodyId); };
     M.needSince = M.needSince || {};
     const ids = new Set();
     for (const v of Object.values(M.views)) {
@@ -1978,8 +2203,11 @@ window.OGX = window.OGX || {};
       const bw = ws.find((w) => w.step.kind === 'building');
       const chain = chainFor({ view: v, first: bw ? bw.step : null, steps: v.isMoon ? [] : chains[v.id] || [], aheadMin: ahead, gameSpeed: gs, factors });
       for (const w of ws) if (w !== bw) chain.push(w.step);
-      const keepRes = chain.reduce((c, s) => addRes(c, s.cost), res0());
-      if (RES.some((r) => keepRes[r] > 0)) keeps.push({ id: 'botbuild:keep:' + v.key, owner: NAME, kind: 'keep', bodyKey: v.key, res: null, keep: keepRes, chain: chain.map((s) => ({ id: s.id, level: s.level || null, n: s.n || null })), aheadMin: ahead });
+      // botbuild-11: the queue items behind the head are paid only when they start (2Moons SetNextQueueElementOnTop drops an
+      // unaffordable one silently): their price stays on the planet too
+      const unpaid = unpaidQueued(v);
+      const keepRes = chain.concat(unpaid).reduce((c, s) => addRes(c, s.cost), res0());
+      if (RES.some((r) => keepRes[r] > 0)) keeps.push({ id: 'botbuild:keep:' + v.key, owner: NAME, kind: 'keep', bodyKey: v.key, res: null, keep: keepRes, chain: chain.map((s) => ({ id: s.id, level: s.level || null, n: s.n || null })), queued: unpaid.map((s) => ({ id: s.id, level: s.level })), aheadMin: ahead });
       if (!ws.length) continue;
       if (incoming[v.key]) {
         const ttl = Math.max(10 * MIN, incoming[v.key] - now + 10 * MIN);
@@ -1993,19 +2221,25 @@ window.OGX = window.OGX || {};
       const id = 'botbuild:' + v.key + ':' + w0.step.id + ':' + (w0.step.level || w0.step.n);
       ids.add(id);
       if (!M.needSince[id]) M.needSince[id] = now;
+      const costSum = RES.reduce((s, r) => s + num(w0.step.cost[r]), 0);
+      const share = costSum > 0 ? Math.min(1, RES.reduce((s, r) => s + num(w0.missing && w0.missing[r]), 0) / costSum) : 1;
       needs.push({ id, owner: NAME, bodyKey: v.key, planKey: 'botbuild:' + v.key, res: n.res, min: n.min, forItem: { id: w0.step.id, level: w0.step.level || null },
         chain: chain.map((s) => ({ id: s.id, level: s.level || null, n: s.n || null })), aheadMin: ahead,
-        wantedBy: M.needSince[id], priority: ++prio, why: w0.cand.label, eta: Number.isFinite(w0.T) ? now + w0.T * 1000 : null });
+        wantedBy: M.needSince[id], priority: 0, share: Math.round(share * 1000) / 1000, until: now + 2 * HOUR, why: w0.cand.label, eta: Number.isFinite(w0.T) ? now + w0.T * 1000 : null, bodyId: v.id });
     }
+    needs.sort((a, b) => b.share - a.share || order(a.bodyId) - order(b.bodyId) || a.bodyId - b.bodyId);
+    needs.forEach((x, i) => { x.priority = needs.length - i; delete x.bodyId; });
     for (const id of Object.keys(M.needSince)) if (!ids.has(id)) delete M.needSince[id];
     // what each waiting planet still asks logistics for: the surplus mines of the other planets leave it in stock
     M.needTotals = {};
     for (const x of needs) { const bid = +String(x.bodyKey).slice(1); if (bid) M.needTotals[bid] = addRes(M.needTotals[bid], x.res); }
     const list = needs.concat(keeps);
-    const sig = JSON.stringify(list.map((x) => [x.id, x.res, x.keep, x.min]));
-    if (sig === M.needSig) return list;
-    M.needSig = sig;
-    if (needs.length) wctx.rec('wait', `Довоз под стройку: ${needs.map((x) => bodyRu(+String(x.bodyKey).slice(1)) + ' ' + RES.map((r) => fmtN(x.res[r])).join(' / ') + ` (шагов ${x.chain.length})`).join('; ')}`, { needs: needs.map((x) => ({ id: x.id, res: x.res, min: x.min, chain: x.chain })) });
+    const sig = JSON.stringify(list.map((x) => [x.id, x.res, x.keep, x.min, x.priority]));
+    // published on change, and once an hour anyway (the `until` of every need moves on; botcore's persisted copy stays fresh)
+    if (sig === M.needSig && now - num(M.needPubT) < HOUR) return list;
+    const changed = sig !== M.needSig;
+    M.needSig = sig; M.needPubT = now;
+    if (needs.length && changed) wctx.rec('wait', `Довоз под стройку: ${needs.map((x) => bodyRu(+String(x.bodyKey).slice(1)) + ' ' + RES.map((r) => fmtN(x.res[r])).join(' / ') + ` (шагов ${x.chain.length})`).join('; ')}`, { needs: needs.map((x) => ({ id: x.id, res: x.res, min: x.min, chain: x.chain })) });
     try { OGX.bot.needs.set(NAME, list); } catch (e) { /* ignore */ }
     return list;
   }
@@ -2158,7 +2392,7 @@ window.OGX = window.OGX || {};
       await OGX.bot.ready;
       await load(ctx.store);
       try { ctx.css(LTP_CSS); } catch (e) { /* no style */ }
-      M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'build', startJitter: [5000, 15000], wakeOn: ['bot:fleet-returned', 'bot:bodies-changed'], run: mainRun });
+      M.handle = OGX.bot.register({ id: NAME, module: NAME, prio: 'build', startJitter: [5000, 15000], wakeOn: ['bot:fleet-returned', 'bot:bodies-changed', 'bot:wants'], run: mainRun });
       OGX.bot.panelSection(NAME, renderPanel);
       const follower = () => { try { return !OGX.bot.status().leader; } catch (e) { return false; } };
       ctx.store.subscribe('plan', (v) => { if (follower() && v && typeof v === 'object') M.plan = v; });
@@ -2175,5 +2409,5 @@ window.OGX = window.OGX || {};
   // (tests/gz-bot-mod-botbuild.test.js, tests/gz-bot-mod-buildplan.test.js); not an API for other modules.
   OGX.botBuild = { version: '2.0.0', POLICIES, SETTINGS, BUILDUP, _M: M, plan, longTermPlan,
     _lib: { plan, longTermPlan, viewsFromState, syncFields, levelFields, policyParams, mineGain, perSat, energyBalance, reqSteps, reqsMet, availOf, waitSec, msuOf, prodOf, parseQueue, costRange,
-      stageAt, empireStage, tacticCfg, researchOrder, astroCappedOf, mineRank, storageHoursOf, nextMineNeed, nextMineMinSum, estimateQueue, advanceViews, freshView, speedOf, SEED_SPEED, chainFor, chainNeed, publishNeeds, readPage, readBody, readResearch, readShipyard } };
+      stageAt, empireStage, tacticCfg, researchOrder, astroCappedOf, mineRank, labPlanetOf, exportersOf, queuedSats, execute, storageHoursOf, nextMineNeed, nextMineMinSum, estimateQueue, advanceViews, freshView, speedOf, SEED_SPEED, chainFor, chainNeed, publishNeeds, clearNeeds, mainRun, act, effLabOf, stepTime1, calibrate, readPage, readBody, readResearch, readShipyard, viewFromDoc, yardLeftAt } };
 })(window.OGX);

@@ -12,7 +12,8 @@
     "128": "icons/icon128.png"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "unlimitedStorage"
   ],
   "background": {
     "service_worker": "background.js",
@@ -115,6 +116,7 @@
         "modules/bot/botdebris/botdebris.js",
         "modules/bot/botbuild/botbuild.js",
         "modules/bot/botexpo/botexpo.js",
+        "modules/bot/botmissiles/botmissiles.js",
         "loader.js"
       ],
       "run_at": "document_end",

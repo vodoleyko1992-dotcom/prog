@@ -3,7 +3,8 @@
 // (tests/gz-world.js, scenario fixtures/galaxyz/bot-scenarios/botsave-save.json: gamespeed 10, no production, silo 3).
 //   node tests/gz-bot-save.test.js
 // Every test also checks: no [OGX errors / bot console errors, and every botsave action has a preceding botsave:decision
-// of the same worker run.
+// of the same worker run. The last test: a bot paused for errors still saves under attack (defense passes the pause), and the
+// pause ends by itself after the probe read of the overview.
 const T = require('./lib');
 const B = require('./gz-bot-lib');
 const { assert } = T;
@@ -312,5 +313,102 @@ T.test('save without Battle Transporters: the fleet flees, resources stay (only 
     assert.ok(!sent.ships[217] && sent.ships[203] === 100 && sent.ships[202] === 200, JSON.stringify(sent.ships));
     assert.deepEqual({ metal: sent.cargo.metal, crystal: sent.cargo.crystal, deuterium: sent.cargo.deuterium }, { metal: 0, crystal: 0, deuterium: 0 }, '202/203/combat holds carry no resources');
     await clean(env, 'no 217');
+  } finally { await env.close(); }
+}, { timeout: 300000 });
+
+T.test('paused for errors: botsave still saves under attack (defense passes the pause); the pause probe then resumes the bot', async () => {
+  const env = await B.launchBot({ world: 'botsave-save', settings: settings({ 'botcore.master': true, 'botcore.dryRun': false, 'botsave.weakIgnore': false }) });
+  try {
+    const W = env.world;
+    const page0 = await env.game('overview', { cp: HOME });
+    await leader(env);
+    // the pause registerError() makes after maxErrors in a row; the leader arms its probe (30-60 min) on the next tick
+    await env.evalOgx(page0, () => OGX.bot.pause('errors'));
+    await env.until(async () => { const s = await env.botStatus(); return s && s.state === 'paused' && s.pauseProbeAt > 0; }, { timeoutMs: 15000, label: 'paused with a probe time' });
+    const { f: h } = await hostile(env, { ships: { 204: 10 }, flightSec: 50 });
+    const sentEv = await env.waitJournal('botsave:save-sent', { timeoutMs: 90000 });
+    const sent = W.log.sent.find((x) => x.originId === HOME);
+    assert.ok(sent, 'the world got the save while the bot was paused: ' + JSON.stringify(W.log.sent));
+    assert.equal(sent.fleetId, sentEv.d.fleetId);
+    assert.equal(sent.mission, 4); assert.equal(sent.type, 3, 'to the own moon');
+    assert.ok(sent.t >= h.arrival - 20 - 8 && sent.t <= h.arrival - 15 + 3, `save start ${sent.t - h.arrival} s before impact`);
+    let st = await env.botStatus();
+    assert.equal(st.state, 'paused', 'still paused after the save'); assert.equal(st.pauseReason, 'errors');
+    // the probe moved to now: one overview read, then the automatic resume (journaled with auto: true)
+    const page = await env.game('overview', { cp: HOME });
+    await leader(env);
+    await env.evalOgx(page, () => { OGX.bot._R.paused.probeAt = OGX.time.serverNow(); });
+    const rs = await env.waitJournal('botcore:resume', { pred: (e) => e.d && e.d.auto === true, timeoutMs: 30000 });
+    assert.equal(rs.d.was, 'errors');
+    st = await env.botStatus();
+    assert.notEqual(st.state, 'paused'); assert.equal(st.consecutiveErrors, 0);
+    await decisionsFirst(env, 'paused save');
+    await clean(env, 'paused save');
+  } finally { await env.close(); }
+}, { timeout: 300000 });
+
+T.test('a fleet landing before the hit (debris-save-4): the save waits for it / plans again after it, nothing flyable is on the body at impact', async () => {
+  const spec = JSON.parse(JSON.stringify(GW.loadScenario('botsave-save')));
+  spec.bodies.find((b) => +b.id === HOME).ships = { 212: 50 };   // nothing flyable at home: everything is "out"
+  const env = await B.launchBot({ world: spec, settings: settings({ 'botcore.master': true, 'botcore.dryRun': false, 'botsave.weakIgnore': false }) });
+  try {
+    const W = env.world;
+    // an own Deploy colony -> home lands before the hit (as a raid / expedition returning while the attack is on its way)
+    let dep = null;
+    for (const speed of [10, 5, 3, 2, 1]) {   // probes: ~6 s at 100 % .. ~50 s at 10 % on this world (gamespeed 7)
+      const r = W.send({ originId: COLONY, ships: { 210: 5 }, target: { galaxy: 2, system: 68, position: 5, type: 1 }, mission: 4, speed });
+      assert.ok(r.ok, JSON.stringify(r));
+      const dur = r.fleet.arrival - W.clock.nowUnix();
+      if (dur >= 25 && dur <= 120) { dep = r.fleet; break; }
+      W.recall(r.fleet.id);
+    }
+    assert.ok(dep, 'a Deploy of 25..120 s');
+    const arrival = dep.arrival + 45;
+    const { f: h } = await hostile(env, { ships: { 204: 10 }, arrivalUnix: arrival, flightSec: arrival - W.clock.nowUnix() });
+    await leader(env);
+    const sentEv = await env.waitJournal('botsave:save-sent', { timeoutMs: 150000 });
+    const sent = W.log.sent.find((x) => x.fleetId === sentEv.d.fleetId);
+    assert.ok(sent && sent.originId === HOME, JSON.stringify(W.log.sent));
+    assert.equal(sent.ships[210], 5, 'the landed fleet was saved: ' + JSON.stringify(sent.ships));
+    assert.ok(sent.t >= dep.arrival, 'after the landing');
+    assert.ok(sent.t < h.arrival, 'before the impact');
+    const skips = (await env.journal({ kind: 'botsave:skip' })).filter((e) => e.d && e.d.reason === 'noShips');
+    for (const s of skips) assert.ok(!/нечего спасать \(нет летающих кораблей\)$/.test(s.w), 'never a final «нечего спасать» while a landing is due: ' + s.w);
+    await decisionsFirst(env, 'landing');
+    await clean(env, 'landing');
+  } finally { await env.close(); }
+}, { timeout: 300000 });
+
+T.test('slots full when the save is due (missed debris-save 1): refused for slots, retried every ~10 s until arrival - 10 s, sent once a slot frees', async () => {
+  const env = await B.launchBot({ world: 'botsave-save', settings: settings({ 'botcore.master': true, 'botcore.dryRun': false, 'botsave.saveLeadMinSec': 40, 'botsave.saveLeadMaxSec': 42 }), page: false });
+  try {
+    const W = env.world;
+    W.command('setResearch', { 108: 1 });                       // 2 slots, both taken
+    const r0 = W.send({ originId: COLONY, ships: { 202: 1 }, target: { galaxy: 2, system: 70, position: 8, type: 1 }, mission: 4, speed: 1 });
+    assert.ok(r0.ok, JSON.stringify(r0));
+    // the second slot frees when a probe Deploy colony -> 2:68:7 lands (~50 s at 10 %): after the first attempt, before the deadline
+    let r1 = null;
+    for (const speed of [1, 2, 3]) {
+      const r = W.send({ originId: COLONY, ships: { 210: 1 }, target: { galaxy: 2, system: 68, position: 7, type: 1 }, mission: 4, speed });
+      assert.ok(r.ok, JSON.stringify(r));
+      const dur = r.fleet.arrival - W.clock.nowUnix();
+      if (dur >= 35 && dur <= 70) { r1 = r.fleet; break; }
+      W.recall(r.fleet.id);
+    }
+    assert.ok(r1, 'a probe Deploy of 35..70 s');
+    const { f: h } = await hostile(env, { ships: { 204: 200 }, arrivalUnix: r1.arrival + 30, flightSec: r1.arrival + 30 - W.clock.nowUnix() });
+    assert.equal(W.slotsMax() - W.slotsUsed(), 0, 'no free slot');
+    await leader(env);
+    const retry = await env.waitJournal('botsave:save-planned', { pred: (e) => e.d && e.d.slotTries >= 1, timeoutMs: 90000 });
+    assert.ok(retry.d.retryAt <= (h.arrival - 10) * 1000, 'retry before the deadline: ' + retry.w);
+    assert.ok(retry.t < r1.arrival * 1000, 'the first attempt came while both slots were taken');
+    assert.ok(!W.log.sent.some((x) => x.originId === HOME), 'nothing sent while no slot is free');
+    const sentEv = await env.waitJournal('botsave:save-sent', { timeoutMs: 120000 });
+    const sent = W.log.sent.find((x) => x.fleetId === sentEv.d.fleetId);
+    assert.ok(sent && sent.originId === HOME, JSON.stringify(W.log.sent));
+    assert.ok(sent.t >= r1.arrival, 'after the slot freed');
+    assert.ok(sent.t < h.arrival - 5, `sent ${h.arrival - sent.t} s before the impact`);
+    await decisionsFirst(env, 'slots retry');
+    await clean(env, 'slots retry');
   } finally { await env.close(); }
 }, { timeout: 300000 });

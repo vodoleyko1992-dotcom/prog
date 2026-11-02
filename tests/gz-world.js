@@ -124,7 +124,50 @@ function scenarioNames() { try { return fs.readdirSync(SCENARIO_DIR).filter((f) 
 
 const UNIVERSE_DEFAULTS = { galaxies: 9, systems: 499, maxPlanets: 15, fleetDebrisPct: 30, defDebrisPct: 0, resourceMultiplier: 22000, storageMultiplier: 5,
   maxDmMissions: 5, moonFactor: 1, moonChance: 20, debrisMoon: 1, topPoints: 1000000, galaxyDeuteriumCost: 10, ecoSpeed: null, buildTimeSec: null, researchTimeSec: null,
-  unitTimeSec: null, minFleetTime: 5, spyProbesSetting: 3, inactiveSec: 604800, inactiveLongSec: 2419200, maxBuildQueue: 5, maxFleetsPerAcs: 16 };
+  unitTimeSec: null, minFleetTime: 5, spyProbesSetting: 3, inactiveSec: 604800, inactiveLongSec: 2419200, maxBuildQueue: 5, maxFleetsPerAcs: 16,
+  // bash rule [UPSTREAM constants.php BASH_ON / BASH_COUNT / BASH_TIME]: off upstream, ON at GALAXYZ (John's «Превышен лимит количества
+  // атак в сутки…» 2026-10-31): at most bashCount attacks (missions 1/2/9) on one target body within bashTime seconds
+  bashOn: true, bashCount: 6, bashTime: 86400,
+  // economy [UPSTREAM PlanetRessUpdate.php:149-170, 300-302]: mine formula x resource_multiplier (Aeternum 22000), basic income
+  // metal_basic_income 20 / crystal_basic_income 10 x multiplier (the saved resources page: 440.000 / 220.000); ecoScale is a test
+  // knob on top of the multiplier (1 = the live economy)
+  metalBasicIncome: 20, crystalBasicIncome: 10, ecoScale: 1,
+  // mission 11 (dark matter search, the 220 collectors) [UPSTREAM MissionCaseFoundDM]: null = the old mock model [GUESS] (every
+  // trip finds 100..300 DM and the collectors are scrapped); 'upstream' = chance min(max, base + perShip x ships) % with
+  // mt_rand(0, 100), find findMin..findMax, collectors scrapped on a find; an object overrides fields of the upstream rule
+  // ({ base: -1, max: -1 } = never finds; scrap: false = collectors come home). No real GALAXYZ mission-11 message was captured.
+  dmMission: null,
+  // mission 15 outcomes: null = the old mock [GUESS] (one tier per type: resources factor 10..50, DM 100..300, 1..5 small cargos,
+  // battle without losses unless forced); 'upstream' = MissionCaseExpedition [UPSTREAM]: eventSize tiers for resources (10..50 /
+  // 50..100 / 100..200), DM (100..300 / 301..600 / 601..3000) and found ships (points budget over the fleet's own types, never
+  // 208/209/214), pirate/alien battle tiers with losses (tier 1 10..30 %, 2 30..60 %, 3 60..100 % [GUESS]: upstream fights it out
+  // with calculateAttack), the return time change of upstream (75 % slower: + stay time, else faster by stay/3 x 2|3|5).
+  // expeditionOutcomes still force the type (and amount / lossPct / delaySec) in both models.
+  expeditionModel: null };
+// [UPSTREAM MissionCaseFoundDM CHANCE / CHANCE_SHIP / MAX_CHANCE / MIN_FOUND / MAX_FOUND]
+const DM_UPSTREAM = { base: 30, perShip: 0.25, max: 50, findMin: 423, findMax: 1278, scrap: true };
+
+// Texts the world answers with, by spec.lang ('en' default | 'ru') [UPSTREAM language/<lang>/INGAME.php, FLEET.php]. The en
+// fleet refusals stay the literals of world.send (taken from the en files); ru replaces them by the refusal code.
+const TEXTS = {
+  en: { bash: 'Bash Rule' },                                                                     // fl_bash_protection en:361
+  ru: {
+    bash: 'Превышен лимит количества атак в сутки на данный пункт назначения.',                  // fl_bash_protection ru:346
+    slots: 'Нет свободных слотов.', ships: 'Не все корабли доступны.', fuel: 'Не хватает дейтерия.',  // fl_no_slots, fl_not_all_ship_avalible, fl_not_enough_deuterium
+    cargo: 'Недостаточная грузоподъёмность.', noob: 'Игрок находится под защитой новичков.',          // fl_not_enough_space, fl_player_is_noob
+    strong: 'Игрок слишком сильный.', noResource: 'Ресурсы не погружены.', noTarget: 'Данного пункта назначения не существует.',
+    target: 'Пункт назначения недоступен.', mission: 'Неверная миссия.', staytime: 'Неверное время удержания.',
+    expeditionSlots: 'Вы не можете отправить больше экспедиций.',
+    // mission 11 [UPSTREAM language/ru/FLEET.php sys_expe_found_dm_1_1:92, sys_expe_nothing_1:123, back_home_with_dm:156, without_dm:155]
+    dmFound: 'Экспедиции удалось поймать и законсервировать немного Тёмной материи.',
+    dmNothing: 'Экспедиция не принесла ничего особого, кроме какой-то странной зверушки с неизвестной болотной планеты.',
+    dmBackWith: (n) => `Ваш флот вернулся из экспедиции.<br>Найдено Тёмная материя (${n}), но корабли были сильно повреждены и их пришлось покинуть.<br>Тёмная материя была доставлена на планету в аварийных капсулах.`,
+    dmBackWithout: 'Ваш флот вернулся из экспедиции ни с чем.',
+  },
+};
+// Event box words [UPSTREAM language/ru/INGAME.php type_mission_*, type_planet_*, cff_*].
+const RU_MISSION = { 1: 'Атака', 2: 'Совместная атака', 3: 'Транспорт', 4: 'Оставить', 5: 'Держаться', 6: 'Шпионаж', 7: 'Колонизировать', 8: 'Переработать',
+  9: 'Уничтожить', 10: 'Ракетная атака', 11: 'Поиск Тёмной материи', 15: 'Экспедиция' };
 
 // ------------------------------------------------------------------ the world
 function createWorld(specOrName, opts = {}) {
@@ -136,6 +179,9 @@ function createWorld(specOrName, opts = {}) {
   const ecoSpeed = U.ecoSpeed != null ? +U.ecoSpeed : gamespeed;
   const tz = num(spec.tzOffsetSec, 7200);
   const rng = makeRng(spec.seed !== undefined ? spec.seed : 1);
+  const lang = spec.lang === 'ru' ? 'ru' : 'en';
+  const tx = (key) => (TEXTS[lang] && TEXTS[lang][key] !== undefined ? TEXTS[lang][key] : TEXTS.en[key]);
+  const dmRule = U.dmMission === 'upstream' ? DM_UPSTREAM : U.dmMission && typeof U.dmMission === 'object' ? Object.assign({}, DM_UPSTREAM, U.dmMission) : null;
 
   // ---------- clock
   let base = spec.startUnix ? +spec.startUnix : Math.floor((opts.now || Date.now()) / 1000);
@@ -221,9 +267,9 @@ function createWorld(specOrName, opts = {}) {
   const world = {
     spec, clock, player, bodies, others, debris, fleets: [], messages: [], raports: {}, researchQueue: [],
     log: { sent: [], recalled: [], builds: [], ajax: [], galaxyViews: [], refusals: [], events: [], script: [] },
-    session: { loggedOut: false, captcha: false }, universe: U, gamespeed, haltSpeed, ecoSpeed, rng,
+    session: { loggedOut: false, captcha: false }, universe: U, gamespeed, haltSpeed, ecoSpeed, rng, lang, tx,
     combatMode: spec.combat || 'sim', expeditionOutcomes: clone(spec.expeditionOutcomes || []), combatFallback: null,
-    catalog: C, MISSION_NAMES, FLEET_STYLE, TYPE_PLANET, TYPE_SHORT, fmt: { pretty, raw, esc, fmtRest, roundHalfEven },
+    catalog: C, name: (id) => (lang === 'ru' && (C.byId.get(+id) || {}).ru) || C.name(id), MISSION_NAMES, FLEET_STYLE, TYPE_PLANET, TYPE_SHORT, fmt: { pretty, raw, esc, fmtRest, roundHalfEven },
   };
 
   // ---------- lookups
@@ -276,6 +322,9 @@ function createWorld(specOrName, opts = {}) {
   world.ownFleets = () => world.fleets.filter((f) => f.owner === 'me' && f.state !== 'done');
   world.slotsUsed = () => world.ownFleets().filter((f) => f.mission !== 10).length;
   world.missionCount = (m) => world.ownFleets().filter((f) => f.mission === m).length;
+  /** Attacks (missions 1/2/9) the player sent at body `targetId` within bashTime before `t`, recalled ones excluded [UPSTREAM CheckBash]. */
+  world.bashCount = (targetId, t = clock.nowUnix()) => world.fleets.filter((f) => f.owner === 'me' && [1, 2, 9].includes(f.mission) && f.to.bodyId === +targetId
+    && f.start > t - num(U.bashTime, 86400) && !f.recalled).length;
   world.expeditionPoints = (ships) => { let p = 0; for (const [id, n] of Object.entries(ships)) { const o = C.byId.get(+id); if (o) p += n * (o.price.metal + o.price.crystal) * 5 / 1000; } return p; };
   world.staytimeOptions = (missions) => {
     if (missions.includes(15)) { const o = []; for (let i = 1; i <= lv(124); i++) o.push({ value: i, hours: Math.round(i / haltSpeed * 100) / 100 }); return o; }
@@ -313,10 +362,11 @@ function createWorld(specOrName, opts = {}) {
     if (b.perHour) return { metal: num(b.perHour.metal), crystal: num(b.perHour.crystal), deuterium: num(b.perHour.deuterium) };
     if (b.type === 'moon') return { metal: 0, crystal: 0, deuterium: 0 };
     const L = (id) => num(b.levels[id]);
-    const m = U.resourceMultiplier / 1000;
+    // the full multiplier: metal mine 38 = 938,100,934/h on the saved resources page (officers / premium bonus come on top of it)
+    const m = U.resourceMultiplier * num(U.ecoScale, 1);
     return {
-      metal: (30 * L(1) * Math.pow(1.1, L(1)) + 30) * m,
-      crystal: (20 * L(2) * Math.pow(1.1, L(2)) + 15) * m,
+      metal: (30 * L(1) * Math.pow(1.1, L(1)) + num(U.metalBasicIncome, 20)) * m,
+      crystal: (20 * L(2) * Math.pow(1.1, L(2)) + num(U.crystalBasicIncome, 10)) * m,
       deuterium: 10 * L(3) * Math.pow(1.1, L(3)) * (1.44 - 0.004 * b.tempMax) * m,
     };
   }
@@ -476,6 +526,13 @@ function createWorld(specOrName, opts = {}) {
         const maxAff = Math.min(...RES.map((r) => (c[r] > 0 ? Math.floor(b.res[r] / c[r]) : Infinity)));
         n = Math.min(n, maxAff);
         if ((id === 407 || id === 408 || id === 409) && n > 0) n = Math.min(n, (b.defense[id] || 0) + b.shipyardQueue.filter((q) => q.id === id).reduce((s, q) => s + q.count, 0) > 0 ? 0 : 1);
+        // missile silo capacity [UPSTREAM BuildFunctions::getMaxConstructibleRockets]: silo level * 10 slots, ABM 1, IPM 2 (queued count too)
+        if (id === 502 || id === 503) {
+          const queued = (qid) => b.shipyardQueue.filter((q) => q.id === qid).reduce((s, q) => s + q.count - q.done, 0);
+          const free = num(b.levels[44]) * 10 - num(b.defense[502]) - 2 * num(b.defense[503]) - queued(502) - 2 * queued(503);
+          n = Math.min(n, Math.floor(Math.max(0, free) / (id === 503 ? 2 : 1)));
+          if (n < 1) { world.log.refusals.push({ t, kind, why: 'silo', bodyId, id }); continue; }
+        }
         if (n < 1) { world.log.refusals.push({ t, kind, why: 'resources', bodyId, id }); continue; }
         pay(b, { metal: c.metal * n, crystal: c.crystal * n, deuterium: c.deuterium * n });
         const last = b.shipyardQueue[b.shipyardQueue.length - 1];
@@ -512,7 +569,7 @@ function createWorld(specOrName, opts = {}) {
     const t = clock.nowUnix();
     world.process(t);
     const from = world.body(req.originId);
-    const fail = (error, code) => { world.log.refusals.push({ t, kind: 'fleet', why: error, code, req: clone(req) }); return { ok: false, error, code }; };
+    const fail = (error, code) => { if (lang !== 'en' && code && TEXTS[lang][code]) error = TEXTS[lang][code]; world.log.refusals.push({ t, kind: 'fleet', why: error, code, req: clone(req) }); return { ok: false, error, code }; };
     if (!from) return fail('No valid start planet', 'origin');
     if (player.vacation) return fail('You are in vacation mode', 'vacation');
     const tg = req.target || {};
@@ -540,6 +597,12 @@ function createWorld(specOrName, opts = {}) {
     if (!missions.includes(mission)) return fail('Invalid mission', 'mission');
     const targetOwner = a.own || a.ownPlanet ? null : a.other;
     if (mission !== 8 && targetOwner && world.isVacation(targetOwner)) return fail('Target planet', 'vacation');
+    // [UPSTREAM ShowFleetStep3Page:267-274 + FleetFunctions::CheckBash] a LOG_FLEETS row per send (fleet_start_time, fleet_end_id =
+    // the target body); a recalled fleet gets fleet_state 2 and no longer counts; the (bashCount + 1)-th within bashTime is refused
+    if (U.bashOn && [1, 2, 9].includes(mission) && a.target) {
+      const n = world.bashCount(a.target.id, t);
+      if (n >= num(U.bashCount, 6)) return fail(tx('bash'), 'bash');
+    }
     if ([1, 2, 5, 6, 9].includes(mission) && targetOwner) {
       if (targetOwner.authAttack > player.authLevel) return fail('You can not attack this player', 'admin');
       if (!world.isInactive(targetOwner) && targetOwner.protection === 'noob') return fail('Player is in the Noob Protection!', 'noob');
@@ -576,12 +639,63 @@ function createWorld(specOrName, opts = {}) {
     return { ok: true, fleet, duration, consumption, distance: dist, maxSpeed, missions };
   };
 
+  /**
+   * Launch interplanetary missiles (ShowFleetMissilePage [UPSTREAM], checks in upstream order with the exact EN texts) from body
+   * originId; form = { galaxy, system, planet, type, SendMI, Target }. The missiles are a mission-10 fleet that takes NO slot
+   * (GetCurrentFleets counts fleet_mission != 10, see slotsUsed), cannot be recalled and ends at impact (arriveOwn case 10).
+   * Returns { ok: true, count, fleet, text } or { ok: false, error, code }.
+   */
+  world.launchMissiles = (originId, form = {}) => {
+    const t = clock.nowUnix();
+    world.process(t);
+    const from = world.body(originId);
+    const fail = (error, code) => { world.log.refusals.push({ t, kind: 'missile', why: error, code, form: clone(form) }); return { ok: false, error, code }; };
+    if (!from || from.type !== 'planet') return fail('Wrong Target', 'origin');
+    const g = num(form.galaxy); const s = num(form.system); const pos = num(form.planet !== undefined ? form.planet : form.position); const type = num(form.type, 1) === 3 ? 3 : 1;
+    const primary = num(form.Target, 0);
+    if (player.vacation) return fail('Vacation mode active', 'vacation');
+    if (num(from.levels[44]) < 4) return fail('Silo Level 4 Required! ', 'silo');
+    if (lv(117) < 1) return fail('Impulse drive required', 'impulse');
+    const range = lv(117) * 5 - 1;
+    if (g !== from.g || Math.abs(s - from.s) > range) return fail('You cannot send rockets into another galaxy. ', 'range');
+    const tcoords = coordsOf(g, s, pos);
+    const a = world.at(tcoords, type);
+    if (!a.target) return fail('Planet does not exist. ', 'noTarget');
+    if (primary !== 0 && !C.defense.concat(C.missiles).includes(primary)) return fail('Wrong Target', 'wrongTarget');
+    const have = num(from.defense[503]);
+    if (have < 1) return fail('No Missles', 'noMissiles');
+    const n = Math.min(Math.floor(num(form.SendMI)), have);
+    if (!(n >= 1)) return fail('Add missile amount! ', 'amount');
+    const owner = a.own || a.ownPlanet ? null : a.other;
+    if (owner) {
+      if (owner.authAttack > player.authLevel) return fail('You can attack the administrators', 'admin');
+      if (world.isVacation(owner)) return fail('The player is in vacation mode', 'targetVacation');
+      if (!world.isInactive(owner) && owner.protection === 'noob') return fail('The player is under the protection of weak player', 'noob');
+      if (!world.isInactive(owner) && owner.protection === 'strong') return fail('The player is too strong.', 'strong');
+    }
+    from.defense[503] = have - n;
+    if (!from.defense[503]) delete from.defense[503];
+    // GetMIPDuration [UPSTREAM FleetFunctions]: max(round((30 + 60 * |dSystem|) / gamespeed), MIN_FLEET_TIME)
+    const duration = Math.max(Math.round((30 + 60 * Math.abs(s - from.s)) / gamespeed), U.minFleetTime);
+    const arrival = t + duration;
+    const fleet = {
+      id: nextFleetId++, owner: 'me', mission: 10, ships: { 503: n }, cargo: { metal: 0, crystal: 0, deuterium: 0, darkmatter: 0 }, speed: 10, consumption: 0, distance: 0, maxSpeed: 0,
+      from: { coords: from.coords, type: 1, bodyId: from.id, name: from.name },
+      to: { coords: tcoords, type, bodyId: a.target.id, name: planetNameAt(tcoords, type) },
+      targetOwner: owner ? owner.id : 'me', primary,
+      start: t, arrival, stayEnd: null, back: arrival, duration, state: 'out', recallable: false, via: 'fleetMissile',
+    };
+    world.fleets.push(fleet);
+    world.log.sent.push({ t, fleetId: fleet.id, via: 'fleetMissile', mission: 10, ships: { 503: n }, cargo: { metal: 0, crystal: 0, deuterium: 0 }, from: from.coords, originId: from.id, to: tcoords, type, speed: 10, arrival, back: arrival, consumption: 0, staytime: null, primary });
+    return { ok: true, count: n, fleet, duration, text: `<b>${n}</b> Missles Deployed. Targeted: ${primary ? C.name(primary) : 'All'}` };
+  };
+
   /** SendFleetBack [UPSTREAM FleetFunctions:298-384]: refused when not own or already returning. */
   world.recall = (fleetId) => {
     const t = clock.nowUnix();
     world.process(t);
     const f = world.fleets.find((x) => x.id === +fleetId);
-    if (!f || f.owner !== 'me' || f.state === 'back' || f.state === 'done' || player.vacation) { world.log.refusals.push({ t, kind: 'recall', why: 'not recallable', fleetId: +fleetId }); return false; }
+    if (!f || f.owner !== 'me' || f.state === 'back' || f.state === 'done' || f.mission === 10 || player.vacation) { world.log.refusals.push({ t, kind: 'recall', why: 'not recallable', fleetId: +fleetId }); return false; }
     const back = f.mission === 5 && f.state === 'hold' ? (f.arrival - f.start) + t : (t - f.start) + t;
     world.log.recalled.push({ t, fleetId: f.id, from: f.state, oldBack: f.back, back });
     f.stayEnd = t; f.back = back; f.state = 'back'; f.recalled = true;
@@ -591,7 +705,7 @@ function createWorld(specOrName, opts = {}) {
   /** ShowFleetAjaxPage [UPSTREAM 38-219]: { slots, ships, code, mess }. */
   world.fleetAjax = (cpId, mission, planetId) => {
     const t = clock.nowUnix();
-    world.process(t);
+    if (world.fleetHandlerOnAjax !== false) world.process(t);
     const from = world.body(cpId) || bodies[0];
     const out = { slots: world.slotsUsed(), ships: {} };
     const done = (code, mess) => { out.code = code; out.mess = mess; world.log.ajax.push({ t, cp: from && from.id, mission, planetId, code, mess }); return out; };
@@ -731,8 +845,13 @@ function createWorld(specOrName, opts = {}) {
   for (const h of spec.hostile || []) scriptQueue.push({ t: now0 + num(h.at), do: 'addHostile', args: h });
 
   let processing = false;
+  // spec.fleetEventsOnPageLoad: like 2Moons, fleet events (arrivals, battles, reports) are processed only by requests WITHOUT
+  // ajax=1 [UPSTREAM includes/common.php:67 AJAX_REQUEST, :126 FleetHandler gate]; the handler marks world.ajaxRequest for the
+  // duration of such a request (message lists, fleetAjax sends, message actions), clock.advance / direct calls always process
+  world.ajaxRequest = false;
   world.process = (nowArg) => {
     if (processing) return 0;
+    if (spec.fleetEventsOnPageLoad && world.ajaxRequest) return 0;
     processing = true;
     let n = 0;
     try {
@@ -833,18 +952,76 @@ function createWorld(specOrName, opts = {}) {
         return;
       }
       case 6: return spyArrive(f, t, a);
+      case 10: return missileImpact(f, t, a);
       case 7: return colonize(f, t);
       case 8: return recycle(f, t);
       default: goBack(f);
     }
   }
 
+  /**
+   * Mission 10 impact [UPSTREAM MissionCaseMIP + calculateMIPAttack]: the interceptors (502) of the target — of its planet for a
+   * moon — stop missiles 1:1 and are consumed; with ABM >= missiles nothing is hit. Otherwise the rest hits the defence in the
+   * order primary (0/502/unknown -> 401), then 401..411 (C.defense), then 503; each unit costs (metal+crystal)*(1+0.1*shield 110)/10
+   * of the attack missiles*12000*(1+0.1*our weapons 109), the attack left over moves on to the next id. One 'Rocket impact'
+   * message (cat 3) to us; log.events kind 'missile'.
+   */
+  function missileImpact(f, t, a) {
+    const tgt = a.target;
+    const n = num(f.ships[503]);
+    const [g, s] = parseCoords(f.to.coords);
+    const link = `<a href="game.php?page=galaxy&amp;galaxy=${g}&amp;system=${s}" class="">[${f.to.coords}]</a>`;
+    if (!tgt) { kill(f, t, 'impact'); return; }
+    const holder = f.to.type === 3 ? (a.planet || a.ownPlanet || tgt) : tgt;
+    holder.defense = holder.defense || {}; tgt.defense = tgt.defense || {};
+    const abm = num(holder.defense[502]);
+    const defTech = a.other ? num(a.other.research[110]) : lv(110);
+    const destroyed = {};
+    let intercepted; let body;
+    if (abm >= n) {
+      holder.defense[502] = abm - n; if (!holder.defense[502]) delete holder.defense[502];
+      intercepted = n;
+      body = 'All your rockets were intercepted.';
+    } else {
+      delete holder.defense[502];
+      intercepted = abm;
+      const present = (id) => num(tgt.defense[id]) > 0;
+      const prim = f.primary && f.primary !== 502 && C.defense.concat(C.missiles).includes(f.primary) ? f.primary : 401;
+      const order = [prim].concat(C.defense.filter((id) => id !== prim), [503].filter((id) => id !== prim)).filter(present);
+      if (!order.length) body = 'The planet does not have defences';
+      else {
+        let total = (n - abm) * 12000 * (1 + 0.1 * lv(109));
+        for (const id of order) {
+          const c = world.costOf(id, 1);
+          const points = (c.metal + c.crystal) * (1 + 0.1 * defTech) / 10;
+          const k = Math.min(Math.floor(total / points), num(tgt.defense[id]));
+          total -= k * points;
+          if (k > 0) { destroyed[id] = k; tgt.defense[id] -= k; if (!tgt.defense[id]) delete tgt.defense[id]; }
+          if (total <= 0) break;
+        }
+        body = `${abm} Rockets of yours were intercepted.<br><br>` + Object.keys(destroyed).map(Number).sort((x, y) => x - y).map((id) => `${C.name(id)} (- ${destroyed[id]})<br>`).join('');
+      }
+    }
+    world.addMessage({ cat: 3, unix: t, from: 'Tower', subject: 'Rocket impact', body: `Interplanetary rockets (${n}) from ${esc(player.name)} are on the planet ${esc(f.to.name)} ${link} <br><br>${body}` });
+    world.log.events.push({ t, kind: 'missile', fleetId: f.id, coords: f.to.coords, missiles: n, intercepted, destroyed });
+    kill(f, t, 'impact');
+  }
+
   function stayEnd(f, t) {
     if (f.mission === 15) return expeditionOutcome(f, t);
     if (f.mission === 11) {
-      const dm = rng.int(100, 300);
+      let dm = 0; let chance = null;
+      if (!dmRule) dm = rng.int(100, 300);                                            // [GUESS] the old mock: always a find
+      else {
+        chance = Math.min(dmRule.max, dmRule.base + sumShips(f.ships) * dmRule.perShip);
+        if (rng.int(0, 100) <= chance) dm = rng.int(dmRule.findMin, dmRule.findMax);   // [UPSTREAM] mt_rand(0, 100) <= chance
+      }
       f.cargo.darkmatter = (f.cargo.darkmatter || 0) + dm;
-      world.addMessage({ cat: 15, unix: t, subject: 'Expedition report', body: 'Our expedition has found an ancient space station, which already floated in space for a long time. The station itself was completely useless, however, still stored in one of its reactors a small set of dark matter was found.' });
+      const body = lang === 'ru' ? (dm ? TEXTS.ru.dmFound : TEXTS.ru.dmNothing) : dm || !dmRule
+        ? 'Our expedition has found an ancient space station, which already floated in space for a long time. The station itself was completely useless, however, still stored in one of its reactors a small set of dark matter was found.'
+        : 'This expedition brings nothing exciting from its journey except some curious, small little animals of an unknown marsh planet.';   // sys_expe_nothing_1 en
+      world.addMessage({ cat: 15, unix: t, subject: 'Expedition report', body });
+      world.log.events.push({ t, kind: 'dm', fleetId: f.id, found: dm, chance });
     }
     goBack(f);
   }
@@ -853,7 +1030,7 @@ function createWorld(specOrName, opts = {}) {
     if (f.owner !== 'me') { kill(f, t, 'foreign-return'); return; }
     const b = world.body(f.from.bodyId);
     // [UPSTREAM MissionCaseFoundDM::ReturnEvent] a DM find scraps the collectors (fleet_array '220,0'), only the DM comes home
-    if (f.mission === 11 && f.cargo.darkmatter > 0) f.ships = {};
+    if (f.mission === 11 && f.cargo.darkmatter > 0 && (!dmRule || dmRule.scrap !== false)) f.ships = {};
     if (b) {
       addTo(b.ships, f.ships);
       addTo(b.res, { metal: f.cargo.metal, crystal: f.cargo.crystal, deuterium: f.cargo.deuterium });
@@ -862,7 +1039,8 @@ function createWorld(specOrName, opts = {}) {
     const total = f.cargo.metal + f.cargo.crystal + f.cargo.deuterium;
     const [g, s] = parseCoords(f.from.coords);
     let body;
-    if (f.mission === 11) body = f.cargo.darkmatter > 0 ? `Your fleet has returned from the expedition.<br>They found (Dark Matter)${pretty(f.cargo.darkmatter)} but the ships were scrapped. <br>the Dark Matter was saved.` : 'Your fleet has returned from the expedition.';
+    if (f.mission === 11 && lang === 'ru') body = f.cargo.darkmatter > 0 ? TEXTS.ru.dmBackWith(pretty(f.cargo.darkmatter)) : TEXTS.ru.dmBackWithout;
+    else if (f.mission === 11) body = f.cargo.darkmatter > 0 ? `Your fleet has returned from the expedition.<br>They found (Dark Matter)${pretty(f.cargo.darkmatter)} but the ships were scrapped. <br>the Dark Matter was saved.` : 'Your fleet has returned from the expedition.';
     else if (f.mission === 15) body = `Your fleet has returned from the expedition.<br>It deliveres Metal ${pretty(f.cargo.metal)}, Crystal ${pretty(f.cargo.crystal)}, Deuterium ${pretty(f.cargo.deuterium)} and Dark Matter ${pretty(f.cargo.darkmatter || 0)}.`;
     else if ((f.mission === 1 || f.mission === 2 || f.mission === 9) && !f.recalled) body = `One of your fleets returns from a attack at the planet ${esc(f.from.name)} <a href="game.php?page=galaxy&amp;galaxy=${parseCoords(f.to.coords)[0]}&amp;system=${parseCoords(f.to.coords)[1]}" class="">[${f.to.coords}]</a>. You have captured ${pretty(f.cargo.metal)} Metal, ${pretty(f.cargo.crystal)} Crystal and ${pretty(f.cargo.deuterium)} Deuterium `;
     else if (total > 0) body = `One of your fleets reaches the planet ${esc(f.from.name)} <a href="game.php?page=galaxy&amp;galaxy=${g}&amp;system=${s}" class="">[${f.from.coords}]</a> and delivers ${pretty(f.cargo.metal)} Metal, ${pretty(f.cargo.crystal)} Crystal and ${pretty(f.cargo.deuterium)} Deuterium.`;
@@ -985,6 +1163,7 @@ function createWorld(specOrName, opts = {}) {
       const ev = rng.int(1, 9);
       o = { type: { 1: 'resources', 2: 'darkMatter', 3: 'ships', 4: 'battle', 5: 'blackHole', 6: 'time' }[ev] || 'nothing', seeded: true };
     }
+    if (U.expeditionModel === 'upstream') return expeditionUpstream(f, t, o, freeCargo, points);
     let text = EXPO_TEXT[o.type] || EXPO_TEXT.nothing;
     const result = { type: o.type };
     if (o.type === 'resources') {
@@ -1013,13 +1192,77 @@ function createWorld(specOrName, opts = {}) {
       f.ships = cleanShips(f.ships); result.lossPct = loss;
       if (!sumShips(f.ships)) { world.addMessage({ cat: 15, unix: t, subject: 'Expedition report', body: text, expedition: result }); kill(f, t, 'expedition battle'); return; }
     } else if (o.type === 'time') {
-      const delay = o.delaySec !== undefined ? +o.delaySec : Math.round((f.back - f.stayEnd) * 0.5);
+      // [UPSTREAM MissionCaseExpedition event 6] fleet_end_time = end_stay + back leg + stay + 2..5 s: a delay of one stay (+2 s)
+      const delay = o.delaySec !== undefined ? +o.delaySec : (f.stayEnd - f.arrival) + 2;
       if (delay >= 0) text = EXPO_TEXT.delay; else text = EXPO_TEXT.speedup;
       f.back += delay; result.delaySec = delay;
     }
     world.addMessage({ cat: 15, unix: t, subject: 'Expedition report', body: text, expedition: result });
     world.log.events.push({ t, kind: 'expedition', fleetId: f.id, outcome: result });
     goBack(f);
+  }
+
+  /** U.expeditionModel 'upstream' [UPSTREAM MissionCaseExpedition::EndStayEvent]; forced fields of `o` win over the draw. */
+  function expeditionUpstream(f, t, o, freeCargo, points) {
+    const tierOf = () => { const e = rng.int(0, 100); return e > 10 ? 1 : e > 0 ? 2 : 3; };
+    let text = EXPO_TEXT[o.type] || EXPO_TEXT.nothing;
+    const result = { type: o.type, model: 'upstream' };
+    const done = (kill_) => {
+      world.addMessage({ cat: 15, unix: t, subject: 'Expedition report', body: text, expedition: result });
+      world.log.events.push({ t, kind: 'expedition', fleetId: f.id, outcome: result });
+      if (kill_) kill(f, t, kill_); else goBack(f);
+    };
+    if (o.type === 'resources') {
+      const tier = tierOf(); result.tier = tier;
+      let factor = tier === 1 ? rng.int(10, 50) : tier === 2 ? rng.int(50, 100) : rng.int(100, 200);
+      const c = rng.int(1, 6); const which = o.res || (c > 3 ? 'metal' : c > 1 ? 'crystal' : 'deuterium');
+      if (which === 'crystal') factor /= 2; if (which === 'deuterium') factor /= 3;
+      const tp = U.topPoints; const maxFactor = tp > 5000000 ? 12000 : tp > 1000000 ? 9000 : tp > 100000 ? 6000 : 2400;
+      const found = o.amount !== undefined ? +o.amount : Math.max(0, Math.round(Math.min(freeCargo, Math.min(maxFactor, Math.max(200, factor)) * points)));
+      f.cargo[which] += found; result.res = which; result.amount = found;
+      text = tier === 1 ? EXPO_TEXT.resources : 'The asteroid belt around an unknown planet contained vast amounts of raw materials. The expedition fleet filled its storage rooms!';
+    } else if (o.type === 'darkMatter') {
+      const tier = tierOf(); result.tier = tier;
+      const dm = o.amount !== undefined ? +o.amount : tier === 1 ? rng.int(100, 300) : tier === 2 ? rng.int(301, 600) : rng.int(601, 3000);
+      f.cargo.darkmatter = (f.cargo.darkmatter || 0) + dm; result.amount = dm;
+    } else if (o.type === 'ships') {
+      let found = {};
+      if (o.ships) found = cleanShips(o.ships);
+      else {
+        const tier = tierOf(); result.tier = tier;
+        const size = tier === 1 ? rng.int(10, 50) : tier === 2 ? rng.int(52, 100) : rng.int(102, 200);
+        let budget = Math.max(Math.round(size * Math.min(points, U.topPoints < 5000000 ? 4500 : 6000)), 10000);
+        for (const id of Object.keys(f.ships).map(Number).sort((a, b) => a - b)) {
+          if (id === 208 || id === 209 || id === 214) continue;
+          const e = C.byId.get(id); const cost = e.price.metal + e.price.crystal;
+          const max = Math.floor(budget / cost); if (max <= 0) continue;
+          const n = rng.int(0, max); if (n <= 0) continue;
+          found[id] = n; budget -= n * cost;
+          if (budget <= 0) break;
+        }
+      }
+      addTo(f.ships, found); result.ships = found;
+      text += Object.keys(found).length ? Object.entries(found).map(([id, n]) => `<br>${C.name(id)}: ${pretty(n)}`).join('')
+        : '<br><br>Unfortunately, no ship of the found could be repaired.';
+    } else if (o.type === 'blackHole') {
+      return done('black hole');
+    } else if (o.type === 'battle') {
+      const tier = tierOf(); result.tier = tier; result.enemy = rng.int(1, 2) === 1 ? 'pirates' : 'aliens';
+      const loss = o.lossPct !== undefined ? +o.lossPct : tier === 1 ? rng.int(10, 30) : tier === 2 ? rng.int(30, 60) : rng.int(60, 100);
+      const before = clone(f.ships);
+      for (const id of Object.keys(f.ships)) f.ships[id] = Math.floor(f.ships[id] * (1 - loss / 100));
+      f.ships = cleanShips(f.ships); result.lossPct = loss;
+      result.lost = {}; for (const [id, n] of Object.entries(before)) if (n - (f.ships[id] || 0) > 0) result.lost[id] = n - (f.ships[id] || 0);
+      if (!sumShips(f.ships)) return done('expedition battle');
+    } else if (o.type === 'time') {
+      const stay = (f.stayEnd || f.arrival) - f.start; const back = f.back - (f.stayEnd || f.arrival);
+      const factor = [2, 2, 2, 2, 2, 2, 2, 3, 3, 5][rng.int(0, 9)];
+      const slower = rng.int(0, 100) < 75;
+      const delay = o.delaySec !== undefined ? +o.delaySec : slower ? stay + factor : -Math.min(Math.round(stay / 3 * factor), back - 1);
+      text = delay >= 0 ? EXPO_TEXT.delay : EXPO_TEXT.speedup;
+      f.back += delay; result.delaySec = delay;
+    }
+    return done(null);
   }
 
   // ---- hostile arrival (battle against our body) [UPSTREAM MissionCaseAttack / MissionCaseSpy for the target]
@@ -1147,6 +1390,8 @@ function createWorld(specOrName, opts = {}) {
     world.fleets.push(f);
   }
   for (const m of spec.messages || []) world.addMessage(Object.assign({ unix: now0 - num(m.ago, 60) }, m));
+  // spec.fleetHandlerOnAjax === false: fleet events are processed only by requests without ajax=1 (the GALAXYZ/2Moons behaviour)
+  world.fleetHandlerOnAjax = spec.fleetHandlerOnAjax === false ? false : true;
 
   world.process(now0);
   return world;
@@ -1185,7 +1430,8 @@ function worldHandler(world, H) {
   const LINK = (q) => `${LIVE}?${q}`;
   const tokens = new Map();
   const galLink = (coords, cls) => { const [g, s] = parseCoords(coords); return `<a href="${LINK(`page=galaxy&amp;galaxy=${g}&amp;system=${s}`)}" class="${cls}">[${coords}]</a>`; };
-  const typeWord = (t) => (t === 3 ? 'Moon' : 'Planet');
+  const RU = W.lang === 'ru';
+  const typeWord = (t) => (RU ? (t === 3 ? 'Луна' : t === 2 ? 'Поле обломков' : 'Планета') : t === 3 ? 'Moon' : 'Planet');
 
   // ---------------------------------------------------------------- frame (every full page)
   function selectorOptions(cur) {
@@ -1209,9 +1455,9 @@ function worldHandler(world, H) {
     });
     return items.join('\n\t\t\t\t\t');
   }
-  function shipsBlind(ships) { return Object.entries(ships).map(([id, n]) => `${n} ${C.name(id)}`).join('; '); }
+  function shipsBlind(ships) { return Object.entries(ships).map(([id, n]) => `${n} ${W.name(id)}`).join('; '); }
   function shipsTip(ships) {
-    return esc(`<table style='width:200px'>${Object.entries(ships).map(([id, n]) => `<tr><td style='width:50%;color:white'>${C.name(id)}:</td><td style='width:50%;color:white'>${pretty(n)}</td></tr>`).join('')}</table>`);
+    return esc(`<table style='width:200px'>${Object.entries(ships).map(([id, n]) => `<tr><td style='width:50%;color:white'>${W.name(id)}:</td><td style='width:50%;color:white'>${pretty(n)}</td></tr>`).join('')}</table>`);
   }
   /** FlyingFleetsTable events [UPSTREAM class.FlyingFleetsTable.php]: [{ time, fleet, status }] sorted by time. */
   function events(now) {
@@ -1228,7 +1474,36 @@ function worldHandler(world, H) {
     }
     return out.sort((a, b) => a.time - b.time || a.f.id - b.f.id);
   }
+  /** spec.lang 'ru': the same event markup with the ru sentences [UPSTREAM language/ru/INGAME.php cff_mission_*]; below spy tech 8
+   *  a hostile fleet shows only «Флот состоит из N кораблей.» (cff_aproaching + cff_ships). */
+  function eventTextRu(e) {
+    const f = e.f; const own = f.owner === 'me'; const style = (own ? 'own' : '') + FLEET_STYLE[f.mission];
+    const fleetsA = `<a href="${LINK('page=overview#')}" data-tooltip-content="${shipsTip(f.ships)}" class="tooltip ${style}">флот</a>`;
+    const blind = own || num(W.player.research[106]) >= 8 ? `<span class="textForBlind"> (${shipsBlind(f.ships)})</span>`
+      : `<span class="textForBlind"> (Флот состоит из ${sumShips(f.ships)} кораблей.)</span>`;
+    const cargo = own && f.cargo.metal + f.cargo.crystal + f.cargo.deuterium > 0 ? `<span class="textForBlind"> (Ресурсы: ${pretty(f.cargo.metal)} Металл; ${pretty(f.cargo.crystal)} Кристалл; ${pretty(f.cargo.deuterium)} Дейтерий)</span>` : '';
+    const from = `${typeWord(f.from.type)} ${esc(f.from.name)} ${galLink(f.from.coords, style)}`;
+    const toName = f.to.name || W.planetNameAt(f.to.coords, f.to.type);
+    const to = `${typeWord(f.to.type)} ${esc(toName)} ${galLink(f.to.coords, style)}`;
+    const mission = `Задание: ${RU_MISSION[f.mission] || MISSION_NAMES[f.mission]}`;
+    if (!own) {
+      const pm = `${esc(W.fleetOwnerName(f))} <a href="#" onclick="return Dialog.PM(${typeof f.owner === 'number' ? f.owner : 0})">[ЛС]</a>`;
+      return `Чужой ${fleetsA}${blind} игрока ${pm} летит с ${from} на ${to}. ${mission}`;
+    }
+    if (f.mission === 15) {
+      if (e.status === 'return') return `Ваш ${fleetsA}${blind}${cargo} возвращается с координат ${galLink(f.to.coords, style)} на ${from}. ${mission}`;
+      return `Ваш ${fleetsA}${blind}${cargo} летит с ${from} к координатам ${galLink(f.to.coords, style)}. ${mission}`;
+    }
+    if (f.mission === 8) {
+      if (e.status === 'return') return `Ваш ${fleetsA}${blind}${cargo} возвращается с поля обломков ${galLink(f.to.coords, style)} на ${from}. ${mission}`;
+      return `Ваш ${fleetsA}${blind}${cargo} летит с ${from} к полю обломков ${galLink(f.to.coords, style)}. ${mission}`;
+    }
+    if (e.status === 'return') return `Ваш ${fleetsA}${blind}${cargo} возвращается с ${to} на ${from}. ${mission}`;
+    if (e.status === 'holding') return `Ваш ${fleetsA}${blind}${cargo} летит с ${from} на орбиту ${to}. ${mission}`;
+    return `Ваш ${fleetsA}${blind}${cargo} летит с ${from} на ${to}. ${mission}`;
+  }
   function eventText(e) {
+    if (RU) return eventTextRu(e);
     const f = e.f; const own = f.owner === 'me'; const style = (own ? 'own' : '') + FLEET_STYLE[f.mission];
     const fleetsA = `<a href="${LINK('page=overview#')}" data-tooltip-content="${shipsTip(f.ships)}" class="tooltip ${style}">Fleets</a>`;
     let blind;
@@ -1651,6 +1926,8 @@ ${Object.entries(f.ships).map(([id, n]) => `		<tr>\n		<td>${C.name(id)}</td>\n		
       const q = kind === 'buildings' ? cur.buildQueue : W.researchQueue;
       const field = kind === 'buildings' ? 'building' : 'tech';
       let end = now;
+      // queue box: spec.queueMarkup 'live' = the GALAXYZ markup of Aeternum (fixtures/galaxyz/queue/*-live.html, 2026-10-31)
+      if (W.spec.queueMarkup === 'live') return liveQueue(html, q, kind, cur, now);
       // queue box [UPSTREAM page.buildings.default.tpl / page.research.default.tpl buildlist]
       box = q.length ? `<div id="buildlist" class="buildlist">\n\t<table style="width:760px">\n${q.map((x, i) => {
         const dur = x.end ? x.end - (x.start || now) : W.buildTime(W.body(x.bodyId || cur.id) || cur, x.id, x.level);
@@ -1668,6 +1945,59 @@ ${Object.entries(f.ships).map(([id, n]) => `		<tr>\n		<td>${C.name(id)}</td>\n		
     }
     html = html.replace(/(<div class="largebox">)\s*(<\/div>)/, `$1\n${box}\n$2`);
     return html;
+  }
+
+  /** GALAXYZ live queue markup [REAL fixtures/galaxyz/queue/buildings-queue-live.html, research-queue-live.html]: the running item
+   *  is a #progressbar (research: #progressbars) + .build-info-row (img.build-icon gebaeude/<id>.png, .build-name, .build-level > span,
+   *  .build-time data-time / secs), the queued ones are a.construction-queue-item (background gebaeude/<id>.png, span level) in
+   *  forms without a building / tech input; the research page repeats the running item at the end of the queued row. */
+  function liveQueue(html, q, kind, cur, now) {
+    let box = '';
+    if (q.length) {
+      const h = q[0];
+      const dur = h.end ? h.end - (h.start || now) : W.buildTime(W.body(h.bodyId || cur.id) || cur, h.id, h.level);
+      const rest = Math.max(0, (h.end || now + dur) - now);
+      const nm = esc(W.name(h.id));
+      const pb = kind === 'research' ? 'progressbars' : 'progressbar';
+      const item = (x) => `
+                                                                                    <form action="game.php?page=${kind}" method="post" class="build_form">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="listid" value="">
+                                                <button type="submit" class="construction-queue-btn">
+                                                    <a class="construction-queue-item tooltip" data-cancel-message="${x.level} ?" data-tooltip-position="top" data-tooltip-content="&lt;div style='font-size:11px;text-align:center;'&gt;${esc(W.name(x.id))} (${x.level}) &lt;br&gt;&lt;span style='font-size:9px;color:#848484;'&gt;Click to cancel the upgrade&lt;/span&gt;&lt;/div&gt;" style="background-image:url(./styles/theme/gow/gebaeude/${x.id}.png);">
+                                                        <span>${x.level}</span>
+                                                    </a>
+                                                </button>
+                                            </form>`;
+      const rows = q.slice(1).concat(kind === 'research' ? [h] : []);
+      box = `                                                    <div class="content">
+                                                                            <div style="float:left;width:100%;">
+                                            <div id="${pb}" data-time="${rest}" style="height:16px;margin-bottom:5px;" class="ui-progressbar ui-widget ui-widget-content ui-corner-all" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                            <div class="ui-progressbar-value ui-widget-header ui-corner-left ui-corner-right" style="width: 0%;"></div></div>
+                                            <div class="build-info-row">
+                                                <div class="build-image-wrapper">
+                                                    <img class="build-icon" src="./styles/theme/gow/gebaeude/${h.id}.png">
+                                                    <form action="game.php?page=${kind}" method="post" class="build_form">
+                                                        <input type="hidden" name="cmd" value="">
+                                                        <button type="submit" class="btn-cancel-building-construction tooltip" data-tooltip-position="top" data-tooltip-content="&lt;span style='font-size:11px;'&gt;Отменить расширение ${nm} Уровень  &lt;span style='color:#d29d00;'&gt;${h.level}&lt;/span&gt; ?&lt;/span&gt;">
+                                                            <img>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                                <div class="build-text">
+                                                    <span class="build-name">${nm}</span>
+                                                    <span class="build-level">Улучшить уровень
+                                                        <span>${h.level}</span>
+                                                    </span>
+                                                    <span class="build-time" id="time${kind === 'research' ? '1' : ''}" data-time="${dur}" secs="${rest}">${rest > 0 ? fmtRest(rest) : 'Готово'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container" style="margin-top:10px;">${rows.map(item).join('')}
+                                </div> <!-- closes .container -->
+                            </div> <!-- closes .content -->`;
+    }
+    return html.replace(/(<div class="largebox">)\s*(<\/div>)/, `$1\n${box}\n$2`);
   }
 
   // ---------------------------------------------------------------- imperium (empire overview)
@@ -1862,17 +2192,27 @@ ${rows.map((p) => `<tr>
 <tr><td>${result}<br><br>The attacker has lost a total of ${pretty(r.lost.attacker)} units.<br>The defender has lost a total of ${pretty(r.lost.defender)} units.<br>At the coordinates are now: ${pretty(r.debris.metal)} Metal and ${pretty(r.debris.crystal)} Crystaldebris.<br>The chance of a moon was ${r.moonChance}%.${r.moonCreated ? '<br>The huge amounts of free-floating metal and crystal particles attract each other and slowly form a moon in orbit around the planet.' : ''}</td></tr>
 </table></div></body></html>`;
   }
+  // [HYPOTHETICAL] (tests-mock-21): no live captcha page was ever saved; markup after the upstream info table
   const captchaPage = () => '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="generator" content="GALAXYZ 1.8.git"><title>Captcha</title></head><body><div id="content"><table class="table519"><tr><th>Info</th></tr><tr><td><p>Please solve the captcha to continue.</p><form id="captcha" method="post" action="game.php?page=overview"><div class="g-recaptcha" data-sitekey="x"></div><input type="submit" value="Send"></form></td></tr></table></div></body></html>';
 
   // ---------------------------------------------------------------- dispatch
-  return function handle(ctx) {
+  // the AJAX gate of spec.fleetEventsOnPageLoad (see world.process): ajax=1 in the query or the form (2Moons HTTP::_GP reads both)
+  const isAjax = (ctx) => String((ctx.query && ctx.query.ajax !== undefined ? ctx.query.ajax : (ctx.form && ctx.form.ajax)) || '') === '1';
+  return function (ctx) {
+    W.ajaxRequest = isAjax(ctx);
+    try { return handle(ctx); } finally { W.ajaxRequest = false; }
+  };
+  function handle(ctx) {
     const { query, form, method } = ctx;
     const lc = String(ctx.page || 'overview').toLowerCase();
     const mode = String(ctx.mode || '').toLowerCase();
     const param = (k) => (query[k] !== undefined ? query[k] : form[k]);
     if (W.session.loggedOut) return ctx.send(302, '', 'text/html; charset=UTF-8', { Location: `${ctx.origin}/${ctx.srv.universe}/index.php` });
     if (W.session.captcha) { ctx.rec.fixture = 'world captcha'; return ctx.send(200, captchaPage()); }
-    W.process(W.clock.nowUnix());
+    // [UPSTREAM common.php:125-127] the FleetHandler runs only on non-ajax requests; spec.fleetHandlerOnAjax false reproduces that
+    // (an arrived fleet's report appears with the next full page, not on a messages ajax read); default true = every request
+    const ajaxReq = String(param('ajax') || '0') !== '0';
+    if (!(ajaxReq && W.spec.fleetHandlerOnAjax === false)) W.process(W.clock.nowUnix());
     const cur = W.body(ctx.state.cp) || W.bodies[0];
     if (!cur) return undefined;
     ctx.rec.world = { now: W.clock.nowUnix(), cp: cur.id };
@@ -1921,6 +2261,11 @@ ${rows.map((p) => `<tr>
       if (!r.ok) return info(r.error, back);
       return page('fleetStep3', (html) => step3(html, r));
     }
+    if (lc === 'fleetmissile') {
+      if (method !== 'POST') return ctx.redirect('page=fleetTable');
+      const r = W.launchMissiles(cur.id, form);
+      return info(r.ok ? r.text : r.error, back);
+    }
     if (lc === 'fleetstep2' || lc === 'fleetstep3') return ctx.redirect('page=fleetTable');
     if (lc === 'fleetajax') return ctx.json(W.fleetAjax(cur.id, num(param('mission'), 0), num(param('planetID'), 0)));
     if (lc === 'fleettable') {
@@ -1962,6 +2307,15 @@ ${rows.map((p) => `<tr>
       return page('overview', (html) => { const a = html.indexOf('<div id="inhalt">'); if (a < 0) return html; const b = divEnd(html, a); return html.slice(0, a) + `<div id="inhalt"><div id="content">${statisticsContent(param('range'))}</div></div>` + html.slice(b); });
     }
     if (lc === 'raport') { const h = raportPage(String(param('raport') || '')); ctx.rec.fixture = 'world raport'; return h ? ctx.send(200, h) : info('The combat report was not found.'); }
+    if (lc === 'settings' && typeof H.settingsForm === 'function') {
+      // account settings [UPSTREAM ShowSettingsPage]: spycount = the probes one spy click (fleetAjax) sends = player.spyProbes
+      if (method === 'POST') {
+        if (num(form.spycount) > 0) W.player.spyProbes = Math.floor(num(form.spycount));
+        return ctx.redirect('page=settings');
+      }
+      ctx.rec.fixture = 'world settings (derived)';
+      return page('overview', (html) => html.replace('<body id="overview"', '<body id="settings"').replace(/(<body id="settings"[^>]*>)/, '$1' + H.settingsForm({ spycount: W.player.spyProbes })));
+    }
     if (method === 'GET' || method === 'POST') {
       const f = require('./gz-server').fileFor(ctx.page, ctx.mode, query);
       if (f && H.pageFile(f) != null && lc !== 'trader' && !(lc === 'resources' && method === 'POST')) return page(f);

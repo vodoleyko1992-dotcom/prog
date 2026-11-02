@@ -10,6 +10,7 @@
 //   (f) leader election in two tabs, takeover after the leader tab closes, the queued action survives
 //   (g) precise send: steps 1-2 early, step 3 at the requested second
 //   (h) stop on logout and on a captcha page      (i) backoff after errors, then pause('errors')
+//   (i2) error streaks per module; defense passes pause/backoff/limits/start pause; pause('errors') ends by the probe read
 //   (j) threat lock from a hostile event in the event box refuses a normal send from that body
 //   (k) every test: no [OGX errors, no console errors from the bot
 //   (m) a prepared precise send (state pre) is disarmed by dry-run on / pause / a new lock (review fix)
@@ -61,13 +62,13 @@ async function until(fn, { timeoutMs = 30000, stepMs = 250, what = 'condition' }
   }
 }
 /** Registers a one-shot test worker that runs the specs in order with wctx.act(); results land in OGX.__t[tag]. Spec extras:
- *  atIn (ms from now -> at), preciseIn + tolMs (-> precise), deadlineIn. */
-async function runActions(env, page, specs, { tag = 'r', id = 'botcore:test' } = {}) {
-  await env.evalOgx(page, ({ specs, tag, id }) => {
+ *  atIn (ms from now -> at), preciseIn + tolMs (-> precise), deadlineIn. module/prio = the worker's own (default botcore/fleet). */
+async function runActions(env, page, specs, { tag = 'r', id = 'botcore:test', module = 'botcore', prio = 'fleet' } = {}) {
+  await env.evalOgx(page, ({ specs, tag, id, module, prio }) => {
     OGX.__t = OGX.__t || {};
     OGX.__t[tag] = { done: false, results: [] };
     OGX.bot.register({
-      id, module: 'botcore', prio: 'fleet', startJitter: [0, 50],
+      id, module, prio, startJitter: [0, 50],
       async run(w) {
         if (OGX.__t[tag].started) return { nextInMs: 3600000 };
         OGX.__t[tag].started = true;
@@ -85,7 +86,7 @@ async function runActions(env, page, specs, { tag = 'r', id = 'botcore:test' } =
         return { nextInMs: 3600000, reason: 'test done' };
       },
     });
-  }, { specs, tag, id });
+  }, { specs, tag, id, module, prio });
 }
 async function results(env, page, tag = 'r', timeoutMs = 60000) {
   return until(async () => {
@@ -108,6 +109,11 @@ async function confirmModal(page, okText) {
   await btn.click();
   await page.waitForSelector('.ogx-modal-overlay', { state: 'detached', timeout: 8000 });
 }
+/** A trusted key press on the game page (not in our UI): the user is active (markUserBusy 'click'). */
+async function userInput(page) {
+  await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); });
+  await page.keyboard.press('Shift');
+}
 const SEND = (over = {}) => Object.assign({ type: 'fleet.send', bodyId: HOME, why: 'тест: колонизатор на [2:68:9]',
   params: { target: { galaxy: 2, system: 68, position: 9, type: 1 }, ships: { 208: 1 }, mission: 7, speed: 10, cargo: { metal: 0, crystal: 0, deuterium: 0 } } }, over);
 /** fleetStep2 offers [7] by default on the static mock; ships 208 x2 on the saved fleetTable (Fleet 1 / 13, 0 / 2 expedition) */
@@ -125,9 +131,16 @@ T.test('(a) defaults: master off, nothing mutating for 20 s on overview/fleetTab
   assert.equal(st.leader, false);
   const defaults = await env.evalOgx(page, () => ['master', 'dryRun', 'maxActionsPerHour', 'maxFleetSendsPerHour', 'galaxyViewsPerHour', 'slotsReserve', 'readMessages', 'sleepFrom', 'deutReserve', 'minGapMs', 'maxGapMs', 'autoLogin']
     .map((k) => [k, OGX.settings.get('botcore.' + k)]));
-  assert.deepEqual(Object.fromEntries(defaults), { master: false, dryRun: true, maxActionsPerHour: 5000, maxFleetSendsPerHour: 30, galaxyViewsPerHour: 0, slotsReserve: 1, readMessages: true, sleepFrom: '01:30', deutReserve: 0,
+  assert.deepEqual(Object.fromEntries(defaults), { master: false, dryRun: true, maxActionsPerHour: 5000, maxFleetSendsPerHour: 500, galaxyViewsPerHour: 0, slotsReserve: 1, readMessages: true, sleepFrom: '01:30', deutReserve: 0,
     minGapMs: 300, maxGapMs: 600, autoLogin: false });
   assert.equal(await env.evalOgx(page, () => OGX.settings.schema('botcore').botcore.maxActionsPerHour.max), 20000, 'maxActionsPerHour up to 20000');
+  // limits sized for «всё на авто» (audit K6/K1): fleet sends 500 (max 2000), builds 5000 (max 20000), galaxy views max 3600
+  const lim = await env.evalOgx(page, () => { const s = OGX.settings.schema('botcore').botcore; return { f: [s.maxFleetSendsPerHour.default, s.maxFleetSendsPerHour.max], b: [s.maxBuildsPerHour.default, s.maxBuildsPerHour.max], g: [s.galaxyViewsPerHour.default, s.galaxyViewsPerHour.max] }; });
+  assert.deepEqual(lim, { f: [500, 2000], b: [5000, 20000], g: [300, 3600] });
+  // a value typed above the max is stored clamped (John typed 10000 galaxy views)
+  await env.evalOgx(page, () => OGX.settings.set('botcore.galaxyViewsPerHour', 10000));
+  assert.equal(await env.evalOgx(page, () => OGX.settings.get('botcore.galaxyViewsPerHour')), 3600, 'clamped to the max');
+  await env.evalOgx(page, () => OGX.settings.set('botcore.galaxyViewsPerHour', 0));
   // max < min: the core uses max = min
   await env.evalOgx(page, () => OGX.settings.set('botcore.maxGapMs', 400).then(() => OGX.settings.set('botcore.minGapMs', 2000)));
   const gr = await env.evalOgx(page, () => OGX.bot.gapRange());
@@ -149,7 +162,7 @@ T.test('(a) defaults: master off, nothing mutating for 20 s on overview/fleetTab
   assert.match(explainer, /Бот работает, пока открыта вкладка с игрой/);
   // module tabs exist in the group «Бот»
   const tabs = await page.$$eval('#ogx-panel-infinity .ogx-tab[data-tab^="bot"]', (els) => els.map((e) => e.dataset.tab));
-  for (const t of ['bot', 'bot-common', 'bot-botsave', 'bot-botfarm', 'bot-botdebris', 'bot-botbuild', 'bot-botexpo', 'bot-log']) assert.ok(tabs.includes(t), 'tab ' + t);
+  for (const t of ['bot', 'bot-common', 'bot-botsave', 'bot-botfarm', 'bot-botdebris', 'bot-botbuild', 'bot-botexpo', 'bot-botmissiles', 'bot-log']) assert.ok(tabs.includes(t), 'tab ' + t);
   await mandatory(env, '(a)');
 }, { timeout: 120000 });
 
@@ -254,7 +267,8 @@ T.test('(c) dry-run off (panel confirm): fleet.send = fleetTable GET + 3 POSTs w
   // journal: start/done for every action, verified
   const done = await journal(env, page, 'botcore:action-done');
   assert.deepEqual(done.map((e) => e.d.type), ['fleet.send', 'fleet.recall', 'build.building']);
-  // cp restore: the last action used the colony, the user is on the home planet
+  // cp restore: the last action used the colony, the user is on the home planet (and active: restores wait for a user)
+  await userInput(page);
   const restore = await waitJournal(env, page, 'botcore:cp-restore', { timeoutMs: 15000 });
   assert.equal(restore.d.cp, HOME);
   const g = env.server.requests.filter((r) => r.method === 'GET' && r.page === 'overview' && r.cp === HOME);
@@ -289,6 +303,9 @@ T.test('(d) limits: second fleet send refused "limit", galaxy budget 0 refuses t
   // the status says the limit is used up (not just «ожидает»); galaxyViews 0 = «never» is not a used-up limit
   assert.equal(st.pauseReason, 'limit');
   assert.deepEqual((st.limitsHit || []).map((x) => x.limit), ['fleetSends']);
+  // OGX.bot.limits.remaining(kind): the allowance left in the rolling hour (0 for a limit set to 0 = off)
+  const left = await env.evalOgx(page, () => ['fleetSends', 'galaxyViews', 'builds', 'nope'].map((k) => OGX.bot.limits.remaining(k)));
+  assert.deepEqual(left, [0, 0, 5000, 0], 'remaining: ' + JSON.stringify(left));
   await openBotPanel(env, page);
   const txt = await page.textContent('.ogx-b-bot-state');
   assert.ok(/лимит исчерпан/.test(txt), 'panel state line: ' + txt);
@@ -454,14 +471,84 @@ T.test('(i) consecutive errors: backoff 5–15 s, then pause("errors") after bot
   await waitJournal(env, page, 'botcore:pause', { pred: (e) => e.d.reason === 'errors' });
   let st = await status(env, page);
   assert.equal(st.state, 'paused'); assert.equal(st.pauseReason, 'errors'); assert.equal(st.consecutiveErrors, 2);
+  assert.equal(st.errors.botcore.n, 2, 'the streak is botcore\'s: ' + JSON.stringify(st.errors));
+  const sNow = await env.evalOgx(page, () => OGX.time.serverNow());   // probeAt is server time (the mock's clock, not the host's)
+  assert.ok(st.pauseProbeAt - sNow > 25 * 60000 && st.pauseProbeAt - sNow < 65 * 60000, 'the probe is due in 30-60 min: ' + (st.pauseProbeAt - sNow) + ' ms');
   await openBotPanel(env, page);
+  assert.match(await page.locator('.ogx-b-bot-state').textContent(), /много ошибок подряд, сам проверит игру в \d/);
   await page.click('.ogx-b-bot-pause');   // «Продолжить»
   await until(async () => (await status(env, page)).state !== 'paused', { what: 'resumed' });
   st = await status(env, page);
-  assert.equal(st.consecutiveErrors, 0);
+  assert.equal(st.consecutiveErrors, 0); assert.deepEqual(st.errors, {}); assert.equal(st.pauseProbeAt, null);
   await waitJournal(env, page, 'botcore:resume');
   await mandatory(env, '(i)');
 }, { timeout: 120000 });
+
+T.test('(i2) error streaks per module; defense passes pause/backoff/limits/start pause; pause("errors") ends by the probe read', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.maxErrors': 2, 'botsave.enabled': true, 'botsave.on': true }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  env.server.route('GET', 'resources', (req, res, ctx) => ctx.send(500, 'boom', 'text/plain'));
+  // 1. one botcore error: botcore backs off 5-15 s; a botsave worker and its read run at once (streak and backoff keyed by module)
+  await runActions(env, page, [{ type: 'read.page', bodyId: HOME, why: 'ошибка 1', params: { page: 'resources' } }], { tag: 'e1', id: 'botcore:e1' });
+  const bo = await waitJournal(env, page, 'botcore:backoff');
+  assert.equal(bo.d.module, 'botcore', JSON.stringify(bo.d));
+  const t1 = Date.now();
+  await runActions(env, page, [{ type: 'read.page', bodyId: HOME, why: 'чтение другого модуля в откате botcore', params: { page: 'overview' } }], { tag: 's1', id: 'botsave:s1', module: 'botsave' });
+  const [s1] = await results(env, page, 's1', 20000);
+  assert.equal(s1.ok, true, 'the botsave read ran: ' + JSON.stringify(s1));
+  assert.ok(Date.now() - t1 < 4500, 'ran during the botcore backoff (' + (Date.now() - t1) + ' ms)');
+  let st = await status(env, page);
+  assert.equal(st.consecutiveErrors, 1); assert.equal(st.errors.botcore.n, 1); assert.equal(st.errors.botsave, undefined, JSON.stringify(st.errors));
+  // 2. the second botcore error (after its backoff) pauses the bot for errors; the record carries the probe time
+  await runActions(env, page, [{ type: 'read.page', bodyId: HOME, why: 'ошибка 2', params: { page: 'resources' } }], { tag: 'e2', id: 'botcore:e2' });
+  const pa = await waitJournal(env, page, 'botcore:pause', { pred: (e) => e.d.reason === 'errors' });
+  assert.equal(pa.d.module, 'botcore');
+  const sNow = await env.evalOgx(page, () => OGX.time.serverNow());
+  assert.ok(pa.d.probeAt - sNow > 25 * 60000 && pa.d.probeAt - sNow < 65 * 60000, 'the probe in 30-60 min (server clock): ' + (pa.d.probeAt - sNow) + ' ms');
+  st = await status(env, page);
+  assert.equal(st.state, 'paused'); assert.equal(st.pauseProbeAt, pa.d.probeAt);
+  // 3. under the pause: a normal read of botsave waits (its worker runs: defense prio), a defense read runs
+  await runActions(env, page, [{ type: 'read.page', prio: 'read', bodyId: HOME, why: 'обычное чтение на паузе', params: { page: 'buildings' } }], { tag: 'n1', id: 'botsave:n1', module: 'botsave', prio: 'defense' });
+  await runActions(env, page, [{ type: 'read.fleetTable', prio: 'defense', bodyId: HOME, why: 'защита на паузе', params: {} }], { tag: 'd1', id: 'botsave:d1', module: 'botsave', prio: 'defense' });
+  const [d1] = await results(env, page, 'd1', 20000);
+  assert.equal(d1.ok, true, 'the defense read ran under the pause: ' + JSON.stringify(d1));
+  await sleep(3000);
+  st = await status(env, page);
+  assert.equal(st.state, 'paused', 'still paused');
+  assert.ok(st.queue.some((q) => q.module === 'botsave' && q.prio === 'read' && q.state === 'queued'), 'the normal read waits: ' + JSON.stringify(st.queue));
+  assert.equal(await env.evalOgx(page, () => !!(OGX.__t.n1 && OGX.__t.n1.done)), false);
+  // 4. the probe (moved to now): one fresh read.page overview, then the automatic resume; the waiting read runs
+  const overviews = () => env.server.requests.filter((r) => r.page === 'overview').length;
+  const n0 = overviews();
+  await env.evalOgx(page, () => { OGX.bot._R.paused.probeAt = OGX.time.serverNow(); });
+  await waitJournal(env, page, 'botcore:probe', { timeoutMs: 20000 });
+  const rs = await waitJournal(env, page, 'botcore:resume', { pred: (e) => e.d && e.d.auto === true, timeoutMs: 20000 });
+  assert.equal(rs.d.was, 'errors');
+  const [n1] = await results(env, page, 'n1', 20000);
+  assert.equal(n1.ok, true, JSON.stringify(n1));
+  st = await status(env, page);
+  assert.notEqual(st.state, 'paused'); assert.equal(st.consecutiveErrors, 0); assert.deepEqual(st.errors, {}); assert.equal(st.pauseProbeAt, null);
+  assert.ok(overviews() > n0, 'the probe read the overview');
+  // 5. limits: an actions limit of 1 (used up) refuses a normal read, a defense read passes; the start pause of a new leader likewise
+  await env.evalOgx(page, () => OGX.settings.set('botcore.maxActionsPerHour', 1));
+  await runActions(env, page, [{ type: 'read.page', prio: 'read', fresh: true, bodyId: HOME, why: 'обычное чтение при лимите', params: { page: 'research' } }], { tag: 'l1', id: 'botcore:l1' });
+  await runActions(env, page, [{ type: 'read.fleetTable', prio: 'defense', bodyId: HOME, why: 'защита при лимите', params: {} }], { tag: 'l2', id: 'botsave:l2', module: 'botsave', prio: 'defense' });
+  const [l1] = await results(env, page, 'l1', 20000); const [l2] = await results(env, page, 'l2', 20000);
+  assert.equal(l1.refused, 'limit', JSON.stringify(l1)); assert.equal(l2.ok, true, JSON.stringify(l2));
+  await env.evalOgx(page, () => OGX.settings.set('botcore.maxActionsPerHour', 5000));
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = OGX.time.serverNow() + 30000; });
+  await runActions(env, page, [{ type: 'read.page', prio: 'read', fresh: true, bodyId: HOME, why: 'обычное чтение в стартовой паузе', params: { page: 'research' } }], { tag: 'p1', id: 'botcore:p1' });
+  await runActions(env, page, [{ type: 'read.fleetTable', prio: 'defense', bodyId: HOME, why: 'защита в стартовой паузе', params: {} }], { tag: 'p2', id: 'botsave:p2', module: 'botsave', prio: 'defense' });
+  const [p2] = await results(env, page, 'p2', 20000);
+  assert.equal(p2.ok, true, JSON.stringify(p2));
+  await sleep(2000);
+  assert.equal(await env.evalOgx(page, () => !!(OGX.__t.p1 && OGX.__t.p1.done)), false, 'the normal read waits for the start pause');
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  const [p1] = await results(env, page, 'p1', 20000);
+  assert.equal(p1.ok, true, JSON.stringify(p1));
+  await mandatory(env, '(i2)');
+}, { timeout: 240000 });
 
 // ------------------------------------------------------------------ (j) threat lock
 T.test('(j) hostile attack in the event box locks [2:68:5]: a normal send from it is refused "threat", nothing posted', async () => {
@@ -495,6 +582,7 @@ T.test('(j) hostile attack in the event box locks [2:68:5]: a normal send from i
   // panel lists the threat with a countdown. Only the overview route carries the hostile event: a fleetTable/step page read by
   // the colony send has a complete event box WITHOUT it and clears the threat (as the live server would); the cp restore
   // (GET overview) brings it back — wait for that before looking at the panel.
+  await userInput(page);
   await until(async () => (await env.evalOgx(page, () => OGX.bot.threats().length)) === 1, { what: 'threat back after the cp restore', timeoutMs: 30000 });
   await openBotPanel(env, page);
   await page.waitForSelector('.ogx-b-bot-threats tr .ogx-countdown', { timeout: 5000 });
@@ -666,7 +754,7 @@ T.test('(o) read cache: identical reads within readCacheSec answered from memory
   await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
   const defaults = await env.evalOgx(page, () => ({ g: OGX.settings.get('botcore.readGapMs'), c: OGX.settings.get('botcore.readCacheSec'), rg: OGX.bot.readGapMs(),
     min: OGX.settings.schema('botcore').botcore.readGapMs.min, ttl: ['read.page', 'read.fleetTable', 'read.galaxy'].map((t) => OGX.bot._readCache.ttl(t)) }));
-  assert.deepEqual(defaults, { g: 150, c: 20, rg: 150, min: 100, ttl: [20000, 30000, 60000] });
+  assert.deepEqual(defaults, { g: 150, c: 10, rg: 150, min: 100, ttl: [10000, 30000, 60000] });
   env.server.clearLog();
   await env.evalOgx(page, ({ HOME, COLONY }) => {
     OGX.__t = { o: { done: false } };
@@ -735,6 +823,437 @@ T.test('(o) read cache: identical reads within readCacheSec answered from memory
   await openBotPanel(env, page);
   const eff = await page.textContent('.ogx-b-bot-eff');
   assert.match(eff, /^Запросов: \d+ \(чтений \d+, из кэша \d+\), построек 2, отправок 0$/, eff);
+  // memory (audit botcore-6): entries keep the html, never the parsed Document; expired entries are swept without a new read
+  const mem = await env.evalOgx(page, () => ({ n: OGX.bot._readCache.size(), docs: [...OGX.bot._R.readCache.values()].filter((c) => c.r && c.r.data && c.r.data.doc).length,
+    html: [...OGX.bot._R.readCache.values()].every((c) => typeof c.r.data.html === 'string'), bytes: OGX.bot._readCache.bytes() }));
+  assert.ok(mem.n > 0, JSON.stringify(mem)); assert.equal(mem.docs, 0, 'no Document kept'); assert.equal(mem.html, true); assert.ok(mem.bytes > 0);
+  await env.evalOgx(page, () => OGX.settings.set('botcore.readCacheSec', 0));   // ttl 0: every entry is expired
+  assert.equal(await env.evalOgx(page, () => { OGX.bot._readCache.sweep(); return OGX.bot._readCache.size(); }), 0, 'expired entries swept');
+  assert.equal(await env.evalOgx(page, () => OGX.bot._readCache.bytes()), 0);
   await mandatory(env, '(o)');
   await env.close();
 }, { timeout: 200000 });
+
+// ------------------------------------------------------------------ (p) game facts are refusals, not errors (audit core-fleet-2/-3)
+T.test('(p) game facts: fleetAjax 601/605, step-3 bash limit / admin texts, build info pages -> refusals with the server text, no backoff, no streak', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false, 'botcore.maxErrors': 2 }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  const S = env.server.state;
+  const AJ = { type: 'fleet.ajax', bodyId: HOME, why: 'тест: шпионаж', params: { mission: 6, planetId: 999001 } };
+  // 1. fleetAjax answers that describe the target
+  S.fleetAjax = { code: 601, mess: 'Fault, planet does not exist', slots: 1 };
+  await runActions(env, page, [AJ], { tag: 'a1', id: 'botcore:a1' });
+  const [a1] = await results(env, page, 'a1', 30000);
+  assert.equal(a1.refused, 'target', JSON.stringify(a1)); assert.equal(a1.code, 601); assert.match(a1.message, /does not exist/);
+  S.fleetAjax = { code: 605, mess: 'Player is in vacation mode', slots: 1 };
+  await runActions(env, page, [AJ], { tag: 'a2', id: 'botcore:a2' });
+  const [a2] = await results(env, page, 'a2', 30000);
+  assert.equal(a2.refused, 'vacation', JSON.stringify(a2));
+  S.fleetAjax = null;
+  // 2. step-3 info pages that are game facts (bash protection, admin) -> refusals with the text
+  S.fleetError = 'Превышен лимит количества атак в сутки на данный пункт назначения.';
+  await runActions(env, page, [SEND({ why: 'тест: лимит атак' })], { tag: 's1', id: 'botcore:s1' });
+  const [s1] = await results(env, page, 's1', 40000);
+  assert.equal(s1.refused, 'attackLimit', JSON.stringify(s1)); assert.match(s1.message, /Превышен лимит/);
+  S.fleetError = 'Полёты на администраторов запрещены.';
+  await runActions(env, page, [SEND({ why: 'тест: админ' })], { tag: 's2', id: 'botcore:s2' });
+  const [s2] = await results(env, page, 's2', 40000);
+  assert.equal(s2.refused, 'admin', JSON.stringify(s2));
+  S.fleetError = null;
+  // 3. build info pages: error 'info' with the kind (the module re-reads and counts its retry), never the backoff ladder
+  S.buildError = 'Недостаточно ресурсов';
+  await runActions(env, page, [{ type: 'build.building', bodyId: HOME, prio: 'build', params: { id: 1, cmd: 'insert' }, why: 'тест: рудник' }], { tag: 'b1', id: 'botcore:b1' });
+  const [b1] = await results(env, page, 'b1', 30000);
+  assert.equal(b1.ok, false); assert.equal(b1.error, 'info'); assert.equal(b1.code, 'resources', JSON.stringify(b1)); assert.match(b1.message, /Недостаточно ресурсов/);
+  S.buildError = 'Максимальное количество построек в очереди 5.';
+  await runActions(env, page, [{ type: 'build.units', bodyId: HOME, prio: 'build', params: { units: { 212: 10 } }, why: 'тест: спутники' }], { tag: 'b2', id: 'botcore:b2' });
+  const [b2] = await results(env, page, 'b2', 30000);
+  assert.equal(b2.code, 'queueFull', JSON.stringify(b2));
+  S.buildError = null;
+  // six game facts with maxErrors 2: no backoff, no pause, no streak
+  const st = await status(env, page);
+  assert.equal(st.state === 'paused', false, 'not paused: ' + st.state);
+  assert.equal(st.consecutiveErrors, 0, JSON.stringify(st.errors));
+  assert.deepEqual(await journal(env, page, 'botcore:backoff'), [], 'no backoff');
+  // 3. fleetAjax 620 (own vacation mode) stops the bot like a vacation page
+  S.fleetAjax = { code: 620, mess: 'Vacation mode active', slots: 1 };
+  await runActions(env, page, [AJ], { tag: 'a3', id: 'botcore:a3' });
+  await waitJournal(env, page, 'botcore:stop', { pred: (e) => e.d.reason === 'vacation' });
+  assert.equal(await env.evalOgx(page, () => OGX.settings.get('botcore.master')), false);
+  await mandatory(env, '(p)');
+  await env.close();
+}, { timeout: 200000 });
+
+// ------------------------------------------------------------------ (q) cp-restore only for a user, inside the queue (audit botcore-4/-5/-9)
+T.test('(q) cp-restore: none while the tab is hidden or nobody is there, one after user input (queued, no overlap); forms page: cp-changing actions wait 15 s after a click, a deadline one is restored at once', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false }, FAST)) });
+  let page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  const restores = () => env.server.requests.filter((r) => r.method === 'GET' && r.page === 'overview' && r.cp === HOME);
+  // 1. hidden tab, no user: an action on the colony is never followed by a restore
+  await env.evalOgx(page, () => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); });
+  env.server.clearLog();
+  await runActions(env, page, [{ type: 'read.page', bodyId: COLONY, prio: 'read', why: 'тест: колония (скрыто)', params: { page: 'buildings' } }], { tag: 'h1', id: 'botcore:h1' });
+  await results(env, page, 'h1', 30000);
+  await sleep(6000);
+  assert.equal(restores().length, 0, 'no cp-restore while hidden');
+  assert.deepEqual(await journal(env, page, 'botcore:cp-restore'), []);
+  // 2. visible again, but nobody active on a page without forms (overview): still none
+  await env.evalOgx(page, () => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+  await sleep(4000);
+  assert.equal(restores().length, 0, 'no cp-restore without a user');
+  // 3. the user presses a key: one restore, as a queue entry (journaled), no request overlaps
+  await userInput(page);
+  const rs = await waitJournal(env, page, 'botcore:cp-restore', { timeoutMs: 10000 });
+  assert.equal(rs.d.cp, HOME); assert.equal(rs.d.ok, true);
+  assert.equal(restores().length, 1, 'exactly one GET overview&cp=' + HOME);
+  assert.ok((await journal(env, page, 'botcore:action-start')).some((e) => /возврат текущей планеты/.test(e.d.why || '')), 'the restore ran through the executor');
+  // 4. forms page (buildings): within 15 s of a click a read on the colony waits; a deadline read runs and is restored at once
+  page = await env.game('buildings', { cp: HOME });
+  await until(async () => (await status(env, page)).leader, { what: 'leader on buildings', timeoutMs: 15000 });
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  await sleep(4000);   // the drain of the navigation
+  env.server.clearLog();
+  await userInput(page);
+  const tClick = Date.now();
+  await runActions(env, page, [{ type: 'read.page', bodyId: COLONY, prio: 'deadline', fresh: true, why: 'тест: срочно на колонии', params: { page: 'research' } }], { tag: 'd1', id: 'botcore:d1' });
+  await results(env, page, 'd1', 20000);
+  await until(() => restores().length >= 1, { what: 'urgent restore', timeoutMs: 8000 });
+  const R1 = env.server.requests;
+  const iD = R1.findIndex((r) => r.page === 'research' && r.cp === COLONY);
+  assert.ok(iD >= 0 && R1[iD + 1] && R1[iD + 1].page === 'overview' && R1[iD + 1].cp === HOME, 'the deadline request is followed by the restore: ' + R1.map((r) => r.page + ':' + r.cp).join(', '));
+  await runActions(env, page, [{ type: 'read.page', bodyId: COLONY, prio: 'read', fresh: true, why: 'тест: колония под формой', params: { page: 'resources' } }], { tag: 'n1', id: 'botcore:n1' });
+  await results(env, page, 'n1', 40000);
+  const nReq = env.server.requests.find((r) => r.page === 'resources' && r.cp === COLONY);
+  assert.ok(nReq && Date.now() - tClick >= 13000, 'the colony read waited for the 15-s form window (' + (Date.now() - tClick) + ' ms)');
+  await mandatory(env, '(q)');
+  await env.close();
+}, { timeout: 200000 });
+
+// ------------------------------------------------------------------ (j2) threat target type from the target segment (audit tests-mock-2)
+T.test('(j2) threatFromEvent: the type word of the TARGET (ru/en/de, Unicode boundaries), never the origin\'s «Луна»; flights keep the sentence type', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  const r = await env.evalOgx(page, () => {
+    const T = OGX.bot._threat;
+    const ev = (text, to) => ({ own: false, hostile: true, status: 'flight', endUnix: Math.round(OGX.time.serverNow() / 1000) + 600, key: '1793350000555', fleetId: 555, mission: 1, from: '2:69:4', to, text, shipsText: '50 Light Fighter' });
+    return {
+      ruFromMoon: T.targetType('Чужой флот игрока Jon Snow летит с Луна Mond [2:69:4] на Планета Главная планета [2:68:5]. Задание: Атака', '2:68:5'),
+      ruToMoon: T.targetType('Чужой флот игрока Jon Snow летит с Планета Snow [2:69:4] на Луна Луна [2:68:5]. Задание: Атака', '2:68:5'),
+      enFromMoon: T.targetType('A hostile fleet from player Jon Snow from Moon Mond [2:69:4] reached the Planet Moonbase [2:68:5]. Mission: Attack', '2:68:5'),
+      enToMoon: T.targetType('A hostile fleet from player Jon Snow from Planet X [2:69:4] reached the Moon Planet [2:68:5]. Mission: Attack', '2:68:5'),
+      deToMoon: T.targetType('Eine feindliche Flotte vom Spieler X vom Planet Y [2:69:4] erreicht den Mond Z [2:68:5]. Mission: Angreifen', '2:68:5'),
+      debris: T.targetType('... с Планета X [2:69:4] на Поле обломков [2:68:5]. Задание: Атака', '2:68:5'),
+      planetWord: T.targetType('... с Планета X [2:69:4] на Планетарий Луноход [2:68:5].', '2:68:5'),
+      threat: T.fromEvent(ev('Чужой флот игрока Jon Snow летит с Луна Mond [2:69:4] на Планета Главная планета [2:68:5]. Задание: Атака', '2:68:5')),
+    };
+  });
+  assert.equal(r.ruFromMoon, 1, 'origin moon, target planet (ru)'); assert.equal(r.ruToMoon, 3, 'target moon (ru «Луна»)');
+  assert.equal(r.enFromMoon, 1); assert.equal(r.enToMoon, 3); assert.equal(r.deToMoon, 3); assert.equal(r.debris, 2);
+  assert.equal(r.planetWord, null, 'no type word inside other words');
+  assert.equal(r.threat.toType, 1); assert.equal(r.threat.bodyKey, 'p' + HOME, JSON.stringify(r.threat));
+  assert.equal(r.threat.ownerName, 'Jon Snow', 'the name ends at « с» (Unicode)');
+  await mandatory(env, '(j2)');
+  await env.close();
+}, { timeout: 90000 });
+
+// ------------------------------------------------------------------ (h2) captcha only from markup (audit botcore-11)
+T.test('(h2) captcha words in player-made text (a planet name, a message subject) do not stop the bot; a page=captcha redirect does', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  env.server.route('GET', 'resources', (req, res, ctx) => ctx.sendPage('overview', (html) => html.replace('<div id="inhalt">', '<div id="inhalt"><table><tr><td>Планета Captcha [2:70:4] игрока reCAPTCHA (hcaptcha)</td></tr></table>')));
+  env.server.route('GET', 'messages', (req, res, ctx) => ctx.send(200, '<form action="game.php?page=messages" method="post"><div class="mainRS"><table id="messagestable"><tbody><tr><th colspan="4">Messages</th></tr>'
+    + '<tr id="message_1"><td>02.11</td><td>Captcha</td><td>Solve the captcha? reCAPTCHA</td><td></td></tr></tbody></table></div></form>'));
+  await runActions(env, page, [
+    { type: 'read.page', bodyId: HOME, why: 'тест: имя «Captcha»', params: { page: 'resources' } },
+    { type: 'read.messages', why: 'тест: тема «captcha»', params: { cat: 100 } },
+  ]);
+  const [a, b] = await results(env, page, 'r', 40000);
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300)); assert.equal(b.ok, true, JSON.stringify(b).slice(0, 300));
+  let st = await status(env, page);
+  assert.notEqual(st.state, 'stopped'); assert.equal(st.master, true);
+  assert.deepEqual(await journal(env, page, 'botcore:captcha'), []);
+  // a redirect to page=captcha (any markup) stops it
+  env.server.route('GET', 'research', (req, res, ctx) => ctx.send(302, '', 'text/html', { Location: ctx.origin + '/Aeternum/game.php?page=captcha' }));
+  env.server.route('GET', 'captcha', (req, res, ctx) => ctx.sendPage('overview'));
+  await runActions(env, page, [{ type: 'read.page', bodyId: HOME, why: 'тест: капча', params: { page: 'research' } }], { tag: 'c', id: 'botcore:c' });
+  await results(env, page, 'c', 30000);
+  await waitJournal(env, page, 'botcore:captcha');
+  st = await status(env, page);
+  assert.equal(st.stopReason, 'captcha');
+  await mandatory(env, '(h2)');
+  await env.close();
+}, { timeout: 120000 });
+
+// ------------------------------------------------------------------ (g2) precise timer in a hidden tab (audit botcore-3)
+T.test('(g2) clock.precise in a hidden tab (main-thread timers clamped to 1 s): fires on time via the Worker (never the 1-s clamp)', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  const lates = await env.evalOgx(page, async () => {
+    const C = OGX.bot._clock;
+    if (C.mode !== 'worker') return { mode: C.mode };
+    const real = window.setTimeout;
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    window.setTimeout = (fn, ms, ...a) => real(fn, Math.max(1000, +ms || 0), ...a);   // Chrome's hidden-tab clamping
+    const out = [];
+    try {
+      for (let i = 0; i < 6; i++) {
+        const target = Date.now() + 1700 + Math.floor(Math.random() * 400);
+        out.push(await new Promise((res) => C.precise(target, () => res(Date.now() - target))));
+      }
+    } finally { window.setTimeout = real; delete document.hidden; }
+    return out;
+  });
+  assert.ok(Array.isArray(lates), 'worker clock: ' + JSON.stringify(lates));
+  // clamped main-thread timers make it >= 500 ms late (spin at target - 1.5 s, then 1-s steps); a loaded box (load 40 on 4 CPUs
+  // here) delays a wake by up to ~150 ms
+  assert.ok(lates.every((x) => x >= 0 && x < 400), 'late by ' + JSON.stringify(lates) + ' ms');
+  await mandatory(env, '(g2)');
+  await env.close();
+}, { timeout: 90000 });
+
+// ------------------------------------------------------------------ (r) unknown pages, ban page, info page answering a read (audit core-fleet-8 / botcore-12)
+T.test('(r) an unknown 200 page is an error with backoff (master stays on), 5 in a row over 10 min stop; a ban page stops; a layout-less info page answering a read is error "info"', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false, 'botcore.maxErrors': 10 }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  let answer = null;   // null = the saved page
+  const MAINT = '<!DOCTYPE html><html><head><title>Технические работы</title></head><body><h1>Сервер на обслуживании</h1><p>Попробуйте позже.</p></body></html>';
+  const bare = (text) => '<!DOCTYPE html><html><head><title>Aeternum</title></head><body><div class="headerRS"></div><div class="mainRS"><table class="table519"><tr><th>Info</th></tr><tr><td><p>' + text + '</p></td></tr></table></div></body></html>';
+  env.server.route('GET', 'resources', (req, res, ctx) => (answer ? ctx.send(200, answer, 'text/html; charset=utf-8') : ctx.sendPage('resources')));
+  const read = async (tag, why) => {
+    await env.evalOgx(page, () => { OGX.bot._R.errors = {}; });   // no backoff wait between the steps
+    await runActions(env, page, [{ type: 'read.page', bodyId: HOME, fresh: true, why, params: { page: 'resources' } }], { tag, id: 'botcore:' + tag });
+    return (await results(env, page, tag, 40000))[0];
+  };
+  // 1. one maintenance page: error 'unknownPage' + backoff, journaled with title and text, the bot stays on; a good page resets the run
+  answer = MAINT;
+  const u1 = await read('u1', 'тест: страница обслуживания');
+  assert.equal(u1.ok, false); assert.equal(u1.error, 'unknownPage', JSON.stringify(u1)); assert.match(u1.message, /Технические работы/);
+  const up = await waitJournal(env, page, 'botcore:unknown-page');
+  assert.equal(up.d.n, 1); assert.match(up.d.snippet, /обслуживании/);
+  await waitJournal(env, page, 'botcore:backoff');
+  let st = await status(env, page);
+  assert.notEqual(st.state, 'stopped'); assert.equal(await env.evalOgx(page, () => OGX.settings.get('botcore.master')), true);
+  answer = null;
+  const ok1 = await read('ok1', 'тест: снова нормальная страница');
+  assert.equal(ok1.ok, true, JSON.stringify(ok1));
+  assert.equal(await env.evalOgx(page, () => OGX.bot._R.unknownPages), null, 'a good page ends the run');
+  // 2. an info page without the game layout (the game closed) answering a read: error 'info' with the text, not ok with an empty view
+  answer = bare('Вселенная в данный момент недоступна: обновление');
+  const i1 = await read('i1', 'тест: игра закрыта');
+  assert.equal(i1.ok, false); assert.equal(i1.error, 'info', JSON.stringify(i1)); assert.match(i1.message, /недоступна/);
+  // 3. the 5th unknown page in a row, the first one 11 min ago: stop 'unknownPage'
+  await env.evalOgx(page, () => { OGX.bot._R.unknownPages = { n: 4, first: OGX.time.serverNow() - 11 * 60000 }; });
+  answer = MAINT;
+  await read('u5', 'тест: пятая неизвестная страница');
+  await waitJournal(env, page, 'botcore:stop', { pred: (e) => e.d.reason === 'unknownPage' });
+  st = await status(env, page);
+  assert.equal(st.state, 'stopped'); assert.equal(st.stopReason, 'unknownPage');
+  // 4. a ban page (2Moons css_account_banned_message) stops at once
+  answer = null;
+  await env.evalOgx(page, () => OGX.bot.start());
+  await until(async () => (await status(env, page)).leader, { what: 'leader again', timeoutMs: 20000 });
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  answer = bare('Ваш аккаунт заблокирован.<br><br>Вы заблокированы до 03.11.2026 10:00.');
+  await runActions(env, page, [{ type: 'read.page', bodyId: HOME, fresh: true, why: 'тест: бан', params: { page: 'resources' } }], { tag: 'b1', id: 'botcore:b1' });
+  await waitJournal(env, page, 'botcore:stop', { pred: (e) => e.d.reason === 'banned' });
+  assert.equal(await env.evalOgx(page, () => OGX.settings.get('botcore.master')), false);
+  await mandatory(env, '(r)');
+  await env.close();
+}, { timeout: 200000 });
+
+// ------------------------------------------------------------------ (s) small runtime fixes (audit core-fleet-14, botcore-17, botcore-18)
+T.test('(s) cached slots apply at init (await state.slots); panel safety text says «всё включено»; clamped settings: stored value journaled + panel hint; a resumed tab that lost the lock gives up the lead', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false }, FAST)) });
+  let page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  // 1. core-fleet-14: a fresh fleetTable slots record in storage is the starting R.slots of the next page (src 'cache')
+  await env.evalOgx(page, async () => {
+    const t = OGX.time.serverNow();
+    await OGX.storage.set('slots', { fleet: { used: 3, max: 13 }, fleetSrc: 'fleetTable', expedition: { used: 1, max: 2 }, fleetT: t, t });
+    await OGX.storage.flush();
+  });
+  page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader after reload', timeoutMs: 15000 });
+  const sl = await env.evalOgx(page, () => OGX.bot._R.slots);
+  assert.ok(sl && sl.src === 'cache' && sl.fleet.used === 3, 'R.slots from storage: ' + JSON.stringify(sl));
+  // 2. botcore-17: the explainer under «Бот» matches the 0.3.2 defaults
+  await openBotPanel(env, page);
+  const expl = await page.locator('.ogx-b-bot-explainer').first().textContent();
+  assert.doesNotMatch(expl, /всё выключено/); assert.match(expl, /включены по умолчанию/);
+  // 2b. rules-5: a typed value above the max is stored clamped; the journal line carries the stored value, the panel says so
+  await env.evalOgx(page, () => { OGX.suite.hub.panel.selectGroup('bot'); OGX.suite.hub.panel.selectTab('bot-common'); });
+  const inp = page.locator('#ogx-set-botcore-galaxyViewsPerHour');
+  await inp.fill('99999');
+  await inp.dispatchEvent('change');
+  await page.waitForSelector('.ogx-b-bot-clamp-hint', { timeout: 8000 });
+  assert.match(await page.locator('.ogx-b-bot-clamp-hint').textContent(), /Введено 99999 — сохранено 3600 \(макс\. 3600\)/);
+  await until(async () => (await inp.inputValue()) === '3600', { what: 'stored value back in the input', timeoutMs: 5000 });
+  assert.equal(await env.evalOgx(page, () => OGX.settings.get('botcore.galaxyViewsPerHour')), 3600);
+  const sj = await waitJournal(env, page, 'botcore:settings', { pred: (e) => e.d && e.d.values && e.d.values['botcore.galaxyViewsPerHour'] !== undefined, timeoutMs: 8000 });
+  assert.equal(sj.d.values['botcore.galaxyViewsPerHour'], 3600); assert.match(sj.w, /galaxyViewsPerHour = 3600/);
+  // 3. botcore-18: 'resume' after the lock went to another tab -> leader-lost 'resumed-stale', no worker restart / pump
+  await env.evalOgx(page, () => { OGX.bot._R.lock = { refresh: async () => false, release: async () => {} }; document.dispatchEvent(new Event('resume')); });
+  const ll = await waitJournal(env, page, 'botcore:leader-lost', { pred: (e) => e.d.why === 'resumed-stale', timeoutMs: 8000 });
+  assert.ok(ll);
+  await mandatory(env, '(s)');
+  await env.close();
+}, { timeout: 120000 });
+
+// ------------------------------------------------------------------ (u) worker schedules survive a navigation (audit botcore-13)
+T.test('(u) a page navigation keeps each module worker\'s due time (stored schedule) and the start pause is 1-3 s (warm takeover)', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botsave.enabled': true, 'botsave.on': true }, FAST)) });
+  let page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  const reg = (p) => env.evalOgx(p, () => {
+    OGX.__runs = 0;
+    OGX.bot.register({ id: 'botsave:sched', module: 'botsave', prio: 'fleet', startJitter: [0, 50], async run() { OGX.__runs++; return { nextInMs: 40000, reason: 'test' }; } });
+  });
+  await reg(page);
+  await until(() => env.evalOgx(page, () => OGX.__runs >= 1), { what: 'first run', timeoutMs: 20000 });
+  const stored = await until(async () => { const v = await env.get('botcore.schedule'); return v && v['botsave:sched'] ? v['botsave:sched'] : null; }, { what: 'schedule stored', timeoutMs: 8000 });
+  const s0 = await env.evalOgx(page, () => OGX.time.serverNow());
+  assert.ok(stored - s0 > 30000 && stored - s0 <= 40500, 'stored nextAt ~ +40 s: ' + (stored - s0));
+  // navigation in the same tab: the new page registers the same worker; it keeps the stored due time, never the 0-50 ms jitter
+  page = await env.game('buildings');
+  await reg(page);
+  await until(async () => (await status(env, page)).leader, { what: 'leader after navigation', timeoutMs: 15000 });
+  await sleep(1500);
+  const after = await env.evalOgx(page, () => {
+    const st = OGX.bot.status(); const w = st.workers.find((x) => x.id === 'botsave:sched');
+    return { nextAt: w && w.nextAt, runs: OGX.__runs, warm: OGX.bot._R.warmStart, pause: OGX.bot._R.startPauseUntil - OGX.time.serverNow(), now: OGX.time.serverNow() };
+  });
+  assert.equal(after.warm, true, 'warm takeover');
+  assert.ok(after.pause < 3000, 'start pause 1-3 s: ' + after.pause);
+  assert.equal(after.runs, 0, 'not re-run after the navigation');
+  assert.ok(Math.abs(after.nextAt - stored) < 1000, 'nextAt kept: ' + (after.nextAt - stored) + ' ms off the stored one');
+  const lead = (await journal(env, page, 'botcore:leader')).pop();
+  assert.ok(lead, 'leader journaled');
+  await mandatory(env, '(u)');
+  await env.close();
+}, { timeout: 120000 });
+
+// ------------------------------------------------------------------ (t) requests and bookkeeping (audit botcore-7/-10/-14/-15, botbuild-6, new APIs)
+T.test('(t) step 0 reuses a fresh fleetTable read, slots follow own sends, refusals keep the cache, verifyUncertain needs a NEW row, verifyBuild matches id+level, lines written once per 2 s, lastPageAt / read.page {after}, limits.remaining', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false, 'botcore.userIdleSec': 0 }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  await env.evalOgx(page, () => { OGX.bot._R.startPauseUntil = 0; });
+  // 1. botcore-15: read.fleetTable HOME, then a send from HOME: one GET fleetTable before step 1; a force send reads again
+  env.server.clearLog();
+  const rem0 = await env.evalOgx(page, () => OGX.bot.limits.remaining('fleetSends'));
+  await runActions(env, page, [{ type: 'read.fleetTable', bodyId: HOME, prio: 'read', params: {}, why: 'тест: флот перед отправкой' }, SEND({ why: 'тест: отправка после чтения' })], { tag: 'f1', id: 'botcore:f1' });
+  const [ft1, s1] = await results(env, page, 'f1', 60000);
+  assert.equal(ft1.ok, true); assert.equal(s1.ok, true, JSON.stringify(s1));
+  let R = env.server.requests;
+  const iS1 = R.findIndex((r) => r.page === 'fleetStep1');
+  assert.equal(R.slice(0, iS1).filter((r) => r.page === 'fleetTable' && r.method === 'GET').length, 1, 'one fleetTable GET before step 1: ' + R.map((r) => r.method + ' ' + r.page).join(', '));
+  // 2. botcore-14: the cached slots follow the send without a read; limits.remaining dropped by one
+  const sl = await env.evalOgx(page, () => OGX.bot._R.slots);
+  assert.equal(sl.src, 'adjusted', JSON.stringify(sl)); assert.equal(sl.fleet.used, ft1.data.slots.fleet.used + 1, JSON.stringify(sl));
+  assert.equal(await env.evalOgx(page, () => OGX.bot.limits.remaining('fleetSends')), rem0 - 1);
+  // a refusal before any request (limit) keeps every cached page
+  await runActions(env, page, [{ type: 'read.fleetTable', bodyId: COLONY, prio: 'read', params: {}, why: 'тест: флот колонии' }], { tag: 'f2', id: 'botcore:f2' });
+  await results(env, page, 'f2', 30000);
+  const size0 = await env.evalOgx(page, () => OGX.bot._readCache.size());
+  await env.evalOgx(page, () => OGX.settings.set('botcore.maxFleetSendsPerHour', 1));
+  await runActions(env, page, [SEND({ why: 'тест: отказ лимита' })], { tag: 'f3', id: 'botcore:f3' });
+  const [f3] = await results(env, page, 'f3', 30000);
+  assert.equal(f3.refused, 'limit', JSON.stringify(f3));
+  assert.equal(await env.evalOgx(page, () => OGX.bot._readCache.size()), size0, 'the refused send kept the read cache');
+  await env.evalOgx(page, () => OGX.settings.set('botcore.maxFleetSendsPerHour', 500));
+  // force: never the cached step 0
+  env.server.clearLog();
+  await runActions(env, page, [{ type: 'read.fleetTable', bodyId: HOME, prio: 'read', params: {}, why: 'тест: флот 2' }, SEND({ cls: 'force', why: 'тест: force' })], { tag: 'f4', id: 'botcore:f4' });
+  await results(env, page, 'f4', 60000);
+  R = env.server.requests;
+  const iS1b = R.findIndex((r) => r.page === 'fleetStep1');
+  assert.equal(R.slice(0, iS1b).filter((r) => r.page === 'fleetTable' && r.method === 'GET').length, 2, 'force: its own step 0');
+  // 3. botcore-10: verifyUncertain accepts only a fleet id that was not there at step 0
+  const vu = await env.evalOgx(page, async ({ HOME }) => {
+    const fr = await new Promise((res) => {
+      OGX.bot.register({ id: 'botcore:vu', module: 'botcore', prio: 'fleet', startJitter: [0, 50], async run(w) { res(await w.act({ type: 'read.fleetTable', bodyId: HOME, fresh: true, prio: 'read', params: {}, why: 'тест: полёты' })); return { nextInMs: 3600000 }; } });
+    });
+    const f = (fr.data.fleetTable.flights || []).find((x) => !x.returning && x.fleetId != null && x.target);
+    if (!f) return { none: true, flights: fr.data.fleetTable.flights };
+    const c = f.target.replace(/[[\]]/g, '').split(':').map(Number);
+    const e = (before) => ({ id: 'vu', type: 'fleet.send', bodyId: HOME, params: { mission: f.missionId, target: { galaxy: c[0], system: c[1], position: c[2], type: 1 }, ships: {} }, flightsBefore: before });
+    return { old: await OGX.bot._verifyUncertain(e([f.fleetId])), fresh: await OGX.bot._verifyUncertain(e([])), noSet: await OGX.bot._verifyUncertain(e(undefined)) };
+  }, { HOME });
+  assert.ok(!vu.none, 'a flight on the saved fleetTable: ' + JSON.stringify(vu));
+  assert.equal(vu.old.ok, false); assert.equal(vu.old.error, 'uncertain', 'the old flight is not this send: ' + JSON.stringify(vu.old));
+  assert.equal(vu.fresh.ok, true, JSON.stringify(vu.fresh));
+  assert.equal(vu.noSet.error, 'uncertain');
+  // 4. botbuild-6: the queue box must hold the element at the ordered level
+  const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'fixtures', 'galaxyz', 'queue', 'buildings-queue5-live.html'), 'utf8');
+  const vb = await env.evalOgx(page, (html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const v = (id, level) => OGX.bot._verifyBuild({ type: 'build.building', params: { id, cmd: 'insert' }, plan: { step: { level } } }, doc, null, null, null);
+    return { m50: v(1, 50), m51: v(1, 51), s9: v(71, 9), s10: v(71, 10) };
+  }, html);
+  assert.equal(vb.m50.ok, true); assert.equal(vb.s9.ok, true);
+  assert.equal(vb.m51.ok, false, 'metal mine 51 is not in the queue (50 is): ' + JSON.stringify(vb.m51));
+  assert.equal(vb.s10.ok, false, JSON.stringify(vb.s10));
+  // 5. botcore-7: 100 module lines in a burst -> at most one storage write of 'lines' now, the last line stored within ~2 s
+  const lw = await env.evalOgx(page, async () => {
+    let n = 0;
+    const orig = OGX.storage.set;
+    OGX.storage.set = function (k, ...a) { if (k === 'botcore.lines') n++; return orig.call(this, k, ...a); };
+    try {
+      await new Promise((res) => {
+        OGX.bot.register({ id: 'botcore:lines', module: 'botcore', prio: 'fleet', startJitter: [0, 50], async run(w) { for (let i = 0; i < 100; i++) w.rec('test', 'строка ' + i); res(); return { nextInMs: 3600000 }; } });
+      });
+      const n1 = n;
+      await new Promise((r) => setTimeout(r, 2600));
+      const stored = await OGX.storage.get('botcore.lines', []);
+      return { n1, n2: n, last: (stored[stored.length - 1] || {}).what };
+    } finally { OGX.storage.set = orig; }
+  });
+  assert.ok(lw.n1 <= 1, 'writes during the burst: ' + lw.n1); assert.ok(lw.n2 <= 2, 'writes after 2.6 s: ' + lw.n2);
+  assert.equal(lw.last, 'строка 99');
+  // 6. lastPageAt and read.page { after }: met -> no request; not met -> one fresh GET; read.page { fresh } bypasses the cache
+  const lp0 = await env.evalOgx(page, () => OGX.bot.lastPageAt());
+  assert.ok(lp0 > 0, 'the page load counts');
+  env.server.clearLog();
+  await runActions(env, page, [
+    { type: 'read.page', bodyId: HOME, prio: 'read', params: { page: 'overview', after: lp0 - 1000 }, why: 'тест: after выполнено' },
+    { type: 'read.page', bodyId: HOME, prio: 'read', params: { page: 'overview', after: lp0 + 10 * 60000 }, why: 'тест: after не выполнено' },
+    { type: 'read.page', bodyId: HOME, prio: 'read', params: { page: 'overview' }, why: 'тест: из кэша' },
+    { type: 'read.page', bodyId: HOME, prio: 'read', params: { page: 'overview', fresh: true }, why: 'тест: fresh в params' },
+  ], { tag: 'a1', id: 'botcore:a1' });
+  const [a1, a2, a3, a4] = await results(env, page, 'a1', 40000);
+  assert.equal(a1.ok, true); assert.equal(a1.cached, true, JSON.stringify(a1));
+  assert.equal(a2.ok, true); assert.ok(!a2.cached);
+  assert.equal(a3.at, a2.at, 'plain read from the cache');
+  assert.ok(a4.at > a2.at, 'params.fresh: a new read');
+  assert.equal(env.server.requests.filter((r) => r.page === 'overview').length, 2, 'after-met and the cached read made no request');
+  assert.ok(await env.evalOgx(page, () => OGX.bot.lastPageAt()) >= a2.at, 'a bot page read moves lastPageAt');
+  await mandatory(env, '(t)');
+  await env.close();
+}, { timeout: 240000 });
+
+// ------------------------------------------------------------------ (v) the fleet dispatch page holds the queue, capped and visible (audit botcore missed-2)
+T.test('(v) a fleetStep1 page holds normal actions (status pauseReason "userActive", journaled once), the lease is at most 90 s and capped at the token\'s 600 s', async () => {
+  const env = await G.launch({ settings: isolate(Object.assign({ 'botcore.master': true, 'botcore.dryRun': false, 'botcore.userIdleSec': 0 }, FAST)) });
+  const page = await env.game('overview');
+  await until(async () => (await status(env, page)).leader, { what: 'leader', timeoutMs: 15000 });
+  const step = await env.game('fleetStep1', { newPage: true });
+  await waitJournal(env, step, 'botcore:user-busy', { timeoutMs: 15000 });
+  const ub = await until(async () => { const v = await env.get('botcore.userBusy'); return v && v.why === 'fleetStep' ? v : null; }, { what: 'fleetStep lease', timeoutMs: 8000 });
+  assert.ok(ub.until - ub.t <= 90000, 'lease <= 90 s: ' + (ub.until - ub.t));
+  const leaderPage = (await status(env, page)).leader ? page : step;
+  await env.evalOgx(leaderPage, () => { OGX.bot._R.startPauseUntil = 0; });
+  await runActions(env, leaderPage, [{ type: 'read.page', bodyId: HOME, prio: 'read', fresh: true, params: { page: 'resources' }, why: 'тест: ждёт страницу отправки' }], { tag: 'w1', id: 'botcore:w1' });
+  const st = await until(async () => { const s = await status(env, leaderPage); return s.pauseReason === 'userActive' ? s : null; }, { what: 'pauseReason userActive', timeoutMs: 15000 });
+  assert.notEqual(st.state, 'paused');
+  assert.equal(await env.evalOgx(leaderPage, () => !!(OGX.__t.w1 && OGX.__t.w1.done)), false, 'the read waits');
+  await mandatory(env, '(v)');
+  await env.close();
+}, { timeout: 120000 });

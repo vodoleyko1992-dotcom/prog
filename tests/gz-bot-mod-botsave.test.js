@@ -150,3 +150,68 @@ T.test('spy the attacker: probes = the suite setting spy.probes (OGX.api.spyProb
   const src = fs.readFileSync(FILE, 'utf8');
   assert.ok(!/210\]?:\s*3\b|probes\s*[:=]\s*3\b/.test(src), 'no hard-coded 3 probes');
 });
+
+T.test('landings on a threatened body (debris-save-4): the next own return leg or Deploy arrival on that body before the last moment planning may start', () => {
+  const { S } = load();
+  const now = 1000000; const first = now + 120000;
+  const latest = S.latestPlanAt(first);
+  assert.equal(latest, first - 10000 - 6000 - 8000 - 2000, 'deadline 10 s + send lead 6 s + reads 8 s + landing margin 2 s');
+  const flights = [
+    { own: true, destKey: 'p1', arrival: now + 50000, returnFlight: true, missionType: 3 },     // return leg home: counts
+    { own: true, destKey: 'p1', arrival: now + 30000, returnFlight: false, missionType: 4 },    // Deploy arrival: counts, earlier
+    { own: true, destKey: 'p1', arrival: now + 20000, returnFlight: false, missionType: 3 },    // outward transport to p1: lands and leaves -> no
+    { own: false, destKey: 'p1', arrival: now + 10000, returnFlight: false, missionType: 1 },   // the hostile itself -> no
+    { own: true, destKey: 'p2', arrival: now + 5000, returnFlight: true, missionType: 15 },     // another body -> no
+    { own: true, destKey: 'p1', arrival: now - 1000, returnFlight: true, missionType: 3 },      // already landed -> no
+  ];
+  assert.equal(S.nextLanding(flights, 'p1', now, latest), now + 30000);
+  assert.equal(S.nextLanding(flights, 'p1', now + 30000, latest), now + 50000, 'after the Deploy landed: the return leg');
+  assert.equal(S.nextLanding(flights, 'p1', now, now + 25000), null, 'a landing after the last moment is not waited for');
+  assert.equal(S.nextLanding(null, 'p1', now, latest), null);
+});
+
+T.test('a fight on an own body goes to the battle registry (side defender, keyed to the threat); probes and missiles make none', () => {
+  const { S } = load();
+  const th = { key: '396900:1793601125', bodyKey: 'p254102', mission: 1, arrival: 1793601125000, to: '2:68:5', toType: 1, probesOnly: false };
+  const b = S.battleOf(th, 'save');
+  assert.equal(b.id, 'save:396900:1793601125'); assert.equal(b.side, 'defender'); assert.equal(b.owner, 'botsave');
+  assert.equal(b.threat, th.key); assert.equal(b.arrival, th.arrival); assert.equal(b.status, 'planned');
+  assert.deepEqual(b.target, { galaxy: 2, system: 68, position: 5, type: 1 });
+  assert.deepEqual(S.battleOf(Object.assign({}, th, { toType: 3 })).target.type, 3, 'moon');
+  assert.equal(S.battleOf(Object.assign({}, th, { mission: 6 })), null, 'espionage');
+  assert.equal(S.battleOf(Object.assign({}, th, { mission: 10 })), null, 'missiles');
+  assert.equal(S.battleOf(Object.assign({}, th, { probesOnly: true })), null, 'probes only');
+  assert.equal(S.battleOf(Object.assign({}, th, { mission: 9 })).side, 'defender', 'destruction');
+});
+
+T.test('harvest save (debris-save-13): nearby fields come from the async galaxy cache and become mission-8 candidates only with 219', async () => {
+  const window = { OGX: { module: () => {} } };
+  vm.runInNewContext(fs.readFileSync(FILE, 'utf8'), { window, setTimeout, clearTimeout, console }, { filename: FILE });
+  const asked = [];
+  window.OGX.galaxy = { cached: async (g, s) => { asked.push(s); return s === 70 ? { positions: [{ position: 9, debris: { metal: 1e9, crystal: 0 } }, { position: 4, debris: { metal: 0, crystal: 0 } }] } : null; } };
+  const S = window.OGX.botSave;
+  const src = { key: 'p1', coords: '2:68:5', type: 'planet' };
+  const fields = JSON.parse(JSON.stringify(await S.nearbyFields(src)));
+  assert.deepEqual(fields, [{ galaxy: 2, system: 70, position: 9, type: 2, field: { metal: 1e9, crystal: 0 } }]);
+  assert.deepEqual(asked.slice(0, 5), [68, 67, 69, 66, 70], 'nearest systems first');
+  const w = { cfg: (k) => (k === 'missionOrder' ? ['harvest', 'expedition'] : undefined), now: () => 1000, locked: () => false };
+  const st = { threats: {} };
+  const with219 = JSON.parse(JSON.stringify(S.candidates(w, st, src, { p1: src }, { 219: 10 }, { fields })));
+  assert.deepEqual(with219[0].target, { galaxy: 2, system: 70, position: 9, type: 2 });
+  assert.equal(with219[0].mission, 8); assert.equal(with219[0].needsProbe, true);
+  const no219 = JSON.parse(JSON.stringify(S.candidates(w, st, src, { p1: src }, { 209: 10 }, { fields })));
+  assert.ok(!no219.some((c) => c.mission === 8), 'no 219 -> no harvest (209 never)');
+});
+
+T.test('spy the attacker from the right body (rules-6): full probe count first, then unlocked, never a 1-probe spy while a body has more', () => {
+  const { S } = load();
+  const A = { key: 'p1', id: 1, coords: '2:68:5', ships: { 210: 30000 } };   // attacked main, locked
+  const B = { key: 'p2', id: 2, coords: '2:68:6', ships: { 210: 1 } };
+  const C = { key: 'p3', id: 3, coords: '2:68:7', ships: { 210: 1200 } };
+  const locked = (k) => k === 'p1';
+  assert.equal(S.spySource({ p1: A, p2: B }, 1100, locked).key, 'p1', 'the locked main with 1100+ beats an unlocked colony with 1 probe');
+  assert.equal(S.spySource({ p1: A, p2: B, p3: C }, 1100, locked).key, 'p3', 'full count on an unlocked body wins');
+  assert.equal(S.spySource({ p1: Object.assign({}, A, { ships: { 210: 0 } }), p2: B, p3: Object.assign({}, C, { ships: { 210: 60 } }) }, 1100, locked).key, 'p3', '60 probes beat 1');
+  assert.equal(S.spySource({ p2: B }, 1100, locked).key, 'p2', 'only one body with probes: it spies');
+  assert.equal(S.spySource({ p1: Object.assign({}, A, { ships: {} }) }, 1100, locked), null);
+});
