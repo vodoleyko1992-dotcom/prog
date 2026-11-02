@@ -23,8 +23,8 @@ const { startGzServer, pageNames } = require('./gz-server');
 const T = require('./lib');
 
 const DIST = path.join(__dirname, '..', 'dist');
-const CHROME = path.join(DIST, 'ogamex-suite-0.3.2-beta-chrome.zip');
-const FIREFOX = path.join(DIST, 'ogamex-suite-0.3.2-beta-firefox.zip');
+const CHROME = path.join(DIST, 'ogamex-suite-0.3.3-beta-chrome.zip');
+const FIREFOX = path.join(DIST, 'ogamex-suite-0.3.3-beta-firefox.zip');
 const USER = path.join(DIST, 'ogamex-suite.user.js');
 const results = [];
 const step = async (name, fn) => {
@@ -36,10 +36,10 @@ const extract = (zip) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ogx-
 function checkTree(dir, browser) {
   const m = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   assert.equal(m.manifest_version, 3);
-  assert.equal(m.version, '0.3.2');
+  assert.equal(m.version, '0.3.3');
   // the spec list (DESIGN.md): unlimitedStorage lifts the 10 MB cap of chrome.storage.local, no user-visible prompt in either browser
   assert.deepEqual(m.permissions, ['storage', 'unlimitedStorage'], browser + ': permissions');
-  assert.equal(m.version_name, browser === 'chrome' ? '0.3.2 beta' : undefined, 'version_name only for Chrome (Firefox warns)');
+  assert.equal(m.version_name, browser === 'chrome' ? '0.3.3 beta' : undefined, 'version_name only for Chrome (Firefox warns)');
   if (browser === 'chrome') {
     assert.deepEqual(m.background, { service_worker: 'background.js' });
     assert.equal(m.browser_specific_settings, undefined);
@@ -98,7 +98,7 @@ function checkTree(dir, browser) {
       await pop.waitForTimeout(800);
       const ping = await pop.evaluate(() => new Promise((r) => chrome.runtime.sendMessage({ type: 'ogx:ping' }, r)));
       assert.equal(ping && ping.ok, true, 'service worker answers ogx:ping');
-      assert.equal(ping.version, '0.3.2');
+      assert.equal(ping.version, '0.3.3');
       await pop.goto(`chrome-extension://${id}/popup/popup.html?tab=modules`);
       await pop.waitForSelector('input[data-module="planetbar"]', { timeout: 5000 });
       const nMods = await pop.$$eval('input[data-module]', (e) => e.length);
@@ -191,7 +191,7 @@ function checkTree(dir, browser) {
 
   await step('userscript: header', async () => {
     const src = fs.readFileSync(USER, 'utf8');
-    for (const re of [/@match\s+\*:\/\/\*\/\*/, /@grant\s+none/, /@run-at\s+document-start/, /@version\s+0\.3\.2-beta/]) assert.match(src.slice(0, 1500), re);
+    for (const re of [/@match\s+\*:\/\/\*\/\*/, /@grant\s+none/, /@run-at\s+document-start/, /@version\s+0\.3\.3-beta/]) assert.match(src.slice(0, 1500), re);
   });
 
   await step('userscript: smoke test on the mock overview and a non-OgameX page', async () => {

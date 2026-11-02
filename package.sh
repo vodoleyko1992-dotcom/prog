@@ -17,8 +17,8 @@ bash "$ROOT/tests/sync.sh"
 
 VERSION="$(node -p 'require(process.argv[1]).version' "$SUITE/manifest.json")"
 VNAME="$(node -p 'require(process.argv[1]).version_name || ""' "$SUITE/manifest.json")"
-[ "$VERSION" = "0.3.2" ] || { echo "package: manifest version is $VERSION, expected 0.3.2" >&2; exit 1; }
-[ "$VNAME" = "0.3.2 beta" ] || { echo "package: version_name is '$VNAME', expected '0.3.2 beta'" >&2; exit 1; }
+[ "$VERSION" = "0.3.3" ] || { echo "package: manifest version is $VERSION, expected 0.3.3" >&2; exit 1; }
+[ "$VNAME" = "0.3.3 beta" ] || { echo "package: version_name is '$VNAME', expected '0.3.3 beta'" >&2; exit 1; }
 TAG="${VERSION}-beta"
 
 rm -rf "$DIST"
