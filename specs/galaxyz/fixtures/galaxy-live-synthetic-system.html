@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)https://ogamex.eu/Aeternum/game.php?page=galaxy -->
+<!-- OGX FIXTURE: LIVE-SYNTHETIC. Skeleton, header, own rows 5-8 and empty rows are the REAL eu/pages/galaxy.html (2026-10-30). Rows 1,2,3,4,9,10,11 are GUESSED foreign rows (moon, debris, status, alliance, actions) written in the live style by tools/gen_galaxy_fixtures.py; their markup has NOT been seen live. -->
+<html lang="en" class="no-js"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Galaxy - Aeternum (New) - Aeterum (New)</title>
+    <meta name="generator" content="GALAXYZ 1.8.git">
+    <!-- 
+
+	-->
+        
+
+
+    <link rel="stylesheet" type="text/css" href="./8_files/boilerplate.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/main.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/jquery.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/jquery.fancybox.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/validationEngine.jquery.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/marquee.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/new_tooltip.css">
+    <link rel="stylesheet" href="./8_files/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/formate_cleaned_safe.css">
+    <link rel="stylesheet" type="text/css" href="./8_files/notify-metro.css">
+    <link rel="shortcut icon" href="https://ogamex.eu/Aeternum/favicon.ico" type="image/x-icon">
+    <script type="text/javascript">
+        var ServerTimezoneOffset = 0;
+        var serverTime 	= new Date(2026, 9, 30, 10, 04, 33);
+        var startTime = serverTime.getTime();
+        var localTime = serverTime;
+        var localTS = startTime;
+        var Gamename = document.title;
+        var Ready		= "Ready";
+        var Skin		= "./styles/theme/gow/";
+        var Lang		= "en";
+        var head_info	= "Info";
+        var auth		= 0;
+        var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] 
+        var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+        var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+        var queryString	= "page=galaxy";
+
+        setInterval(function() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+        }, 1000);
+    </script>
+    <script type="text/javascript" src="./8_files/jquery.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.ui.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.cookie.js"></script>
+    <script type="text/javascript" src="./8_files/main.js"></script>
+    <script type="text/javascript" src="./8_files/util.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.validationEngine.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.validationEngine-en.js">
+    </script>
+    <script type="text/javascript" src="./8_files/tooltip.js"></script>
+    <script type="text/javascript" src="./8_files/base.js"></script>
+    <script type="text/javascript" src="./8_files/new_tooltip.js"></script>
+    <script type="text/javascript" src="./8_files/jquery.countdown.js"></script>
+    <script type="text/javascript" src="./8_files/topnav.js"></script>
+    <!--<script type="text/javascript" src="./scripts/game/notify.js"></script>-->
+    <!--<script type="text/javascript" src="./scripts/game/notify-metro.js"></script>-->
+    <script src="./8_files/fleetTable.js"></script>
+            <script type="text/javascript" src="./8_files/galaxy.js"></script>
+    
+    
+    <script type="text/javascript">
+        $(function() {
+            
+        });
+    </script>
+    <script type="text/javascript">
+        // <![CDATA[
+        function openWindow(url, width, height, options, name) {
+            width = width ? width : 800;
+            height = height ? height : 600;
+            options = options ? options : 'resizable=yes';
+            name = name ? name : 'openWindow';
+            window.open(
+                url,
+                name,
+                'screenX=' + (screen.width - width) / 2 + ',screenY=' + (screen.height - height) / 2 + ',width=' +
+                width + ',height=' + height + ',' + options
+            )
+        }
+        // ]]>
+    </script>
+    <script type="text/javascript">
+        jQuery(function($) {
+            $('._previous').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').prev()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:last').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+
+            $('._next').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').next()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:first').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+        });
+    </script>
+<meta content="extension" property="gosuslugi.plugin.extension.content"></head>
+
+<body id="galaxy" class="full">
+    <div id="tooltip" class="tip"></div>
+<!-- START main.topnav -->
+<div id="boxBG">
+    <div id="page">
+        <a name="anchor" id="anchor"></a>
+        <div id="info" class="header">
+            <div id="clearAdvice"></div>
+            <div id="playerName">Player: <span class="textBeefy"><a href="https://ogamex.eu/Aeternum/game.php?page=settings">vodoleyko1992</a></span></div>
+            <div id="bar">
+                <ul>
+                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=buddyList" target="_self">Friendships</a></li>                    <li><a href="javascript:OpenPopup(&#39;?page=notes&#39;, &#39;notes&#39;, 720, 300);">Notes</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=statistics&amp;range=194" target="_self">Statistics</a>
+                    </li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=search" target="_self">Search</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=settings" target="_self">Options</a></li>
+                                        <li><a href="https://ogamex.eu/Aeternum/game.php?page=battleSimulator" target="_self">Simulator</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=GiveBonus" target="_self">Voucher code</a></li>                    <li><a href="https://ogamex.eu/" target="_self">
+                            <font style="color:red;">Logout</font>
+                        </a></li>
+                </ul>
+            </div>
+            <div id="clock" class="servertime">Oct Fri 30 10:04:39</div>
+            <div id="planetSelect">
+                <table>
+                    <tbody><tr>
+                        <td id="planetImage">
+                            <img src="./8_files/s_dschjungelplanet07.gif" alt="">
+                        </td>
+                        <td id="planetSelectorWrapper">
+                            <select id="planetSelector" style="margin-bottom:0px">
+                                <option value="254102" selected="selected">Главная планета [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254104">Colony [2:68:7]</option>
+<option value="254105">Colony [2:68:8]</option>
+
+                            </select>
+                            <div style="width: 145px;float: left;margin: 0 10px;margin-bottom: 37px;">
+                                <div class="_previous" style="width: calc(50% - 2px);background: #0d1014;float: left;border: 1px solid #212121;border-top: none;cursor:pointer">
+                                    &lt;</div>
+                                <div class="_next" style="width: calc(50% - 1px);background: #0d1014;float: left;border: 1px solid #212121;border-left: none;border-top: none;cursor:pointer">
+                                    &gt;</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+
+            <div id="resTable">
+                <table>
+                    <tbody><tr>
+                                                                                                                        <td>
+                                        <img data-currentname="current_Metal" data-toolclass="tool_39" src="./8_files/metal.gif" alt="" class="tooltipHTML" title="
+                                    Metal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    1.438.388.129
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    3.416.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    1.932.927.923                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Crystal" data-toolclass="tool_39" src="./8_files/crystal.gif" alt="" class="tooltipHTML" title="
+                                    Crystal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    241.044.112
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.863.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    822.497.302                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Deuterium" data-toolclass="tool_39" src="./8_files/deuterium.gif" alt="" class="tooltipHTML" title="
+                                    Deuterium:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    356.701.043
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.016.750.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    394.585.192                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                <td>
+                                    <img data-currentname="current_Energy" data-toolclass="tool_39" src="./8_files/energy.gif" alt="" class="tooltipHTML" title="
+                                Energy:|
+                                &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Available: &lt;/th&gt;
+                                        &lt;td&gt;&lt;span class=&#39;current&#39;&gt;47.480&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Current production::&lt;/th&gt;
+                                        &lt;td&gt;
+                                            &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                438                                            &lt;/span&gt;
+                                        &lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Consumption:&lt;/th&gt;
+                                        &lt;td&gt;&lt;span style=&#39;color:red&#39; class=&#39;undermark&#39;&gt;-47.042&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                &lt;/table&gt;
+                            ">
+                                </td>
+
+                                                                                                                                                    <td>
+                                        <img data-currentname="current_Dark Matter" data-toolclass="tool_92" src="./8_files/darkmatter.gif" alt="" class="tooltipHTML" title="
+                                    Dark Matter:|
+                                    &lt;table class=&#39;resourceTooltip tool_92&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;&lt;span class=&#39;current&#39;&gt;3.981&lt;/span&gt;&lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                    
+                    </tr>
+
+                    <tr>
+                                                                                    <td class="res_current tooltip" id="current_metal" data-real="1438388129.2551" data-tooltip-content="1.441.609.675">1.441&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_crystal" data-real="241044112.49668" data-tooltip-content="242.414.941">242&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_deuterium" data-real="356701042.53926" data-tooltip-content="357.358.684">357&nbsp;M</td>
+                                                                                                                                                <td class="res_current tooltip Imperium tooltipRight js_hideTipOnMobile" t="438 / 47.480">
+                                    <span>
+                                        438&nbsp;/&nbsp;47.5K
+                                    </span>
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_darkmatter" data-real="3981" data-tooltip-content="3.981">
+                                    4K
+                                </td>
+                                                    
+                    </tr>
+                </tbody></table>
+            </div>
+
+
+            <div id="officers" class="">
+                                                                    <a href="https://ogamex.eu/Aeternum/game.php?page=vote" class="tooltipHTML   commander js_hideTipOnMobile" title="Vote notification|You can vote and get free Dark Matter">
+                        <img class="glows" src="./8_files/alert.gif" width="30" height="30">
+                    </a>
+                            </div>
+
+
+
+            <div class="messages-section">
+                                    <a href="https://ogamex.eu/Aeternum/game.php?page=messages" class="messages-button tooltipBottom js_hideTipOnMobile" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Messages  &lt;/div&gt;">
+                        <span class="new-msg-count">
+                                2
+                        </span>                    </a>
+                    <a href="https://discord.gg/wjBcjvM" class="chat-button tooltipBottom js_hideTipOnMobile" target="_blank" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Join our Discord server&lt;/div&gt;">
+                    </a>
+                            </div>
+
+            
+
+</div><!-- END main.topnav -->
+<!-- START main.navigation -->
+<div id="links">
+    <ul id="menuTable">
+        <li>
+            <span class="menu_icon">
+                                    <a class="Imperium tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=imperium" title="Empire" target="_self">
+                    </a>
+                            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=overview" target="_self">
+                <span class="textlabel">Overview</span>
+            </a>
+        </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Resources tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=resources" title="Resources" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=buildings" target="_self">
+                    <span class="textlabel">Buildings</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="FleetTrader tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=fleetDealer" title="Merchant of Fleets" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=trader" target="_self">
+                    <span class="textlabel">
+                        <font style="color:yellow">Market</font>
+                    </span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Research tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=techtree" title="Technologies" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=research" target="_self">
+                    <span class="textlabel">Research</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                <a class="Tersane tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=tournament" title="Tournament" target="_self">
+                </a>
+            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=fleet" target="_self">
+                    <span class="textlabel">Hangar</span>
+                </a>
+                    </li>
+
+                <li>
+            <span class="menu_icon">
+                <img src="./8_files/navi_ikon_defense_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=defense" target="_self">
+                <span class="textlabel">Defenses</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Filo tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=transport" title="Transport" target="_self">
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=fleetTable" target="_self">
+                <span class="textlabel">Fleet</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Galaxy tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=donatebis" title="Shop">
+
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=galaxy" target="_self">
+                <span class="textlabel">Galaxy</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./8_files/navi_ikon_alliance_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=alliance" target="_self">
+                <span class="textlabel">Alliance</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./8_files/navi_ikon_premium_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=officier" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Officers</font>
+                </span>
+            </a>
+        </li>        <!--<li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=ressprem" target="_self">
+					<span class="textlabel"><font style="color:yellow">Black Market</font></span>
+				</a>
+		</li>-->
+        <li>
+            <span class="menu_icon">
+                <div class="Satinal"></div>
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=premium" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Premium</font>
+                </span>
+            </a>
+        </li>
+        <!-- <li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=satinal" target="_self">
+					<span class="textlabel"><font style="color:orange">satin_al</font></span>
+				</a>
+		</li> !-->
+
+
+
+            </ul>
+        <script type="text/javascript">
+        var viewShortlyNumber = 1;
+        		var vacation			= 0;
+        		        		        resourceTicker({
+            			available: (1438388129.2550642),
+            			limit: [0, "3416925000"],
+            			production: 1932927923.2055,
+            			valueElem: "current_metal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (241044112.49668074),
+            			limit: [0, "1863925000"],
+            			production: 822497302.17436,
+            			valueElem: "current_crystal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (356701042.53925794),
+            			limit: [0, "1016750000"],
+            			production: 394585191.6862,
+            			valueElem: "current_deuterium"
+        }, true);
+        		        		        		        		        		        		
+    </script>
+    
+            </div>
+<!-- END main.navigation -->
+<div id="inhalt">
+<script type="text/javascript">
+    var firstClick = false;
+
+    function eventHeader(content) {
+
+        $(content).toggle(300);
+
+        if (content == ".allFleetsEvent" && firstClick == false) {
+            $('.OvfleetEvents_').each(function(index) {
+                var height_ = $(this).outerHeight();
+                console.log(height_);
+                if (height_ < 7) {
+                    $(this).remove();
+                }
+            });
+            firstClick = true;
+        }
+    }
+
+    $(function() {
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(1)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(2)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(1) > span').first().hide();
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(2) > span').first().hide();
+        $('span[data-hide="true"]').prev().hide();
+    });
+</script>
+
+
+<div id="messages_collapsed" class="messpositionDiv" style="z-index:5;">
+                <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./8_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                    <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="956">00:15:50</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29">10:20:29</span>
+				<span><span class="flight ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>                 <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="956" style="display: none;">00:15:50</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29" "="" data-hide="true" style="display: none;">10:20:29</span>
+				<span data-hide="true"><span class="flight ownharvest" style="display: none;">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+            <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./8_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793350031396900" class="fleets" data-fleet-end-time="1793350031" data-fleet-time="2558">00:42:32</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:47:11" "="">10:47:11</span>
+				<span><span class="return ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> returns from debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a> back to planet Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+    
+
+</div>
+<style type="text/css">
+    .allFleetsEvent {
+        display: none;
+    }
+
+    .d23 {}
+</style>
+<script type="text/javascript">
+		$(document).keydown(function(e) {
+			switch(e.which) {
+				case 37:
+					galaxy_submit('systemLeft');
+				break;
+
+				case 38:
+					galaxy_submit('galaxyRight')
+				break;
+
+				case 39:
+					galaxy_submit('systemRight')
+				break;
+
+				case 40: 
+					galaxy_submit('galaxyLeft')
+				break;
+
+				default: return; 
+			}
+			e.preventDefault();
+		});
+	</script>
+<div id="content" style="padding:0px">
+
+  <table id="galaxytableHead" style="width:654px;padding:0px;margin:0px;" cellspacing="0" cellpadding="0" border="0">
+		<thead>
+			<tr id="galaxyheadbg">
+				<td colspan="13">
+					<div style="position:relative;height:55px;width:647px;">
+						<form action="https://ogamex.eu/Aeternum/game.php?page=galaxy" method="post" id="galaxy_form">
+						<input type="hidden" id="auto" value="dr">
+						<div id="galaxyscroll">
+							<span>Galaxy</span>
+							<div class="GaxSelector">
+								<span>
+									<a href="javascript:void(0);" class="backGalaxy" name="galaxyLeft" onclick="galaxy_submit(&#39;galaxyLeft&#39;)">
+										<img src="./8_files/dot.gif" height="24" width="25" alt="">
+									</a>
+									<input type="text" name="galaxy" value="2" size="5" maxlength="3" tabindex="1">
+									<a href="javascript:void(0);" class="forwardGalaxy" name="galaxyRight" onclick="galaxy_submit(&#39;galaxyRight&#39;)">
+										<img src="./8_files/dot.gif" height="24" width="25" alt="">
+									</a>
+								</span>
+									<br class="clearfloat">
+							</div>
+						</div>
+						<div id="solarscroll">
+							<span>System</span>
+							<div class="SysSelector">
+								<span>
+									<a href="javascript:void(0);" class="backGalaxy" name="systemLeft" onclick="galaxy_submit(&#39;systemLeft&#39;)">
+										<img src="./8_files/dot.gif" height="24" width="25" alt="">
+									</a>
+									<input type="text" name="system" value="68" size="5" maxlength="3" tabindex="2">
+									<a href="javascript:void(0);" class="forwardGalaxy" name="systemRight" onclick="galaxy_submit(&#39;systemRight&#39;)">
+										<img src="./8_files/dot.gif" height="24" width="25" alt="">
+									</a>
+								<span>
+									<br class="clearfloat">
+							</span></span></div>
+						</div>
+
+						<div id="showbutton">
+							<a href="javascript:void(0);" onclick="document.forms[0].submit();return false;">
+								<span class="bleft"></span>
+								<span class="text">View</span>
+								<span class="bright"></span>
+								<input type="submit" style="display:none; position: absolute;" value="View">
+							</a>
+						</div>
+						</form>
+						<div id="expeditionbutton">
+							<a href="https://ogamex.eu/Aeternum/game.php?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=16&amp;planettype=1&amp;target_mission=15">
+								<span class="bleft"></span>
+								<span class="text">Deep area of galaxy</span>
+								<span class="bright"></span>
+							</a>
+						</div>
+
+					</div>
+				</td>
+			</tr>
+
+
+
+
+		
+    <tr class="info info_header">
+     <td style="background:none transparent;border:0" colspan="13">
+      <span id="probes">
+       <!--<span id="probeValue"></span>-->
+       102 Spy Probes
+      </span>
+      <span id="recycler">
+       <!--<span id="recyclerValue"></span>-->
+        0 Recycler            
+       </span>
+      <span id="recycler">
+       <!--<span id="recyclerValue"></span>-->
+        0 Giga Recycler            
+       </span>
+       <span id="rockets">
+        <!--<span id="missileValue"></span>-->
+         0 Available Missiles            
+        </span>
+        <span id="slots">
+         <span id="slotValue">
+          <!--<span id="slotUsed"></span>-->
+          1/13
+         </span>
+         Fleet Slots            
+        </span>
+       </td>
+      </tr>
+
+      <tr id="galaxyheadbg2" style="background-color:transparent;border:0px">
+		<th style="text-align:left;width:14px;overflow:hidden;background-image:none" colspan="3">Pos.</th>
+		<th style="text-align:left;width:74px;background-image:none">Planet</th>
+		<th style="text-align:left;width:151px;background-image:none">Planet Name</th>
+		<th class="text_moon" style="width:48px;background-image:none" colspan="2">Moon</th>
+		<th style="width:34px;background-image:none">Debris</th>
+		<th style="width:151px;background-image:none">Player (State)</th>
+		<th style="text-align:center;width:106px;background-image:none">Alliance</th>
+		<th style="text-align:right;width:72px;background-image:none">Actions</th>
+		<th style="width:4px;background-image:none"></th>
+      </tr>
+		</thead>
+   <tbody>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">1</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Arrakis&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:1]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_dschjungelplanet04.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301120);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:OpenPopup(&amp;quot;?page=phalanx&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=1&amp;amp;planettype=1&amp;quot;, &amp;quot;&amp;quot;, 640, 510);&#39;&gt;Phalanx&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=1&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=1&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=1&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=1&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_dschjungelplanet04.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Arrakis (*)</td>
+		<td class="moon" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Moon Mond&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;Diameter&lt;/td&gt;&lt;td&gt;8.944&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Temperatura&lt;/td&gt;&lt;td&gt;-27&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301121);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><img src="./styles/theme/gow/planeten/small/s_mond.gif" height="22" width="22" alt="Mond"></a>
+		
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Debris Field [2:68:1]&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;Metal:&lt;/td&gt;&lt;td&gt;120.000&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Crystal:&lt;/td&gt;&lt;td&gt;45.000&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;javascript:doit(8, 301120);&#39;&gt;Recycle&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><img src="./styles/theme/gow/planeten/debris.gif" height="22" width="22" alt=""></a>
+         		
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;Flor&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 12&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(3837)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3837);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=12&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class=" galaxy-username">Flor</span>
+				
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Alliance Aeternum Guard 14 Members&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;?page=alliance&amp;amp;mode=info&amp;amp;id=7&#39;&gt;Page of the Alliance&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;start=2&amp;amp;who=2&#39;&gt;Stats&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><span class="galaxy-alliance-friend galaxy-alliance">AET</span></a>
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301120,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3837)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(3837)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=1&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">2</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Colony&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:2]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_normaltempplanet02.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301140);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:OpenPopup(&amp;quot;?page=phalanx&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=2&amp;amp;planettype=1&amp;quot;, &amp;quot;&amp;quot;, 640, 510);&#39;&gt;Phalanx&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=2&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=2&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=2&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=2&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_normaltempplanet02.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Colony (37 min)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Debris Field [2:68:2]&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;Metal:&lt;/td&gt;&lt;td&gt;3.400&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Crystal:&lt;/td&gt;&lt;td&gt;1.100&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;javascript:doit(8, 301140);&#39;&gt;Recycle&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><img src="./styles/theme/gow/planeten/debris.gif" height="22" width="22" alt=""></a>
+         		
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;Txemin&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 455&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(3839)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3839);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=455&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-inactive galaxy-username">Txemin</span>
+				<span>(</span><span class="galaxy-short-inactive galaxy-short">i</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301140,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3839)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(3839)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=2&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">3</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Winterfell&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:3]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_eisplanet01.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301160);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=3&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=3&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=3&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=3&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_eisplanet01.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Winterfell </td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;Severian&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 88&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3836);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=88&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-vacation galaxy-username">Severian</span>
+				<span>(</span><span class="galaxy-short-vacation galaxy-short">VM</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Alliance Night Watch 1 Members&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;?page=alliance&amp;amp;mode=info&amp;amp;id=19&#39;&gt;Page of the Alliance&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;start=40&amp;amp;who=2&#39;&gt;Stats&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><span class="galaxy-alliance-enemy galaxy-alliance">NW</span></a>
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301160,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3836)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=3&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">4</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Exile&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:4]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_trockenplanet05.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301170);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=4&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=4&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=4&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=4&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_trockenplanet05.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Exile </td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;marusic01&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 301&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(3844)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3844);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=301&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-vacation galaxy-username-banned galaxy-username">marusic01</span>
+				<span>(</span><span class="galaxy-short-vacation galaxy-short">VM</span>&nbsp;<span class="galaxy-short-banned galaxy-short">B</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301170,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3844)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(3844)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=4&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<td class="position">
+			<span style="color:#FC4242">5</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Главная планета&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:5]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_dschjungelplanet07.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=5&amp;planettype=1&amp;target_mission=4&#39;&gt;Deploy&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=5&amp;planettype=1&amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./8_files/s_dschjungelplanet07.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Главная планета (*)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+		
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+		
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;vodoleyko1992&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 194&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;who=1&amp;start=194&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class=" galaxy-username">vodoleyko1992</span>
+				
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 					</td>
+		</tr>
+		<tr class="row">
+    		<td class="position">
+			<span style="color:#FC5353">6</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Colony&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:6]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_dschjungelplanet10.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=6&amp;planettype=1&amp;target_mission=4&#39;&gt;Deploy&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=6&amp;planettype=1&amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./8_files/s_dschjungelplanet10.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Colony (49 min)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+		
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+		
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;vodoleyko1992&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 194&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;who=1&amp;start=194&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class=" galaxy-username">vodoleyko1992</span>
+				
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 					</td>
+		</tr>
+		<tr class="row">
+    		<td class="position">
+			<span style="color:#FF6B6B">7</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Colony&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:7]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_normaltempplanet02.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=7&amp;planettype=1&amp;target_mission=4&#39;&gt;Deploy&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=7&amp;planettype=1&amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./8_files/s_normaltempplanet02.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Colony (49 min)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+		
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+		
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;vodoleyko1992&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 194&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;who=1&amp;start=194&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class=" galaxy-username">vodoleyko1992</span>
+				
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 					</td>
+		</tr>
+		<tr class="row">
+    		<td class="position">
+			<span style="color:#FF8383">8</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Colony&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:8]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_normaltempplanet02.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=8&amp;planettype=1&amp;target_mission=4&#39;&gt;Deploy&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=8&amp;planettype=1&amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./8_files/s_normaltempplanet02.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Colony (50 min)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+		
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+		
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;vodoleyko1992&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 194&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;who=1&amp;start=194&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class=" galaxy-username">vodoleyko1992</span>
+				
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">9</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Little One&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:9]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_normaltempplanet06.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301180);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=9&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=9&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=9&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=9&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_normaltempplanet06.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Little One (23 min)</td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;terror&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 530&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(4359)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(4359);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=530&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-noob galaxy-username">terror</span>
+				<span>(</span><span class="galaxy-short-noob galaxy-short">N</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301180,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(4359)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(4359)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=9&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">10</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet King&#039;s Landing&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:10]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_gasplanet02.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301190);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=10&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=10&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=10&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_gasplanet02.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">King&#039;s Landing (*)</td>
+		<td class="moon" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Moon Moon&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;Diameter&lt;/td&gt;&lt;td&gt;7.450&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Temperatura&lt;/td&gt;&lt;td&gt;-61&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301191);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><img src="./styles/theme/gow/planeten/small/s_mond.gif" height="22" width="22" alt="Moon"></a>
+		
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Debris Field [2:68:10]&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;Metal:&lt;/td&gt;&lt;td&gt;9.800.000&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Crystal:&lt;/td&gt;&lt;td&gt;4.100.000&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;javascript:doit(8, 301190);&#39;&gt;Recycle&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><img src="./styles/theme/gow/planeten/debris.gif" height="22" width="22" alt=""></a>
+         		
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;Jon Snow&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 1&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(3843)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3843);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=1&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-strong galaxy-username">Jon Snow</span>
+				<span>(</span><span class="galaxy-short-strong galaxy-short">S</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Alliance Nova Collective 8 Members&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListLinks&#39;&gt;&lt;li&gt;&lt;a href=&#39;?page=alliance&amp;amp;mode=info&amp;amp;id=12&#39;&gt;Page of the Alliance&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;start=1&amp;amp;who=2&#39;&gt;Stats&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;"><span class="galaxy-alliance-member galaxy-alliance">NOVA</span></a>
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301190,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3843)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(3843)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<!-- OGX GUESS: foreign row, markup not seen live -->
+    		<td class="position">
+			<span style="color:#FC4242">11</span>
+		</td>
+        		<td class="microplanet1">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="&lt;div style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;&lt;h1&gt;Planet Hauptplanet&lt;/h1&gt;&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;&lt;ul class=&#39;ListImage&#39;&gt;&lt;li&gt;&lt;span id=&#39;pos-planet&#39;&gt;[2:68:11]&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;img class=&#39;planetTooltip jungle_2&#39; src=&#39;./styles/theme/gow/planeten/small/s_wasserplanet03.gif&#39;  alt=&#39;&#39; height=&#39;33&#39;&gt;&lt;/li&gt;&lt;/ul&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+			&lt;li&gt;&lt;a href=&#39;javascript:doit(6,301150);&#39;&gt;Espionage&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=11&amp;amp;planettype=1&amp;amp;target_mission=1&#39;&gt;Attack&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=11&amp;amp;planettype=1&amp;amp;target_mission=5&#39;&gt;Hold&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=fleetTable&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=11&amp;amp;planettype=1&amp;amp;target_mission=3&#39;&gt;Transport&lt;/a&gt;&lt;/li&gt;
+			&lt;li&gt;&lt;a href=&#39;?page=galaxy&amp;amp;action=sendMissle&amp;amp;galaxy=2&amp;amp;system=68&amp;amp;planet=11&#39;&gt;Missile Attack&lt;/a&gt;&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/div&gt;
+			">
+				<img src="./styles/theme/gow/planeten/small/s_wasserplanet03.gif" height="30" width="30" alt="">
+			</a>
+		</td>
+		<td align="center" class="planetname1" style="white-space: nowrap;">Hauptplanet </td>
+		<td class="moon" style="white-space: nowrap;">
+					</td>
+		<td class="spacer02" style="white-space: nowrap;">
+		</td>
+
+		<td class="debris" style="white-space: nowrap;">
+         		</td>
+
+		<td class="playername">
+			<a class="tooltipRight tooltipClose js_hideTipOnMobile" title="
+			&lt;div id=&#39;player&#39; style=&#39;&#39; class=&#39;htmlTooltip galaxyTooltip&#39;&gt;
+			&lt;h1&gt;Player: &lt;span&gt;Geronimo&lt;/span&gt;&lt;/h1&gt;
+			&lt;div class=&#39;splitLine&#39;&gt;&lt;/div&gt;
+			&lt;ul class=&#39;ListLinks&#39;&gt;
+				&lt;li class=&#39;rank&#39;&gt;Ranking: 1201&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Buddy(3833)&#39;&gt;Friend request&lt;/a&gt;&lt;/li&gt;
+				&lt;li&gt;&lt;a href=&#39;#&#39; onclick=&#39;return Dialog.Playercard(3833);&#39;&gt;Player profile&lt;/a&gt;&lt;/li&gt;
+						&lt;li&gt;&lt;a href=&#39;?page=statistics&amp;amp;who=1&amp;amp;start=1201&#39;&gt;Stats&lt;/li&gt;&lt;/ul&gt;
+			&lt;/div&gt;">
+				<span class="galaxy-username-inactive galaxy-username-longinactive galaxy-username">Geronimo</span>
+				<span>(</span><span class="galaxy-short-inactive galaxy-short">i</span>&nbsp;<span class="galaxy-short-longinactive galaxy-short">I</span><span>)</span>
+							</a>
+		</td>
+		<td class="spacer03"></td>
+		<td class="allytag" style="white-space: nowrap;">
+			 		</td>
+		<td class="spacer04"></td>
+		<td class="action" colspan="2" style="white-space: nowrap;">
+			 <a href="javascript:doit(6,301150,{&quot;210&quot;:&quot;1&quot;})"><img src="./styles/theme/gow/img/e.gif" title="Spying" alt=""></a><a href="#" onclick="return Dialog.PM(3833)"><img src="./styles/theme/gow/img/m.gif" title="Write message" alt=""></a><a href="#" onclick="return Dialog.Buddy(3833)"><img src="./styles/theme/gow/img/b.gif" title="Friend request" alt=""></a><a href="?page=galaxy&amp;action=sendMissle&amp;galaxy=2&amp;system=68&amp;planet=11&amp;type=1"><img src="./styles/theme/gow/img/r.gif" title="Missile attack" alt=""></a>					</td>
+		</tr>
+		<tr class="row">
+    		<td class="position">
+			<a class="tooltipTop js_hideTipOnMobile" title="Planet fields: 305-382&lt;br /&gt;Approximately-10°Cto30°C&lt;br /&gt;" href="https://ogamex.eu/Aeternum/game.php?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=12&amp;planettype=1&amp;target_mission=7"><span style="font-weight:bold;color:#98C6FE">12</span></a>
+		</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    	</tr>
+		<tr class="row">
+    		<td class="position">
+			<a class="tooltipTop js_hideTipOnMobile" title="Planet fields: 246-272&lt;br /&gt;Approximately-50°Cto-10°C&lt;br /&gt;" href="https://ogamex.eu/Aeternum/game.php?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=13&amp;planettype=1&amp;target_mission=7"><span style="font-weight:bold;color:#88BDFF">13</span></a>
+		</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    	</tr>
+		<tr class="row">
+    		<td class="position">
+			<a class="tooltipTop js_hideTipOnMobile" title="Planet fields: 184-211&lt;br /&gt;Approximately-90°Cto-50°C&lt;br /&gt;" href="https://ogamex.eu/Aeternum/game.php?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=14&amp;planettype=1&amp;target_mission=7"><span style="font-weight:bold;color:#6DAEFE">14</span></a>
+		</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    	</tr>
+		<tr class="row">
+    		<td class="position">
+			<a class="tooltipTop js_hideTipOnMobile" title="Planet fields: 149-169&lt;br /&gt;Approximately-130°Cto-90°C&lt;br /&gt;" href="https://ogamex.eu/Aeternum/game.php?page=fleetTable&amp;galaxy=2&amp;system=68&amp;planet=15&amp;planettype=1&amp;target_mission=7"><span style="font-weight:bold;color:#57A3FF">15</span></a>
+		</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    	</tr>
+	
+
+     </tbody>
+     <tfoot>
+		<!--System 2:68-->
+		<tr id="fleetstatusrow" class="info">
+			<td colspan="13" style="background-color:transparent;border:0px">
+
+			</td>
+		</tr>
+      <tr class="info">
+       <td colspan="13" style="background-color:transparent;border:0px">
+		<!--System 2:68-->
+        <span id="legend">
+		 <a class="tooltip" data-tooltip-content="
+&lt;table style=&#39;width:240px&#39;&gt;
+&lt;tr&gt;&lt;th colspan=&#39;2&#39;&gt;Legend&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;Strong player&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-strong&#39;&gt;S&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;Weak player&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-noob&#39;&gt;N&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;Vacation mode&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-vacation&#39;&gt;VM&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;Banned / Suspended&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-banned&#39;&gt;B&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;7 Inactive days&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-inactive&#39;&gt;i&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&#39;width:220px&#39;&gt;28 Inactive days&lt;/td&gt;&lt;td&gt;&lt;span class=&#39;galaxy-short-longinactive&#39;&gt;I&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;"><span class="icon icon_info"></span></a>
+        </span>
+        <span id="colonized">(1 Existing planets)</span>
+         <br class="clearfloat"><br>
+       </td>
+      </tr>
+     </tfoot>
+	</table>
+
+	<script type="text/javascript">
+		status_ok		= 'Done';
+		status_fail		= 'Error';
+		MaxFleetSetting = 3;
+	</script>
+
+
+</div></div>
+
+<div id="rechts">
+	<div id="norm">
+		<div id="myWorlds">
+			<div id="myWorlds">
+				<div id="countColonies">
+					<p class="textCenter"><span>[4 / 6]</span> My planets</p>
+				</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254102" class="planetlink  active active-planet planetPic reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Главная планета [2:68:5]&lt;/b&gt;&lt;br&gt;
+				32°C to 72°C&lt;br&gt;
+				20.000 km (259 / 405)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254102&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254102&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254102&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254102&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254102&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254102&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254102&amp;galaxy=2&amp;system=68&amp;position=5&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./8_files/s_dschjungelplanet07.gif">
+								<span class="planet-name">Главная планета</span>
+								<span class="planet-koords">[2:68:5]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254103" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:6]&lt;/b&gt;&lt;br&gt;
+				20°C to 60°C&lt;br&gt;
+				18.627 km (81 / 347)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254103&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254103&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254103&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254103&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254103&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254103&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254103&amp;galaxy=2&amp;system=68&amp;position=6&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./8_files/s_dschjungelplanet10.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:6]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254104" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:7]&lt;/b&gt;&lt;br&gt;
+				22°C to 62°C&lt;br&gt;
+				20.808 km (77 / 433)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254104&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254104&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254104&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254104&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254104&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254104&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254104&amp;galaxy=2&amp;system=68&amp;position=7&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./8_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:7]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254105" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:8]&lt;/b&gt;&lt;br&gt;
+				-10°C to 30°C&lt;br&gt;
+				22.671 km (128 / 514)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254105&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254105&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254105&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254105&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254105&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254105&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254105&amp;galaxy=2&amp;system=68&amp;position=8&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./8_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:8]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+</div>
+
+<div class="gototop"></div>
+<div class="clear"></div>
+<script type="text/javascript">
+    $(window).scroll(function() {
+        if ($(this).scrollTop() >= 50) { // If page is scrolled more than 50px
+            $('#return-to-top').fadeIn(200); // Fade in the arrow
+        } else {
+            $('#return-to-top').fadeOut(200); // Else fade out the arrow
+        }
+    });
+    $('#return-to-top').click(function() { // When arrow is clicked
+        $('body,html').animate({
+            scrollTop: 0 // Scroll to top of body
+        }, 500);
+    });
+</script>
+
+<div id="siteFooter" class="clearfloat">
+    <div class="fcontent">
+        <div class="fleft textLeft">
+            <b>© 2026 - OGAMEX</b>
+
+             </div>
+        <div class="fright textRight">
+            <a href="https://ogamex.eu/Aeternum/game.php?page=banList" target="_self">
+                <font style="color:red;">Banned</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=records" target="_self">
+                <font style="color:orange;">Records</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=battleHall" target="_self">
+                <font style="color:#6F9FC8;">Hall of Fame</font>
+            </a> |
+            <!--<a href="game.php?page=questions" target="_self">FAQ</a> |-->
+
+            <a href="https://ogamex.eu/Aeternum/game.php?page=ticket" target="_self">Support</a> |            <a href="https://ogamex.eu/Aeternum/index.php?page=rules" target="rules">Rules</a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=vote" target="_self">
+                <font style="color:green;">Vote &amp; Reward</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy#" onclick="return Dialog.Server();">
+                <font style="color:green;">Game information</font>
+            </a>
+        </div>
+        <br class="clearfloat">
+    </div>
+</div>
+
+
+<div id="fancybox-tmp"></div><div id="fancybox-loading"><div></div></div><div id="fancybox-overlay"></div><div id="fancybox-wrap"><div id="fancybox-outer"><div class="fancybox-bg" id="fancybox-bg-n"></div><div class="fancybox-bg" id="fancybox-bg-ne"></div><div class="fancybox-bg" id="fancybox-bg-e"></div><div class="fancybox-bg" id="fancybox-bg-se"></div><div class="fancybox-bg" id="fancybox-bg-s"></div><div class="fancybox-bg" id="fancybox-bg-sw"></div><div class="fancybox-bg" id="fancybox-bg-w"></div><div class="fancybox-bg" id="fancybox-bg-nw"></div><div id="fancybox-content"></div><a id="fancybox-close"></a><div id="fancybox-title"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a></div></div></body></html>

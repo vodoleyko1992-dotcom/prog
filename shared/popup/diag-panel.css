@@ -1,0 +1,24 @@
+/* shared/popup/diag-panel.css — styles of the "Логи для разбора" panel. Owner: core. Same text as OGXDiagPanel.CSS (diag-panel.js); keep both identical (tests/core-diag.test.js checks it). */
+.ogx-diag{font:12px/1.4 Arial,Helvetica,sans-serif;color:#cfd8e3;background:#0d1014;padding:10px;min-width:300px;box-sizing:border-box}
+.ogx-diag *{box-sizing:border-box}
+.ogx-panel .ogx-diag{background:transparent;padding:2px 0;min-width:0}
+.ogx-diag-title{font-size:14px;font-weight:bold;margin:0 0 6px;color:#6f9fd8}
+.ogx-diag-stats{color:#8a99ab;margin:0 0 8px;min-height:16px}
+.ogx-diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ogx-diag-btn{display:block;width:100%;padding:6px 8px;border:1px solid #2b3846;border-radius:3px;background:#161c24;color:#cfd8e3;cursor:pointer;font:inherit;text-align:center}
+.ogx-diag-btn:hover{border-color:#6f9fd8;color:#fff}
+.ogx-diag-btn:disabled{opacity:.5;cursor:wait}
+.ogx-diag-btn-primary{background:#1d3550;border-color:#6f9fd8}
+.ogx-diag-btn-danger{border-color:#7a2a2a;color:#f0a0a0}
+.ogx-diag-last{display:flex;gap:4px;grid-column:span 2}
+.ogx-diag-last .ogx-diag-btn{flex:1}
+.ogx-diag-n{width:80px;padding:4px;border:1px solid #2b3846;background:#0d1014;color:#cfd8e3;border-radius:3px;font:inherit}
+.ogx-diag-wide{grid-column:span 2}
+.ogx-diag-status{margin-top:8px;min-height:16px;color:#4caf50;word-break:break-all}
+.ogx-diag-status.ogx-diag-err{color:#f44336}
+.ogx-diag-hint{margin-top:8px;color:#8a99ab;font-size:11px}
+.ogx-diag-settings{margin-top:10px;border-top:1px solid #2b3846;padding-top:8px}
+.ogx-diag-full{display:block;width:100%;padding:10px 8px;margin:0 0 4px;font-size:14px;font-weight:bold;background:#1d3550;border-color:#6f9fd8;color:#fff}
+.ogx-diag-full-note{color:#8a99ab;font-size:11px;margin:0 0 6px}
+.ogx-diag-more{margin-top:8px;border-top:1px solid #2b3846;padding-top:6px}
+.ogx-diag-more>summary{cursor:pointer;color:#6f9fd8;margin-bottom:6px}

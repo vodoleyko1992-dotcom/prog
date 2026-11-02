@@ -1,0 +1,80 @@
+{
+ "name": "capacity-below-halves",
+ "seed": 17,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "202": 2
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {},
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "planet": {
+   "metal": 1000000,
+   "crystal": 1000000,
+   "deuterium": 1000000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  108
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ]
+ ],
+ "expected": {
+  "won": "a",
+  "rounds": 1,
+  "attackers": [
+   [
+    [
+     202,
+     2
+    ]
+   ]
+  ],
+  "defenders": [
+   []
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 0,
+    "crystal": 0
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 0,
+   "defender": 0
+  },
+  "steal": {
+   "metal": 3333.3333333333335,
+   "crystal": 3333.333333333333,
+   "deuterium": 3333.333333333333
+  },
+  "used": 1
+ }
+}

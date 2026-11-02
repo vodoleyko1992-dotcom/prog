@@ -1,0 +1,132 @@
+{
+ "name": "rf-cruiser-vs-lf",
+ "seed": 2,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "206": 50
+    },
+    "tech": {
+     "weapons": 10,
+     "shielding": 10,
+     "armour": 10
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {
+     "204": 400
+    },
+    "tech": {
+     "weapons": 10,
+     "shielding": 10,
+     "armour": 10
+    }
+   }
+  ],
+  "planet": {
+   "metal": 1000000,
+   "crystal": 1000000,
+   "deuterium": 1000000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  116,
+  113,
+  155,
+  173,
+  109,
+  116,
+  130,
+  186,
+  116,
+  96
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ]
+ ],
+ "expected": {
+  "won": "a",
+  "rounds": 3,
+  "attackers": [
+   [
+    [
+     206,
+     39
+    ]
+   ]
+  ],
+  "defenders": [
+   [
+    [
+     204,
+     0
+    ]
+   ]
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 66000,
+    "crystal": 23100
+   },
+   "defender": {
+    "metal": 360000,
+    "crystal": 120000
+   }
+  },
+  "unitLost": {
+   "attacker": 297000,
+   "defender": 1600000
+  },
+  "steal": {
+   "metal": 10400,
+   "crystal": 10400,
+   "deuterium": 10400
+  },
+  "used": 10
+ }
+}

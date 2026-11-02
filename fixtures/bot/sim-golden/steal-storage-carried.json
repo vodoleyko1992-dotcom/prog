@@ -1,0 +1,145 @@
+{
+ "name": "steal-storage-carried",
+ "seed": 19,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "203": 10,
+     "204": 20
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    },
+    "factor": {
+     "ShipStorage": 0.5
+    },
+    "carried": {
+     "metal": 30000,
+     "crystal": 20000,
+     "deuterium": 10000
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {
+     "401": 3
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "planet": {
+   "metal": 2000000,
+   "crystal": 1000000,
+   "deuterium": 300000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  80,
+  93,
+  120,
+  16,
+  84,
+  150,
+  102,
+  120,
+  99,
+  69
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   56,
+   84
+  ]
+ ],
+ "expected": {
+  "won": "a",
+  "rounds": 2,
+  "attackers": [
+   [
+    [
+     203,
+     10
+    ],
+    [
+     204,
+     20
+    ]
+   ]
+  ],
+  "defenders": [
+   [
+    [
+     401,
+     2
+    ]
+   ]
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 0,
+    "crystal": 0
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 0,
+   "defender": 6000
+  },
+  "steal": {
+   "metal": 105500,
+   "crystal": 105500,
+   "deuterium": 105500
+  },
+  "used": 10
+ }
+}

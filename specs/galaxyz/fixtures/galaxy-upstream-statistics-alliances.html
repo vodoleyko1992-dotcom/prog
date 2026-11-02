@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+	<!-- OGX FIXTURE: UPSTREAM-derived, NOT a real page. Hand-rendered by tools/gen_galaxy_fixtures.py from upstream 2Moons 1.8
+     page.statistics.default.tpl + shared.statistics.allianceTable.tpl + language/en. Invented but consistent data. The live GALAXYZ fork renders a DIFFERENT markup
+     (see eu/pages/galaxy.html and galaxy-live-synthetic-system.html); use this file for semantics/edge cases only. -->
+	<title>Statistics - Aeternum - GALAXYZ</title>
+	<meta name="generator" content="2Moons 1.8.git">
+	<!--
+		This website is powered by 2Moons 1.8.git
+		2Moons is a free Space Browsergame initially created by Jan Kröpke and licensed under GNU/GPL.
+		2Moons is copyright 2009-2013 of Jan Kröpke. Extensions are copyright of their respective owners.
+		Information and contribution at http://2moons.cc/
+	-->
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/boilerplate.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/ingame/main.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.fancybox.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/validationEngine.jquery.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/theme/gow/formate.css?v=.git">
+	<link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+	<script type="text/javascript">
+	var ServerTimezoneOffset = 0;
+	var serverTime 	= new Date(2026, 9, 30, 10, 03, 37);
+	var startTime	= serverTime.getTime();
+	var localTime 	= serverTime;
+	var localTS 	= startTime;
+	var Gamename	= document.title;
+	var Ready		= "Ready";
+	var Skin		= "./styles/theme/gow/";
+	var Lang		= "en";
+	var head_info	= "Info";
+	var auth		= 0;
+	var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+	var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+	var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+	var queryString	= "page=statistics";
+	var isPlayerCardActive	= "true";
+
+	setInterval(function() {
+		serverTime.setSeconds(serverTime.getSeconds()+1);
+	}, 1000);
+	</script>
+	<script type="text/javascript" src="./scripts/base/jquery.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.ui.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.cookie.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.fancybox.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.validationEngine.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/l18n/validationEngine/jquery.validationEngine-en.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/tooltip.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/game/base.js?v=.git"></script>
+	    
+	<script type="text/javascript">
+	$(function() {
+
+	});
+	</script>
+</head>
+<body id="statistics" class="full">
+	<div id="tooltip" class="tip"></div>
+<div id="leftmenu">
+	<ul id="menu">
+		<li class="menu-head"><a href="game.php?page=changelog">Changelog</a></li>
+		<li class="menucat1-head"></li>
+		<li><a href="game.php?page=overview">Overview</a></li>
+		<li><a href="game.php?page=imperium">Empire</a></li>
+		<li><a href="game.php?page=research">Research</a></li>
+		<li><a href="game.php?page=buildings">Buildings</a></li>
+		<li><a href="game.php?page=shipyard&amp;mode=fleet">Hangar</a></li>
+		<li><a href="game.php?page=shipyard&amp;mode=defense">Defenses</a></li>
+		<li><a href="game.php?page=officier">Officers</a></li>
+		<li><a href="game.php?page=trader">Market</a></li>
+		<li><a href="game.php?page=fleetDealer">Merchant of Fleets</a></li>
+		<li><a href="game.php?page=fleetTable">Fleet</a></li>
+		<li><a href="game.php?page=techtree">Technologies</a></li>
+		<li><a href="game.php?page=resources">Resources</a></li>
+		<li class="menucat2-head"></li>
+		<li><a href="game.php?page=galaxy">Galaxy</a></li>
+		<li><a href="game.php?page=alliance">Alliance</a></li>
+		<li><a href="game.php?page=statistics">Statistics</a></li>
+		<li><a href="game.php?page=records">Records</a></li>
+		<li><a href="game.php?page=battleHall">Hall of Fame</a></li>
+		<li><a href="game.php?page=search">Search</a></li>
+		<li><a href="game.php?page=chat">Chat</a></li>
+		<li><a href="game.php?page=ticket">Support</a></li>
+		<li><a href="game.php?page=questions">FAQ</a></li>
+		<li><a href="game.php?page=banList">Banned</a></li>
+		<li><a href="index.php?page=rules" target="rules">Rules</a></li>
+		<li><a href="game.php?page=battleSimulator">Simulator</a></li>
+
+		<li class="menucat3-head"></li>
+		<li><a href="game.php?page=messages">Messages<span id="newmes"> (<span id="newmesnum">2</span>)</span></a></li>
+		<li><a href="javascript:OpenPopup('?page=notes', 'notes', 720, 300);">Notes</a></li>
+		<li><a href="game.php?page=buddyList">Friendships</a></li>
+		<li><a href="game.php?page=settings">Options</a></li>
+		<li><a href="game.php?page=logout">Logout</a></li>
+		<li class="menu-footer"></li>
+	</ul>
+	<div id="disclamer"><a href="index.php?page=disclamer" target="_blank">Credits</a></div>
+</div><div id="page">
+	<div id="header">
+		<table id="headerTable">
+			<tbody>
+				<tr>
+					<td id="planetImage">
+                       <img src="./styles/theme/gow/planeten/small/s_dschjungelplanet07.jpg" alt="">
+					</td>
+					<td id="planetSelectorWrapper">
+                        <label for="planetSelector"></label>
+						<select id="planetSelector">
+							<option value="254102" selected="selected">Homeworld [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254110">Moon (Moon) [2:68:5]</option>
+
+						</select>
+					</td>
+					<td id="resourceWrapper">
+						<table id="resourceTable">
+							<tbody>
+								<tr>
+									<td><img src="./styles/theme/gow/images/metal.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/crystal.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/deuterium.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/energy.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/darkmatter.gif" alt=""></td>
+								</tr>
+								<tr>
+									<td class="res_name">Metal</td>
+									<td class="res_name">Crystal</td>
+									<td class="res_name">Deuterium</td>
+									<td class="res_name">Energy</td>
+									<td class="res_name">Dark Matter</td>
+								</tr>
+								<tr>
+									<td class="res_current" id="current_metal" data-real="1408320361.5607">1.408.320.362</td>
+									<td class="res_current" id="current_crystal" data-real="228249710.01842">228.249.710</td>
+									<td class="res_current" id="current_deuterium" data-real="350563050.66861">350.563.051</td>
+									<td class="res_current"><span>438&nbsp;/&nbsp;47.480</span></td>
+									<td class="res_current" id="current_darkmatter" data-real="3981">3.981</td>
+								</tr>
+								<tr>
+									<td class="res_max" id="max_metal" data-real="1408320361.5607">3.416.925.000</td>
+									<td class="res_max" id="max_crystal" data-real="228249710.01842">1.863.925.000</td>
+									<td class="res_max" id="max_deuterium" data-real="350563050.66861">1.016.750.000</td>
+									<td>&nbsp;</td>
+									<td>&nbsp;</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+		var viewShortlyNumber	= 0;
+		var vacation			= 0;
+        $(function() {
+            resourceTicker({
+                available: 1408320361.5607,
+                limit: [0, 3416925000],
+                production: 1932927923.2055,
+                valueElem: "current_metal"
+            }, true);
+            resourceTicker({
+                available: 228249710.01842,
+                limit: [0, 1863925000],
+                production: 822497302.17436,
+                valueElem: "current_crystal"
+            }, true);
+            resourceTicker({
+                available: 350563050.66861,
+                limit: [0, 1016750000],
+                production: 394585191.6862,
+                valueElem: "current_deuterium"
+            }, true);
+        });
+		</script>
+        <script src="scripts/game/topnav.js"></script>
+	</div>
+<div id="content"><form name="stats" id="stats" method="post" action="">
+	<table class="table519">
+		<tr>
+			<th>Statistics (Updated: 30. Oct 2026, 10:00:02)</th>
+		</tr>
+		<tr>
+			<td>
+				<label for="who">Show</label> <select name="who" id="who" onchange="$('#stats').submit();"><option value="1">Player</option>
+<option value="2" selected="selected">Alliance</option></select>
+				<label for="type">by</label> <select name="type" id="type" onchange="$('#stats').submit();"><option value="1" selected="selected">Points</option>
+<option value="2">Fleets</option>
+<option value="3">Research</option>
+<option value="4">Buildings</option>
+<option value="5">Defense</option></select>
+				<label for="range">in the positions</label> <select name="range" id="range" onchange="$('#stats').submit();"><option value="1" selected="selected">1-100</option>
+<option value="101">101-200</option>
+<option value="201">201-300</option>
+<option value="301">301-400</option>
+<option value="401">401-500</option>
+<option value="501">501-600</option></select>
+			</td>
+		</tr>
+	</table>
+</form>
+<table class="table519">
+<tr>
+	<th style="width:60px;">Position</th>
+	<th>Alliance</th>
+	<th>Members</th>
+	<th>Points</th>
+	<th>per Member</th>
+</tr>
+<tr>
+	<td><a class="tooltip" data-tooltip-content="<span style='color:green'>+1</span>">1</a></td>
+	<td><a href="game.php?page=alliance&amp;mode=info&amp;id=12" target="ally" style="color:lime">Nova Collective</a></td>
+	<td>8</td>
+	<td>2.401.200</td>
+	<td>300.150</td>
+</tr><tr>
+	<td><a class="tooltip" data-tooltip-content="<span style='color:red'>-1</span>">2</a></td>
+	<td><a href="game.php?page=alliance&amp;mode=info&amp;id=7" target="ally">Aeternum Guard</a></td>
+	<td>14</td>
+	<td>2.210.000</td>
+	<td>157.857</td>
+</tr><tr>
+	<td><a class="tooltip" data-tooltip-content="<span style='color:#87CEEB'>*</span>">3</a></td>
+	<td><a href="game.php?page=alliance&amp;mode=info&amp;id=19" target="ally">Night Watch</a></td>
+	<td>1</td>
+	<td>990.112</td>
+	<td>990.112</td>
+</tr>
+</table>
+
+</div>
+<div class="clear"></div>
+<div id="footer">
+</div>
+</body>
+</html>

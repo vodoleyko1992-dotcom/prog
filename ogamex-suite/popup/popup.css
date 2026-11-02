@@ -1,0 +1,44 @@
+/* ogamex-suite/popup/popup.css — popup and options page. Colours match the in-game panel (shared/core/20-style.js). */
+:root { color-scheme: dark; --bg: #0d1014; --panel: #161c24; --panel2: #1c242e; --border: #2b3846; --text: #cfd8e3; --muted: #8593a3; --accent: #6f9fd8; --ok: #4caf50; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 12px/1.45 Arial, Helvetica, sans-serif; }
+body.ogx-popup { width: 380px; min-height: 420px; }
+body.ogx-options { width: auto; max-width: 720px; margin: 0 auto; padding: 16px; font-size: 13px; }
+* { box-sizing: border-box; }
+.sx-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.sx-logo { width: 30px; height: 30px; border-radius: 6px; background: linear-gradient(135deg, #1d3550, #6f9fd8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.sx-title { font-weight: bold; font-size: 14px; color: #fff; }
+.sx-ver { color: var(--muted); font-size: 11px; }
+.sx-tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--border); background: var(--bg); }
+.sx-tab { padding: 5px 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 3px 3px 0 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.sx-tab:hover { color: var(--text); }
+.sx-tab.sx-active { background: var(--panel); border-color: var(--border); color: #fff; }
+.sx-pane { padding: 8px 12px; }
+.sx-pane[hidden], [hidden] { display: none !important; }
+.sx-sec { margin: 0 0 10px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
+.sx-sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.sx-sec-title { font-weight: bold; color: var(--accent); }
+.sx-sec-all { color: var(--muted); cursor: pointer; }
+.sx-mod { display: flex; align-items: center; gap: 6px; padding: 2px 0; cursor: pointer; }
+.sx-mod-title { flex: 1; }
+.sx-mod-name { color: var(--muted); font-size: 10px; font-family: monospace; }
+.sx-muted { color: var(--muted); margin: 4px 0 8px; }
+.sx-foot { margin-top: 4px; }
+.sx-row { display: flex; gap: 6px; margin: 6px 0; }
+.sx-input { flex: 1; padding: 5px 6px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--text); font: inherit; }
+.sx-btn { padding: 5px 10px; border: 1px solid var(--border); border-radius: 3px; background: var(--panel2); color: var(--text); font: inherit; cursor: pointer; }
+.sx-btn:hover { border-color: var(--accent); color: #fff; }
+.sx-btn-primary { background: #1d3550; border-color: var(--accent); }
+.sx-btn-small { padding: 0 6px; margin-left: 6px; }
+.sx-hosts { list-style: none; margin: 6px 0; padding: 0; }
+.sx-hosts li { display: flex; align-items: center; justify-content: space-between; padding: 3px 6px; border-bottom: 1px solid var(--border); }
+.sx-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.sx-chip { padding: 2px 8px; border: 1px dashed var(--border); border-radius: 10px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.sx-status { min-height: 18px; padding: 4px 12px 8px; color: var(--ok); }
+#ogx-suite-logs-holder .ogx-diag { padding: 0; background: transparent; min-width: 0; }
+.sx-tabstatus { margin: 8px 12px 2px; padding: 6px 8px; border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: 4px; background: var(--panel); }
+.sx-tabstatus[data-ogx-tabstatus="ok"] { border-left-color: var(--ok); }
+.sx-tabstatus[data-ogx-tabstatus="warn"], .sx-tabstatus[data-ogx-tabstatus="gated"] { border-left-color: #ff9800; }
+.sx-tabstatus[data-ogx-tabstatus="no"] { border-left-color: #f44336; }
+.sx-ts-title { font-weight: bold; color: var(--accent); margin-bottom: 2px; }
+.sx-ts-text > div + div { margin-top: 2px; }
+.sx-ts-raw { display: block; margin-top: 4px; color: var(--muted); font: 10px/1.3 monospace; word-break: break-word; }

@@ -1,0 +1,108 @@
+<!-- UPSTREAM-DERIVED fixture, NOT a real page. Rendered by specs/galaxyz/tools/messages/gen_messages_fixtures.php from the
+     upstream 2Moons 1.8 templates/mission code with invented data (player vodoleyko1992, Главная планета [2:68:5]).
+     The GALAXYZ fork may differ; verify against a real page. AJAX fragment of GET game.php?page=messages&mode=view&messcat=5&site=1&ajax=1 (layout.ajax.tpl = bare content block) -->
+
+<form action="game.php?page=messages" method="post">
+<input type="hidden" name="mode" value="action">
+<input type="hidden" name="ajax" value="1">
+<input type="hidden" name="messcat" value="5">
+<input type="hidden" name="side" value="1">
+<table id="messagestable" style="width:760px;">
+	<tr>
+		<th colspan="4">Messages</th>
+	</tr>
+		<tr>
+		<td colspan="4">
+			<select name="actionTop">
+				<option value="readmarked">Mark selected messages as read</option>
+				<option value="readtypeall">Mark all messages of this type as read</option>
+				<option value="readall">Mark all messages as read</option>
+				<option value="deletemarked">Delete marked messages</option>
+				<option value="deleteunmarked">Delete all messages not marked</option>
+				<option value="deletetypeall">Delete all messages of this type</option>
+				<option value="deleteall">Delete all messages</option>
+			</select>
+			<input value="Confirm" type="submit" name="submitTop">
+		</td>
+	</tr>
+		<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(5, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+	<tr style="height: 20px;">
+		<td>Action</td>
+		<td>Date</td>
+		<td>From</td>
+		<td>Subject</td>
+	</tr>
+		<tr id="message_520510" class="message_head mes_unread">
+		<td style="width:40px;" rowspan="2">
+		<input name="messageID[520510]" value="1" type="checkbox">		</td>
+		<td>30. Oct 2026, 09:06:40</td>
+		<td>Fleet Headquarters</td>
+		<td>Transportmessage
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		One of your fleets reaches the planet Colony <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="">[2:68:6]</a> and delivers 500.000 Metal, 250.000 Crystal and 100.000 Deuterium.
+		</td>
+	</tr>
+		<tr id="message_520509" class="message_head mes_unread">
+		<td style="width:40px;" rowspan="2">
+		<input name="messageID[520509]" value="1" type="checkbox">		</td>
+		<td>30. Oct 2026, 09:05:50</td>
+		<td>Fleet Headquarters</td>
+		<td>Transportmessage
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		A peaceful fleet of Kovacs Prime <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=70" class="">[2:70:4]</a> reached Главная планета <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="">[2:68:5]</a> and delivers 1.000 Metal, 2.000 Crystal and 3.000 Deuterium.
+		</td>
+	</tr>
+		<tr id="message_520505" class="message_head mes_unread">
+		<td style="width:40px;" rowspan="2">
+		<input name="messageID[520505]" value="1" type="checkbox">		</td>
+		<td>30. Oct 2026, 09:05:00</td>
+		<td>Fleet Headquarters</td>
+		<td>Recycling Report
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		Having arrived at there destination your Recyclers collect 4.145.000 Metal and 2.072.500 Crystal
+		</td>
+	</tr>
+		<tr id="message_520501" class="message_head">
+		<td style="width:40px;" rowspan="2">
+		<input name="messageID[520501]" value="1" type="checkbox">		</td>
+		<td>30. Oct 2026, 09:04:10</td>
+		<td>Fleet Headquarters</td>
+		<td>Located fleet
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		Your fleet reaches the planet <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="">[2:68:7]</a> and delivers 10 Metal, 20 Crystal and 89 Deuterium.
+		</td>
+	</tr>
+	
+	<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(5, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+		<tr>
+		<td colspan="4">
+			<select name="actionBottom">
+				<option value="readmarked">Mark selected messages as read</option>
+				<option value="readtypeall">Mark all messages of this type as read</option>
+				<option value="readall">Mark all messages as read</option>
+				<option value="deletemarked">Delete marked messages</option>
+				<option value="deleteunmarked">Delete all messages not marked</option>
+				<option value="deletetypeall">Delete all messages of this type</option>
+				<option value="deleteall">Delete all messages</option>
+			</select>
+			<input value="Confirm" type="submit" name="submitBottom">
+		</td>
+	</tr>
+	</table>
+</form>

@@ -1,0 +1,300 @@
+<div id="content">
+    <div>
+        <script type="text/javascript">
+            var currentCategory = 2;
+            var currentType = 0;
+            var site = 1;
+            var searchSite = 1;
+            var resultsPerPage = 100;
+        </script>
+
+        <div class="pagebar">
+                                                            <span class=" activePager">1</span>
+                                &nbsp;
+                                </div>
+        <select class="changeSite fright">
+                                        <option selected=&quot;selected&quot; value="1"> 1 - 100</option>
+                    </select>
+        <div class="fleft" id="highscoreHeadline">
+                            Points
+                    </div>
+
+        <table id="ranks" class="allyHighscore">
+            <thead>
+            <tr>
+                <td class="position">
+                    Position
+                </td>
+                <td class="movement"></td>
+                <td class="name">
+                    Alliance
+                </td>
+                <td class="member_count" align="center">
+                    Member
+                </td>
+                <td align="center" class="score tooltip js_hideTipOnMobile" title="Average points">
+                    Points
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+                            <tr class=" " id="position31">
+                    <td class="position">
+                        1
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Galactic Empire</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/31" target="_blank" class="txt_link">[GE]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        21
+                    </td>
+
+                    <td class="score">
+                        4,520,110
+                        <div class="small">ø215,243</div>
+                    </td>
+                </tr>
+                            <tr class=" alt" id="position18">
+                    <td class="position">
+                        2
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Free Traders</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/18" target="_blank" class="txt_link">[FTRD]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        17
+                    </td>
+
+                    <td class="score">
+                        3,011,870
+                        <div class="small">ø177,169</div>
+                    </td>
+                </tr>
+                            <tr class=" " id="position12">
+                    <td class="position">
+                        3
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Nova Collective</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/12" target="_blank" class="txt_link">[NOVA]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        8
+                    </td>
+
+                    <td class="score">
+                        2,154,300
+                        <div class="small">ø269,288</div>
+                    </td>
+                </tr>
+                            <tr class=" alt" id="position40">
+                    <td class="position">
+                        4
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Dark Matter Inc</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/40" target="_blank" class="txt_link">[DMI]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        12
+                    </td>
+
+                    <td class="score">
+                        1,650,220
+                        <div class="small">ø137,518</div>
+                    </td>
+                </tr>
+                            <tr class=" " id="position22">
+                    <td class="position">
+                        5
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Starfall</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/22" target="_blank" class="txt_link">[SF]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        6
+                    </td>
+
+                    <td class="score">
+                        990,300
+                        <div class="small">ø165,050</div>
+                    </td>
+                </tr>
+                            <tr class=" alt" id="position9">
+                    <td class="position">
+                        6
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Iron Wolves</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/9" target="_blank" class="txt_link">[IW]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        5
+                    </td>
+
+                    <td class="score">
+                        702,560
+                        <div class="small">ø140,512</div>
+                    </td>
+                </tr>
+                            <tr class=" " id="position14">
+                    <td class="position">
+                        7
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Blue Horizon</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/14" target="_blank" class="txt_link">[BLUE]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        7
+                    </td>
+
+                    <td class="score">
+                        560,010
+                        <div class="small">ø80,001</div>
+                    </td>
+                </tr>
+                            <tr class=" alt" id="position27">
+                    <td class="position">
+                        8
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Eclipse</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/27" target="_blank" class="txt_link">[ECL]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        4
+                    </td>
+
+                    <td class="score">
+                        450,200
+                        <div class="small">ø112,550</div>
+                    </td>
+                </tr>
+                            <tr class=" " id="position7">
+                    <td class="position">
+                        9
+                    </td>
+
+                    <td class="movement">
+                        <img src="/img/icons/ea5bf2cc93e52e22e3c1b80c7f7563.gif" alt="stay">
+                    </td>
+
+                    <td class="name">
+                        <div class="ally-name">
+                            <span>Raiders of the Lost Ark</span>
+                        </div>
+                        <div class="ally-tag">
+                            <a href="http://localhost/alliance/info/7" target="_blank" class="txt_link">[RAID]</a>
+                        </div>
+                    </td>
+
+                    <td class="member_count" align="center">
+                        3
+                    </td>
+
+                    <td class="score">
+                        412,004
+                        <div class="small">ø137,335</div>
+                    </td>
+                </tr>
+                        </tbody>
+        </table>
+
+        <script type="text/javascript">
+            $(document).ready(function(){
+                initHighscoreContent();
+                initHighscore();
+            });
+        </script>
+        <div class="pagebar">
+            <a href="javascript:void(0);" class="scrollToTop">Back to top</a>
+            &nbsp;
+                                                            <span class=" activePager">1</span>
+                                &nbsp;
+                                </div>
+    </div>
+</div>

@@ -1,0 +1,90 @@
+{
+ "name": "empty-defender",
+ "seed": 15,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "202": 5,
+     "203": 2
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {},
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "planet": {
+   "metal": 100000,
+   "crystal": 80000,
+   "deuterium": 60000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  91,
+  99
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ]
+ ],
+ "expected": {
+  "won": "a",
+  "rounds": 1,
+  "attackers": [
+   [
+    [
+     202,
+     5
+    ],
+    [
+     203,
+     2
+    ]
+   ]
+  ],
+  "defenders": [
+   []
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 0,
+    "crystal": 0
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 0,
+   "defender": 0
+  },
+  "steal": {
+   "metal": 25000,
+   "crystal": 25000,
+   "deuterium": 25000
+  },
+  "used": 2
+ }
+}

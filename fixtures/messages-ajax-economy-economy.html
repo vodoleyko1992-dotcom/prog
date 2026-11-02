@@ -1,0 +1,156 @@
+<div id="defaultmessagespage">
+    <div class="tab_ctn">
+        <ul class="tab_inner clearfix">
+                        <ul class="pagination">
+                <li class="paginator  disabled " data-tab="3" data-page="1">|&lt;&lt;</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&lt;</li>
+                <li class="curPage" data-tab="3">1/1</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&gt;</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&gt;&gt;|</li>
+            </ul>
+            <input type="hidden" name="token" value="b5e7750a20009bf4c875f592bcc7a432">
+                                                    <li class="msg " data-msg-id="2025">
+                    <div class="msg_status"></div>
+                    <div class="msg_head">
+                        <span class="msg_title blue_txt">Settlement Report</span>
+                        <span class="fright">
+                            <a href="javascript: void(0);" class="fright">
+                                <span class="icon_nf icon_refuse js_actionKill tooltip js_hideTipOnMobile" title="delete"></span>
+                            </a>
+                            <span class="msg_date fright">28.10.2026 12:00:00</span>
+                        </span>
+                        <br>
+                        <span class="msg_sender_label">From:</span>
+                        <span class="msg_sender">Fleet Command</span>
+                    </div>
+                    <span class="msg_content">
+                        The fleet has arrived at the assigned coordinates 2:118:12, found a new planet there and are beginning to develop upon it immediately.
+                    </span>
+                    <message-footer class="msg_actions">
+                        <message-footer-actions>
+                            
+                        </message-footer-actions>
+                        <message-footer-details>
+                            
+                        </message-footer-details>
+                    </message-footer>
+                    <script type="text/javascript">
+                        initOverlays();
+                    </script>
+                </li>
+                            <li class="msg " data-msg-id="2024">
+                    <div class="msg_status"></div>
+                    <div class="msg_head">
+                        <span class="msg_title blue_txt">Settlement Report</span>
+                        <span class="fright">
+                            <a href="javascript: void(0);" class="fright">
+                                <span class="icon_nf icon_refuse js_actionKill tooltip js_hideTipOnMobile" title="delete"></span>
+                            </a>
+                            <span class="msg_date fright">28.10.2026 11:00:00</span>
+                        </span>
+                        <br>
+                        <span class="msg_sender_label">From:</span>
+                        <span class="msg_sender">Settlers</span>
+                    </div>
+                    <span class="msg_content">
+                        The fleet has arrived at assigned coordinates 2:120:7 and ascertains that the planet is viable for colonisation. Shortly after starting to develop the planet, the colonists realise that their knowledge of astrophysics is not sufficient to complete the colonisation of a new planet.
+                    </span>
+                    <message-footer class="msg_actions">
+                        <message-footer-actions>
+                            
+                        </message-footer-actions>
+                        <message-footer-details>
+                            
+                        </message-footer-details>
+                    </message-footer>
+                    <script type="text/javascript">
+                        initOverlays();
+                    </script>
+                </li>
+                            <li class="msg " data-msg-id="2023">
+                    <div class="msg_status"></div>
+                    <div class="msg_head">
+                        <span class="msg_title blue_txt">Repair completed</span>
+                        <span class="fright">
+                            <a href="javascript: void(0);" class="fright">
+                                <span class="icon_nf icon_refuse js_actionKill tooltip js_hideTipOnMobile" title="delete"></span>
+                            </a>
+                            <span class="msg_date fright">28.10.2026 10:00:00</span>
+                        </span>
+                        <br>
+                        <span class="msg_sender_label">From:</span>
+                        <span class="msg_sender">System Message</span>
+                    </div>
+                    <span class="msg_content">
+                        Your repair request on planet <a href="http://localhost/galaxy?galaxy=1&system=42&position=8" class="txt_link"><img src="http://localhost/img/planets/medium/jungle_1.png" width="16" height="16" class="tooltip js_hideTipOnMobile" title="Planet"> Homeworld [1:42:8]</a> has been completed.<br />
+18 ships have been put back into service.
+                    </span>
+                    <message-footer class="msg_actions">
+                        <message-footer-actions>
+                            
+                        </message-footer-actions>
+                        <message-footer-details>
+                            
+                        </message-footer-details>
+                    </message-footer>
+                    <script type="text/javascript">
+                        initOverlays();
+                    </script>
+                </li>
+                        <ul class="pagination">
+                <li class="paginator  disabled " data-tab="3" data-page="1">|&lt;&lt;</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&lt;</li>
+                <li class="curPage" data-tab="3">1/1</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&gt;</li>
+                <li class="paginator  disabled " data-tab="3" data-page="1">&gt;&gt;|</li>
+            </ul>
+        </ul>
+        <script type="text/javascript">
+    var activeTabid = $('.ui-tabs-active a').attr('id'); //erster tab als default
+    var hasSubtabs = $('div[aria-labelledby="' + activeTabid + '"] .tab_ctn div ul.subtabs').length;
+    var activeSubtabid = '';
+
+    $('.ui-tabs-active a').each(function () {
+        activeSubtabid = $(this).attr('id');
+    });
+
+    var msgids = [];
+    var index = 0;
+
+    if (hasSubtabs > 0) {
+        $('div[aria-labelledby="' + activeSubtabid + '"] .msg_new').each(function () {
+            msgids[index] = $(this).data('msg-id');
+            index++;
+        });
+    } else {
+        $('div[aria-labelledby="' + activeTabid + '"] .msg_new').each(function () {
+            msgids[index] = $(this).data('msg-id');
+            index++;
+        });
+    }
+
+    msgids = JSON.stringify(msgids);
+
+    // Remove new message count indicator as soon as the tab is opened
+    var message_menu_count = $('.comm_menu.messages span.new_msg_count');
+    var message_tab_count = $('.ui-tabs-active .new_msg_count');
+
+    if (message_menu_count.length > 0 && message_tab_count.length > 0) {
+        var menuCount = parseInt(message_menu_count[0].innerHTML);
+        var tabCount = parseInt(message_tab_count[0].innerHTML);
+        var newCount = menuCount - tabCount;
+
+        if (newCount > 0) {
+            message_menu_count.html(newCount);
+        } else {
+            message_menu_count.remove();
+        }
+    }
+
+    $('.ui-tabs-active .new_msg_count').remove();
+
+    if (hasSubtabs > 0) {
+        $('.ui-tabs-active a span:not(.icon_caption)').remove();
+    }
+</script>    </div>
+</div>

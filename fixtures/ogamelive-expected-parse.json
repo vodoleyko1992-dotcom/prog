@@ -1,0 +1,553 @@
+{
+  "num": {
+    "152,347": 152347,
+    "+4,128": 4128,
+    "-2,754": -2754,
+    "1.25Mn": 1250000,
+    "1.5M": 1500000,
+    "2B": 2000000000
+  },
+  "bodiesPlanet": [
+    {
+      "planetId": 1,
+      "rowId": "planet-1",
+      "name": "Homeworld",
+      "coords": "1:42:8",
+      "moonId": 5,
+      "building": false
+    },
+    {
+      "planetId": 3,
+      "rowId": "planet-2",
+      "name": "Colony",
+      "coords": "2:118:12",
+      "moonId": null,
+      "building": true
+    }
+  ],
+  "currentPlanet": {
+    "key": "p1",
+    "id": 1,
+    "isMoon": false,
+    "planetId": 1,
+    "coords": "1:42:8"
+  },
+  "currentMoon": {
+    "key": "m5",
+    "id": 5,
+    "isMoon": true,
+    "planetId": 1,
+    "coords": "1:42:8"
+  },
+  "tooltips": {
+    "M": {
+      "dispo": 152347,
+      "capa": 255000,
+      "prod": 4128,
+      "cache": 0
+    },
+    "C": {
+      "dispo": 98712,
+      "capa": 140000,
+      "prod": 2187,
+      "cache": 0
+    },
+    "D": {
+      "dispo": 41230,
+      "capa": 75000,
+      "prod": 1043,
+      "cache": 0
+    },
+    "E": {
+      "dispo": 106,
+      "prod": 2860,
+      "conso": -2754
+    }
+  },
+  "tooltipsMoon": {
+    "M": {
+      "dispo": 12500,
+      "capa": 10000,
+      "prod": 0,
+      "cache": 0
+    },
+    "C": {
+      "dispo": 8300,
+      "capa": 10000,
+      "prod": 0,
+      "cache": 0
+    },
+    "D": {
+      "dispo": 0,
+      "capa": 10000,
+      "prod": 0,
+      "cache": 0
+    },
+    "E": {
+      "dispo": 0,
+      "prod": 0,
+      "conso": 0
+    }
+  },
+  "inline": {
+    "M": {
+      "dispo": 152347.29861111,
+      "capa": 255000,
+      "prod": 4128.00000000012
+    },
+    "C": {
+      "dispo": 98712.55,
+      "capa": 140000,
+      "prod": 2187
+    },
+    "D": {
+      "dispo": 41230.871527778,
+      "capa": 75000,
+      "prod": 1042.999999999992
+    },
+    "E": {
+      "dispo": 106
+    }
+  },
+  "levelsResources": {
+    "metalMine": 22,
+    "crystalMine": 19,
+    "deuteriumSynthesizer": 15,
+    "solarPlant": 24,
+    "fusionPlant": 8,
+    "solarSatellite": 0,
+    "resbuggy": 20,
+    "metalStorage": 8,
+    "crystalStorage": 7,
+    "deuteriumStorage": 6
+  },
+  "levelsResearch": {
+    "energyTechnology": 12,
+    "laserTechnology": 12,
+    "ionTechnology": 5,
+    "hyperspaceTechnology": 8,
+    "plasmaTechnology": 7,
+    "combustionDriveTechnology": 10,
+    "impulseDriveTechnology": 7,
+    "hyperspaceDriveTechnology": 6,
+    "espionageTechnology": 10,
+    "computerTechnology": 12,
+    "astrophysicsTechnology": 9,
+    "researchNetworkTechnology": 2,
+    "gravitonTechnology": 0,
+    "weaponsTechnology": 12,
+    "shieldingTechnology": 11,
+    "armorTechnology": 12
+  },
+  "levelsFacilities": {
+    "roboticsFactory": 10,
+    "shipyard": 8,
+    "researchLaboratory": 10,
+    "allianceDepot": 2,
+    "missileSilo": 2,
+    "naniteFactory": 1,
+    "terraformer": 0,
+    "repairDock": 1
+  },
+  "timersOverview": {
+    "buildingCountdown": 13984,
+    "researchCountdown": 106200,
+    "unitCountdown": 22350,
+    "buildingTitle": "Metal Mine",
+    "buildingTarget": 23,
+    "buildingObjectId": 1
+  },
+  "timersResources": {
+    "buildingCountdown": 13984,
+    "unitCountdown": 22350,
+    "buildingTitle": "Metal Mine",
+    "buildingTarget": 23,
+    "buildingObjectId": 1
+  },
+  "resourceSettings": {
+    "metal": 100,
+    "cristal": 100,
+    "deut": 100,
+    "ces": 100,
+    "cef": 100,
+    "sat": 100,
+    "foreuse": 100,
+    "factor": 100
+  },
+  "fleetPage": {
+    "fleet": {
+      "fighterLight": 40,
+      "fighterHeavy": 0,
+      "cruiser": 12,
+      "battleship": 0,
+      "interceptor": 0,
+      "bomber": 0,
+      "destroyer": 0,
+      "deathstar": 0,
+      "reaper": 0,
+      "explorer": 0,
+      "transporterSmall": 25,
+      "transporterLarge": 18,
+      "colonyShip": 1,
+      "recycler": 6,
+      "espionageProbe": 15
+    },
+    "slots": {
+      "used": 4,
+      "max": 6,
+      "label": "Fleets:"
+    },
+    "expeSlots": {
+      "used": 1,
+      "max": 2,
+      "label": "Expeditions:"
+    }
+  },
+  "titlesShipyard": {
+    "Light Fighter": 204,
+    "Heavy Fighter": 205,
+    "Cruiser": 206,
+    "Battleship": 207,
+    "Battlecruiser": 215,
+    "Bomber": 211,
+    "Destroyer": 213,
+    "Deathstar": 214,
+    "Reaper": 218,
+    "Pathfinder": 219,
+    "Small Cargo": 202,
+    "Large Cargo": 203,
+    "Colony Ship": 208,
+    "Recycler": 209,
+    "Espionage Probe": 210,
+    "Solar Satellite": 212,
+    "Crawler": 217
+  },
+  "techtree203": {
+    "structural": 21600,
+    "shield": 40,
+    "attack": 8,
+    "speed": 22500,
+    "capacity": 41250,
+    "consumption": 50
+  },
+  "serverSettings": {
+    "economySpeed": 1,
+    "researchSpeed": 1,
+    "fleetSpeedWar": 2,
+    "fleetSpeedHolding": 1,
+    "fleetSpeedPeaceful": 1,
+    "galaxies": 9,
+    "systems": 499,
+    "lifeform": false
+  },
+  "topScorePage2": {
+    "rank": 401,
+    "points": 21339
+  },
+  "flights": {
+    "1199": {
+      "eventId": 1199,
+      "realMissionId": 1199,
+      "synthetic": null,
+      "arrivalTime": 1793322750000,
+      "destination": "p1",
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:42:9",
+        "dest": "1:42:8",
+        "fromType": "debrisField",
+        "destType": "planet"
+      },
+      "missionType": 8,
+      "returnFlight": true,
+      "own": true,
+      "detailsFleet": 4,
+      "resources": {
+        "M": 31200,
+        "C": 18900,
+        "D": 0
+      },
+      "vaissels": {
+        "recycler": 4
+      }
+    },
+    "1201": {
+      "eventId": 1201,
+      "realMissionId": 1201,
+      "synthetic": null,
+      "arrivalTime": 1793324177000,
+      "destination": null,
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:42:8",
+        "dest": "1:45:6",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 1,
+      "returnFlight": false,
+      "own": true,
+      "detailsFleet": 30,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 106
+      },
+      "vaissels": {
+        "fighterLight": 20,
+        "transporterLarge": 10
+      }
+    },
+    "1203": {
+      "eventId": 1203,
+      "realMissionId": 1203,
+      "synthetic": null,
+      "arrivalTime": 1793330056000,
+      "destination": "p1",
+      "destinationType": "planet",
+      "coords": {
+        "from": "2:118:12",
+        "dest": "1:42:8",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 3,
+      "returnFlight": false,
+      "own": true,
+      "detailsFleet": 5,
+      "resources": {
+        "M": 50000,
+        "C": 30000,
+        "D": 10790
+      },
+      "vaissels": {
+        "transporterLarge": 5
+      }
+    },
+    "1210": {
+      "eventId": 1210,
+      "realMissionId": 1210,
+      "synthetic": null,
+      "arrivalTime": 1793322257000,
+      "destination": "p1",
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:40:11",
+        "dest": "1:42:8",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 6,
+      "returnFlight": false,
+      "own": false,
+      "detailsFleet": 3,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 1
+      },
+      "vaissels": {
+        "espionageProbe": 3
+      }
+    },
+    "1211": {
+      "eventId": 1211,
+      "realMissionId": 1211,
+      "synthetic": null,
+      "arrivalTime": 1793324937000,
+      "destination": "p3",
+      "destinationType": "planet",
+      "coords": {
+        "from": "2:120:5",
+        "dest": "2:118:12",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 3,
+      "returnFlight": false,
+      "own": false,
+      "detailsFleet": 2,
+      "resources": {
+        "M": 20000,
+        "C": 10000,
+        "D": 20
+      },
+      "vaissels": {
+        "transporterLarge": 2
+      }
+    },
+    "890090": {
+      "eventId": 890090,
+      "realMissionId": 1202,
+      "synthetic": "holdEnd",
+      "arrivalTime": 1793324437000,
+      "destination": null,
+      "destinationType": "deepSpace",
+      "coords": {
+        "from": "1:42:8",
+        "dest": "1:42:16",
+        "fromType": "planet",
+        "destType": "deepSpace"
+      },
+      "missionType": 15,
+      "returnFlight": false,
+      "own": true,
+      "detailsFleet": 12,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 60
+      },
+      "vaissels": {
+        "transporterLarge": 10,
+        "espionageProbe": 1,
+        "explorer": 1
+      }
+    },
+    "1001200": {
+      "eventId": 1001200,
+      "realMissionId": 1201,
+      "synthetic": "return",
+      "arrivalTime": 1793328517000,
+      "destination": "p1",
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:45:6",
+        "dest": "1:42:8",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 1,
+      "returnFlight": true,
+      "own": true,
+      "detailsFleet": 30,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 0
+      },
+      "vaissels": {
+        "fighterLight": 20,
+        "transporterLarge": 10
+      }
+    },
+    "1001201": {
+      "eventId": 1001201,
+      "realMissionId": 1202,
+      "synthetic": "return",
+      "arrivalTime": 1793327003000,
+      "destination": "p1",
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:42:16",
+        "dest": "1:42:8",
+        "fromType": "deepSpace",
+        "destType": "planet"
+      },
+      "missionType": 15,
+      "returnFlight": true,
+      "own": true,
+      "detailsFleet": 12,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 0
+      },
+      "vaissels": {
+        "transporterLarge": 10,
+        "espionageProbe": 1,
+        "explorer": 1
+      }
+    },
+    "1001202": {
+      "eventId": 1001202,
+      "realMissionId": 1203,
+      "synthetic": "return",
+      "arrivalTime": 1793341275000,
+      "destination": "p3",
+      "destinationType": "planet",
+      "coords": {
+        "from": "1:42:8",
+        "dest": "2:118:12",
+        "fromType": "planet",
+        "destType": "planet"
+      },
+      "missionType": 3,
+      "returnFlight": true,
+      "own": true,
+      "detailsFleet": 5,
+      "resources": {
+        "M": 0,
+        "C": 0,
+        "D": 0
+      },
+      "vaissels": {
+        "transporterLarge": 5
+      }
+    }
+  },
+  "project10s": {
+    "M": {
+      "dispo": 1010,
+      "capa": 10000,
+      "prod": 3600
+    },
+    "C": {
+      "dispo": 10000,
+      "capa": 10000,
+      "prod": 0,
+      "lastprod": 3600
+    },
+    "D": {
+      "dispo": 0,
+      "capa": 10000,
+      "prod": 0
+    },
+    "lastTime": 11000
+  },
+  "untilFull": {
+    "M": 9000,
+    "C": 10
+  },
+  "costOverlay": {
+    "total": 7500,
+    "missingTotal": 4500,
+    "rows": {
+      "M": {
+        "need": 5000,
+        "diff": -4000,
+        "sc": 1,
+        "lc": 1
+      },
+      "C": {
+        "need": 2000,
+        "diff": 7990,
+        "sc": 2,
+        "lc": 1
+      },
+      "D": {
+        "need": 500,
+        "diff": -500,
+        "sc": 1,
+        "lc": 1
+      }
+    },
+    "secondsUntilAffordable": 4000,
+    "sc": 1,
+    "lc": 1
+  },
+  "expedition": [
+    {
+      "metal": 500000,
+      "crystal": 333333,
+      "deuterium": 166666,
+      "min": 50000
+    },
+    {
+      "metal": 3000000,
+      "crystal": 2000000,
+      "deuterium": 1000000,
+      "min": 50000
+    }
+  ]
+}

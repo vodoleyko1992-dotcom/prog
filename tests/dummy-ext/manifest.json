@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "OGX Dummy (test harness)",
+  "version": "0.0.1",
+  "description": "Minimal extension used by tests/harness.test.js to prove the harness works.",
+  "permissions": ["storage", "unlimitedStorage"],
+  "background": { "service_worker": "background.js", "scripts": ["background.js"] },
+  "content_scripts": [
+    { "matches": ["http://*/*", "https://*/*"], "exclude_matches": ["*://*.ogame.gameforge.com/*"],
+      "js": ["main/page-hook.js"], "run_at": "document_start", "world": "MAIN", "all_frames": false },
+    { "matches": ["http://*/*", "https://*/*"], "exclude_matches": ["*://*.ogame.gameforge.com/*"],
+      "js": ["core/00-core.js", "modules/probe/probe.js", "loader.js"], "run_at": "document_end", "all_frames": false }
+  ],
+  "browser_specific_settings": { "gecko": { "id": "ogx-dummy@ogx.local", "strict_min_version": "128.0" } }
+}

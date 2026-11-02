@@ -1,0 +1,172 @@
+{
+ "name": "botbuild-tactic",
+ "seed": 1,
+ "gamespeed": 2000,
+ "haltSpeed": 1,
+ "startUnix": 1793347417,
+ "tzOffsetSec": 7200,
+ "universe": {
+  "galaxies": 9,
+  "systems": 499,
+  "maxPlanets": 15,
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "resourceMultiplier": 22000,
+  "storageMultiplier": 5,
+  "maxDmMissions": 5,
+  "moonFactor": 1,
+  "moonChance": 20,
+  "topPoints": 1000000,
+  "galaxyDeuteriumCost": 10,
+  "buildTimeSec": 600,
+  "researchTimeSec": 600,
+  "unitTimeSec": 1
+ },
+ "player": {
+  "name": "vodoleyko1992",
+  "id": 4377,
+  "research": {
+   "106": 12,
+   "108": 10,
+   "109": 10,
+   "110": 10,
+   "111": 8,
+   "113": 12,
+   "114": 8,
+   "115": 12,
+   "117": 12,
+   "118": 8,
+   "120": 12,
+   "124": 12,
+   "131": 8,
+   "133": 8,
+   "123": 6
+  },
+  "officers": {},
+  "darkMatter": 3981,
+  "vacation": false,
+  "spyMessagesMode": 0,
+  "maxPlanets": 9,
+  "rank": 194,
+  "points": 5000000,
+  "spyProbes": 3
+ },
+ "bodies": [
+  {
+   "id": 254102,
+   "type": "planet",
+   "name": "Главная планета",
+   "coords": "2:68:5",
+   "tempMax": 40,
+   "fieldsMax": 405,
+   "res": {
+    "metal": 100000000000.0,
+    "crystal": 100000000000.0,
+    "deuterium": 100000000000.0
+   },
+   "levels": {
+    "1": 45,
+    "2": 40,
+    "3": 39,
+    "14": 20,
+    "15": 10,
+    "21": 14,
+    "22": 26,
+    "23": 26,
+    "24": 25,
+    "31": 22
+   },
+   "ships": {
+    "202": 5
+   },
+   "defense": {},
+   "image": "dschjungelplanet07",
+   "energy": {
+    "production": 9000000,
+    "consumption": 5000000
+   },
+   "fieldsUsed": 268,
+   "perHour": {
+    "metal": 2160000000,
+    "crystal": 800000000,
+    "deuterium": 420000000
+   }
+  },
+  {
+   "id": 254103,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:6",
+   "tempMax": 40,
+   "fieldsMax": 347,
+   "res": {
+    "metal": 20000000,
+    "crystal": 20000000,
+    "deuterium": 20000000
+   },
+   "levels": {
+    "1": 28,
+    "2": 23,
+    "3": 22,
+    "14": 15,
+    "15": 5,
+    "21": 8,
+    "22": 10,
+    "23": 10,
+    "24": 10,
+    "31": 10
+   },
+   "ships": {},
+   "defense": {},
+   "image": "dschjungelplanet07",
+   "energy": {
+    "production": 900000,
+    "consumption": 300000
+   },
+   "fieldsUsed": 153,
+   "perHour": {
+    "metal": 266000000,
+    "crystal": 120000000,
+    "deuterium": 55000000
+   }
+  },
+  {
+   "id": 254104,
+   "type": "planet",
+   "name": "Colony 2",
+   "coords": "2:68:7",
+   "tempMax": 40,
+   "fieldsMax": 433,
+   "res": {
+    "metal": 1000000,
+    "crystal": 1000000,
+    "deuterium": 1000000
+   },
+   "levels": {
+    "1": 3,
+    "2": 1,
+    "14": 2,
+    "22": 9,
+    "23": 9,
+    "24": 9
+   },
+   "ships": {},
+   "defense": {},
+   "image": "dschjungelplanet07",
+   "energy": {
+    "production": 5000,
+    "consumption": 200
+   },
+   "fieldsUsed": 15
+  }
+ ],
+ "others": [],
+ "debris": [],
+ "flights": [],
+ "hostile": [],
+ "messages": [],
+ "script": [],
+ "combat": "sim",
+ "expeditionOutcomes": [],
+ "description": "botbuild tactic (John's build-up rules): main 254102 [2:68:5] with mines 45/40/39, lab 22, shipyard 14; colony 254103 [2:68:6] 28/23/22 with storages 10 (26.8M, below the 32M of nanites 6: store first), nanites 5, shipyard 8, lab 10; fresh colony 254104 [2:68:7] 3/1/0, robots 2; no 217 research (110 10, 111 8, 114 8, 117 12); 600 s build/research times."
+}

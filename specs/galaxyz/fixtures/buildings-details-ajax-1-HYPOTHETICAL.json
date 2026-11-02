@@ -1,0 +1,7 @@
+{
+ "_note": "HYPOTHETICAL: shape {target, content:{[target]:html}} is REAL (inline JS of page=buildings: json.content[json.target]); target name and html are guesses from base.js selectors",
+ "target": "technologydetails",
+ "content": {
+  "technologydetails": "<div id=\"technologydetails\" data-tech=\"1\">\n    <h3>Metal Mine <span class=\"level\">(Level 30)</span></h3>\n    <ul class=\"costs\" data-tech-id=\"1\" data-level=\"30\" data-max=\"255\" data-factor=\"1.5\">\n      <li class=\"cost-item\" data-res=\"901\" data-base=\"11505063\" data-have=\"2064425065\"><img src=\"metal.gif\" alt=\"\"><span class=\"res-amount\">11.505.063</span><span class=\"lack\" hidden></span></li>\n      <li class=\"cost-item\" data-res=\"902\" data-base=\"2876265\" data-have=\"1126197944\"><img src=\"crystal.gif\" alt=\"\"><span class=\"res-amount\">2.876.265</span><span class=\"lack\" hidden></span></li>\n    </ul>\n    <form class=\"build_form\" action=\"game.php?page=buildings\" method=\"post\" data-tech-ok=\"1\" data-room-ok=\"1\" data-max-reached=\"0\" data-buyable=\"1\" data-busy=\"0\">\n      <input type=\"hidden\" name=\"cmd\" value=\"insert\">\n      <input type=\"hidden\" name=\"building\" value=\"1\">\n      <input type=\"number\" id=\"b_input_1\" class=\"upgrade-input\" name=\"level\" value=\"31\" min=\"31\" max=\"255\">\n      <div class=\"build-it_wrap\"><button type=\"submit\" class=\"upgrade build_submit\"><span class=\"tooltipTop\" title=\"Build\">Build</span></button></div>\n    </form>\n  </div>"
+ }
+}

@@ -1,0 +1,167 @@
+{
+ "name": "draw-6-rounds-even",
+ "seed": 10,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "205": 200
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {
+     "402": 400,
+     "405": 100
+    },
+    "tech": {
+     "weapons": 10,
+     "shielding": 10,
+     "armour": 10
+    }
+   }
+  ],
+  "planet": {
+   "metal": 1000000,
+   "crystal": 0,
+   "deuterium": 0
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  90,
+  100,
+  91,
+  183,
+  155,
+  10,
+  81,
+  101,
+  96,
+  195,
+  66,
+  91,
+  105,
+  108,
+  76,
+  68
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   56,
+   84
+  ],
+  [
+   56,
+   84
+  ]
+ ],
+ "expected": {
+  "won": "r",
+  "rounds": 3,
+  "attackers": [
+   [
+    [
+     205,
+     0
+    ]
+   ]
+  ],
+  "defenders": [
+   [
+    [
+     402,
+     399
+    ],
+    [
+     405,
+     100
+    ]
+   ]
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 360000,
+    "crystal": 240000
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 2000000,
+   "defender": 12000
+  },
+  "steal": {
+   "metal": 0,
+   "crystal": 0,
+   "deuterium": 0
+  },
+  "used": 16
+ }
+}

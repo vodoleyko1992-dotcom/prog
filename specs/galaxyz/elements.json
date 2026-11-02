@@ -1,0 +1,5327 @@
+{
+ "_meta": {
+  "generatedBy": "specs/galaxyz/tools/buildings/gen_elements.py (input: _real.json from extract-real.js, upstream 2Moons)",
+  "server": "ogamex.eu/Aeternum, GALAXYZ 1.8.git (2Moons fork), English UI, saved 2026-10-30",
+  "srcTags": {
+   "REAL <page>.html": "copied from the real saved page eu/pages/<page>.html",
+   "UPSTREAM <file>:<line>": "upstream 2Moons default (the fork keeps vars in the DB; admins may have changed it)",
+   "DERIVED": "computed from REAL values by an upstream rule",
+   "INFERRED": "reasoned, not seen",
+   "UNKNOWN": "no source"
+  },
+  "resources": {
+   "901": "Metal",
+   "902": "Crystal",
+   "903": "Deuterium",
+   "911": "Energy",
+   "921": "Dark Matter"
+  },
+  "formulas": {
+   "buildingResearchPrice": "price(level L) = cost * factor^(L-1), per resource, floored for display (UPSTREAM class.BuildFunctions.php:65-96); cost here = level-1 price",
+   "unitPrice": "ships/defense/missiles: cost * amount",
+   "buildTime": "hours = (metal+crystal) / (game_speed * (1 + robot14)) * 0.5^nanite15 * (1 + BuildTime bonus); ships use shipyard21 (UPSTREAM class.BuildFunctions.php:152-156)",
+   "researchTime": "hours = (metal+crystal) / (1000 * (1 + lab31 incl. IRN)) / (game_speed/2500) * (1 - factor_university/100)^university6 * (1 + ResearchTime bonus) (UPSTREAM :170)",
+   "note": "game_speed and factor_university are server config, not visible on any saved page; fleetStep1 data.gamespeed=7 is the FLEET speed only. Prefer times shown by the details AJAX."
+  },
+  "lists": {
+   "buildings": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    12,
+    14,
+    15,
+    21,
+    22,
+    23,
+    24,
+    31,
+    33,
+    34,
+    44,
+    71,
+    72,
+    73
+   ],
+   "research": [
+    106,
+    108,
+    109,
+    110,
+    111,
+    113,
+    114,
+    115,
+    117,
+    118,
+    120,
+    121,
+    122,
+    123,
+    124,
+    131,
+    132,
+    133,
+    199
+   ],
+   "shipyardFleet": [
+    208,
+    220,
+    202,
+    203,
+    204,
+    205,
+    210,
+    212,
+    206,
+    207,
+    209,
+    211,
+    213,
+    215,
+    217,
+    219,
+    214,
+    216,
+    218
+   ],
+   "shipyardDefense": [
+    407,
+    408,
+    409,
+    411,
+    502,
+    503,
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    410
+   ],
+   "officers": [
+    601,
+    602,
+    603,
+    604,
+    605,
+    606,
+    607,
+    608,
+    609,
+    610,
+    611,
+    612,
+    613,
+    614,
+    615
+   ],
+   "moonBuildingsTab": [
+    14,
+    15,
+    41,
+    42,
+    43,
+    44
+   ],
+   "upstreamAllowMoon": [
+    14,
+    21,
+    22,
+    23,
+    24,
+    41,
+    42,
+    43
+   ]
+  },
+  "diffsFromUpstream": [
+   {
+    "id": 220,
+    "field": "cost",
+    "upstream": {
+     "901": 6000000,
+     "902": 7000000,
+     "903": 3000000
+    },
+    "real": {
+     "901": 60000,
+     "902": 70000,
+     "903": 30000
+    },
+    "src": "REAL fleetDealer.html var CostInfo"
+   }
+  ],
+  "requirementsDifferFromUpstream": [],
+  "notes": [
+   "Every element on a list page is shown, also those whose requirements are unmet (div.icon[data-status=off]); upstream hid them.",
+   "220 Dark Matter Collector: REAL CostInfo is 100x cheaper than upstream (60000/70000/30000 vs 6M/7M/3M).",
+   "407-409, 411, 502, 503: not in CostInfo (fleetDealer cannot scrap them) -> cost is UPSTREAM only.",
+   "41-43 (moon) never appear on a saved list page (all saved pages are planets).",
+   "Ship attack/shield/capacity/rapidfire: no real page shows them; UPSTREAM only."
+  ]
+ },
+ "elements": {
+  "1": {
+   "id": 1,
+   "key": "metal_mine",
+   "kind": "building",
+   "name": "Metal Mine",
+   "nameRu": "Рудник металла",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 1.5,
+   "maxLevel": 255,
+   "cost": {
+    "901": 60,
+    "902": 15
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "production": {
+    "901": "(30 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor)",
+    "911": "-(10 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor)"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:948",
+    "onePerPlanet": "UPSTREAM install/install.sql:948",
+    "factor": "UPSTREAM install/install.sql:948, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:948",
+    "cost": "UPSTREAM install/install.sql:948, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "production": "UPSTREAM install/install.sql:948",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 0
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "2": {
+   "id": 2,
+   "key": "crystal_mine",
+   "kind": "building",
+   "name": "Crystal Mine",
+   "nameRu": "Рудник кристалла",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 1.5,
+   "maxLevel": 255,
+   "cost": {
+    "901": 48,
+    "902": 24
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "production": {
+    "902": "(20 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor)",
+    "911": "-(10 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor);"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:949",
+    "onePerPlanet": "UPSTREAM install/install.sql:949",
+    "factor": "UPSTREAM install/install.sql:949, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:949",
+    "cost": "UPSTREAM install/install.sql:949, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "production": "UPSTREAM install/install.sql:949",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 1
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "3": {
+   "id": 3,
+   "key": "deuterium_sintetizer",
+   "kind": "building",
+   "name": "Deuterium Refinery",
+   "nameRu": "Синтезатор дейтерия",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 1.5,
+   "maxLevel": 255,
+   "cost": {
+    "901": 225,
+    "902": 75
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "production": {
+    "903": "(10 * $BuildLevel * pow((1.1), $BuildLevel) * (-0.002 * $BuildTemp + 1.28) * (0.1 * $BuildLevelFactor))",
+    "911": "- (30 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor)"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:950",
+    "onePerPlanet": "UPSTREAM install/install.sql:950",
+    "factor": "UPSTREAM install/install.sql:950, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:950",
+    "cost": "UPSTREAM install/install.sql:950, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "production": "UPSTREAM install/install.sql:950",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 2
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "4": {
+   "id": 4,
+   "key": "solar_plant",
+   "kind": "building",
+   "name": "Solar Power plant",
+   "nameRu": "Солнечная электростанция",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 1.5,
+   "maxLevel": 255,
+   "cost": {
+    "901": 75,
+    "902": 30
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "production": {
+    "911": "(20 * $BuildLevel * pow((1.1), $BuildLevel)) * (0.1 * $BuildLevelFactor)"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:951",
+    "onePerPlanet": "UPSTREAM install/install.sql:951",
+    "factor": "UPSTREAM install/install.sql:951, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:951",
+    "cost": "UPSTREAM install/install.sql:951, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "production": "UPSTREAM install/install.sql:951",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 3
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "6": {
+   "id": 6,
+   "key": "university",
+   "kind": "building",
+   "name": "University",
+   "nameRu": "Технополис",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 100000000,
+    "902": 50000000,
+    "903": 25000000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "14": 20,
+    "31": 22,
+    "15": 4,
+    "108": 12,
+    "123": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:952",
+    "onePerPlanet": "UPSTREAM install/install.sql:952",
+    "factor": "UPSTREAM install/install.sql:952, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:952",
+    "cost": "UPSTREAM install/install.sql:952, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 4
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "12": {
+   "id": 12,
+   "key": "fusion_plant",
+   "kind": "building",
+   "name": "Deuterium Power Plant",
+   "nameRu": "Термоядерная электростанция",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 900,
+    "902": 360,
+    "903": 180
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "production": {
+    "903": "- (10 * $BuildLevel * pow(1.1,$BuildLevel) * (0.1 * $BuildLevelFactor))",
+    "911": "(30 * $BuildLevel * pow((1.05 + $BuildEnergy * 0.01), $BuildLevel)) * (0.1 * $BuildLevelFactor)"
+   },
+   "requirements": {
+    "3": 5,
+    "113": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:953",
+    "onePerPlanet": "UPSTREAM install/install.sql:953",
+    "factor": "UPSTREAM install/install.sql:953, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:953",
+    "cost": "UPSTREAM install/install.sql:953, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "production": "UPSTREAM install/install.sql:953",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 5
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "14": {
+   "id": 14,
+   "key": "robot_factory",
+   "kind": "building",
+   "name": "Robot Factory",
+   "nameRu": "Фабрика роботов",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 400,
+    "902": 120,
+    "903": 200
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:954",
+    "onePerPlanet": "UPSTREAM install/install.sql:954",
+    "factor": "UPSTREAM install/install.sql:954, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:954",
+    "cost": "UPSTREAM install/install.sql:954, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 6
+   },
+   "techtreeTabs": [
+    "Buildings",
+    "Moon Buildings"
+   ]
+  },
+  "15": {
+   "id": 15,
+   "key": "nano_factory",
+   "kind": "building",
+   "name": "Nanite Factory",
+   "nameRu": "Фабрика нанитов",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 1000000,
+    "902": 500000,
+    "903": 100000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "14": 10,
+    "108": 10
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:955",
+    "onePerPlanet": "UPSTREAM install/install.sql:955",
+    "factor": "UPSTREAM install/install.sql:955, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:955",
+    "cost": "UPSTREAM install/install.sql:955, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 7
+   },
+   "techtreeTabs": [
+    "Buildings",
+    "Moon Buildings"
+   ]
+  },
+  "21": {
+   "id": 21,
+   "key": "hangar",
+   "kind": "building",
+   "name": "Shipyard",
+   "nameRu": "Верфь",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 400,
+    "902": 200,
+    "903": 100
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "14": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:956",
+    "onePerPlanet": "UPSTREAM install/install.sql:956",
+    "factor": "UPSTREAM install/install.sql:956, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:956",
+    "cost": "UPSTREAM install/install.sql:956, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 8
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "22": {
+   "id": 22,
+   "key": "metal_store",
+   "kind": "building",
+   "name": "Metal Storage",
+   "nameRu": "Хранилище металла",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "storage": {
+    "901": "floor(2.5 * pow(1.8331954764, $BuildLevel)) * 5000"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:957",
+    "onePerPlanet": "UPSTREAM install/install.sql:957",
+    "factor": "UPSTREAM install/install.sql:957, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:957",
+    "cost": "UPSTREAM install/install.sql:957, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "storage": "UPSTREAM install/install.sql:957",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 9
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "23": {
+   "id": 23,
+   "key": "crystal_store",
+   "kind": "building",
+   "name": "Crystal Storage",
+   "nameRu": "Хранилище кристалла",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000,
+    "902": 1000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "storage": {
+    "902": "floor(2.5 * pow(1.8331954764, $BuildLevel)) * 5000"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:958",
+    "onePerPlanet": "UPSTREAM install/install.sql:958",
+    "factor": "UPSTREAM install/install.sql:958, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:958",
+    "cost": "UPSTREAM install/install.sql:958, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "storage": "UPSTREAM install/install.sql:958",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 10
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "24": {
+   "id": 24,
+   "key": "deuterium_store",
+   "kind": "building",
+   "name": "Deuterium Storage",
+   "nameRu": "Ёмкость для дейтерия",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000,
+    "902": 2000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "storage": {
+    "903": "floor(2.5 * pow(1.8331954764, $BuildLevel)) * 5000"
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:959",
+    "onePerPlanet": "UPSTREAM install/install.sql:959",
+    "factor": "UPSTREAM install/install.sql:959, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:959",
+    "cost": "UPSTREAM install/install.sql:959, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "storage": "UPSTREAM install/install.sql:959",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 11
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "31": {
+   "id": 31,
+   "key": "laboratory",
+   "kind": "building",
+   "name": "Research Lab",
+   "nameRu": "Исследовательская лаборатория",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 200,
+    "902": 400,
+    "903": 200
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:960",
+    "onePerPlanet": "UPSTREAM install/install.sql:960",
+    "factor": "UPSTREAM install/install.sql:960, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:960",
+    "cost": "UPSTREAM install/install.sql:960, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 12
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "33": {
+   "id": 33,
+   "key": "terraformer",
+   "kind": "building",
+   "name": "Terraformer",
+   "nameRu": "Терраформер",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "902": 50000,
+    "903": 100000,
+    "911": 1000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "15": 1,
+    "113": 12
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:961",
+    "onePerPlanet": "UPSTREAM install/install.sql:961",
+    "factor": "UPSTREAM install/install.sql:961, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:961",
+    "cost": "UPSTREAM install/install.sql:961, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 13
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "34": {
+   "id": 34,
+   "key": "ally_deposit",
+   "kind": "building",
+   "name": "Alliance Depot",
+   "nameRu": "Склад альянса",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 20000,
+    "902": 40000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:962",
+    "onePerPlanet": "UPSTREAM install/install.sql:962",
+    "factor": "UPSTREAM install/install.sql:962, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:962",
+    "cost": "UPSTREAM install/install.sql:962, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 14
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ]
+  },
+  "41": {
+   "id": 41,
+   "key": "mondbasis",
+   "kind": "building",
+   "name": "Moon base",
+   "nameRu": "Лунная база",
+   "onPlanetType": [
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 20000,
+    "902": 40000,
+    "903": 20000
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:963",
+    "onPlanetType": "UPSTREAM install/install.sql:963",
+    "onePerPlanet": "UPSTREAM install/install.sql:963",
+    "factor": "UPSTREAM install/install.sql:963",
+    "maxLevel": "UPSTREAM install/install.sql:963",
+    "cost": "UPSTREAM install/install.sql:963",
+    "name": "REAL techtree.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Moon Buildings"
+   ]
+  },
+  "42": {
+   "id": 42,
+   "key": "phalanx",
+   "kind": "building",
+   "name": "Phalax Sensor",
+   "nameRu": "Сенсорная фаланга",
+   "onPlanetType": [
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 20000,
+    "902": 40000,
+    "903": 20000
+   },
+   "requirements": {
+    "41": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:964",
+    "onPlanetType": "UPSTREAM install/install.sql:964",
+    "onePerPlanet": "UPSTREAM install/install.sql:964",
+    "factor": "UPSTREAM install/install.sql:964",
+    "maxLevel": "UPSTREAM install/install.sql:964",
+    "cost": "UPSTREAM install/install.sql:964",
+    "name": "REAL techtree.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Moon Buildings"
+   ]
+  },
+  "43": {
+   "id": 43,
+   "key": "sprungtor",
+   "kind": "building",
+   "name": "Jumpgate",
+   "nameRu": "Телепорт",
+   "onPlanetType": [
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000000,
+    "902": 4000000,
+    "903": 2000000
+   },
+   "requirements": {
+    "41": 1,
+    "114": 7
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:965",
+    "onPlanetType": "UPSTREAM install/install.sql:965",
+    "onePerPlanet": "UPSTREAM install/install.sql:965",
+    "factor": "UPSTREAM install/install.sql:965",
+    "maxLevel": "UPSTREAM install/install.sql:965",
+    "cost": "UPSTREAM install/install.sql:965",
+    "name": "REAL techtree.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Moon Buildings"
+   ]
+  },
+  "44": {
+   "id": 44,
+   "key": "silo",
+   "kind": "building",
+   "name": "Missile Silo",
+   "nameRu": "Ракетная шахта",
+   "onPlanetType": [
+    1
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 20000,
+    "902": 20000,
+    "903": 1000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "21": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL buildings.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:966",
+    "onePerPlanet": "UPSTREAM install/install.sql:966",
+    "factor": "UPSTREAM install/install.sql:966, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:966",
+    "cost": "UPSTREAM install/install.sql:966, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL buildings.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL buildings.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "buildings",
+    "position": 15
+   },
+   "techtreeTabs": [
+    "Buildings",
+    "Moon Buildings"
+   ]
+  },
+  "71": {
+   "id": 71,
+   "forkOnly": true,
+   "src": {
+    "name": "REAL buildings.html",
+    "key": "REAL buildings.html div.icon class",
+    "listedOn": "REAL buildings.html",
+    "kind": "REAL buildings.html",
+    "requirements": "REAL techtree.html",
+    "techtreeTabs": "REAL techtree.html",
+    "onPlanetType": "INFERRED listed on a planet (buildings.html); moon unknown",
+    "cost": "UNKNOWN (fork-only; read TechnologyDetailsAjax .costs li.cost-item[data-base])",
+    "factor": "UNKNOWN (TechnologyDetailsAjax .costs[data-factor])",
+    "maxLevel": "UNKNOWN (.costs[data-max])"
+   },
+   "name": "Light conveyor",
+   "key": "conveyor1",
+   "listedOn": {
+    "page": "buildings",
+    "position": 16
+   },
+   "kind": "building",
+   "requirements": {
+    "15": 5,
+    "21": 14
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ],
+   "onPlanetType": [
+    1
+   ],
+   "cost": null,
+   "factor": null,
+   "maxLevel": null,
+   "note": "Fork-only \"conveyor\" building, not in 2Moons. Effect unknown (name suggests shipyard production speed; requires Nanite+Shipyard)."
+  },
+  "72": {
+   "id": 72,
+   "forkOnly": true,
+   "src": {
+    "name": "REAL buildings.html",
+    "key": "REAL buildings.html div.icon class",
+    "listedOn": "REAL buildings.html",
+    "kind": "REAL buildings.html",
+    "requirements": "REAL techtree.html",
+    "techtreeTabs": "REAL techtree.html",
+    "onPlanetType": "INFERRED listed on a planet (buildings.html); moon unknown",
+    "cost": "UNKNOWN (fork-only; read TechnologyDetailsAjax .costs li.cost-item[data-base])",
+    "factor": "UNKNOWN (TechnologyDetailsAjax .costs[data-factor])",
+    "maxLevel": "UNKNOWN (.costs[data-max])"
+   },
+   "name": "Average conveyor",
+   "key": "conveyor2",
+   "listedOn": {
+    "page": "buildings",
+    "position": 17
+   },
+   "kind": "building",
+   "requirements": {
+    "15": 8,
+    "21": 14
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ],
+   "onPlanetType": [
+    1
+   ],
+   "cost": null,
+   "factor": null,
+   "maxLevel": null,
+   "note": "Fork-only \"conveyor\" building, not in 2Moons. Effect unknown (name suggests shipyard production speed; requires Nanite+Shipyard)."
+  },
+  "73": {
+   "id": 73,
+   "forkOnly": true,
+   "src": {
+    "name": "REAL buildings.html",
+    "key": "REAL buildings.html div.icon class",
+    "listedOn": "REAL buildings.html",
+    "kind": "REAL buildings.html",
+    "requirements": "REAL techtree.html",
+    "techtreeTabs": "REAL techtree.html",
+    "onPlanetType": "INFERRED listed on a planet (buildings.html); moon unknown",
+    "cost": "UNKNOWN (fork-only; read TechnologyDetailsAjax .costs li.cost-item[data-base])",
+    "factor": "UNKNOWN (TechnologyDetailsAjax .costs[data-factor])",
+    "maxLevel": "UNKNOWN (.costs[data-max])"
+   },
+   "name": "Heavy conveyor",
+   "key": "conveyor3",
+   "listedOn": {
+    "page": "buildings",
+    "position": 18
+   },
+   "kind": "building",
+   "requirements": {
+    "15": 10,
+    "21": 18
+   },
+   "techtreeTabs": [
+    "Buildings"
+   ],
+   "onPlanetType": [
+    1
+   ],
+   "cost": null,
+   "factor": null,
+   "maxLevel": null,
+   "note": "Fork-only \"conveyor\" building, not in 2Moons. Effect unknown (name suggests shipyard production speed; requires Nanite+Shipyard)."
+  },
+  "106": {
+   "id": 106,
+   "key": "spy_tech",
+   "kind": "research",
+   "name": "Spy Technology",
+   "nameRu": "Шпионаж",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 200,
+    "902": 1000,
+    "903": 200
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:967",
+    "onePerPlanet": "UPSTREAM install/install.sql:967",
+    "factor": "UPSTREAM install/install.sql:967, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:967",
+    "cost": "UPSTREAM install/install.sql:967, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 0
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "108": {
+   "id": 108,
+   "key": "computer_tech",
+   "kind": "research",
+   "name": "Computer Technology",
+   "nameRu": "Компьютерная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "902": 400,
+    "903": 600
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:968",
+    "onePerPlanet": "UPSTREAM install/install.sql:968",
+    "factor": "UPSTREAM install/install.sql:968, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:968",
+    "cost": "UPSTREAM install/install.sql:968, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 1
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "109": {
+   "id": 109,
+   "key": "military_tech",
+   "kind": "research",
+   "name": "Weapons Technology",
+   "nameRu": "Оружейная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 800,
+    "902": 200
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 4
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:969",
+    "onePerPlanet": "UPSTREAM install/install.sql:969",
+    "factor": "UPSTREAM install/install.sql:969, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:969",
+    "cost": "UPSTREAM install/install.sql:969, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 2
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "110": {
+   "id": 110,
+   "key": "defence_tech",
+   "kind": "research",
+   "name": "Shield Technology",
+   "nameRu": "Щитовая технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 200,
+    "902": 600
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "113": 3,
+    "31": 6
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:970",
+    "onePerPlanet": "UPSTREAM install/install.sql:970",
+    "factor": "UPSTREAM install/install.sql:970, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:970",
+    "cost": "UPSTREAM install/install.sql:970, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 3
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "111": {
+   "id": 111,
+   "key": "shield_tech",
+   "kind": "research",
+   "name": "Armour Technology",
+   "nameRu": "Броня космических кораблей",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 1000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:971",
+    "onePerPlanet": "UPSTREAM install/install.sql:971",
+    "factor": "UPSTREAM install/install.sql:971, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:971",
+    "cost": "UPSTREAM install/install.sql:971, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 4
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "113": {
+   "id": 113,
+   "key": "energy_tech",
+   "kind": "research",
+   "name": "Energy Technology",
+   "nameRu": "Энергетическая технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "902": 800,
+    "903": 400
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:972",
+    "onePerPlanet": "UPSTREAM install/install.sql:972",
+    "factor": "UPSTREAM install/install.sql:972, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:972",
+    "cost": "UPSTREAM install/install.sql:972, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 5
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "114": {
+   "id": 114,
+   "key": "hyperspace_tech",
+   "kind": "research",
+   "name": "Hyperspace Technology",
+   "nameRu": "Гиперпространственная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "902": 4000,
+    "903": 2000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "113": 5,
+    "110": 5,
+    "31": 7
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:973",
+    "onePerPlanet": "UPSTREAM install/install.sql:973",
+    "factor": "UPSTREAM install/install.sql:973, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:973",
+    "cost": "UPSTREAM install/install.sql:973, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 6
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "115": {
+   "id": 115,
+   "key": "combustion_tech",
+   "kind": "research",
+   "name": "Combustion Engine",
+   "nameRu": "Реактивный двигатель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 400,
+    "903": 600
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "113": 1,
+    "31": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:974",
+    "onePerPlanet": "UPSTREAM install/install.sql:974",
+    "factor": "UPSTREAM install/install.sql:974, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:974",
+    "cost": "UPSTREAM install/install.sql:974, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 7
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "117": {
+   "id": 117,
+   "key": "impulse_motor_tech",
+   "kind": "research",
+   "name": "Impulse Engine",
+   "nameRu": "Импульсный двигатель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000,
+    "902": 4000,
+    "903": 600
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "113": 1,
+    "31": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:975",
+    "onePerPlanet": "UPSTREAM install/install.sql:975",
+    "factor": "UPSTREAM install/install.sql:975, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:975",
+    "cost": "UPSTREAM install/install.sql:975, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 8
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "118": {
+   "id": 118,
+   "key": "hyperspace_motor_tech",
+   "kind": "research",
+   "name": "Hyperspace Engine",
+   "nameRu": "Гиперпространственный двигатель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 10000,
+    "902": 20000,
+    "903": 6000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "114": 3,
+    "31": 7
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:976",
+    "onePerPlanet": "UPSTREAM install/install.sql:976",
+    "factor": "UPSTREAM install/install.sql:976, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:976",
+    "cost": "UPSTREAM install/install.sql:976, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 9
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "120": {
+   "id": 120,
+   "key": "laser_tech",
+   "kind": "research",
+   "name": "Laser Technology",
+   "nameRu": "Лазерная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 200,
+    "902": 100
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 1,
+    "113": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:977",
+    "onePerPlanet": "UPSTREAM install/install.sql:977",
+    "factor": "UPSTREAM install/install.sql:977, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:977",
+    "cost": "UPSTREAM install/install.sql:977, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 10
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "121": {
+   "id": 121,
+   "key": "ionic_tech",
+   "kind": "research",
+   "name": "Ion Technology",
+   "nameRu": "Ионная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 1000,
+    "902": 300,
+    "903": 100
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 4,
+    "120": 5,
+    "113": 4
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:978",
+    "onePerPlanet": "UPSTREAM install/install.sql:978",
+    "factor": "UPSTREAM install/install.sql:978, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:978",
+    "cost": "UPSTREAM install/install.sql:978, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 11
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "122": {
+   "id": 122,
+   "key": "buster_tech",
+   "kind": "research",
+   "name": "Plasma Technology",
+   "nameRu": "Плазменная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 2000,
+    "902": 4000,
+    "903": 1000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 5,
+    "113": 8,
+    "120": 10,
+    "121": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:979",
+    "onePerPlanet": "UPSTREAM install/install.sql:979",
+    "factor": "UPSTREAM install/install.sql:979, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:979",
+    "cost": "UPSTREAM install/install.sql:979, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 12
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "123": {
+   "id": 123,
+   "key": "intergalactic_tech",
+   "kind": "research",
+   "name": "Intergalactic Research Network",
+   "nameRu": "Межгалактическая исследовательская сеть",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 240000,
+    "902": 400000,
+    "903": 160000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 10,
+    "108": 8,
+    "114": 8
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:980",
+    "onePerPlanet": "UPSTREAM install/install.sql:980",
+    "factor": "UPSTREAM install/install.sql:980, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:980",
+    "cost": "UPSTREAM install/install.sql:980, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 13
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "124": {
+   "id": 124,
+   "key": "expedition_tech",
+   "kind": "research",
+   "name": "Expedition Research",
+   "nameRu": "Астрофизика",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.75,
+   "maxLevel": 255,
+   "cost": {
+    "901": 4000,
+    "902": 8000,
+    "903": 4000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "106": 3,
+    "117": 3,
+    "31": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:981",
+    "onePerPlanet": "UPSTREAM install/install.sql:981",
+    "factor": "UPSTREAM install/install.sql:981, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:981",
+    "cost": "UPSTREAM install/install.sql:981, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 14
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "131": {
+   "id": 131,
+   "key": "metal_proc_tech",
+   "kind": "research",
+   "name": "Mineral Research",
+   "nameRu": "Технология добычи металла",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 750,
+    "902": 500,
+    "903": 250
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 8,
+    "113": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:982",
+    "onePerPlanet": "UPSTREAM install/install.sql:982",
+    "factor": "UPSTREAM install/install.sql:982, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:982",
+    "cost": "UPSTREAM install/install.sql:982, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 15
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "132": {
+   "id": 132,
+   "key": "crystal_proc_tech",
+   "kind": "research",
+   "name": "Semi-Crystals Research",
+   "nameRu": "Технология добычи кристалла",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 1000,
+    "902": 750,
+    "903": 500
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 8,
+    "113": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:983",
+    "onePerPlanet": "UPSTREAM install/install.sql:983",
+    "factor": "UPSTREAM install/install.sql:983, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:983",
+    "cost": "UPSTREAM install/install.sql:983, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 16
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "133": {
+   "id": 133,
+   "key": "deuterium_proc_tech",
+   "kind": "research",
+   "name": "Fuel Research",
+   "nameRu": "Технология добычи дейтерия",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 2.0,
+   "maxLevel": 255,
+   "cost": {
+    "901": 1250,
+    "902": 1000,
+    "903": 750
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 8,
+    "113": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:984",
+    "onePerPlanet": "UPSTREAM install/install.sql:984",
+    "factor": "UPSTREAM install/install.sql:984, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:984",
+    "cost": "UPSTREAM install/install.sql:984, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 17
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "199": {
+   "id": 199,
+   "key": "graviton_tech",
+   "kind": "research",
+   "name": "Graviton Research",
+   "nameRu": "Гравитационная технология",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 3.0,
+   "maxLevel": 255,
+   "cost": {
+    "911": 300000
+   },
+   "costNote": "upstream migration_2.sql stores cost/factor; the price of level L is cost * factor^(L-1) (BuildFunctions.php:94-95)",
+   "requirements": {
+    "31": 12
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL research.html div.icon class",
+    "onPlanetType": "UPSTREAM install/install.sql:985",
+    "onePerPlanet": "UPSTREAM install/install.sql:985",
+    "factor": "UPSTREAM install/install.sql:985, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "maxLevel": "UPSTREAM install/install.sql:985",
+    "cost": "UPSTREAM install/install.sql:985, CONSISTENT with REAL buyable buttons (verify-buyable.js 35/35)",
+    "name": "REAL research.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL research.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "research",
+    "position": 18
+   },
+   "techtreeTabs": [
+    "Research"
+   ]
+  },
+  "202": {
+   "id": 202,
+   "key": "small_ship_cargo",
+   "kind": "ship",
+   "name": "Light Cargo",
+   "nameRu": "Малый транспорт",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 2000,
+    "902": 2000
+   },
+   "structure": 4000,
+   "attack": 5,
+   "shield": 10,
+   "speed": 5000,
+   "speed2": 10000,
+   "speedTech": 4,
+   "capacity": 5000,
+   "consumption": 10,
+   "consumption2": 20,
+   "requirements": {
+    "21": 2,
+    "115": 2
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "205": 3,
+     "214": 250,
+     "215": 3,
+     "216": 250,
+     "218": 250
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:986",
+    "onPlanetType": "UPSTREAM install/install.sql:986",
+    "onePerPlanet": "UPSTREAM install/install.sql:986",
+    "factor": "UPSTREAM install/install.sql:986",
+    "maxLevel": "UPSTREAM install/install.sql:986",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:986",
+    "shield": "UPSTREAM install/install.sql:986",
+    "speed": "UPSTREAM install/install.sql:986",
+    "speed2": "UPSTREAM install/install.sql:986",
+    "speedTech": "UPSTREAM install/install.sql:986",
+    "capacity": "UPSTREAM install/install.sql:986",
+    "consumption": "UPSTREAM install/install.sql:986",
+    "consumption2": "UPSTREAM install/install.sql:986",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 2
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "203": {
+   "id": 203,
+   "key": "big_ship_cargo",
+   "kind": "ship",
+   "name": "Heavy Cargo",
+   "nameRu": "Большой транспорт",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 6000,
+    "902": 6000
+   },
+   "structure": 12000,
+   "attack": 5,
+   "shield": 25,
+   "speed": 7500,
+   "speed2": 7500,
+   "speedTech": 1,
+   "capacity": 25000,
+   "consumption": 50,
+   "consumption2": 50,
+   "requirements": {
+    "21": 4,
+    "115": 6
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 250,
+     "215": 3,
+     "216": 250,
+     "218": 250
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:987",
+    "onPlanetType": "UPSTREAM install/install.sql:987",
+    "onePerPlanet": "UPSTREAM install/install.sql:987",
+    "factor": "UPSTREAM install/install.sql:987",
+    "maxLevel": "UPSTREAM install/install.sql:987",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:987",
+    "shield": "UPSTREAM install/install.sql:987",
+    "speed": "UPSTREAM install/install.sql:987",
+    "speed2": "UPSTREAM install/install.sql:987",
+    "speedTech": "UPSTREAM install/install.sql:987",
+    "capacity": "UPSTREAM install/install.sql:987",
+    "consumption": "UPSTREAM install/install.sql:987",
+    "consumption2": "UPSTREAM install/install.sql:987",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 3
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "204": {
+   "id": 204,
+   "key": "light_hunter",
+   "kind": "ship",
+   "name": "Light Fighter",
+   "nameRu": "Лёгкий истребитель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 3000,
+    "902": 1000
+   },
+   "structure": 4000,
+   "attack": 50,
+   "shield": 10,
+   "speed": 12500,
+   "speed2": 12500,
+   "speedTech": 1,
+   "capacity": 50,
+   "consumption": 20,
+   "consumption2": 20,
+   "requirements": {
+    "21": 1,
+    "115": 1
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "206": 6,
+     "214": 200,
+     "216": 200,
+     "218": 200
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:988",
+    "onPlanetType": "UPSTREAM install/install.sql:988",
+    "onePerPlanet": "UPSTREAM install/install.sql:988",
+    "factor": "UPSTREAM install/install.sql:988",
+    "maxLevel": "UPSTREAM install/install.sql:988",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:988",
+    "shield": "UPSTREAM install/install.sql:988",
+    "speed": "UPSTREAM install/install.sql:988",
+    "speed2": "UPSTREAM install/install.sql:988",
+    "speedTech": "UPSTREAM install/install.sql:988",
+    "capacity": "UPSTREAM install/install.sql:988",
+    "consumption": "UPSTREAM install/install.sql:988",
+    "consumption2": "UPSTREAM install/install.sql:988",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 4
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "205": {
+   "id": 205,
+   "key": "heavy_hunter",
+   "kind": "ship",
+   "name": "Heavy Fighter",
+   "nameRu": "Тяжёлый истребитель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 6000,
+    "902": 4000
+   },
+   "structure": 10000,
+   "attack": 150,
+   "shield": 25,
+   "speed": 10000,
+   "speed2": 15000,
+   "speedTech": 2,
+   "capacity": 100,
+   "consumption": 75,
+   "consumption2": 75,
+   "requirements": {
+    "21": 3,
+    "111": 2,
+    "117": 2
+   },
+   "rapidfire": {
+    "to": {
+     "202": 3,
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 100,
+     "215": 4,
+     "216": 100,
+     "218": 100
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:989",
+    "onPlanetType": "UPSTREAM install/install.sql:989",
+    "onePerPlanet": "UPSTREAM install/install.sql:989",
+    "factor": "UPSTREAM install/install.sql:989",
+    "maxLevel": "UPSTREAM install/install.sql:989",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:989",
+    "shield": "UPSTREAM install/install.sql:989",
+    "speed": "UPSTREAM install/install.sql:989",
+    "speed2": "UPSTREAM install/install.sql:989",
+    "speedTech": "UPSTREAM install/install.sql:989",
+    "capacity": "UPSTREAM install/install.sql:989",
+    "consumption": "UPSTREAM install/install.sql:989",
+    "consumption2": "UPSTREAM install/install.sql:989",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 5
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "206": {
+   "id": 206,
+   "key": "crusher",
+   "kind": "ship",
+   "name": "Cruiser",
+   "nameRu": "Крейсер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 20000,
+    "902": 7000,
+    "903": 2000
+   },
+   "structure": 27000,
+   "attack": 400,
+   "shield": 50,
+   "speed": 15000,
+   "speed2": 15000,
+   "speedTech": 2,
+   "capacity": 800,
+   "consumption": 300,
+   "consumption2": 300,
+   "requirements": {
+    "21": 5,
+    "117": 4,
+    "121": 2
+   },
+   "rapidfire": {
+    "to": {
+     "204": 6,
+     "401": 10,
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 33,
+     "215": 4,
+     "216": 33,
+     "218": 33
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:990",
+    "onPlanetType": "UPSTREAM install/install.sql:990",
+    "onePerPlanet": "UPSTREAM install/install.sql:990",
+    "factor": "UPSTREAM install/install.sql:990",
+    "maxLevel": "UPSTREAM install/install.sql:990",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:990",
+    "shield": "UPSTREAM install/install.sql:990",
+    "speed": "UPSTREAM install/install.sql:990",
+    "speed2": "UPSTREAM install/install.sql:990",
+    "speedTech": "UPSTREAM install/install.sql:990",
+    "capacity": "UPSTREAM install/install.sql:990",
+    "consumption": "UPSTREAM install/install.sql:990",
+    "consumption2": "UPSTREAM install/install.sql:990",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 8
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "207": {
+   "id": 207,
+   "key": "battle_ship",
+   "kind": "ship",
+   "name": "Battleship",
+   "nameRu": "Линкор",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 45000,
+    "902": 15000
+   },
+   "structure": 60000,
+   "attack": 1000,
+   "shield": 200,
+   "speed": 10000,
+   "speed2": 10000,
+   "speedTech": 3,
+   "capacity": 1500,
+   "consumption": 250,
+   "consumption2": 250,
+   "requirements": {
+    "21": 7,
+    "118": 4
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 30,
+     "215": 10,
+     "216": 30,
+     "218": 30
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:991",
+    "onPlanetType": "UPSTREAM install/install.sql:991",
+    "onePerPlanet": "UPSTREAM install/install.sql:991",
+    "factor": "UPSTREAM install/install.sql:991",
+    "maxLevel": "UPSTREAM install/install.sql:991",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:991",
+    "shield": "UPSTREAM install/install.sql:991",
+    "speed": "UPSTREAM install/install.sql:991",
+    "speed2": "UPSTREAM install/install.sql:991",
+    "speedTech": "UPSTREAM install/install.sql:991",
+    "capacity": "UPSTREAM install/install.sql:991",
+    "consumption": "UPSTREAM install/install.sql:991",
+    "consumption2": "UPSTREAM install/install.sql:991",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 9
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "208": {
+   "id": 208,
+   "key": "colonizer",
+   "kind": "ship",
+   "name": "Colony Ship",
+   "nameRu": "Колонизатор",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 10000,
+    "902": 20000,
+    "903": 10000
+   },
+   "structure": 30000,
+   "attack": 50,
+   "shield": 100,
+   "speed": 2500,
+   "speed2": 2500,
+   "speedTech": 2,
+   "capacity": 7500,
+   "consumption": 1000,
+   "consumption2": 1000,
+   "requirements": {
+    "21": 4,
+    "117": 3
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 250,
+     "216": 250,
+     "218": 250
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:992",
+    "onPlanetType": "UPSTREAM install/install.sql:992",
+    "onePerPlanet": "UPSTREAM install/install.sql:992",
+    "factor": "UPSTREAM install/install.sql:992",
+    "maxLevel": "UPSTREAM install/install.sql:992",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:992",
+    "shield": "UPSTREAM install/install.sql:992",
+    "speed": "UPSTREAM, CONFIRMED by REAL fleetStep1.html data.ships",
+    "speed2": "UPSTREAM install/install.sql:992",
+    "speedTech": "UPSTREAM install/install.sql:992",
+    "capacity": "UPSTREAM install/install.sql:992",
+    "consumption": "UPSTREAM, CONFIRMED by REAL fleetStep1.html data.ships",
+    "consumption2": "UPSTREAM install/install.sql:992",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 0
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ],
+   "realCheck": {
+    "fleetStep1.speed": 6000.000000000001,
+    "fleetStep1.consumption": 1000,
+    "note": "speed with Impulse Engine 7: 2500*(1+0.2*7)=6000 -> upstream base speed confirmed; consumption 1000 confirmed"
+   }
+  },
+  "209": {
+   "id": 209,
+   "key": "recycler",
+   "kind": "ship",
+   "name": "Recycler",
+   "nameRu": "Переработчик",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 10000,
+    "902": 6000,
+    "903": 2000
+   },
+   "structure": 16000,
+   "attack": 1,
+   "shield": 10,
+   "speed": 2000,
+   "speed2": 2000,
+   "speedTech": 1,
+   "capacity": 20000,
+   "consumption": 300,
+   "consumption2": 300,
+   "requirements": {
+    "21": 4,
+    "115": 6,
+    "110": 2
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "214": 250,
+     "216": 250,
+     "218": 250
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:993",
+    "onPlanetType": "UPSTREAM install/install.sql:993",
+    "onePerPlanet": "UPSTREAM install/install.sql:993",
+    "factor": "UPSTREAM install/install.sql:993",
+    "maxLevel": "UPSTREAM install/install.sql:993",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:993",
+    "shield": "UPSTREAM install/install.sql:993",
+    "speed": "UPSTREAM install/install.sql:993",
+    "speed2": "UPSTREAM install/install.sql:993",
+    "speedTech": "UPSTREAM install/install.sql:993",
+    "capacity": "UPSTREAM install/install.sql:993",
+    "consumption": "UPSTREAM install/install.sql:993",
+    "consumption2": "UPSTREAM install/install.sql:993",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 10
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "210": {
+   "id": 210,
+   "key": "spy_sonde",
+   "kind": "ship",
+   "name": "Spy Probe",
+   "nameRu": "Шпионский зонд",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "902": 1000
+   },
+   "structure": 1000,
+   "attack": 0,
+   "shield": 0,
+   "speed": 100000000,
+   "speed2": 100000000,
+   "speedTech": 1,
+   "capacity": 5,
+   "consumption": 1,
+   "consumption2": 1,
+   "requirements": {
+    "21": 3,
+    "115": 3,
+    "106": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "202": 5,
+     "203": 5,
+     "204": 5,
+     "205": 5,
+     "206": 5,
+     "207": 5,
+     "208": 5,
+     "209": 5,
+     "211": 5,
+     "213": 5,
+     "214": 1250,
+     "215": 5,
+     "216": 1250,
+     "217": 5,
+     "218": 1250,
+     "219": 5,
+     "220": 5
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:994",
+    "onPlanetType": "UPSTREAM install/install.sql:994",
+    "onePerPlanet": "UPSTREAM install/install.sql:994",
+    "factor": "UPSTREAM install/install.sql:994",
+    "maxLevel": "UPSTREAM install/install.sql:994",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:994",
+    "shield": "UPSTREAM install/install.sql:994",
+    "speed": "UPSTREAM, CONFIRMED by REAL fleetTable.html tooltip",
+    "speed2": "UPSTREAM install/install.sql:994",
+    "speedTech": "UPSTREAM install/install.sql:994",
+    "capacity": "UPSTREAM install/install.sql:994",
+    "consumption": "UPSTREAM install/install.sql:994",
+    "consumption2": "UPSTREAM install/install.sql:994",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 6
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ],
+   "realCheck": {
+    "fleetTable.tooltip": "Speed:  220000000",
+    "note": "Combustion 12: 100000000*(1+0.1*12)=220000000 -> upstream base confirmed"
+   }
+  },
+  "211": {
+   "id": 211,
+   "key": "bomber_ship",
+   "kind": "ship",
+   "name": "Planet Bomber",
+   "nameRu": "Бомбардировщик",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 50000,
+    "902": 25000,
+    "903": 15000
+   },
+   "structure": 75000,
+   "attack": 1000,
+   "shield": 500,
+   "speed": 4000,
+   "speed2": 5000,
+   "speedTech": 5,
+   "capacity": 500,
+   "consumption": 1000,
+   "consumption2": 1000,
+   "requirements": {
+    "117": 6,
+    "21": 8,
+    "122": 5
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5,
+     "401": 20,
+     "402": 20,
+     "403": 10,
+     "405": 10
+    },
+    "from": {
+     "214": 25,
+     "216": 25,
+     "218": 25
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:995",
+    "onPlanetType": "UPSTREAM install/install.sql:995",
+    "onePerPlanet": "UPSTREAM install/install.sql:995",
+    "factor": "UPSTREAM install/install.sql:995",
+    "maxLevel": "UPSTREAM install/install.sql:995",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:995",
+    "shield": "UPSTREAM install/install.sql:995",
+    "speed": "UPSTREAM install/install.sql:995",
+    "speed2": "UPSTREAM install/install.sql:995",
+    "speedTech": "UPSTREAM install/install.sql:995",
+    "capacity": "UPSTREAM install/install.sql:995",
+    "consumption": "UPSTREAM install/install.sql:995",
+    "consumption2": "UPSTREAM install/install.sql:995",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 11
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "212": {
+   "id": 212,
+   "key": "solar_satelit",
+   "kind": "ship",
+   "name": "Solar Satellite",
+   "nameRu": "Солнечный спутник",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "902": 2000,
+    "903": 500
+   },
+   "structure": 2000,
+   "attack": 0,
+   "shield": 0,
+   "speed": 0,
+   "speed2": 0,
+   "speedTech": 0,
+   "capacity": 0,
+   "consumption": 0,
+   "consumption2": 0,
+   "production": {
+    "911": "((($BuildTemp + 160) / 6) * (0.1 * $BuildLevelFactor) * $BuildLevel)"
+   },
+   "requirements": {
+    "21": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "202": 5,
+     "203": 5,
+     "204": 5,
+     "205": 5,
+     "206": 5,
+     "207": 5,
+     "208": 5,
+     "209": 5,
+     "211": 5,
+     "213": 5,
+     "214": 1250,
+     "215": 5,
+     "216": 1250,
+     "217": 5,
+     "218": 1250,
+     "219": 5,
+     "220": 5
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:996",
+    "onPlanetType": "UPSTREAM install/install.sql:996",
+    "onePerPlanet": "UPSTREAM install/install.sql:996",
+    "factor": "UPSTREAM install/install.sql:996",
+    "maxLevel": "UPSTREAM install/install.sql:996",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:996",
+    "shield": "UPSTREAM install/install.sql:996",
+    "speed": "UPSTREAM install/install.sql:996",
+    "speed2": "UPSTREAM install/install.sql:996",
+    "speedTech": "UPSTREAM install/install.sql:996",
+    "capacity": "UPSTREAM install/install.sql:996",
+    "consumption": "UPSTREAM install/install.sql:996",
+    "consumption2": "UPSTREAM install/install.sql:996",
+    "production": "UPSTREAM install/install.sql:996",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 7
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "213": {
+   "id": 213,
+   "key": "destructor",
+   "kind": "ship",
+   "name": "Star Fighter",
+   "nameRu": "Уничтожитель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 60000,
+    "902": 50000,
+    "903": 15000
+   },
+   "structure": 110000,
+   "attack": 2000,
+   "shield": 500,
+   "speed": 5000,
+   "speed2": 5000,
+   "speedTech": 3,
+   "capacity": 2000,
+   "consumption": 1000,
+   "consumption2": 1000,
+   "requirements": {
+    "21": 9,
+    "118": 6,
+    "114": 5
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5,
+     "215": 2,
+     "402": 10
+    },
+    "from": {
+     "214": 5,
+     "216": 5,
+     "218": 5
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:997",
+    "onPlanetType": "UPSTREAM install/install.sql:997",
+    "onePerPlanet": "UPSTREAM install/install.sql:997",
+    "factor": "UPSTREAM install/install.sql:997",
+    "maxLevel": "UPSTREAM install/install.sql:997",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:997",
+    "shield": "UPSTREAM install/install.sql:997",
+    "speed": "UPSTREAM install/install.sql:997",
+    "speed2": "UPSTREAM install/install.sql:997",
+    "speedTech": "UPSTREAM install/install.sql:997",
+    "capacity": "UPSTREAM install/install.sql:997",
+    "consumption": "UPSTREAM install/install.sql:997",
+    "consumption2": "UPSTREAM install/install.sql:997",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 12
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "214": {
+   "id": 214,
+   "key": "dearth_star",
+   "kind": "ship",
+   "name": "Battle Fortress",
+   "nameRu": "Звезда смерти",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 5000000,
+    "902": 4000000,
+    "903": 1000000
+   },
+   "structure": 9000000,
+   "attack": 200000,
+   "shield": 50000,
+   "speed": 200,
+   "speed2": 200,
+   "speedTech": 3,
+   "capacity": 1000000,
+   "consumption": 1,
+   "consumption2": 1,
+   "requirements": {
+    "21": 12,
+    "118": 7,
+    "114": 6,
+    "199": 1
+   },
+   "rapidfire": {
+    "to": {
+     "210": 1250,
+     "212": 1250,
+     "202": 250,
+     "203": 250,
+     "208": 250,
+     "209": 250,
+     "204": 200,
+     "205": 100,
+     "206": 33,
+     "207": 30,
+     "211": 25,
+     "215": 15,
+     "213": 5,
+     "401": 200,
+     "402": 200,
+     "403": 100,
+     "404": 50,
+     "405": 100
+    },
+    "from": {
+     "216": 1
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:998",
+    "onPlanetType": "UPSTREAM install/install.sql:998",
+    "onePerPlanet": "UPSTREAM install/install.sql:998",
+    "factor": "UPSTREAM install/install.sql:998",
+    "maxLevel": "UPSTREAM install/install.sql:998",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:998",
+    "shield": "UPSTREAM install/install.sql:998",
+    "speed": "UPSTREAM install/install.sql:998",
+    "speed2": "UPSTREAM install/install.sql:998",
+    "speedTech": "UPSTREAM install/install.sql:998",
+    "capacity": "UPSTREAM install/install.sql:998",
+    "consumption": "UPSTREAM install/install.sql:998",
+    "consumption2": "UPSTREAM install/install.sql:998",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 16
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "215": {
+   "id": 215,
+   "key": "battleship",
+   "kind": "ship",
+   "name": "Battle Cruiser",
+   "nameRu": "Линейный крейсер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 30000,
+    "902": 40000,
+    "903": 15000
+   },
+   "structure": 70000,
+   "attack": 700,
+   "shield": 400,
+   "speed": 10000,
+   "speed2": 10000,
+   "speedTech": 3,
+   "capacity": 750,
+   "consumption": 250,
+   "consumption2": 250,
+   "requirements": {
+    "114": 5,
+    "120": 12,
+    "118": 5,
+    "21": 8
+   },
+   "rapidfire": {
+    "to": {
+     "202": 3,
+     "203": 3,
+     "205": 4,
+     "206": 4,
+     "207": 10,
+     "210": 5,
+     "212": 5
+    },
+    "from": {
+     "213": 2,
+     "214": 15,
+     "216": 15,
+     "218": 15
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:999",
+    "onPlanetType": "UPSTREAM install/install.sql:999",
+    "onePerPlanet": "UPSTREAM install/install.sql:999",
+    "factor": "UPSTREAM install/install.sql:999",
+    "maxLevel": "UPSTREAM install/install.sql:999",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:999",
+    "shield": "UPSTREAM install/install.sql:999",
+    "speed": "UPSTREAM install/install.sql:999",
+    "speed2": "UPSTREAM install/install.sql:999",
+    "speedTech": "UPSTREAM install/install.sql:999",
+    "capacity": "UPSTREAM install/install.sql:999",
+    "consumption": "UPSTREAM install/install.sql:999",
+    "consumption2": "UPSTREAM install/install.sql:999",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 13
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "216": {
+   "id": 216,
+   "key": "lune_noir",
+   "kind": "ship",
+   "name": "Black Moon",
+   "nameRu": "Сверхновая звезда",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 8000000,
+    "902": 2000000,
+    "903": 1500000
+   },
+   "structure": 10000000,
+   "attack": 150000,
+   "shield": 70000,
+   "speed": 900,
+   "speed2": 900,
+   "speedTech": 3,
+   "capacity": 15000000,
+   "consumption": 250,
+   "consumption2": 250,
+   "requirements": {
+    "106": 12,
+    "21": 15,
+    "109": 14,
+    "110": 14,
+    "111": 15,
+    "114": 10,
+    "120": 20,
+    "199": 3
+   },
+   "rapidfire": {
+    "to": {
+     "210": 1250,
+     "212": 1250,
+     "202": 250,
+     "203": 250,
+     "204": 200,
+     "205": 100,
+     "206": 33,
+     "207": 30,
+     "208": 250,
+     "209": 250,
+     "211": 25,
+     "213": 5,
+     "214": 1,
+     "215": 15,
+     "401": 400,
+     "402": 200,
+     "403": 100,
+     "404": 50,
+     "405": 100
+    },
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1000",
+    "onPlanetType": "UPSTREAM install/install.sql:1000",
+    "onePerPlanet": "UPSTREAM install/install.sql:1000",
+    "factor": "UPSTREAM install/install.sql:1000",
+    "maxLevel": "UPSTREAM install/install.sql:1000",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1000",
+    "shield": "UPSTREAM install/install.sql:1000",
+    "speed": "UPSTREAM install/install.sql:1000",
+    "speed2": "UPSTREAM install/install.sql:1000",
+    "speedTech": "UPSTREAM install/install.sql:1000",
+    "capacity": "UPSTREAM install/install.sql:1000",
+    "consumption": "UPSTREAM install/install.sql:1000",
+    "consumption2": "UPSTREAM install/install.sql:1000",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 17
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "217": {
+   "id": 217,
+   "key": "ev_transporter",
+   "kind": "ship",
+   "name": "Battle Transporter",
+   "nameRu": "Улучшенный транспорт",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 35000,
+    "902": 20000,
+    "903": 1500
+   },
+   "structure": 55000,
+   "attack": 50,
+   "shield": 120,
+   "speed": 6000,
+   "speed2": 6000,
+   "speedTech": 3,
+   "capacity": 40000000,
+   "consumption": 90,
+   "consumption2": 90,
+   "requirements": {
+    "111": 10,
+    "21": 14,
+    "114": 10,
+    "110": 14,
+    "117": 15
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1001",
+    "onPlanetType": "UPSTREAM install/install.sql:1001",
+    "onePerPlanet": "UPSTREAM install/install.sql:1001",
+    "factor": "UPSTREAM install/install.sql:1001",
+    "maxLevel": "UPSTREAM install/install.sql:1001",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1001",
+    "shield": "UPSTREAM install/install.sql:1001",
+    "speed": "UPSTREAM install/install.sql:1001",
+    "speed2": "UPSTREAM install/install.sql:1001",
+    "speedTech": "UPSTREAM install/install.sql:1001",
+    "capacity": "REAL user report from the live game 2026-10-31 (40 000 000); upstream install.sql:1001 has 400000000",
+    "consumption": "UPSTREAM install/install.sql:1001",
+    "consumption2": "UPSTREAM install/install.sql:1001",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 14
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "218": {
+   "id": 218,
+   "key": "star_crasher",
+   "kind": "ship",
+   "name": "Avatar",
+   "nameRu": "Аватар",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 275000000,
+    "902": 130000000,
+    "903": 60000000
+   },
+   "structure": 405000000,
+   "attack": 35000000,
+   "shield": 2000000,
+   "speed": 10,
+   "speed2": 10,
+   "speedTech": 3,
+   "capacity": 50000000,
+   "consumption": 10000,
+   "consumption2": 10000,
+   "requirements": {
+    "21": 18,
+    "109": 20,
+    "110": 20,
+    "111": 20,
+    "114": 15,
+    "118": 20,
+    "120": 25,
+    "199": 8
+   },
+   "rapidfire": {
+    "to": {
+     "210": 1250,
+     "212": 1250,
+     "202": 250,
+     "203": 250,
+     "204": 200,
+     "205": 100,
+     "206": 33,
+     "207": 30,
+     "208": 250,
+     "209": 250,
+     "211": 25,
+     "213": 5,
+     "215": 15,
+     "401": 400,
+     "402": 200,
+     "403": 100,
+     "404": 50,
+     "405": 100
+    },
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1002",
+    "onPlanetType": "UPSTREAM install/install.sql:1002",
+    "onePerPlanet": "UPSTREAM install/install.sql:1002",
+    "factor": "UPSTREAM install/install.sql:1002",
+    "maxLevel": "UPSTREAM install/install.sql:1002",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1002",
+    "shield": "UPSTREAM install/install.sql:1002",
+    "speed": "UPSTREAM install/install.sql:1002",
+    "speed2": "UPSTREAM install/install.sql:1002",
+    "speedTech": "UPSTREAM install/install.sql:1002",
+    "capacity": "UPSTREAM install/install.sql:1002",
+    "consumption": "UPSTREAM install/install.sql:1002",
+    "consumption2": "UPSTREAM install/install.sql:1002",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 18
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "219": {
+   "id": 219,
+   "key": "giga_recykler",
+   "kind": "ship",
+   "name": "Battle Recycler",
+   "nameRu": "Мега переработчик",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 1000000,
+    "902": 600000,
+    "903": 200000
+   },
+   "structure": 1600000,
+   "attack": 1,
+   "shield": 1000,
+   "speed": 7500,
+   "speed2": 7500,
+   "speedTech": 3,
+   "capacity": 20000000,
+   "consumption": 300,
+   "consumption2": 300,
+   "requirements": {
+    "21": 15,
+    "109": 15,
+    "110": 15,
+    "111": 15,
+    "118": 8
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1003",
+    "onPlanetType": "UPSTREAM install/install.sql:1003",
+    "onePerPlanet": "UPSTREAM install/install.sql:1003",
+    "factor": "UPSTREAM install/install.sql:1003",
+    "maxLevel": "UPSTREAM install/install.sql:1003",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1003",
+    "shield": "UPSTREAM install/install.sql:1003",
+    "speed": "UPSTREAM install/install.sql:1003",
+    "speed2": "UPSTREAM install/install.sql:1003",
+    "speedTech": "UPSTREAM install/install.sql:1003",
+    "capacity": "UPSTREAM install/install.sql:1003",
+    "consumption": "UPSTREAM install/install.sql:1003",
+    "consumption2": "UPSTREAM install/install.sql:1003",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 15
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ]
+  },
+  "220": {
+   "id": 220,
+   "key": "dm_ship",
+   "kind": "ship",
+   "name": "Dark Matter Collector",
+   "nameRu": "Сборщик Тёмной материи",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 60000,
+    "902": 70000,
+    "903": 30000
+   },
+   "structure": 130000,
+   "attack": 5,
+   "shield": 50000,
+   "speed": 100,
+   "speed2": 100,
+   "speedTech": 3,
+   "capacity": 6000000,
+   "consumption": 100000,
+   "consumption2": 100000,
+   "requirements": {
+    "21": 9,
+    "114": 5,
+    "118": 6
+   },
+   "rapidfire": {
+    "to": {
+     "210": 5,
+     "212": 5
+    },
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1004",
+    "onPlanetType": "UPSTREAM install/install.sql:1004",
+    "onePerPlanet": "UPSTREAM install/install.sql:1004",
+    "factor": "UPSTREAM install/install.sql:1004",
+    "maxLevel": "UPSTREAM install/install.sql:1004",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-fleet.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1004",
+    "shield": "UPSTREAM install/install.sql:1004",
+    "speed": "UPSTREAM install/install.sql:1004",
+    "speed2": "UPSTREAM install/install.sql:1004",
+    "speedTech": "UPSTREAM install/install.sql:1004",
+    "capacity": "UPSTREAM install/install.sql:1004",
+    "consumption": "UPSTREAM install/install.sql:1004",
+    "consumption2": "UPSTREAM install/install.sql:1004",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-fleet.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-fleet",
+    "position": 1
+   },
+   "techtreeTabs": [
+    "Fleet"
+   ],
+   "upstreamValue": {
+    "cost": {
+     "901": 6000000,
+     "902": 7000000,
+     "903": 3000000
+    }
+   }
+  },
+  "401": {
+   "id": 401,
+   "key": "misil_launcher",
+   "kind": "defense",
+   "name": "Missile Launcher",
+   "nameRu": "Ракетная установка",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 2000
+   },
+   "structure": 2000,
+   "attack": 80,
+   "shield": 20,
+   "requirements": {
+    "21": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "206": 10,
+     "211": 20,
+     "214": 200,
+     "216": 400,
+     "218": 400
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1005",
+    "onPlanetType": "UPSTREAM install/install.sql:1005",
+    "onePerPlanet": "UPSTREAM install/install.sql:1005",
+    "factor": "UPSTREAM install/install.sql:1005",
+    "maxLevel": "UPSTREAM install/install.sql:1005",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1005",
+    "shield": "UPSTREAM install/install.sql:1005",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 6
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "402": {
+   "id": 402,
+   "key": "small_laser",
+   "kind": "defense",
+   "name": "Light Laser Turret",
+   "nameRu": "Лёгкий лазер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 1500,
+    "902": 500
+   },
+   "structure": 2000,
+   "attack": 100,
+   "shield": 25,
+   "requirements": {
+    "113": 1,
+    "21": 2,
+    "120": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "211": 20,
+     "213": 10,
+     "214": 200,
+     "216": 200,
+     "218": 200
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1006",
+    "onPlanetType": "UPSTREAM install/install.sql:1006",
+    "onePerPlanet": "UPSTREAM install/install.sql:1006",
+    "factor": "UPSTREAM install/install.sql:1006",
+    "maxLevel": "UPSTREAM install/install.sql:1006",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1006",
+    "shield": "UPSTREAM install/install.sql:1006",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 7
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "403": {
+   "id": 403,
+   "key": "big_laser",
+   "kind": "defense",
+   "name": "Heavy Laser Turret",
+   "nameRu": "Тяжёлый лазер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 6000,
+    "902": 2000
+   },
+   "structure": 8000,
+   "attack": 250,
+   "shield": 100,
+   "requirements": {
+    "113": 3,
+    "21": 4,
+    "120": 6
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "211": 10,
+     "214": 100,
+     "216": 100,
+     "218": 100
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1007",
+    "onPlanetType": "UPSTREAM install/install.sql:1007",
+    "onePerPlanet": "UPSTREAM install/install.sql:1007",
+    "factor": "UPSTREAM install/install.sql:1007",
+    "maxLevel": "UPSTREAM install/install.sql:1007",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1007",
+    "shield": "UPSTREAM install/install.sql:1007",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 8
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "404": {
+   "id": 404,
+   "key": "gauss_canyon",
+   "kind": "defense",
+   "name": "Gauss Cannon",
+   "nameRu": "Пушка Гаусса",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 20000,
+    "902": 15000,
+    "903": 2000
+   },
+   "structure": 35000,
+   "attack": 1100,
+   "shield": 200,
+   "requirements": {
+    "21": 6,
+    "113": 6,
+    "109": 3,
+    "110": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "214": 50,
+     "216": 50,
+     "218": 50
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1008",
+    "onPlanetType": "UPSTREAM install/install.sql:1008",
+    "onePerPlanet": "UPSTREAM install/install.sql:1008",
+    "factor": "UPSTREAM install/install.sql:1008",
+    "maxLevel": "UPSTREAM install/install.sql:1008",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1008",
+    "shield": "UPSTREAM install/install.sql:1008",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 9
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "405": {
+   "id": 405,
+   "key": "ionic_canyon",
+   "kind": "defense",
+   "name": "Ion Cannon",
+   "nameRu": "Ионное орудие",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 2000,
+    "902": 6000
+   },
+   "structure": 8000,
+   "attack": 150,
+   "shield": 500,
+   "requirements": {
+    "21": 4,
+    "121": 4
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {
+     "211": 10,
+     "214": 100,
+     "216": 100,
+     "218": 100
+    }
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1009",
+    "onPlanetType": "UPSTREAM install/install.sql:1009",
+    "onePerPlanet": "UPSTREAM install/install.sql:1009",
+    "factor": "UPSTREAM install/install.sql:1009",
+    "maxLevel": "UPSTREAM install/install.sql:1009",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1009",
+    "shield": "UPSTREAM install/install.sql:1009",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 10
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "406": {
+   "id": 406,
+   "key": "buster_canyon",
+   "kind": "defense",
+   "name": "Plasma Cannon",
+   "nameRu": "Плазменное орудие",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 50000,
+    "902": 50000,
+    "903": 30000
+   },
+   "structure": 100000,
+   "attack": 3000,
+   "shield": 300,
+   "requirements": {
+    "21": 8,
+    "122": 7
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1010",
+    "onPlanetType": "UPSTREAM install/install.sql:1010",
+    "onePerPlanet": "UPSTREAM install/install.sql:1010",
+    "factor": "UPSTREAM install/install.sql:1010",
+    "maxLevel": "UPSTREAM install/install.sql:1010",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1010",
+    "shield": "UPSTREAM install/install.sql:1010",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 11
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "407": {
+   "id": 407,
+   "key": "small_protection_shield",
+   "kind": "defense",
+   "name": "Small Shield Dome",
+   "nameRu": "Малый щитовой купол",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": true,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 10000,
+    "902": 10000
+   },
+   "structure": 20000,
+   "attack": 1,
+   "shield": 2000,
+   "requirements": {
+    "110": 2,
+    "21": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1011",
+    "onPlanetType": "UPSTREAM install/install.sql:1011",
+    "onePerPlanet": "UPSTREAM install/install.sql:1011",
+    "factor": "UPSTREAM install/install.sql:1011",
+    "maxLevel": "UPSTREAM install/install.sql:1011",
+    "cost": "UPSTREAM install/install.sql:1011",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1011",
+    "attack": "UPSTREAM install/install.sql:1011",
+    "shield": "UPSTREAM install/install.sql:1011",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 0
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "408": {
+   "id": 408,
+   "key": "big_protection_shield",
+   "kind": "defense",
+   "name": "Large Shield Dome",
+   "nameRu": "Большой щитовой купол",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": true,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 50000,
+    "902": 50000
+   },
+   "structure": 100000,
+   "attack": 1,
+   "shield": 10000,
+   "requirements": {
+    "110": 6,
+    "21": 6
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1012",
+    "onPlanetType": "UPSTREAM install/install.sql:1012",
+    "onePerPlanet": "UPSTREAM install/install.sql:1012",
+    "factor": "UPSTREAM install/install.sql:1012",
+    "maxLevel": "UPSTREAM install/install.sql:1012",
+    "cost": "UPSTREAM install/install.sql:1012",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1012",
+    "attack": "UPSTREAM install/install.sql:1012",
+    "shield": "UPSTREAM install/install.sql:1012",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 1
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "409": {
+   "id": 409,
+   "key": "planet_protector",
+   "kind": "defense",
+   "name": "Atmospheric Shield",
+   "nameRu": "Планетарный щитовой купол",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": true,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 10000000,
+    "902": 5000000,
+    "903": 2500000
+   },
+   "structure": 15000000,
+   "attack": 1,
+   "shield": 1000000,
+   "requirements": {
+    "609": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1013",
+    "onPlanetType": "UPSTREAM install/install.sql:1013",
+    "onePerPlanet": "UPSTREAM install/install.sql:1013",
+    "factor": "UPSTREAM install/install.sql:1013",
+    "maxLevel": "UPSTREAM install/install.sql:1013",
+    "cost": "UPSTREAM install/install.sql:1013",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1013",
+    "attack": "UPSTREAM install/install.sql:1013",
+    "shield": "UPSTREAM install/install.sql:1013",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 2
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "410": {
+   "id": 410,
+   "key": "graviton_canyon",
+   "kind": "defense",
+   "name": "Gravitons Cannon",
+   "nameRu": "Гравитонное орудие",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 15000000,
+    "902": 15000000
+   },
+   "structure": 30000000,
+   "attack": 500000,
+   "shield": 80000,
+   "requirements": {
+    "199": 7,
+    "21": 18,
+    "109": 20
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1014",
+    "onPlanetType": "UPSTREAM install/install.sql:1014",
+    "onePerPlanet": "UPSTREAM install/install.sql:1014",
+    "factor": "UPSTREAM install/install.sql:1014",
+    "maxLevel": "UPSTREAM install/install.sql:1014",
+    "cost": "REAL fleetDealer.html var CostInfo",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "DERIVED metal+crystal of REAL cost (2Moons rule)",
+    "attack": "UPSTREAM install/install.sql:1014",
+    "shield": "UPSTREAM install/install.sql:1014",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 12
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "411": {
+   "id": 411,
+   "key": "orbital_station",
+   "kind": "defense",
+   "name": "Orbital Defence Platform",
+   "nameRu": "Орбитальная база",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": true,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 5000000000,
+    "902": 2000000000,
+    "903": 500000000,
+    "911": 1000000,
+    "921": 10000
+   },
+   "structure": 7000000000,
+   "attack": 400000000,
+   "shield": 2000000000,
+   "requirements": {
+    "199": 10,
+    "110": 22,
+    "122": 20,
+    "108": 15,
+    "111": 25,
+    "113": 20,
+    "608": 2,
+    "21": 20
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1015",
+    "onPlanetType": "UPSTREAM install/install.sql:1015",
+    "onePerPlanet": "UPSTREAM install/install.sql:1015",
+    "factor": "UPSTREAM install/install.sql:1015",
+    "maxLevel": "UPSTREAM install/install.sql:1015",
+    "cost": "UPSTREAM install/install.sql:1015",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1015",
+    "attack": "UPSTREAM install/install.sql:1015",
+    "shield": "UPSTREAM install/install.sql:1015",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 3
+   },
+   "techtreeTabs": [
+    "Defenses"
+   ]
+  },
+  "502": {
+   "id": 502,
+   "key": "interceptor_misil",
+   "kind": "missile",
+   "name": "Interceptor",
+   "nameRu": "Ракета-перехватчик",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 8000,
+    "903": 2000
+   },
+   "structure": 8000,
+   "attack": 1,
+   "shield": 1,
+   "requirements": {
+    "44": 2,
+    "21": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1016",
+    "onPlanetType": "UPSTREAM install/install.sql:1016",
+    "onePerPlanet": "UPSTREAM install/install.sql:1016",
+    "factor": "UPSTREAM install/install.sql:1016",
+    "maxLevel": "UPSTREAM install/install.sql:1016",
+    "cost": "UPSTREAM install/install.sql:1016",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1016",
+    "attack": "UPSTREAM install/install.sql:1016",
+    "shield": "UPSTREAM install/install.sql:1016",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 4
+   },
+   "techtreeTabs": [
+    "Missiles"
+   ]
+  },
+  "503": {
+   "id": 503,
+   "key": "interplanetary_misil",
+   "kind": "missile",
+   "name": "Interplanetary missiles",
+   "nameRu": "Межпланетная ракета",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "901": 12500,
+    "902": 2500,
+    "903": 10000
+   },
+   "structure": 15000,
+   "attack": 12000,
+   "shield": 1,
+   "requirements": {
+    "44": 4,
+    "21": 1,
+    "117": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1017",
+    "onPlanetType": "UPSTREAM install/install.sql:1017",
+    "onePerPlanet": "UPSTREAM install/install.sql:1017",
+    "factor": "UPSTREAM install/install.sql:1017",
+    "maxLevel": "UPSTREAM install/install.sql:1017",
+    "cost": "UPSTREAM install/install.sql:1017",
+    "name": "REAL shipyard-defense.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "structure": "UPSTREAM install/install.sql:1017",
+    "attack": "UPSTREAM install/install.sql:1017",
+    "shield": "UPSTREAM install/install.sql:1017",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "listedOn": "REAL shipyard-defense.html",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "listedOn": {
+    "page": "shipyard-defense",
+    "position": 5
+   },
+   "techtreeTabs": [
+    "Missiles"
+   ]
+  },
+  "601": {
+   "id": 601,
+   "key": "rpg_geologue",
+   "kind": "officer",
+   "name": "Geologist",
+   "nameRu": "Геолог",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 20,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "Resource": {
+     "value": 0.05,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1018",
+    "onePerPlanet": "UPSTREAM install/install.sql:1018",
+    "factor": "UPSTREAM install/install.sql:1018",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1018",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1018",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "602": {
+   "id": 602,
+   "key": "rpg_amiral",
+   "kind": "officer",
+   "name": "Admiral",
+   "nameRu": "Адмирал",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 20,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "Attack": {
+     "value": 0.05,
+     "unit": "percent"
+    },
+    "Defensive": {
+     "value": 0.05,
+     "unit": "percent"
+    },
+    "Shield": {
+     "value": 0.05,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1019",
+    "onePerPlanet": "UPSTREAM install/install.sql:1019",
+    "factor": "UPSTREAM install/install.sql:1019",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1019",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1019",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "603": {
+   "id": 603,
+   "key": "rpg_ingenieur",
+   "kind": "officer",
+   "name": "Engineer",
+   "nameRu": "Инженер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 10,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "Attack": {
+     "value": 0.05,
+     "unit": "percent"
+    },
+    "Defensive": {
+     "value": 0.05,
+     "unit": "percent"
+    },
+    "Energy": {
+     "value": 0.05,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "601": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1020",
+    "onePerPlanet": "UPSTREAM install/install.sql:1020",
+    "factor": "UPSTREAM install/install.sql:1020",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1020",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1020",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "604": {
+   "id": 604,
+   "key": "rpg_technocrate",
+   "kind": "officer",
+   "name": "Technocrat",
+   "nameRu": "Технократ",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 10,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "ShipTime": {
+     "value": -0.05,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "602": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1021",
+    "onePerPlanet": "UPSTREAM install/install.sql:1021",
+    "factor": "UPSTREAM install/install.sql:1021",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1021",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1021",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "605": {
+   "id": 605,
+   "key": "rpg_constructeur",
+   "kind": "officer",
+   "name": "Constructor",
+   "nameRu": "Архитектор",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 3,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "BuildTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "601": 10,
+    "603": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1022",
+    "onePerPlanet": "UPSTREAM install/install.sql:1022",
+    "factor": "UPSTREAM install/install.sql:1022",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1022",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1022",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "606": {
+   "id": 606,
+   "key": "rpg_scientifique",
+   "kind": "officer",
+   "name": "Scientologist",
+   "nameRu": "Учёный",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 3,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "ResearchTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "601": 10,
+    "603": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1023",
+    "onePerPlanet": "UPSTREAM install/install.sql:1023",
+    "factor": "UPSTREAM install/install.sql:1023",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1023",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1023",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "607": {
+   "id": 607,
+   "key": "rpg_stockeur",
+   "kind": "officer",
+   "name": "Storage expert",
+   "nameRu": "Хранитель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 2,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "ShipStorage": {
+     "value": 0.5,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "605": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1024",
+    "onePerPlanet": "UPSTREAM install/install.sql:1024",
+    "factor": "UPSTREAM install/install.sql:1024",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1024",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1024",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "608": {
+   "id": 608,
+   "key": "rpg_defenseur",
+   "kind": "officer",
+   "name": "Minister of Defence",
+   "nameRu": "Министр обороны",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 2,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "DefensiveTime": {
+     "value": -0.25,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "606": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1025",
+    "onePerPlanet": "UPSTREAM install/install.sql:1025",
+    "factor": "UPSTREAM install/install.sql:1025",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1025",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1025",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "609": {
+   "id": 609,
+   "key": "rpg_bunker",
+   "kind": "officer",
+   "name": "Guardian",
+   "nameRu": "Защитник",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 1,
+   "cost": {
+    "921": 1000
+   },
+   "requirements": {
+    "601": 20,
+    "603": 10,
+    "605": 3,
+    "606": 3,
+    "607": 2,
+    "608": 2
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1026",
+    "onePerPlanet": "UPSTREAM install/install.sql:1026",
+    "factor": "UPSTREAM install/install.sql:1026",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1026",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "610": {
+   "id": 610,
+   "key": "rpg_espion",
+   "kind": "officer",
+   "name": "Spy",
+   "nameRu": "Разведчик",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 2,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "SpyPower": {
+     "value": 0.35,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "602": 10,
+    "604": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1027",
+    "onePerPlanet": "UPSTREAM install/install.sql:1027",
+    "factor": "UPSTREAM install/install.sql:1027",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1027",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1027",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "611": {
+   "id": 611,
+   "key": "rpg_commandant",
+   "kind": "officer",
+   "name": "Commander",
+   "nameRu": "Командир",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 3,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "FleetSlots": {
+     "value": 3.0,
+     "unit": "absolute"
+    }
+   },
+   "requirements": {
+    "602": 10,
+    "604": 5
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1028",
+    "onePerPlanet": "UPSTREAM install/install.sql:1028",
+    "factor": "UPSTREAM install/install.sql:1028",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1028",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1028",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "612": {
+   "id": 612,
+   "key": "rpg_destructeur",
+   "kind": "officer",
+   "name": "Destroyer",
+   "nameRu": "Уничтожитель",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 1,
+   "cost": {
+    "921": 1000
+   },
+   "requirements": {
+    "610": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1029",
+    "onePerPlanet": "UPSTREAM install/install.sql:1029",
+    "factor": "UPSTREAM install/install.sql:1029",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1029",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "613": {
+   "id": 613,
+   "key": "rpg_general",
+   "kind": "officer",
+   "name": "General",
+   "nameRu": "Генерал",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 3,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "FlyTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {
+    "611": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1030",
+    "onePerPlanet": "UPSTREAM install/install.sql:1030",
+    "factor": "UPSTREAM install/install.sql:1030",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1030",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1030",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "614": {
+   "id": 614,
+   "key": "rpg_raideur",
+   "kind": "officer",
+   "name": "Emperor",
+   "nameRu": "Рейдер",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 1,
+   "cost": {
+    "921": 1000
+   },
+   "requirements": {
+    "602": 20,
+    "604": 10,
+    "610": 2,
+    "611": 2,
+    "612": 1,
+    "613": 3
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1031",
+    "onePerPlanet": "UPSTREAM install/install.sql:1031",
+    "factor": "UPSTREAM install/install.sql:1031",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1031",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "615": {
+   "id": 615,
+   "key": "rpg_empereur",
+   "kind": "officer",
+   "name": "Raider",
+   "nameRu": "Император",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": 1,
+   "cost": {
+    "921": 1000
+   },
+   "bonus": {
+    "Planets": {
+     "value": 2.0,
+     "unit": "absolute"
+    }
+   },
+   "requirements": {
+    "614": 1,
+    "609": 1
+   },
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "REAL officier.html div.officers100 class",
+    "onPlanetType": "UPSTREAM install/install.sql:1032",
+    "onePerPlanet": "UPSTREAM install/install.sql:1032",
+    "factor": "UPSTREAM install/install.sql:1032",
+    "maxLevel": "REAL officier.html span.level \"cur/max\"",
+    "cost": "UPSTREAM install/install.sql:1032",
+    "name": "REAL officier.html",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1032",
+    "requirements": "REAL techtree.html",
+    "rapidfire": "UPSTREAM install/install.sql:1041+",
+    "techtreeTabs": "REAL techtree.html"
+   },
+   "techtreeTabs": [
+    "Officers"
+   ]
+  },
+  "701": {
+   "id": 701,
+   "key": "dm_attack",
+   "kind": "dmfunc",
+   "name": "Weapons Upgrade",
+   "nameRu": "Вооружение",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 1500
+   },
+   "bonus": {
+    "Attack": {
+     "value": 0.1,
+     "unit": "percent"
+    },
+    "Defensive": {
+     "value": 0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1033",
+    "onPlanetType": "UPSTREAM install/install.sql:1033",
+    "onePerPlanet": "UPSTREAM install/install.sql:1033",
+    "factor": "UPSTREAM install/install.sql:1033",
+    "maxLevel": "UPSTREAM install/install.sql:1033",
+    "cost": "UPSTREAM install/install.sql:1033",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1033",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "702": {
+   "id": 702,
+   "key": "dm_defensive",
+   "kind": "dmfunc",
+   "name": "Shield Upgrade",
+   "nameRu": "Мощность щитов",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 1500
+   },
+   "bonus": {
+    "Shield": {
+     "value": 0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1034",
+    "onPlanetType": "UPSTREAM install/install.sql:1034",
+    "onePerPlanet": "UPSTREAM install/install.sql:1034",
+    "factor": "UPSTREAM install/install.sql:1034",
+    "maxLevel": "UPSTREAM install/install.sql:1034",
+    "cost": "UPSTREAM install/install.sql:1034",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1034",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "703": {
+   "id": 703,
+   "key": "dm_buildtime",
+   "kind": "dmfunc",
+   "name": "Building Upgrade",
+   "nameRu": "Время строительства",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 750
+   },
+   "bonus": {
+    "BuildTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1035",
+    "onPlanetType": "UPSTREAM install/install.sql:1035",
+    "onePerPlanet": "UPSTREAM install/install.sql:1035",
+    "factor": "UPSTREAM install/install.sql:1035",
+    "maxLevel": "UPSTREAM install/install.sql:1035",
+    "cost": "UPSTREAM install/install.sql:1035",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1035",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "704": {
+   "id": 704,
+   "key": "dm_resource",
+   "kind": "dmfunc",
+   "name": "Ressource Upgrade",
+   "nameRu": "Добыча сырья",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 2500
+   },
+   "bonus": {
+    "Resource": {
+     "value": 0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1036",
+    "onPlanetType": "UPSTREAM install/install.sql:1036",
+    "onePerPlanet": "UPSTREAM install/install.sql:1036",
+    "factor": "UPSTREAM install/install.sql:1036",
+    "maxLevel": "UPSTREAM install/install.sql:1036",
+    "cost": "UPSTREAM install/install.sql:1036",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1036",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "705": {
+   "id": 705,
+   "key": "dm_energie",
+   "kind": "dmfunc",
+   "name": "Energy Upgrade",
+   "nameRu": "Выработка энергии",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 2000
+   },
+   "bonus": {
+    "Energy": {
+     "value": 0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1037",
+    "onPlanetType": "UPSTREAM install/install.sql:1037",
+    "onePerPlanet": "UPSTREAM install/install.sql:1037",
+    "factor": "UPSTREAM install/install.sql:1037",
+    "maxLevel": "UPSTREAM install/install.sql:1037",
+    "cost": "UPSTREAM install/install.sql:1037",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1037",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "706": {
+   "id": 706,
+   "key": "dm_researchtime",
+   "kind": "dmfunc",
+   "name": "Research Upgrade",
+   "nameRu": "Время проведения исследований",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 1250
+   },
+   "bonus": {
+    "ResearchTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1038",
+    "onPlanetType": "UPSTREAM install/install.sql:1038",
+    "onePerPlanet": "UPSTREAM install/install.sql:1038",
+    "factor": "UPSTREAM install/install.sql:1038",
+    "maxLevel": "UPSTREAM install/install.sql:1038",
+    "cost": "UPSTREAM install/install.sql:1038",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1038",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  },
+  "707": {
+   "id": 707,
+   "key": "dm_fleettime",
+   "kind": "dmfunc",
+   "name": "Fleet Upgrade",
+   "nameRu": "Время полёта кораблей",
+   "onPlanetType": [
+    1,
+    3
+   ],
+   "onePerPlanet": false,
+   "factor": 1.0,
+   "maxLevel": null,
+   "cost": {
+    "921": 3000
+   },
+   "bonus": {
+    "FlyTime": {
+     "value": -0.1,
+     "unit": "percent"
+    }
+   },
+   "requirements": {},
+   "rapidfire": {
+    "to": {},
+    "from": {}
+   },
+   "src": {
+    "key": "UPSTREAM install/install.sql:1039",
+    "onPlanetType": "UPSTREAM install/install.sql:1039",
+    "onePerPlanet": "UPSTREAM install/install.sql:1039",
+    "factor": "UPSTREAM install/install.sql:1039",
+    "maxLevel": "UPSTREAM install/install.sql:1039",
+    "cost": "UPSTREAM install/install.sql:1039",
+    "name": "UPSTREAM language/en/TECH.php",
+    "nameRu": "UPSTREAM language/ru/TECH.php",
+    "bonus": "UPSTREAM install/install.sql:1039",
+    "requirements": "UPSTREAM install/install.sql:1140+",
+    "rapidfire": "UPSTREAM install/install.sql:1041+"
+   }
+  }
+ }
+}

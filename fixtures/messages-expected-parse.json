@@ -1,0 +1,1045 @@
+{
+  "espionageList": {
+    "page": 1,
+    "totalPages": 1,
+    "messages": [
+      {
+        "id": 2051,
+        "unread": true,
+        "title": "Espionage report from Arrakeen [1:45:9]",
+        "titleClass": "blue_txt",
+        "date": "30.10.2026 00:41:05",
+        "ts": 1793320865000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2051?tab=fleets&subtab=espionage",
+        "key": "espionage_report"
+      },
+      {
+        "id": 2049,
+        "unread": true,
+        "title": "Espionage report from Planet Kronos [1:42:11]",
+        "titleClass": "blue_txt",
+        "date": "30.10.2026 00:33:51",
+        "ts": 1793320431000,
+        "from": "Fleet Command",
+        "detailsUrl": null,
+        "key": "espionage_detected"
+      },
+      {
+        "id": 2044,
+        "unread": false,
+        "title": "Espionage report from Moon [1:45:9]",
+        "titleClass": "blue_txt",
+        "date": "29.10.2026 23:58:12",
+        "ts": 1793318292000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2044?tab=fleets&subtab=espionage",
+        "key": "espionage_report"
+      },
+      {
+        "id": 2038,
+        "unread": false,
+        "title": "Espionage report from Colony [1:39:4]",
+        "titleClass": "blue_txt",
+        "date": "29.10.2026 22:15:40",
+        "ts": 1793312140000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2038?tab=fleets&subtab=espionage",
+        "key": "espionage_report"
+      }
+    ]
+  },
+  "espionageShort": [
+    {
+      "id": 2051,
+      "target": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Arrakeen"
+      },
+      "player": "Lieutenant Nusakan",
+      "resourcesApprox": {
+        "metal": 1468000,
+        "crystal": 500451,
+        "deuterium": 65266
+      },
+      "resourcesTotalInclEnergy": 2037116,
+      "counterEspionage": 4,
+      "detailsUrl": "http://localhost/ajax/messages/2051?tab=fleets&subtab=espionage"
+    },
+    {
+      "id": 2044,
+      "target": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "moon",
+        "planetType": 3,
+        "name": "Moon"
+      },
+      "player": "Lieutenant Nusakan",
+      "resourcesApprox": {
+        "metal": 210500,
+        "crystal": 98340,
+        "deuterium": 12007
+      },
+      "resourcesTotalInclEnergy": 320847,
+      "counterEspionage": 1,
+      "detailsUrl": "http://localhost/ajax/messages/2044?tab=fleets&subtab=espionage"
+    },
+    {
+      "id": 2038,
+      "target": {
+        "coords": [
+          1,
+          39,
+          4
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "player": "Hagen",
+      "resourcesApprox": {
+        "metal": 120345,
+        "crystal": 64210,
+        "deuterium": 30128
+      },
+      "resourcesTotalInclEnergy": 214669,
+      "counterEspionage": 0,
+      "detailsUrl": "http://localhost/ajax/messages/2038?tab=fleets&subtab=espionage"
+    }
+  ],
+  "espionageDetected": [
+    {
+      "id": 2049,
+      "ts": 1793320431000,
+      "from": {
+        "coords": [
+          1,
+          42,
+          11
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Kronos"
+      },
+      "attackerName": "Admiral Rigel",
+      "target": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      },
+      "counterEspionage": 0
+    }
+  ],
+  "combatList": {
+    "page": 1,
+    "totalPages": 1,
+    "messages": [
+      {
+        "id": 2053,
+        "unread": true,
+        "title": "Combat report Colony [1:39:4]",
+        "titleClass": "middlemark",
+        "date": "30.10.2026 00:50:22",
+        "ts": 1793321422000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2053?tab=fleets&subtab=combat_reports",
+        "key": "battle_report"
+      },
+      {
+        "id": 2050,
+        "unread": true,
+        "title": "Combat report Homeworld [1:42:8]",
+        "titleClass": "middlemark",
+        "date": "30.10.2026 00:12:03",
+        "ts": 1793319123000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2050?tab=fleets&subtab=combat_reports",
+        "key": "battle_report"
+      },
+      {
+        "id": 2043,
+        "unread": false,
+        "title": "Contact with the attacking fleet has been lost. [1:45:9]",
+        "titleClass": "blue_txt",
+        "date": "29.10.2026 23:31:44",
+        "ts": 1793316704000,
+        "from": "Fleet Command",
+        "detailsUrl": null,
+        "key": "fleet_lost_contact"
+      },
+      {
+        "id": 2040,
+        "unread": false,
+        "title": "Missile attack on 1:45:9",
+        "titleClass": "middlemark",
+        "date": "29.10.2026 23:05:00",
+        "ts": 1793315100000,
+        "from": "Fleet Command",
+        "detailsUrl": null,
+        "key": "missile_attack_report"
+      },
+      {
+        "id": 2039,
+        "unread": false,
+        "title": "Missile attack on 2:118:12",
+        "titleClass": "middlemark",
+        "date": "29.10.2026 22:47:31",
+        "ts": 1793314051000,
+        "from": "Defense Command",
+        "detailsUrl": null,
+        "key": "missile_defense_report"
+      },
+      {
+        "id": 2034,
+        "unread": false,
+        "title": "Combat report Homeworld [1:42:8]",
+        "titleClass": "middlemark",
+        "date": "29.10.2026 21:40:10",
+        "ts": 1793310010000,
+        "from": "Fleet Command",
+        "detailsUrl": "http://localhost/ajax/messages/2034?tab=fleets&subtab=combat_reports",
+        "key": "battle_report"
+      }
+    ]
+  },
+  "battleShort": [
+    {
+      "id": 2053,
+      "defenderPlace": {
+        "coords": [
+          1,
+          39,
+          4
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "attacker": {
+        "name": "Commander Vega",
+        "lossesApprox": 12000,
+        "mark": "undermark"
+      },
+      "defender": {
+        "name": "Hagen",
+        "lossesApprox": 28000,
+        "mark": "overmark"
+      },
+      "winner": "attacker",
+      "lootApprox": 107000,
+      "lootPercent": 50,
+      "debrisTotalApprox": 3600,
+      "repaired": 10,
+      "moonChance": 0,
+      "detailsUrl": "http://localhost/ajax/messages/2053?tab=fleets&subtab=combat_reports"
+    },
+    {
+      "id": 2050,
+      "defenderPlace": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      },
+      "attacker": {
+        "name": "Admiral Rigel",
+        "lossesApprox": 0,
+        "mark": "undermark"
+      },
+      "defender": {
+        "name": "Commander Vega",
+        "lossesApprox": 320000,
+        "mark": "overmark"
+      },
+      "winner": "attacker",
+      "lootApprox": 146000,
+      "lootPercent": 50,
+      "debrisTotalApprox": 54000,
+      "repaired": 50,
+      "moonChance": null,
+      "detailsUrl": "http://localhost/ajax/messages/2050?tab=fleets&subtab=combat_reports"
+    },
+    {
+      "id": 2034,
+      "defenderPlace": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      },
+      "attacker": {
+        "name": "Pirates",
+        "lossesApprox": 104000,
+        "mark": "overmark"
+      },
+      "defender": {
+        "name": "Commander Vega",
+        "lossesApprox": 8000,
+        "mark": "undermark"
+      },
+      "winner": "defender",
+      "lootApprox": 0,
+      "lootPercent": 0,
+      "debrisTotalApprox": 33600,
+      "repaired": 0,
+      "moonChance": 0,
+      "detailsUrl": "http://localhost/ajax/messages/2034?tab=fleets&subtab=combat_reports"
+    }
+  ],
+  "expeditionPages": [
+    "1/2",
+    "2/2"
+  ],
+  "expeditions": [
+    {
+      "id": 2054,
+      "ts": 1793321702000,
+      "key": "expedition_gain_resources",
+      "outcome": "resources",
+      "resources": {
+        "metal": 412500
+      }
+    },
+    {
+      "id": 2052,
+      "ts": 1793321058000,
+      "key": "expedition_gain_ships",
+      "outcome": "ships",
+      "shipsByName": {
+        "Small Cargo": 5,
+        "Light Fighter": 12,
+        "Espionage Probe": 3
+      }
+    },
+    {
+      "id": 2048,
+      "ts": 1793318557000,
+      "key": "expedition_gain_dark_matter",
+      "outcome": "dark_matter",
+      "darkMatter": 1850
+    },
+    {
+      "id": 2047,
+      "ts": 1793318399000,
+      "key": "expedition_failed",
+      "outcome": "nothing"
+    },
+    {
+      "id": 2046,
+      "ts": 1793317746000,
+      "key": "expedition_failed_and_delay",
+      "outcome": "delay"
+    },
+    {
+      "id": 2045,
+      "ts": 1793317332000,
+      "key": "expedition_failed_and_speedup",
+      "outcome": "speedup"
+    },
+    {
+      "id": 2042,
+      "ts": 1793316045000,
+      "key": "expedition_battle_aliens",
+      "outcome": "aliens"
+    },
+    {
+      "id": 2041,
+      "ts": 1793315469000,
+      "key": "expedition_merchant_found",
+      "outcome": "merchant"
+    },
+    {
+      "id": 2037,
+      "ts": 1793311371000,
+      "key": "expedition_gain_item",
+      "outcome": "item"
+    },
+    {
+      "id": 2035,
+      "ts": 1793310010000,
+      "key": "expedition_battle_pirates",
+      "outcome": "pirates"
+    },
+    {
+      "id": 2030,
+      "ts": 1793302053000,
+      "key": "expedition_loss_of_fleet",
+      "outcome": "fleet_lost"
+    }
+  ],
+  "transport": [
+    {
+      "id": 2036,
+      "key": "transport_arrived",
+      "ts": 1793311100000,
+      "from": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      },
+      "to": {
+        "coords": [
+          2,
+          118,
+          12
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "resources": {
+        "metal": 75000,
+        "crystal": 40000,
+        "deuterium": 12500
+      }
+    },
+    {
+      "id": 2032,
+      "key": "fleet_union_invite",
+      "title": "Invitation to alliance combat"
+    }
+  ],
+  "other": [
+    {
+      "id": 2055,
+      "key": "return_of_fleet_with_resources",
+      "ts": 1793321800000,
+      "from": {
+        "coords": [
+          1,
+          39,
+          4
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "to": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      },
+      "resources": {
+        "metal": 60172,
+        "crystal": 32105,
+        "deuterium": 15064
+      }
+    },
+    {
+      "id": 2033,
+      "key": "return_of_fleet",
+      "ts": 1793308360000,
+      "from": {
+        "coords": [
+          1,
+          42,
+          16
+        ],
+        "type": "coordinates",
+        "planetType": 1,
+        "name": null
+      },
+      "to": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      }
+    },
+    {
+      "id": 2031,
+      "key": "fleet_deployment_with_resources",
+      "ts": 1793306700000,
+      "from": {
+        "coords": [
+          2,
+          118,
+          12
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "to": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "moon",
+        "planetType": 3,
+        "name": "Moon"
+      },
+      "resources": {
+        "metal": 20000,
+        "crystal": 10000,
+        "deuterium": 5321
+      }
+    },
+    {
+      "id": 2029,
+      "key": "transport_received",
+      "ts": 1793296931000,
+      "from": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Arrakeen"
+      },
+      "to": {
+        "coords": [
+          2,
+          118,
+          12
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "resources": {
+        "metal": 15000,
+        "crystal": 0,
+        "deuterium": 2000
+      }
+    },
+    {
+      "id": 2028,
+      "key": "debris_field_harvest",
+      "ts": 1793295000000,
+      "from": null,
+      "to": {
+        "coords": [
+          1,
+          39,
+          4
+        ],
+        "type": "debris",
+        "planetType": 2,
+        "name": null
+      },
+      "ship": "Recycler",
+      "shipAmount": 2,
+      "capacity": 40000,
+      "field": {
+        "metal": 2700,
+        "crystal": 900,
+        "deuterium": 0
+      },
+      "harvested": {
+        "metal": 2700,
+        "crystal": 900,
+        "deuterium": 0
+      }
+    },
+    {
+      "id": 2027,
+      "key": "fleet_deployment",
+      "ts": 1793289605000,
+      "from": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "moon",
+        "planetType": 3,
+        "name": "Moon"
+      },
+      "to": {
+        "coords": [
+          1,
+          42,
+          8
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Homeworld"
+      }
+    },
+    {
+      "id": 2026,
+      "key": "acs_defend_arrival_sender",
+      "ts": 1793287200000,
+      "from": null,
+      "to": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Arrakeen"
+      }
+    }
+  ],
+  "economy": [
+    {
+      "id": 2025,
+      "key": "colony_established",
+      "title": "Settlement Report"
+    },
+    {
+      "id": 2024,
+      "key": "colony_establish_fail_astrophysics",
+      "title": "Settlement Report"
+    },
+    {
+      "id": 2023,
+      "key": "wreck_field_repair_completed",
+      "title": "Repair completed"
+    }
+  ],
+  "universe": [
+    {
+      "id": 1,
+      "key": "welcome_message",
+      "title": "Welcome to OGameX!"
+    }
+  ],
+  "espionageFull": [
+    {
+      "id": 2051,
+      "title": "Espionage report from Arrakeen [1:45:9]",
+      "date": "30.10.2026 00:41:05",
+      "ts": 1793320865000,
+      "target": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Arrakeen"
+      },
+      "attackParams": {
+        "galaxy": 1,
+        "system": 45,
+        "position": 9,
+        "type": 1
+      },
+      "player": "Lieutenant Nusakan",
+      "counterEspionage": 4,
+      "resources": {
+        "metal": 1468279,
+        "crystal": 500451,
+        "deuterium": 65266,
+        "energy": 3120
+      },
+      "debris": {
+        "metal": 0,
+        "crystal": 0,
+        "deuterium": 0
+      },
+      "ships": {
+        "202": 40,
+        "203": 12,
+        "204": 120,
+        "206": 14,
+        "210": 9,
+        "212": 25
+      },
+      "defense": {
+        "401": 150,
+        "402": 80,
+        "403": 12,
+        "404": 4,
+        "407": 1,
+        "502": 6
+      },
+      "buildings": {
+        "1": 24,
+        "2": 20,
+        "3": 18,
+        "4": 22,
+        "14": 10,
+        "21": 9,
+        "22": 8,
+        "23": 7,
+        "24": 6,
+        "31": 10,
+        "44": 2
+      },
+      "research": {
+        "106": 8,
+        "108": 10,
+        "109": 9,
+        "110": 8,
+        "111": 9,
+        "113": 10,
+        "114": 6,
+        "115": 10,
+        "117": 7,
+        "120": 10,
+        "121": 5,
+        "124": 5
+      },
+      "known": {
+        "research": true,
+        "buildings": true,
+        "defense": true,
+        "ships": true
+      }
+    },
+    {
+      "id": 2044,
+      "title": "Espionage report from Moon [1:45:9]",
+      "date": "29.10.2026 23:58:12",
+      "ts": 1793318292000,
+      "target": {
+        "coords": [
+          1,
+          45,
+          9
+        ],
+        "type": "moon",
+        "planetType": 3,
+        "name": "Moon"
+      },
+      "attackParams": {
+        "galaxy": 1,
+        "system": 45,
+        "position": 9,
+        "type": 3
+      },
+      "player": "Lieutenant Nusakan",
+      "counterEspionage": 1,
+      "resources": {
+        "metal": 210500,
+        "crystal": 98340,
+        "deuterium": 12007,
+        "energy": 0
+      },
+      "debris": {
+        "metal": 0,
+        "crystal": 0,
+        "deuterium": 0
+      },
+      "ships": {
+        "203": 30,
+        "207": 6
+      },
+      "defense": {},
+      "buildings": {},
+      "research": {},
+      "known": {
+        "research": false,
+        "buildings": false,
+        "defense": false,
+        "ships": true
+      }
+    },
+    {
+      "id": 2038,
+      "title": "Espionage report from Colony [1:39:4]",
+      "date": "29.10.2026 22:15:40",
+      "ts": 1793312140000,
+      "target": {
+        "coords": [
+          1,
+          39,
+          4
+        ],
+        "type": "planet",
+        "planetType": 1,
+        "name": "Colony"
+      },
+      "attackParams": {
+        "galaxy": 1,
+        "system": 39,
+        "position": 4,
+        "type": 1
+      },
+      "player": "Hagen",
+      "counterEspionage": 0,
+      "resources": {
+        "metal": 120345,
+        "crystal": 64210,
+        "deuterium": 30128,
+        "energy": -14
+      },
+      "debris": {
+        "metal": 2700,
+        "crystal": 900,
+        "deuterium": 0
+      },
+      "ships": {},
+      "defense": {
+        "401": 10,
+        "402": 4
+      },
+      "buildings": {},
+      "research": {},
+      "known": {
+        "research": false,
+        "buildings": false,
+        "defense": true,
+        "ships": true
+      }
+    }
+  ],
+  "battleFull": [
+    {
+      "id": 2053,
+      "defenderPlanet": {
+        "coords": [
+          1,
+          39,
+          4
+        ]
+      },
+      "date": "30.10.2026 00:50:22",
+      "loot": {
+        "metal": 60172,
+        "crystal": 32105,
+        "deuterium": 15064
+      },
+      "debris": {
+        "metal": 2700,
+        "crystal": 900,
+        "deuterium": 0
+      },
+      "recyclersNeeded": 1,
+      "moonCreated": false,
+      "attacker": {
+        "name": "Commander Vega",
+        "origin": "Commander Vega from Planet Homeworld [1:42:8]",
+        "mark": "undermark",
+        "characterClass": "Collector",
+        "weapons": 60,
+        "shields": 50,
+        "armour": 60
+      },
+      "defender": {
+        "name": "Hagen",
+        "origin": "Hagen",
+        "mark": "overmark",
+        "characterClass": null,
+        "weapons": 20,
+        "shields": 20,
+        "armour": 30
+      },
+      "rounds": 2,
+      "start": {
+        "attacker": {
+          "203": 20,
+          "204": 50
+        },
+        "defender": {
+          "401": 10,
+          "402": 4
+        }
+      },
+      "end": {
+        "attacker": {
+          "203": 20,
+          "204": 47
+        },
+        "defender": {}
+      },
+      "unitsLost": {
+        "attacker": {
+          "204": 3
+        },
+        "defender": {
+          "401": 10,
+          "402": 4
+        }
+      }
+    },
+    {
+      "id": 2050,
+      "defenderPlanet": {
+        "coords": [
+          1,
+          42,
+          8
+        ]
+      },
+      "date": "30.10.2026 00:12:03",
+      "loot": {
+        "metal": 76173,
+        "crystal": 49356,
+        "deuterium": 20615
+      },
+      "debris": {
+        "metal": 39000,
+        "crystal": 15000,
+        "deuterium": 0
+      },
+      "recyclersNeeded": 3,
+      "moonCreated": false,
+      "attacker": {
+        "name": "Admiral Rigel",
+        "origin": "Admiral Rigel from Planet Kronos [1:42:11]",
+        "mark": "undermark",
+        "characterClass": "General",
+        "weapons": 80,
+        "shields": 70,
+        "armour": 80
+      },
+      "defender": {
+        "name": "Commander Vega",
+        "origin": "Commander Vega",
+        "mark": "overmark",
+        "characterClass": "Collector",
+        "weapons": 60,
+        "shields": 50,
+        "armour": 60
+      },
+      "rounds": 2,
+      "start": {
+        "attacker": {
+          "203": 15,
+          "206": 30
+        },
+        "defender": {
+          "202": 5,
+          "204": 40,
+          "401": 60,
+          "402": 10
+        }
+      },
+      "end": {
+        "attacker": {
+          "203": 15,
+          "206": 30
+        },
+        "defender": {}
+      },
+      "unitsLost": {
+        "attacker": {},
+        "defender": {
+          "202": 5,
+          "204": 40,
+          "401": 60,
+          "402": 10
+        }
+      }
+    },
+    {
+      "id": 2034,
+      "defenderPlanet": {
+        "coords": [
+          1,
+          42,
+          8
+        ]
+      },
+      "date": "29.10.2026 21:40:10",
+      "loot": {
+        "metal": 0,
+        "crystal": 0,
+        "deuterium": 0
+      },
+      "debris": {
+        "metal": 23400,
+        "crystal": 10200,
+        "deuterium": 0
+      },
+      "recyclersNeeded": 2,
+      "moonCreated": false,
+      "attacker": {
+        "name": "Pirates",
+        "origin": "Pirates from Deep space [1:42:16]",
+        "mark": "overmark",
+        "characterClass": null,
+        "weapons": 40,
+        "shields": 40,
+        "armour": 40
+      },
+      "defender": {
+        "name": "Commander Vega",
+        "origin": "Commander Vega",
+        "mark": "undermark",
+        "characterClass": null,
+        "weapons": 60,
+        "shields": 50,
+        "armour": 60
+      },
+      "rounds": 2,
+      "start": {
+        "attacker": {
+          "204": 16,
+          "205": 4
+        },
+        "defender": {
+          "203": 25,
+          "204": 30,
+          "210": 1
+        }
+      },
+      "end": {
+        "attacker": {},
+        "defender": {
+          "203": 25,
+          "204": 28,
+          "210": 1
+        }
+      },
+      "unitsLost": {
+        "attacker": {
+          "204": 16,
+          "205": 4
+        },
+        "defender": {
+          "204": 2
+        }
+      }
+    }
+  ],
+  "snapshot": {
+    "bodyId": "messages",
+    "activeTab": "2",
+    "activeSubtab": "20",
+    "ids": [
+      2051,
+      2049,
+      2044,
+      2038
+    ],
+    "menuUnread": 6
+  }
+}

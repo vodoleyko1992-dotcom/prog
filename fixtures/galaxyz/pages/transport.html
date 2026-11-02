@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)https://ogamex.eu/Aeternum/game.php?page=transport -->
+<html lang="en" class="no-js"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Info - Aeternum (New) - Aeterum (New)</title>
+    <meta name="generator" content="GALAXYZ 1.8.git">
+    <!-- 
+
+	-->
+        
+
+
+    <link rel="stylesheet" type="text/css" href="./15_files/boilerplate.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/main.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/jquery.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/jquery.fancybox.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/validationEngine.jquery.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/marquee.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/new_tooltip.css">
+    <link rel="stylesheet" href="./15_files/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/formate_cleaned_safe.css">
+    <link rel="stylesheet" type="text/css" href="./15_files/notify-metro.css">
+    <link rel="shortcut icon" href="https://ogamex.eu/Aeternum/favicon.ico" type="image/x-icon">
+    <script type="text/javascript">
+        var ServerTimezoneOffset = 0;
+        var serverTime 	= new Date(2026, 9, 30, 10, 06, 53);
+        var startTime = serverTime.getTime();
+        var localTime = serverTime;
+        var localTS = startTime;
+        var Gamename = document.title;
+        var Ready		= "Ready";
+        var Skin		= "./styles/theme/gow/";
+        var Lang		= "en";
+        var head_info	= "Info";
+        var auth		= 0;
+        var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] 
+        var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+        var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+        var queryString	= "page=transport";
+
+        setInterval(function() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+        }, 1000);
+    </script>
+    <script type="text/javascript" src="./15_files/jquery.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.ui.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.cookie.js"></script>
+    <script type="text/javascript" src="./15_files/main.js"></script>
+    <script type="text/javascript" src="./15_files/util.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.validationEngine.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.validationEngine-en.js">
+    </script>
+    <script type="text/javascript" src="./15_files/tooltip.js"></script>
+    <script type="text/javascript" src="./15_files/base.js"></script>
+    <script type="text/javascript" src="./15_files/new_tooltip.js"></script>
+    <script type="text/javascript" src="./15_files/jquery.countdown.js"></script>
+    <script type="text/javascript" src="./15_files/topnav.js"></script>
+    <!--<script type="text/javascript" src="./scripts/game/notify.js"></script>-->
+    <!--<script type="text/javascript" src="./scripts/game/notify-metro.js"></script>-->
+    <script src="./15_files/fleetTable.js"></script>
+    
+    
+    <script type="text/javascript">
+        $(function() {
+            
+        });
+    </script>
+    <script type="text/javascript">
+        // <![CDATA[
+        function openWindow(url, width, height, options, name) {
+            width = width ? width : 800;
+            height = height ? height : 600;
+            options = options ? options : 'resizable=yes';
+            name = name ? name : 'openWindow';
+            window.open(
+                url,
+                name,
+                'screenX=' + (screen.width - width) / 2 + ',screenY=' + (screen.height - height) / 2 + ',width=' +
+                width + ',height=' + height + ',' + options
+            )
+        }
+        // ]]>
+    </script>
+    <script type="text/javascript">
+        jQuery(function($) {
+            $('._previous').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').prev()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:last').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+
+            $('._next').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').next()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:first').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+        });
+    </script>
+<meta content="extension" property="gosuslugi.plugin.extension.content"></head>
+
+<body id="shipyard" class="full">
+    <div id="tooltip" class="tip"></div>
+<!-- START main.topnav -->
+<div id="boxBG">
+    <div id="page">
+        <a name="anchor" id="anchor"></a>
+        <div id="info" class="header">
+            <div id="clearAdvice"></div>
+            <div id="playerName">Player: <span class="textBeefy"><a href="https://ogamex.eu/Aeternum/game.php?page=settings">vodoleyko1992</a></span></div>
+            <div id="bar">
+                <ul>
+                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=buddyList" target="_self">Friendships</a></li>                    <li><a href="javascript:OpenPopup(&#39;?page=notes&#39;, &#39;notes&#39;, 720, 300);">Notes</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=statistics&amp;range=194" target="_self">Statistics</a>
+                    </li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=search" target="_self">Search</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=settings" target="_self">Options</a></li>
+                                        <li><a href="https://ogamex.eu/Aeternum/game.php?page=battleSimulator" target="_self">Simulator</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=GiveBonus" target="_self">Voucher code</a></li>                    <li><a href="https://ogamex.eu/" target="_self">
+                            <font style="color:red;">Logout</font>
+                        </a></li>
+                </ul>
+            </div>
+            <div id="clock" class="servertime">Oct Fri 30 10:07:01</div>
+            <div id="planetSelect">
+                <table>
+                    <tbody><tr>
+                        <td id="planetImage">
+                            <img src="./15_files/s_dschjungelplanet07.gif" alt="">
+                        </td>
+                        <td id="planetSelectorWrapper">
+                            <select id="planetSelector" style="margin-bottom:0px">
+                                <option value="254102" selected="selected">Главная планета [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254104">Colony [2:68:7]</option>
+<option value="254105">Colony [2:68:8]</option>
+
+                            </select>
+                            <div style="width: 145px;float: left;margin: 0 10px;margin-bottom: 37px;">
+                                <div class="_previous" style="width: calc(50% - 2px);background: #0d1014;float: left;border: 1px solid #212121;border-top: none;cursor:pointer">
+                                    &lt;</div>
+                                <div class="_next" style="width: calc(50% - 1px);background: #0d1014;float: left;border: 1px solid #212121;border-left: none;border-top: none;cursor:pointer">
+                                    &gt;</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+
+            <div id="resTable">
+                <table>
+                    <tbody><tr>
+                                                                                                                        <td>
+                                        <img data-currentname="current_Metal" data-toolclass="tool_39" src="./15_files/metal.gif" alt="" class="tooltipHTML" title="
+                                    Metal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    1.513.557.548
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    3.416.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    1.932.927.923                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Crystal" data-toolclass="tool_39" src="./15_files/crystal.gif" alt="" class="tooltipHTML" title="
+                                    Crystal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    273.030.119
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.863.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    822.497.302                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Deuterium" data-toolclass="tool_39" src="./15_files/deuterium.gif" alt="" class="tooltipHTML" title="
+                                    Deuterium:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    372.046.022
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.016.750.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    394.585.192                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                <td>
+                                    <img data-currentname="current_Energy" data-toolclass="tool_39" src="./15_files/energy.gif" alt="" class="tooltipHTML" title="
+                                Energy:|
+                                &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Available: &lt;/th&gt;
+                                        &lt;td&gt;&lt;span class=&#39;current&#39;&gt;49.544&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Current production::&lt;/th&gt;
+                                        &lt;td&gt;
+                                            &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                2.502                                            &lt;/span&gt;
+                                        &lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Consumption:&lt;/th&gt;
+                                        &lt;td&gt;&lt;span style=&#39;color:red&#39; class=&#39;undermark&#39;&gt;-47.042&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                &lt;/table&gt;
+                            ">
+                                </td>
+
+                                                                                                                                                    <td>
+                                        <img data-currentname="current_Dark Matter" data-toolclass="tool_92" src="./15_files/darkmatter.gif" alt="" class="tooltipHTML" title="
+                                    Dark Matter:|
+                                    &lt;table class=&#39;resourceTooltip tool_92&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;&lt;span class=&#39;current&#39;&gt;606&lt;/span&gt;&lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                    
+                    </tr>
+
+                    <tr>
+                                                                                    <td class="res_current tooltip" id="current_metal" data-real="1513557548.4909" data-tooltip-content="1.517.852.943">1.517&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_crystal" data-real="273030118.69235" data-tooltip-content="274.857.890">274&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_deuterium" data-real="372046022.21594" data-tooltip-content="372.922.878">372&nbsp;M</td>
+                                                                                                                                                <td class="res_current tooltip Imperium tooltipRight js_hideTipOnMobile" t="2.502 / 49.544">
+                                    <span>
+                                        2.5K&nbsp;/&nbsp;49.5K
+                                    </span>
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_darkmatter" data-real="606" data-tooltip-content="606">
+                                    606
+                                </td>
+                                                    
+                    </tr>
+                </tbody></table>
+            </div>
+
+
+            <div id="officers" class="">
+                                                                    <a href="https://ogamex.eu/Aeternum/game.php?page=vote" class="tooltipHTML   commander js_hideTipOnMobile" title="Vote notification|You can vote and get free Dark Matter">
+                        <img class="glows" src="./15_files/alert.gif" width="30" height="30">
+                    </a>
+                            </div>
+
+
+
+            <div class="messages-section">
+                                    <a href="https://ogamex.eu/Aeternum/game.php?page=messages" class="messages-button tooltipBottom js_hideTipOnMobile" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Messages  &lt;/div&gt;">
+                        <span class="new-msg-count">
+                                2
+                        </span>                    </a>
+                    <a href="https://discord.gg/wjBcjvM" class="chat-button tooltipBottom js_hideTipOnMobile" target="_blank" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Join our Discord server&lt;/div&gt;">
+                    </a>
+                            </div>
+
+            
+
+</div><!-- END main.topnav -->
+<!-- START main.navigation -->
+<div id="links">
+    <ul id="menuTable">
+        <li>
+            <span class="menu_icon">
+                                    <a class="Imperium tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=imperium" title="Empire" target="_self">
+                    </a>
+                            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=overview" target="_self">
+                <span class="textlabel">Overview</span>
+            </a>
+        </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Resources tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=resources" title="Resources" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=buildings" target="_self">
+                    <span class="textlabel">Buildings</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="FleetTrader tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=fleetDealer" title="Merchant of Fleets" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=trader" target="_self">
+                    <span class="textlabel">
+                        <font style="color:yellow">Market</font>
+                    </span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Research tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=techtree" title="Technologies" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=research" target="_self">
+                    <span class="textlabel">Research</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                <a class="Tersane tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=tournament" title="Tournament" target="_self">
+                </a>
+            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=fleet" target="_self">
+                    <span class="textlabel">Hangar</span>
+                </a>
+                    </li>
+
+                <li>
+            <span class="menu_icon">
+                <img src="./15_files/navi_ikon_defense_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=defense" target="_self">
+                <span class="textlabel">Defenses</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Filo tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=transport" title="Transport" target="_self">
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=fleetTable" target="_self">
+                <span class="textlabel">Fleet</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Galaxy tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=donatebis" title="Shop">
+
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=galaxy" target="_self">
+                <span class="textlabel">Galaxy</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./15_files/navi_ikon_alliance_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=alliance" target="_self">
+                <span class="textlabel">Alliance</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./15_files/navi_ikon_premium_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=officier" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Officers</font>
+                </span>
+            </a>
+        </li>        <!--<li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=ressprem" target="_self">
+					<span class="textlabel"><font style="color:yellow">Black Market</font></span>
+				</a>
+		</li>-->
+        <li>
+            <span class="menu_icon">
+                <div class="Satinal"></div>
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=premium" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Premium</font>
+                </span>
+            </a>
+        </li>
+        <!-- <li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=satinal" target="_self">
+					<span class="textlabel"><font style="color:orange">satin_al</font></span>
+				</a>
+		</li> !-->
+
+
+
+            </ul>
+        <script type="text/javascript">
+        var viewShortlyNumber = 1;
+        		var vacation			= 0;
+        		        		        resourceTicker({
+            			available: (1513557548.4908643),
+            			limit: [0, "3416925000"],
+            			production: 1932927923.2055,
+            			valueElem: "current_metal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (273030118.69235075),
+            			limit: [0, "1863925000"],
+            			production: 822497302.17436,
+            			valueElem: "current_crystal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (372046022.2159379),
+            			limit: [0, "1016750000"],
+            			production: 394585191.6862,
+            			valueElem: "current_deuterium"
+        }, true);
+        		        		        		        		        		        		
+    </script>
+    
+            </div>
+<!-- END main.navigation -->
+<div id="inhalt">
+<div class="headerRS">
+
+	<table style="width:670px;margin-left:0px;padding-top:7px;">
+		<tbody><tr>
+			<td style="background:none;border:none;color:#fff;"><b>Info</b></td>
+		</tr>
+	</tbody></table>
+	</div>
+
+	<div class="mainRS">
+<table class="list listOfOthers hard-table">
+	<tbody><tr>
+		<td><img height="36" src="./15_files/warning.png"><br><p>You need Admiral officier at level 10!!</p><br><p><a href="https://ogamex.eu/Aeternum/game.php?page=overview"><button class="button black medium">Back</button></a></p></td>
+	</tr>
+</tbody></table>
+</div>
+<div class="footerRS"></div></div>
+</div>
+
+<div class="gototop"></div>
+<div class="clear"></div>
+<script type="text/javascript">
+    $(window).scroll(function() {
+        if ($(this).scrollTop() >= 50) { // If page is scrolled more than 50px
+            $('#return-to-top').fadeIn(200); // Fade in the arrow
+        } else {
+            $('#return-to-top').fadeOut(200); // Else fade out the arrow
+        }
+    });
+    $('#return-to-top').click(function() { // When arrow is clicked
+        $('body,html').animate({
+            scrollTop: 0 // Scroll to top of body
+        }, 500);
+    });
+</script>
+</div>
+<div id="siteFooter" class="clearfloat">
+    <div class="fcontent">
+        <div class="fleft textLeft">
+            <b>© 2026 - OGAMEX</b>
+
+             </div>
+        <div class="fright textRight">
+            <a href="https://ogamex.eu/Aeternum/game.php?page=banList" target="_self">
+                <font style="color:red;">Banned</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=records" target="_self">
+                <font style="color:orange;">Records</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=battleHall" target="_self">
+                <font style="color:#6F9FC8;">Hall of Fame</font>
+            </a> |
+            <!--<a href="game.php?page=questions" target="_self">FAQ</a> |-->
+
+            <a href="https://ogamex.eu/Aeternum/game.php?page=ticket" target="_self">Support</a> |            <a href="https://ogamex.eu/Aeternum/index.php?page=rules" target="rules">Rules</a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=vote" target="_self">
+                <font style="color:green;">Vote &amp; Reward</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=transport#" onclick="return Dialog.Server();">
+                <font style="color:green;">Game information</font>
+            </a>
+        </div>
+        <br class="clearfloat">
+    </div>
+</div>
+
+
+<div id="fancybox-tmp"></div><div id="fancybox-loading"><div></div></div><div id="fancybox-overlay"></div><div id="fancybox-wrap"><div id="fancybox-outer"><div class="fancybox-bg" id="fancybox-bg-n"></div><div class="fancybox-bg" id="fancybox-bg-ne"></div><div class="fancybox-bg" id="fancybox-bg-e"></div><div class="fancybox-bg" id="fancybox-bg-se"></div><div class="fancybox-bg" id="fancybox-bg-s"></div><div class="fancybox-bg" id="fancybox-bg-sw"></div><div class="fancybox-bg" id="fancybox-bg-w"></div><div class="fancybox-bg" id="fancybox-bg-nw"></div><div id="fancybox-content"></div><a id="fancybox-close"></a><div id="fancybox-title"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a></div></div></body></html>

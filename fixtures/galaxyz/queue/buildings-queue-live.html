@@ -1,0 +1,1944 @@
+
+<!doctype html>
+<html lang="ru" class="no-js" data-ogx-suite="ready" data-ogx-live="ready" data-ogx-infinity="ready"><!-- ogx: commented-out markup removed --><head>
+    <title>Готово - Постройки - Aeternum (New) - Aeterum (New)</title>
+    <meta name="generator" content="GALAXYZ 1.8.git">
+    <!-- 
+
+	-->
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/base/boilerplate.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/ingame/main.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.fancybox.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/base/validationEngine.jquery.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/base/marquee.css?v=.git">
+    <link rel="stylesheet" type="text/css" href="./styles/theme/gow/new_tooltip.css?v=.git">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="./styles/theme/gow/formate_cleaned_safe.css">
+    <link rel="stylesheet" type="text/css" href="./styles/resource/css/notify-metro.css">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <script type="text/javascript" data-ogx-stripped="inline"></script>
+    <script type="text/javascript" src="./scripts/base/jquery.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/base/jquery.ui.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/base/jquery.cookie.js?v=.git"></script>
+    <script type="text/javascript" src="./styles/resource/back-to-top-master/assets/js/main.js?v=.git"></script>
+    <script type="text/javascript" src="./styles/resource/back-to-top-master/assets/js/util.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/base/jquery.fancybox.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/base/jquery.validationEngine.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/l18n/validationEngine/jquery.validationEngine-ru.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/base/tooltip.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/game/base.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/game/new_tooltip.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/game/jquery.countdown.js?v=.git"></script>
+    <script type="text/javascript" src="./scripts/game/topnav.js?v=2676"></script>
+    <!-- ogx: commented-out markup removed -->
+    <!-- ogx: commented-out markup removed -->
+    <script src="scripts/game/fleetTable.js"></script>
+            <script type="text/javascript" src="./scripts/game/buildlist.js?v=.git"></script>
+    
+    
+    <script type="text/javascript" data-ogx-stripped="inline"></script>
+    <script type="text/javascript" data-ogx-stripped="inline"></script>
+    <script type="text/javascript" data-ogx-stripped="inline"></script>
+<style id="ogx-core">
+.ogx-root, .ogx-panel, .ogx-modal-overlay, .ogx-toasts, .ogx-tooltip, .ogx-banner, .ogx-settings-form, .ogx-table, .ogx-gx-slot {
+  --ogx-bg: #0d1014; --ogx-panel: #161c24; --ogx-panel-2: #1c242e; --ogx-border: #2b3846; --ogx-text: #cfd8e3; --ogx-muted: #8593a3;
+  --ogx-accent: #6f9fd8; --ogx-ok: #4caf50; --ogx-warn: #ff9800; --ogx-bad: #f44336;
+  --ogx-metal: #a9b5c4; --ogx-crystal: #79c2e8; --ogx-deuterium: #7fe0b4; --ogx-energy: #f2d16b;
+  font: 11px/1.4 Verdana, Arial, sans-serif; color: var(--ogx-text); box-sizing: border-box;
+  /* GALAXYZ centres everything from body (and 2Moons skins set letter-spacing / uppercase on links): reset for own widgets */
+  text-align: left; letter-spacing: normal; text-transform: none; text-shadow: none;
+}
+.ogx-root *, .ogx-panel *, .ogx-modal-overlay * { box-sizing: border-box; }
+.ogx-root [hidden], .ogx-panel[hidden], .ogx-panel [hidden], .ogx-tooltip[hidden], .ogx-menu-badge[hidden], .ogx-badge[hidden] { display: none !important; }
+.ogx-float-root { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 9000; }
+
+/* buttons */
+.ogx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 22px; padding: 2px 8px; border: 1px solid var(--ogx-border);
+  border-radius: 3px; background: var(--ogx-panel-2); color: var(--ogx-text); font: inherit; cursor: pointer; white-space: nowrap; }
+.ogx-btn:hover { border-color: var(--ogx-accent); color: #fff; }
+.ogx-btn:focus-visible { outline: 1px solid var(--ogx-accent); outline-offset: 1px; }
+.ogx-btn:disabled { opacity: .5; cursor: default; }
+.ogx-btn-primary { background: #24486e; border-color: var(--ogx-accent); color: #fff; }
+.ogx-btn-danger { background: #5a1f1c; border-color: var(--ogx-bad); color: #fff; }
+.ogx-btn-icon { min-width: 22px; padding: 2px 4px; }
+.ogx-icon { display: inline-block; vertical-align: middle; flex: none; }
+
+/* menu entry (OgameX ul#menuTableTools; GALAXYZ ul#menuTable: li 176x29, span.menu_icon floats right, 38px wide) */
+.ogx-menu-entry .ogx-menu-icon { display: flex; align-items: center; justify-content: center; color: var(--ogx-accent, #6f9fd8); font-size: 14px; background: none; }
+.ogx-menu-entry a.menubutton { position: relative; }
+#menuTable > li.ogx-menu-entry .ogx-menu-icon { width: 27px; height: 27px; margin: 1px 0 0 4px; border-radius: 4px; font-size: 16px; line-height: 27px;
+  text-shadow: 0 0 6px rgba(111,159,216,.8); cursor: pointer; }
+#menuTable > li.ogx-menu-entry a.menubutton .ogx-menu-badge { position: absolute; top: 2px; right: 4px; line-height: 13px; }
+.ogx-menu-badge { display: inline-block; margin-left: 4px; padding: 0 4px; border-radius: 7px; background: #f44336; color: #fff; font-size: 9px; line-height: 13px; }
+
+/* side panel */
+.ogx-panel { position: fixed; top: 0; bottom: 0; z-index: 9000; width: min(360px, 100vw); max-width: 100vw; display: flex; flex-direction: column;
+  background: var(--ogx-panel); border: 1px solid var(--ogx-border); box-shadow: 0 0 18px rgba(0,0,0,.6); }
+.ogx-panel-right { right: 0; border-right: 0; }
+.ogx-panel-left { left: 0; border-left: 0; }
+.ogx-panel-header { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--ogx-border); background: var(--ogx-bg); }
+.ogx-panel-title { flex: 1; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ogx-panel-body { flex: 1; overflow: auto; padding: 6px 8px; }
+.ogx-panel-status { padding: 4px 8px; border-top: 1px solid var(--ogx-border); color: var(--ogx-muted); }
+.ogx-panel-grip { position: absolute; top: 0; bottom: 0; width: 5px; cursor: ew-resize; }
+.ogx-panel-right .ogx-panel-grip { left: -3px; }
+.ogx-panel-left .ogx-panel-grip { right: -3px; }
+
+/* tabs */
+.ogx-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 6px 0; border-bottom: 1px solid var(--ogx-border); background: var(--ogx-bg); }
+.ogx-tab { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid transparent; border-bottom: 0; border-radius: 3px 3px 0 0;
+  background: transparent; color: var(--ogx-muted); font: inherit; cursor: pointer; }
+.ogx-tab:hover { color: var(--ogx-text); }
+.ogx-tab.ogx-active { background: var(--ogx-panel); border-color: var(--ogx-border); color: #fff; }
+.ogx-tab-groups { padding-top: 5px; }
+.ogx-tab-groups .ogx-tab { font-weight: bold; letter-spacing: .3px; }
+.ogx-tab-groups .ogx-tab.ogx-active { color: var(--ogx-accent); }
+.ogx-badge { display: inline-block; min-width: 14px; padding: 0 4px; border-radius: 7px; background: var(--ogx-accent); color: #000; font-size: 9px; line-height: 14px; text-align: center; }
+.ogx-badge.ogx-bad { background: var(--ogx-bad); color: #fff; }
+
+/* tables */
+.ogx-table { width: 100%; border-collapse: collapse; background: var(--ogx-panel); }
+.ogx-table th, .ogx-table td { padding: 3px 5px; border-bottom: 1px solid var(--ogx-border); text-align: left; vertical-align: middle; }
+.ogx-table thead th { position: sticky; top: 0; z-index: 1; background: var(--ogx-bg); color: #fff; font-weight: bold; white-space: nowrap; }
+.ogx-table tbody tr:nth-child(even) td { background: rgba(255,255,255,.025); }
+.ogx-table tbody tr:hover td { background: rgba(111,159,216,.12); }
+.ogx-table th.ogx-sortable { cursor: pointer; user-select: none; }
+.ogx-table th.ogx-sortable::after { content: ''; display: inline-block; margin-left: 4px; opacity: .4; }
+.ogx-table th.ogx-sorted-asc::after { content: '▲'; opacity: 1; font-size: 8px; }
+.ogx-table th.ogx-sorted-desc::after { content: '▼'; opacity: 1; font-size: 8px; }
+.ogx-table .ogx-right { text-align: right; font-variant-numeric: tabular-nums; }
+.ogx-table .ogx-center { text-align: center; }
+.ogx-table tr.ogx-clickable { cursor: pointer; }
+.ogx-table tr.ogx-empty td { color: var(--ogx-muted); text-align: center; padding: 10px; }
+
+/* modal */
+.ogx-modal-overlay { position: fixed; inset: 0; z-index: 9500; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.55); }
+.ogx-modal { max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: var(--ogx-panel); border: 1px solid var(--ogx-border);
+  border-radius: 4px; box-shadow: 0 6px 30px rgba(0,0,0,.7); }
+.ogx-modal-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--ogx-border); background: var(--ogx-bg); }
+.ogx-modal-title { flex: 1; font-weight: bold; color: #fff; }
+.ogx-modal-body { padding: 10px; overflow: auto; }
+.ogx-modal-buttons { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--ogx-border); }
+.ogx-confirm-text > div + div { margin-top: 3px; }
+.ogx-warn-text { color: var(--ogx-warn); }
+
+/* toasts */
+.ogx-toasts { position: fixed; right: 16px; bottom: 16px; z-index: 9600; display: flex; flex-direction: column; gap: 6px; max-width: min(360px, calc(100vw - 32px)); }
+.ogx-toast { padding: 8px 10px; border-radius: 3px; border-left: 3px solid var(--ogx-accent); background: var(--ogx-panel); color: var(--ogx-text);
+  box-shadow: 0 2px 10px rgba(0,0,0,.6); cursor: pointer; }
+.ogx-toast-ok { border-left-color: var(--ogx-ok); }
+.ogx-toast-warn { border-left-color: var(--ogx-warn); }
+.ogx-toast-error { border-left-color: var(--ogx-bad); }
+
+/* tooltip */
+.ogx-tooltip { position: fixed; z-index: 9700; max-width: 360px; padding: 6px 8px; border: 1px solid var(--ogx-border); border-radius: 3px;
+  background: #0b0e12; color: var(--ogx-text); box-shadow: 0 2px 10px rgba(0,0,0,.7); pointer-events: none; white-space: normal; }
+
+/* bars, countdowns, colours */
+.ogx-bar { position: relative; height: 4px; min-width: 30px; border-radius: 2px; background: #26303b; overflow: hidden; }
+.ogx-bar-fill { height: 100%; background: var(--ogx-ok); }
+.ogx-bar.ogx-warn .ogx-bar-fill { background: var(--ogx-warn); }
+.ogx-bar.ogx-bad .ogx-bar-fill { background: var(--ogx-bad); }
+.ogx-countdown { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ogx-countdown.ogx-done { color: var(--ogx-ok); }
+.ogx-ok-text, .ogx-root .ogx-ok-text { color: var(--ogx-ok); }
+.ogx-bad-text { color: var(--ogx-bad); }
+.ogx-muted { color: var(--ogx-muted); }
+.ogx-metal { color: var(--ogx-metal); } .ogx-crystal { color: var(--ogx-crystal); } .ogx-deuterium { color: var(--ogx-deuterium); } .ogx-energy { color: var(--ogx-energy); }
+
+/* forms */
+.ogx-settings-form fieldset { margin: 0 0 8px; padding: 6px 8px; border: 1px solid var(--ogx-border); border-radius: 3px; }
+.ogx-settings-form legend { padding: 0 4px; color: #fff; font-weight: bold; }
+.ogx-settings-section { margin: 6px 0 2px; color: var(--ogx-accent); font-weight: bold; }
+.ogx-field { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0; }
+.ogx-field > label { flex: 1 1 180px; }
+.ogx-field-bool { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.ogx-hint { flex-basis: 100%; color: var(--ogx-muted); font-size: 10px; }
+.ogx-root input[type=text], .ogx-root input[type=search], .ogx-root input[type=number], .ogx-root select, .ogx-root textarea,
+.ogx-panel input[type=search],
+.ogx-settings-form input[type=text], .ogx-settings-form input[type=search], .ogx-settings-form input[type=number], .ogx-settings-form select, .ogx-settings-form textarea,
+.ogx-input { min-height: 20px; padding: 1px 4px; border: 1px solid var(--ogx-border); border-radius: 2px; background: var(--ogx-bg); color: var(--ogx-text); font: inherit; }
+.ogx-root input[type=checkbox], .ogx-root input[type=radio] { margin: 0 4px 0 0; vertical-align: middle; }
+.ogx-settings-form input[type=number] { width: 90px; }
+.ogx-settings-form textarea { width: 100%; font-family: monospace; }
+.ogx-invalid { border-color: var(--ogx-bad) !important; }
+
+/* banner (fleet prefill and module notices) */
+.ogx-banner { display: flex; align-items: center; gap: 8px; margin: 4px 0; padding: 6px 8px; border: 1px solid var(--ogx-accent); border-radius: 3px;
+  background: rgba(36,72,110,.85); color: #fff; }
+.ogx-banner > .ogx-btn { margin-left: auto; }
+
+/* galaxy row slot (direct child of #galaxyRowN, survives cell re-render) */
+.ogx-gx-slot { display: inline-flex; align-items: center; gap: 2px; margin-left: 2px; vertical-align: middle; }
+.ogx-gx-slot:empty { display: none; }
+.ogx-gx-header { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
+</style><style id="ogx-s-suite">
+.ogx-s-hub-h { font-weight: bold; color: #fff; margin: 4px 0 6px; font-size: 13px; }
+.ogx-s-hub-muted { color: var(--ogx-muted, #8593a3); margin: 4px 0 8px; line-height: 1.4; }
+.ogx-s-hub-actions { margin: 6px 0 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ogx-s-hub-modules { margin: 4px 0 8px; }
+.ogx-s-hub-modules label { cursor: pointer; }
+.ogx-s-hub-state.ogx-ok { color: var(--ogx-ok, #4caf50); }
+.ogx-s-hub-state.ogx-muted { color: var(--ogx-muted, #8593a3); }
+.ogx-s-hub-note { margin: 6px 0; padding: 6px; border: 1px solid var(--ogx-border, #2b3846); border-radius: 3px; }
+.ogx-s-hub-list { margin: 4px 0 8px 18px; padding: 0; list-style: disc; }
+.ogx-s-hub-list li { margin: 2px 0; }
+.ogx-s-hub-launcher { position: fixed; left: 8px; bottom: 8px; z-index: 8990; }
+</style><style id="ogx-l-menu">
+.ogx-l-menu-modal { font-size: 12px; line-height: 1.45; }
+.ogx-l-menu-head { margin-bottom: 8px; }
+.ogx-l-menu-title { font-weight: bold; color: var(--ogx-accent, #6cf); }
+.ogx-l-menu-sub, .ogx-l-menu-muted { color: var(--ogx-muted, #8a96a3); }
+.ogx-l-menu-muted { font-size: 11px; margin: 2px 0 6px; }
+.ogx-l-menu-coexist { margin: 6px 0 10px; }
+.ogx-l-menu-section { border-top: 1px solid var(--ogx-border, #2a3440); padding: 8px 0 6px; }
+.ogx-l-menu-h { margin: 0 0 6px; font-size: 13px; color: var(--ogx-text, #dde); }
+.ogx-l-menu-fresh { width: 100%; }
+.ogx-l-menu-fresh td, .ogx-l-menu-fresh th { white-space: nowrap; }
+.ogx-l-menu-coords { color: var(--ogx-muted, #8a96a3); }
+.ogx-l-menu-current { font-weight: bold; }
+.ogx-l-menu-moon { padding-left: 10px; }
+.ogx-l-menu-age.ogx-ok { color: var(--ogx-ok, #6c6); }
+.ogx-l-menu-age.ogx-warn { color: var(--ogx-warn, #fc6); }
+.ogx-l-menu-age.ogx-bad { color: var(--ogx-bad, #f66); }
+.ogx-l-menu-actions { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ogx-l-menu-progress { margin-top: 8px; }
+.ogx-l-menu-prog-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; gap: 8px; }
+.ogx-l-menu-result { margin-top: 8px; }
+.ogx-l-menu-result.ogx-warn { color: var(--ogx-warn, #fc6); }
+.ogx-l-menu-errors { margin: 4px 0 0 16px; padding: 0; }
+.ogx-l-menu-server { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.ogx-l-menu-server dt { color: var(--ogx-muted, #8a96a3); }
+.ogx-l-menu-server dd { margin: 0; }
+.ogx-l-menu-server dd.ogx-l-menu-unknown { color: var(--ogx-muted, #8a96a3); font-style: italic; }
+.ogx-l-menu-notice { white-space: pre-line; }
+.ogx-l-menu-clock { display: inline-block; margin-left: 12px; color: #9c0; font-size: 11px; }
+.ogx-l-menu-clock-ping.ogx-warn { color: #fc6; }
+.ogx-l-menu-clock-ping.ogx-bad { color: #f66; }
+</style><style id="ogx-l-planetbar">
+#planetbarcomponent.ogx-l-planetbar-host { z-index: 3; }
+.ogx-l-planetbar-prod { position: absolute; left: 100%; top: 2px; margin-left: 6px; width: 200px; z-index: 5; box-sizing: border-box;
+  padding: 2px 4px; border: 1px solid #2b3846; border-radius: 3px; background: rgba(13,16,20,.88);
+  font: 10px/12px Verdana, Arial, sans-serif; color: #cfd8e3; text-align: left; white-space: nowrap; }
+.ogx-l-planetbar-prod * { box-sizing: border-box; }
+.ogx-l-planetbar-prod.ogx-l-planetbar-compact { top: 50%; transform: translateY(-50%); padding: 1px 3px; }
+.ogx-l-planetbar-prod.ogx-l-planetbar-inflow { position: relative; left: auto; top: auto; transform: none; width: auto; margin: 0 0 4px 5px; }
+.ogx-l-planetbar-inflow .ogx-l-planetbar-stock { flex-basis: 54px; }
+.ogx-l-planetbar-inflow .ogx-l-planetbar-build { height: auto; white-space: normal; }
+.ogx-l-planetbar-inflow .ogx-l-planetbar-rate { font-size: 9px; }
+.ogx-l-planetbar-inflow .ogx-l-planetbar-sline { flex-wrap: wrap; height: auto; column-gap: 6px; }
+.ogx-l-planetbar-part { display: block; overflow: hidden; }
+.ogx-l-planetbar-prod:not(.ogx-l-planetbar-raider) .ogx-l-planetbar-moon { display: none; }
+#planetList.ogx-l-planetbar-moons .ogx-l-planetbar-prod:not(.ogx-l-planetbar-raider) .ogx-l-planetbar-planet { display: none; }
+#planetList.ogx-l-planetbar-moons .ogx-l-planetbar-prod:not(.ogx-l-planetbar-raider) .ogx-l-planetbar-moon { display: block; }
+.ogx-l-planetbar-raider { width: 196px; display: flex; gap: 4px; }
+.ogx-l-planetbar-raider .ogx-l-planetbar-part { flex: 1 1 0; min-width: 0; display: block; }
+.ogx-l-planetbar-raider .ogx-l-planetbar-stock { flex: 1 1 auto; }
+.ogx-l-planetbar-line { display: flex; align-items: center; gap: 3px; height: 12px; margin: 0 0 1px; overflow: hidden; }
+.ogx-l-planetbar-lbl { flex: 0 0 9px; font-weight: bold; }
+.ogx-l-planetbar-r-metal.ogx-l-planetbar-lbl { color: #a9b5c4; } .ogx-l-planetbar-r-crystal.ogx-l-planetbar-lbl { color: #79c2e8; } .ogx-l-planetbar-r-deuterium.ogx-l-planetbar-lbl { color: #7fe0b4; } .ogx-l-planetbar-r-energy.ogx-l-planetbar-lbl { color: #f2d16b; }
+.ogx-l-planetbar-stock { position: relative; flex: 0 0 82px; height: 11px; border-radius: 2px; background: #26303b; overflow: hidden; }
+.ogx-l-planetbar-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(76,175,80,.45); }
+.ogx-l-planetbar-stock.ogx-l-planetbar-warn .ogx-l-planetbar-fill { background: rgba(255,152,0,.6); }
+.ogx-l-planetbar-stock.ogx-l-planetbar-bad .ogx-l-planetbar-fill { background: rgba(244,67,54,.65); }
+.ogx-l-planetbar-energy .ogx-l-planetbar-fill { background: rgba(242,209,107,.35); }
+.ogx-l-planetbar-energy.ogx-l-planetbar-warn .ogx-l-planetbar-fill { background: rgba(255,152,0,.6); }
+.ogx-l-planetbar-energy.ogx-l-planetbar-bad .ogx-l-planetbar-fill { background: rgba(244,67,54,.65); }
+.ogx-l-planetbar-val { position: relative; display: block; padding: 0 2px; text-align: right; color: #fff; text-shadow: 0 0 2px #000; }
+.ogx-l-planetbar-rate { flex: 1 1 auto; text-align: right; color: #8fbf8f; overflow: hidden; }
+.ogx-l-planetbar-rate.ogx-l-planetbar-warn, .ogx-l-planetbar-fusion.ogx-l-planetbar-warn { color: #ff9800; }
+.ogx-l-planetbar-rate.ogx-l-planetbar-bad, .ogx-l-planetbar-fusion.ogx-l-planetbar-bad { color: #f44336; }
+.ogx-l-planetbar-fusion { flex: 1 1 auto; text-align: right; color: #cfd8e3; }
+.ogx-l-planetbar-sline { justify-content: space-between; }
+.ogx-l-planetbar-sum { color: #fff; }
+.ogx-l-planetbar-stock.ogx-l-planetbar-unknown .ogx-l-planetbar-fill { background: transparent; }
+.ogx-l-planetbar-rate.ogx-l-planetbar-muted { color: #8593a3; }
+.ogx-l-planetbar-need.ogx-l-planetbar-ok { color: #8fbf8f; } .ogx-l-planetbar-need.ogx-l-planetbar-bad { color: #f44336; } .ogx-l-planetbar-need.ogx-l-planetbar-muted, .ogx-l-planetbar-muted { color: #8593a3; }
+.ogx-l-planetbar-build { color: #6f9fd8; gap: 4px; }
+.ogx-l-planetbar-build .ogx-l-planetbar-bname { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.ogx-l-planetbar-build.ogx-l-planetbar-down { color: #ff9800; }
+.ogx-l-planetbar-build.ogx-l-planetbar-stale { color: #8593a3; font-style: italic; }
+.ogx-l-planetbar-build .ogx-countdown { flex: none; color: #fff; }
+.ogx-l-planetbar-oneline { margin: 0; gap: 2px; }
+.ogx-l-planetbar-oneline .ogx-l-planetbar-stock { flex: 1 1 0; min-width: 0; }
+.ogx-l-planetbar-ctimer { flex: none; }
+.ogx-l-planetbar-ctimer .ogx-l-planetbar-line { margin: 0; height: 11px; }
+.ogx-l-planetbar-nomoon { color: #8593a3; }
+.ogx-l-planetbar-ships { position: absolute; display: block; height: 3px; background: rgba(38,48,59,.9); border-radius: 2px; overflow: hidden; pointer-events: auto; }
+.ogx-l-planetbar-ships-planet { left: 10px; right: 10px; bottom: 1px; }
+.ogx-l-planetbar-ships-moon { left: 0; right: 0; bottom: -3px; height: 2px; }
+.ogx-l-planetbar-ships.ogx-l-planetbar-ships-inflow { position: relative; left: auto; right: auto; bottom: auto; margin: 2px 0 0; height: 3px; }
+.ogx-l-planetbar-ships-fill { display: block; height: 100%; }
+.ogx-l-planetbar-ships-fill.ogx-l-planetbar-ok { background: #4caf50; } .ogx-l-planetbar-ships-fill.ogx-l-planetbar-warn { background: #ff9800; } .ogx-l-planetbar-ships-fill.ogx-l-planetbar-bad { background: #f44336; }
+.ogx-l-planetbar-switch[hidden] { display: none; }
+.ogx-l-planetbar-switch { display: flex; justify-content: center; gap: 2px; margin: 2px 0; }
+.ogx-l-planetbar-switch-btn { padding: 0 5px; height: 15px; border: 1px solid #2b3846; border-radius: 3px; background: #161c24; color: #8593a3; font: 10px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-l-planetbar-switch-btn:hover { color: #fff; border-color: #6f9fd8; }
+.ogx-l-planetbar-switch-btn.ogx-l-planetbar-on { color: #fff; background: #24486e; border-color: #6f9fd8; }
+</style><style id="ogx-l-inflight">
+.ogx-l-inflight-totals { position: relative; box-sizing: border-box; clear: both; margin: 4px 0 2px; width: 340px; padding: 2px 3px; border: 1px solid #2b3846; border-radius: 3px;
+  background: rgba(13,16,20,.9); font: 10px/13px Verdana, Arial, sans-serif; color: #cfd8e3; text-align: left; white-space: nowrap; z-index: 4; }
+.ogx-l-inflight-totals * { box-sizing: border-box; }
+#planetbarcomponent.ogx-l-inflight-host { z-index: 3; }
+/* The block can be wider than the right column and reach the game's fixed scroll-to-top button (1366 px windows): keep the button on top. */
+body .gototop { z-index: 20; }
+.ogx-l-inflight-totals.ogx-l-inflight-compact { width: 300px; }
+.ogx-l-inflight-totals.ogx-l-inflight-narrow { width: auto; min-width: 0; }
+.ogx-l-inflight-narrow .ogx-l-inflight-cols { display: none; }
+.ogx-l-inflight-narrow .ogx-l-inflight-title { flex: 1 1 auto; }
+.ogx-l-inflight-narrow .ogx-l-inflight-line { flex-wrap: wrap; column-gap: 0; }
+.ogx-l-inflight-narrow .ogx-l-inflight-lbl { flex: 0 0 100%; color: #cfd8e3; }
+.ogx-l-inflight-narrow .ogx-l-inflight-v, .ogx-l-inflight-narrow .ogx-l-inflight-need { flex: 0 0 50%; }
+.ogx-l-inflight-narrow .ogx-l-inflight-v::before { color: #8593a3; font-weight: normal; }
+.ogx-l-inflight-narrow .ogx-l-inflight-v.ogx-l-inflight-r-metal::before { content: 'М '; } .ogx-l-inflight-narrow .ogx-l-inflight-v.ogx-l-inflight-r-crystal::before { content: 'К '; }
+.ogx-l-inflight-narrow .ogx-l-inflight-v.ogx-l-inflight-r-deuterium::before { content: 'Д '; } .ogx-l-inflight-narrow .ogx-l-inflight-v.ogx-l-inflight-r-sum::before { content: 'Σ '; }
+.ogx-l-inflight-head { display: flex; align-items: center; gap: 2px; border-bottom: 1px solid #2b3846; margin-bottom: 1px; }
+.ogx-l-inflight-title { flex: 0 0 70px; font-weight: bold; color: #fff; }
+.ogx-l-inflight-cols { flex: 1 1 auto; display: flex; }
+.ogx-l-inflight-ch { flex: 1 1 0; text-align: right; font-weight: bold; color: #8593a3; }
+.ogx-l-inflight-btn { flex: none; width: 14px; height: 13px; padding: 0; border: 1px solid #2b3846; border-radius: 2px; background: #161c24; color: #8593a3; font: 9px/11px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-l-inflight-btn:hover { color: #fff; border-color: #6f9fd8; }
+.ogx-l-inflight-collapsed .ogx-l-inflight-body { display: none; }
+.ogx-l-inflight-line { display: flex; align-items: center; gap: 3px; min-height: 13px; }
+.ogx-l-inflight-lbl { flex: 0 0 70px; color: #8593a3; overflow: hidden; text-overflow: ellipsis; }
+.ogx-l-inflight-v { flex: 1 1 0; min-width: 0; text-align: right; color: #fff; overflow: hidden; text-overflow: ellipsis; }
+.ogx-l-inflight-l-grand .ogx-l-inflight-v { font-weight: bold; }
+.ogx-l-inflight-l-prod .ogx-l-inflight-v { color: #8fbf8f; }
+.ogx-l-inflight-l-inflight .ogx-l-inflight-v { color: #79c2e8; }
+.ogx-l-inflight-v.ogx-l-inflight-approx { font-style: italic; }
+.ogx-l-inflight-ch.ogx-l-inflight-r-metal { color: #a9b5c4; } .ogx-l-inflight-ch.ogx-l-inflight-r-crystal { color: #79c2e8; } .ogx-l-inflight-ch.ogx-l-inflight-r-deuterium { color: #7fe0b4; }
+.ogx-l-inflight-l-need { justify-content: space-between; }
+.ogx-l-inflight-need { flex: 1 1 0; text-align: right; }
+.ogx-l-inflight-need.ogx-l-inflight-ok { color: #8fbf8f; } .ogx-l-inflight-need.ogx-l-inflight-bad { color: #f44336; } .ogx-l-inflight-need.ogx-l-inflight-muted, .ogx-l-inflight-muted { color: #8593a3; }
+.ogx-l-inflight-note { white-space: normal; font-size: 9px; line-height: 11px; }
+.ogx-l-inflight-status { white-space: normal; color: #f2d16b; } .ogx-l-inflight-status.ogx-l-inflight-bad { color: #f44336; }
+.smallplanet.ogx-l-inflight-row { position: relative; }
+.ogx-l-inflight-in { position: absolute; z-index: 6; display: inline-flex; align-items: center; gap: 1px; height: 12px; padding: 0 2px; border-radius: 6px;
+  background: rgba(36,72,110,.92); border: 1px solid #6f9fd8; color: #fff; font: bold 9px/10px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-l-inflight-in-planet { left: 1px; top: 1px; }
+.ogx-l-inflight-in-moon { right: -4px; top: -4px; }
+.smallplanet.smaller .ogx-l-inflight-in-planet { top: 0; left: 0; }
+.ogx-l-inflight-in.ogx-l-inflight-in-hostile { background: rgba(160,20,20,.95); border-color: #ff6b6b; animation: ogx-l-inflight-blink 1.2s ease-in-out infinite; }
+@keyframes ogx-l-inflight-blink { 50% { opacity: .55; } }
+.smallplanet.ogx-l-inflight-hostile { box-shadow: inset 0 0 0 1px rgba(244,67,54,.85); }
+.ogx-l-inflight-tip { font: 11px/14px Verdana, Arial, sans-serif; }
+.ogx-l-inflight-tip-h { font-weight: bold; margin-bottom: 3px; }
+.ogx-l-inflight-tip-t { border-collapse: collapse; }
+.ogx-l-inflight-tip-t th, .ogx-l-inflight-tip-t td { padding: 1px 3px; text-align: left; white-space: nowrap; }
+.ogx-l-inflight-tip-t th { color: #8593a3; font-weight: normal; border-bottom: 1px solid #2b3846; }
+.ogx-l-inflight-tip-row.ogx-l-inflight-hostile-row td { color: #ff6b6b; font-weight: bold; }
+.ogx-l-inflight-tip-row.ogx-l-inflight-own-row td { color: #a5d6a7; }
+.ogx-l-inflight-c { margin-right: 6px; }
+.ogx-l-inflight-tip-t td.ogx-l-inflight-cargo { padding: 0 5px 3px 14px; color: #cfd8e3; font-size: 10px; }
+</style><style id="ogx-l-techcost">
+.ogx-l-techcost-badge { position: absolute; left: 1px; bottom: 16px; z-index: 2; /* above the game's .level bar (bottom:0, 15px) */ display: flex; flex-direction: column; align-items: flex-start;
+  padding: 1px 3px; background: rgba(0, 0, 0, .72); border-radius: 2px; font: 9px/10px Verdana, Arial, sans-serif; color: #cfd8e3;
+  pointer-events: auto; max-width: calc(100% - 4px); white-space: nowrap; overflow: hidden; text-align: left; }
+.ogx-l-techcost-bl { display: block; }
+.ogx-l-techcost-bl-metal { color: #a9b5c4; } .ogx-l-techcost-bl-crystal { color: #79c2e8; } .ogx-l-techcost-bl-deuterium { color: #7fe0b4; } .ogx-l-techcost-bl-energy { color: #f2d04d; }
+.ogx-l-techcost-bl.ogx-l-techcost-bad { color: #f44336; font-weight: bold; }
+.ogx-l-techcost-badge.ogx-l-techcost-short { box-shadow: inset 0 0 0 1px rgba(244, 67, 54, .6); }
+.sprite_small .ogx-l-techcost-badge, .small .ogx-l-techcost-badge { font-size: 8px; line-height: 9px; }
+#technologydetails .costs ul li.ogx-l-techcost-total { display: inline-block; vertical-align: top; width: 52px; height: 48px; margin: 0 3px; text-align: center; color: #fff; }
+.ogx-l-techcost-total-sym { display: block; font: bold 20px/32px Verdana, Arial, sans-serif; color: #6f9fd8; margin-bottom: 2px; }
+.ogx-l-techcost-ov { position: absolute; left: 1px; bottom: 101px; width: 198px; z-index: 3; box-sizing: border-box; padding: 3px 4px;
+  background: rgba(13, 16, 20, .88); border-top: 1px solid #2b3846; color: #cfd8e3; font: 10px/12px Verdana, Arial, sans-serif; text-align: left; }
+.ogx-l-techcost-head { display: flex; align-items: center; gap: 4px; color: #6f9fd8; font-weight: bold; }
+.ogx-l-techcost-title { flex: 1 1 auto; }
+.ogx-l-techcost-mult { color: #ff9600; }
+.ogx-l-techcost-toggle { background: none; border: 0; color: #cfd8e3; cursor: pointer; padding: 0 2px; font-size: 10px; line-height: 12px; }
+.ogx-l-techcost-collapsed .ogx-l-techcost-body { display: none; }
+.ogx-l-techcost-tbl { width: 100%; border-collapse: collapse; margin-top: 2px; }
+.ogx-l-techcost-tbl td { padding: 0 2px; white-space: nowrap; }
+.ogx-l-techcost-res { width: 12px; font-weight: bold; }
+.ogx-l-techcost-diff { text-align: right; }
+.ogx-l-techcost-ships { text-align: right; color: #9aa7b5; font-size: 9px; }
+.ogx-l-techcost-row-metal .ogx-l-techcost-res { color: #a9b5c4; } .ogx-l-techcost-row-crystal .ogx-l-techcost-res { color: #79c2e8; } .ogx-l-techcost-row-deuterium .ogx-l-techcost-res { color: #7fe0b4; } .ogx-l-techcost-row-energy .ogx-l-techcost-res { color: #f2d04d; }
+.ogx-l-techcost-tbl tr.ogx-l-techcost-ok .ogx-l-techcost-diff { color: #4caf50; } .ogx-l-techcost-tbl tr.ogx-l-techcost-bad .ogx-l-techcost-diff { color: #f44336; }
+.ogx-l-techcost-row-total td { border-top: 1px solid #2b3846; }
+.ogx-l-techcost-need { color: #9aa7b5; margin-top: 1px; }
+.ogx-l-techcost-eta { margin-top: 1px; white-space: normal; }
+.ogx-l-techcost-eta.ogx-l-techcost-ok { color: #4caf50; } .ogx-l-techcost-eta.ogx-l-techcost-warn { color: #ff9800; } .ogx-l-techcost-eta.ogx-l-techcost-bad { color: #f44336; }
+.ogx-l-techcost-afford { color: #9aa7b5; }
+.ogx-l-techcost-ov.ogx-l-techcost-flow { position: static; left: auto; bottom: auto; width: auto; max-width: 320px; margin: 4px 0; border: 1px solid #2b3846; border-radius: 3px; }
+.ogx-l-techcost-muted { color: #8593a3; }
+.ogx-l-techcost-badge.ogx-l-techcost-unknown { color: #8593a3; font-style: italic; }
+</style><style id="ogx-l-timeline-css">
+div#ogx-l-timeline { position: relative; clear: both; width: 165px; margin: 4px 0 6px; padding: 2px 3px 3px; border: 1px solid #2b3846; border-radius: 3px;
+  background: rgba(13,16,20,.92); font: 10px/13px Verdana, Arial, sans-serif; color: #cfd8e3; text-align: left; z-index: 4; box-sizing: border-box; }
+div#ogx-l-timeline * { box-sizing: border-box; }
+div#ogx-l-timeline.ogx-l-timeline-pos-right { width: 137px; margin-left: 8px; }
+div#ogx-l-timeline.ogx-l-timeline-gz.ogx-l-timeline-pos-right { width: 165px; margin-left: 0; }   /* GALAXYZ right column: same box as since the core port */
+div#ogx-l-timeline.ogx-l-timeline-gz.ogx-l-timeline-pos-left { width: 165px; margin: 6px 0 6px 4px; }
+.ogx-l-timeline-head { display: flex; align-items: center; gap: 3px; border-bottom: 1px solid #2b3846; padding-bottom: 1px; margin-bottom: 2px; white-space: nowrap; }
+.ogx-l-timeline-title { flex: 1 1 auto; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; }
+.ogx-l-timeline-slots { flex: none; color: #8fbf8f; font-weight: bold; cursor: default; }
+.ogx-l-timeline-slots.ogx-l-timeline-full, .ogx-l-timeline-slots.overmark { color: #f44336; }
+.ogx-l-timeline-btn { flex: none; width: 15px; height: 14px; padding: 0; border: 1px solid #2b3846; border-radius: 2px; background: #161c24; color: #8593a3;
+  font: 10px/12px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-l-timeline-btn:hover { color: #fff; border-color: #6f9fd8; }
+.ogx-l-timeline-spin { animation: ogx-l-timeline-spin 1s linear infinite; }
+@keyframes ogx-l-timeline-spin { to { transform: rotate(360deg); } }
+.ogx-l-timeline-collapsed .ogx-l-timeline-body { display: none; }
+.ogx-l-timeline-collapsed .ogx-l-timeline-toggle { transform: rotate(-90deg); }
+.ogx-l-timeline-row { padding: 2px 1px; border-bottom: 1px solid rgba(43,56,70,.6); cursor: pointer; }
+.ogx-l-timeline-row:last-child { border-bottom: 0; }
+.ogx-l-timeline-row:hover, .ogx-l-timeline-row:focus { background: rgba(111,159,216,.12); outline: none; }
+.ogx-l-timeline-row.ogx-l-timeline-hostile { background: rgba(160,20,20,.35); box-shadow: inset 2px 0 0 #f44336; }
+.ogx-l-timeline-row.ogx-l-timeline-hostile .ogx-l-timeline-time, .ogx-l-timeline-row.ogx-l-timeline-hostile .ogx-l-timeline-cd { color: #ff6b6b; }
+.ogx-l-timeline-row.ogx-l-timeline-foreign:not(.ogx-l-timeline-hostile) { box-shadow: inset 2px 0 0 #f2d16b; }
+.ogx-l-timeline-row.ogx-l-timeline-ret { opacity: .85; }
+.ogx-l-timeline-l1, .ogx-l-timeline-l2 { display: flex; align-items: center; gap: 3px; white-space: nowrap; min-height: 13px; }
+.ogx-l-timeline-icon { flex: none; width: 16px; height: 16px; }
+.ogx-l-timeline-icon-txt { display: inline-block; text-align: center; font-size: 8px; line-height: 16px; background: #24486e; border-radius: 2px; color: #fff; }
+.ogx-l-timeline-icon.ogx-l-timeline-icon-gz { width: auto; min-width: 22px; height: 13px; padding: 0 2px; font: bold 8px/13px Verdana, Arial, sans-serif; }
+.ogx-l-timeline-time { flex: 1 1 auto; color: #fff; }
+.ogx-l-timeline-cd { flex: none; color: #9cd3ff; font-weight: bold; }
+.ogx-l-timeline-cd .ogx-countdown.ogx-done { color: #8593a3; font-weight: normal; }
+.ogx-l-timeline-l2 { font-size: 9px; color: #a9b5c4; }
+.ogx-l-timeline-from, .ogx-l-timeline-to { overflow: hidden; text-overflow: ellipsis; }
+.ogx-l-timeline-dir { flex: none; color: #8593a3; }
+.ogx-l-timeline-dir-ret { color: #8fbf8f; }
+.ogx-l-timeline-units { flex: 1 1 auto; text-align: right; color: #cfd8e3; }
+.ogx-l-timeline-bars { display: flex; gap: 2px; margin-top: 1px; }
+.ogx-l-timeline-bar { flex: 1 1 0; height: 3px; background: rgba(255,255,255,.08); border-radius: 1px; overflow: hidden; }
+.ogx-l-timeline-fill { height: 100%; }
+.ogx-l-timeline-bar-metal .ogx-l-timeline-fill { background: #a9b5c4; }
+.ogx-l-timeline-bar-crystal .ogx-l-timeline-fill { background: #79c2e8; }
+.ogx-l-timeline-bar-deuterium .ogx-l-timeline-fill { background: #7fe0b4; }
+.ogx-l-timeline-bars-unknown .ogx-l-timeline-bar { background: repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 3px, transparent 3px 5px); }
+.ogx-l-timeline-muted { color: #8593a3; }
+.ogx-l-timeline-empty { padding: 2px 0; }
+.ogx-l-timeline-foot { font-size: 9px; line-height: 11px; padding-top: 2px; white-space: normal; }
+.ogx-l-timeline-status { white-space: normal; color: #f2d16b; } .ogx-l-timeline-status.ogx-l-timeline-bad { color: #f44336; }
+.ogx-l-timeline-tip { font: 11px/14px Verdana, Arial, sans-serif; }
+.ogx-l-timeline-tip table { border-collapse: collapse; }
+.ogx-l-timeline-tip th { text-align: left; font-weight: normal; color: #8593a3; padding: 0 6px 0 0; white-space: nowrap; vertical-align: top; }
+.ogx-l-timeline-tip td { padding: 0; max-width: 260px; }
+.ogx-l-timeline-tip .ogx-l-timeline-tip-bad td { color: #ff6b6b; font-weight: bold; }
+</style><style id="ogx-i-panel">
+.ogx-i-panel-head { padding: 4px 10px 6px; border-bottom: 1px solid var(--ogx-border, #2b3846); font-size: 12px; }
+.ogx-i-panel-hline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 18px; }
+.ogx-i-panel-pname { font-weight: bold; color: var(--ogx-text, #e3e9f0); }
+.ogx-i-panel-pcls, .ogx-i-panel-prank, .ogx-i-panel-pdm { color: var(--ogx-muted, #8593a3); }
+.ogx-i-panel-poff { color: var(--ogx-muted, #8593a3); }
+.ogx-i-panel-officer { color: var(--ogx-text, #e3e9f0); white-space: nowrap; }
+.ogx-i-panel-offlink { color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-panel-pvac { color: var(--ogx-warn, #ff9800); }
+.ogx-i-panel-hline[hidden], .ogx-i-panel-pcls[hidden], .ogx-i-panel-pvac[hidden] { display: none; }
+.ogx-i-panel-clock { font-variant-numeric: tabular-nums; color: var(--ogx-text, #e3e9f0); }
+.ogx-i-panel-attack { margin-left: auto; padding: 0 6px; border-radius: 3px; color: var(--ogx-ok, #8fbf8f); border: 1px solid transparent; }
+.ogx-i-panel-attack.ogx-i-panel-attack-on { color: #fff; background: var(--ogx-bad, #c62828); border-color: #ff5252; cursor: pointer; animation: ogx-i-panel-blink 1.2s ease-in-out infinite; }
+@keyframes ogx-i-panel-blink { 50% { opacity: .55; } }
+.ogx-i-panel-hint { font-size: 10px; color: var(--ogx-muted, #8593a3); margin: 0 0 4px; }
+.ogx-i-panel-planets { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+.ogx-i-panel-row { padding: 3px 5px; border: 1px solid var(--ogx-border, #2b3846); border-radius: 3px; background: rgba(255,255,255,.02); cursor: pointer; }
+.ogx-i-panel-row:hover { border-color: var(--ogx-accent, #6f9fd8); background: rgba(111,159,216,.08); }
+.ogx-i-panel-row.ogx-i-panel-moon { margin-left: 16px; }
+.ogx-i-panel-row.ogx-i-panel-current { border-color: var(--ogx-accent, #6f9fd8); box-shadow: inset 3px 0 0 var(--ogx-accent, #6f9fd8); }
+.ogx-i-panel-r1, .ogx-i-panel-r2, .ogx-i-panel-r3 { display: flex; align-items: center; gap: 6px; min-height: 15px; }
+.ogx-i-panel-r2 { margin: 2px 0; }
+.ogx-i-panel-name { font-weight: bold; color: var(--ogx-text, #e3e9f0); text-decoration: none; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ogx-i-panel-name:hover { text-decoration: underline; }
+.ogx-i-panel-coords { color: var(--ogx-muted, #8593a3); white-space: nowrap; }
+.ogx-i-panel-fields { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.ogx-i-panel-fields .ogx-bar { width: 44px; }
+.ogx-i-panel-temp { color: var(--ogx-muted, #8593a3); white-space: nowrap; }
+.ogx-i-panel-age { margin-left: auto; color: var(--ogx-muted, #8593a3); font-size: 10px; white-space: nowrap; }
+.ogx-i-panel-age.ogx-i-panel-old { color: var(--ogx-warn, #ff9800); }
+.ogx-i-panel-res { position: relative; flex: 1 1 0; min-width: 0; padding: 1px 3px; line-height: 12px; text-overflow: ellipsis; border-radius: 2px; background: #1c242e; overflow: hidden; white-space: nowrap; }
+.ogx-i-panel-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(76,175,80,.35); }
+.ogx-i-panel-res.ogx-i-panel-warn .ogx-i-panel-fill { background: rgba(255,152,0,.5); }
+.ogx-i-panel-res.ogx-i-panel-bad .ogx-i-panel-fill { background: rgba(244,67,54,.55); }
+.ogx-i-panel-res.ogx-i-panel-nostore .ogx-i-panel-fill { display: none; }
+.ogx-i-panel-res > *:not(.ogx-i-panel-fill) { position: relative; }
+.ogx-i-panel-lbl { font-weight: bold; margin-right: 3px; }
+.ogx-i-panel-r-metal .ogx-i-panel-lbl, .ogx-i-panel-tval.ogx-i-panel-r-metal { color: var(--ogx-metal, #a9b5c4); }
+.ogx-i-panel-r-crystal .ogx-i-panel-lbl, .ogx-i-panel-tval.ogx-i-panel-r-crystal { color: var(--ogx-crystal, #79c2e8); }
+.ogx-i-panel-r-deuterium .ogx-i-panel-lbl, .ogx-i-panel-tval.ogx-i-panel-r-deuterium { color: var(--ogx-deuterium, #7fe0b4); }
+.ogx-i-panel-val { color: #fff; font-weight: normal; }
+.ogx-i-panel-rate { display: block; color: #8fbf8f; font-size: 9px; line-height: 10px; }
+.ogx-i-panel-r3 { font-size: 10px; }
+.ogx-i-panel-build { color: #6f9fd8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ogx-i-panel-build.ogx-i-panel-down { color: var(--ogx-warn, #ff9800); }
+.ogx-i-panel-build.ogx-i-panel-stale { color: var(--ogx-muted, #8593a3); font-style: italic; }
+.ogx-i-panel-build .ogx-countdown { color: #fff; }
+.ogx-i-panel-ships { white-space: nowrap; }
+.ogx-i-panel-links { margin-left: auto; display: inline-flex; gap: 3px; }
+.ogx-i-panel-link { padding: 0 3px; border: 1px solid var(--ogx-border, #2b3846); border-radius: 2px; color: var(--ogx-muted, #8593a3); text-decoration: none; }
+.ogx-i-panel-link:hover { color: #fff; border-color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-panel-totals { margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--ogx-border, #2b3846); }
+.ogx-i-panel-tline { display: flex; gap: 4px; min-height: 15px; align-items: center; }
+.ogx-i-panel-tlabel { flex: 0 0 82px; color: var(--ogx-muted, #8593a3); }
+.ogx-i-panel-tval { flex: 1 1 0; min-width: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.ogx-i-panel-thead { font-size: 10px; }
+.ogx-i-panel-tsum { color: #fff; }
+.ogx-i-panel-tnote { font-size: 10px; color: var(--ogx-muted, #8593a3); }
+.ogx-i-panel-tnote:empty { display: none; }
+.ogx-i-panel-tships { flex: 1 1 auto; text-align: right; }
+#planetList .smallplanet > .ogx-i-panel-fields-badge { position: absolute; left: 2px; bottom: 0; z-index: 4; padding: 0 2px; font: 9px/10px Verdana, Arial, sans-serif;
+  color: #8fbf8f; background: rgba(13,16,20,.75); border-radius: 2px; pointer-events: auto; }
+#planetList .smallplanet > .ogx-i-panel-fields-badge.ogx-i-panel-warn { color: #ff9800; }
+#planetList .smallplanet > .ogx-i-panel-fields-badge.ogx-i-panel-bad { color: #f44336; }
+</style><style id="ogx-i-empire">
+.ogx-i-empire-pane { display: flex; flex-direction: column; gap: 6px; }
+.ogx-i-empire-head { display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-empire-views { display: flex; flex-wrap: wrap; gap: 2px; }
+.ogx-i-empire-view { padding: 1px 6px; }
+.ogx-i-empire-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.ogx-i-empire-what { color: var(--ogx-muted); }
+.ogx-i-empire-what summary { cursor: pointer; }
+.ogx-i-empire-what-item { display: inline-flex; align-items: center; margin-right: 8px; white-space: nowrap; }
+.ogx-i-empire-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px; border: 1px solid var(--ogx-border); border-radius: 3px; }
+.ogx-i-empire-progress .ogx-bar { flex: 1 1 120px; min-width: 80px; }
+.ogx-i-empire-progress-text { flex: 1 1 100%; }
+.ogx-i-empire-scroll { overflow: auto; max-height: calc(100vh - 230px); border: 1px solid var(--ogx-border); }
+.ogx-i-empire-modal .ogx-i-empire-scroll { max-height: calc(100vh - 220px); }
+.ogx-i-empire-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: 11px; }
+.ogx-i-empire-table th, .ogx-i-empire-table td { padding: 2px 3px; border-bottom: 1px solid var(--ogx-border); white-space: nowrap; }
+/* the right-aligned last column (Итого) would otherwise end flush on the scroll box border */
+.ogx-i-empire-table th:last-child, .ogx-i-empire-table td:last-child { padding-right: 6px; }
+.ogx-i-empire-table thead th { position: sticky; top: 0; background: var(--ogx-bg); z-index: 2; text-align: right; vertical-align: bottom; }
+.ogx-i-empire-table th.ogx-i-empire-label, .ogx-i-empire-table th.ogx-i-empire-corner { position: sticky; left: 0; background: var(--ogx-panel); text-align: left; z-index: 1; }
+.ogx-i-empire-table thead th.ogx-i-empire-corner { z-index: 3; background: var(--ogx-bg); }
+.ogx-i-empire-col-link { color: var(--ogx-accent); text-decoration: none; }
+.ogx-i-empire-col-link:hover { text-decoration: underline; }
+.ogx-i-empire-moon { color: var(--ogx-muted); }
+.ogx-i-empire-sub { color: var(--ogx-muted); font-weight: normal; font-size: 10px; }
+.ogx-i-empire-cell { text-align: right; font-variant-numeric: tabular-nums; }
+.ogx-i-empire-total { font-weight: bold; color: #fff; }
+.ogx-i-empire-section > th, .ogx-i-empire-section > td { border-top: 1px solid var(--ogx-muted); }
+.ogx-i-empire-stale { opacity: .45; }
+.ogx-i-empire-unknown { color: var(--ogx-muted); }
+.ogx-i-empire-na { background: rgba(255,255,255,.03); }
+.ogx-i-empire-queued { color: var(--ogx-energy); }
+.ogx-i-empire-done { color: var(--ogx-ok); }
+.ogx-i-empire-warn { color: var(--ogx-warn); }
+.ogx-i-empire-bad { color: var(--ogx-bad); }
+.ogx-i-empire-mismatch { color: var(--ogx-warn); text-decoration: underline dotted; }
+.ogx-i-empire-res-metal { color: var(--ogx-metal); }
+.ogx-i-empire-res-crystal { color: var(--ogx-crystal); }
+.ogx-i-empire-res-deuterium { color: var(--ogx-deuterium); }
+.ogx-i-empire-res-metal.ogx-i-empire-warn, .ogx-i-empire-res-crystal.ogx-i-empire-warn, .ogx-i-empire-res-deuterium.ogx-i-empire-warn { color: var(--ogx-warn); }
+.ogx-i-empire-res-metal.ogx-i-empire-bad, .ogx-i-empire-res-crystal.ogx-i-empire-bad, .ogx-i-empire-res-deuterium.ogx-i-empire-bad { color: var(--ogx-bad); }
+.ogx-i-empire-points { color: var(--ogx-muted); }
+.ogx-i-empire-calc { color: var(--ogx-muted); font-style: italic; }
+.ogx-i-empire-game-link { text-decoration: none; }
+.ogx-i-empire-note { padding: 4px; color: var(--ogx-muted); }
+.ogx-i-empire-mismatch-note { color: var(--ogx-warn); }
+.ogx-i-empire-error { padding: 6px; border: 1px solid var(--ogx-bad); color: var(--ogx-bad); border-radius: 3px; }
+.ogx-i-empire-empty, .ogx-i-empire-loading { padding: 8px; color: var(--ogx-muted); }
+.ogx-i-empire-legend { color: var(--ogx-muted); font-size: 10px; }
+.ogx-i-empire-stale-sample { opacity: .45; }
+.ogx-i-empire-queued-sample { color: var(--ogx-energy); }
+.ogx-i-empire-unknown-count { color: var(--ogx-warn); }
+.ogx-i-empire-notice { white-space: pre-line; }
+</style><style id="ogx-i-targets">
+.ogx-i-targets-slot { gap: 3px; }
+#galaxytableHead td.action .ogx-gx-slot.ogx-i-targets-slot { display: inline-flex; vertical-align: middle; margin-left: 3px; }
+.ogx-i-targets-unresolved p { margin: 0 0 6px; }
+.ogx-i-targets-tools { display: inline-flex; align-items: center; gap: 3px; }
+.ogx-i-targets-dot { width: 12px; height: 12px; min-width: 12px; padding: 0; border-radius: 50%; border: 1px solid #6b7a8c; background: transparent; cursor: pointer; vertical-align: middle; outline-offset: 1px; }
+.ogx-i-targets-dot.ogx-i-targets-ring { outline: 2px solid #888; }
+.ogx-i-targets-note, .ogx-i-targets-star { background: transparent; border: 0; padding: 0 1px; cursor: pointer; color: #6b7a8c; line-height: 0; vertical-align: middle; }
+.ogx-i-targets-note svg, .ogx-i-targets-star svg { width: 12px; height: 12px; }
+.ogx-i-targets-note.ogx-i-targets-has-note { color: #f2d16b; }
+.ogx-i-targets-star.ogx-i-targets-star-on { color: #fdd835; }
+.ogx-i-targets-star.ogx-i-targets-star-on svg { fill: #fdd835; }
+.ogx-i-targets-hsdot { display: inline-block; min-width: 10px; height: 10px; border-radius: 5px; margin-right: 4px; vertical-align: middle; font-size: 8px; line-height: 10px; text-align: center; color: #000; }
+.ogx-i-targets-hsdot-plain { background: #5d6b7a; }
+.ogx-i-targets-menu { position: fixed; z-index: 100000; background: #161c24; border: 1px solid #2b3846; border-radius: 4px; padding: 6px; width: 220px; box-sizing: border-box; box-shadow: 0 4px 16px rgba(0,0,0,.6); }
+.ogx-i-targets-menu-sec + .ogx-i-targets-menu-sec { margin-top: 6px; }
+.ogx-i-targets-menu-label { color: #8593a3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ogx-i-targets-menu-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.ogx-i-targets-sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #2b3846; cursor: pointer; padding: 0; background: #0d1014; color: #8593a3; font-size: 12px; line-height: 14px; }
+.ogx-i-targets-sw.ogx-i-targets-sw-on { box-shadow: 0 0 0 2px #fff; }
+.ogx-i-targets-tab { display: flex; flex-direction: column; gap: 6px; }
+.ogx-i-targets-bar, .ogx-i-targets-sform { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+/* the game's CSS sets visibility:hidden on native selects (it replaces them with its own dropdowns) */
+select.ogx-i-targets-sel { visibility: visible !important; display: inline-block !important; }
+.ogx-i-targets-f-text, .ogx-i-targets-q { flex: 1 1 120px; min-width: 100px; }
+/* colours of type=search inputs come from the core (20-style); only the padding is local */
+input.ogx-i-targets-f-text, input.ogx-i-targets-q { padding: 3px 6px; }
+.ogx-i-targets-table-host { overflow-x: auto; max-width: 100%; }
+.ogx-i-targets-table th, .ogx-i-targets-table td { padding: 3px 4px; }
+.ogx-i-targets-tab a:not(.ogx-btn), .ogx-i-targets-unresolved a { color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-targets-count, .ogx-i-targets-muted { color: var(--ogx-muted, #8593a3); }
+.ogx-i-targets-hint { color: var(--ogx-muted, #8593a3); font-size: 10px; }
+.ogx-i-targets-error { color: var(--ogx-bad, #f44336); }
+.ogx-i-targets-warn { color: var(--ogx-warn, #ff9800); }
+.ogx-i-targets-table td { white-space: nowrap; }
+.ogx-i-targets-table tr.ogx-empty td { white-space: normal; }
+.ogx-i-targets-markcell, .ogx-i-targets-actions { display: inline-flex; gap: 3px; align-items: center; }
+.ogx-i-targets-notecell { background: transparent; border: 0; color: inherit; cursor: pointer; max-width: 140px; overflow: hidden; text-overflow: ellipsis; text-align: left; padding: 0; }
+.ogx-i-targets-loot { color: var(--ogx-ok, #4caf50); }
+.ogx-i-targets-act-on { color: var(--ogx-bad, #f44336); font-weight: bold; }
+.ogx-i-targets-status { color: var(--ogx-warn, #ff9800); }
+.ogx-i-targets-rlist { display: flex; flex-direction: column; gap: 2px; }
+.ogx-i-targets-ritem { display: flex; gap: 4px; align-items: center; padding: 2px 4px; border-bottom: 1px solid var(--ogx-border, #2b3846); }
+.ogx-i-targets-rbtns { margin-left: auto; display: inline-flex; gap: 3px; }
+.ogx-i-targets-card { border: 1px solid var(--ogx-border, #2b3846); border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+.ogx-i-targets-card-head { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+.ogx-i-targets-kv { display: flex; gap: 6px; }
+.ogx-i-targets-k { color: var(--ogx-muted, #8593a3); min-width: 110px; }
+.ogx-i-targets-card-btns { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.ogx-i-targets-note-form { display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-targets-note-form textarea { width: 100%; resize: vertical; }
+</style><style id="ogx-i-targets-colors">#galaxyContent .galaxyRow.ogx-i-targets-mark-red { background-color: rgba(229,57,53,0.22) !important; box-shadow: inset 3px 0 0 #e53935; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-red > td { background-color: rgba(229,57,53,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-red > td:first-child { box-shadow: inset 3px 0 0 #e53935; }
+.ogx-i-targets-c-red { background: #e53935 !important; border-color: #e53935 !important; }
+.ogx-i-targets-tr-red > td:first-child { box-shadow: inset 3px 0 0 #e53935; }
+#galaxyContent .galaxyRow.ogx-i-targets-mark-orange { background-color: rgba(251,140,0,0.22) !important; box-shadow: inset 3px 0 0 #fb8c00; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-orange > td { background-color: rgba(251,140,0,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-orange > td:first-child { box-shadow: inset 3px 0 0 #fb8c00; }
+.ogx-i-targets-c-orange { background: #fb8c00 !important; border-color: #fb8c00 !important; }
+.ogx-i-targets-tr-orange > td:first-child { box-shadow: inset 3px 0 0 #fb8c00; }
+#galaxyContent .galaxyRow.ogx-i-targets-mark-yellow { background-color: rgba(253,216,53,0.22) !important; box-shadow: inset 3px 0 0 #fdd835; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-yellow > td { background-color: rgba(253,216,53,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-yellow > td:first-child { box-shadow: inset 3px 0 0 #fdd835; }
+.ogx-i-targets-c-yellow { background: #fdd835 !important; border-color: #fdd835 !important; }
+.ogx-i-targets-tr-yellow > td:first-child { box-shadow: inset 3px 0 0 #fdd835; }
+#galaxyContent .galaxyRow.ogx-i-targets-mark-green { background-color: rgba(67,160,71,0.22) !important; box-shadow: inset 3px 0 0 #43a047; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-green > td { background-color: rgba(67,160,71,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-green > td:first-child { box-shadow: inset 3px 0 0 #43a047; }
+.ogx-i-targets-c-green { background: #43a047 !important; border-color: #43a047 !important; }
+.ogx-i-targets-tr-green > td:first-child { box-shadow: inset 3px 0 0 #43a047; }
+#galaxyContent .galaxyRow.ogx-i-targets-mark-blue { background-color: rgba(41,182,246,0.22) !important; box-shadow: inset 3px 0 0 #29b6f6; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-blue > td { background-color: rgba(41,182,246,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-blue > td:first-child { box-shadow: inset 3px 0 0 #29b6f6; }
+.ogx-i-targets-c-blue { background: #29b6f6 !important; border-color: #29b6f6 !important; }
+.ogx-i-targets-tr-blue > td:first-child { box-shadow: inset 3px 0 0 #29b6f6; }
+#galaxyContent .galaxyRow.ogx-i-targets-mark-purple { background-color: rgba(171,71,188,0.22) !important; box-shadow: inset 3px 0 0 #ab47bc; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-purple > td { background-color: rgba(171,71,188,0.22) !important; }
+#galaxytableHead > tbody > tr.row.ogx-i-targets-mark-purple > td:first-child { box-shadow: inset 3px 0 0 #ab47bc; }
+.ogx-i-targets-c-purple { background: #ab47bc !important; border-color: #ab47bc !important; }
+.ogx-i-targets-tr-purple > td:first-child { box-shadow: inset 3px 0 0 #ab47bc; }</style><style id="ogx-i-spy">
+.ogx-i-spy-root { display: flex; flex-direction: column; gap: 6px; }
+.ogx-i-spy-head { display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-spy-info { color: var(--ogx-muted, #8a99ab); }
+.ogx-i-spy-tools { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.ogx-i-spy-filter { flex: 1 1 140px; min-width: 100px; }
+.ogx-i-spy-scroller { position: relative; }
+.ogx-i-spy-wrap { overflow-x: auto; }
+.ogx-i-spy-scrollhint { position: absolute; top: 0; right: 0; bottom: 0; width: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  color: var(--ogx-accent, #6f9fd8); font-weight: bold; background: linear-gradient(to right, transparent, var(--ogx-panel, #161c24) 70%); }
+.ogx-i-spy-scrollhint[hidden] { display: none; }
+.ogx-i-spy-where { display: inline-flex; flex-direction: column; line-height: 1.2; }
+.ogx-i-spy-pname { color: var(--ogx-muted, #8a99ab); font-size: 10px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+.ogx-i-spy-units .ogx-i-spy-sep { color: var(--ogx-muted, #8a99ab); margin: 0 2px; }
+.ogx-i-spy-table td, .ogx-i-spy-table th { white-space: nowrap; }
+.ogx-i-spy-table tr.ogx-i-spy-risky td:first-child { box-shadow: inset 3px 0 0 var(--ogx-warn, #ff9800); }
+.ogx-i-spy-table tr.ogx-i-spy-approx .ogx-i-spy-loot { font-style: italic; }
+.ogx-i-spy-actions { display: inline-flex; gap: 2px; flex-wrap: nowrap; align-items: center; }
+.ogx-i-spy-table tr.ogx-i-spy-morerow td { white-space: normal; background: rgba(255,255,255,.03); }
+.ogx-i-spy-morebox { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; position: sticky; left: 4px; max-width: 400px; }
+.ogx-i-spy-morebox .ogx-icon { vertical-align: -2px; }
+.ogx-i-spy-ibtn { padding: 1px 3px; line-height: 0; }
+.ogx-i-spy-btn { padding: 1px 4px; font-size: 10px; }
+.ogx-i-spy-warn { color: var(--ogx-warn, #ff9800); }
+.ogx-i-spy-unknown { color: var(--ogx-muted, #8a99ab); }
+.ogx-i-spy-pos { color: var(--ogx-ok, #4caf50); }
+.ogx-i-spy-neg { color: var(--ogx-bad, #f44336); }
+.ogx-i-spy-raided { font-size: 10px; margin-left: 4px; }
+.ogx-i-spy-table a.ogx-i-spy-coords, .ogx-i-spy-table a.ogx-i-spy-coords:visited { color: var(--ogx-accent, #6f9fd8); text-decoration: none; }
+.ogx-i-spy-note { color: var(--ogx-muted, #8a99ab); font-size: 10px; }
+.ogx-i-spy-unresolved p { margin: 0 0 6px; }
+.ogx-i-spy-unresolved a.ogx-i-spy-galaxy-link, .ogx-i-spy-unresolved a.ogx-i-spy-galaxy-link:visited { color: var(--ogx-accent, #6f9fd8); text-decoration: underline; }
+.ogx-i-spy-badge { box-sizing: border-box; max-width: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0; padding: 3px 6px; border: 1px solid var(--ogx-border, #2b3846);
+  background: var(--ogx-panel, #161c24); color: var(--ogx-text, #cfd8e3); font-size: 11px; border-radius: 3px; }
+.ogx-i-spy-b-loot { color: var(--ogx-ok, #4caf50); font-weight: bold; }
+.ogx-i-spy-muted { color: var(--ogx-muted, #8a99ab); }
+</style><style id="ogx-i-stats">
+.ogx-i-stats-root { display: flex; flex-direction: column; gap: 8px; }
+.ogx-i-stats-head { display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-stats-tools { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.ogx-i-stats-grow { flex: 1 1 auto; }
+.ogx-i-stats-lbl, .ogx-i-stats-info, .ogx-i-stats-metric, .ogx-i-stats-note, .ogx-i-stats-empty { color: var(--ogx-muted, #8a99ab); }
+.ogx-i-stats-progress { color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-stats-custom input { width: 120px; }
+/* the game hides every <select> (body.ogame select { visibility: hidden }) for its own dropdown widget */
+.ogx-i-stats-tools select.ogx-i-stats-period { visibility: visible; }
+.ogx-i-stats-sec { border: 1px solid var(--ogx-border, #2b3846); border-radius: 3px; padding: 4px 6px; background: var(--ogx-panel, #161c24); }
+.ogx-i-stats-h { margin: 0 0 4px; font-size: 12px; color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-stats-kv { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; border-bottom: 1px dotted rgba(255,255,255,0.06); }
+.ogx-i-stats-k { color: var(--ogx-muted, #8a99ab); }
+.ogx-i-stats-v { text-align: right; }
+.ogx-i-stats-m { color: var(--ogx-metal, #a9b5c4); } .ogx-i-stats-c { color: var(--ogx-crystal, #79c2e8); } .ogx-i-stats-d { color: var(--ogx-deuterium, #7fe0b4); }
+.ogx-i-stats-pos { color: var(--ogx-ok, #4caf50); } .ogx-i-stats-neg { color: var(--ogx-bad, #f44336); }
+.ogx-i-stats-roles { width: 100%; margin: 3px 0; } .ogx-i-stats-roles td, .ogx-i-stats-roles th { text-align: right; } .ogx-i-stats-roles td:first-child, .ogx-i-stats-roles th:first-child { text-align: left; }
+.ogx-i-stats-outcomes { display: flex; flex-direction: column; gap: 1px; margin: 3px 0; }
+.ogx-i-stats-orow { display: grid; grid-template-columns: 110px 1fr 40px 36px; gap: 6px; align-items: center; }
+.ogx-i-stats-ocount, .ogx-i-stats-opct { text-align: right; }
+.ogx-i-stats-ships { display: flex; flex-wrap: wrap; gap: 2px 8px; justify-content: flex-end; }
+.ogx-i-stats-chartbox { display: flex; flex-direction: column; gap: 3px; }
+.ogx-i-stats-chips { display: flex; gap: 3px; flex-wrap: wrap; }
+.ogx-i-stats-chip { padding: 1px 6px; font-size: 10px; } .ogx-i-stats-chip-on { border-color: var(--ogx-accent, #6f9fd8); color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-stats-chart { height: 130px; background: var(--ogx-panel, #161c24); border: 1px solid var(--ogx-border, #2b3846); }
+.ogx-i-stats-axis { stroke: var(--ogx-border, #2b3846); stroke-width: 1; }
+.ogx-i-stats-tick { fill: var(--ogx-muted, #8a99ab); font-size: 9px; }
+.ogx-i-stats-bar-pos { fill: var(--ogx-accent, #6f9fd8); } .ogx-i-stats-bar-neg { fill: var(--ogx-bad, #f44336); }
+.ogx-i-stats-confirm p { margin: 0 0 6px; } .ogx-i-stats-check { display: flex; gap: 4px; align-items: center; }
+.ogx-i-stats-badge, .ogx-i-stats-summary { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0; padding: 3px 6px; border: 1px solid var(--ogx-border, #2b3846);
+  background: var(--ogx-panel, #161c24); color: var(--ogx-text, #cfd8e3); font-size: 11px; border-radius: 3px; list-style: none; }
+.ogx-i-stats-summary { border-color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-stats-badge, .ogx-i-stats-summary { box-sizing: border-box; max-width: 100%; text-align: left; }
+td.ogx-i-stats-summary-cell { padding: 0 2px; }
+.ogx-i-stats-note { font-size: 10px; }
+.ogx-i-stats-sum-title { font-weight: bold; color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-stats-muted { color: var(--ogx-muted, #8a99ab); }
+.ogx-i-stats-tag { white-space: nowrap; }
+.ogx-i-stats-o-good { color: var(--ogx-ok, #4caf50); font-weight: bold; } .ogx-i-stats-o-bad { color: var(--ogx-bad, #f44336); font-weight: bold; }
+.ogx-i-stats-o-warn { color: var(--ogx-warn, #ff9800); font-weight: bold; } .ogx-i-stats-o-neutral { color: var(--ogx-muted, #8a99ab); font-weight: bold; }
+</style><style id="ogx-i-stalk">
+.ogx-i-stalk-slot { display: inline-flex; vertical-align: middle; margin-left: 3px; }
+.ogx-i-stalk-eye { background: transparent; border: 0; padding: 0 1px; cursor: pointer; color: #6b7a8c; line-height: 0; vertical-align: middle; }
+.ogx-i-stalk-eye svg { width: 13px; height: 13px; }
+.ogx-i-stalk-eye.ogx-i-stalk-eye-on { color: #ff9800; }
+.ogx-i-stalk-tab { display: flex; flex-direction: column; gap: 6px; }
+.ogx-i-stalk-bar { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.ogx-i-stalk-name { flex: 1 1 120px; min-width: 100px; }
+input.ogx-i-stalk-name, input.ogx-i-stalk-sys-input { padding: 3px 6px; }   /* colours: core 20-style (text and search inputs) */
+.ogx-i-stalk-found { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.ogx-i-stalk-opts { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ogx-i-stalk-opt { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+.ogx-i-stalk-interval { width: 52px; }
+.ogx-i-stalk-status { color: #8593a3; font-size: 10px; }
+.ogx-i-stalk-result { padding: 3px 6px; border-radius: 3px; background: #1d2530; }
+.ogx-i-stalk-result-error { color: #f44336; }
+.ogx-i-stalk-result-warn { color: #ff9800; }
+.ogx-i-stalk-result-ok { color: #4caf50; }
+.ogx-i-stalk-empty, .ogx-i-stalk-muted { color: #8593a3; }
+.ogx-i-stalk-bad { color: #f44336; }
+.ogx-i-stalk-hint { color: #6b7a8c; font-size: 10px; margin-top: 4px; }
+.ogx-i-stalk-card { border: 1px solid #2b3846; border-radius: 4px; padding: 6px; background: #121820; display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-stalk-card-active { border-color: #ff9800; }
+.ogx-i-stalk-head { display: flex; align-items: center; gap: 6px; }
+.ogx-i-stalk-pname { font-weight: bold; color: #e6edf5; }
+.ogx-i-stalk-st { color: #8593a3; }
+.ogx-i-stalk-seen { color: #cfd8e3; }
+.ogx-i-stalk-seen-now { color: #ff9800; font-weight: bold; }
+.ogx-i-stalk-spacer { flex: 1; }
+.ogx-i-stalk-meta { color: #8593a3; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.ogx-i-stalk-chip { display: inline-flex; align-items: center; gap: 2px; padding: 0 3px; border: 1px solid #2b3846; border-radius: 3px; color: #cfd8e3; }
+.ogx-i-stalk-chip-manual { border-style: dashed; }
+.ogx-i-stalk-chip-link { color: #6f9fd8; text-decoration: none; }
+.ogx-i-stalk-chip-x { background: transparent; border: 0; color: #8593a3; cursor: pointer; padding: 0 1px; }
+.ogx-i-stalk-sys-input { width: 52px; }
+.ogx-i-stalk-bodies td, .ogx-i-stalk-bodies th { padding: 1px 4px; }
+.ogx-i-stalk-bodies tr.ogx-i-stalk-moon td:first-child { padding-left: 12px; }
+.ogx-i-stalk-row-act td.ogx-i-stalk-act { color: #ff9800; font-weight: bold; }
+.ogx-i-stalk-act-self { color: #8593a3; font-style: italic; }
+.ogx-i-stalk-sub { color: #8593a3; font-size: 10px; margin: 2px 0; }
+.ogx-i-stalk-strip { display: grid; grid-template-columns: repeat(96, 1fr); gap: 1px; height: 12px; }
+.ogx-i-stalk-cell { background: #1b232d; }
+.ogx-i-stalk-cell.ogx-i-stalk-c-chk { background: #2e4a3a; }
+.ogx-i-stalk-cell.ogx-i-stalk-c-self { background: #5d6b7a; }
+.ogx-i-stalk-cell.ogx-i-stalk-c-act { background: #ff9800; }
+.ogx-i-stalk-axis { display: flex; justify-content: space-between; color: #6b7a8c; font-size: 9px; }
+.ogx-i-stalk-heat { border-collapse: separate; border-spacing: 1px; width: 100%; table-layout: fixed; }
+.ogx-i-stalk-heat th { font-weight: normal; color: #6b7a8c; font-size: 9px; padding: 0; text-align: center; }
+.ogx-i-stalk-heat tbody th { text-align: right; padding-right: 3px; width: 34px; }
+.ogx-i-stalk-hc { height: 9px; background: #1b232d; padding: 0; }
+.ogx-i-stalk-hc.ogx-i-stalk-hchk { background: #24342c; }
+.ogx-i-stalk-hc.ogx-i-stalk-h1 { background: #5a3d12; }
+.ogx-i-stalk-hc.ogx-i-stalk-h2 { background: #8a5a14; }
+.ogx-i-stalk-hc.ogx-i-stalk-h3 { background: #c47a10; }
+.ogx-i-stalk-hc.ogx-i-stalk-h4 { background: #ff9800; }
+</style><style id="ogx-i-flights">
+.ogx-i-flights-tab { font: 11px/1.4 Verdana, Arial, sans-serif; color: var(--ogx-text, #ddd); }
+.ogx-i-flights-toolbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.ogx-i-flights-toolbar .ogx-btn { padding: 1px 6px; }
+.ogx-i-flights-age { color: var(--ogx-muted, #8a96a3); margin-left: auto; font-size: 10px; }
+.ogx-i-flights-status { margin: 4px 0; }
+.ogx-i-flights-empty { padding: 12px; color: var(--ogx-muted, #8a96a3); text-align: center; }
+.ogx-i-flights-chartbox { overflow-x: auto; }
+svg.ogx-i-flights-chart { display: block; background: rgba(0,0,0,.25); border: 1px solid var(--ogx-border, #2c3440); border-radius: 3px; font: 9px Verdana, Arial, sans-serif; }
+.ogx-i-flights-lane { fill: transparent; }
+.ogx-i-flights-lane-alt { fill: rgba(255,255,255,.035); }
+.ogx-i-flights-lanelabel { fill: var(--ogx-text, #ccd); font-size: 9px; }
+.ogx-i-flights-lanelabel-deep { fill: #9fa8da; font-style: italic; }
+.ogx-i-flights-grid { stroke: rgba(255,255,255,.08); stroke-width: 1; }
+.ogx-i-flights-tick { fill: var(--ogx-muted, #8a96a3); font-size: 9px; }
+.ogx-i-flights-group { cursor: default; outline: none; }
+.ogx-i-flights-seg { stroke-width: 1; fill-opacity: .85; }
+.ogx-i-flights-seg-hold { fill-opacity: .4; }
+.ogx-i-flights-seg-ret { fill-opacity: .45; stroke-dasharray: 3 2; }
+.ogx-i-flights-seg-open { stroke-dasharray: 1 2; }
+.ogx-i-flights-foreign .ogx-i-flights-seg { fill-opacity: .25; stroke-dasharray: 4 2; stroke-width: 1.5; }
+.ogx-i-flights-hostile .ogx-i-flights-seg { fill-opacity: .9; stroke: #ff8a80; stroke-dasharray: none; }
+.ogx-i-flights-hostile .ogx-i-flights-seg-out { animation: ogx-i-flights-blink 1.2s ease-in-out infinite; }
+@keyframes ogx-i-flights-blink { 50% { fill-opacity: .45; } }
+.ogx-i-flights-group:hover .ogx-i-flights-seg, .ogx-i-flights-group:focus .ogx-i-flights-seg { stroke: #fff; }
+.ogx-i-flights-arrive { stroke-width: 2; }
+.ogx-i-flights-now { stroke: #ffeb3b; stroke-width: 1.5; pointer-events: none; }
+.ogx-i-flights-nowlabel { fill: #ffeb3b; font-size: 9px; pointer-events: none; }
+.ogx-i-flights-grid, .ogx-i-flights-tick, .ogx-i-flights-lanelabel, .ogx-i-flights-rettext, .ogx-i-flights-arrive { pointer-events: none; }
+.ogx-i-flights-rettext { fill: var(--ogx-muted, #8a96a3); font-size: 9px; }
+.ogx-i-flights-rettext.ogx-i-flights-hasret { fill: #9ccc65; }
+.ogx-i-flights-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 8px; font-size: 10px; }
+.ogx-i-flights-legend-muted { color: var(--ogx-muted, #8a96a3); }
+.ogx-i-flights-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+.ogx-i-flights-h { margin: 8px 0 4px; font-size: 11px; color: var(--ogx-accent, #6cb4ff); }
+.ogx-i-flights-h-hostile { color: var(--ogx-bad, #f44336); }
+.ogx-i-flights-list { width: 100%; }
+.ogx-i-flights-list td, .ogx-i-flights-list th { padding: 2px 3px; }
+.ogx-i-flights-row-hostile td { background: rgba(244,67,54,.18); }
+.ogx-i-flights-row-foreign td { font-style: italic; }
+.ogx-i-flights-route { white-space: normal; }
+.ogx-i-flights-listwrap { overflow-x: auto; }
+.ogx-i-flights-list { font-size: 10px; }
+.ogx-i-flights-list td:first-child { white-space: nowrap; }
+.ogx-i-flights-ret { color: #9ccc65; font-size: 10px; }
+.ogx-i-flights-when { white-space: nowrap; }
+.ogx-i-flights-abs { color: var(--ogx-muted, #8a96a3); }
+.ogx-i-flights-recall { padding: 0 4px; font-size: 10px; }
+.ogx-i-flights-tip table td { padding: 0 4px; vertical-align: top; }
+.ogx-i-flights-tip .ogx-i-flights-tk { color: var(--ogx-muted, #8a96a3); white-space: nowrap; }
+.ogx-i-flights-movement { margin: 6px 0 8px; padding: 6px; background: var(--ogx-panel, #161b22); border: 1px solid var(--ogx-border, #2c3440); border-radius: 4px; color: var(--ogx-text, #ddd); font: 11px Verdana, Arial, sans-serif; }
+.ogx-i-flights-mhead { margin-bottom: 4px; }
+.ogx-i-flights-movement-gz { width: 650px; margin: 8px 0 8px 8px; box-sizing: border-box; text-align: left; }
+</style><style id="ogx-i-fleethelp">
+.ogx-i-fleethelp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 8px; padding: 4px 6px; border: 1px solid var(--ogx-border); border-radius: 3px; background: var(--ogx-panel); color: var(--ogx-text); font-size: 11px; clear: both; }
+.ogx-i-fleethelp-bar2 { margin: 6px 0; }
+.ogx-i-fleethelp-bargz { margin: 2px 0; justify-content: center; text-align: left; border: none; background: transparent; }
+tr.ogx-i-fleethelp-row > td { padding: 2px 4px; }
+.ogx-i-fleethelp-label { color: var(--ogx-accent); font-weight: bold; }
+.ogx-i-fleethelp-keeplink { color: var(--ogx-muted) !important; text-decoration: underline dotted; }
+.ogx-i-fleethelp-status { color: var(--ogx-muted); }
+.ogx-i-fleethelp-walkbar { margin: 4px 8px; }
+.ogx-i-fleethelp-tab { display: flex; flex-direction: column; gap: 8px; }
+.ogx-i-fleethelp-head { display: flex; align-items: center; gap: 6px; }
+.ogx-i-fleethelp-head select { flex: 1; }
+.ogx-i-fleethelp-table td { vertical-align: top; }
+.ogx-i-fleethelp-table { width: 100%; table-layout: auto; }
+.ogx-i-fleethelp-table td, .ogx-i-fleethelp-table th { padding: 2px 3px; word-break: break-word; }
+.ogx-i-fleethelp-acts .ogx-btn { padding: 1px 5px; font-size: 10px; }
+.ogx-i-fleethelp-table tr.ogx-i-fleethelp-off td { opacity: .65; }
+.ogx-i-fleethelp-acts { white-space: nowrap; }
+.ogx-i-fleethelp-table td.ogx-i-fleethelp-avail { white-space: nowrap; word-break: normal; }
+.ogx-i-fleethelp-table td.ogx-i-fleethelp-need { word-break: normal; }
+.ogx-i-fleethelp-actsbox { display: flex; flex-direction: column; gap: 3px; }
+.ogx-i-fleethelp-muted { color: var(--ogx-muted); font-size: 10px; }
+.ogx-i-fleethelp-foot { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.ogx-i-fleethelp-walk { display: flex; gap: 6px; }
+.ogx-i-fleethelp-rules h4, .ogx-i-fleethelp-editor h4 { margin: 6px 0 3px; font-size: 11px; color: var(--ogx-accent); }
+.ogx-i-fleethelp-rule { display: flex; align-items: center; gap: 6px; padding: 2px 0; border-bottom: 1px solid var(--ogx-border); }
+.ogx-i-fleethelp-rlabel { min-width: 140px; }
+.ogx-i-fleethelp-rule > span:nth-child(2) { flex: 1; }
+.ogx-i-fleethelp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; }
+.ogx-i-fleethelp-field { display: flex; flex-direction: column; gap: 1px; font-size: 10px; }
+.ogx-i-fleethelp-inp { width: 100%; box-sizing: border-box; }
+.ogx-i-fleethelp-statusline { font-size: 10px; color: var(--ogx-muted); }
+.ogx-i-fleethelp-notice { white-space: pre-line; }
+.ogx-i-fleethelp-cpallow { margin: 4px 0; }
+.ogx-i-fleethelp-cpallow[hidden] { display: none; }
+.ogx-i-fleethelp-bst { font-size: 10px; }
+.ogx-i-fleethelp-statusline.ogx-i-fleethelp-stale, .ogx-i-fleethelp-muted.ogx-i-fleethelp-stale { color: var(--ogx-bad, #e06c6c); }
+.ogx-i-fleethelp-all { width: 100%; }
+.ogx-i-fleethelp-table tr.ogx-i-fleethelp-warn td { color: var(--ogx-warn, #e0b04c); font-size: 10px; padding-top: 0; }
+.ogx-i-fleethelp-table tr.ogx-i-fleethelp-stalerow td.ogx-i-fleethelp-src { box-shadow: inset 2px 0 0 var(--ogx-bad, #e06c6c); }
+.ogx-i-fleethelp-table td.ogx-i-fleethelp-cargo, .ogx-i-fleethelp-table td.ogx-i-fleethelp-t217 { white-space: nowrap; word-break: normal; }
+.ogx-i-fleethelp-table tr[data-status="sent"] td.ogx-i-fleethelp-status { color: var(--ogx-good, #6cc070); }
+.ogx-i-fleethelp-table tr[data-status="failed"] td.ogx-i-fleethelp-status { color: var(--ogx-bad, #e06c6c); }
+.ogx-i-fleethelp-orderrow { display: flex; align-items: center; gap: 6px; }
+.ogx-i-fleethelp-walkbox summary, .ogx-i-fleethelp-rulesbox summary { cursor: pointer; color: var(--ogx-accent); font-size: 11px; }
+.ogx-i-fleethelp-walkrow { display: flex; gap: 6px; margin: 4px 0; }
+.ogx-i-fleethelp-dlg-table td { font-size: 11px; padding: 3px 4px; }
+.ogx-i-fleethelp-dlg-skips h4 { margin: 8px 0 3px; font-size: 11px; color: var(--ogx-accent); }
+.ogx-i-fleethelp-dlg-skip { font-size: 11px; color: var(--ogx-muted); }
+.ogx-i-fleethelp-dlg-total { margin-top: 8px; font-size: 11px; }
+</style><style id="ogx-i-todo">
+.ogx-i-todo-host { position: relative; }
+.ogx-i-todo-plus { position: absolute; top: 1px; left: 1px; z-index: 5; min-width: 16px; height: 16px; padding: 0 3px; border: 1px solid #2b3846; border-radius: 3px;
+  background: rgba(13,16,20,.85); color: #8fd18f; font: bold 11px/14px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-i-todo-plus:hover { background: #1f3a1f; color: #fff; }
+.ogx-i-todo-plus.ogx-i-todo-plus-r { left: auto; right: 1px; }
+.ogx-i-todo-plus.ogx-i-todo-has { color: #6f9fd8; font-size: 9px; }
+.ogx-i-todo-dplus { margin: 4px 0; padding: 2px 8px; border: 1px solid #2b3846; border-radius: 3px; background: #161c24; color: #8fd18f; font: bold 11px Verdana, Arial, sans-serif; cursor: pointer; }
+.ogx-i-todo-dplus:hover { background: #1f3a1f; color: #fff; }
+#planetList .smallplanet > .ogx-i-todo-ready { position: absolute; z-index: 6; width: 7px; height: 7px; border-radius: 50%; background: #4caf50; box-shadow: 0 0 4px #4caf50; pointer-events: auto; }
+#planetList .smallplanet > .ogx-i-todo-ready-planet { left: 2px; top: 2px; }
+#planetList .smallplanet > .ogx-i-todo-ready-moon { right: 2px; top: 2px; background: #8fd18f; }
+.ogx-i-todo-tab { display: flex; flex-direction: column; gap: 10px; }
+.ogx-i-todo-form { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.ogx-root .ogx-i-todo-form select { visibility: visible; width: auto; max-width: 170px; height: auto; float: none; } /* game CSS: body.ogame select{visibility:hidden}, select{width:250px} */
+.ogx-i-todo-list-head { margin-bottom: 2px; }
+.ogx-i-todo-muted { color: var(--ogx-muted, #8a96a3); font-size: 10px; }
+.ogx-i-todo-cur { color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-todo-table td { vertical-align: top; }
+.ogx-i-todo-acts { white-space: nowrap; text-align: right; }
+.ogx-i-todo-acts .ogx-btn { margin-left: 2px; }
+.ogx-i-todo-acts > div + div { margin-top: 2px; }
+.ogx-i-todo-nw { white-space: nowrap; }
+.ogx-i-todo-sep { display: none; }
+.ogx-i-todo-table { width: 100%; font-size: 11px; }
+.ogx-i-todo-table td, .ogx-i-todo-table th { padding: 2px 3px; }
+.ogx-i-todo-st-ok { color: var(--ogx-ok, #4caf50); font-weight: bold; }
+.ogx-i-todo-st-wait { color: var(--ogx-warn, #ff9800); }
+.ogx-i-todo-st-bad { color: var(--ogx-bad, #f44336); }
+.ogx-i-todo-st-queued, .ogx-i-todo-st-sent { color: var(--ogx-accent, #6f9fd8); }
+.ogx-i-todo-row-ok td.ogx-i-todo-name { color: var(--ogx-ok, #4caf50); }
+.ogx-i-todo-total td { font-weight: bold; border-top: 1px solid var(--ogx-border, #2b3846); }
+</style><style id="ogx-i-prefs">
+.ogx-i-prefs-tab { display: flex; flex-direction: column; gap: 10px; }
+.ogx-i-prefs-sec { border: 1px solid var(--ogx-border); border-radius: 4px; padding: 6px 8px; background: var(--ogx-panel); }
+.ogx-i-prefs-sec h3 { margin: 0 0 6px; font-size: 12px; color: var(--ogx-accent); }
+.ogx-i-prefs-mods { display: grid; grid-template-columns: 1fr; gap: 3px; }
+.ogx-i-prefs-mod { cursor: pointer; }
+.ogx-i-prefs-muted { color: var(--ogx-muted); }
+.ogx-i-prefs-reload-note { margin-top: 6px; }
+.ogx-i-prefs-reload-note.ogx-i-prefs-pending { color: var(--ogx-warn); }
+.ogx-i-prefs-btns { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.ogx-i-prefs-pastebox { display: flex; gap: 4px; align-items: flex-start; }
+.ogx-i-prefs-paste { flex: 1; min-height: 34px; resize: vertical; font-size: 10px; }
+.ogx-i-prefs-result { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.ogx-i-prefs-result[hidden] { display: none; }
+.ogx-i-prefs-help { display: grid; gap: 2px; }
+.ogx-i-prefs-hk kbd { display: inline-block; min-width: 90px; padding: 0 4px; border: 1px solid var(--ogx-border); border-radius: 3px; background: var(--ogx-bg); font-family: inherit; font-size: 10px; }
+.ogx-i-prefs-conflict { color: var(--ogx-bad); }
+.ogx-i-prefs-legend { cursor: pointer; user-select: none; }
+.ogx-i-prefs-legend::before { content: '▾ '; }
+.ogx-i-prefs-collapsed > .ogx-i-prefs-legend::before { content: '▸ '; }
+.ogx-i-prefs-collapsed > :not(legend) { display: none !important; }
+.ogx-i-prefs-fs-tools { margin-top: 4px; text-align: right; }
+.ogx-i-prefs-preview { display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+.ogx-i-prefs-warn { color: var(--ogx-warn); border-color: var(--ogx-warn); }
+.ogx-i-prefs-r { text-align: right; }
+.ogx-i-prefs-modes { display: flex; flex-direction: column; gap: 3px; }
+.ogx-i-prefs-st-new { color: var(--ogx-ok); }
+.ogx-i-prefs-st-changed { color: var(--ogx-warn); }
+.ogx-i-prefs-st-same { color: var(--ogx-muted); }
+.ogx-i-prefs-keytable td:first-child { word-break: break-all; }
+</style></head>
+
+<body id="buildings" class="full">
+    <div id="tooltip" class="tip"></div>
+<!-- START main.topnav -->
+<div id="boxBG">
+    <div id="page">
+        <a name="anchor" id="anchor"></a>
+        <div id="info" class="header">
+            <div id="clearAdvice"></div>
+            <div id="playerName">Игрок: <span class="textBeefy"><a href="game.php?page=settings">vodoleyko1992</a></span></div>
+            <div id="bar">
+                <ul>
+                    <li><a href="game.php?page=buddyList" target="_self">Друзья</a></li>                    <li><a href="javascript:OpenPopup('?page=notes', 'notes', 720, 300);">Заметки</a></li>                    <li><a href="game.php?page=statistics&amp;range=107" target="_self">Статистика</a>
+                    </li>                    <li><a href="game.php?page=search" target="_self">Поиск</a></li>                    <li><a href="game.php?page=settings" target="_self">Настройки</a></li>
+                                        <li><a href="game.php?page=battleSimulator" target="_self">Симулятор боя</a></li>                    <li><a href="game.php?page=GiveBonus" target="_self">Voucher code</a></li>                    <li><a href="https://ogamex.eu/" target="_self">
+                            <font style="color:red;">Выход</font>
+                        </a></li>
+                </ul>
+            </div>
+            <div id="clock" class="servertime">Окт Сбт 31 14:23:55</div>
+            <div id="planetSelect">
+                <table>
+                    <tbody><tr>
+                        <td id="planetImage">
+                            <img src="./styles/theme/gow/planeten/small/s_normaltempplanet07.gif" alt="">
+                        </td>
+                        <td id="planetSelectorWrapper">
+                            <select id="planetSelector" style="margin-bottom:0px">
+                                <option value="254102">Главная планета [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254104">Colony [2:68:7]</option>
+<option value="254105">1992 [2:68:8]</option>
+<option value="254106">Colony [2:68:9]</option>
+<option value="254107">Планета [2:68:4]</option>
+<option value="254109">Планета [2:68:10]</option>
+<option value="254110" selected="selected">Планета [2:68:11]</option>
+<option value="254111">Планета [2:68:12]</option>
+
+                            </select>
+                            <div style="width: 145px;float: left;margin: 0 10px;margin-bottom: 37px;">
+                                <div class="_previous" style="width: calc(50% - 2px);background: #0d1014;float: left;border: 1px solid #212121;border-top: none;cursor:pointer">
+                                    &lt;</div>
+                                <div class="_next" style="width: calc(50% - 1px);background: #0d1014;float: left;border: 1px solid #212121;border-left: none;border-top: none;cursor:pointer">
+                                    &gt;</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+
+            <div id="resTable">
+                <table>
+                    <tbody><tr>
+                                                                                                                        <td>
+                                        <img data-currentname="current_Металл" data-toolclass="tool_39" src="./styles/theme/gow/images/metal.gif" alt="" class="tooltipHTML" title="
+                                    Металл:|
+                                    &lt;table class='resourceTooltip tool_39'&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Доступно: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;spanstyle='color:red' class='current'&gt;
+                                                    60.733
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Вместимость хранилищ:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class='storage' style='color:red'&gt;
+                                                    50.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Производство:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style='color:lime' class='undermark production'&gt;
+                                                    0                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Кристалл" data-toolclass="tool_39" src="./styles/theme/gow/images/crystal.gif" alt="" class="tooltipHTML" title="
+                                    Кристалл:|
+                                    &lt;table class='resourceTooltip tool_39'&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Доступно: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class='current'&gt;
+                                                    27.324
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Вместимость хранилищ:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class='storage' &gt;
+                                                    50.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Производство:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style='color:lime' class='undermark production'&gt;
+                                                    220.000                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Дейтерий" data-toolclass="tool_39" src="./styles/theme/gow/images/deuterium.gif" alt="" class="tooltipHTML" title="
+                                    Дейтерий:|
+                                    &lt;table class='resourceTooltip tool_39'&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Доступно: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class='current'&gt;
+                                                    4.800
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Вместимость хранилищ:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class='storage' &gt;
+                                                    50.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Производство:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style='color:lime' class='undermark production'&gt;
+                                                    0                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                <td>
+                                    <img data-currentname="current_Энергия" data-toolclass="tool_39" src="./styles/theme/gow/images/energy.gif" alt="" class="tooltipHTML" title="
+                                Энергия:|
+                                &lt;table class='resourceTooltip tool_39'&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Доступно: &lt;/th&gt;
+                                        &lt;td&gt;&lt;span class='current'&gt;0&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Производство::&lt;/th&gt;
+                                        &lt;td&gt;
+                                            &lt;span style='color:lime' class='undermark production'&gt;
+                                                0                                            &lt;/span&gt;
+                                        &lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;потребление:&lt;/th&gt;
+                                        &lt;td&gt;&lt;span style='color:red' class='undermark'&gt;0&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                &lt;/table&gt;
+                            ">
+                                </td>
+
+                                                                                                                                                    <td>
+                                        <img data-currentname="current_Тёмная материя" data-toolclass="tool_92" src="./styles/theme/gow/images/darkmatter.gif" alt="" class="tooltipHTML" title="
+                                    Тёмная материя:|
+                                    &lt;table class='resourceTooltip tool_92'&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Доступно: &lt;/th&gt;
+                                            &lt;td&gt;&lt;span class='current'&gt;1.982&lt;/span&gt;&lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                    
+                    </tr>
+
+                    <tr>
+                                                                                    <td class="res_current tooltip res_current_max" id="current_metal" data-real="60733.000000" data-tooltip-content="60.733">
+                                    60.7K
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_crystal" data-real="27324.444444" data-tooltip-content="27.446">27,4&nbsp;K</td>
+                                                                                                                <td class="res_current tooltip" id="current_deuterium" data-real="4800.000000" data-tooltip-content="4.800">4,8&nbsp;K</td>
+                                                                                                                                                <td class="res_current tooltip Imperium tooltipRight js_hideTipOnMobile" t="0&nbsp;/&nbsp;0">
+                                    <span>
+                                        0&nbsp;/&nbsp;0
+                                    </span>
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_darkmatter" data-real="1982" data-tooltip-content="1.982">
+                                    2K
+                                </td>
+                                                    
+                    </tr>
+                </tbody></table>
+            </div>
+
+
+            <div id="officers" class="">
+                                                                    <a href="game.php?page=vote" class="tooltipHTML   commander js_hideTipOnMobile" title="Vote notification|You can vote and get free Dark Matter">
+                        <img class="glows" src="./styles/theme/gow/img/navigation/alert.gif" width="30" height="30">
+                    </a>
+                            </div>
+
+
+
+            <div class="messages-section">
+                                    <a href="game.php?page=messages" class="messages-button tooltipBottom js_hideTipOnMobile" title="&lt;div style='font-size:11px;'&gt;Сообщения  &lt;/div&gt;">
+                        <span class="new-msg-count">
+                                4
+                        </span>                    </a>
+                    <a href="https://discord.gg/wjBcjvM" class="chat-button tooltipBottom js_hideTipOnMobile" target="_blank" title="&lt;div style='font-size:11px;'&gt;Join our Discord server&lt;/div&gt;">
+                    </a>
+                            </div>
+
+            
+
+</div><!-- END main.topnav -->
+<!-- START main.navigation -->
+<div id="links">
+    <ul id="menuTable">
+        <li>
+            <span class="menu_icon">
+                                    <a class="Imperium tooltipRight js_hideTipOnMobile " href="game.php?page=imperium" title="Империя" target="_self">
+                    </a>
+                            </span>
+            <a class="menubutton " href="game.php?page=overview" target="_self">
+                <span class="textlabel">Обзор</span>
+            </a>
+        </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Resources tooltipRight js_hideTipOnMobile " href="game.php?page=resources" title="Сырьё" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="game.php?page=buildings" target="_self">
+                    <span class="textlabel">Постройки</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="FleetTrader tooltipRight js_hideTipOnMobile " href="game.php?page=fleetDealer" title="Скупщик флота" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="game.php?page=trader" target="_self">
+                    <span class="textlabel">
+                        <font style="color:yellow">Скупщик ресурсов</font>
+                    </span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Research tooltipRight js_hideTipOnMobile " href="game.php?page=techtree" title="Технологии" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="game.php?page=research" target="_self">
+                    <span class="textlabel">Исследования</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                <a class="Tersane tooltipRight js_hideTipOnMobile " href="game.php?page=tournament" title="Tурнир" target="_self">
+                </a>
+            </span>
+                            <a class="menubutton " href="game.php?page=shipyard&amp;mode=fleet" target="_self">
+                    <span class="textlabel">Верфь</span>
+                </a>
+                    </li>
+
+                <li>
+            <span class="menu_icon">
+                <img src="./styles/theme/gow/img/navigation/navi_ikon_defense_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="game.php?page=shipyard&amp;mode=defense" target="_self">
+                <span class="textlabel">Оборона</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Filo tooltipRight js_hideTipOnMobile" href="game.php?page=transport" title="Транспорт" target="_self">
+                </a>
+            </span>
+            <a class="menubutton " href="game.php?page=fleetTable" target="_self">
+                <span class="textlabel">Флот</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Galaxy tooltipRight js_hideTipOnMobile" href="game.php?page=donatebis" title="Shop">
+
+                </a>
+            </span>
+            <a class="menubutton " href="game.php?page=galaxy" target="_self">
+                <span class="textlabel">Галактика</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./styles/theme/gow/img/navigation/navi_ikon_alliance_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="game.php?page=alliance" target="_self">
+                <span class="textlabel">Альянс</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./styles/theme/gow/img/navigation/navi_ikon_premium_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton premiumHighligt " href="game.php?page=officier" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Офицеры</font>
+                </span>
+            </a>
+        </li>        <!-- ogx: commented-out markup removed -->
+        <li>
+            <span class="menu_icon">
+                <div class="Satinal"></div>
+            </span>
+            <a class="menubutton premiumHighligt " href="game.php?page=premium" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Premium</font>
+                </span>
+            </a>
+        </li>
+        <!-- ogx: commented-out markup removed -->
+
+
+
+            <li id="ogx-suite-entry" class="ogx-menu-entry"><span class="menu_icon"><div class="menuImage ogx-menu-icon" title="OgameX Suite: Infinity, Live, Бот, Логи">✦</div></span><a class="menubutton ogx-menubutton" href="#" title="OgameX Suite: Infinity, Live, Бот, Логи" data-ogx="ogx-suite-entry" data-ogx-act="suite:toggle"><span class="textlabel">OgameX Suite</span><span class="ogx-menu-badge" hidden=""></span></a></li></ul>
+        <script type="text/javascript" data-ogx-stripped="inline"></script>
+    
+            </div>
+<!-- END main.navigation -->
+<div id="inhalt">
+    <script type="text/javascript" data-ogx-stripped="inline"></script>
+
+
+<div id="messages_collapsed" class="messpositionDiv" style="z-index:5;">
+        <div id="eventboxLoading" style="text-align:center">
+            <h3>Нет движения флота</h3>
+    </div>
+
+</div>
+<style type="text/css">
+    .allFleetsEvent {
+        display: none;
+    }
+
+    .d23 {}
+</style>
+
+    <div class="technologyContainer">
+        <div id="planet" class="" data-anchor="technologyDetails" style="background:url(./styles/theme/gow/img/pagination/water.jpg) no-repeat; height:300px; width:654px;">
+            <h2>Постройки Планета: Планета</h2>
+
+                    </div>
+
+
+        <div id="technologydetails_wrapper">
+            <div id="technologydetails_content"></div>
+        </div>
+    </div>
+
+    <div class="cs-left"></div>
+    <div class="cs-right"></div>
+
+    <div id="navcontainer">
+        <div id="supplies">
+            <div id="technologies">
+                <h3> Buildings under construction</h3>
+                <div class="bottom-side clearfix">
+                    <div class="largebox">
+                                                    <div class="content">
+                                                                    
+                                                                            <div style="float:left;width:100%;">
+                                            <div id="progressbar" data-time="1" style="height:16px;margin-bottom:5px;" class="ui-progressbar ui-widget ui-widget-content ui-corner-all" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0.01">
+                                            <div class="ui-progressbar-value ui-widget-header ui-corner-left ui-corner-right" style="width: 100%;"></div></div>
+                                            <div class="build-info-row">
+                                                <div class="build-image-wrapper">
+                                                    <img class="build-icon" src="./styles/theme/gow/gebaeude/14.png">
+                                                    <form action="game.php?page=buildings" method="post" class="build_form">
+                                                        <input type="hidden" name="cmd" value="">
+                                                        <button type="submit" class="btn-cancel-building-construction tooltip" data-tooltip-position="top" data-tooltip-content="&lt;span style='font-size:11px;'&gt;Отменить расширение Фабрика роботов Уровень  &lt;span style='color:#d29d00;'&gt;1&lt;/span&gt; ?&lt;/span&gt;">
+                                                            <img>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                                <div class="build-text">
+                                                    <span class="build-name">Фабрика роботов</span>
+                                                    <span class="build-level">Улучшить уровень
+                                                        <span>1</span>
+                                                    </span>
+                                                    <span class="build-time" id="time" data-time="1" secs="1">Готово</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="build-fast-wrapper">
+                                            <form action="game.php?page=buildings" method="post" class="build_form">
+                                                <input type="hidden" name="cmd" value="">
+                                                <button type="submit" class="tooltip" data-tooltip-content="Сразу создайте Antimatter.&lt;br&gt; Цена : 501 DM">
+                                                    <a class="complete-btn" style="text-decoration:none;">
+                                                        <span class="btn-dm-complete-text">Завершено</span>
+                                                        <span class="btn-dm-complete-cost">
+                                                            Стоимость : 501                                                            DM
+                                                        </span>
+                                                    </a>
+
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <div class="container" style="margin-top:10px;">
+                                        
+                                        
+                                                                        
+                                    
+                                                                                    <form action="game.php?page=buildings" method="post" class="build_form">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="listid" value="">
+                                                <button type="submit" class="construction-queue-btn">
+                                                    <a class="construction-queue-item tooltip" data-cancel-message="2 ?" data-tooltip-position="top" data-tooltip-content="&lt;div style='font-size:11px;text-align:center;'&gt;Фабрика роботов (2) &lt;br&gt;&lt;span style='font-size:9px;color:#848484;'&gt;Click to cancel the upgrade&lt;/span&gt;&lt;/div&gt;" style="background-image:url(./styles/theme/gow/gebaeude/14.png);">
+                                                        <span>2</span>
+                                                    </a>
+                                                </button>
+                                            </form>
+                                        
+                                                                        
+                                    
+                                                                                    <form action="game.php?page=buildings" method="post" class="build_form">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="listid" value="">
+                                                <button type="submit" class="construction-queue-btn">
+                                                    <a class="construction-queue-item tooltip" data-cancel-message="3 ?" data-tooltip-position="top" data-tooltip-content="&lt;div style='font-size:11px;text-align:center;'&gt;Фабрика роботов (3) &lt;br&gt;&lt;span style='font-size:9px;color:#848484;'&gt;Click to cancel the upgrade&lt;/span&gt;&lt;/div&gt;" style="background-image:url(./styles/theme/gow/gebaeude/14.png);">
+                                                        <span>3</span>
+                                                    </a>
+                                                </button>
+                                            </form>
+                                        
+                                                                        
+                                    
+                                                                                    <form action="game.php?page=buildings" method="post" class="build_form">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="listid" value="">
+                                                <button type="submit" class="construction-queue-btn">
+                                                    <a class="construction-queue-item tooltip" data-cancel-message="4 ?" data-tooltip-position="top" data-tooltip-content="&lt;div style='font-size:11px;text-align:center;'&gt;Фабрика роботов (4) &lt;br&gt;&lt;span style='font-size:9px;color:#848484;'&gt;Click to cancel the upgrade&lt;/span&gt;&lt;/div&gt;" style="background-image:url(./styles/theme/gow/gebaeude/14.png);">
+                                                        <span>4</span>
+                                                    </a>
+                                                </button>
+                                            </form>
+                                        
+                                    
+                                </div> <!-- closes .container -->
+                            </div> <!-- closes .content -->
+                                            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="navcontainer">
+
+        <div id="supplies">
+
+            <div id="technologies">
+
+                <h3>Постройки</h3>
+
+                <ul class="icons">
+                                                                        
+                                <li class="technology has_details ogx-i-todo-host" data-technology="1">
+                                    <button class="upgrade" onclick="document.getElementById('build_form1').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile metal_mine" title="Рудник металла">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form1" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="1" title="Следующий уровень 1: Металл 60, Кристалл 15
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 60</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 15</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="1" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="2">
+                                    <button class="upgrade" onclick="document.getElementById('build_form2').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile crystal_mine" title="Рудник кристалла">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form2" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="2" title="Следующий уровень 1: Металл 48, Кристалл 24
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 48</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 24</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="2" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="3">
+                                    <button class="upgrade" onclick="document.getElementById('build_form3').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile deuterium_sintetizer" title="Синтезатор дейтерия">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form3" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="3" title="Следующий уровень 1: Металл 225, Кристалл 75
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 225</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 75</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="3" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="4">
+                                    <button class="upgrade" onclick="document.getElementById('build_form4').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile solar_plant" title="Солнечная электростанция">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form4" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="4" title="Следующий уровень 1: Металл 75, Кристалл 30
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 75</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 30</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="4" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="6">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile university" style="background: url(./styles/theme/gow/gebaeude/6.png); background-repeat:no-repeat; background-size:202px 200px;background-size:cover !important;" title="Технополис&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-short" data-ogx-act="badge" data-id="6" title="Следующий уровень 1: Металл 100&nbsp;000&nbsp;000, Кристалл 50&nbsp;000&nbsp;000, Дейтерий 25&nbsp;000&nbsp;000
+Не хватает: металла 99&nbsp;939&nbsp;267, кристалла 49&nbsp;972&nbsp;676, дейтерия 24&nbsp;995&nbsp;200"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal ogx-l-techcost-bad">М 100&nbsp;млн</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal ogx-l-techcost-bad">К 50&nbsp;млн</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium ogx-l-techcost-bad">Д 25&nbsp;млн</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="6" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="12">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile fusion_plant" title="Термоядерная электростанция&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="12" title="Следующий уровень 1: Металл 900, Кристалл 360, Дейтерий 180
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 900</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 360</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium">Д 180</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="12" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="14">
+                                    <button class="upgrade" onclick="document.getElementById('build_form14').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile robot_factory" title="Фабрика роботов">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form14" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="14" title="Следующий уровень 1: Металл 400, Кристалл 120, Дейтерий 200
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 400</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 120</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium">Д 200</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="14" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="15">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile nano_factory" title="Фабрика нанитов&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-short" data-ogx-act="badge" data-id="15" title="Следующий уровень 1: Металл 1&nbsp;000&nbsp;000, Кристалл 500&nbsp;000, Дейтерий 100&nbsp;000
+Не хватает: металла 939&nbsp;267, кристалла 472&nbsp;676, дейтерия 95&nbsp;200"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal ogx-l-techcost-bad">М 1&nbsp;млн</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal ogx-l-techcost-bad">К 500&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium ogx-l-techcost-bad">Д 100&nbsp;тыс.</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="15" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="21">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile hangar" title="Верфь&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="21" title="Следующий уровень 1: Металл 400, Кристалл 200, Дейтерий 100
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 400</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 200</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium">Д 100</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="21" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="22">
+                                    <button class="upgrade" onclick="document.getElementById('build_form22').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile metal_store" title="Хранилище металла">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form22" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="22" title="Следующий уровень 1: Металл 2&nbsp;000
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 2&nbsp;тыс.</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="22" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="23">
+                                    <button class="upgrade" onclick="document.getElementById('build_form23').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile crystal_store" title="Хранилище кристалла">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form23" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="23" title="Следующий уровень 1: Металл 2&nbsp;000, Кристалл 1&nbsp;000
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 2&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 1&nbsp;тыс.</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="23" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="24">
+                                    <button class="upgrade" onclick="document.getElementById('build_form24').submit();"></button>                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile deuterium_store" title="Ёмкость для дейтерия">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form24" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="24" title="Следующий уровень 1: Металл 2&nbsp;000, Кристалл 2&nbsp;000
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 2&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 2&nbsp;тыс.</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="24" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="31">
+                                                                                                            <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile laboratory" title="Исследовательская лаборатория" data-status="disabled">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form31" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="31" title="Следующий уровень 1: Металл 200, Кристалл 400, Дейтерий 200
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 200</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 400</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium">Д 200</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="31" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="33">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile terraformer" title="Терраформер&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-short" data-ogx-act="badge" data-id="33" title="Следующий уровень 1: Кристалл 50&nbsp;000, Дейтерий 100&nbsp;000, Энергия 1&nbsp;000
+Не хватает: кристалла 22&nbsp;676, дейтерия 95&nbsp;200, энергии 1&nbsp;000"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal ogx-l-techcost-bad">К 50&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium ogx-l-techcost-bad">Д 100&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-energy ogx-l-techcost-bad">Э 1&nbsp;тыс.</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="33" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                            
+                                <li class="technology has_details ogx-i-todo-host" data-technology="34">
+                                                                                                            <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile ally_deposit" title="Склад альянса">
+                                            <form action="game.php?page=buildings" method="post" class="build_form" id="build_form34" style="display:none">
+                                                <input type="hidden" name="cmd" value="">
+                                                <input type="hidden" name="building" value="">
+                                            </form>
+                                            <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                        <span class="ogx-l-techcost-badge ogx-l-techcost-short" data-ogx-act="badge" data-id="34" title="Следующий уровень 1: Металл 20&nbsp;000, Кристалл 40&nbsp;000
+Не хватает: кристалла 12&nbsp;676"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 20&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal ogx-l-techcost-bad">К 40&nbsp;тыс.</span></span></div>
+                                    <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="34" title="Добавить следующий уровень в план">+</button></li>
+
+                                                                                                                    
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="44">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile silo" title="Ракетная шахта&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge" data-ogx-act="badge" data-id="44" title="Следующий уровень 1: Металл 20&nbsp;000, Кристалл 20&nbsp;000, Дейтерий 1&nbsp;000
+Ресурсов достаточно"><span class="ogx-l-techcost-bl ogx-l-techcost-bl-metal">М 20&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-crystal">К 20&nbsp;тыс.</span><span class="ogx-l-techcost-bl ogx-l-techcost-bl-deuterium">Д 1&nbsp;тыс.</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="44" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="71">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile conveyor1" style="background: url(./styles/theme/gow/gebaeude/71.png); background-repeat:no-repeat; background-size:202px 200px;background-size:cover !important;" title="Легкий конвейер&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-unknown" data-ogx-act="badge" data-id="71" title="Цена этого здания на сервере неизвестна: игра показывает её только в окне постройки"><span class="ogx-l-techcost-bl">цена ?</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="71" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="72">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile conveyor2" style="background: url(./styles/theme/gow/gebaeude/72.png); background-repeat:no-repeat; background-size:202px 200px;background-size:cover !important;" title="Средний конвейер&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-unknown" data-ogx-act="badge" data-id="72" title="Цена этого здания на сервере неизвестна: игра показывает её только в окне постройки"><span class="ogx-l-techcost-bl">цена ?</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="72" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                                                                                                            <li class="technology has_details ogx-i-todo-host" data-technology="73">
+                                    <div class="icon sprite sprite_medium medium tooltipTop hideOthers js_hideTipOnMobile conveyor3" style="background: url(./styles/theme/gow/gebaeude/73.png); background-repeat:no-repeat; background-size:202px 200px;background-size:cover !important;" title="Тяжелый конвейер&lt;br&gt;Requirements are not met!" data-status="off">
+                                        <span class="level" data-value="0" data-bonus="0"><span>0</span><span class="bonus"></span></span>
+                                    <span class="ogx-l-techcost-badge ogx-l-techcost-unknown" data-ogx-act="badge" data-id="73" title="Цена этого здания на сервере неизвестна: игра показывает её только в окне постройки"><span class="ogx-l-techcost-bl">цена ?</span></span></div>
+                                <button type="button" class="ogx-i-todo-plus ogx-i-todo-plus-r" data-ogx-act="todo:plus" data-id="73" title="Добавить следующий уровень в план">+</button></li>
+                                                        
+                        
+
+                        <script data-ogx-stripped="inline"></script>
+
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+        </div>
+        <div id="rechts">
+	<div id="norm">
+		<div id="myWorlds">
+			<div id="myWorlds">
+				<div id="countColonies">
+					<p class="textCenter"><span>[9 / 9]</span> Мои планеты</p>
+				</div><div class="ogx-l-planetbar-switch" hidden=""><button type="button" class="ogx-l-planetbar-switch-btn ogx-l-planetbar-on" title="Показать производство планет" data-ogx-act="planetbar:view-planets" data-view="planets">Планеты</button><button type="button" class="ogx-l-planetbar-switch-btn" title="Показать запасы лун" data-ogx-act="planetbar:view-moons" data-view="moons">Луны</button></div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254102" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Главная планета [2:68:5]&lt;/b&gt;&lt;br&gt;
+				32°C до 72°C&lt;br&gt;
+				20.000 км (288 / 405)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254102'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254102'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254102'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254102'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254102'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254102'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254102&amp;galaxy=2&amp;system=68&amp;position=5'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_dschjungelplanet07.gif">
+								<span class="planet-name">Главная планета</span>
+								<span class="planet-koords">[2:68:5]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254102"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254102"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-unknown" title="Металл: 1&nbsp;723&nbsp;808&nbsp;565
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">1,72&nbsp;млрд</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-unknown" title="Кристалл: 354&nbsp;869&nbsp;954
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">354&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-unknown" title="Дейтерий: 413&nbsp;513&nbsp;299
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">413&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 322&nbsp;777, потребление 123&nbsp;880, баланс +198&nbsp;897 (использовано 38%)"><span class="ogx-l-planetbar-fill" data-w="38.4" style="width: 38.4%;"></span><span class="ogx-l-planetbar-val">+198&nbsp;897</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 2&nbsp;492&nbsp;191&nbsp;820">Σ 2,49&nbsp;млрд</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 939, нужно 42 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 939/42</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-build ogx-l-planetbar-stale" title="На планете идёт строительство (значок в списке планет). Что строится и когда закончится, видно в обзоре или на странице построек этой планеты.">идёт строительство</div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 949 (без спутников и гусеничников), данные 23 мин назад" data-ships="949"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-ok" style="width: 0.5%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254103" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Colony [2:68:6]&lt;/b&gt;&lt;br&gt;
+				20°C до 60°C&lt;br&gt;
+				18.627 км (258 / 347)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254103'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254103'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254103'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254103'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254103'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254103'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254103&amp;galaxy=2&amp;system=68&amp;position=6'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_dschjungelplanet10.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:6]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254103"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254103"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-unknown" title="Металл: 271&nbsp;846&nbsp;814
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">271&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-unknown" title="Кристалл: 267&nbsp;043&nbsp;815
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">267&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-unknown" title="Дейтерий: 227&nbsp;294&nbsp;135
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">227&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 322&nbsp;476, потребление 62&nbsp;501, баланс +259&nbsp;975 (использовано 19%)"><span class="ogx-l-planetbar-fill" data-w="19.4" style="width: 19.4%;"></span><span class="ogx-l-planetbar-val">+259&nbsp;975</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 766&nbsp;184&nbsp;764">Σ 766&nbsp;млн</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 971, нужно 13 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 971/13</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-build ogx-l-planetbar-stale" title="На планете идёт строительство (значок в списке планет). Что строится и когда закончится, видно в обзоре или на странице построек этой планеты.">идёт строительство</div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 971 (без спутников и гусеничников), данные 23 мин назад" data-ships="971"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-ok" style="width: 0.5%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254104" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Colony [2:68:7]&lt;/b&gt;&lt;br&gt;
+				22°C до 62°C&lt;br&gt;
+				20.808 км (262 / 433)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254104'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254104'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254104'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254104'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254104'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254104'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254104&amp;galaxy=2&amp;system=68&amp;position=7'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:7]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254104"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254104"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-ok" title="Металл: 1&nbsp;646&nbsp;177&nbsp;140 (14%)
+Ёмкость: 11&nbsp;483&nbsp;000&nbsp;000, заполнится через 2:39:48 (31.10 16:03:42)
+Выработка: +3&nbsp;693&nbsp;204&nbsp;431/ч, +88&nbsp;636&nbsp;906&nbsp;359/сут"><span class="ogx-l-planetbar-fill" data-w="14.3" style="width: 14.3%;"></span><span class="ogx-l-planetbar-val">1,64&nbsp;млрд</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+3,69&nbsp;млрд/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-ok" title="Кристалл: 673&nbsp;569&nbsp;212 (20%)
+Ёмкость: 3&nbsp;416&nbsp;925&nbsp;000, заполнится через 1:48:55 (31.10 15:12:49)
+Выработка: +1&nbsp;511&nbsp;154&nbsp;987/ч, +36&nbsp;267&nbsp;719&nbsp;709/сут"><span class="ogx-l-planetbar-fill" data-w="19.7" style="width: 19.7%;"></span><span class="ogx-l-planetbar-val">673&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+1,51&nbsp;млрд/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-ok" title="Дейтерий: 296&nbsp;652&nbsp;973 (16%)
+Ёмкость: 1&nbsp;863&nbsp;925&nbsp;000, заполнится через 2:21:17 (31.10 15:45:11)
+Выработка: +665&nbsp;541&nbsp;168/ч, +15&nbsp;972&nbsp;988&nbsp;040/сут"><span class="ogx-l-planetbar-fill" data-w="15.9" style="width: 15.9%;"></span><span class="ogx-l-planetbar-val">296&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+665&nbsp;млн/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 223&nbsp;276, потребление 79&nbsp;694, баланс +143&nbsp;582 (использовано 36%)"><span class="ogx-l-planetbar-fill" data-w="35.7" style="width: 35.7%;"></span><span class="ogx-l-planetbar-val">+143&nbsp;582</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 2&nbsp;616&nbsp;399&nbsp;326">Σ 2,61&nbsp;млрд</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 963, нужно 44 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 963/44</span></div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 963 (без спутников и гусеничников), данные 23 мин назад" data-ships="963"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-ok" style="width: 0.5%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254105" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;1992 [2:68:8]&lt;/b&gt;&lt;br&gt;
+				-10°C до 30°C&lt;br&gt;
+				22.671 км (403 / 529)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254105'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254105'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254105'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254105'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254105'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254105'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254105&amp;galaxy=2&amp;system=68&amp;position=8'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_normaltempplanet02.gif">
+								<span class="planet-name">1992</span>
+								<span class="planet-koords">[2:68:8]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254105"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254105"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-ok" title="Металл: 51&nbsp;551&nbsp;968&nbsp;486 (6%)
+Ёмкость: 798&nbsp;945&nbsp;200&nbsp;000, заполнится через 1д 16:12:19 (02.11 05:36:13)
+Выработка: +18&nbsp;589&nbsp;421&nbsp;550/ч, +446&nbsp;146&nbsp;117&nbsp;213/сут"><span class="ogx-l-planetbar-fill" data-w="6.5" style="width: 6.5%;"></span><span class="ogx-l-planetbar-val">51,5&nbsp;млрд</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+18,5&nbsp;млрд/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-unknown" title="Кристалл: 1&nbsp;047&nbsp;664&nbsp;225&nbsp;474
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">1,04&nbsp;трлн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-unknown" title="Дейтерий: 749&nbsp;360&nbsp;896&nbsp;061
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">749&nbsp;млрд</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 758&nbsp;848, потребление 401&nbsp;825, баланс +357&nbsp;023 (использовано 53%)"><span class="ogx-l-planetbar-fill" data-w="53.0" style="width: 53%;"></span><span class="ogx-l-planetbar-val">+357&nbsp;023</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 1&nbsp;848&nbsp;577&nbsp;090&nbsp;021">Σ 1,84&nbsp;трлн</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 100&nbsp;243, нужно 30&nbsp;810 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 100&nbsp;243/30&nbsp;810</span></div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 208&nbsp;986 (без спутников и гусеничников), данные 6 мин назад" data-ships="208986"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-bad" style="width: 100%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254106" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Colony [2:68:9]&lt;/b&gt;&lt;br&gt;
+				15°C до 55°C&lt;br&gt;
+				20.591 км (248 / 429)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254106'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254106'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254106'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254106'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254106'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254106'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254106&amp;galaxy=2&amp;system=68&amp;position=9'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_wasserplanet09.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:9]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254106"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254106"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-ok" title="Металл: 505&nbsp;952&nbsp;044 (2%)
+Ёмкость: 21&nbsp;050&nbsp;575&nbsp;000, заполнится через 7:57:32 (31.10 21:21:26)
+Выработка: +2&nbsp;581&nbsp;303&nbsp;789/ч, +61&nbsp;951&nbsp;290&nbsp;948/сут"><span class="ogx-l-planetbar-fill" data-w="2.4" style="width: 2.4%;"></span><span class="ogx-l-planetbar-val">505&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+2,58&nbsp;млрд/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-ok" title="Кристалл: 176&nbsp;150&nbsp;938 (3%)
+Ёмкость: 6&nbsp;263&nbsp;925&nbsp;000, заполнится через 6:34:18 (31.10 19:58:12)
+Выработка: +926&nbsp;363&nbsp;908/ч, +22&nbsp;232&nbsp;733&nbsp;810/сут"><span class="ogx-l-planetbar-fill" data-w="2.8" style="width: 2.8%;"></span><span class="ogx-l-planetbar-val">176&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+926&nbsp;млн/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-ok" title="Дейтерий: 161&nbsp;235&nbsp;740 (9%)
+Ёмкость: 1&nbsp;863&nbsp;925&nbsp;000, заполнится через 4:42:25 (31.10 18:06:19)
+Выработка: +361&nbsp;732&nbsp;709/ч, +8&nbsp;681&nbsp;585&nbsp;018/сут"><span class="ogx-l-planetbar-fill" data-w="8.7" style="width: 8.7%;"></span><span class="ogx-l-planetbar-val">161&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+361&nbsp;млн/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 95&nbsp;028, потребление 48&nbsp;209, баланс +46&nbsp;819 (использовано 51%)"><span class="ogx-l-planetbar-fill" data-w="50.7" style="width: 50.7%;"></span><span class="ogx-l-planetbar-val">+46&nbsp;819</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 843&nbsp;338&nbsp;724">Σ 843&nbsp;млн</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 979, нужно 15 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 979/15</span></div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 979 (без спутников и гусеничников), данные 23 мин назад" data-ships="979"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-ok" style="width: 0.5%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254107" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Планета [2:68:4]&lt;/b&gt;&lt;br&gt;
+				57°C до 97°C&lt;br&gt;
+				20.856 км (213 / 435)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254107'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254107'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254107'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254107'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254107'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254107'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254107&amp;galaxy=2&amp;system=68&amp;position=4'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_dschjungelplanet03.gif">
+								<span class="planet-name">Планета</span>
+								<span class="planet-koords">[2:68:4]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254107"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254107"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-ok" title="Металл: 71&nbsp;332&nbsp;494 (2%)
+Ёмкость: 3&nbsp;416&nbsp;925&nbsp;000, заполнится через 2:23:06 (31.10 15:47:01)
+Выработка: +1&nbsp;402&nbsp;639&nbsp;188/ч, +33&nbsp;663&nbsp;340&nbsp;535/сут"><span class="ogx-l-planetbar-fill" data-w="2.1" style="width: 2.1%;"></span><span class="ogx-l-planetbar-val">71,3&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+1,4&nbsp;млрд/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-ok" title="Кристалл: 36&nbsp;470&nbsp;084 (4%)
+Ёмкость: 1&nbsp;016&nbsp;750&nbsp;000, заполнится через 1:59:16 (31.10 15:23:10)
+Выработка: +493&nbsp;130&nbsp;715/ч, +11&nbsp;835&nbsp;137&nbsp;166/сут"><span class="ogx-l-planetbar-fill" data-w="3.6" style="width: 3.6%;"></span><span class="ogx-l-planetbar-val">36,4&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+493&nbsp;млн/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-ok" title="Дейтерий: 38&nbsp;092&nbsp;527 (13%)
+Ёмкость: 302&nbsp;550&nbsp;000, заполнится через 1:19:04 (31.10 14:42:58)
+Выработка: +200&nbsp;663&nbsp;811/ч, +4&nbsp;815&nbsp;931&nbsp;471/сут"><span class="ogx-l-planetbar-fill" data-w="12.6" style="width: 12.6%;"></span><span class="ogx-l-planetbar-val">38&nbsp;млн</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-ok" title="Выработка в час">+200&nbsp;млн/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 122&nbsp;323, потребление 27&nbsp;184, баланс +95&nbsp;139 (использовано 22%)"><span class="ogx-l-planetbar-fill" data-w="22.2" style="width: 22.2%;"></span><span class="ogx-l-planetbar-val">+95&nbsp;139</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 145&nbsp;895&nbsp;106">Σ 145&nbsp;млн</span><span class="ogx-l-planetbar-need ogx-l-planetbar-ok" data-ship="217" title="Улучшенный транспорт: есть 994, нужно 3 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 994/3</span></div><span class="ogx-l-planetbar-ships ogx-l-planetbar-ships-inflow" title="Кораблей на планете: 994 (без спутников и гусеничников), данные 23 мин назад" data-ships="994"><span class="ogx-l-planetbar-ships-fill ogx-l-planetbar-ok" style="width: 0.5%; min-width: 8px;"></span></span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254109" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Планета [2:68:10]&lt;/b&gt;&lt;br&gt;
+				-22°C до 18°C&lt;br&gt;
+				19.390 км (0 / 376)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254109'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254109'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254109'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254109'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254109'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254109'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254109&amp;galaxy=2&amp;system=68&amp;position=10'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_wasserplanet09.gif">
+								<span class="planet-name">Планета</span>
+								<span class="planet-koords">[2:68:10]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254109"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254109"><span class="ogx-l-planetbar-muted" title="Данных о ресурсах ещё нет: откройте эту планету, страницу Empire или нажмите OgameX Suite → Live → «Обновить данные всех планет»">нет данных</span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254110" class="planetlink  active active-planet planetPic reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Планета [2:68:11]&lt;/b&gt;&lt;br&gt;
+				-39°C до 1°C&lt;br&gt;
+				18.027 км (0 / 325)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254110'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254110'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254110'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254110'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254110'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254110'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254110&amp;galaxy=2&amp;system=68&amp;position=11'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_normaltempplanet07.gif">
+								<span class="planet-name">Планета</span>
+								<span class="planet-koords">[2:68:11]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254110"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254110"><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="metal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-metal">М</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-metal ogx-l-planetbar-unknown" title="Металл: 60&nbsp;733
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">60,7&nbsp;тыс.</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="crystal"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-crystal">К</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-crystal ogx-l-planetbar-unknown" title="Кристалл: 27&nbsp;324
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">27,3&nbsp;тыс.</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-res" data-res="deuterium"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-deuterium">Д</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-r-deuterium ogx-l-planetbar-unknown" title="Дейтерий: 4&nbsp;800
+Ёмкость и выработка неизвестны (данные со страницы Empire: откройте эту планету)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">4&nbsp;800</span></span><span class="ogx-l-planetbar-rate ogx-l-planetbar-muted" title="Выработка неизвестна: откройте эту планету">?/ч</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-eline"><span class="ogx-l-planetbar-lbl ogx-l-planetbar-r-energy">Э</span><span class="ogx-l-planetbar-stock ogx-l-planetbar-energy ogx-l-planetbar-ok" title="Энергия: производство 0, потребление 0, баланс 0 (использовано 0%)"><span class="ogx-l-planetbar-fill" data-w="0.0" style="width: 0%;"></span><span class="ogx-l-planetbar-val">0</span></span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-sline"><span class="ogx-l-planetbar-sum" title="Всего ресурсов: 92&nbsp;857">Σ 92,8&nbsp;тыс.</span><span class="ogx-l-planetbar-need ogx-l-planetbar-muted" data-ship="217" title="Улучшенный транспорт: есть неизвестно (откройте «Флот» на этой планете), нужно 1 (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. ?/1</span></div><div class="ogx-l-planetbar-line ogx-l-planetbar-build ogx-l-planetbar-stale" title="На планете идёт строительство (значок в списке планет). Что строится и когда закончится, видно в обзоре или на странице построек этой планеты.">идёт строительство</div></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="game.php?page=overview&amp;cp=254111" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style='text-align:left'&gt;
+				&lt;b&gt;Планета [2:68:12]&lt;/b&gt;&lt;br&gt;
+				-13°C до 27°C&lt;br&gt;
+				18.520 км (0 / 343)&lt;br&gt;
+
+				&lt;a href='game.php?page=overview&amp;cp=254111'&gt;Обзор&lt;/a&gt;&lt;br&gt;
+								&lt;a href='game.php?page=buildings&amp;cp=254111'&gt;Постройки&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=research&amp;cp=254111'&gt;Исследования&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href='game.php?page=shipyard&amp;cp=254111'&gt;Верфь&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=shipyard&amp;mode=defense&amp;cp=254111'&gt;Оборона&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=fleetTable&amp;cp=254111'&gt;Флот&lt;/a&gt;&lt;br&gt;
+												&lt;a href='game.php?page=galaxy&amp;cp=254111&amp;galaxy=2&amp;system=68&amp;position=12'&gt;Галактика&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="styles/theme/gow/planeten/small/s_wasserplanet06.gif">
+								<span class="planet-name">Планета</span>
+								<span class="planet-koords">[2:68:12]
+																</span>
+							</a>
+
+							
+
+
+
+						</div><div class="ogx-l-planetbar-prod ogx-l-planetbar-inflow" data-planet-id="254111"><div class="ogx-l-planetbar-part ogx-l-planetbar-planet" data-key="p254111"><span class="ogx-l-planetbar-muted" title="Данных о ресурсах ещё нет: откройте эту планету, страницу Empire или нажмите OgameX Suite → Live → «Обновить данные всех планет»">нет данных</span></div><div class="ogx-l-planetbar-part ogx-l-planetbar-moon ogx-l-planetbar-nomoon"><span class="ogx-l-planetbar-muted">нет луны</span></div></div>
+					<div class="ogx-l-inflight-totals"><div class="ogx-l-inflight-head"><span class="ogx-l-inflight-title">Итоги</span><span class="ogx-l-inflight-cols"><span class="ogx-l-inflight-ch ogx-l-inflight-r-metal">М</span><span class="ogx-l-inflight-ch ogx-l-inflight-r-crystal">К</span><span class="ogx-l-inflight-ch ogx-l-inflight-r-deuterium">Д</span><span class="ogx-l-inflight-ch">Σ</span></span><button type="button" class="ogx-l-inflight-btn" title="Обновить список флотов (один запрос страницы «Флот»)" data-ogx-act="inflight:refresh">⟳</button><button type="button" class="ogx-l-inflight-btn" title="Свернуть / развернуть" data-ogx-act="inflight:toggle">▾</button></div><div class="ogx-l-inflight-body"><div class="ogx-l-inflight-line ogx-l-inflight-l-inflight" data-row="inflight" title="Ресурсы на борту своих флотов: 0 заданий (возвраты без груза не считаются)
+Список флотов: только что"><span class="ogx-l-inflight-lbl">В полёте</span><span class="ogx-l-inflight-v ogx-l-inflight-r-metal" data-res="metal" data-v="0" title="Металл: 0">0</span><span class="ogx-l-inflight-v ogx-l-inflight-r-crystal" data-res="crystal" data-v="0" title="Кристалл: 0">0</span><span class="ogx-l-inflight-v ogx-l-inflight-r-deuterium" data-res="deuterium" data-v="0" title="Дейтерий: 0">0</span><span class="ogx-l-inflight-v ogx-l-inflight-r-sum" data-res="sum" data-v="0" title="Всего: 0">0</span></div><div class="ogx-l-inflight-line ogx-l-inflight-l-bodies" data-row="bodies" title="Сумма запасов всех тел с данными (проекция на текущий момент)"><span class="ogx-l-inflight-lbl">На планетах</span><span class="ogx-l-inflight-v ogx-l-inflight-r-metal" data-res="metal" data-v="55771146280" title="Металл: 55&nbsp;771&nbsp;146&nbsp;280">55,7&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-crystal" data-res="crystal" data-v="1049172356803" title="Кристалл: 1&nbsp;049&nbsp;172&nbsp;356&nbsp;803">1,04&nbsp;трлн</span><span class="ogx-l-inflight-v ogx-l-inflight-r-deuterium" data-res="deuterium" data-v="750497689538" title="Дейтерий: 750&nbsp;497&nbsp;689&nbsp;538">750&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-sum" data-res="sum" data-v="1855441192622" title="Всего: 1&nbsp;855&nbsp;441&nbsp;192&nbsp;622">1,85&nbsp;трлн</span></div><div class="ogx-l-inflight-line ogx-l-inflight-l-prod" data-row="prod" title="Суммарная выработка планет"><span class="ogx-l-inflight-lbl">Выраб./ч</span><span class="ogx-l-inflight-v ogx-l-inflight-r-metal" data-res="metal" data-v="26266568961" title="Металл: 26&nbsp;266&nbsp;568&nbsp;961/ч">+26,2&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-crystal" data-res="crystal" data-v="2930649612" title="Кристалл: 2&nbsp;930&nbsp;649&nbsp;612/ч">+2,93&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-deuterium" data-res="deuterium" data-v="1227937689" title="Дейтерий: 1&nbsp;227&nbsp;937&nbsp;689/ч">+1,22&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-sum" data-res="sum" data-v="30425156261" title="Всего: 30&nbsp;425&nbsp;156&nbsp;261/ч">+30,4&nbsp;млрд</span></div><div class="ogx-l-inflight-line ogx-l-inflight-l-grand" data-row="grand" title="На планетах + в полёте"><span class="ogx-l-inflight-lbl">Итого</span><span class="ogx-l-inflight-v ogx-l-inflight-r-metal" data-res="metal" data-v="55771146280" title="Металл: 55&nbsp;771&nbsp;146&nbsp;280">55,7&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-crystal" data-res="crystal" data-v="1049172356803" title="Кристалл: 1&nbsp;049&nbsp;172&nbsp;356&nbsp;803">1,04&nbsp;трлн</span><span class="ogx-l-inflight-v ogx-l-inflight-r-deuterium" data-res="deuterium" data-v="750497689538" title="Дейтерий: 750&nbsp;497&nbsp;689&nbsp;538">750&nbsp;млрд</span><span class="ogx-l-inflight-v ogx-l-inflight-r-sum" data-res="sum" data-v="1855441192622" title="Всего: 1&nbsp;855&nbsp;441&nbsp;192&nbsp;622">1,85&nbsp;трлн</span></div><div class="ogx-l-inflight-line ogx-l-inflight-l-need"><span class="ogx-l-inflight-lbl">Транспорт</span><span class="ogx-l-inflight-need ogx-l-inflight-ok" data-ship="217" data-need="30925" data-have="105089" title="Улучшенный транспорт: есть 105&nbsp;089 (сумма по 6 телам), нужно 30&nbsp;925 для 1&nbsp;855&nbsp;441&nbsp;192&nbsp;622 ресурсов (вместимость 60&nbsp;000&nbsp;000)">Ул. трансп. 105&nbsp;089/30&nbsp;925</span></div><div class="ogx-l-inflight-note ogx-l-inflight-muted">Нет данных о ресурсах: 2 тела.</div><div class="ogx-l-inflight-status" hidden=""></div></div></div></div><div id="ogx-l-timeline" class="ogx-l-timeline-root ogx-l-timeline-pos-right ogx-l-timeline-gz"><div class="ogx-l-timeline-head"><button type="button" class="ogx-l-timeline-btn ogx-l-timeline-reload" title="Обновить список полётов (один запрос страницы «Флот»)" aria-label="Обновить" data-ogx-act="timeline:reload">⟳</button><span class="ogx-l-timeline-title">Полёты</span><span class="ogx-l-timeline-slots ogx-l-timeline-slots-fleet" data-slots="fleet" data-used="0" data-max="22" title="Слоты флотов: занято 0 из 22 (по списку полётов)">Ф&nbsp;0/22</span><span class="ogx-l-timeline-slots ogx-l-timeline-slots-exp" data-slots="expedition" data-used="0" data-max="3" title="Слоты экспедиций: занято 0 из 3 (по списку полётов)">Э&nbsp;0/3</span><button type="button" class="ogx-l-timeline-btn ogx-l-timeline-toggle" title="Свернуть / развернуть" data-ogx-act="timeline:toggle">▾</button></div><div class="ogx-l-timeline-body"><div class="ogx-l-timeline-status" hidden=""></div><div class="ogx-l-timeline-list"><div class="ogx-l-timeline-empty ogx-l-timeline-muted">Нет полётов</div></div><div class="ogx-l-timeline-foot ogx-l-timeline-muted" hidden="" title="Список флотов: только что"></div></div></div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+        <script data-ogx-stripped="inline"></script>
+
+    </div>
+
+<div class="gototop"></div>
+<div class="clear"></div>
+<script type="text/javascript" data-ogx-stripped="inline"></script>
+
+<div id="siteFooter" class="clearfloat">
+    <div class="fcontent">
+        <div class="fleft textLeft">
+            <b>© 2026 - OGAMEX</b>
+
+             </div>
+        <div class="fright textRight">
+            <a href="game.php?page=banList" target="_self">
+                <font style="color:red;">Заблокированные</font>
+            </a> |
+            <a href="game.php?page=records" target="_self">
+                <font style="color:orange;">Рекорды</font>
+            </a> |
+            <a href="game.php?page=battleHall" target="_self">
+                <font style="color:#6F9FC8;">Зал славы</font>
+            </a> |
+            <!-- ogx: commented-out markup removed -->
+
+            <a href="game.php?page=ticket" target="_self">Техническая поддержка</a> |            <a href="index.php?page=rules" target="rules">Правила</a> |
+            <a href="game.php?page=vote" target="_self">
+                <font style="color:green;">Vote &amp; Reward</font>
+            </a> |
+            <a href="#" onclick="return Dialog.Server();">
+                <font style="color:green;">Game information</font>
+            </a>
+        </div>
+        <br class="clearfloat">
+    </div>
+</div>
+
+
+<div id="fancybox-tmp"></div><div id="fancybox-loading"><div></div></div><div id="fancybox-overlay"></div><div id="fancybox-wrap"><div id="fancybox-outer"><div class="fancybox-bg" id="fancybox-bg-n"></div><div class="fancybox-bg" id="fancybox-bg-ne"></div><div class="fancybox-bg" id="fancybox-bg-e"></div><div class="fancybox-bg" id="fancybox-bg-se"></div><div class="fancybox-bg" id="fancybox-bg-s"></div><div class="fancybox-bg" id="fancybox-bg-sw"></div><div class="fancybox-bg" id="fancybox-bg-w"></div><div class="fancybox-bg" id="fancybox-bg-nw"></div><div id="fancybox-content"></div><a id="fancybox-close"></a><div id="fancybox-title"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a></div></div><div id="ogx-panel-infinity" class="ogx-root ogx-panel ogx-panel-right" hidden="" tabindex="-1" style="width: min(465px, 100vw);"><div class="ogx-panel-grip" title="Изменить ширину"></div><div class="ogx-panel-header"><div class="ogx-panel-title">OgameX Suite</div><button class="ogx-btn ogx-btn-icon ogx-panel-close" title="Закрыть (Esc)" type="button"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ogx-icon ogx-icon-close"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></button></div><div id="ogx-i-panel-head" class="ogx-i-panel-head"><div class="ogx-i-panel-hline"><span class="ogx-i-panel-pname">vodoleyko1992</span><span class="ogx-i-panel-pcls" hidden=""></span><span class="ogx-i-panel-prank" title="Место в общем рейтинге">место 107</span><span class="ogx-i-panel-pvac" hidden=""></span></div><div class="ogx-i-panel-hline ogx-i-panel-offline"><span class="ogx-i-panel-poff" data-key="none" title="">Офицеры: неизвестно — <a class="ogx-i-panel-offlink" href="https://ogamex.eu/Aeternum/game.php?page=officier" data-ogx-act="panel:officers" title="Уровни офицеров видны только на странице «Офицеры»: откройте её один раз">откройте «Офицеры»</a></span></div><div class="ogx-i-panel-hline"><span class="ogx-i-panel-pdm" title="Тёмная материя">ТМ 1&nbsp;982</span><span class="ogx-i-panel-clock" title="Время сервера">13:23:53</span><span class="ogx-i-panel-attack" data-ogx-act="panel:attack" title="Враждебных флотов не обнаружено (данные только что)">Атак нет</span></div></div><div class="ogx-tabs ogx-tab-groups" role="tablist"><button class="ogx-tab ogx-tab-group ogx-active" role="tab" data-group="infinity" title="OgameX Infinity: панель, империя, цели, шпионаж, статистика, слежка" type="button" aria-selected="true">Infinity</button><button class="ogx-tab ogx-tab-group" role="tab" data-group="live" title="OgameX Live: производство, ресурсы в полёте, стоимость, флот, экспедиции, полёты" type="button" aria-selected="false">Live</button><button class="ogx-tab ogx-tab-group" role="tab" data-group="bot" title="Полная автоматизация (в разработке)" type="button" aria-selected="false">Бот</button><button class="ogx-tab ogx-tab-group" role="tab" data-group="logs" title="Логи для разбора" type="button" aria-selected="false">Логи</button></div><div class="ogx-tabs" role="tablist"><button class="ogx-tab" role="tab" data-tab="planets" type="button">Планеты<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="empire" type="button">Империя<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="targets" type="button">Цели<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="search" type="button">Поиск<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="spy" type="button">Шпионаж<span class="ogx-badge">16</span></button><button class="ogx-tab" role="tab" data-tab="stats" type="button">Статистика<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="stalk" type="button">Слежка<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="flights" type="button">Полёты<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="collect" type="button">Сбор<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="todo" type="button">План<span class="ogx-badge" hidden=""></span></button><button class="ogx-tab" role="tab" data-tab="prefs" type="button">Настройки<span class="ogx-badge" hidden=""></span></button></div><div class="ogx-panel-body"><div class="ogx-tab-pane" data-tab="live" hidden=""></div><div class="ogx-tab-pane" data-tab="bot" hidden=""></div><div class="ogx-tab-pane" data-tab="planets" hidden=""></div><div class="ogx-tab-pane" data-tab="diag" hidden=""></div><div class="ogx-tab-pane" data-tab="empire" hidden=""></div><div class="ogx-tab-pane" data-tab="targets" hidden=""></div><div class="ogx-tab-pane" data-tab="search" hidden=""></div><div class="ogx-tab-pane" data-tab="spy" hidden=""></div><div class="ogx-tab-pane" data-tab="stats" hidden=""></div><div class="ogx-tab-pane" data-tab="stalk" hidden=""></div><div class="ogx-tab-pane" data-tab="flights" hidden=""></div><div class="ogx-tab-pane" data-tab="collect" hidden=""></div><div class="ogx-tab-pane" data-tab="todo" hidden=""></div><div class="ogx-tab-pane" data-tab="prefs" hidden=""></div></div><div class="ogx-panel-status" hidden=""></div></div></body></html>

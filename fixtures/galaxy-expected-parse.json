@@ -1,0 +1,568 @@
+{
+ "galaxy-ajax-1-42.json": {
+  "galaxy": 1,
+  "system": 42,
+  "colonized": 6,
+  "positions": [
+   {
+    "position": 4,
+    "coords": "1:42:4",
+    "planetId": 61,
+    "planetName": "Nova Prime",
+    "destroyed": false,
+    "activity": "*",
+    "moon": null,
+    "playerId": 150,
+    "playerName": "Nova",
+    "status": "s",
+    "rank": 5,
+    "allianceId": 12,
+    "allianceTag": "NOVA",
+    "allianceName": "Nova Collective",
+    "missions": [
+     3,
+     6,
+     1,
+     5
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   },
+   {
+    "position": 6,
+    "coords": "1:42:6",
+    "planetId": 62,
+    "planetName": "Mine Alpha",
+    "destroyed": false,
+    "activity": null,
+    "moon": null,
+    "playerId": 201,
+    "playerName": "OldMiner",
+    "status": "i",
+    "rank": 88,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [
+     3,
+     6,
+     1
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   },
+   {
+    "position": 8,
+    "coords": "1:42:8",
+    "planetId": 1,
+    "planetName": "Homeworld",
+    "destroyed": false,
+    "activity": "*",
+    "moon": {
+     "id": 5,
+     "name": "Moon",
+     "size": 8660,
+     "destroyed": false,
+     "activity": 23
+    },
+    "debris": {
+     "metal": 12400,
+     "crystal": 7800,
+     "deuterium": 0,
+     "requiredShips": 1
+    },
+    "playerId": 108,
+    "playerName": "Commander Vega",
+    "status": "",
+    "rank": 37,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [
+     3,
+     4
+    ],
+    "canPhalanx": false,
+    "canMissile": false
+   },
+   {
+    "position": 11,
+    "coords": "1:42:11",
+    "planetId": 63,
+    "planetName": "Frozen",
+    "destroyed": false,
+    "activity": null,
+    "moon": null,
+    "playerId": 202,
+    "playerName": "Sleeper",
+    "status": "vI",
+    "rank": 150,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [
+     3,
+     6,
+     1
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   },
+   {
+    "position": 13,
+    "coords": "1:42:13",
+    "planetId": 64,
+    "planetName": "Little Rock",
+    "destroyed": false,
+    "activity": 37,
+    "moon": null,
+    "playerId": 204,
+    "playerName": "Rookie",
+    "status": "n",
+    "rank": 201,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [
+     3,
+     6,
+     1
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   }
+  ],
+  "expeditionDebris": null,
+  "me": {
+   "playerId": 108,
+   "currentPlanetId": 1,
+   "probes": 15,
+   "recyclers": 6,
+   "pathfinders": 0,
+   "missiles": 5,
+   "usedSlots": 4,
+   "maxSlots": 6,
+   "canSystemPhalanx": false
+  }
+ },
+ "galaxy-ajax-1-45.json": {
+  "galaxy": 1,
+  "system": 45,
+  "colonized": 4,
+  "positions": [
+   {
+    "position": 1,
+    "coords": "1:45:1",
+    "planetId": 2,
+    "planetName": "Arakis",
+    "destroyed": false,
+    "activity": null,
+    "moon": null,
+    "playerId": 1,
+    "playerName": "Legor",
+    "status": "An",
+    "rank": null,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [
+     3
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   },
+   {
+    "position": 3,
+    "coords": "1:45:3",
+    "planetId": 70,
+    "planetName": "Destroyed Planet",
+    "destroyed": true,
+    "activity": null,
+    "moon": null,
+    "debris": {
+     "metal": 45000,
+     "crystal": 30000,
+     "deuterium": 0,
+     "requiredShips": 4
+    },
+    "playerId": null,
+    "playerName": null,
+    "status": "",
+    "rank": null,
+    "allianceId": null,
+    "allianceTag": null,
+    "allianceName": null,
+    "missions": [],
+    "canPhalanx": false,
+    "canMissile": false
+   },
+   {
+    "position": 6,
+    "coords": "1:45:6",
+    "planetId": 77,
+    "planetName": "Farmville",
+    "destroyed": false,
+    "activity": 18,
+    "moon": {
+     "id": 78,
+     "name": "Moon",
+     "size": 7450,
+     "destroyed": false,
+     "activity": "*"
+    },
+    "playerId": 233,
+    "playerName": "Raider42",
+    "status": "",
+    "rank": 12,
+    "allianceId": 7,
+    "allianceTag": "RAID",
+    "allianceName": "Raiders of the Lost Ark",
+    "missions": [
+     3,
+     6,
+     1
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   },
+   {
+    "position": 9,
+    "coords": "1:45:9",
+    "planetId": 79,
+    "planetName": "Haven",
+    "destroyed": false,
+    "activity": "*",
+    "moon": null,
+    "playerId": 150,
+    "playerName": "Nova",
+    "status": "s",
+    "rank": 5,
+    "allianceId": 12,
+    "allianceTag": "NOVA",
+    "allianceName": "Nova Collective",
+    "missions": [
+     3,
+     6,
+     1,
+     5
+    ],
+    "canPhalanx": false,
+    "canMissile": true
+   }
+  ],
+  "expeditionDebris": null,
+  "me": {
+   "playerId": 108,
+   "currentPlanetId": 1,
+   "probes": 15,
+   "recyclers": 6,
+   "pathfinders": 0,
+   "missiles": 5,
+   "usedSlots": 4,
+   "maxSlots": 6,
+   "canSystemPhalanx": false
+  }
+ },
+ "galaxy-ajax-1-45-from-moon.json": [
+  {
+   "position": 1,
+   "canPhalanx": false,
+   "canMissile": true
+  },
+  {
+   "position": 3,
+   "canPhalanx": false,
+   "canMissile": false
+  },
+  {
+   "position": 6,
+   "canPhalanx": true,
+   "canMissile": true
+  },
+  {
+   "position": 9,
+   "canPhalanx": true,
+   "canMissile": true
+  }
+ ],
+ "galaxy-ajax-1-42-discoverer.json (expeditionDebris)": {
+  "metal": 8800,
+  "crystal": 5600,
+  "deuterium": 1200,
+  "requiredShips": 1
+ },
+ "galaxy-ajax-1-44-empty.json": {
+  "galaxy": 1,
+  "system": 44,
+  "colonized": 0,
+  "positions": [],
+  "expeditionDebris": null,
+  "me": {
+   "playerId": 108,
+   "currentPlanetId": 1,
+   "probes": 15,
+   "recyclers": 6,
+   "pathfinders": 0,
+   "missiles": 5,
+   "usedSlots": 4,
+   "maxSlots": 6,
+   "canSystemPhalanx": false
+  }
+ },
+ "galaxy-highscore-page.html (first 3 + me)": {
+  "category": 1,
+  "type": 0,
+  "page": 1,
+  "pages": 3,
+  "rows": [
+   {
+    "id": 301,
+    "rank": 1,
+    "name": "Bolt",
+    "me": false,
+    "admin": false,
+    "homeCoords": "8:38:6",
+    "allianceId": null,
+    "allianceTag": null,
+    "points": 1284330,
+    "totalShips": null
+   },
+   {
+    "id": 302,
+    "rank": 2,
+    "name": "Cygnus",
+    "me": false,
+    "admin": false,
+    "homeCoords": "6:75:11",
+    "allianceId": null,
+    "allianceTag": null,
+    "points": 967076,
+    "totalShips": null
+   },
+   {
+    "id": 303,
+    "rank": 3,
+    "name": "Drake",
+    "me": false,
+    "admin": false,
+    "homeCoords": "4:112:1",
+    "allianceId": null,
+    "allianceTag": null,
+    "points": 728190,
+    "totalShips": null
+   },
+   {
+    "id": 108,
+    "rank": 37,
+    "name": "Commander Vega",
+    "me": true,
+    "admin": false,
+    "homeCoords": "1:42:8",
+    "allianceId": null,
+    "allianceTag": null,
+    "points": 48213,
+    "totalShips": null
+   }
+  ]
+ },
+ "galaxy-highscore-ajax-alliances.html": {
+  "category": 2,
+  "type": 0,
+  "rows": [
+   {
+    "id": 31,
+    "rank": 1,
+    "name": "Galactic Empire",
+    "tag": "GE",
+    "members": 21,
+    "points": 4520110,
+    "average": 215243
+   },
+   {
+    "id": 18,
+    "rank": 2,
+    "name": "Free Traders",
+    "tag": "FTRD",
+    "members": 17,
+    "points": 3011870,
+    "average": 177169
+   },
+   {
+    "id": 12,
+    "rank": 3,
+    "name": "Nova Collective",
+    "tag": "NOVA",
+    "members": 8,
+    "points": 2154300,
+    "average": 269288
+   },
+   {
+    "id": 40,
+    "rank": 4,
+    "name": "Dark Matter Inc",
+    "tag": "DMI",
+    "members": 12,
+    "points": 1650220,
+    "average": 137518
+   },
+   {
+    "id": 22,
+    "rank": 5,
+    "name": "Starfall",
+    "tag": "SF",
+    "members": 6,
+    "points": 990300,
+    "average": 165050
+   },
+   {
+    "id": 9,
+    "rank": 6,
+    "name": "Iron Wolves",
+    "tag": "IW",
+    "members": 5,
+    "points": 702560,
+    "average": 140512
+   },
+   {
+    "id": 14,
+    "rank": 7,
+    "name": "Blue Horizon",
+    "tag": "BLUE",
+    "members": 7,
+    "points": 560010,
+    "average": 80001
+   },
+   {
+    "id": 27,
+    "rank": 8,
+    "name": "Eclipse",
+    "tag": "ECL",
+    "members": 4,
+    "points": 450200,
+    "average": 112550
+   },
+   {
+    "id": 7,
+    "rank": 9,
+    "name": "Raiders of the Lost Ark",
+    "tag": "RAID",
+    "members": 3,
+    "points": 412004,
+    "average": 137335
+   }
+  ]
+ },
+ "scan 1:42..1:47 (1:46 answers 403)": {
+  "scan": {
+   "done": 3,
+   "stoppedBy": "vacation"
+  },
+  "scanned": [
+   "1:42=5",
+   "1:44=0",
+   "1:45=4"
+  ]
+ },
+ "post /ajax/highscore military (first row)": {
+  "id": 301,
+  "rank": 1,
+  "name": "Bolt",
+  "me": false,
+  "admin": false,
+  "homeCoords": "8:38:6",
+  "allianceId": null,
+  "allianceTag": null,
+  "points": 398142,
+  "totalShips": 41910
+ },
+ "galaxy-page.html + galaxy-ajax-1-42.json (live DOM)": [
+  {
+   "position": 4,
+   "planetId": 61,
+   "planetName": "Nova Prime",
+   "activity": "*",
+   "moonId": null,
+   "moonActivity": null,
+   "playerId": 150,
+   "playerName": "Nova",
+   "own": false,
+   "status": [
+    "strong"
+   ],
+   "allianceId": 12,
+   "allianceTag": "NOVA",
+   "debris": null
+  },
+  {
+   "position": 6,
+   "planetId": 62,
+   "planetName": "Mine Alpha",
+   "activity": null,
+   "moonId": null,
+   "moonActivity": null,
+   "playerId": 201,
+   "playerName": "OldMiner",
+   "own": false,
+   "status": [
+    "inactive"
+   ],
+   "allianceId": null,
+   "allianceTag": null,
+   "debris": null
+  },
+  {
+   "position": 8,
+   "planetId": 1,
+   "planetName": "Homeworld",
+   "activity": "*",
+   "moonId": 5,
+   "moonActivity": 23,
+   "playerId": null,
+   "playerName": "Commander Vega",
+   "own": true,
+   "status": [],
+   "allianceId": null,
+   "allianceTag": null,
+   "debris": {
+    "metal": 12400,
+    "crystal": 7800,
+    "deuterium": 0
+   }
+  },
+  {
+   "position": 11,
+   "planetId": 63,
+   "planetName": "Frozen",
+   "activity": null,
+   "moonId": null,
+   "moonActivity": null,
+   "playerId": 202,
+   "playerName": "Sleeper",
+   "own": false,
+   "status": [
+    "vacation",
+    "longinactive"
+   ],
+   "allianceId": null,
+   "allianceTag": null,
+   "debris": null
+  },
+  {
+   "position": 13,
+   "planetId": 64,
+   "planetName": "Little Rock",
+   "activity": 37,
+   "moonId": null,
+   "moonActivity": null,
+   "playerId": 204,
+   "playerName": "Rookie",
+   "own": false,
+   "status": [
+    "noob"
+   ],
+   "allianceId": null,
+   "allianceTag": null,
+   "debris": null
+  }
+ ]
+}

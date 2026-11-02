@@ -1,0 +1,671 @@
+{
+ "fleet-live-synthetic-error.html": {
+  "live": {
+   "success": false,
+   "message": "Not enough deuterium available."
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-live-synthetic-fleetStep1.html": {
+  "live": {
+   "token": "d583ed8b434e588148fe929b8f939eab",
+   "fleetGroup": 0,
+   "targetMission": 1,
+   "target": {
+    "galaxy": 2,
+    "system": 70,
+    "planet": 9,
+    "type": 1
+   },
+   "speedOptions": [
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ],
+   "data": {
+    "fleetroom": "1275000",
+    "gamespeed": 7,
+    "fleetspeedfactor": 1,
+    "planet": {
+     "galaxy": "2",
+     "system": "68",
+     "planet": "5",
+     "planet_type": "1"
+    },
+    "maxspeed": 12000,
+    "ships": {
+     "202": {
+      "consumption": "20",
+      "speed": 12000,
+      "amount": "250"
+     },
+     "204": {
+      "consumption": "20",
+      "speed": 27500,
+      "amount": "1200"
+     },
+     "210": {
+      "consumption": "1",
+      "speed": 220000000,
+      "amount": "1"
+     }
+    },
+    "fleetMinDuration": 5
+   },
+   "colonies": [
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 6,
+     "type": 1,
+     "name": "Colony"
+    },
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 7,
+     "type": 1,
+     "name": "Colony"
+    },
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 8,
+     "type": 1,
+     "name": "Colony"
+    },
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 5,
+     "type": 3,
+     "name": "Moon"
+    }
+   ],
+   "shortcuts": [
+    {
+     "galaxy": 2,
+     "system": 70,
+     "planet": 9,
+     "type": 1,
+     "name": "Farm"
+    },
+    {
+     "galaxy": 2,
+     "system": 87,
+     "planet": 8,
+     "type": 2,
+     "name": "DF"
+    }
+   ],
+   "acs": [
+    {
+     "galaxy": 2,
+     "system": 70,
+     "planet": 9,
+     "type": 1,
+     "acsId": 5521,
+     "name": "AG482913377"
+    }
+   ]
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-live-synthetic-fleetStep2-attack.html": {
+  "live": {
+   "token": "d583ed8b434e588148fe929b8f939eab",
+   "missions": [
+    {
+     "id": 3,
+     "name": "Transport",
+     "checked": false
+    },
+    {
+     "id": 1,
+     "name": "Attack",
+     "checked": true
+    },
+    {
+     "id": 5,
+     "name": "Transfer",
+     "checked": false
+    }
+   ],
+   "checkedMission": 1,
+   "stayOptions": [
+    {
+     "value": 1,
+     "hours": 1
+    },
+    {
+     "value": 2,
+     "hours": 2
+    },
+    {
+     "value": 4,
+     "hours": 4
+    },
+    {
+     "value": 8,
+     "hours": 8
+    },
+    {
+     "value": 12,
+     "hours": 12
+    },
+    {
+     "value": 16,
+     "hours": 16
+    },
+    {
+     "value": 32,
+     "hours": 32
+    }
+   ],
+   "consumption": 236,
+   "fleetPoints": 150,
+   "heading": "Send fleet 2:68:5 - Planet",
+   "data": {
+    "fleetroom": "1275000",
+    "consumption": "236"
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-live-synthetic-fleetStep2-expedition.html": {
+  "live": {
+   "token": "d583ed8b434e588148fe929b8f939eab",
+   "missions": [
+    {
+     "id": 15,
+     "name": "Expedition",
+     "checked": false
+    }
+   ],
+   "checkedMission": null,
+   "stayOptions": [
+    {
+     "value": 1,
+     "hours": 1
+    },
+    {
+     "value": 2,
+     "hours": 2
+    },
+    {
+     "value": 3,
+     "hours": 3
+    },
+    {
+     "value": 4,
+     "hours": 4
+    },
+    {
+     "value": 5,
+     "hours": 5
+    },
+    {
+     "value": 6,
+     "hours": 6
+    },
+    {
+     "value": 7,
+     "hours": 7
+    },
+    {
+     "value": 8,
+     "hours": 8
+    }
+   ],
+   "consumption": 1931,
+   "fleetPoints": 150,
+   "heading": "Send fleet 2:68:5 - Planet",
+   "data": {
+    "fleetroom": "1275000",
+    "consumption": "1931"
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-live-synthetic-fleetTable.html": {
+  "live": {
+   "slots": {
+    "used": 5,
+    "max": 13
+   },
+   "expeditions": {
+    "used": 1,
+    "max": 2
+   },
+   "extraCounters": [
+    {
+     "label": "Asteroids",
+     "used": 0,
+     "max": 5
+    }
+   ],
+   "flights": [
+    {
+     "index": 1,
+     "fleetId": 397101,
+     "missionName": "Attack",
+     "missionId": 1,
+     "returning": false,
+     "amount": 1500,
+     "ships": {
+      "Light Fighter": 1200,
+      "Light Cargo": 300
+     },
+     "origin": "2:68:5",
+     "arrivalText": "30. Oct 2026, 10:29:20",
+     "target": "2:70:9",
+     "returnText": "30. Oct 2026, 10:54:20",
+     "arrivalUnix": 1793348960,
+     "returnUnix": 1793350460,
+     "timerUnix": 1793350460,
+     "timerRestSec": 3000,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": true,
+     "recallable": true,
+     "canOpenAcs": true
+    },
+    {
+     "index": 2,
+     "fleetId": null,
+     "missionName": "Transport",
+     "missionId": 3,
+     "returning": true,
+     "amount": 40,
+     "ships": {
+      "Heavy Cargo": 40
+     },
+     "origin": "2:68:6",
+     "arrivalText": "30. Oct 2026, 09:49:20",
+     "target": "2:68:5",
+     "returnText": "30. Oct 2026, 10:14:20",
+     "arrivalUnix": 1793346560,
+     "returnUnix": 1793348060,
+     "timerUnix": 1793348060,
+     "timerRestSec": 600,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": false,
+     "recallable": false,
+     "canOpenAcs": false
+    },
+    {
+     "index": 3,
+     "fleetId": 397103,
+     "missionName": "Deploy",
+     "missionId": 4,
+     "returning": false,
+     "amount": 15,
+     "ships": {
+      "Battleship": 15
+     },
+     "origin": "2:68:5",
+     "arrivalText": "30. Oct 2026, 10:44:20",
+     "target": "2:68:8",
+     "returnText": "-",
+     "arrivalUnix": 1793349860,
+     "returnUnix": null,
+     "timerUnix": 1793349860,
+     "timerRestSec": 2400,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": true,
+     "recallable": true,
+     "canOpenAcs": false
+    },
+    {
+     "index": 4,
+     "fleetId": 397104,
+     "missionName": "Expedition",
+     "missionId": 15,
+     "returning": false,
+     "amount": 11,
+     "ships": {
+      "Heavy Cargo": 10,
+      "Spy Probe": 1
+     },
+     "origin": "2:68:5",
+     "arrivalText": "30. Oct 2026, 09:44:20",
+     "target": "2:68:16",
+     "returnText": "30. Oct 2026, 11:27:40",
+     "arrivalUnix": 1793346260,
+     "returnUnix": 1793352460,
+     "timerUnix": 1793352460,
+     "timerRestSec": 5000,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": false,
+     "recallable": true,
+     "canOpenAcs": false
+    },
+    {
+     "index": 5,
+     "fleetId": 397105,
+     "missionName": "Transfer",
+     "missionId": 5,
+     "returning": false,
+     "amount": 50,
+     "ships": {
+      "Cruiser": 50
+     },
+     "origin": "2:68:7",
+     "arrivalText": "30. Oct 2026, 09:59:20",
+     "target": "2:71:4",
+     "returnText": "30. Oct 2026, 12:06:00",
+     "arrivalUnix": 1793347160,
+     "returnUnix": 1793354760,
+     "timerUnix": 1793354760,
+     "timerRestSec": 7300,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": false,
+     "recallable": true,
+     "canOpenAcs": false
+    }
+   ],
+   "noFreeSlots": false,
+   "ships": [
+    {
+     "id": 202,
+     "name": "Light Cargo",
+     "count": 1250,
+     "speed": 12000,
+     "selectable": true
+    },
+    {
+     "id": 208,
+     "name": "Colony Ship",
+     "count": 2,
+     "speed": 6000,
+     "selectable": true
+    },
+    {
+     "id": 210,
+     "name": "Spy Probe",
+     "count": 102,
+     "speed": 220000000,
+     "selectable": true
+    },
+    {
+     "id": 212,
+     "name": "Solar Satellite",
+     "count": 797,
+     "speed": 0,
+     "selectable": false
+    }
+   ],
+   "prefill": {
+    "galaxy": 2,
+    "system": 70,
+    "planet": 9,
+    "type": 1,
+    "target_mission": 1
+   },
+   "canContinue": true,
+   "acs": {
+    "mainFleetId": 397101,
+    "name": "AG482913377",
+    "invited": [
+     {
+      "id": 1907,
+      "name": "Vodoley"
+     },
+     {
+      "id": 2210,
+      "name": "Nova"
+     }
+    ],
+    "statusMessage": "Player Nova added to attack."
+   },
+   "bonus": {
+    "attack": 35,
+    "defense": 85,
+    "shield": 60,
+    "combustion": 120,
+    "impulse": 140,
+    "hyperspace": 120
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-real-fleetStep1.html": {
+  "live": {
+   "token": "d583ed8b434e588148fe929b8f939eab",
+   "fleetGroup": 0,
+   "targetMission": 0,
+   "target": {
+    "galaxy": 2,
+    "system": 68,
+    "planet": 5,
+    "type": 1
+   },
+   "speedOptions": [
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ],
+   "data": {
+    "fleetroom": "7500",
+    "gamespeed": 7,
+    "fleetspeedfactor": 1,
+    "planet": {
+     "galaxy": "2",
+     "system": "68",
+     "planet": "5",
+     "planet_type": "1"
+    },
+    "maxspeed": 6000.000000000001,
+    "ships": {
+     "208": {
+      "consumption": "1000",
+      "speed": 6000.000000000001,
+      "amount": "1"
+     }
+    },
+    "fleetMinDuration": 5
+   },
+   "colonies": [
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 6,
+     "type": 1,
+     "name": "Colony"
+    },
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 7,
+     "type": 1,
+     "name": "Colony"
+    },
+    {
+     "galaxy": 2,
+     "system": 68,
+     "planet": 8,
+     "type": 1,
+     "name": "Colony"
+    }
+   ],
+   "shortcuts": [],
+   "acs": []
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-real-fleetStep2.html": {
+  "live": {
+   "token": "d583ed8b434e588148fe929b8f939eab",
+   "missions": [
+    {
+     "id": 7,
+     "name": "Colonize",
+     "checked": false
+    }
+   ],
+   "checkedMission": null,
+   "stayOptions": [],
+   "consumption": 118,
+   "fleetPoints": 150,
+   "heading": "Send fleet 2:68:5 - Planet",
+   "data": {
+    "fleetroom": "7500",
+    "consumption": "118"
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-real-fleetStep3.html": {
+  "live": {
+   "success": true,
+   "title": "Fleet sent",
+   "missionName": "Colonize",
+   "missionId": 7,
+   "distance": 1020,
+   "maxSpeed": 6000,
+   "consumption": 118,
+   "from": "2:68:5",
+   "to": "2:68:9",
+   "arrivalText": "30. Oct 2026, 10:20:01",
+   "returnText": "30. Oct 2026, 10:30:54",
+   "arrivalWall": 1793355601000,
+   "returnWall": 1793356254000,
+   "ships": {
+    "Colony Ship": 1
+   },
+   "redirect": "3;URL=game.php?page=fleetTable"
+  },
+  "sameAsDomParser": true
+ },
+ "fleet-real-fleetTable.html": {
+  "live": {
+   "slots": {
+    "used": 1,
+    "max": 13
+   },
+   "expeditions": {
+    "used": 0,
+    "max": 2
+   },
+   "extraCounters": [
+    {
+     "label": "Asteroids",
+     "used": 0,
+     "max": 5
+    }
+   ],
+   "flights": [
+    {
+     "index": 1,
+     "fleetId": 396900,
+     "missionName": "Recycle",
+     "missionId": 8,
+     "returning": false,
+     "amount": 8290,
+     "ships": {
+      "Recycler": 8290
+     },
+     "origin": "2:68:5",
+     "arrivalText": "30. Oct 2026, 10:20:29",
+     "target": "2:87:8",
+     "returnText": "30. Oct 2026, 10:47:11",
+     "arrivalUnix": 1793348429,
+     "returnUnix": 1793350031,
+     "timerUnix": 1793350031,
+     "timerRestSec": 2571,
+     "tzOffsetMs": 7200000,
+     "nextIsArrival": true,
+     "recallable": true,
+     "canOpenAcs": false
+    }
+   ],
+   "noFreeSlots": false,
+   "ships": [
+    {
+     "id": 208,
+     "name": "Colony Ship",
+     "count": 2,
+     "speed": 6000,
+     "selectable": true
+    },
+    {
+     "id": 210,
+     "name": "Spy Probe",
+     "count": 102,
+     "speed": 220000000,
+     "selectable": true
+    },
+    {
+     "id": 212,
+     "name": "Solar Satellite",
+     "count": 797,
+     "speed": 0,
+     "selectable": false
+    }
+   ],
+   "prefill": {
+    "galaxy": 2,
+    "system": 68,
+    "planet": 5,
+    "type": 1,
+    "target_mission": 0
+   },
+   "canContinue": true,
+   "acs": null,
+   "bonus": {
+    "attack": 35,
+    "defense": 85,
+    "shield": 60,
+    "combustion": 120,
+    "impulse": 140,
+    "hyperspace": 120
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "calc": {
+  "sameTarget": {
+   "distance": 5,
+   "maxSpeed": 6000.000000000001,
+   "durationSec": 47,
+   "durationRaw": 47.07211788733527,
+   "consumption": 2,
+   "arrivalUnix": null,
+   "returnUnix": null
+  },
+  "step3": {
+   "distance": 1020,
+   "maxSpeed": 6000.000000000001,
+   "durationSec": 653,
+   "durationRaw": 653.3488119488363,
+   "consumption": 118,
+   "arrivalUnix": null,
+   "returnUnix": null
+  },
+  "realStep3Delta": 653,
+  "checks": {
+   "durSame": true,
+   "consSame": true,
+   "dist": true,
+   "dur": true,
+   "cons": true,
+   "delta": true,
+   "shipSpeedLC": true,
+   "shipSpeedProbe": true,
+   "shipSpeedColony": true
+  }
+ }
+}

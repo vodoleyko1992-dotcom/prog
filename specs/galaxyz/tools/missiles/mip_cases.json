@@ -1,0 +1,213 @@
+[
+    {
+        "case": {
+            "n": 10,
+            "weapons": 0,
+            "shield": 0,
+            "target": 0,
+            "def": {
+                "401": 100
+            }
+        },
+        "php": {
+            "intercepted": 0,
+            "abmLeft": 0,
+            "destroyed": {
+                "401": 100
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 25,
+            "weapons": 14,
+            "shield": 13,
+            "target": 0,
+            "def": {
+                "401": 1500,
+                "402": 900,
+                "403": 120,
+                "404": 12,
+                "407": 1,
+                "408": 1,
+                "502": 20
+            }
+        },
+        "php": {
+            "intercepted": 20,
+            "abmLeft": 0,
+            "destroyed": {
+                "401": 313
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 20,
+            "weapons": 14,
+            "shield": 13,
+            "target": 0,
+            "def": {
+                "401": 1500,
+                "402": 900,
+                "403": 120,
+                "404": 12,
+                "407": 1,
+                "408": 1,
+                "502": 20
+            }
+        },
+        "php": {
+            "intercepted": 20,
+            "abmLeft": 0,
+            "destroyed": {}
+        }
+    },
+    {
+        "case": {
+            "n": 15,
+            "weapons": 14,
+            "shield": 13,
+            "target": 0,
+            "def": {
+                "401": 1500,
+                "402": 900,
+                "502": 20
+            }
+        },
+        "php": {
+            "intercepted": 15,
+            "abmLeft": 5,
+            "destroyed": {}
+        }
+    },
+    {
+        "case": {
+            "n": 60,
+            "weapons": 14,
+            "shield": 13,
+            "target": 404,
+            "def": {
+                "401": 1500,
+                "402": 900,
+                "403": 120,
+                "404": 12,
+                "407": 1,
+                "408": 1,
+                "502": 20
+            }
+        },
+        "php": {
+            "intercepted": 20,
+            "abmLeft": 0,
+            "destroyed": {
+                "404": 12,
+                "401": 1500,
+                "402": 794
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 500,
+            "weapons": 20,
+            "shield": 18,
+            "target": 406,
+            "def": {
+                "401": 30000,
+                "404": 2000,
+                "406": 500,
+                "408": 1,
+                "503": 50,
+                "502": 100
+            }
+        },
+        "php": {
+            "intercepted": 100,
+            "abmLeft": 0,
+            "destroyed": {
+                "406": 500,
+                "401": 714
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 7,
+            "weapons": 3,
+            "shield": 7,
+            "target": 502,
+            "def": {
+                "402": 5,
+                "405": 3,
+                "407": 1
+            }
+        },
+        "php": {
+            "intercepted": 0,
+            "abmLeft": 0,
+            "destroyed": {
+                "402": 5,
+                "405": 3,
+                "407": 1
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 3,
+            "weapons": 0,
+            "shield": 0,
+            "target": 0,
+            "def": {
+                "410": 2
+            }
+        },
+        "php": {
+            "intercepted": 0,
+            "abmLeft": 0,
+            "destroyed": {}
+        }
+    },
+    {
+        "case": {
+            "n": 40000,
+            "weapons": 25,
+            "shield": 22,
+            "target": 410,
+            "def": {
+                "401": 1000000,
+                "410": 500,
+                "409": 1,
+                "411": 1,
+                "502": 5000
+            }
+        },
+        "php": {
+            "intercepted": 5000,
+            "abmLeft": 0,
+            "destroyed": {
+                "410": 153,
+                "401": 1875
+            }
+        }
+    },
+    {
+        "case": {
+            "n": 12,
+            "weapons": 10,
+            "shield": 10,
+            "target": 0,
+            "def": {
+                "503": 40
+            }
+        },
+        "php": {
+            "intercepted": 0,
+            "abmLeft": 0,
+            "destroyed": {
+                "503": 40
+            }
+        }
+    }
+]

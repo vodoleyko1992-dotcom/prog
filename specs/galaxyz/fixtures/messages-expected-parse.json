@@ -1,0 +1,4180 @@
+{
+ "messages-live-synthetic-cat15.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 15,
+    "page": 1,
+    "pages": 2,
+    "items": [
+     {
+      "id": 520920,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:56:40",
+      "wall": 1793354200000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "resources",
+       "key": "sys_expe_found_ress_1_1",
+       "lang": "en",
+       "wall": 1793354200000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520919,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:55:40",
+      "wall": 1793354140000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "darkmatter",
+       "key": "sys_expe_found_dm_2_3",
+       "lang": "en",
+       "wall": 1793354140000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520918,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:54:40",
+      "wall": 1793354080000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "ships",
+       "key": "sys_expe_found_ships_1_2",
+       "lang": "en",
+       "wall": 1793354080000,
+       "ships": {
+        "202": 37,
+        "204": 1250
+       },
+       "shipsByName": {
+        "Light Cargo": 37,
+        "Light Fighter": 1250
+       }
+      }
+     },
+     {
+      "id": 520917,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:53:40",
+      "wall": 1793354020000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "ships",
+       "key": "sys_expe_found_ships_2_1",
+       "lang": "en",
+       "wall": 1793354020000,
+       "ships": {},
+       "shipsByName": {}
+      }
+     },
+     {
+      "id": 520916,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:52:40",
+      "wall": 1793353960000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "nothing",
+       "key": "sys_expe_nothing_6",
+       "lang": "en",
+       "wall": 1793353960000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520915,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:51:40",
+      "wall": 1793353900000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "delay",
+       "key": "sys_expe_time_slow_2",
+       "lang": "en",
+       "wall": 1793353900000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520914,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:50:40",
+      "wall": 1793353840000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "speedup",
+       "key": "sys_expe_time_fast_1",
+       "lang": "en",
+       "wall": 1793353840000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520913,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:49:40",
+      "wall": 1793353780000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "fleet_lost",
+       "key": "sys_expe_lost_fleet_3",
+       "lang": "en",
+       "wall": 1793353780000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520912,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:48:40",
+      "wall": 1793353720000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "battle_pirates",
+       "key": "sys_expe_attack_1_2_3",
+       "lang": "en",
+       "wall": 1793353720000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520911,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:47:40",
+      "wall": 1793353660000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "resources",
+       "key": "sys_expe_found_ress_3_2",
+       "lang": "en",
+       "wall": 1793353660000,
+       "ships": null,
+       "shipsByName": null
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-live-synthetic-cat3.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 3,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520410,
+      "kind": "combat",
+      "unread": true,
+      "date": "30. Oct 2026, 09:00:00",
+      "wall": 1793350800000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+       "url": "game.php?page=raport&raport=3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "coordsStr": "2:70:4",
+       "planetTypeShort": "P",
+       "myResult": "win",
+       "winner": "attacker",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 36000,
+        "defender": 1985000
+       },
+       "loot": {
+        "901": 12053668,
+        "902": 5251102,
+        "903": 1825031
+       },
+       "debris": {
+        "901": 495000,
+        "902": 225000
+       },
+       "wall": 1793350800000
+      }
+     },
+     {
+      "id": 520402,
+      "kind": "combat",
+      "unread": true,
+      "date": "30. Oct 2026, 08:55:00",
+      "wall": 1793350500000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+       "url": "game.php?page=raport&raport=9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "coordsStr": "2:68:5",
+       "planetTypeShort": "P",
+       "myResult": "loss",
+       "winner": "attacker",
+       "myRole": "defender",
+       "lost": {
+        "attacker": 0,
+        "defender": 4400000
+       },
+       "loot": {
+        "901": 150000,
+        "902": 80000,
+        "903": 20000
+       },
+       "debris": {
+        "901": 1050000,
+        "902": 600000
+       },
+       "wall": 1793350500000
+      }
+     },
+     {
+      "id": 520399,
+      "kind": "combat_expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 08:50:00",
+      "wall": 1793350200000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "0123456789abcdef0123456789abcdef",
+       "url": "game.php?page=raport&raport=0123456789abcdef0123456789abcdef",
+       "viaCombatReportPhp": true,
+       "isExpedition": true,
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 16
+       },
+       "coordsStr": "2:68:16",
+       "planetTypeShort": "P",
+       "myResult": "loss",
+       "winner": "defender",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 2300000,
+        "defender": 120000
+       },
+       "loot": {
+        "901": 0,
+        "902": 0,
+        "903": 0
+       },
+       "debris": {
+        "901": 0,
+        "902": 0
+       },
+       "wall": 1793350200000
+      }
+     },
+     {
+      "id": 520390,
+      "kind": "missile",
+      "unread": false,
+      "date": "30. Oct 2026, 08:45:00",
+      "wall": 1793349900000,
+      "from": "Fleet Headquarters",
+      "subject": "Rocket impact",
+      "data": {
+       "kind": "missile",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        },
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        }
+       ],
+       "wall": 1793349900000,
+       "resources": null,
+       "raw": [
+        5,
+        300,
+        120
+       ],
+       "missiles": 25,
+       "intercepted": 5,
+       "destroyed": {
+        "401": 300,
+        "402": 120
+       },
+       "unknownTitles": [],
+       "from": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "to": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       }
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-live-synthetic-cat4.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 4,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520610,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:23:20",
+      "wall": 1793352200000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        }
+       ],
+       "wall": 1793352200000,
+       "resources": {
+        "901": 12053668,
+        "902": 5251102,
+        "903": 1825031
+       },
+       "raw": [
+        12053668,
+        5251102,
+        1825031
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       }
+      }
+     },
+     {
+      "id": 520609,
+      "kind": "return_empty",
+      "unread": true,
+      "date": "30. Oct 2026, 09:21:40",
+      "wall": 1793352100000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_empty",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793352100000,
+       "resources": null,
+       "raw": [],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520608,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:20:00",
+      "wall": 1793352000000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793352000000,
+       "resources": {
+        "901": 4145000,
+        "902": 2072500,
+        "903": 0
+       },
+       "raw": [
+        4145000,
+        2072500,
+        0
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520607,
+      "kind": "return_expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:18:20",
+      "wall": 1793351900000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_expedition",
+       "links": [],
+       "wall": 1793351900000,
+       "resources": {
+        "901": 1254000,
+        "902": 0,
+        "903": 0,
+        "921": 450
+       },
+       "raw": [
+        1254000,
+        0,
+        0,
+        450
+       ]
+      }
+     },
+     {
+      "id": 520606,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:16:40",
+      "wall": 1793351800000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793351800000,
+       "resources": {
+        "901": 0,
+        "902": 0,
+        "903": 0
+       },
+       "raw": [
+        0,
+        0,
+        0
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520605,
+      "kind": "colonisation",
+      "unread": false,
+      "date": "30. Oct 2026, 09:15:00",
+      "wall": 1793351700000,
+      "from": "Colonisation",
+      "subject": "Colonisation report",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-live-synthetic-cat5.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 5,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520510,
+      "kind": "transport_arrival",
+      "unread": true,
+      "date": "30. Oct 2026, 09:06:40",
+      "wall": 1793351200000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 6
+        }
+       ],
+       "wall": 1793351200000,
+       "resources": {
+        "901": 500000,
+        "902": 250000,
+        "903": 100000
+       },
+       "raw": [
+        500000,
+        250000,
+        100000
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 6
+       }
+      }
+     },
+     {
+      "id": 520509,
+      "kind": "transport_received",
+      "unread": true,
+      "date": "30. Oct 2026, 09:05:50",
+      "wall": 1793351150000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_received",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        },
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793351150000,
+       "resources": {
+        "901": 1000,
+        "902": 2000,
+        "903": 3000
+       },
+       "raw": [
+        1000,
+        2000,
+        3000
+       ],
+       "from": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "to": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520505,
+      "kind": "recycle",
+      "unread": true,
+      "date": "30. Oct 2026, 09:05:00",
+      "wall": 1793351100000,
+      "from": "Fleet Headquarters",
+      "subject": "Recycling Report",
+      "data": {
+       "kind": "recycle",
+       "links": [],
+       "wall": 1793351100000,
+       "resources": {
+        "901": 4145000,
+        "902": 2072500
+       },
+       "raw": [
+        4145000,
+        2072500
+       ]
+      }
+     },
+     {
+      "id": 520501,
+      "kind": "deploy_arrival",
+      "unread": false,
+      "date": "30. Oct 2026, 09:04:10",
+      "wall": 1793351050000,
+      "from": "Fleet Headquarters",
+      "subject": "Located fleet",
+      "data": {
+       "kind": "deploy_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 7
+        }
+       ],
+       "wall": 1793351050000,
+       "resources": {
+        "901": 10,
+        "902": 20,
+        "903": 89
+       },
+       "raw": [
+        10,
+        20,
+        89
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 7
+       }
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-real-all.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 100,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520244,
+      "kind": "spy_report",
+      "unread": false,
+      "date": "30. Oct 2026, 09:53:36",
+      "wall": 1793354016000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report 2 bolygó [2:81:10] on 30. Oct 2026, 08:53:44",
+       "targetName": "2 bolygó",
+       "coords": {
+        "galaxy": 2,
+        "system": 81,
+        "planet": 10
+       },
+       "coordsStr": "2:81:10",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 08:53:44",
+       "reportWall": 1793350424000,
+       "destroyed": false,
+       "discoveryChance": 0,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": false,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 2684939750000,
+        "902": 1700557697522,
+        "903": 675144412230,
+        "911": 356568
+       },
+       "fleet": {
+        "202": 0,
+        "203": 0,
+        "204": 0,
+        "205": 0,
+        "206": 0,
+        "207": 0,
+        "208": 0,
+        "209": 0,
+        "210": 0,
+        "211": 0,
+        "212": 0,
+        "213": 0,
+        "214": 0,
+        "215": 0,
+        "216": 0,
+        "217": 0,
+        "218": 0,
+        "219": 0,
+        "220": 0
+       },
+       "defense": null,
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 520242,
+      "kind": "spy_report",
+      "unread": false,
+      "date": "30. Oct 2026, 09:53:20",
+      "wall": 1793354000000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Colony [2:72:6] on 30. Oct 2026, 09:53:28",
+       "targetName": "Colony",
+       "coords": {
+        "galaxy": 2,
+        "system": 72,
+        "planet": 6
+       },
+       "coordsStr": "2:72:6",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 09:53:28",
+       "reportWall": 1793354008000,
+       "destroyed": false,
+       "discoveryChance": 0,
+       "revealed": {
+        "resources": true,
+        "fleet": false,
+        "defense": false,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 11483000000,
+        "902": 11483000000,
+        "903": 6263925000,
+        "911": 3391
+       },
+       "fleet": null,
+       "defense": null,
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-real-spy.html": {
+  "live": {
+   "categories": [
+    {
+     "cat": 0,
+     "key": "spy",
+     "name": "Spy messages",
+     "color": "#FFFF00",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 1,
+     "key": "player",
+     "name": "Player messages",
+     "color": "#FF6699",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 2,
+     "key": "alliance",
+     "name": "Alliance messages",
+     "color": "#FF3300",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 3,
+     "key": "combat",
+     "name": "Combat messages",
+     "color": "#FF9900",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 4,
+     "key": "system",
+     "name": "System messages",
+     "color": "#773399",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 5,
+     "key": "transport",
+     "name": "Transport messages",
+     "color": "#009933",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 15,
+     "key": "expedition",
+     "name": "Expedition messages",
+     "color": "#6495ed",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 50,
+     "key": "game",
+     "name": "Game messages",
+     "color": "#666600",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 99,
+     "key": "construction",
+     "name": "Construction messages",
+     "color": "#007070",
+     "unread": 0,
+     "total": 0
+    },
+    {
+     "cat": 100,
+     "key": "all",
+     "name": "All messages",
+     "color": "#ABABAB",
+     "unread": 0,
+     "total": 2
+    },
+    {
+     "cat": 999,
+     "key": "outbox",
+     "name": "Outbox",
+     "color": "#CCCCCC",
+     "unread": 0,
+     "total": 0
+    }
+   ],
+   "list": {
+    "cat": 0,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520244,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 09:53:36",
+      "wall": 1793354016000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report 2 bolygó [2:81:10] on 30. Oct 2026, 08:53:44",
+       "targetName": "2 bolygó",
+       "coords": {
+        "galaxy": 2,
+        "system": 81,
+        "planet": 10
+       },
+       "coordsStr": "2:81:10",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 08:53:44",
+       "reportWall": 1793350424000,
+       "destroyed": false,
+       "discoveryChance": 0,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": false,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 2684939750000,
+        "902": 1700557697522,
+        "903": 675144412230,
+        "911": 356568
+       },
+       "fleet": {
+        "202": 0,
+        "203": 0,
+        "204": 0,
+        "205": 0,
+        "206": 0,
+        "207": 0,
+        "208": 0,
+        "209": 0,
+        "210": 0,
+        "211": 0,
+        "212": 0,
+        "213": 0,
+        "214": 0,
+        "215": 0,
+        "216": 0,
+        "217": 0,
+        "218": 0,
+        "219": 0,
+        "220": 0
+       },
+       "defense": null,
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 520242,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 09:53:20",
+      "wall": 1793354000000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Colony [2:72:6] on 30. Oct 2026, 09:53:28",
+       "targetName": "Colony",
+       "coords": {
+        "galaxy": 2,
+        "system": 72,
+        "planet": 6
+       },
+       "coordsStr": "2:72:6",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 09:53:28",
+       "reportWall": 1793354008000,
+       "destroyed": false,
+       "discoveryChance": 0,
+       "revealed": {
+        "resources": true,
+        "fleet": false,
+        "defense": false,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 11483000000,
+        "902": 11483000000,
+        "903": 6263925000,
+        "911": 3391
+       },
+       "fleet": null,
+       "defense": null,
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-battleHall.html": {
+  "live": [
+   {
+    "rank": 1,
+    "reportId": "aaaabbbbccccddddeeeeffff00001111",
+    "attacker": "Zeus & Hera",
+    "defender": "Titan",
+    "result": "a",
+    "date": "27. Oct 2026, 08:00:00",
+    "wall": 1793088000000,
+    "units": 98500000000
+   },
+   {
+    "rank": 2,
+    "reportId": "22223333444455556666777788889999",
+    "attacker": "Raider",
+    "defender": "Turtle",
+    "result": "r",
+    "date": "21. Oct 2026, 08:00:00",
+    "wall": 1792569600000,
+    "units": 5400000000
+   },
+   {
+    "rank": 3,
+    "reportId": "abcdefabcdefabcdefabcdefabcdef12",
+    "attacker": "A",
+    "defender": "B",
+    "result": "w",
+    "date": "10. Oct 2026, 08:00:00",
+    "wall": 1791619200000,
+    "units": 1200000000
+   }
+  ],
+  "sameAsDomParser": true
+ },
+ "messages-upstream-raport-battlehall.html": {
+  "live": {
+   "mode": 0,
+   "hallOfFame": true,
+   "time": "30. Oct 2026, 08:54:00",
+   "wall": 1793350440000,
+   "result": "a",
+   "resultText": "The attacker has won the battle!",
+   "loot": {
+    "901": 12053668,
+    "902": 5251102,
+    "903": 1825031
+   },
+   "lost": {
+    "attacker": 36000,
+    "defender": 1985000
+   },
+   "debris": {
+    "901": 495000,
+    "902": 225000
+   },
+   "moonChance": 7,
+   "moonCreated": true,
+   "rounds": [
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 400,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "204": {
+         "name": "Light Fighter",
+         "count": 800,
+         "weapon": 100,
+         "shield": 20,
+         "armour": 800
+        },
+        "401": {
+         "name": "Missile Launcher",
+         "count": 1500,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 900,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": {
+      "attackerPower": 1404000,
+      "defenderShieldAbsorbed": 115000,
+      "defenderPower": 680000,
+      "attackerShieldAbsorbed": 59200
+     }
+    },
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 388,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "401": {
+         "name": "Missile Launcher",
+         "count": 210,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 35,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": {
+      "attackerPower": 1398000,
+      "defenderShieldAbsorbed": 30000,
+      "defenderPower": 40600,
+      "attackerShieldAbsorbed": 8400
+     }
+    },
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 388,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": true,
+       "units": {},
+       "unknown": []
+      }
+     ],
+     "fire": null
+    }
+   ],
+   "tailLines": [
+    "The attacker has won the battle!",
+    "He captures 12.053.668 Metal, 5.251.102 Crystal and 1.825.031 Deuterium",
+    "The attackers losses: 36.000 units",
+    "The defenders losses: 1.985.000 units",
+    "At the coordinates are now: 495.000 Metal and 225.000 Crystaldebris.",
+    "Moon Chance: 7 %",
+    "A moon formed at the planet Moon [0:0:0] !"
+   ],
+   "roundsFought": 2,
+   "start": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": null,
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": false,
+      "units": {
+       "203": {
+        "name": "Heavy Cargo",
+        "count": 400,
+        "weapon": 12,
+        "shield": 60,
+        "armour": 3000
+       },
+       "207": {
+        "name": "Battleship",
+        "count": 150,
+        "weapon": 2400,
+        "shield": 480,
+        "armour": 15000
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": null,
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": false,
+      "units": {
+       "204": {
+        "name": "Light Fighter",
+        "count": 800,
+        "weapon": 100,
+        "shield": 20,
+        "armour": 800
+       },
+       "401": {
+        "name": "Missile Launcher",
+        "count": 1500,
+        "weapon": 160,
+        "shield": 40,
+        "armour": 400
+       },
+       "402": {
+        "name": "Light Laser Turret",
+        "count": 900,
+        "weapon": 200,
+        "shield": 50,
+        "armour": 400
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "fire": {
+     "attackerPower": 1404000,
+     "defenderShieldAbsorbed": 115000,
+     "defenderPower": 680000,
+     "attackerShieldAbsorbed": 59200
+    }
+   },
+   "end": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": null,
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": false,
+      "units": {
+       "203": {
+        "name": "Heavy Cargo",
+        "count": 388,
+        "weapon": 12,
+        "shield": 60,
+        "armour": 3000
+       },
+       "207": {
+        "name": "Battleship",
+        "count": 150,
+        "weapon": 2400,
+        "shield": 480,
+        "armour": 15000
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": null,
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": true,
+      "units": {},
+      "unknown": []
+     }
+    ],
+    "fire": null
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-raport-defender-won.html": {
+  "live": {
+   "mode": 0,
+   "hallOfFame": false,
+   "time": "30. Oct 2026, 08:54:00",
+   "wall": 1793350440000,
+   "result": "r",
+   "resultText": "The defender has won the battle!",
+   "loot": null,
+   "lost": {
+    "attacker": 2300000,
+    "defender": 120000
+   },
+   "debris": {
+    "901": 0,
+    "902": 0
+   },
+   "moonChance": 0,
+   "moonCreated": false,
+   "rounds": [
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "planetTypeShort": "P",
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 400,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "204": {
+         "name": "Light Fighter",
+         "count": 800,
+         "weapon": 100,
+         "shield": 20,
+         "armour": 800
+        },
+        "401": {
+         "name": "Missile Launcher",
+         "count": 1500,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 900,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": {
+      "attackerPower": 1404000,
+      "defenderShieldAbsorbed": 115000,
+      "defenderPower": 680000,
+      "attackerShieldAbsorbed": 59200
+     }
+    },
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "planetTypeShort": "P",
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": true,
+       "units": {},
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "401": {
+         "name": "Missile Launcher",
+         "count": 210,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 35,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": null
+    }
+   ],
+   "tailLines": [
+    "The defender has won the battle!",
+    "The attackers losses: 2.300.000 units",
+    "The defenders losses: 120.000 units",
+    "At the coordinates are now: 0 Metal and 0 Crystaldebris.",
+    "Moon Chance: 0 %"
+   ],
+   "roundsFought": 1,
+   "start": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": {
+       "galaxy": 2,
+       "system": 68,
+       "planet": 5
+      },
+      "planetTypeShort": "P",
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": false,
+      "units": {
+       "203": {
+        "name": "Heavy Cargo",
+        "count": 400,
+        "weapon": 12,
+        "shield": 60,
+        "armour": 3000
+       },
+       "207": {
+        "name": "Battleship",
+        "count": 150,
+        "weapon": 2400,
+        "shield": 480,
+        "armour": 15000
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4
+      },
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": false,
+      "units": {
+       "204": {
+        "name": "Light Fighter",
+        "count": 800,
+        "weapon": 100,
+        "shield": 20,
+        "armour": 800
+       },
+       "401": {
+        "name": "Missile Launcher",
+        "count": 1500,
+        "weapon": 160,
+        "shield": 40,
+        "armour": 400
+       },
+       "402": {
+        "name": "Light Laser Turret",
+        "count": 900,
+        "weapon": 200,
+        "shield": 50,
+        "armour": 400
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "fire": {
+     "attackerPower": 1404000,
+     "defenderShieldAbsorbed": 115000,
+     "defenderPower": 680000,
+     "attackerShieldAbsorbed": 59200
+    }
+   },
+   "end": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": {
+       "galaxy": 2,
+       "system": 68,
+       "planet": 5
+      },
+      "planetTypeShort": "P",
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": true,
+      "units": {},
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4
+      },
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": false,
+      "units": {
+       "401": {
+        "name": "Missile Launcher",
+        "count": 210,
+        "weapon": 160,
+        "shield": 40,
+        "armour": 400
+       },
+       "402": {
+        "name": "Light Laser Turret",
+        "count": 35,
+        "weapon": 200,
+        "shield": 50,
+        "armour": 400
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "fire": null
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-raport.html": {
+  "live": {
+   "mode": 0,
+   "hallOfFame": false,
+   "time": "30. Oct 2026, 08:54:00",
+   "wall": 1793350440000,
+   "result": "a",
+   "resultText": "The attacker has won the battle!",
+   "loot": {
+    "901": 12053668,
+    "902": 5251102,
+    "903": 1825031
+   },
+   "lost": {
+    "attacker": 36000,
+    "defender": 1985000
+   },
+   "debris": {
+    "901": 495000,
+    "902": 225000
+   },
+   "moonChance": 7,
+   "moonCreated": true,
+   "rounds": [
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "planetTypeShort": "P",
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 400,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "204": {
+         "name": "Light Fighter",
+         "count": 800,
+         "weapon": 100,
+         "shield": 20,
+         "armour": 800
+        },
+        "401": {
+         "name": "Missile Launcher",
+         "count": 1500,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 900,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": {
+      "attackerPower": 1404000,
+      "defenderShieldAbsorbed": 115000,
+      "defenderPower": 680000,
+      "attackerShieldAbsorbed": 59200
+     }
+    },
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "planetTypeShort": "P",
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 388,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": false,
+       "units": {
+        "401": {
+         "name": "Missile Launcher",
+         "count": 210,
+         "weapon": 160,
+         "shield": 40,
+         "armour": 400
+        },
+        "402": {
+         "name": "Light Laser Turret",
+         "count": 35,
+         "weapon": 200,
+         "shield": 50,
+         "armour": 400
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "fire": {
+      "attackerPower": 1398000,
+      "defenderShieldAbsorbed": 30000,
+      "defenderPower": 40600,
+      "attackerShieldAbsorbed": 8400
+     }
+    },
+    {
+     "attackers": [
+      {
+       "role": "Attacker",
+       "name": "vodoleyko1992",
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "planetTypeShort": "P",
+       "tech": {
+        "weapon": 140,
+        "shield": 130,
+        "armour": 150
+       },
+       "destroyed": false,
+       "units": {
+        "203": {
+         "name": "Heavy Cargo",
+         "count": 388,
+         "weapon": 12,
+         "shield": 60,
+         "armour": 3000
+        },
+        "207": {
+         "name": "Battleship",
+         "count": 150,
+         "weapon": 2400,
+         "shield": 480,
+         "armour": 15000
+        }
+       },
+       "unknown": []
+      }
+     ],
+     "defenders": [
+      {
+       "role": "Defender",
+       "name": "Kovacs",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "planetTypeShort": null,
+       "tech": {
+        "weapon": 100,
+        "shield": 90,
+        "armour": 110
+       },
+       "destroyed": true,
+       "units": {},
+       "unknown": []
+      }
+     ],
+     "fire": null
+    }
+   ],
+   "tailLines": [
+    "The attacker has won the battle!",
+    "He captures 12.053.668 Metal, 5.251.102 Crystal and 1.825.031 Deuterium",
+    "The attackers losses: 36.000 units",
+    "The defenders losses: 1.985.000 units",
+    "At the coordinates are now: 495.000 Metal and 225.000 Crystaldebris.",
+    "Moon Chance: 7 %",
+    "A moon formed at the planet Moon [2:70:4] !"
+   ],
+   "roundsFought": 2,
+   "start": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": {
+       "galaxy": 2,
+       "system": 68,
+       "planet": 5
+      },
+      "planetTypeShort": "P",
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": false,
+      "units": {
+       "203": {
+        "name": "Heavy Cargo",
+        "count": 400,
+        "weapon": 12,
+        "shield": 60,
+        "armour": 3000
+       },
+       "207": {
+        "name": "Battleship",
+        "count": 150,
+        "weapon": 2400,
+        "shield": 480,
+        "armour": 15000
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4
+      },
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": false,
+      "units": {
+       "204": {
+        "name": "Light Fighter",
+        "count": 800,
+        "weapon": 100,
+        "shield": 20,
+        "armour": 800
+       },
+       "401": {
+        "name": "Missile Launcher",
+        "count": 1500,
+        "weapon": 160,
+        "shield": 40,
+        "armour": 400
+       },
+       "402": {
+        "name": "Light Laser Turret",
+        "count": 900,
+        "weapon": 200,
+        "shield": 50,
+        "armour": 400
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "fire": {
+     "attackerPower": 1404000,
+     "defenderShieldAbsorbed": 115000,
+     "defenderPower": 680000,
+     "attackerShieldAbsorbed": 59200
+    }
+   },
+   "end": {
+    "attackers": [
+     {
+      "role": "Attacker",
+      "name": "vodoleyko1992",
+      "coords": {
+       "galaxy": 2,
+       "system": 68,
+       "planet": 5
+      },
+      "planetTypeShort": "P",
+      "tech": {
+       "weapon": 140,
+       "shield": 130,
+       "armour": 150
+      },
+      "destroyed": false,
+      "units": {
+       "203": {
+        "name": "Heavy Cargo",
+        "count": 388,
+        "weapon": 12,
+        "shield": 60,
+        "armour": 3000
+       },
+       "207": {
+        "name": "Battleship",
+        "count": 150,
+        "weapon": 2400,
+        "shield": 480,
+        "armour": 15000
+       }
+      },
+      "unknown": []
+     }
+    ],
+    "defenders": [
+     {
+      "role": "Defender",
+      "name": "Kovacs",
+      "coords": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4
+      },
+      "planetTypeShort": null,
+      "tech": {
+       "weapon": 100,
+       "shield": 90,
+       "armour": 110
+      },
+      "destroyed": true,
+      "units": {},
+      "unknown": []
+     }
+    ],
+    "fire": null
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-100-p2.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 100,
+    "page": 2,
+    "pages": 3,
+    "items": [
+     {
+      "id": 530112,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 11:02:14",
+      "wall": 1793358134000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Kronos [2:70:4] on 30. Oct 2026, 11:02:22",
+       "targetName": "Kronos",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "coordsStr": "2:70:4",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 11:02:22",
+       "reportWall": 1793358142000,
+       "destroyed": false,
+       "discoveryChance": 12,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": true,
+        "buildings": true,
+        "research": true
+       },
+       "resources": {
+        "901": 4523000000,
+        "902": 1210500000,
+        "903": 98000000,
+        "911": -1250
+       },
+       "fleet": {
+        "202": 1500,
+        "203": 300,
+        "204": 0,
+        "205": 0,
+        "206": 0,
+        "207": 0,
+        "208": 0,
+        "209": 77,
+        "210": 5,
+        "211": 0,
+        "212": 120,
+        "213": 0,
+        "214": 0,
+        "215": 0,
+        "216": 0,
+        "217": 0,
+        "218": 0,
+        "219": 0,
+        "220": 0
+       },
+       "defense": {
+        "401": 2000,
+        "402": 1500,
+        "403": 0,
+        "404": 0,
+        "405": 0,
+        "406": 0,
+        "407": 1,
+        "408": 1,
+        "409": 0,
+        "410": 0,
+        "411": 0,
+        "502": 20,
+        "503": 0
+       },
+       "buildings": {
+        "1": 40,
+        "2": 36,
+        "3": 33,
+        "4": 30,
+        "6": 0,
+        "12": 0,
+        "14": 12,
+        "15": 6,
+        "21": 12,
+        "22": 15,
+        "23": 0,
+        "24": 0,
+        "31": 12,
+        "33": 0,
+        "34": 0,
+        "41": 0,
+        "42": 0,
+        "43": 0,
+        "44": 0,
+        "71": 0,
+        "72": 0,
+        "73": 0
+       },
+       "research": {
+        "106": 14,
+        "108": 12,
+        "109": 15,
+        "110": 14,
+        "111": 15,
+        "113": 12,
+        "114": 0,
+        "115": 16,
+        "117": 0,
+        "118": 0,
+        "120": 0,
+        "121": 0,
+        "122": 0,
+        "123": 0,
+        "124": 0,
+        "131": 0,
+        "132": 0,
+        "133": 0,
+        "199": 0
+       },
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 530110,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 11:01:40",
+      "wall": 1793358100000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Arrakeen (Moon) [2:71:9] on 30. Oct 2026, 11:01:52",
+       "targetName": "Arrakeen (Moon)",
+       "coords": {
+        "galaxy": 2,
+        "system": 71,
+        "planet": 9
+       },
+       "coordsStr": "2:71:9",
+       "planetType": 3,
+       "reportDateText": "30. Oct 2026, 11:01:52",
+       "reportWall": 1793358112000,
+       "destroyed": true,
+       "discoveryChance": null,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": false,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 1000,
+        "902": 0,
+        "903": 52001,
+        "911": 0
+       },
+       "fleet": {
+        "202": 0,
+        "203": 0,
+        "204": 10,
+        "205": 0,
+        "206": 0,
+        "207": 0,
+        "208": 0,
+        "209": 0,
+        "210": 0,
+        "211": 0,
+        "212": 0,
+        "213": 0,
+        "214": 0,
+        "215": 0,
+        "216": 0,
+        "217": 0,
+        "218": 0,
+        "219": 0,
+        "220": 0
+       },
+       "defense": null,
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 530101,
+      "kind": "spy_detected",
+      "unread": true,
+      "date": "30. Oct 2026, 10:58:03",
+      "wall": 1793357883000,
+      "from": "Room monitoring",
+      "subject": "Spying activity",
+      "data": {
+       "from": {
+        "galaxy": 2,
+        "system": 66,
+        "planet": 7
+       },
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 6
+       },
+       "fromText": "A hostile fleet of the planet Aldebaran",
+       "fromMoon": false,
+       "wall": 1793357883000
+      }
+     },
+     {
+      "id": 530099,
+      "kind": "combat",
+      "unread": true,
+      "date": "30. Oct 2026, 10:55:00",
+      "wall": 1793357700000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "3f1c0d6e8a2b4c5d6e7f8091a2b3c4d5",
+       "url": "game.php?page=raport&raport=3f1c0d6e8a2b4c5d6e7f8091a2b3c4d5",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "coordsStr": "2:70:4",
+       "planetTypeShort": "P",
+       "myResult": "win",
+       "winner": "attacker",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 12000,
+        "defender": 4580000
+       },
+       "loot": {
+        "901": 2261500000,
+        "902": 605250000,
+        "903": 49000000
+       },
+       "debris": {
+        "901": 1374000,
+        "902": 1260000
+       },
+       "wall": 1793357700000
+      }
+     },
+     {
+      "id": 530098,
+      "kind": "combat",
+      "unread": false,
+      "date": "30. Oct 2026, 10:41:10",
+      "wall": 1793356870000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+       "url": "game.php?page=raport&raport=0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "coordsStr": "2:68:5",
+       "planetTypeShort": "P",
+       "myResult": "loss",
+       "winner": "defender",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 999000,
+        "defender": 0
+       },
+       "loot": {
+        "901": 0,
+        "902": 0,
+        "903": 0
+       },
+       "debris": {
+        "901": 299700,
+        "902": 299700
+       },
+       "wall": 1793356870000
+      }
+     },
+     {
+      "id": 530090,
+      "kind": "return",
+      "unread": false,
+      "date": "30. Oct 2026, 10:30:55",
+      "wall": 1793356255000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        }
+       ],
+       "wall": 1793356255000,
+       "resources": {
+        "901": 2261500000,
+        "902": 605250000,
+        "903": 49000000
+       },
+       "raw": [
+        2261500000,
+        605250000,
+        49000000
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       }
+      }
+     },
+     {
+      "id": 530085,
+      "kind": "recycle",
+      "unread": false,
+      "date": "30. Oct 2026, 10:20:29",
+      "wall": 1793355629000,
+      "from": "Fleet Headquarters",
+      "subject": "Recycling Report",
+      "data": {
+       "kind": "recycle",
+       "links": [],
+       "wall": 1793355629000,
+       "resources": {
+        "901": 1374000,
+        "902": 1260000
+       },
+       "raw": [
+        1374000,
+        1260000
+       ]
+      }
+     },
+     {
+      "id": 530080,
+      "kind": "transport_arrival",
+      "unread": false,
+      "date": "30. Oct 2026, 10:20:01",
+      "wall": 1793355601000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 6
+        }
+       ],
+       "wall": 1793355601000,
+       "resources": {
+        "901": 7382,
+        "902": 0,
+        "903": 0
+       },
+       "raw": [
+        7382,
+        0,
+        0
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 6
+       }
+      }
+     },
+     {
+      "id": 530079,
+      "kind": "transport_received",
+      "unread": false,
+      "date": "30. Oct 2026, 10:19:44",
+      "wall": 1793355584000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_received",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 66,
+         "planet": 7
+        },
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793355584000,
+       "resources": {
+        "901": 1000000,
+        "902": 500000,
+        "903": 0
+       },
+       "raw": [
+        1000000,
+        500000,
+        0
+       ],
+       "from": {
+        "galaxy": 2,
+        "system": 66,
+        "planet": 7
+       },
+       "to": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 530075,
+      "kind": "return_empty",
+      "unread": false,
+      "date": "30. Oct 2026, 10:10:12",
+      "wall": 1793355012000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_empty",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793355012000,
+       "resources": null,
+       "raw": [],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 530070,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 10:05:00",
+      "wall": 1793354700000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "resources",
+       "key": "sys_expe_found_ress_1_1",
+       "lang": "en",
+       "wall": 1793354700000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 530069,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 10:04:00",
+      "wall": 1793354640000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "ships",
+       "key": "sys_expe_found_ships_3_1",
+       "lang": "en",
+       "wall": 1793354640000,
+       "ships": {
+        "202": 1200,
+        "206": 35
+       },
+       "shipsByName": {
+        "Light Cargo": 1200,
+        "Cruiser": 35
+       }
+      }
+     },
+     {
+      "id": 530068,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 10:03:00",
+      "wall": 1793354580000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "nothing",
+       "key": "sys_expe_nothing_6",
+       "lang": "en",
+       "wall": 1793354580000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 530067,
+      "kind": "return_expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 10:02:00",
+      "wall": 1793354520000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_expedition",
+       "links": [],
+       "wall": 1793354520000,
+       "resources": {
+        "901": 812000,
+        "902": 0,
+        "903": 0,
+        "921": 0
+       },
+       "raw": [
+        812000,
+        0,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": 530060,
+      "kind": "colonisation",
+      "unread": false,
+      "date": "30. Oct 2026, 09:58:00",
+      "wall": 1793354280000,
+      "from": "Colonisation",
+      "subject": "Colonisation report",
+      "data": null
+     },
+     {
+      "id": 530055,
+      "kind": "deploy_arrival",
+      "unread": false,
+      "date": "30. Oct 2026, 09:50:00",
+      "wall": 1793353800000,
+      "from": "Fleet Headquarters",
+      "subject": "Located fleet",
+      "data": {
+       "kind": "deploy_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 6
+        }
+       ],
+       "wall": 1793353800000,
+       "resources": {
+        "901": 10,
+        "902": 20,
+        "903": 30
+       },
+       "raw": [
+        10,
+        20,
+        30
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 6
+       }
+      }
+     },
+     {
+      "id": 530050,
+      "kind": "player",
+      "unread": false,
+      "date": "30. Oct 2026, 09:40:00",
+      "wall": 1793353200000,
+      "from": "Aldebaran [2:66:7]",
+      "subject": "Hi neighbour",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-999.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 999,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 530200,
+      "kind": "outbox",
+      "unread": false,
+      "date": "30. Oct 2026, 11:10:00",
+      "wall": 1793358600000,
+      "from": "Aldebaran [2:66:7]",
+      "subject": "Re:Hi neighbour",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat0.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 0,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520301,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 08:40:00",
+      "wall": 1793349600000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Moon [2:71:12] on 30. Oct 2026, 08:40:12",
+       "targetName": "Moon",
+       "coords": {
+        "galaxy": 2,
+        "system": 71,
+        "planet": 12
+       },
+       "coordsStr": "2:71:12",
+       "planetType": 3,
+       "reportDateText": "30. Oct 2026, 08:40:12",
+       "reportWall": 1793349612000,
+       "destroyed": true,
+       "discoveryChance": null,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": true,
+        "buildings": false,
+        "research": false
+       },
+       "resources": {
+        "901": 1200000,
+        "903": 85000
+       },
+       "fleet": {
+        "204": 15,
+        "214": 1
+       },
+       "defense": {},
+       "buildings": null,
+       "research": null,
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 520298,
+      "kind": "spy_report",
+      "unread": true,
+      "date": "30. Oct 2026, 08:30:00",
+      "wall": 1793349000000,
+      "from": "Spying department",
+      "subject": "Intelligence report",
+      "data": {
+       "title": "Spy Report Kovacs Prime [2:70:4] on 30. Oct 2026, 08:30:09",
+       "targetName": "Kovacs Prime",
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "coordsStr": "2:70:4",
+       "planetType": 1,
+       "reportDateText": "30. Oct 2026, 08:30:09",
+       "reportWall": 1793349009000,
+       "destroyed": false,
+       "discoveryChance": 3,
+       "revealed": {
+        "resources": true,
+        "fleet": true,
+        "defense": true,
+        "buildings": true,
+        "research": true
+       },
+       "resources": {
+        "901": 48211338,
+        "902": 21004410,
+        "903": 7300126,
+        "911": -1250
+       },
+       "fleet": {
+        "202": 120,
+        "203": 45,
+        "204": 800,
+        "205": 0,
+        "206": 30,
+        "207": 0,
+        "208": 0,
+        "209": 12,
+        "210": 5,
+        "211": 0,
+        "212": 400,
+        "213": 0,
+        "214": 0,
+        "215": 0,
+        "216": 0,
+        "217": 0,
+        "218": 0,
+        "219": 0,
+        "220": 0
+       },
+       "defense": {
+        "401": 1500,
+        "402": 900,
+        "403": 120,
+        "404": 12,
+        "405": 0,
+        "406": 0,
+        "407": 1,
+        "408": 1,
+        "409": 0,
+        "410": 0,
+        "411": 0,
+        "502": 20,
+        "503": 0
+       },
+       "buildings": {
+        "1": 30,
+        "2": 27,
+        "3": 25,
+        "4": 28,
+        "6": 0,
+        "12": 5,
+        "14": 10,
+        "15": 4,
+        "21": 12,
+        "22": 11,
+        "23": 10,
+        "24": 9,
+        "31": 12,
+        "33": 0,
+        "34": 0,
+        "41": 0,
+        "42": 0,
+        "43": 0,
+        "44": 4,
+        "71": 1,
+        "72": 0,
+        "73": 0
+       },
+       "research": {
+        "106": 10,
+        "108": 12,
+        "109": 14,
+        "110": 13,
+        "111": 15,
+        "113": 12,
+        "114": 8,
+        "115": 14,
+        "117": 9,
+        "118": 7,
+        "120": 12,
+        "121": 5,
+        "122": 7,
+        "123": 0,
+        "124": 9,
+        "131": 0,
+        "132": 0,
+        "133": 0,
+        "199": 0
+       },
+       "exact": true,
+       "unknownNames": []
+      }
+     },
+     {
+      "id": 520290,
+      "kind": "spy_detected",
+      "unread": false,
+      "date": "30. Oct 2026, 08:25:00",
+      "wall": 1793348700000,
+      "from": "Room monitoring",
+      "subject": "Spying activity",
+      "data": {
+       "from": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "fromText": "A hostile fleet of the planet Kovacs Prime",
+       "fromMoon": false,
+       "wall": 1793348700000
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat1.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 1,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520800,
+      "kind": "player",
+      "unread": true,
+      "date": "30. Oct 2026, 09:41:40",
+      "wall": 1793353300000,
+      "from": "Kovacs [2:70:4]",
+      "subject": "Re:hello",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat15.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 15,
+    "page": 1,
+    "pages": 2,
+    "items": [
+     {
+      "id": 520920,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:56:40",
+      "wall": 1793354200000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "resources",
+       "key": "sys_expe_found_ress_1_1",
+       "lang": "en",
+       "wall": 1793354200000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520919,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:55:40",
+      "wall": 1793354140000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "darkmatter",
+       "key": "sys_expe_found_dm_2_3",
+       "lang": "en",
+       "wall": 1793354140000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520918,
+      "kind": "expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:54:40",
+      "wall": 1793354080000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "ships",
+       "key": "sys_expe_found_ships_1_2",
+       "lang": "en",
+       "wall": 1793354080000,
+       "ships": {
+        "202": 37,
+        "204": 1250
+       },
+       "shipsByName": {
+        "Light Cargo": 37,
+        "Light Fighter": 1250
+       }
+      }
+     },
+     {
+      "id": 520917,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:53:40",
+      "wall": 1793354020000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "ships",
+       "key": "sys_expe_found_ships_2_1",
+       "lang": "en",
+       "wall": 1793354020000,
+       "ships": {},
+       "shipsByName": {}
+      }
+     },
+     {
+      "id": 520916,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:52:40",
+      "wall": 1793353960000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "nothing",
+       "key": "sys_expe_nothing_6",
+       "lang": "en",
+       "wall": 1793353960000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520915,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:51:40",
+      "wall": 1793353900000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "delay",
+       "key": "sys_expe_time_slow_2",
+       "lang": "en",
+       "wall": 1793353900000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520914,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:50:40",
+      "wall": 1793353840000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "speedup",
+       "key": "sys_expe_time_fast_1",
+       "lang": "en",
+       "wall": 1793353840000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520913,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:49:40",
+      "wall": 1793353780000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "fleet_lost",
+       "key": "sys_expe_lost_fleet_3",
+       "lang": "en",
+       "wall": 1793353780000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520912,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:48:40",
+      "wall": 1793353720000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "battle_pirates",
+       "key": "sys_expe_attack_1_2_3",
+       "lang": "en",
+       "wall": 1793353720000,
+       "ships": null,
+       "shipsByName": null
+      }
+     },
+     {
+      "id": 520911,
+      "kind": "expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 09:47:40",
+      "wall": 1793353660000,
+      "from": "Fleet Headquarters",
+      "subject": "Expedition report",
+      "data": {
+       "outcome": "resources",
+       "key": "sys_expe_found_ress_3_2",
+       "lang": "en",
+       "wall": 1793353660000,
+       "ships": null,
+       "shipsByName": null
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat3.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 3,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520410,
+      "kind": "combat",
+      "unread": true,
+      "date": "30. Oct 2026, 09:00:00",
+      "wall": 1793350800000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+       "url": "game.php?page=raport&raport=3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "coordsStr": "2:70:4",
+       "planetTypeShort": "P",
+       "myResult": "win",
+       "winner": "attacker",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 36000,
+        "defender": 1985000
+       },
+       "loot": {
+        "901": 12053668,
+        "902": 5251102,
+        "903": 1825031
+       },
+       "debris": {
+        "901": 495000,
+        "902": 225000
+       },
+       "wall": 1793350800000
+      }
+     },
+     {
+      "id": 520402,
+      "kind": "combat",
+      "unread": true,
+      "date": "30. Oct 2026, 08:55:00",
+      "wall": 1793350500000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+       "url": "game.php?page=raport&raport=9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+       "viaCombatReportPhp": false,
+       "isExpedition": false,
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "coordsStr": "2:68:5",
+       "planetTypeShort": "P",
+       "myResult": "loss",
+       "winner": "attacker",
+       "myRole": "defender",
+       "lost": {
+        "attacker": 0,
+        "defender": 4400000
+       },
+       "loot": {
+        "901": 150000,
+        "902": 80000,
+        "903": 20000
+       },
+       "debris": {
+        "901": 1050000,
+        "902": 600000
+       },
+       "wall": 1793350500000
+      }
+     },
+     {
+      "id": 520399,
+      "kind": "combat_expedition",
+      "unread": false,
+      "date": "30. Oct 2026, 08:50:00",
+      "wall": 1793350200000,
+      "from": "Fleet Headquarters",
+      "subject": "Fight report",
+      "data": {
+       "reportId": "0123456789abcdef0123456789abcdef",
+       "url": "game.php?page=raport&raport=0123456789abcdef0123456789abcdef",
+       "viaCombatReportPhp": true,
+       "isExpedition": true,
+       "coords": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 16
+       },
+       "coordsStr": "2:68:16",
+       "planetTypeShort": "P",
+       "myResult": "loss",
+       "winner": "defender",
+       "myRole": "attacker",
+       "lost": {
+        "attacker": 2300000,
+        "defender": 120000
+       },
+       "loot": {
+        "901": 0,
+        "902": 0,
+        "903": 0
+       },
+       "debris": {
+        "901": 0,
+        "902": 0
+       },
+       "wall": 1793350200000
+      }
+     },
+     {
+      "id": 520390,
+      "kind": "missile",
+      "unread": false,
+      "date": "30. Oct 2026, 08:45:00",
+      "wall": 1793349900000,
+      "from": "Fleet Headquarters",
+      "subject": "Rocket impact",
+      "data": {
+       "kind": "missile",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        },
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        }
+       ],
+       "wall": 1793349900000,
+       "resources": null,
+       "raw": [
+        5,
+        300,
+        120
+       ],
+       "missiles": 25,
+       "intercepted": 5,
+       "destroyed": {
+        "401": 300,
+        "402": 120
+       },
+       "unknownTitles": [],
+       "from": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       },
+       "to": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       }
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat4.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 4,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520610,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:23:20",
+      "wall": 1793352200000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        }
+       ],
+       "wall": 1793352200000,
+       "resources": {
+        "901": 12053668,
+        "902": 5251102,
+        "903": 1825031
+       },
+       "raw": [
+        12053668,
+        5251102,
+        1825031
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       }
+      }
+     },
+     {
+      "id": 520609,
+      "kind": "return_empty",
+      "unread": true,
+      "date": "30. Oct 2026, 09:21:40",
+      "wall": 1793352100000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_empty",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793352100000,
+       "resources": null,
+       "raw": [],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520608,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:20:00",
+      "wall": 1793352000000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793352000000,
+       "resources": {
+        "901": 4145000,
+        "902": 2072500,
+        "903": 0
+       },
+       "raw": [
+        4145000,
+        2072500,
+        0
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520607,
+      "kind": "return_expedition",
+      "unread": true,
+      "date": "30. Oct 2026, 09:18:20",
+      "wall": 1793351900000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return_expedition",
+       "links": [],
+       "wall": 1793351900000,
+       "resources": {
+        "901": 1254000,
+        "902": 0,
+        "903": 0,
+        "921": 450
+       },
+       "raw": [
+        1254000,
+        0,
+        0,
+        450
+       ]
+      }
+     },
+     {
+      "id": 520606,
+      "kind": "return",
+      "unread": true,
+      "date": "30. Oct 2026, 09:16:40",
+      "wall": 1793351800000,
+      "from": "Fleet Headquarters",
+      "subject": "Fleet return",
+      "data": {
+       "kind": "return",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793351800000,
+       "resources": {
+        "901": 0,
+        "902": 0,
+        "903": 0
+       },
+       "raw": [
+        0,
+        0,
+        0
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520605,
+      "kind": "colonisation",
+      "unread": false,
+      "date": "30. Oct 2026, 09:15:00",
+      "wall": 1793351700000,
+      "from": "Colonisation",
+      "subject": "Colonisation report",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat5.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 5,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520510,
+      "kind": "transport_arrival",
+      "unread": true,
+      "date": "30. Oct 2026, 09:06:40",
+      "wall": 1793351200000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 6
+        }
+       ],
+       "wall": 1793351200000,
+       "resources": {
+        "901": 500000,
+        "902": 250000,
+        "903": 100000
+       },
+       "raw": [
+        500000,
+        250000,
+        100000
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 6
+       }
+      }
+     },
+     {
+      "id": 520509,
+      "kind": "transport_received",
+      "unread": true,
+      "date": "30. Oct 2026, 09:05:50",
+      "wall": 1793351150000,
+      "from": "Fleet Headquarters",
+      "subject": "Transportmessage",
+      "data": {
+       "kind": "transport_received",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 70,
+         "planet": 4
+        },
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 5
+        }
+       ],
+       "wall": 1793351150000,
+       "resources": {
+        "901": 1000,
+        "902": 2000,
+        "903": 3000
+       },
+       "raw": [
+        1000,
+        2000,
+        3000
+       ],
+       "from": {
+        "galaxy": 2,
+        "system": 70,
+        "planet": 4
+       },
+       "to": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 5
+       }
+      }
+     },
+     {
+      "id": 520505,
+      "kind": "recycle",
+      "unread": true,
+      "date": "30. Oct 2026, 09:05:00",
+      "wall": 1793351100000,
+      "from": "Fleet Headquarters",
+      "subject": "Recycling Report",
+      "data": {
+       "kind": "recycle",
+       "links": [],
+       "wall": 1793351100000,
+       "resources": {
+        "901": 4145000,
+        "902": 2072500
+       },
+       "raw": [
+        4145000,
+        2072500
+       ]
+      }
+     },
+     {
+      "id": 520501,
+      "kind": "deploy_arrival",
+      "unread": false,
+      "date": "30. Oct 2026, 09:04:10",
+      "wall": 1793351050000,
+      "from": "Fleet Headquarters",
+      "subject": "Located fleet",
+      "data": {
+       "kind": "deploy_arrival",
+       "links": [
+        {
+         "galaxy": 2,
+         "system": 68,
+         "planet": 7
+        }
+       ],
+       "wall": 1793351050000,
+       "resources": {
+        "901": 10,
+        "902": 20,
+        "903": 89
+       },
+       "raw": [
+        10,
+        20,
+        89
+       ],
+       "target": {
+        "galaxy": 2,
+        "system": 68,
+        "planet": 7
+       }
+      }
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat99.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 99,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520700,
+      "kind": "construction",
+      "unread": true,
+      "date": "30. Oct 2026, 09:40:00",
+      "wall": 1793353200000,
+      "from": "List of construction",
+      "subject": "Impossible to build",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "messages-upstream-view-cat999.html": {
+  "live": {
+   "categories": [],
+   "list": {
+    "cat": 999,
+    "page": 1,
+    "pages": 1,
+    "items": [
+     {
+      "id": 520801,
+      "kind": "outbox",
+      "unread": false,
+      "date": "30. Oct 2026, 09:43:20",
+      "wall": 1793353400000,
+      "from": "Kovacs [2:70:4]",
+      "subject": "hello",
+      "data": null
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ }
+}

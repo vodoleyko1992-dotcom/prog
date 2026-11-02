@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+	<!-- OGX FIXTURE: UPSTREAM-derived, NOT a real page. Rendered by hand from upstream 2Moons 1.8 templates
+	     (layout.full.tpl, main.header.tpl, main.navigation.tpl, main.topnav.tpl, page.overview.default.tpl,
+	     class.FlyingFleetsTable.php, language/en). Plausible data; theme gow (TOPNAV_SHORTLY_NUMBER = 0).
+	     TIMESTAMP (render time) = 1793347417 = 2026-10-30 08:03:37 UTC, server timezone UTC+2.
+	     The live GALAXYZ fork uses a DIFFERENT layout: see layout-live-synthetic-*.html and eu/pages/*.html. -->
+	<title>Overview - Aeternum - GALAXYZ</title>
+	<meta name="generator" content="2Moons 1.8.git">
+	<!--
+		This website is powered by 2Moons 1.8.git
+		2Moons is a free Space Browsergame initially created by Jan Kröpke and licensed under GNU/GPL.
+		2Moons is copyright 2009-2013 of Jan Kröpke. Extensions are copyright of their respective owners.
+		Information and contribution at http://2moons.cc/
+	-->
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/boilerplate.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/ingame/main.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/jquery.fancybox.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/resource/css/base/validationEngine.jquery.css?v=.git">
+	<link rel="stylesheet" type="text/css" href="./styles/theme/gow/formate.css?v=.git">
+	<link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+	<script type="text/javascript">
+	var ServerTimezoneOffset = 0;
+	var serverTime 	= new Date(2026, 9, 30, 10, 03, 37);
+	var startTime	= serverTime.getTime();
+	var localTime 	= serverTime;
+	var localTS 	= startTime;
+	var Gamename	= document.title;
+	var Ready		= "Ready";
+	var Skin		= "./styles/theme/gow/";
+	var Lang		= "en";
+	var head_info	= "Info";
+	var auth		= 0;
+	var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+	var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+	var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+	var queryString	= "page=overview";
+	var isPlayerCardActive	= "true";
+
+	setInterval(function() {
+		serverTime.setSeconds(serverTime.getSeconds()+1);
+	}, 1000);
+	</script>
+	<script type="text/javascript" src="./scripts/base/jquery.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.ui.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.cookie.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.fancybox.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/jquery.validationEngine.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/l18n/validationEngine/jquery.validationEngine-en.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/base/tooltip.js?v=.git"></script>
+	<script type="text/javascript" src="./scripts/game/base.js?v=.git"></script>
+	    <script src="scripts/game/overview.js"></script>
+	<script type="text/javascript">
+	$(function() {
+
+	});
+	</script>
+</head>
+<body id="overview" class="full">
+	<div id="tooltip" class="tip"></div>
+<div id="leftmenu">
+	<ul id="menu">
+		<li class="menu-head"><a href="game.php?page=changelog">Changelog</a></li>
+		<li class="menucat1-head"></li>
+		<li><a href="game.php?page=overview">Overview</a></li>
+		<li><a href="game.php?page=imperium">Empire</a></li>
+		<li><a href="game.php?page=research">Research</a></li>
+		<li><a href="game.php?page=buildings">Buildings</a></li>
+		<li><a href="game.php?page=shipyard&amp;mode=fleet">Hangar</a></li>
+		<li><a href="game.php?page=shipyard&amp;mode=defense">Defenses</a></li>
+		<li><a href="game.php?page=officier">Officers</a></li>
+		<li><a href="game.php?page=trader">Market</a></li>
+		<li><a href="game.php?page=fleetDealer">Merchant of Fleets</a></li>
+		<li><a href="game.php?page=fleetTable">Fleet</a></li>
+		<li><a href="game.php?page=techtree">Technologies</a></li>
+		<li><a href="game.php?page=resources">Resources</a></li>
+		<li class="menucat2-head"></li>
+		<li><a href="game.php?page=galaxy">Galaxy</a></li>
+		<li><a href="game.php?page=alliance">Alliance</a></li>
+		<li><a href="game.php?page=statistics">Statistics</a></li>
+		<li><a href="game.php?page=records">Records</a></li>
+		<li><a href="game.php?page=battleHall">Hall of Fame</a></li>
+		<li><a href="game.php?page=search">Search</a></li>
+		<li><a href="game.php?page=chat">Chat</a></li>
+		<li><a href="game.php?page=ticket">Support</a></li>
+		<li><a href="game.php?page=questions">FAQ</a></li>
+		<li><a href="game.php?page=banList">Banned</a></li>
+		<li><a href="index.php?page=rules" target="rules">Rules</a></li>
+		<li><a href="game.php?page=battleSimulator">Simulator</a></li>
+
+		<li class="menucat3-head"></li>
+		<li><a href="game.php?page=messages">Messages<span id="newmes"> (<span id="newmesnum">2</span>)</span></a></li>
+		<li><a href="javascript:OpenPopup('?page=notes', 'notes', 720, 300);">Notes</a></li>
+		<li><a href="game.php?page=buddyList">Friendships</a></li>
+		<li><a href="game.php?page=settings">Options</a></li>
+		<li><a href="game.php?page=logout">Logout</a></li>
+		<li class="menu-footer"></li>
+	</ul>
+	<div id="disclamer"><a href="index.php?page=disclamer" target="_blank">Credits</a></div>
+</div><div id="page">
+	<div id="header">
+		<table id="headerTable">
+			<tbody>
+				<tr>
+					<td id="planetImage">
+                       <img src="./styles/theme/gow/planeten/small/s_dschjungelplanet07.jpg" alt="">
+					</td>
+					<td id="planetSelectorWrapper">
+                        <label for="planetSelector"></label>
+						<select id="planetSelector">
+							<option value="254102" selected="selected">Homeworld [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254110">Moon (Moon) [2:68:5]</option>
+
+						</select>
+					</td>
+					<td id="resourceWrapper">
+						<table id="resourceTable">
+							<tbody>
+								<tr>
+									<td><img src="./styles/theme/gow/images/metal.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/crystal.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/deuterium.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/energy.gif" alt=""></td>
+									<td><img src="./styles/theme/gow/images/darkmatter.gif" alt=""></td>
+								</tr>
+								<tr>
+									<td class="res_name">Metal</td>
+									<td class="res_name">Crystal</td>
+									<td class="res_name">Deuterium</td>
+									<td class="res_name">Energy</td>
+									<td class="res_name">Dark Matter</td>
+								</tr>
+								<tr>
+									<td class="res_current" id="current_metal" data-real="1408320361.5607">1.408.320.362</td>
+									<td class="res_current" id="current_crystal" data-real="228249710.01842">228.249.710</td>
+									<td class="res_current" id="current_deuterium" data-real="350563050.66861">350.563.051</td>
+									<td class="res_current"><span>438&nbsp;/&nbsp;47.480</span></td>
+									<td class="res_current" id="current_darkmatter" data-real="3981">3.981</td>
+								</tr>
+								<tr>
+									<td class="res_max" id="max_metal" data-real="1408320361.5607">3.416.925.000</td>
+									<td class="res_max" id="max_crystal" data-real="228249710.01842">1.863.925.000</td>
+									<td class="res_max" id="max_deuterium" data-real="350563050.66861">1.016.750.000</td>
+									<td>&nbsp;</td>
+									<td>&nbsp;</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<script type="text/javascript">
+		var viewShortlyNumber	= 0;
+		var vacation			= 0;
+        $(function() {
+            resourceTicker({
+                available: 1408320361.5607,
+                limit: [0, 3416925000],
+                production: 1932927923.2055,
+                valueElem: "current_metal"
+            }, true);
+            resourceTicker({
+                available: 228249710.01842,
+                limit: [0, 1863925000],
+                production: 822497302.17436,
+                valueElem: "current_crystal"
+            }, true);
+            resourceTicker({
+                available: 350563050.66861,
+                limit: [0, 1016750000],
+                production: 394585191.6862,
+                valueElem: "current_deuterium"
+            }, true);
+        });
+		</script>
+        <script src="scripts/game/topnav.js"></script>
+	</div>
+<div id="content"><table class="table519">
+	<tr>
+		<th colspan="3"><a href="#" onclick="return Dialog.PlanetAction();" title="Rename or delete">Planet "<span class="planetname">Homeworld</span>"</a> (TestPlayer)</th>
+	</tr>
+	<tr>
+		<td colspan="3"><a href="?page=messages">You have 2 new messages</a></td>
+	</tr>
+	<tr>
+		<td>Server time</td>
+		<td colspan="2" class="servertime">Oct Fri 30 10:03:37</td>
+	</tr>
+	<tr>
+		<td style="white-space: nowrap;">Active Admins</td>
+		<td colspan="2">Currently, there is no administrator online</td>
+	</tr>
+	<tr>
+		<th colspan="3">Activities</th>
+	</tr>
+	<tr>
+		<td id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="1012">00:16:52</td>
+		<td colspan="2"><span class="flight ownharvest">One of your <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Recycler:</td><td style='width:50%;color:white'>8.290</td></tr></table>" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></td>
+	</tr>
+	<tr>
+		<td id="fleettime_1793348917397001" class="fleets" data-fleet-end-time="1793348917" data-fleet-time="1500">00:25:00</td>
+		<td colspan="2"><span class="flight attack">A hostile <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Light Fighter:</td><td style='width:50%;color:white'>1.200</td></tr><tr><td style='width:50%;color:white'>Cruiser:</td><td style='width:50%;color:white'>300</td></tr></table>" class="tooltip attack">Fleets</a><span class="textForBlind"> (1200 Light Fighter; 300 Cruiser)</span> from player Raider <a href="#" onclick="return Dialog.PM(777)">[PM]</a> from Planet Raidbase <a href="game.php?page=galaxy&amp;galaxy=3&amp;system=120" class="attack">[3:120:9]</a> reached the Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="attack">[2:68:5]</a>. Mission: Attack</span></td>
+	</tr>
+	<tr>
+		<td id="fleettime_1793349617397050" class="fleets" data-fleet-end-time="1793349617" data-fleet-time="2200">00:36:40</td>
+		<td colspan="2"><span class="holding hold">A friendly <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Battleship:</td><td style='width:50%;color:white'>50</td></tr></table>" class="tooltip hold">Fleets</a><span class="textForBlind"> (50 Battleship)</span> from player Friend <a href="#" onclick="return Dialog.PM(888)">[PM]</a> from Planet Allyhome <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=70" class="hold">[2:70:4]</a> is in Orbit of the Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="hold">[2:68:5]</a>. Mission: Hold</span></td>
+	</tr>
+	<tr>
+		<td id="fleettime_1793350031396900" class="fleets" data-fleet-end-time="1793350031" data-fleet-time="2614">00:43:34</td>
+		<td colspan="2"><span class="return ownharvest">One of your <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Recycler:</td><td style='width:50%;color:white'>8.290</td></tr></table>" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> returns from debris <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a> back to planet Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a>. Mission: Recycle</span></td>
+	</tr>
+	<tr>
+		<td id="fleettime_1793350817397100" class="fleets" data-fleet-end-time="1793350817" data-fleet-time="3400">00:56:40</td>
+		<td colspan="2"><span class="flight owntransport">One of your <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Heavy Cargo:</td><td style='width:50%;color:white'>500</td></tr></table>" class="tooltip owntransport">Fleets</a><span class="textForBlind"> (500 Heavy Cargo)</span> from Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="owntransport">[2:68:5]</a> reached the Planet Colony <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="owntransport">[2:68:6]</a>. Mission: <a data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Metal</td><td style='width:50%;color:white'>1.000.000</td></tr><tr><td style='width:50%;color:white'>Crystal</td><td style='width:50%;color:white'>500.000</td></tr><tr><td style='width:50%;color:white'>Deuterium</td><td style='width:50%;color:white'>0</td></tr></table>" class="tooltip owntransport">Transport</a><span class="textForBlind"> (Ressources: 1000000 Metal; 500000 Crystal; 0 Deuterium)</span></span></td>
+	</tr>
+	<tr>
+		<td id="fleettime_1793354617397200" class="fleets" data-fleet-end-time="1793354617" data-fleet-time="7200">02:00:00</td>
+		<td colspan="2"><span class="holding owntransport">One of your <a href="#" data-tooltip-content="<table style='width:200px'><tr><td style='width:50%;color:white'>Light Cargo:</td><td style='width:50%;color:white'>100</td></tr></table>" class="tooltip owntransport">Fleets</a><span class="textForBlind"> (100 Light Cargo)</span> from Planet Homeworld <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="owntransport">[2:68:5]</a> is on a Expedition to Position <a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="owntransport">[2:68:16]</a>. Mission: Expedition</span></td>
+	</tr>
+	<tr>
+		<td><a href="game.php?page=overview&amp;cp=254110&amp;re=0" title="Moon"><img src="./styles/theme/gow/planeten/mond.jpg" height="50" width="50" alt="Moon (Moon)"></a><br>Moon (Moon)</td>
+		<td>
+			<img src="./styles/theme/gow/planeten/dschjungelplanet07.jpg" height="200" width="200" alt="Homeworld">
+			<br>Metal Mine (40)<br><div class="timer" data-time="3600">01h 00m 00s</div>
+		</td>
+		<td>
+		<table id="planetList">
+			<tr style="height:20px;">
+			<td class="transparent">Colony<br><a href="game.php?page=overview&amp;cp=254103" title="Colony"><img src="./styles/theme/gow/planeten/small/s_dschjungelplanet10.jpg" alt="Colony"></a><br>Crystal Mine (31)<br><span style="color:#7F7F7F;">(00h 42m 10s)</span></td>
+			<td class="transparent">&nbsp;</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td>Diameter</td>
+		<td colspan="2">20.000 km (<a title="Fields used">259</a> / <a title="Max. Permitted fields">405</a> Fields)</td>
+	</tr>
+	<tr>
+		<td>Temperature</td>
+		<td colspan="2">Approximately 32°C to 72°C</td>
+	</tr>
+	<tr>
+		<td>Position</td>
+		<td colspan="2"><a href="game.php?page=galaxy&amp;galaxy=2&amp;system=68">[2:68:5]</a></td>
+	</tr>
+	<tr>
+		<td>Points</td>
+		<td colspan="2">489 (Position <a href="game.php?page=statistics&amp;range=194">194</a> of 547)</td>
+	</tr>
+</table>
+</div>
+<div class="clear"></div>
+<div id="footer">
+</div>
+</body>
+</html>

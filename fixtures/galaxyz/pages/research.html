@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)https://ogamex.eu/Aeternum/game.php?page=research -->
+<html lang="en" class="no-js"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Research - Aeternum (New) - Aeterum (New)</title>
+    <meta name="generator" content="GALAXYZ 1.8.git">
+    <!-- 
+
+	-->
+        
+
+
+    <link rel="stylesheet" type="text/css" href="./4_files/boilerplate.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/main.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/jquery.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/jquery.fancybox.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/validationEngine.jquery.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/marquee.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/new_tooltip.css">
+    <link rel="stylesheet" href="./4_files/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/formate_cleaned_safe.css">
+    <link rel="stylesheet" type="text/css" href="./4_files/notify-metro.css">
+    <link rel="shortcut icon" href="https://ogamex.eu/Aeternum/favicon.ico" type="image/x-icon">
+    <script type="text/javascript">
+        var ServerTimezoneOffset = 0;
+        var serverTime 	= new Date(2026, 9, 30, 10, 03, 59);
+        var startTime = serverTime.getTime();
+        var localTime = serverTime;
+        var localTS = startTime;
+        var Gamename = document.title;
+        var Ready		= "Ready";
+        var Skin		= "./styles/theme/gow/";
+        var Lang		= "en";
+        var head_info	= "Info";
+        var auth		= 0;
+        var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] 
+        var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+        var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+        var queryString	= "page=research";
+
+        setInterval(function() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+        }, 1000);
+    </script>
+    <script type="text/javascript" src="./4_files/jquery.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.ui.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.cookie.js"></script>
+    <script type="text/javascript" src="./4_files/main.js"></script>
+    <script type="text/javascript" src="./4_files/util.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.validationEngine.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.validationEngine-en.js">
+    </script>
+    <script type="text/javascript" src="./4_files/tooltip.js"></script>
+    <script type="text/javascript" src="./4_files/base.js"></script>
+    <script type="text/javascript" src="./4_files/new_tooltip.js"></script>
+    <script type="text/javascript" src="./4_files/jquery.countdown.js"></script>
+    <script type="text/javascript" src="./4_files/topnav.js"></script>
+    <!--<script type="text/javascript" src="./scripts/game/notify.js"></script>-->
+    <!--<script type="text/javascript" src="./scripts/game/notify-metro.js"></script>-->
+    <script src="./4_files/fleetTable.js"></script>
+    
+    
+        <script>
+        jQuery(function() {
+            jQuery('.showSingle').click(function() {
+                jQuery('.targetDiv').hide();
+                jQuery('#div' + $(this).attr('target')).show();
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+        $(function() {
+            
+        });
+    </script>
+    <script type="text/javascript">
+        // <![CDATA[
+        function openWindow(url, width, height, options, name) {
+            width = width ? width : 800;
+            height = height ? height : 600;
+            options = options ? options : 'resizable=yes';
+            name = name ? name : 'openWindow';
+            window.open(
+                url,
+                name,
+                'screenX=' + (screen.width - width) / 2 + ',screenY=' + (screen.height - height) / 2 + ',width=' +
+                width + ',height=' + height + ',' + options
+            )
+        }
+        // ]]>
+    </script>
+    <script type="text/javascript">
+        jQuery(function($) {
+            $('._previous').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').prev()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:last').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+
+            $('._next').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').next()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:first').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+        });
+    </script>
+<meta content="extension" property="gosuslugi.plugin.extension.content"></head>
+
+<body id="research" class="full">
+    <div id="tooltip" class="tip"></div>
+<!-- START main.topnav -->
+<div id="boxBG">
+    <div id="page">
+        <a name="anchor" id="anchor"></a>
+        <div id="info" class="header">
+            <div id="clearAdvice"></div>
+            <div id="playerName">Player: <span class="textBeefy"><a href="https://ogamex.eu/Aeternum/game.php?page=settings">vodoleyko1992</a></span></div>
+            <div id="bar">
+                <ul>
+                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=buddyList" target="_self">Friendships</a></li>                    <li><a href="javascript:OpenPopup(&#39;?page=notes&#39;, &#39;notes&#39;, 720, 300);">Notes</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=statistics&amp;range=194" target="_self">Statistics</a>
+                    </li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=search" target="_self">Search</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=settings" target="_self">Options</a></li>
+                                        <li><a href="https://ogamex.eu/Aeternum/game.php?page=battleSimulator" target="_self">Simulator</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=GiveBonus" target="_self">Voucher code</a></li>                    <li><a href="https://ogamex.eu/" target="_self">
+                            <font style="color:red;">Logout</font>
+                        </a></li>
+                </ul>
+            </div>
+            <div id="clock" class="servertime">Oct Fri 30 10:04:02</div>
+            <div id="planetSelect">
+                <table>
+                    <tbody><tr>
+                        <td id="planetImage">
+                            <img src="./4_files/s_dschjungelplanet07.gif" alt="">
+                        </td>
+                        <td id="planetSelectorWrapper">
+                            <select id="planetSelector" style="margin-bottom:0px">
+                                <option value="254102" selected="selected">Главная планета [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254104">Colony [2:68:7]</option>
+<option value="254105">Colony [2:68:8]</option>
+
+                            </select>
+                            <div style="width: 145px;float: left;margin: 0 10px;margin-bottom: 37px;">
+                                <div class="_previous" style="width: calc(50% - 2px);background: #0d1014;float: left;border: 1px solid #212121;border-top: none;cursor:pointer">
+                                    &lt;</div>
+                                <div class="_next" style="width: calc(50% - 1px);background: #0d1014;float: left;border: 1px solid #212121;border-left: none;border-top: none;cursor:pointer">
+                                    &gt;</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+
+            <div id="resTable">
+                <table>
+                    <tbody><tr>
+                                                                                                                        <td>
+                                        <img data-currentname="current_Metal" data-toolclass="tool_39" src="./4_files/metal.gif" alt="" class="tooltipHTML" title="
+                                    Metal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    1.420.132.699
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    3.416.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    1.932.927.923                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Crystal" data-toolclass="tool_39" src="./4_files/crystal.gif" alt="" class="tooltipHTML" title="
+                                    Crystal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    233.276.082
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.863.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    822.497.302                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Deuterium" data-toolclass="tool_39" src="./4_files/deuterium.gif" alt="" class="tooltipHTML" title="
+                                    Deuterium:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    352.974.405
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.016.750.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    394.585.192                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                <td>
+                                    <img data-currentname="current_Energy" data-toolclass="tool_39" src="./4_files/energy.gif" alt="" class="tooltipHTML" title="
+                                Energy:|
+                                &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Available: &lt;/th&gt;
+                                        &lt;td&gt;&lt;span class=&#39;current&#39;&gt;47.480&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Current production::&lt;/th&gt;
+                                        &lt;td&gt;
+                                            &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                438                                            &lt;/span&gt;
+                                        &lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Consumption:&lt;/th&gt;
+                                        &lt;td&gt;&lt;span style=&#39;color:red&#39; class=&#39;undermark&#39;&gt;-47.042&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                &lt;/table&gt;
+                            ">
+                                </td>
+
+                                                                                                                                                    <td>
+                                        <img data-currentname="current_Dark Matter" data-toolclass="tool_92" src="./4_files/darkmatter.gif" alt="" class="tooltipHTML" title="
+                                    Dark Matter:|
+                                    &lt;table class=&#39;resourceTooltip tool_92&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;&lt;span class=&#39;current&#39;&gt;3.981&lt;/span&gt;&lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                    
+                    </tr>
+
+                    <tr>
+                                                                                    <td class="res_current tooltip" id="current_metal" data-real="1420132698.8692" data-tooltip-content="1.421.743.472">1.421&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_crystal" data-real="233276082.42059" data-tooltip-content="233.961.496">233&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_deuterium" data-real="352974404.61779" data-tooltip-content="353.303.225">353&nbsp;M</td>
+                                                                                                                                                <td class="res_current tooltip Imperium tooltipRight js_hideTipOnMobile" t="438 / 47.480">
+                                    <span>
+                                        438&nbsp;/&nbsp;47.5K
+                                    </span>
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_darkmatter" data-real="3981" data-tooltip-content="3.981">
+                                    4K
+                                </td>
+                                                    
+                    </tr>
+                </tbody></table>
+            </div>
+
+
+            <div id="officers" class="">
+                                                                    <a href="https://ogamex.eu/Aeternum/game.php?page=vote" class="tooltipHTML   commander js_hideTipOnMobile" title="Vote notification|You can vote and get free Dark Matter">
+                        <img class="glows" src="./4_files/alert.gif" width="30" height="30">
+                    </a>
+                            </div>
+
+
+
+            <div class="messages-section">
+                                    <a href="https://ogamex.eu/Aeternum/game.php?page=messages" class="messages-button tooltipBottom js_hideTipOnMobile" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Messages  &lt;/div&gt;">
+                        <span class="new-msg-count">
+                                2
+                        </span>                    </a>
+                    <a href="https://discord.gg/wjBcjvM" class="chat-button tooltipBottom js_hideTipOnMobile" target="_blank" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Join our Discord server&lt;/div&gt;">
+                    </a>
+                            </div>
+
+            
+
+</div><!-- END main.topnav -->
+<!-- START main.navigation -->
+<div id="links">
+    <ul id="menuTable">
+        <li>
+            <span class="menu_icon">
+                                    <a class="Imperium tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=imperium" title="Empire" target="_self">
+                    </a>
+                            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=overview" target="_self">
+                <span class="textlabel">Overview</span>
+            </a>
+        </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Resources tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=resources" title="Resources" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=buildings" target="_self">
+                    <span class="textlabel">Buildings</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="FleetTrader tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=fleetDealer" title="Merchant of Fleets" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=trader" target="_self">
+                    <span class="textlabel">
+                        <font style="color:yellow">Market</font>
+                    </span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Research tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=techtree" title="Technologies" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=research" target="_self">
+                    <span class="textlabel">Research</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                <a class="Tersane tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=tournament" title="Tournament" target="_self">
+                </a>
+            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=fleet" target="_self">
+                    <span class="textlabel">Hangar</span>
+                </a>
+                    </li>
+
+                <li>
+            <span class="menu_icon">
+                <img src="./4_files/navi_ikon_defense_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=defense" target="_self">
+                <span class="textlabel">Defenses</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Filo tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=transport" title="Transport" target="_self">
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=fleetTable" target="_self">
+                <span class="textlabel">Fleet</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Galaxy tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=donatebis" title="Shop">
+
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=galaxy" target="_self">
+                <span class="textlabel">Galaxy</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./4_files/navi_ikon_alliance_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=alliance" target="_self">
+                <span class="textlabel">Alliance</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./4_files/navi_ikon_premium_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=officier" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Officers</font>
+                </span>
+            </a>
+        </li>        <!--<li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=ressprem" target="_self">
+					<span class="textlabel"><font style="color:yellow">Black Market</font></span>
+				</a>
+		</li>-->
+        <li>
+            <span class="menu_icon">
+                <div class="Satinal"></div>
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=premium" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Premium</font>
+                </span>
+            </a>
+        </li>
+        <!-- <li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=satinal" target="_self">
+					<span class="textlabel"><font style="color:orange">satin_al</font></span>
+				</a>
+		</li> !-->
+
+
+
+            </ul>
+        <script type="text/javascript">
+        var viewShortlyNumber = 1;
+        		var vacation			= 0;
+        		        		        resourceTicker({
+            			available: (1420132698.8691883),
+            			limit: [0, "3416925000"],
+            			production: 1932927923.2055,
+            			valueElem: "current_metal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (233276082.4205935),
+            			limit: [0, "1863925000"],
+            			production: 822497302.17436,
+            			valueElem: "current_crystal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (352974404.6177943),
+            			limit: [0, "1016750000"],
+            			production: 394585191.6862,
+            			valueElem: "current_deuterium"
+        }, true);
+        		        		        		        		        		        		
+    </script>
+    
+            </div>
+<!-- END main.navigation -->
+<div id="inhalt">
+    <script type="text/javascript">
+    var firstClick = false;
+
+    function eventHeader(content) {
+
+        $(content).toggle(300);
+
+        if (content == ".allFleetsEvent" && firstClick == false) {
+            $('.OvfleetEvents_').each(function(index) {
+                var height_ = $(this).outerHeight();
+                console.log(height_);
+                if (height_ < 7) {
+                    $(this).remove();
+                }
+            });
+            firstClick = true;
+        }
+    }
+
+    $(function() {
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(1)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(2)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(1) > span').first().hide();
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(2) > span').first().hide();
+        $('span[data-hide="true"]').prev().hide();
+    });
+</script>
+
+
+<div id="messages_collapsed" class="messpositionDiv" style="z-index:5;">
+                <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./4_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                    <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="990">00:16:27</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29">10:20:29</span>
+				<span><span class="flight ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=research#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>                 <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="990" style="display: none;">00:16:27</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29" "="" data-hide="true" style="display: none;">10:20:29</span>
+				<span data-hide="true"><span class="flight ownharvest" style="display: none;">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=research#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+            <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./4_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793350031396900" class="fleets" data-fleet-end-time="1793350031" data-fleet-time="2592">00:43:09</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:47:11" "="">10:47:11</span>
+				<span><span class="return ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=research#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> returns from debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a> back to planet Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+    
+
+</div>
+<style type="text/css">
+    .allFleetsEvent {
+        display: none;
+    }
+
+    .d23 {}
+</style>
+
+
+    <div id="planet" style="background:url(./styles/theme/gow/img/pagination/arastirma.jpg) no-repeat; height:250px; width:654px;">
+        <h2>Research</h2>
+    </div>
+    <div id="technologydetails_wrapper" style="height:250px">
+        <div id="technologydetails_content" class="small"></div>
+    </div>
+    <div class="cs-left" style="top:214px"></div>
+    <div class="cs-right" style="top:214px"></div>
+
+    <div id="navcontainer">
+        <div id="supplies">
+            <div id="technologies">
+                <h3> Research under construction</h3>
+                <div class="bottom-side clearfix">
+                    <div class="largebox">
+                                            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="navcontainer">
+        <div id="supplies">
+            <div id="technologies">
+                <h3>Buildings</h3>
+                <ul class="icons">
+                                                                        <li class="technology has_details " id="button106" style="width:99px;height:100px;margin:6px 2px" data-technology="106" title="Spy Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium spy_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form106&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form106" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="106">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="106" title="Spy Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">12</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button108" style="width:99px;height:100px;margin:6px 2px" data-technology="108" title="Computer Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium computer_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form108&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form108" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="108">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="108" title="Computer Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">12</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button109" style="width:99px;height:100px;margin:6px 2px" data-technology="109" title="Weapons Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium military_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form109&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form109" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="109">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="109" title="Weapons Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">2</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button110" style="width:99px;height:100px;margin:6px 2px" data-technology="110" title="Shield Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium defence_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form110&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form110" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="110">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="110" title="Shield Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">7</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button111" style="width:99px;height:100px;margin:6px 2px" data-technology="111" title="Armour Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium shield_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/111.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form111&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form111" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="111">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="111" title="Armour Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">6</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button113" style="width:99px;height:100px;margin:6px 2px" data-technology="113" title="Energy Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium energy_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form113&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form113" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="113">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="113" title="Energy Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">12</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button114" style="width:99px;height:100px;margin:6px 2px" data-technology="114" title="Hyperspace Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium hyperspace_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form114&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form114" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="114">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="114" title="Hyperspace Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">8</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button115" style="width:99px;height:100px;margin:6px 2px" data-technology="115" title="Combustion Engine ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium combustion_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form115&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form115" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="115">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="115" title="Combustion Engine" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">12</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button117" style="width:99px;height:100px;margin:6px 2px" data-technology="117" title="Impulse Engine ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium impulse_motor_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/117.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form117&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form117" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="117">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="117" title="Impulse Engine" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">7</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button118" style="width:99px;height:100px;margin:6px 2px" data-technology="118" title="Hyperspace Engine ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium hyperspace_motor_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form118&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form118" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="118">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="118" title="Hyperspace Engine" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">4</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button120" style="width:99px;height:100px;margin:6px 2px" data-technology="120" title="Laser Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium laser_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form120&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form120" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="120">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="120" title="Laser Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">10</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button121" style="width:99px;height:100px;margin:6px 2px" data-technology="121" title="Ion Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium ionic_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form121&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form121" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="121">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="121" title="Ion Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">5</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button122" style="width:99px;height:100px;margin:6px 2px" data-technology="122" title="Plasma Technology ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium buster_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form122&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form122" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="122">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="122" title="Plasma Technology" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">7</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button123" style="width:99px;height:100px;margin:6px 2px" data-technology="123" title="Intergalactic Research Network ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium intergalactic_tech" style="padding:0;width:95px;height:95px;">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form123&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form123" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="123">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="123" title="Intergalactic Research Network" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">5</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button124" style="width:99px;height:100px;margin:6px 2px" data-technology="124" title="Expedition Research ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium expedition_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/124.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form124&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form124" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="124">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="124" title="Expedition Research" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">6</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button131" style="width:99px;height:100px;margin:6px 2px" data-technology="131" title="Mineral Research ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium metal_proc_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/131.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form131&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form131" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="131">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="131" title="Mineral Research" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">8</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button132" style="width:99px;height:100px;margin:6px 2px" data-technology="132" title="Semi-Crystals Research ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium crystal_proc_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/132.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form132&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form132" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="132">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="132" title="Semi-Crystals Research" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">0</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button133" style="width:99px;height:100px;margin:6px 2px" data-technology="133" title="Fuel Research ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium deuterium_proc_tech" style="padding:0;width:95px;height:95px;background:url(./styles/theme/gow/gebaeude/133.png)">
+                                                                                    <button class="upgrade" type="button" onclick="(function(btn){
+            if(btn.dataset.busy===&#39;1&#39;) return;
+            btn.dataset.busy=&#39;1&#39;;
+            btn.disabled=true;
+            document.getElementById(&#39;build_form133&#39;).submit();
+        })(this);" style="z-index:10000"></button>
+                                            <form action="https://ogamex.eu/Aeternum/game.php?page=research" method="post" class="build_form" id="build_form133" style="display:none">
+                                                <input type="hidden" name="cmd" value="insert">
+                                                <input type="hidden" name="tech" value="133">
+                                            </form>
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="133" title="Fuel Research" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">8</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                                                    <li class="technology has_details " id="button199" style="width:99px;height:100px;margin:6px 2px" data-technology="199" title="Graviton Research ">
+                                <div class="premium">
+                                    <div class="icon sprite sprite_medium medium graviton_tech" style="padding:0;width:95px;height:95px;">
+                                        
+                                        <a tabindex="2" href="javascript:void(0);" ref="2" class="detail_button tooltipTop js_hideTipOnMobile slideIn tpd-hideOnClickOutside" data-technology="199" title="Graviton Research" style="background-position: bottom;background:none;z-index: 1000;">
+                                            <span class="ecke" style="top: 84px;left: 1px;">
+                                                <span class="level" style="padding: 0 5px;">0</span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </li>
+                        
+                        <script>
+                            $(document).ready(function() {
+                                $(".technology button.upgrade").click(function(event) {
+                                    event.stopPropagation();
+                                });
+                                $('.has_details.technology').click(function() {
+                                    $('.allFleetsEvent').css('display', 'none');
+                                    $('html, body').animate({
+                                        scrollTop: 0
+                                    }, 'fast');
+                                    if ($(this).hasClass('showsDetails')) {
+                                        return;
+                                    }
+                                    var technologyId = $(this).attr('data-technology');
+                                    var element = $(this);
+                                    var elemTechnologyDetailsWrapper = $('#technologydetails_wrapper');
+                                    var elemTechnologyDetailsContent = $('#technologydetails_content');
+                                    var elemTechnologyDetails = $('#technologydetails');
+                                    elemTechnologyDetailsWrapper.toggleClass('slide-up', true);
+                                    elemTechnologyDetailsWrapper.toggleClass('slide-down', false);
+                                    $.ajax({
+                                        url: './game.php?page=ResearchDetailsAjax&technology=' +
+                                            technologyId
+                                    }).done(function(data) {
+                                        var json = $.parseJSON(data);
+                                        var anchor = $('[data-anchor=technologyDetails]');
+                                        $('.showsDetails').removeClass('showsDetails');
+                                        element.closest('.has_details').addClass('showsDetails');
+                                        if (elemTechnologyDetails.length > 0) {
+                                            elemTechnologyDetails.replaceWith(json.content[json.target])
+                                            elemTechnologyDetails
+                                                .addClass(anchor.data('technologydetails-size'))
+                                                .offset(anchor.offset())
+                                        } else {
+                                            elemTechnologyDetailsContent.html(json.content[json.target])
+                                            elemTechnologyDetails
+                                                .addClass(anchor.data('technologydetails-size'))
+                                                .offset(anchor.offset())
+                                        }
+                                    });
+                                });
+                                $(document).on('click', '.technology_tree', function() {
+                                    var _url = $(this).attr('data-target');
+                                    $.ajax({
+                                        url: _url
+                                    }).done(function(data) {
+                                        if ($('.tech-dialog').length == 0) {
+                                            $('body').append('<div class="tech-dialog"></div>');
+                                        }
+                                        $('.tech-dialog').html(data);
+                                    })
+                                });
+                                $(document).on('click', '#technologydetails .close, .showsDetails', function() {
+                                    $('#technologydetails_wrapper').removeClass('slide-up');
+                                    $('#technologydetails_wrapper').toggleClass('slide-down', true);
+                                    setTimeout(function() {
+                                            //$('#technologydetails_wrapper').removeClass('slide-down');
+                                        }
+                                        .bind(this), 500);
+                                    $('.showsDetails').removeClass('showsDetails');
+                                });
+
+                            });
+                        </script>
+                                    </ul>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    <div id="rechts">
+	<div id="norm">
+		<div id="myWorlds">
+			<div id="myWorlds">
+				<div id="countColonies">
+					<p class="textCenter"><span>[4 / 6]</span> My planets</p>
+				</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254102" class="planetlink  active active-planet planetPic reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Главная планета [2:68:5]&lt;/b&gt;&lt;br&gt;
+				32°C to 72°C&lt;br&gt;
+				20.000 km (259 / 405)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254102&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254102&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254102&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254102&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254102&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254102&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254102&amp;galaxy=2&amp;system=68&amp;position=5&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./4_files/s_dschjungelplanet07.gif">
+								<span class="planet-name">Главная планета</span>
+								<span class="planet-koords">[2:68:5]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254103" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:6]&lt;/b&gt;&lt;br&gt;
+				20°C to 60°C&lt;br&gt;
+				18.627 km (81 / 347)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254103&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254103&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254103&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254103&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254103&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254103&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254103&amp;galaxy=2&amp;system=68&amp;position=6&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./4_files/s_dschjungelplanet10.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:6]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254104" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:7]&lt;/b&gt;&lt;br&gt;
+				22°C to 62°C&lt;br&gt;
+				20.808 km (77 / 433)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254104&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254104&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254104&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254104&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254104&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254104&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254104&amp;galaxy=2&amp;system=68&amp;position=7&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./4_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:7]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254105" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:8]&lt;/b&gt;&lt;br&gt;
+				-10°C to 30°C&lt;br&gt;
+				22.671 km (128 / 514)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254105&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254105&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254105&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254105&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254105&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254105&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254105&amp;galaxy=2&amp;system=68&amp;position=8&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./4_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:8]
+								<i class="bi bi-building-fill-up buildingIco"></i>								</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+</div>
+
+<div class="gototop"></div>
+<div class="clear"></div>
+<script type="text/javascript">
+    $(window).scroll(function() {
+        if ($(this).scrollTop() >= 50) { // If page is scrolled more than 50px
+            $('#return-to-top').fadeIn(200); // Fade in the arrow
+        } else {
+            $('#return-to-top').fadeOut(200); // Else fade out the arrow
+        }
+    });
+    $('#return-to-top').click(function() { // When arrow is clicked
+        $('body,html').animate({
+            scrollTop: 0 // Scroll to top of body
+        }, 500);
+    });
+</script>
+
+<div id="siteFooter" class="clearfloat">
+    <div class="fcontent">
+        <div class="fleft textLeft">
+            <b>© 2026 - OGAMEX</b>
+
+             </div>
+        <div class="fright textRight">
+            <a href="https://ogamex.eu/Aeternum/game.php?page=banList" target="_self">
+                <font style="color:red;">Banned</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=records" target="_self">
+                <font style="color:orange;">Records</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=battleHall" target="_self">
+                <font style="color:#6F9FC8;">Hall of Fame</font>
+            </a> |
+            <!--<a href="game.php?page=questions" target="_self">FAQ</a> |-->
+
+            <a href="https://ogamex.eu/Aeternum/game.php?page=ticket" target="_self">Support</a> |            <a href="https://ogamex.eu/Aeternum/index.php?page=rules" target="rules">Rules</a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=vote" target="_self">
+                <font style="color:green;">Vote &amp; Reward</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=research#" onclick="return Dialog.Server();">
+                <font style="color:green;">Game information</font>
+            </a>
+        </div>
+        <br class="clearfloat">
+    </div>
+</div>
+
+
+<div id="fancybox-tmp"></div><div id="fancybox-loading"><div></div></div><div id="fancybox-overlay"></div><div id="fancybox-wrap"><div id="fancybox-outer"><div class="fancybox-bg" id="fancybox-bg-n"></div><div class="fancybox-bg" id="fancybox-bg-ne"></div><div class="fancybox-bg" id="fancybox-bg-e"></div><div class="fancybox-bg" id="fancybox-bg-se"></div><div class="fancybox-bg" id="fancybox-bg-s"></div><div class="fancybox-bg" id="fancybox-bg-sw"></div><div class="fancybox-bg" id="fancybox-bg-w"></div><div class="fancybox-bg" id="fancybox-bg-nw"></div><div id="fancybox-content"></div><a id="fancybox-close"></a><div id="fancybox-title"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a></div></div></body></html>

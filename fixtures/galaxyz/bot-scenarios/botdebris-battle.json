@@ -1,0 +1,422 @@
+{
+ "name": "botdebris-battle",
+ "seed": 1,
+ "gamespeed": 2000,
+ "haltSpeed": 1,
+ "startUnix": 1793347417,
+ "tzOffsetSec": 7200,
+ "universe": {
+  "galaxies": 9,
+  "systems": 499,
+  "maxPlanets": 15,
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "resourceMultiplier": 22000,
+  "storageMultiplier": 5,
+  "maxDmMissions": 5,
+  "moonFactor": 1,
+  "moonChance": 20,
+  "topPoints": 1000000,
+  "galaxyDeuteriumCost": 10
+ },
+ "player": {
+  "name": "vodoleyko1992",
+  "id": 4377,
+  "research": {
+   "106": 12,
+   "108": 12,
+   "109": 10,
+   "110": 10,
+   "111": 10,
+   "113": 12,
+   "114": 8,
+   "115": 12,
+   "117": 10,
+   "118": 8,
+   "120": 12,
+   "121": 7,
+   "122": 5,
+   "124": 9
+  },
+  "officers": {},
+  "darkMatter": 3981,
+  "vacation": false,
+  "spyMessagesMode": 0,
+  "maxPlanets": 6,
+  "rank": 194,
+  "points": 5000000,
+  "spyProbes": 3
+ },
+ "bodies": [
+  {
+   "id": 254102,
+   "type": "planet",
+   "name": "Главная планета",
+   "coords": "2:68:5",
+   "tempMax": 72,
+   "fieldsMax": 405,
+   "res": {
+    "metal": 50000000,
+    "crystal": 30000000,
+    "deuterium": 20000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 20,
+    "203": 200,
+    "209": 300,
+    "210": 20,
+    "217": 20,
+    "219": 300
+   },
+   "defense": {
+    "401": 100,
+    "402": 50,
+    "502": 10,
+    "503": 5
+   },
+   "image": "dschjungelplanet07",
+   "perHour": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 0
+   }
+  },
+  {
+   "id": 254110,
+   "type": "moon",
+   "planetId": 254102,
+   "name": "Moon",
+   "coords": "2:68:5",
+   "tempMax": 0,
+   "fieldsMax": 1,
+   "fieldsUsed": 0,
+   "diameter": 8888,
+   "res": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 5000000
+   },
+   "levels": {
+    "41": 1
+   },
+   "ships": {
+    "209": 300,
+    "219": 300
+   },
+   "defense": {},
+   "perHour": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 0
+   }
+  },
+  {
+   "id": 254103,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:6",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 5000000,
+    "crystal": 3000000,
+    "deuterium": 1000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 20,
+    "209": 10,
+    "219": 10
+   },
+   "defense": {},
+   "image": "dschjungelplanet10",
+   "perHour": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 0
+   }
+  },
+  {
+   "id": 254104,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:7",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 4000000,
+    "crystal": 2000000,
+    "deuterium": 900000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "203": 5
+   },
+   "defense": {},
+   "perHour": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 0
+   }
+  },
+  {
+   "id": 254105,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 3000000,
+    "crystal": 1000000,
+    "deuterium": 800000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {},
+   "perHour": {
+    "metal": 0,
+    "crystal": 0,
+    "deuterium": 0
+   }
+  },
+  {
+   "id": 254106,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:70:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 1000000,
+    "crystal": 500000,
+    "deuterium": 200000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 5
+   },
+   "defense": {},
+   "perHour": {
+    "metal": 1000,
+    "crystal": 500,
+    "deuterium": 100
+   }
+  }
+ ],
+ "others": [
+  {
+   "id": 3839,
+   "name": "Txemin",
+   "status": "i",
+   "rank": 455,
+   "points": 120000,
+   "research": {
+    "106": 4,
+    "109": 5,
+    "110": 5,
+    "111": 5
+   },
+   "planets": [
+    {
+     "id": 301140,
+     "coords": "2:68:10",
+     "name": "Colony",
+     "res": {
+      "metal": 2000000,
+      "crystal": 1000000,
+      "deuterium": 400000
+     },
+     "defense": {
+      "401": 10
+     },
+     "ships": {},
+     "levels": {
+      "1": 20,
+      "2": 18,
+      "3": 15,
+      "22": 8,
+      "23": 7,
+      "24": 6
+     },
+     "lastActivity": null
+    }
+   ]
+  },
+  {
+   "id": 3836,
+   "name": "Severian",
+   "status": "v",
+   "rank": 120,
+   "points": 900000,
+   "research": {
+    "106": 10
+   },
+   "planets": [
+    {
+     "id": 301150,
+     "coords": "2:68:12",
+     "name": "Homeworld",
+     "res": {
+      "metal": 100000,
+      "crystal": 50000,
+      "deuterium": 10000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3843,
+   "name": "Jon Snow",
+   "status": "",
+   "rank": 1,
+   "points": 1834221,
+   "protection": null,
+   "research": {
+    "106": 14,
+    "109": 14,
+    "110": 14,
+    "111": 14
+   },
+   "allyId": 12,
+   "allyName": "Nova Collective",
+   "allyTag": "NOVA",
+   "planets": [
+    {
+     "id": 301160,
+     "coords": "2:69:4",
+     "name": "Winterfell",
+     "res": {
+      "metal": 800000,
+      "crystal": 400000,
+      "deuterium": 100000
+     },
+     "ships": {
+      "204": 500,
+      "205": 100
+     },
+     "defense": {
+      "401": 500,
+      "402": 200
+     },
+     "lastActivity": 5,
+     "moon": {
+      "id": 301161,
+      "name": "Moon",
+      "diameter": 8944
+     }
+    }
+   ]
+  },
+  {
+   "id": 3850,
+   "name": "Oldman",
+   "status": "I",
+   "rank": 600,
+   "points": 50000,
+   "research": {
+    "106": 2
+   },
+   "planets": [
+    {
+     "id": 301170,
+     "coords": "2:69:9",
+     "name": "Colony",
+     "res": {
+      "metal": 1000000,
+      "crystal": 500000,
+      "deuterium": 100000
+     },
+     "ships": {},
+     "defense": {},
+     "levels": {
+      "1": 10,
+      "2": 10,
+      "3": 5
+     },
+     "lastActivity": null
+    }
+   ]
+  }
+ ],
+ "debris": [
+  {
+   "coords": "2:68:10",
+   "metal": 1000,
+   "crystal": 0
+  },
+  {
+   "coords": "2:68:7",
+   "metal": 30000000000,
+   "crystal": 20000000000
+  }
+ ],
+ "flights": [],
+ "hostile": [],
+ "messages": [],
+ "script": [],
+ "combat": "sim",
+ "expeditionOutcomes": [],
+ "description": "botdebris tests: 300 recyclers on 254102 [2:68:5] and 300 on its moon 254110 (moon first on ties), 10 on 254103, 200 heavy cargo on 254102; no production except the colony 254106 (perHour 1000/500/100); residual field 1000 metal at the inactive target 2:68:10 (pre-send possible), no field at the inactive 2:69:9 (post-battle only), own field 30 M / 20 M at the own colony 2:68:7. Battles are put by each test (OGX.bot.battles.put); battle debris comes from script setDebris at the battle second. gamespeed 2000: recyclers fly 3 s at 100 %, 27 s at 10 %."
+}

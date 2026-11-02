@@ -1,0 +1,503 @@
+{
+ "name": "botfarm-inactives",
+ "seed": 1,
+ "gamespeed": 2000,
+ "haltSpeed": 1,
+ "startUnix": 1793347417,
+ "tzOffsetSec": 7200,
+ "universe": {
+  "galaxies": 9,
+  "systems": 499,
+  "maxPlanets": 15,
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "resourceMultiplier": 22000,
+  "storageMultiplier": 5,
+  "maxDmMissions": 5,
+  "moonFactor": 1,
+  "moonChance": 20,
+  "topPoints": 1000000,
+  "galaxyDeuteriumCost": 10
+ },
+ "player": {
+  "name": "vodoleyko1992",
+  "id": 4377,
+  "research": {
+   "106": 12,
+   "108": 12,
+   "109": 10,
+   "110": 10,
+   "111": 10,
+   "113": 12,
+   "114": 8,
+   "115": 12,
+   "117": 10,
+   "118": 8,
+   "120": 12,
+   "121": 7,
+   "122": 5,
+   "124": 9
+  },
+  "officers": {},
+  "darkMatter": 3981,
+  "vacation": false,
+  "spyMessagesMode": 0,
+  "maxPlanets": 6,
+  "rank": 194,
+  "points": 5000000,
+  "spyProbes": 3
+ },
+ "bodies": [
+  {
+   "id": 254102,
+   "type": "planet",
+   "name": "Главная планета",
+   "coords": "2:68:5",
+   "tempMax": 72,
+   "fieldsMax": 405,
+   "res": {
+    "metal": 50000000,
+    "crystal": 30000000,
+    "deuterium": 20000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 200,
+    "203": 100,
+    "204": 50,
+    "207": 20,
+    "208": 2,
+    "209": 50,
+    "210": 100,
+    "212": 50,
+    "217": 10,
+    "219": 2
+   },
+   "defense": {
+    "401": 100,
+    "402": 50,
+    "502": 10,
+    "503": 5
+   },
+   "image": "dschjungelplanet07"
+  },
+  {
+   "id": 254103,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:6",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 5000000,
+    "crystal": 3000000,
+    "deuterium": 1000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 20,
+    "210": 10
+   },
+   "defense": {},
+   "image": "dschjungelplanet10"
+  },
+  {
+   "id": 254104,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:7",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 4000000,
+    "crystal": 2000000,
+    "deuterium": 900000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "203": 5
+   },
+   "defense": {}
+  },
+  {
+   "id": 254105,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 3000000,
+    "crystal": 1000000,
+    "deuterium": 800000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {}
+  },
+  {
+   "id": 254106,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:70:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 1000000,
+    "crystal": 500000,
+    "deuterium": 200000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "202": 5
+   },
+   "defense": {}
+  }
+ ],
+ "others": [
+  {
+   "id": 3900,
+   "name": "Inactive1",
+   "status": "i",
+   "rank": 800,
+   "points": 50000,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302000,
+     "coords": "2:68:10",
+     "name": "Planet",
+     "res": {
+      "metal": 2000000,
+      "crystal": 1000000,
+      "deuterium": 400000
+     },
+     "defense": {
+      "401": 10
+     },
+     "ships": {},
+     "levels": {
+      "1": 22,
+      "2": 20,
+      "3": 18,
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 20000,
+      "crystal": 10000,
+      "deuterium": 5000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3901,
+   "name": "Inactive2",
+   "status": "i",
+   "rank": 801,
+   "points": 51000,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302001,
+     "coords": "2:68:13",
+     "name": "Planet",
+     "res": {
+      "metal": 6000000,
+      "crystal": 3000000,
+      "deuterium": 1000000
+     },
+     "defense": {},
+     "ships": {},
+     "levels": {
+      "1": 22,
+      "2": 20,
+      "3": 18,
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 20000,
+      "crystal": 10000,
+      "deuterium": 5000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3902,
+   "name": "Inactive3",
+   "status": "iI",
+   "rank": 802,
+   "points": 52000,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302002,
+     "coords": "2:69:9",
+     "name": "Planet",
+     "res": {
+      "metal": 900000,
+      "crystal": 800000,
+      "deuterium": 100000
+     },
+     "defense": {
+      "401": 200,
+      "402": 100
+     },
+     "ships": {},
+     "levels": {
+      "1": 22,
+      "2": 20,
+      "3": 18,
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 20000,
+      "crystal": 10000,
+      "deuterium": 5000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3903,
+   "name": "Inactive4",
+   "status": "I",
+   "rank": 803,
+   "points": 53000,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302003,
+     "coords": "2:70:3",
+     "name": "Planet",
+     "res": {
+      "metal": 15000000,
+      "crystal": 8000000,
+      "deuterium": 2000000
+     },
+     "defense": {},
+     "ships": {},
+     "levels": {
+      "1": 22,
+      "2": 20,
+      "3": 18,
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 20000,
+      "crystal": 10000,
+      "deuterium": 5000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3904,
+   "name": "Inactive5",
+   "status": "i",
+   "rank": 804,
+   "points": 54000,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302004,
+     "coords": "2:67:7",
+     "name": "Planet",
+     "res": {
+      "metal": 300000,
+      "crystal": 100000,
+      "deuterium": 20000
+     },
+     "defense": {},
+     "ships": {},
+     "levels": {
+      "1": 22,
+      "2": 20,
+      "3": 18,
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 20000,
+      "crystal": 10000,
+      "deuterium": 5000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3836,
+   "name": "Severian",
+   "status": "v",
+   "rank": 120,
+   "points": 900000,
+   "research": {
+    "106": 10
+   },
+   "planets": [
+    {
+     "id": 301150,
+     "coords": "2:68:12",
+     "name": "Homeworld",
+     "res": {
+      "metal": 100000,
+      "crystal": 50000,
+      "deuterium": 10000
+     }
+    }
+   ]
+  },
+  {
+   "id": 3843,
+   "name": "Jon Snow",
+   "status": "",
+   "rank": 1,
+   "points": 1834221,
+   "protection": null,
+   "research": {
+    "106": 14,
+    "109": 14,
+    "110": 14,
+    "111": 14
+   },
+   "allyId": 12,
+   "allyName": "Nova Collective",
+   "allyTag": "NOVA",
+   "planets": [
+    {
+     "id": 301160,
+     "coords": "2:69:4",
+     "name": "Winterfell",
+     "res": {
+      "metal": 800000,
+      "crystal": 400000,
+      "deuterium": 100000
+     },
+     "ships": {
+      "204": 500,
+      "205": 100
+     },
+     "defense": {
+      "401": 500,
+      "402": 200
+     },
+     "lastActivity": 5,
+     "moon": {
+      "id": 301161,
+      "name": "Moon",
+      "diameter": 8944
+     }
+    }
+   ]
+  }
+ ],
+ "debris": [
+  {
+   "coords": "2:68:11",
+   "metal": 120000,
+   "crystal": 80000
+  }
+ ],
+ "flights": [],
+ "hostile": [],
+ "messages": [],
+ "script": [],
+ "combat": "sim",
+ "expeditionOutcomes": [],
+ "description": "basic with five inactive targets (i / iI / I) in 2:67-70, different loot and defense; probes 100, small cargos 200, large cargos 100 on 254102."
+}

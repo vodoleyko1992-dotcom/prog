@@ -1,0 +1,162 @@
+{
+ "name": "gz-218-vs-411",
+ "seed": 23,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "218": 1
+    },
+    "tech": {
+     "weapons": 20,
+     "shielding": 20,
+     "armour": 20
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {
+     "410": 5,
+     "411": 1
+    },
+    "tech": {
+     "weapons": 20,
+     "shielding": 20,
+     "armour": 20
+    }
+   }
+  ],
+  "planet": {
+   "metal": 10000000000,
+   "crystal": 10000000000,
+   "deuterium": 10000000000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  80,
+  83,
+  101,
+  9,
+  60,
+  86,
+  103,
+  108,
+  105,
+  18,
+  87,
+  90,
+  101,
+  83,
+  83
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   56,
+   84
+  ],
+  [
+   56,
+   84
+  ]
+ ],
+ "expected": {
+  "won": "r",
+  "rounds": 3,
+  "attackers": [
+   [
+    [
+     218,
+     0
+    ]
+   ]
+  ],
+  "defenders": [
+   [
+    [
+     410,
+     5
+    ],
+    [
+     411,
+     1
+    ]
+   ]
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 82500000,
+    "crystal": 39000000
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 405000000,
+   "defender": 0
+  },
+  "steal": {
+   "metal": 0,
+   "crystal": 0,
+   "deuterium": 0
+  },
+  "used": 15
+ }
+}

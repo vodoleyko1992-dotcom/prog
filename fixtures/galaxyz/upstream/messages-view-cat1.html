@@ -1,0 +1,71 @@
+<!-- UPSTREAM-DERIVED fixture, NOT a real page. Rendered by specs/galaxyz/tools/messages/gen_messages_fixtures.php from the
+     upstream 2Moons 1.8 templates/mission code with invented data (player vodoleyko1992, Главная планета [2:68:5]).
+     The GALAXYZ fork may differ; verify against a real page. AJAX fragment of GET game.php?page=messages&mode=view&messcat=1&site=1&ajax=1 (layout.ajax.tpl = bare content block) -->
+
+<form action="game.php?page=messages" method="post">
+<input type="hidden" name="mode" value="action">
+<input type="hidden" name="ajax" value="1">
+<input type="hidden" name="messcat" value="1">
+<input type="hidden" name="side" value="1">
+<table id="messagestable" style="width:760px;">
+	<tr>
+		<th colspan="4">Messages</th>
+	</tr>
+		<tr>
+		<td colspan="4">
+			<select name="actionTop">
+				<option value="readmarked">Mark selected messages as read</option>
+				<option value="readtypeall">Mark all messages of this type as read</option>
+				<option value="readall">Mark all messages as read</option>
+				<option value="deletemarked">Delete marked messages</option>
+				<option value="deleteunmarked">Delete all messages not marked</option>
+				<option value="deletetypeall">Delete all messages of this type</option>
+				<option value="deleteall">Delete all messages</option>
+			</select>
+			<input value="Confirm" type="submit" name="submitTop">
+		</td>
+	</tr>
+		<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(1, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+	<tr style="height: 20px;">
+		<td>Action</td>
+		<td>Date</td>
+		<td>From</td>
+		<td>Subject</td>
+	</tr>
+		<tr id="message_520800" class="message_head mes_unread">
+		<td style="width:40px;" rowspan="2">
+		<input name="messageID[520800]" value="1" type="checkbox">		</td>
+		<td>30. Oct 2026, 09:41:40</td>
+		<td>Kovacs [2:70:4]</td>
+		<td>Re:hello
+				<a href="#" onclick="return Dialog.PM(5512, Message.CreateAnswer('Re:hello'));" title="Reply to: Kovacs [2:70:4]"><img src="./styles/theme/gow/img/m.gif" border="0"></a>
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		Hi neighbour,<br />
+no attack please :)
+		</td>
+	</tr>
+	
+	<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(1, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+		<tr>
+		<td colspan="4">
+			<select name="actionBottom">
+				<option value="readmarked">Mark selected messages as read</option>
+				<option value="readtypeall">Mark all messages of this type as read</option>
+				<option value="readall">Mark all messages as read</option>
+				<option value="deletemarked">Delete marked messages</option>
+				<option value="deleteunmarked">Delete all messages not marked</option>
+				<option value="deletetypeall">Delete all messages of this type</option>
+				<option value="deleteall">Delete all messages</option>
+			</select>
+			<input value="Confirm" type="submit" name="submitBottom">
+		</td>
+	</tr>
+	</table>
+</form>

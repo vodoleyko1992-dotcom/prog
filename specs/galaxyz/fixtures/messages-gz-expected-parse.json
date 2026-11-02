@@ -1,0 +1,3515 @@
+{
+ "messages-spy.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 0,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520244,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:36",
+     "wall": 1793354016000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 0,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report 2 bolygó [2:81:10] on 30. Oct 2026, 08:53:44",
+      "target": {
+       "name": "2 bolygó",
+       "coords": [
+        2,
+        81,
+        10
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 08:53:44",
+      "reportWall": 1793350424000,
+      "resources": {
+       "metal": 2684939750000,
+       "crystal": 1700557697522,
+       "deuterium": 675144412230,
+       "energy": 356568
+      },
+      "ships": {
+       "202": 0,
+       "203": 0,
+       "204": 0,
+       "205": 0,
+       "206": 0,
+       "207": 0,
+       "208": 0,
+       "209": 0,
+       "210": 0,
+       "211": 0,
+       "212": 0,
+       "213": 0,
+       "214": 0,
+       "215": 0,
+       "216": 0,
+       "217": 0,
+       "218": 0,
+       "219": 0,
+       "220": 0
+      },
+      "defense": null,
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 2684939750000,
+       "902": 1700557697522.1,
+       "903": 675144412229.63,
+       "911": 356568
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": false,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 0,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 81,
+       "planet": 10,
+       "planettype": 1
+      }
+     }
+    },
+    {
+     "id": 520242,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:20",
+     "wall": 1793354000000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 0,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Colony [2:72:6] on 30. Oct 2026, 09:53:28",
+      "target": {
+       "name": "Colony",
+       "coords": [
+        2,
+        72,
+        6
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 09:53:28",
+      "reportWall": 1793354008000,
+      "resources": {
+       "metal": 11483000000,
+       "crystal": 11483000000,
+       "deuterium": 6263925000,
+       "energy": 3391
+      },
+      "ships": null,
+      "defense": null,
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 11483000000,
+       "902": 11483000000,
+       "903": 6263925000,
+       "911": 3391
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": false,
+       "defense": false,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 0,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 72,
+       "planet": 6,
+       "planettype": 1
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-all.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 100,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520244,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:36",
+     "wall": 1793354016000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report 2 bolygó [2:81:10] on 30. Oct 2026, 08:53:44",
+      "target": {
+       "name": "2 bolygó",
+       "coords": [
+        2,
+        81,
+        10
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 08:53:44",
+      "reportWall": 1793350424000,
+      "resources": {
+       "metal": 2684939750000,
+       "crystal": 1700557697522,
+       "deuterium": 675144412230,
+       "energy": 356568
+      },
+      "ships": {
+       "202": 0,
+       "203": 0,
+       "204": 0,
+       "205": 0,
+       "206": 0,
+       "207": 0,
+       "208": 0,
+       "209": 0,
+       "210": 0,
+       "211": 0,
+       "212": 0,
+       "213": 0,
+       "214": 0,
+       "215": 0,
+       "216": 0,
+       "217": 0,
+       "218": 0,
+       "219": 0,
+       "220": 0
+      },
+      "defense": null,
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 2684939750000,
+       "902": 1700557697522.1,
+       "903": 675144412229.63,
+       "911": 356568
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": false,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 0,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 81,
+       "planet": 10,
+       "planettype": 1
+      }
+     }
+    },
+    {
+     "id": 520242,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:20",
+     "wall": 1793354000000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Colony [2:72:6] on 30. Oct 2026, 09:53:28",
+      "target": {
+       "name": "Colony",
+       "coords": [
+        2,
+        72,
+        6
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 09:53:28",
+      "reportWall": 1793354008000,
+      "resources": {
+       "metal": 11483000000,
+       "crystal": 11483000000,
+       "deuterium": 6263925000,
+       "energy": 3391
+      },
+      "ships": null,
+      "defense": null,
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 11483000000,
+       "902": 11483000000,
+       "903": 6263925000,
+       "911": 3391
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": false,
+       "defense": false,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 0,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 72,
+       "planet": 6,
+       "planettype": 1
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-live-synthetic-cat15.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 15,
+   "page": 1,
+   "pages": 2,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520920,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:56:40",
+     "wall": 1793354200000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_resources",
+     "fleet": {
+      "key": "expedition_resources",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520919,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:55:40",
+     "wall": 1793354140000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_darkmatter",
+     "fleet": {
+      "key": "expedition_darkmatter",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520918,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:54:40",
+     "wall": 1793354080000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_ships",
+     "fleet": {
+      "key": "expedition_ships",
+      "coords": [],
+      "resources": {},
+      "shipsByName": {
+       "Light Cargo": 37,
+       "Light Fighter": 1250
+      },
+      "noShipsFound": false
+     }
+    },
+    {
+     "id": 520917,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:40",
+     "wall": 1793354020000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_ships",
+     "fleet": {
+      "key": "expedition_ships",
+      "coords": [],
+      "resources": {},
+      "shipsByName": {},
+      "noShipsFound": true
+     }
+    },
+    {
+     "id": 520916,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:52:40",
+     "wall": 1793353960000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_nothing",
+     "fleet": {
+      "key": "expedition_nothing",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520915,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:51:40",
+     "wall": 1793353900000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_delay",
+     "fleet": {
+      "key": "expedition_delay",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520914,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:50:40",
+     "wall": 1793353840000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_early",
+     "fleet": {
+      "key": "expedition_early",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520913,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:49:40",
+     "wall": 1793353780000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_lost",
+     "fleet": {
+      "key": "expedition_lost",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520912,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:48:40",
+     "wall": 1793353720000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_pirates",
+     "fleet": {
+      "key": "expedition_pirates",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520911,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:47:40",
+     "wall": 1793353660000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_resources",
+     "fleet": {
+      "key": "expedition_resources",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-live-synthetic-cat3.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 3,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520410,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:00:00",
+     "wall": 1793350800000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+      "result": "win",
+      "coords": [
+       2,
+       70,
+       4
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 36000,
+       "defender": 1985000
+      },
+      "loot": {
+       "metal": 12053668,
+       "crystal": 5251102,
+       "deuterium": 1825031
+      },
+      "debris": {
+       "metal": 495000,
+       "crystal": 225000
+      }
+     }
+    },
+    {
+     "id": 520402,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:55:00",
+     "wall": 1793350500000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+      "result": "lose",
+      "coords": [
+       2,
+       68,
+       5
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 0,
+       "defender": 4400000
+      },
+      "loot": {
+       "metal": 150000,
+       "crystal": 80000,
+       "deuterium": 20000
+      },
+      "debris": {
+       "metal": 1050000,
+       "crystal": 600000
+      }
+     }
+    },
+    {
+     "id": 520399,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:50:00",
+     "wall": 1793350200000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "0123456789abcdef0123456789abcdef",
+      "expedition": true,
+      "url": "CombatReport.php?raport=0123456789abcdef0123456789abcdef",
+      "result": "lose",
+      "coords": [
+       2,
+       68,
+       16
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 2300000,
+       "defender": 120000
+      },
+      "loot": {
+       "metal": 0,
+       "crystal": 0,
+       "deuterium": 0
+      },
+      "debris": {
+       "metal": 0,
+       "crystal": 0
+      }
+     }
+    },
+    {
+     "id": 520390,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:45:00",
+     "wall": 1793349900000,
+     "from": "Fleet Headquarters",
+     "subject": "Rocket impact",
+     "senderId": null,
+     "messcat": 3,
+     "key": "missile",
+     "fleet": {
+      "key": "missile",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ],
+       [
+        2,
+        70,
+        4
+       ]
+      ],
+      "resources": {},
+      "missiles": 25,
+      "intercepted": 5,
+      "destroyedByName": {
+       "Missile Launcher": 300,
+       "Light Laser Turret": 120
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-live-synthetic-cat4.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 4,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520610,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:23:20",
+     "wall": 1793352200000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "attack_return",
+     "fleet": {
+      "key": "attack_return",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ]
+      ],
+      "resources": {
+       "metal": 12053668,
+       "crystal": 5251102,
+       "deuterium": 1825031
+      }
+     }
+    },
+    {
+     "id": 520609,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:21:40",
+     "wall": 1793352100000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "fleet_return",
+     "fleet": {
+      "key": "fleet_return",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520608,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:20:00",
+     "wall": 1793352000000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "transport_own",
+     "fleet": {
+      "key": "transport_own",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 4145000,
+       "crystal": 2072500,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 520607,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:18:20",
+     "wall": 1793351900000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "expedition_back_home",
+     "fleet": {
+      "key": "expedition_back_home",
+      "coords": [],
+      "resources": {
+       "metal": 1254000,
+       "crystal": 0,
+       "deuterium": 0,
+       "darkmatter": 450
+      }
+     }
+    },
+    {
+     "id": 520606,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:16:40",
+     "wall": 1793351800000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "stay",
+     "fleet": {
+      "key": "stay",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 0,
+       "crystal": 0,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 520605,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:15:00",
+     "wall": 1793351700000,
+     "from": "Colonisation",
+     "subject": "Colonisation report",
+     "senderId": null,
+     "messcat": 4,
+     "key": "colonisation_ok",
+     "fleet": {
+      "key": "colonisation_ok",
+      "coords": [
+       [
+        2,
+        68,
+        9
+       ]
+      ],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-live-synthetic-cat5.html": {
+  "categories": [
+   {
+    "id": 0,
+    "name": "Spy messages",
+    "color": "rgb(255, 255, 0)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 1,
+    "name": "Player messages",
+    "color": "rgb(255, 102, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 2,
+    "name": "Alliance messages",
+    "color": "rgb(255, 51, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 3,
+    "name": "Combat messages",
+    "color": "rgb(255, 153, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 4,
+    "name": "System messages",
+    "color": "rgb(119, 51, 153)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 5,
+    "name": "Transport messages",
+    "color": "rgb(0, 153, 51)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 15,
+    "name": "Expedition messages",
+    "color": "rgb(100, 149, 237)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 50,
+    "name": "Game messages",
+    "color": "rgb(102, 102, 0)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 99,
+    "name": "Construction messages",
+    "color": "rgb(0, 112, 112)",
+    "unread": 0,
+    "total": 0
+   },
+   {
+    "id": 100,
+    "name": "All messages",
+    "color": "rgb(171, 171, 171)",
+    "unread": 0,
+    "total": 2
+   },
+   {
+    "id": 999,
+    "name": "Outbox",
+    "color": "rgb(204, 204, 204)",
+    "unread": 0,
+    "total": 0
+   }
+  ],
+  "headerUnread": 2,
+  "list": {
+   "messcat": 5,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520510,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:06:40",
+     "wall": 1793351200000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 5,
+     "key": "transport_own",
+     "fleet": {
+      "key": "transport_own",
+      "coords": [
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {
+       "metal": 500000,
+       "crystal": 250000,
+       "deuterium": 100000
+      }
+     }
+    },
+    {
+     "id": 520509,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:05:50",
+     "wall": 1793351150000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 5,
+     "key": "transport_foreign",
+     "fleet": {
+      "key": "transport_foreign",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ],
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 1000,
+       "crystal": 2000,
+       "deuterium": 3000
+      }
+     }
+    },
+    {
+     "id": 520505,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:05:00",
+     "wall": 1793351100000,
+     "from": "Fleet Headquarters",
+     "subject": "Recycling Report",
+     "senderId": null,
+     "messcat": 5,
+     "key": "recycle",
+     "fleet": {
+      "key": "recycle",
+      "coords": [],
+      "resources": {
+       "metal": 4145000,
+       "crystal": 2072500
+      }
+     }
+    },
+    {
+     "id": 520501,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:04:10",
+     "wall": 1793351050000,
+     "from": "Fleet Headquarters",
+     "subject": "Located fleet",
+     "senderId": null,
+     "messcat": 5,
+     "key": "stay",
+     "fleet": {
+      "key": "stay",
+      "coords": [
+       [
+        2,
+        68,
+        7
+       ]
+      ],
+      "resources": {
+       "metal": 10,
+       "crystal": 20,
+       "deuterium": 89
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-battleHall.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": null
+ },
+ "messages-upstream-raport-battlehall.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": null,
+  "combatFull": {
+   "time": "30. Oct 2026, 08:54:00",
+   "result": "attacker",
+   "rounds": [
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 400,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Light Fighter": 800,
+        "Missile Launcher": 1500,
+        "Light Laser Turret": 900
+       },
+       "destroyed": false
+      }
+     ]
+    },
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 388,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Missile Launcher": 210,
+        "Light Laser Turret": 35
+       },
+       "destroyed": false
+      }
+     ]
+    },
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 388,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": null,
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {},
+       "destroyed": true
+      }
+     ]
+    }
+   ],
+   "loot": {
+    "metal": 12053668,
+    "crystal": 5251102,
+    "deuterium": 1825031
+   },
+   "lostUnits": {
+    "attacker": 36000,
+    "defender": 1985000
+   },
+   "debris": {
+    "metal": 495000,
+    "crystal": 225000
+   },
+   "moonChance": 7,
+   "moonBuilt": true,
+   "notFound": false
+  }
+ },
+ "messages-upstream-raport-defender-won.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": null,
+  "combatFull": {
+   "time": "30. Oct 2026, 08:54:00",
+   "result": "defender",
+   "rounds": [
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": [
+        2,
+        68,
+        5
+       ],
+       "planetTypeShort": "P",
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 400,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Light Fighter": 800,
+        "Missile Launcher": 1500,
+        "Light Laser Turret": 900
+       },
+       "destroyed": false
+      }
+     ]
+    },
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": [
+        2,
+        68,
+        5
+       ],
+       "planetTypeShort": "P",
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {},
+       "destroyed": true
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Missile Launcher": 210,
+        "Light Laser Turret": 35
+       },
+       "destroyed": false
+      }
+     ]
+    }
+   ],
+   "loot": null,
+   "lostUnits": {
+    "attacker": 2300000,
+    "defender": 120000
+   },
+   "debris": {
+    "metal": 0,
+    "crystal": 0
+   },
+   "moonChance": 0,
+   "moonBuilt": false,
+   "notFound": false
+  }
+ },
+ "messages-upstream-raport.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": null,
+  "combatFull": {
+   "time": "30. Oct 2026, 08:54:00",
+   "result": "attacker",
+   "rounds": [
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": [
+        2,
+        68,
+        5
+       ],
+       "planetTypeShort": "P",
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 400,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Light Fighter": 800,
+        "Missile Launcher": 1500,
+        "Light Laser Turret": 900
+       },
+       "destroyed": false
+      }
+     ]
+    },
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": [
+        2,
+        68,
+        5
+       ],
+       "planetTypeShort": "P",
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 388,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {
+        "Missile Launcher": 210,
+        "Light Laser Turret": 35
+       },
+       "destroyed": false
+      }
+     ]
+    },
+    {
+     "attacker": [
+      {
+       "role": "attacker",
+       "name": "vodoleyko1992",
+       "coords": [
+        2,
+        68,
+        5
+       ],
+       "planetTypeShort": "P",
+       "tech": [
+        140,
+        130,
+        150
+       ],
+       "ships": {
+        "Heavy Cargo": 388,
+        "Battleship": 150
+       },
+       "destroyed": false
+      }
+     ],
+     "defender": [
+      {
+       "role": "defender",
+       "name": "Kovacs",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetTypeShort": null,
+       "tech": [
+        100,
+        90,
+        110
+       ],
+       "ships": {},
+       "destroyed": true
+      }
+     ]
+    }
+   ],
+   "loot": {
+    "metal": 12053668,
+    "crystal": 5251102,
+    "deuterium": 1825031
+   },
+   "lostUnits": {
+    "attacker": 36000,
+    "defender": 1985000
+   },
+   "debris": {
+    "metal": 495000,
+    "crystal": 225000
+   },
+   "moonChance": 7,
+   "moonBuilt": true,
+   "notFound": false
+  }
+ },
+ "messages-upstream-view-100-p2.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 100,
+   "page": 2,
+   "pages": 3,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 530112,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 11:02:14",
+     "wall": 1793358134000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Kronos [2:70:4] on 30. Oct 2026, 11:02:22",
+      "target": {
+       "name": "Kronos",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 11:02:22",
+      "reportWall": 1793358142000,
+      "resources": {
+       "metal": 4523000000,
+       "crystal": 1210500000,
+       "deuterium": 98000000,
+       "energy": -1250
+      },
+      "ships": {
+       "202": 1500,
+       "203": 300,
+       "204": 0,
+       "205": 0,
+       "206": 0,
+       "207": 0,
+       "208": 0,
+       "209": 77,
+       "210": 5,
+       "211": 0,
+       "212": 120,
+       "213": 0,
+       "214": 0,
+       "215": 0,
+       "216": 0,
+       "217": 0,
+       "218": 0,
+       "219": 0,
+       "220": 0
+      },
+      "defense": {
+       "401": 2000,
+       "402": 1500,
+       "403": 0,
+       "404": 0,
+       "405": 0,
+       "406": 0,
+       "407": 1,
+       "408": 1,
+       "409": 0,
+       "410": 0,
+       "411": 0,
+       "502": 20,
+       "503": 0
+      },
+      "buildings": {
+       "1": 40,
+       "2": 36,
+       "3": 33,
+       "4": 30,
+       "6": 0,
+       "12": 0,
+       "14": 12,
+       "15": 6,
+       "21": 12,
+       "22": 15,
+       "23": 0,
+       "24": 0,
+       "31": 12,
+       "33": 0,
+       "34": 0,
+       "41": 0,
+       "42": 0,
+       "43": 0,
+       "44": 0,
+       "71": 0,
+       "72": 0,
+       "73": 0
+      },
+      "research": {
+       "106": 14,
+       "108": 12,
+       "109": 15,
+       "110": 14,
+       "111": 15,
+       "113": 12,
+       "114": 0,
+       "115": 16,
+       "117": 0,
+       "118": 0,
+       "120": 0,
+       "121": 0,
+       "122": 0,
+       "123": 0,
+       "124": 0,
+       "131": 0,
+       "132": 0,
+       "133": 0,
+       "199": 0
+      },
+      "exact": {
+       "901": 4523000000.4,
+       "902": 1210500000.5,
+       "903": 98000000,
+       "911": -1250
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": true,
+       "buildings": true,
+       "research": true
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 12,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4,
+       "planettype": 1
+      }
+     }
+    },
+    {
+     "id": 530110,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 11:01:40",
+     "wall": 1793358100000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Arrakeen (Moon) [2:71:9] on 30. Oct 2026, 11:01:52",
+      "target": {
+       "name": "Arrakeen (Moon)",
+       "coords": [
+        2,
+        71,
+        9
+       ],
+       "planetType": 3
+      },
+      "reportDate": "30. Oct 2026, 11:01:52",
+      "reportWall": 1793358112000,
+      "resources": {
+       "metal": 1000,
+       "crystal": 0,
+       "deuterium": 52001,
+       "energy": 0
+      },
+      "ships": {
+       "202": 0,
+       "203": 0,
+       "204": 10,
+       "205": 0,
+       "206": 0,
+       "207": 0,
+       "208": 0,
+       "209": 0,
+       "210": 0,
+       "211": 0,
+       "212": 0,
+       "213": 0,
+       "214": 0,
+       "215": 0,
+       "216": 0,
+       "217": 0,
+       "218": 0,
+       "219": 0,
+       "220": 0
+      },
+      "defense": null,
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 1000,
+       "902": 0,
+       "903": 52000.75,
+       "911": 0
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": false,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": true,
+      "counterEspionage": null,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 71,
+       "planet": 9,
+       "planettype": 3
+      }
+     }
+    },
+    {
+     "id": 530101,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:58:03",
+     "wall": 1793357883000,
+     "from": "Room monitoring",
+     "subject": "Spying activity",
+     "senderId": null,
+     "messcat": 100,
+     "key": "spy_activity",
+     "fleet": {
+      "key": "spy_activity",
+      "coords": [
+       [
+        2,
+        66,
+        7
+       ],
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {}
+     }
+    },
+    {
+     "id": 530099,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:55:00",
+     "wall": 1793357700000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "3f1c0d6e8a2b4c5d6e7f8091a2b3c4d5",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=3f1c0d6e8a2b4c5d6e7f8091a2b3c4d5",
+      "result": "win",
+      "coords": [
+       2,
+       70,
+       4
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 12000,
+       "defender": 4580000
+      },
+      "loot": {
+       "metal": 2261500000,
+       "crystal": 605250000,
+       "deuterium": 49000000
+      },
+      "debris": {
+       "metal": 1374000,
+       "crystal": 1260000
+      }
+     }
+    },
+    {
+     "id": 530098,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:41:10",
+     "wall": 1793356870000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+      "result": "lose",
+      "coords": [
+       2,
+       68,
+       5
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 999000,
+       "defender": 0
+      },
+      "loot": {
+       "metal": 0,
+       "crystal": 0,
+       "deuterium": 0
+      },
+      "debris": {
+       "metal": 299700,
+       "crystal": 299700
+      }
+     }
+    },
+    {
+     "id": 530090,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:30:55",
+     "wall": 1793356255000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 100,
+     "key": "attack_return",
+     "fleet": {
+      "key": "attack_return",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ]
+      ],
+      "resources": {
+       "metal": 2261500000,
+       "crystal": 605250000,
+       "deuterium": 49000000
+      }
+     }
+    },
+    {
+     "id": 530085,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:20:29",
+     "wall": 1793355629000,
+     "from": "Fleet Headquarters",
+     "subject": "Recycling Report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "recycle",
+     "fleet": {
+      "key": "recycle",
+      "coords": [],
+      "resources": {
+       "metal": 1374000,
+       "crystal": 1260000
+      }
+     }
+    },
+    {
+     "id": 530080,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:20:01",
+     "wall": 1793355601000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 100,
+     "key": "transport_own",
+     "fleet": {
+      "key": "transport_own",
+      "coords": [
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {
+       "metal": 7382,
+       "crystal": 0,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 530079,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:19:44",
+     "wall": 1793355584000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 100,
+     "key": "transport_foreign",
+     "fleet": {
+      "key": "transport_foreign",
+      "coords": [
+       [
+        2,
+        66,
+        7
+       ],
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 1000000,
+       "crystal": 500000,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 530075,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:10:12",
+     "wall": 1793355012000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 100,
+     "key": "fleet_return",
+     "fleet": {
+      "key": "fleet_return",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {}
+     }
+    },
+    {
+     "id": 530070,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:05:00",
+     "wall": 1793354700000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "expedition_resources",
+     "fleet": {
+      "key": "expedition_resources",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 530069,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:04:00",
+     "wall": 1793354640000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "expedition_ships",
+     "fleet": {
+      "key": "expedition_ships",
+      "coords": [],
+      "resources": {},
+      "shipsByName": {
+       "Light Cargo": 1200,
+       "Cruiser": 35
+      },
+      "noShipsFound": false
+     }
+    },
+    {
+     "id": 530068,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:03:00",
+     "wall": 1793354580000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "expedition_nothing",
+     "fleet": {
+      "key": "expedition_nothing",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 530067,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 10:02:00",
+     "wall": 1793354520000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 100,
+     "key": "expedition_back_home",
+     "fleet": {
+      "key": "expedition_back_home",
+      "coords": [],
+      "resources": {
+       "metal": 812000,
+       "crystal": 0,
+       "deuterium": 0,
+       "darkmatter": 0
+      }
+     }
+    },
+    {
+     "id": 530060,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:58:00",
+     "wall": 1793354280000,
+     "from": "Colonisation",
+     "subject": "Colonisation report",
+     "senderId": null,
+     "messcat": 100,
+     "key": "colonisation_ok",
+     "fleet": {
+      "key": "colonisation_ok",
+      "coords": [
+       [
+        2,
+        68,
+        9
+       ]
+      ],
+      "resources": {}
+     }
+    },
+    {
+     "id": 530055,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:50:00",
+     "wall": 1793353800000,
+     "from": "Fleet Headquarters",
+     "subject": "Located fleet",
+     "senderId": null,
+     "messcat": 100,
+     "key": "stay",
+     "fleet": {
+      "key": "stay",
+      "coords": [
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {
+       "metal": 10,
+       "crystal": 20,
+       "deuterium": 30
+      }
+     }
+    },
+    {
+     "id": 530050,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:40:00",
+     "wall": 1793353200000,
+     "from": "Aldebaran [2:66:7]",
+     "subject": "Hi neighbour",
+     "senderId": 412345,
+     "messcat": 100,
+     "key": "player_message",
+     "fleet": {
+      "key": "player_message",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-999.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 999,
+   "page": 1,
+   "pages": 1,
+   "outbox": true,
+   "actions": [],
+   "items": [
+    {
+     "id": 530200,
+     "unread": false,
+     "checkbox": false,
+     "date": "30. Oct 2026, 11:10:00",
+     "wall": 1793358600000,
+     "from": "Aldebaran [2:66:7]",
+     "subject": "Re:Hi neighbour",
+     "senderId": null,
+     "messcat": 999,
+     "key": "unknown",
+     "fleet": {
+      "key": "unknown",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat0.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 0,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520301,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:40:00",
+     "wall": 1793349600000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 0,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Moon [2:71:12] on 30. Oct 2026, 08:40:12",
+      "target": {
+       "name": "Moon",
+       "coords": [
+        2,
+        71,
+        12
+       ],
+       "planetType": 3
+      },
+      "reportDate": "30. Oct 2026, 08:40:12",
+      "reportWall": 1793349612000,
+      "resources": {
+       "metal": 1200000,
+       "deuterium": 85000
+      },
+      "ships": {
+       "204": 15,
+       "214": 1
+      },
+      "defense": {},
+      "buildings": null,
+      "research": null,
+      "exact": {
+       "901": 1200000,
+       "903": 85000
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": true,
+       "buildings": false,
+       "research": false
+      },
+      "probesDestroyed": true,
+      "counterEspionage": null,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 71,
+       "planet": 12,
+       "planettype": 3
+      }
+     }
+    },
+    {
+     "id": 520298,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:30:00",
+     "wall": 1793349000000,
+     "from": "Spying department",
+     "subject": "Intelligence report",
+     "senderId": null,
+     "messcat": 0,
+     "key": "spy_report",
+     "spy": {
+      "title": "Spy Report Kovacs Prime [2:70:4] on 30. Oct 2026, 08:30:09",
+      "target": {
+       "name": "Kovacs Prime",
+       "coords": [
+        2,
+        70,
+        4
+       ],
+       "planetType": 1
+      },
+      "reportDate": "30. Oct 2026, 08:30:09",
+      "reportWall": 1793349009000,
+      "resources": {
+       "metal": 48211338,
+       "crystal": 21004410,
+       "deuterium": 7300126,
+       "energy": -1250
+      },
+      "ships": {
+       "202": 120,
+       "203": 45,
+       "204": 800,
+       "205": 0,
+       "206": 30,
+       "207": 0,
+       "208": 0,
+       "209": 12,
+       "210": 5,
+       "211": 0,
+       "212": 400,
+       "213": 0,
+       "214": 0,
+       "215": 0,
+       "216": 0,
+       "217": 0,
+       "218": 0,
+       "219": 0,
+       "220": 0
+      },
+      "defense": {
+       "401": 1500,
+       "402": 900,
+       "403": 120,
+       "404": 12,
+       "405": 0,
+       "406": 0,
+       "407": 1,
+       "408": 1,
+       "409": 0,
+       "410": 0,
+       "411": 0,
+       "502": 20,
+       "503": 0
+      },
+      "buildings": {
+       "1": 30,
+       "2": 27,
+       "3": 25,
+       "4": 28,
+       "6": 0,
+       "12": 5,
+       "14": 10,
+       "15": 4,
+       "21": 12,
+       "22": 11,
+       "23": 10,
+       "24": 9,
+       "31": 12,
+       "33": 0,
+       "34": 0,
+       "41": 0,
+       "42": 0,
+       "43": 0,
+       "44": 4,
+       "71": 1,
+       "72": 0,
+       "73": 0
+      },
+      "research": {
+       "106": 10,
+       "108": 12,
+       "109": 14,
+       "110": 13,
+       "111": 15,
+       "113": 12,
+       "114": 8,
+       "115": 14,
+       "117": 9,
+       "118": 7,
+       "120": 12,
+       "121": 5,
+       "122": 7,
+       "123": 0,
+       "124": 9,
+       "131": 0,
+       "132": 0,
+       "133": 0,
+       "199": 0
+      },
+      "exact": {
+       "901": 48211337.6,
+       "902": 21004410.2,
+       "903": 7300125.9,
+       "911": -1250
+      },
+      "simulateMatches": true,
+      "known": {
+       "ships": true,
+       "defense": true,
+       "buildings": true,
+       "research": true
+      },
+      "probesDestroyed": false,
+      "counterEspionage": 3,
+      "attackParams": {
+       "galaxy": 2,
+       "system": 70,
+       "planet": 4,
+       "planettype": 1
+      }
+     }
+    },
+    {
+     "id": 520290,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:25:00",
+     "wall": 1793348700000,
+     "from": "Room monitoring",
+     "subject": "Spying activity",
+     "senderId": null,
+     "messcat": 0,
+     "key": "spy_activity",
+     "fleet": {
+      "key": "spy_activity",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ],
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat1.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 1,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520800,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:41:40",
+     "wall": 1793353300000,
+     "from": "Kovacs [2:70:4]",
+     "subject": "Re:hello",
+     "senderId": 5512,
+     "messcat": 1,
+     "key": "player_message",
+     "fleet": {
+      "key": "player_message",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat15.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 15,
+   "page": 1,
+   "pages": 2,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520920,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:56:40",
+     "wall": 1793354200000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_resources",
+     "fleet": {
+      "key": "expedition_resources",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520919,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:55:40",
+     "wall": 1793354140000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_darkmatter",
+     "fleet": {
+      "key": "expedition_darkmatter",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520918,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:54:40",
+     "wall": 1793354080000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_ships",
+     "fleet": {
+      "key": "expedition_ships",
+      "coords": [],
+      "resources": {},
+      "shipsByName": {
+       "Light Cargo": 37,
+       "Light Fighter": 1250
+      },
+      "noShipsFound": false
+     }
+    },
+    {
+     "id": 520917,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:53:40",
+     "wall": 1793354020000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_ships",
+     "fleet": {
+      "key": "expedition_ships",
+      "coords": [],
+      "resources": {},
+      "shipsByName": {},
+      "noShipsFound": true
+     }
+    },
+    {
+     "id": 520916,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:52:40",
+     "wall": 1793353960000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_nothing",
+     "fleet": {
+      "key": "expedition_nothing",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520915,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:51:40",
+     "wall": 1793353900000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_delay",
+     "fleet": {
+      "key": "expedition_delay",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520914,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:50:40",
+     "wall": 1793353840000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_early",
+     "fleet": {
+      "key": "expedition_early",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520913,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:49:40",
+     "wall": 1793353780000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_lost",
+     "fleet": {
+      "key": "expedition_lost",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520912,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:48:40",
+     "wall": 1793353720000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_pirates",
+     "fleet": {
+      "key": "expedition_pirates",
+      "coords": [],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520911,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:47:40",
+     "wall": 1793353660000,
+     "from": "Fleet Headquarters",
+     "subject": "Expedition report",
+     "senderId": null,
+     "messcat": 15,
+     "key": "expedition_resources",
+     "fleet": {
+      "key": "expedition_resources",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat3.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 3,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520410,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:00:00",
+     "wall": 1793350800000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=3f9a2c7e5b1d4e8f9a0b1c2d3e4f5a6b",
+      "result": "win",
+      "coords": [
+       2,
+       70,
+       4
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 36000,
+       "defender": 1985000
+      },
+      "loot": {
+       "metal": 12053668,
+       "crystal": 5251102,
+       "deuterium": 1825031
+      },
+      "debris": {
+       "metal": 495000,
+       "crystal": 225000
+      }
+     }
+    },
+    {
+     "id": 520402,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:55:00",
+     "wall": 1793350500000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+      "expedition": false,
+      "url": "game.php?page=raport&raport=9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b",
+      "result": "lose",
+      "coords": [
+       2,
+       68,
+       5
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 0,
+       "defender": 4400000
+      },
+      "loot": {
+       "metal": 150000,
+       "crystal": 80000,
+       "deuterium": 20000
+      },
+      "debris": {
+       "metal": 1050000,
+       "crystal": 600000
+      }
+     }
+    },
+    {
+     "id": 520399,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:50:00",
+     "wall": 1793350200000,
+     "from": "Fleet Headquarters",
+     "subject": "Fight report",
+     "senderId": null,
+     "messcat": 3,
+     "key": "combat_report",
+     "combat": {
+      "reportId": "0123456789abcdef0123456789abcdef",
+      "expedition": true,
+      "url": "CombatReport.php?raport=0123456789abcdef0123456789abcdef",
+      "result": "lose",
+      "coords": [
+       2,
+       68,
+       16
+      ],
+      "planetTypeShort": "P",
+      "losses": {
+       "attacker": 2300000,
+       "defender": 120000
+      },
+      "loot": {
+       "metal": 0,
+       "crystal": 0,
+       "deuterium": 0
+      },
+      "debris": {
+       "metal": 0,
+       "crystal": 0
+      }
+     }
+    },
+    {
+     "id": 520390,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 08:45:00",
+     "wall": 1793349900000,
+     "from": "Fleet Headquarters",
+     "subject": "Rocket impact",
+     "senderId": null,
+     "messcat": 3,
+     "key": "missile",
+     "fleet": {
+      "key": "missile",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ],
+       [
+        2,
+        70,
+        4
+       ]
+      ],
+      "resources": {},
+      "missiles": 25,
+      "intercepted": 5,
+      "destroyedByName": {
+       "Missile Launcher": 300,
+       "Light Laser Turret": 120
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat4.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 4,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520610,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:23:20",
+     "wall": 1793352200000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "attack_return",
+     "fleet": {
+      "key": "attack_return",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ]
+      ],
+      "resources": {
+       "metal": 12053668,
+       "crystal": 5251102,
+       "deuterium": 1825031
+      }
+     }
+    },
+    {
+     "id": 520609,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:21:40",
+     "wall": 1793352100000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "fleet_return",
+     "fleet": {
+      "key": "fleet_return",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {}
+     }
+    },
+    {
+     "id": 520608,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:20:00",
+     "wall": 1793352000000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "transport_own",
+     "fleet": {
+      "key": "transport_own",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 4145000,
+       "crystal": 2072500,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 520607,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:18:20",
+     "wall": 1793351900000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "expedition_back_home",
+     "fleet": {
+      "key": "expedition_back_home",
+      "coords": [],
+      "resources": {
+       "metal": 1254000,
+       "crystal": 0,
+       "deuterium": 0,
+       "darkmatter": 450
+      }
+     }
+    },
+    {
+     "id": 520606,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:16:40",
+     "wall": 1793351800000,
+     "from": "Fleet Headquarters",
+     "subject": "Fleet return",
+     "senderId": null,
+     "messcat": 4,
+     "key": "stay",
+     "fleet": {
+      "key": "stay",
+      "coords": [
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 0,
+       "crystal": 0,
+       "deuterium": 0
+      }
+     }
+    },
+    {
+     "id": 520605,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:15:00",
+     "wall": 1793351700000,
+     "from": "Colonisation",
+     "subject": "Colonisation report",
+     "senderId": null,
+     "messcat": 4,
+     "key": "colonisation_ok",
+     "fleet": {
+      "key": "colonisation_ok",
+      "coords": [
+       [
+        2,
+        68,
+        9
+       ]
+      ],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat5.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 5,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520510,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:06:40",
+     "wall": 1793351200000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 5,
+     "key": "transport_own",
+     "fleet": {
+      "key": "transport_own",
+      "coords": [
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {
+       "metal": 500000,
+       "crystal": 250000,
+       "deuterium": 100000
+      }
+     }
+    },
+    {
+     "id": 520509,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:05:50",
+     "wall": 1793351150000,
+     "from": "Fleet Headquarters",
+     "subject": "Transportmessage",
+     "senderId": null,
+     "messcat": 5,
+     "key": "transport_foreign",
+     "fleet": {
+      "key": "transport_foreign",
+      "coords": [
+       [
+        2,
+        70,
+        4
+       ],
+       [
+        2,
+        68,
+        5
+       ]
+      ],
+      "resources": {
+       "metal": 1000,
+       "crystal": 2000,
+       "deuterium": 3000
+      }
+     }
+    },
+    {
+     "id": 520505,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:05:00",
+     "wall": 1793351100000,
+     "from": "Fleet Headquarters",
+     "subject": "Recycling Report",
+     "senderId": null,
+     "messcat": 5,
+     "key": "recycle",
+     "fleet": {
+      "key": "recycle",
+      "coords": [],
+      "resources": {
+       "metal": 4145000,
+       "crystal": 2072500
+      }
+     }
+    },
+    {
+     "id": 520501,
+     "unread": false,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:04:10",
+     "wall": 1793351050000,
+     "from": "Fleet Headquarters",
+     "subject": "Located fleet",
+     "senderId": null,
+     "messcat": 5,
+     "key": "stay",
+     "fleet": {
+      "key": "stay",
+      "coords": [
+       [
+        2,
+        68,
+        7
+       ]
+      ],
+      "resources": {
+       "metal": 10,
+       "crystal": 20,
+       "deuterium": 89
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat99.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 99,
+   "page": 1,
+   "pages": 1,
+   "outbox": false,
+   "actions": [
+    "readmarked",
+    "readtypeall",
+    "readall",
+    "deletemarked",
+    "deleteunmarked",
+    "deletetypeall",
+    "deleteall"
+   ],
+   "items": [
+    {
+     "id": 520700,
+     "unread": true,
+     "checkbox": true,
+     "date": "30. Oct 2026, 09:40:00",
+     "wall": 1793353200000,
+     "from": "List of construction",
+     "subject": "Impossible to build",
+     "senderId": null,
+     "messcat": 99,
+     "key": "construction",
+     "fleet": {
+      "key": "construction",
+      "coords": [
+       [
+        2,
+        68,
+        6
+       ]
+      ],
+      "resources": {
+       "metal": 1000000,
+       "crystal": 500000,
+       "deuterium": 100000
+      }
+     }
+    }
+   ]
+  }
+ },
+ "messages-upstream-view-cat999.html": {
+  "categories": [],
+  "headerUnread": 0,
+  "list": {
+   "messcat": 999,
+   "page": 1,
+   "pages": 1,
+   "outbox": true,
+   "actions": [],
+   "items": [
+    {
+     "id": 520801,
+     "unread": false,
+     "checkbox": false,
+     "date": "30. Oct 2026, 09:43:20",
+     "wall": 1793353400000,
+     "from": "Kovacs [2:70:4]",
+     "subject": "hello",
+     "senderId": null,
+     "messcat": 999,
+     "key": "unknown",
+     "fleet": {
+      "key": "unknown",
+      "coords": [],
+      "resources": {}
+     }
+    }
+   ]
+  }
+ }
+}

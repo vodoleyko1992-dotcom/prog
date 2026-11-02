@@ -1,0 +1,374 @@
+[
+    {
+        "id": 204,
+        "machine_name": "light_fighter",
+        "title_en": "Light Fighter",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 205,
+        "machine_name": "heavy_fighter",
+        "title_en": "Heavy Fighter",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 206,
+        "machine_name": "cruiser",
+        "title_en": "Cruiser",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 207,
+        "machine_name": "battle_ship",
+        "title_en": "Battleship",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 215,
+        "machine_name": "battlecruiser",
+        "title_en": "Battlecruiser",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 211,
+        "machine_name": "bomber",
+        "title_en": "Bomber",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 213,
+        "machine_name": "destroyer",
+        "title_en": "Destroyer",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 214,
+        "machine_name": "deathstar",
+        "title_en": "Deathstar",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 218,
+        "machine_name": "reaper",
+        "title_en": "Reaper",
+        "group": "MilitaryShipObjects"
+    },
+    {
+        "id": 202,
+        "machine_name": "small_cargo",
+        "title_en": "Small Cargo",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 203,
+        "machine_name": "large_cargo",
+        "title_en": "Large Cargo",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 208,
+        "machine_name": "colony_ship",
+        "title_en": "Colony Ship",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 209,
+        "machine_name": "recycler",
+        "title_en": "Recycler",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 210,
+        "machine_name": "espionage_probe",
+        "title_en": "Espionage Probe",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 212,
+        "machine_name": "solar_satellite",
+        "title_en": "Solar Satellite",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 217,
+        "machine_name": "crawler",
+        "title_en": "Crawler",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 219,
+        "machine_name": "pathfinder",
+        "title_en": "Pathfinder",
+        "group": "CivilShipObjects"
+    },
+    {
+        "id": 401,
+        "machine_name": "rocket_launcher",
+        "title_en": "Rocket Launcher",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 402,
+        "machine_name": "light_laser",
+        "title_en": "Light Laser",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 403,
+        "machine_name": "heavy_laser",
+        "title_en": "Heavy Laser",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 404,
+        "machine_name": "gauss_cannon",
+        "title_en": "Gauss Cannon",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 405,
+        "machine_name": "ion_cannon",
+        "title_en": "Ion Cannon",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 406,
+        "machine_name": "plasma_turret",
+        "title_en": "Plasma Turret",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 407,
+        "machine_name": "small_shield_dome",
+        "title_en": "Small Shield Dome",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 408,
+        "machine_name": "large_shield_dome",
+        "title_en": "Large Shield Dome",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 502,
+        "machine_name": "anti_ballistic_missile",
+        "title_en": "Anti-Ballistic Missiles",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 503,
+        "machine_name": "interplanetary_missile",
+        "title_en": "Interplanetary Missiles",
+        "group": "DefenseObjects"
+    },
+    {
+        "id": 1,
+        "machine_name": "metal_mine",
+        "title_en": "Metal Mine",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 2,
+        "machine_name": "crystal_mine",
+        "title_en": "Crystal Mine",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 3,
+        "machine_name": "deuterium_synthesizer",
+        "title_en": "Deuterium Synthesizer",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 4,
+        "machine_name": "solar_plant",
+        "title_en": "Solar Plant",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 12,
+        "machine_name": "fusion_plant",
+        "title_en": "Fusion Reactor",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 22,
+        "machine_name": "metal_store",
+        "title_en": "Metal Storage",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 23,
+        "machine_name": "crystal_store",
+        "title_en": "Crystal Storage",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 24,
+        "machine_name": "deuterium_store",
+        "title_en": "Deuterium Tank",
+        "group": "BuildingObjects"
+    },
+    {
+        "id": 14,
+        "machine_name": "robot_factory",
+        "title_en": "Robotics Factory",
+        "group": "StationObjects"
+    },
+    {
+        "id": 21,
+        "machine_name": "shipyard",
+        "title_en": "Shipyard",
+        "group": "StationObjects"
+    },
+    {
+        "id": 31,
+        "machine_name": "research_lab",
+        "title_en": "Research Lab",
+        "group": "StationObjects"
+    },
+    {
+        "id": 34,
+        "machine_name": "alliance_depot",
+        "title_en": "Alliance Depot",
+        "group": "StationObjects"
+    },
+    {
+        "id": 44,
+        "machine_name": "missile_silo",
+        "title_en": "Missile Silo",
+        "group": "StationObjects"
+    },
+    {
+        "id": 15,
+        "machine_name": "nano_factory",
+        "title_en": "Nanite Factory",
+        "group": "StationObjects"
+    },
+    {
+        "id": 33,
+        "machine_name": "terraformer",
+        "title_en": "Terraformer",
+        "group": "StationObjects"
+    },
+    {
+        "id": 36,
+        "machine_name": "space_dock",
+        "title_en": "Space Dock",
+        "group": "StationObjects"
+    },
+    {
+        "id": 41,
+        "machine_name": "lunar_base",
+        "title_en": "Lunar Base",
+        "group": "StationObjects"
+    },
+    {
+        "id": 42,
+        "machine_name": "sensor_phalanx",
+        "title_en": "Sensor Phalanx",
+        "group": "StationObjects"
+    },
+    {
+        "id": 43,
+        "machine_name": "jump_gate",
+        "title_en": "Jump Gate",
+        "group": "StationObjects"
+    },
+    {
+        "id": 113,
+        "machine_name": "energy_technology",
+        "title_en": "Energy Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 120,
+        "machine_name": "laser_technology",
+        "title_en": "Laser Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 121,
+        "machine_name": "ion_technology",
+        "title_en": "Ion Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 114,
+        "machine_name": "hyperspace_technology",
+        "title_en": "Hyperspace Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 122,
+        "machine_name": "plasma_technology",
+        "title_en": "Plasma Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 115,
+        "machine_name": "combustion_drive",
+        "title_en": "Combustion Drive",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 117,
+        "machine_name": "impulse_drive",
+        "title_en": "Impulse Drive",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 118,
+        "machine_name": "hyperspace_drive",
+        "title_en": "Hyperspace Drive",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 106,
+        "machine_name": "espionage_technology",
+        "title_en": "Espionage Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 108,
+        "machine_name": "computer_technology",
+        "title_en": "Computer Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 124,
+        "machine_name": "astrophysics",
+        "title_en": "Astrophysics",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 123,
+        "machine_name": "intergalactic_research_network",
+        "title_en": "Intergalactic Research Network",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 199,
+        "machine_name": "graviton_technology",
+        "title_en": "Graviton Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 109,
+        "machine_name": "weapon_technology",
+        "title_en": "Weapon Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 110,
+        "machine_name": "shielding_technology",
+        "title_en": "Shield Technology",
+        "group": "ResearchObjects"
+    },
+    {
+        "id": 111,
+        "machine_name": "armor_technology",
+        "title_en": "Armour Technology",
+        "group": "ResearchObjects"
+    }
+]

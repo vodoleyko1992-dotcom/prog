@@ -1,0 +1,80 @@
+{
+ "name": "steal-metal-eq-deut-11-12",
+ "seed": 18,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "202": 24
+    },
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {},
+    "tech": {
+     "weapons": 0,
+     "shielding": 0,
+     "armour": 0
+    }
+   }
+  ],
+  "planet": {
+   "metal": 120000,
+   "crystal": 0,
+   "deuterium": 120000
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "keepOrder": false
+ },
+ "numbers": [
+  113
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ]
+ ],
+ "expected": {
+  "won": "a",
+  "rounds": 1,
+  "attackers": [
+   [
+    [
+     202,
+     24
+    ]
+   ]
+  ],
+  "defenders": [
+   []
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 0,
+    "crystal": 0
+   },
+   "defender": {
+    "metal": 0,
+    "crystal": 0
+   }
+  },
+  "unitLost": {
+   "attacker": 0,
+   "defender": 0
+  },
+  "steal": {
+   "metal": 50000,
+   "crystal": 0,
+   "deuterium": 60000
+  },
+  "used": 1
+ }
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- HYPOTHETICAL FIXTURE, NOT A REAL PAGE AND NOT FROM AN UPSTREAM TEMPLATE.
+     Built only from the selectors and data-attributes that the REAL fork script base.js ("[buildlist.js]" block,
+     saved with eu/pages/overview.html) reads: #technologydetails, .costs[data-factor|data-level|data-max|data-tech-id],
+     li.cost-item[data-res|data-base|data-have] .res-amount, .lack, form.build_form[data-tech-ok|data-room-ok|
+     data-max-reached|data-buyable|data-busy], .build-it_wrap .upgrade .tooltipTop, input#b_input_<id>.upgrade-input.
+     Element nesting, hidden inputs (cmd/building) and texts are GUESSES modelled on upstream page.buildings.default.tpl.
+     Replace with a real TechnologyDetailsAjax response as soon as one is captured. -->
+<html lang="en"><head><meta charset="UTF-8"><title>Buildings - Aeternum (New) - Aeterum (New)</title>
+<meta name="generator" content="GALAXYZ 1.8.git">
+<script>var serverTime = new Date(2026, 9, 30, 8, 56, 40); var startTime = serverTime.getTime(); var queryString = "page=buildings";</script>
+</head>
+<body id="buildings" class="full">
+<table><tbody><tr>
+<td class="res_current tooltip" id="current_metal" data-real="2064425065" data-tooltip-content="2.064.425.065">2.064&nbsp;M</td>
+<td class="res_current tooltip" id="current_crystal" data-real="1126197944" data-tooltip-content="1.126.197.944">1.126&nbsp;M</td>
+<td class="res_current tooltip" id="current_deuterium" data-real="743320817" data-tooltip-content="743.320.817">743&nbsp;M</td>
+<td class="res_current tooltip" id="current_darkmatter" data-real="3981" data-tooltip-content="3.981">4K</td>
+</tr></tbody></table>
+<div id="inhalt"><!-- real pages: div.technologyContainer > #technologydetails_wrapper > #technologydetails_content receives json.content[json.target] -->
+  <div id="technologydetails_wrapper"><div id="technologydetails_content">
+  <div id="technologydetails" data-tech="1">
+    <h3>Metal Mine <span class="level">(Level 30)</span></h3>
+    <ul class="costs" data-tech-id="1" data-level="30" data-max="255" data-factor="1.5">
+      <li class="cost-item" data-res="901" data-base="11505063" data-have="2064425065"><img src="metal.gif" alt=""><span class="res-amount">11.505.063</span><span class="lack" hidden></span></li>
+      <li class="cost-item" data-res="902" data-base="2876265" data-have="1126197944"><img src="crystal.gif" alt=""><span class="res-amount">2.876.265</span><span class="lack" hidden></span></li>
+    </ul>
+    <form class="build_form" action="game.php?page=buildings" method="post" data-tech-ok="1" data-room-ok="1" data-max-reached="0" data-buyable="1" data-busy="0">
+      <input type="hidden" name="cmd" value="insert">
+      <input type="hidden" name="building" value="1">
+      <input type="number" id="b_input_1" class="upgrade-input" name="level" value="31" min="31" max="255">
+      <div class="build-it_wrap"><button type="submit" class="upgrade build_submit"><span class="tooltipTop" title="Build">Build</span></button></div>
+    </form>
+  </div>
+  </div></div>
+</div>
+</body></html>

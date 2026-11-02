@@ -1,0 +1,41 @@
+<!-- UPSTREAM-DERIVED fixture, NOT a real page. Rendered by specs/galaxyz/tools/messages/gen_messages_fixtures.php from the
+     upstream 2Moons 1.8 templates/mission code with invented data (player vodoleyko1992, Главная планета [2:68:5]).
+     The GALAXYZ fork may differ; verify against a real page. AJAX fragment of GET game.php?page=messages&mode=view&messcat=999&site=1&ajax=1 (layout.ajax.tpl = bare content block) -->
+
+<form action="game.php?page=messages" method="post">
+<input type="hidden" name="mode" value="action">
+<input type="hidden" name="ajax" value="1">
+<input type="hidden" name="messcat" value="999">
+<input type="hidden" name="side" value="1">
+<table id="messagestable" style="width:760px;">
+	<tr>
+		<th colspan="4">Messages</th>
+	</tr>
+		<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(999, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+	<tr style="height: 20px;">
+		<td>Action</td>
+		<td>Date</td>
+		<td>To</td>
+		<td>Subject</td>
+	</tr>
+		<tr id="message_520801" class="message_head">
+		<td style="width:40px;" rowspan="2">
+				</td>
+		<td>30. Oct 2026, 09:43:20</td>
+		<td>Kovacs [2:70:4]</td>
+		<td>hello
+				</td>
+	</tr>
+	<tr class="messages_body">
+		<td colspan="3" class="left">
+		Hello!
+		</td>
+	</tr>
+	
+	<tr style="height: 20px;">
+		<td class="right" colspan="4">Page: <a href="#" onclick="Message.getMessages(999, 1);return false;"><b>[1]</b></a></td>
+	</tr>
+	</table>
+</form>

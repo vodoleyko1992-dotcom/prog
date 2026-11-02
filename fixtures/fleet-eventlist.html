@@ -1,0 +1,1181 @@
+<div id="eventListWrap">
+    <div id="eventHeader">
+        <a class="close_details eventToggle" href="javascript:toggleEvents();">
+        </a>
+        <h2>Events</h2>
+    </div>
+    <table id="eventContent">
+        <tbody>
+        
+                                    
+    <tr class="eventFleet" id="eventRow-1210"
+        data-mission-type="6"
+        data-return-flight="false"
+        data-arrival-time="1793322257"
+    >
+        <td class="countDown">
+        <span id="counter-eventlist-1210" class="friendly textBeefy">
+                    load...
+        </span>
+        </td>
+        <td class="arrivalTime">01:04:17 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/6.gif" class="tooltipHTML"
+                 title="Own fleet | Espionage" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Darkstar
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=40"
+               target="_top">
+                [1:40:11]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>3</span>
+        </td>
+        <td class="icon_movement">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Espionage Probe:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;3&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;1&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+        <td class="sendMail">
+                    </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1210"),
+                    1793322257 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1210]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1199"
+        data-mission-type="8"
+        data-return-flight="true"
+        data-arrival-time="1793322750"
+    >
+        <td class="countDown">
+            <span id="counter-eventlist-1199" class="friendly textBeefy">
+                load...
+            </span>
+        </td>
+        <td class="arrivalTime">01:12:30 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/8.gif" class="tooltipHTML"
+                 title="Own fleet | Harvest (R)" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>4</span>
+        </td>
+        <td class="icon_movement_reserve">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Recycler:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;4&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;31,200&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;18,900&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon tf js_hideTipOnMobile" title="Debris Field"></figure>debris field
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:9]
+            </a>
+        </td>
+
+        <td class="sendMail">
+        </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1199"),
+                    1793322750 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1199]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1201"
+        data-mission-type="1"
+        data-return-flight="false"
+        data-arrival-time="1793324177"
+    >
+        <td class="countDown">
+        <span id="counter-eventlist-1201" class="friendly textBeefy">
+                    load...
+        </span>
+        </td>
+        <td class="arrivalTime">01:36:17 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/1.gif" class="tooltipHTML"
+                 title="Own fleet | Attack" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>30</span>
+        </td>
+        <td class="icon_movement">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Light Fighter:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;20&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;106&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Farmville
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=45"
+               target="_top">
+                [1:45:6]
+            </a>
+        </td>
+        <td class="sendMail">
+                            <span class="reversal reversal_time" ref="1201">
+                    <a class="icon_link tooltipHTML recallFleet" data-fleet-id="1201"
+                       title="Recall:| 30.10.2026<br>
+                                            01:30:37">
+                        <img src="/img/icons/89624964d4b06356842188dba05b1b.gif" height="16" width="16"/>
+                    </a>
+                </span>
+                    </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                            <a href="javascript:void(0)" class="sendMail js_openChat tooltip" data-playerid="233" title="Raider42"><span class="icon icon_chat"></span></a>
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1201"),
+                    1793324177 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1201]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-890090"
+        data-mission-type="15"
+        data-return-flight="false"
+        data-arrival-time="1793324437"
+    >
+        <td class="countDown">
+        <span id="counter-eventlist-890090" class="friendly textBeefy">
+                    load...
+        </span>
+        </td>
+        <td class="arrivalTime">01:40:37 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/15.gif" class="tooltipHTML"
+                 title="Own fleet | Expedition" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>12</span>
+        </td>
+        <td class="icon_movement">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Espionage Probe:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;1&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Pathfinder:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;1&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;60&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <span class="deep-space-text">Deep space</span>
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:16]
+            </a>
+        </td>
+        <td class="sendMail">
+                    </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-890090"),
+                    1793324437 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [890090]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1211"
+        data-mission-type="3"
+        data-return-flight="false"
+        data-arrival-time="1793324937"
+    >
+        <td class="countDown">
+        <span id="counter-eventlist-1211" class="friendly textBeefy">
+                    load...
+        </span>
+        </td>
+        <td class="arrivalTime">01:48:57 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/3.gif" class="tooltipHTML"
+                 title="Own fleet | Transport" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Haven
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=2&amp;system=120"
+               target="_top">
+                [2:120:5]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>2</span>
+        </td>
+        <td class="icon_movement">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;2&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;20,000&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10,000&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;20&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Colony
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=2&amp;system=118"
+               target="_top">
+                [2:118:12]
+            </a>
+        </td>
+        <td class="sendMail">
+                    </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1211"),
+                    1793324937 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1211]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1001201"
+        data-mission-type="15"
+        data-return-flight="true"
+        data-arrival-time="1793327003"
+    >
+        <td class="countDown">
+            <span id="counter-eventlist-1001201" class="friendly textBeefy">
+                load...
+            </span>
+        </td>
+        <td class="arrivalTime">02:23:23 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/15.gif" class="tooltipHTML"
+                 title="Own fleet | Expedition (R)" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>12</span>
+        </td>
+        <td class="icon_movement_reserve">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Espionage Probe:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;1&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Pathfinder:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;1&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <span class="deep-space-text">Deep space</span>
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:16]
+            </a>
+        </td>
+
+        <td class="sendMail">
+        </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1001201"),
+                    1793327003 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1001201]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1001200"
+        data-mission-type="1"
+        data-return-flight="true"
+        data-arrival-time="1793328517"
+    >
+        <td class="countDown">
+            <span id="counter-eventlist-1001200" class="friendly textBeefy">
+                load...
+            </span>
+        </td>
+        <td class="arrivalTime">02:48:37 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/1.gif" class="tooltipHTML"
+                 title="Own fleet | Attack (R)" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>30</span>
+        </td>
+        <td class="icon_movement_reserve">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Light Fighter:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;20&lt;/td&gt;
+                &lt;/tr&gt;
+                            &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Farmville
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=45"
+               target="_top">
+                [1:45:6]
+            </a>
+        </td>
+
+        <td class="sendMail">
+        </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                            <a href="javascript:void(0)" class="sendMail js_openChat tooltip" data-playerid="233" title="Raider42"><span class="icon icon_chat"></span></a>
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1001200"),
+                    1793328517 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1001200]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1203"
+        data-mission-type="3"
+        data-return-flight="false"
+        data-arrival-time="1793330056"
+    >
+        <td class="countDown">
+        <span id="counter-eventlist-1203" class="friendly textBeefy">
+                    load...
+        </span>
+        </td>
+        <td class="arrivalTime">03:14:16 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/3.gif" class="tooltipHTML"
+                 title="Own fleet | Transport" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Colony
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=2&amp;system=118"
+               target="_top">
+                [2:118:12]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>5</span>
+        </td>
+        <td class="icon_movement">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;5&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;50,000&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;30,000&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;10,790&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+        <td class="sendMail">
+                            <span class="reversal reversal_time" ref="1203">
+                    <a class="icon_link tooltipHTML recallFleet" data-fleet-id="1203"
+                       title="Recall:| 30.10.2026<br>
+                                            01:47:17">
+                        <img src="/img/icons/89624964d4b06356842188dba05b1b.gif" height="16" width="16"/>
+                    </a>
+                </span>
+                    </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1203"),
+                    1793330056 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1203]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                                                
+    <tr class="eventFleet" id="eventRow-1001202"
+        data-mission-type="3"
+        data-return-flight="true"
+        data-arrival-time="1793341275"
+    >
+        <td class="countDown">
+            <span id="counter-eventlist-1001202" class="friendly textBeefy">
+                load...
+            </span>
+        </td>
+        <td class="arrivalTime">06:21:15 Clock</td>
+        <td class="missionFleet">
+            <img src="/img/fleet/3.gif" class="tooltipHTML"
+                 title="Own fleet | Transport (R)" alt=""/>
+        </td>
+
+        <td class="originFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Colony
+                            </td>
+        <td class="coordsOrigin">
+            <a href="http://localhost/galaxy?galaxy=2&amp;system=118"
+               target="_top">
+                [2:118:12]
+            </a>
+        </td>
+
+        <td class="detailsFleet">
+            <span>5</span>
+        </td>
+        <td class="icon_movement_reserve">
+            <span class="tooltip tooltipRight tooltipClose"
+                  title="&lt;div class=&quot;htmlTooltip&quot;&gt;
+    &lt;h1&gt;Fleet details:&lt;/h1&gt;
+    &lt;div class=&quot;splitLine&quot;&gt;&lt;/div&gt;
+            &lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; class=&quot;fleetinfo&quot;&gt;
+            &lt;tr&gt;
+                &lt;th colspan=&quot;3&quot;&gt;Ships:&lt;/th&gt;
+            &lt;/tr&gt;
+                                        &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Large Cargo:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;5&lt;/td&gt;
+                &lt;/tr&gt;
+            
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;&nbsp;&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;th colspan=&quot;3&quot;&gt;Shipment:&lt;/th&gt;
+                &lt;/tr&gt;
+
+                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Metal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Crystal:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+                                &lt;tr&gt;
+                    &lt;td colspan=&quot;2&quot;&gt;Deuterium:&lt;/td&gt;
+                    &lt;td class=&quot;value&quot;&gt;0&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/table&gt;
+    &lt;/div&gt;
+">
+                &nbsp;
+            </span>
+        </td>
+
+        <td class="destFleet">
+                                <figure class="planetIcon planet js_hideTipOnMobile"
+                            title="Planet"></figure>Homeworld
+                            </td>
+        <td class="destCoords">
+            <a href="http://localhost/galaxy?galaxy=1&amp;system=42"
+               target="_top">
+                [1:42:8]
+            </a>
+        </td>
+
+        <td class="sendMail">
+        </td>
+        <td class="sendProbe">
+        </td>
+        <td class="sendMail">
+                    </td>
+    </tr>
+
+<script type="text/javascript">
+    (function ($) {
+        // Initialize countdown timer for this fleet mission row
+        // When the countdown reaches zero, it calls the checkEvents endpoint to determine
+        // which mission rows should be removed from the display (e.g., arrival missions entering hold time)
+
+        // Set up AJAX to include CSRF token for Laravel authentication
+        var wrappedCountdown = function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize the countdown timer
+            // Parameters: countdown element, time remaining (seconds), parent container,
+            //             checkEvents URL, mission IDs to check when timer expires
+            new eventboxCountdown(
+                $("#counter-eventlist-1001202"),
+                    1793341275 - 1793321837,
+                $("#eventListWrap"),
+                "http://localhost/ajax/fleet/eventlist/checkevents",
+                [1001202]
+            );
+        };
+        wrappedCountdown();
+    })(jQuery);
+</script>
+
+                            </tbody>
+    </table>
+    <div id="eventFooter"></div>
+</div>
+<script type="text/javascript">
+    var timeDelta = 1713793145000 - (new Date()).getTime();
+    var LocalizationStrings = {"timeunits":{"short":{"year":"y","month":"m","week":"w","day":"d","hour":"h","minute":"m","second":"s"}},"status":{"ready":"done"},"decimalPoint":".","thousandSeperator":",","unitMega":"M","unitKilo":"K","unitMilliard":"Bn","question":"Question","error":"Error","loading":"load...","notice":"Reference","yes":"yes","no":"No","ok":"Ok","attention":"Caution","outlawWarning":"You are about to attack a stronger player. If you do this, your attack defences will be shut down for 7 days and all players will be able to attack you without punishment. Are you sure you want to continue?","lastSlotWarningMoon":"This building will use the last available building slot. Expand your Lunar Base to receive more space. Are you sure you want to build this building?","lastSlotWarningPlanet":"This building will use the last available building slot. Expand your Terraformer or buy a Planet Field item to obtain more slots. Are you sure you want to build this building?","forcedVacationWarning":"Confirm your lobby account now and we\u2019ll gift you Dark Matter in each universe!","planetMoveBreakUpWarning":"Caution! This mission may still be running once the relocation period starts and if this is the case, the process will be canceled. Do you really want to continue with this job?","moreDetails":"More details","lessDetails":"Less detail","planetOrder":{"lock":"Lock arrangement","unlock":"Unlock arrangement"},"darkMatter":"Dark Matter","errorNotEnoughDM":"Not enough Dark Matter available!","activateItem":{"upgradeItemQuestion":"Would you like to replace the existing item? The old bonus will be lost in the process.","upgradeItemQuestionHeader":"Replace item?"},"characterClassItem":{"buyAndActivateItemQuestion":"Do you want to activate the #characterClassName# class for #darkmatter# Dark Matter? In doing so, you will lose your current class.","activateItemQuestion":"Do you want to activate the #characterClassName# class? In doing so, you will lose your current class."},"allianceClassItem":{"buyAndActivateItemQuestion":"Do you want to activate the alliance class #allianceClassName# for #darkmatter# Dark Matter? In doing so, you will lose your current alliance class.","activateItemQuestion":"Do you want to activate the alliance class #allianceClassName#? In doing so, you will lose your current alliance class.","appendCurrentClassQuestion":"<br><br>Current alliance class: #currentAllianceClassName#<br><br>Last changed on: #lastAllianceClassChange#"},"LOCA_ALL_NETWORK_ATTENTION":"Caution","LOCA_ALL_YES":"yes","LOCA_ALL_NO":"No","redirectMessage":"By following this link, you will leave OGame. Do you wish to continue?"};
+    $("a.icon_link.recallFleet").click(function (e) {
+        e.preventDefault();
+        var fleetId = $(this).attr("data-fleet-id");
+        errorBoxDecision(
+            "Recall",
+            "Recall fleet",
+            "yes",
+            "No",
+            function() {
+                $.post(ajaxRecallFleetURI, {fleet_mission_id: fleetId, _token: 'Xq2mZ8vR4kL0pT6yB1nW9cE3sH7jD5fA2gU8iO4e'}, (data) => {
+                    token = data.newAjaxToken
+
+                    if (data.success) {
+                        let currentUrl = window.location.href
+                        let params = new URLSearchParams(currentUrl)
+                        let currentComponent = params.get("component")
+
+                        switch (currentComponent) {
+                            case "movement":
+                                window.location.reload()
+                                return;
+                            case "galaxy":
+                                if (
+                                    submitForm &&
+                                    typeof submitForm === "function" &&
+                                    typeof galaxy !== "undefined" &&
+                                    typeof system !== "undefined"
+                                ) {
+                                    submitForm();
+                                }
+                                break;
+                        }
+
+                        getAjaxEventbox()
+                        refreshFleetEvents()
+                    }
+                })
+            }
+        );
+        return false;
+    });
+</script>
+
+

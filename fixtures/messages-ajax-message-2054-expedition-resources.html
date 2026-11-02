@@ -1,0 +1,66 @@
+
+<ul class="pagination">
+    <li class="p_li last">
+        <a class="fright txt_link msg_action_link  disabled "
+           data-messageid="2054"
+           data-tab="fleets"
+           data-subtab="expeditions"
+            style="opacity: 0.5; cursor: default;" >|&lt;&lt;</a>
+    </li>
+    <li class="p_li">
+        <a class="fright txt_link msg_action_link  disabled "
+           data-messageid="2054"
+           data-tab="fleets"
+           data-subtab="expeditions"
+            style="opacity: 0.5; cursor: default;" >&lt;</a>
+    </li>
+    <li class="p_li active">
+        <a class="fright txt_link msg_action_link active"
+           data-messageid="2054"
+           data-tab="fleets"
+           data-subtab="expeditions">1/11</a>
+    </li>
+    <li class="p_li">
+        <a class="fright txt_link msg_action_link "
+           data-messageid="2052"
+           data-tab="fleets"
+           data-subtab="expeditions"
+           >&gt;</a>
+    </li>
+    <li class="p_li last">
+        <a class="fright txt_link msg_action_link "
+           data-messageid="2030"
+           data-tab="fleets"
+           data-subtab="expeditions"
+           >&gt;&gt;|</a>
+    </li>
+</ul>
+
+<div class="detail_msg" data-msg-id="2054" data-message-type="10">
+    Your expedition discovered a small asteroid from which some resources could be harvested.<br /><br />Metal 412,500 have been captured.
+</div>
+<script type="text/javascript">
+    ogame.messages.initDetailMessages(true);
+    ogame.messagecounter.resetCounterByType(ogame.messagecounter.type_message);
+    var elem, messageId, senderId, receiverId, associationId;
+
+    function reportMessageConfirmation(_elem, _messageId, _senderId, _receiverId, _question) {
+        elem = _elem;
+        messageId = _messageId;
+        senderId = _senderId;
+        receiverId = _receiverId;
+
+        errorBoxDecision(
+            "Caution",
+            _question,
+            "yes",
+            "No",
+            reportMessageCallback
+        );
+    }
+
+    function reportMessageCallback() {
+        elem.hide();
+        reportMessage(messageId, senderId, receiverId);
+    }
+</script>

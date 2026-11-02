@@ -1,0 +1,139 @@
+{
+ "name": "botbuild-fields",
+ "seed": 1,
+ "gamespeed": 2000,
+ "haltSpeed": 1,
+ "startUnix": 1793347417,
+ "tzOffsetSec": 7200,
+ "universe": {
+  "galaxies": 9,
+  "systems": 499,
+  "maxPlanets": 15,
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "resourceMultiplier": 22000,
+  "storageMultiplier": 5,
+  "maxDmMissions": 5,
+  "moonFactor": 1,
+  "moonChance": 20,
+  "topPoints": 1000000,
+  "galaxyDeuteriumCost": 10,
+  "buildTimeSec": 600,
+  "researchTimeSec": 600,
+  "unitTimeSec": 1
+ },
+ "player": {
+  "name": "vodoleyko1992",
+  "id": 4377,
+  "research": {
+   "106": 12,
+   "108": 12,
+   "109": 10,
+   "110": 10,
+   "111": 10,
+   "113": 12,
+   "114": 8,
+   "115": 12,
+   "117": 10,
+   "118": 8,
+   "120": 12,
+   "121": 7,
+   "122": 5,
+   "124": 9
+  },
+  "officers": {},
+  "darkMatter": 3981,
+  "vacation": false,
+  "spyMessagesMode": 0,
+  "maxPlanets": 6,
+  "rank": 194,
+  "points": 5000000,
+  "spyProbes": 3
+ },
+ "bodies": [
+  {
+   "id": 254102,
+   "type": "planet",
+   "name": "Главная планета",
+   "coords": "2:68:5",
+   "tempMax": 40,
+   "fieldsMax": 163,
+   "res": {
+    "metal": 2000000,
+    "crystal": 1000000,
+    "deuterium": 500000
+   },
+   "levels": {
+    "1": 12,
+    "2": 10,
+    "3": 8,
+    "4": 12,
+    "14": 4,
+    "15": 1,
+    "21": 4,
+    "22": 8,
+    "23": 8,
+    "24": 8,
+    "31": 8
+   },
+   "ships": {
+    "202": 5
+   },
+   "defense": {},
+   "image": "dschjungelplanet07",
+   "perHour": {
+    "metal": 40000,
+    "crystal": 20000,
+    "deuterium": 10000
+   },
+   "energy": {
+    "production": 5000,
+    "consumption": 2600
+   },
+   "fieldsUsed": 162
+  },
+  {
+   "id": 254103,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:6",
+   "tempMax": 40,
+   "fieldsMax": 140,
+   "res": {
+    "metal": 50000,
+    "crystal": 20000,
+    "deuterium": 5000
+   },
+   "levels": {
+    "1": 4,
+    "2": 2,
+    "4": 3,
+    "22": 5,
+    "23": 5,
+    "24": 5
+   },
+   "ships": {},
+   "defense": {},
+   "image": "dschjungelplanet10",
+   "perHour": {
+    "metal": 4000,
+    "crystal": 1500,
+    "deuterium": 500
+   },
+   "energy": {
+    "production": 1000,
+    "consumption": 380
+   },
+   "fieldsUsed": 14
+  }
+ ],
+ "others": [],
+ "debris": [],
+ "flights": [],
+ "hostile": [],
+ "messages": [],
+ "script": [],
+ "combat": "sim",
+ "expeditionOutcomes": [],
+ "description": "botbuild: 254102 has exactly one free field (162/163), nanite 1 and energy technology 12 -> terraformer."
+}

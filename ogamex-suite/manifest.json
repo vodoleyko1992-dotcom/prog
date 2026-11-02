@@ -1,0 +1,130 @@
+{
+  "manifest_version": 3,
+  "name": "OgameX Suite",
+  "short_name": "OgameX Suite",
+  "description": "OgameX Live, OgameX Infinity и «Бот» (полная автоматизация; по умолчанию все функции включены) в одном расширении: GALAXYZ / 2Moons (ogamex.eu) и серверы OgameX.",
+  "version": "0.3.2",
+  "version_name": "0.3.2 beta",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": [
+      "shared/core/21-diaglib.js",
+      "shared/background/diag-bg.js",
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_title": "OgameX Suite",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "exclude_matches": [
+        "*://*.ogame.gameforge.com/*"
+      ],
+      "js": [
+        "shared/main/page-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "exclude_matches": [
+        "*://*.ogame.gameforge.com/*"
+      ],
+      "js": [
+        "shared/core/00-ogx.js",
+        "shared/core/01-util.js",
+        "shared/core/02-bus.js",
+        "shared/core/03-storage.js",
+        "shared/core/04-settings.js",
+        "shared/core/05-page.js",
+        "shared/core/06-time.js",
+        "shared/core/07-dom.js",
+        "shared/core/08-catalog-data.js",
+        "shared/core/09-catalog.js",
+        "shared/core/10-calc.js",
+        "shared/core/11-parse.js",
+        "shared/core/12-http.js",
+        "shared/core/13-bridge.js",
+        "shared/core/14-state.js",
+        "shared/core/15-flights.js",
+        "shared/core/16-fleet.js",
+        "shared/core/17-galaxy.js",
+        "shared/core/18-exptexts-data.js",
+        "shared/core/19-messages.js",
+        "shared/core/20-style.js",
+        "shared/core/21-diaglib.js",
+        "shared/core/22-diag.js",
+        "shared/core/23-learn.js",
+        "shared/core/24-pagescan.js",
+        "shared/popup/diag-panel.js",
+        "suite/00-suite.js",
+        "suite/hub.js",
+        "modules/live/menu/menu.js",
+        "modules/live/planetbar/planetbar.js",
+        "modules/live/inflight/inflight.js",
+        "modules/live/techcost/techcost.js",
+        "modules/live/fleetinfo/fleetinfo.js",
+        "modules/live/expedition/expedition.js",
+        "modules/live/timeline/timeline.js",
+        "modules/infinity/panel/panel.js",
+        "modules/infinity/empire/empire.js",
+        "modules/infinity/targets/targets.js",
+        "modules/infinity/spy/spy.js",
+        "modules/infinity/missiles/missiles.js",
+        "modules/infinity/stats/stats.js",
+        "modules/infinity/stalk/stalk.js",
+        "modules/infinity/flights/flights.js",
+        "modules/infinity/fleethelp/fleethelp.js",
+        "modules/infinity/todo/todo.js",
+        "modules/infinity/mail/mail.js",
+        "modules/infinity/prefs/prefs.js",
+        "modules/bot/botcore/botcore.js",
+        "modules/bot/botsim/botsim.js",
+        "modules/bot/botpanel/botpanel.js",
+        "modules/bot/botsave/botsave.js",
+        "modules/bot/botfarm/botfarm.js",
+        "modules/bot/botdebris/botdebris.js",
+        "modules/bot/botbuild/botbuild.js",
+        "modules/bot/botexpo/botexpo.js",
+        "loader.js"
+      ],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ogamex-suite@ogx.local",
+      "strict_min_version": "128.0"
+    }
+  }
+}

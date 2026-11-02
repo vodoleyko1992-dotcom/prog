@@ -1,0 +1,884 @@
+{
+    "_meta": {
+        "generatedBy": "specs/galaxyz/tools/messages/gen_messages_fixtures.php",
+        "source": "UPSTREAM language/{en,ru}/{FLEET,INGAME,TECH,L18N}.php; the fork may have edited strings (en spy strings confirmed REAL in messages-spy.html)"
+    },
+    "en": {
+        "mg_type": {
+            "0": "Spy messages",
+            "1": "Player messages",
+            "2": "Alliance messages",
+            "3": "Combat messages",
+            "4": "System messages",
+            "5": "Transport messages",
+            "15": "Expedition messages",
+            "50": "Game messages",
+            "99": "Construction messages",
+            "100": "All messages",
+            "999": "Outbox"
+        },
+        "months": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+        ],
+        "strings": {
+            "sys_mess_tower": "Fleet Headquarters",
+            "sys_mess_qg": "Spying department",
+            "sys_mess_spy_report": "Intelligence report",
+            "sys_mess_spy_control": "Room monitoring",
+            "sys_mess_spy_activity": "Spying activity",
+            "sys_mess_attack_report": "Fight report",
+            "sys_irak_subject": "Rocket impact",
+            "sys_mess_transport": "Transportmessage",
+            "sys_recy_report": "Recycling Report",
+            "sys_stat_mess_stay": "Located fleet",
+            "sys_mess_fleetback": "Fleet return",
+            "sys_expe_report": "Expedition report",
+            "sys_colo_mess_from": "Colonisation",
+            "sys_colo_mess_report": "Colonisation report",
+            "sys_buildlist": "List of construction",
+            "sys_techlist": "Research list",
+            "sys_buildlist_fail": "Impossible to build",
+            "sys_mess_head": "Spy Report %s [%d:%d:%d] on %s",
+            "sys_mess_spy_lostproba": "The spy probes discovery chance was:  %d %% ",
+            "sys_mess_spy_destroyed": "<font color=\"red\">Your spy probes were destroyed! </font>",
+            "sys_mess_spy_ennemyfleet": "A hostile fleet of the planet",
+            "sys_mess_spy_seen_at": "was sighted near your planet",
+            "sys_mess_spy_report_moon": "(Moon)",
+            "sys_tran_mess_owner": "One of your fleets reaches the planet %s %s and delivers %s %s, %s %s and %s %s.",
+            "sys_tran_mess_user": "A peaceful fleet of %s %s reached %s %s and delivers %s %s, %s %s and %s %s.",
+            "sys_tran_mess_back": "One of your fleets returns from the planet %s %s.",
+            "sys_recy_gotten": "Having arrived at there destination your Recyclers collect %s %s and %s %s",
+            "sys_stat_mess": "Your fleet reaches the planet %s and delivers %s %s, %s %s and %s %s.",
+            "sys_fleet_won": "One of your fleets returns from a attack at the planet %s %s. You have captured %s %s, %s %s and %s %s ",
+            "sys_expe_back_home": "Your fleet has returned from the expedition.<br>It deliveres %s %s, %s %s, %s %s and %s %s.",
+            "sys_expe_back_home_without_dm": "Your fleet has returned from the expedition.",
+            "sys_expe_back_home_with_dm": "Your fleet has returned from the expedition.<br>They found (%s)%s but the ships were scrapped. <br>the %s was saved.",
+            "sys_expe_found_ships_nothing": "No ships could be found.",
+            "sys_expe_attackname_1": "Pirates",
+            "sys_expe_attackname_2": "Aliens",
+            "sys_colo_allisok": "One of your fleets reaches the coordinates %s. The settlers start to colonise the new planet.",
+            "sys_colo_badpos": "One of your fleets reaches the coordinates %s. No settlement possibility was found here, your settlers return disappointed. ",
+            "sys_colo_notfree": "One of your fleets reaches the coordinates %s. When your settlers arrived at the coordinates they found that there is already a colony there. Completely demoralized they return home. ",
+            "sys_colo_maxcolo": "One of your fleets reaches the coordinates %s. Ssettlement is not possible as you can only have %d planets. ",
+            "sys_colo_notech": "One of your fleets reached the coordinates %s. When your settlers approached the planet, they had to determine that their equipment still not for the prevailing climate was suitable and must be developed first. Disappointed, the settlers returned.",
+            "sys_irak_mess": "Interplanetary rockets (%d) from %s are on the planet %s <br><br>",
+            "sys_irak_def": "%d Rockets of yours were intercepted.",
+            "sys_irak_no_def": "The planet does not have defences",
+            "sys_irak_no_att": "All your rockets were intercepted.",
+            "sys_attack_title": "The following fleets face each other on: ",
+            "sys_destruc_title": "The following fleets face each other for a moon destruction:",
+            "sys_attack_attacker_pos": "Attacker",
+            "sys_attack_defender_pos": "Defender",
+            "sys_ship_type": "Type",
+            "sys_ship_count": "Amount",
+            "sys_ship_weapon": "Firepower",
+            "sys_ship_shield": "Shield",
+            "sys_ship_armour": "Armour",
+            "sys_destroyed": "Destroyed",
+            "sys_attacker_won": "The attacker has won the battle!",
+            "sys_defender_won": "The defender has won the battle!",
+            "sys_both_won": "The fight ends in a draw! ",
+            "sys_stealed_ressources": "He captures",
+            "sys_and": "and",
+            "sys_attacker_lostunits": "The attackers losses:",
+            "sys_defender_lostunits": "The defenders losses:",
+            "sys_units": "units",
+            "debree_field_1": "At the coordinates are now:",
+            "debree_field_2": "debris.",
+            "sys_moonproba": "Moon Chance: ",
+            "sys_moonbuilt": "A moon formed at the planet %s [%d:%d:%d] !",
+            "fleet_attack_1": "The attacking fleet fires with a power of",
+            "fleet_attack_2": "at the defender. The shields of the defender absorb",
+            "fleet_defs_1": "The defending fleet fires with a power of",
+            "fleet_defs_2": "at the attacker. The shields of the attacker absorb",
+            "damage": "damage points.",
+            "sys_raport_not_found": "Invalid Battle Report ID",
+            "sys_raport_lost_contact": "The contact to the attacking fleet was lost (that is, it was shot down in the first round.)",
+            "sys_lost": "Losses",
+            "sys_gain": "Profit",
+            "sys_debris": "Rubblefield",
+            "type_planet_short_1": "P",
+            "type_planet_short_2": "D",
+            "type_planet_short_3": "M",
+            "type_mission_1": "Attack",
+            "fl_simulate": "Simulate",
+            "php_tdformat": "d. M Y, H:i:s"
+        },
+        "expedition": {
+            "sys_expe_blackholl_1": {
+                "outcome": "fleet_lost",
+                "text": "Your fleet encountered a black hole and was partly destroyed! "
+            },
+            "sys_expe_blackholl_2": {
+                "outcome": "fleet_lost",
+                "text": "Your fleet encountered a black hole and was destroyed completely! "
+            },
+            "sys_expe_found_ships": {
+                "outcome": "ships",
+                "text": "Your researchers have found spaceships which were in perfect condition!.<br>: "
+            },
+            "sys_expe_found_ress_1_1": {
+                "outcome": "resources",
+                "text": "Your expedition has discovered a small asteroids cluster from which some resources could be won. "
+            },
+            "sys_expe_found_ress_1_2": {
+                "outcome": "resources",
+                "text": "Some easily accessible resource fields were found and raw materials were won successfully on the remote planetoid."
+            },
+            "sys_expe_found_ress_1_3": {
+                "outcome": "resources",
+                "text": "Some easily accessible resource fields were found and raw materials were won successfully on the remote planetoid."
+            },
+            "sys_expe_found_ress_1_4": {
+                "outcome": "resources",
+                "text": "The expedition discovered a planet contaminated by radiation with a highly-poisonous atmosphere. Scans, however, shown that this planet contains alot of raw material. It was mined by automatic drones to win a maximum of raw materials. "
+            },
+            "sys_expe_found_ress_2_1": {
+                "outcome": "resources",
+                "text": "Your expedition found an ancient freighter convoy which is fully loaded but deserted. Some resources could be yielded. "
+            },
+            "sys_expe_found_ress_2_2": {
+                "outcome": "resources",
+                "text": "Your expedition found great raw material deposits on a little moon with an atmosphere of it`s own. The ships crew is going to yield this treasure."
+            },
+            "sys_expe_found_ress_2_3": {
+                "outcome": "resources",
+                "text": "We have met a small convoy of civilian ships which urgently needed food and medicine. In the exchange for it we got a whole set of useful resources."
+            },
+            "sys_expe_found_ress_3_1": {
+                "outcome": "resources",
+                "text": "Your expedition fleet reported the find of a gigantic alien shipwreck. But the ships were of no purpose because its technology, however the ship could be chopped into pieces for its components so the crew could win valuable raw materials."
+            },
+            "sys_expe_found_ress_3_2": {
+                "outcome": "resources",
+                "text": "The asteroid belt around an unknown planet contained vast amounts of raw materials. The expedition fleet filled its storage rooms!"
+            },
+            "sys_expe_found_dm_1_1": {
+                "outcome": "darkmatter",
+                "text": "The expedition has succeeded to capture some dark matter."
+            },
+            "sys_expe_found_dm_1_2": {
+                "outcome": "darkmatter",
+                "text": "Our expedition has discovered a ghost ship, which transported a small amount of dark matter. Although we have not been able to find notes on what has happened to the original crew, our technicians, however, managed to get hold of the dark matter."
+            },
+            "sys_expe_found_dm_1_3": {
+                "outcome": "darkmatter",
+                "text": "We met a strange alien on board of a little ship which left a little container for us in exchange for a couple of simple, mathematical calculations with dark matter."
+            },
+            "sys_expe_found_dm_1_4": {
+                "outcome": "darkmatter",
+                "text": "We have found the remains of an alien ship. There was a little container on board with dark matter!"
+            },
+            "sys_expe_found_dm_1_5": {
+                "outcome": "darkmatter",
+                "text": "The expedition followed some strange signals and discovered an asteroid, in the core was a small amount of dark matter detected. The asteroid was taken on board and the researchers extracted the dark matter."
+            },
+            "sys_expe_found_dm_2_1": {
+                "outcome": "darkmatter",
+                "text": "Our expedition has succeeded in a single experiment. You have been able to win dark matter from a dying star."
+            },
+            "sys_expe_found_dm_2_2": {
+                "outcome": "darkmatter",
+                "text": "Our expedition reports a strange spectral phenomenon. Among other things this was the reason that dark matter formed in the energy storages of the ship shields. Our technicians tried to conserve the the phenomenon as long as possible to capture as much as possible dark matter."
+            },
+            "sys_expe_found_dm_2_3": {
+                "outcome": "darkmatter",
+                "text": "Our expedition has found an ancient space station, which already floated in space for a long time. The station itself was completely useless, however, still stored in one of its reactors a small set of dark matter was found."
+            },
+            "sys_expe_found_dm_3_1": {
+                "outcome": "darkmatter",
+                "text": "Distortion has made it possible for your expedition to get a large amount of dark matter from a spontaneous hyperspace!"
+            },
+            "sys_expe_found_dm_3_2": {
+                "outcome": "darkmatter",
+                "text": "Our expedition reported a first contact with an unique alien. Apparently an energy creature who was called Legorianer has flown through the ships of the expedition and then decided to help the underdeveloped species out a little, a container with dark matter was materialized on board of the bridge!"
+            },
+            "sys_expe_found_ships_1_1": {
+                "outcome": "ships",
+                "text": "We have discovered the remains of a predecessor expedition! Our technicians look, whether they get some of the wrecks working again."
+            },
+            "sys_expe_found_ships_1_2": {
+                "outcome": "ships",
+                "text": "We have found a deserted pirate base. Some old ships are still located in the hangar. Our technicians look, whether still some of the ships are useable."
+            },
+            "sys_expe_found_ships_1_3": {
+                "outcome": "ships",
+                "text": "Our expedition found a planet which was almost completly destroyed by wars. Various shipwrecks drifted in the orbit. The technicians try to repair some of these. Perhaps we also find information on what has happened here."
+            },
+            "sys_expe_found_ships_1_4": {
+                "outcome": "ships",
+                "text": "The expedition stumbled upon an old starbase which seems to be abandoned for an eternity. A couple of ships were found in the hangar of the fortress. The technicians managed to get some of them flying again."
+            },
+            "sys_expe_found_ships_2_1": {
+                "outcome": "ships",
+                "text": "We have found the remains of an armada. The technicians of the expedition have immediately gone onto the partly intact ships and were able to repair some of them."
+            },
+            "sys_expe_found_ships_2_2": {
+                "outcome": "ships",
+                "text": "Our expedition discovered an old, automatic shipyard. Some ships still were in the production phase and our technicians tried to finish the construction, the energy supply of the shipyard first needed to be restored."
+            },
+            "sys_expe_found_ships_3_1": {
+                "outcome": "ships",
+                "text": "We have found a gigantic ship cemetery. Some technicians of the expedition have managed to get the ship into operation again."
+            },
+            "sys_expe_found_ships_3_2": {
+                "outcome": "ships",
+                "text": "We have discovered a planet with remains of a civilization. Another gigantic ship station which is still intact has been spotted from outerspace. Some of our technicians and pilots have gone onto the surface to look, whether a couple of the ships can be retrieved."
+            },
+            "sys_expe_lost_fleet_1": {
+                "outcome": "fleet_lost",
+                "text": "The only thing left of the expedition is the following radio message: Zzzrrt oh God!...Krrrzzzzt the zrrrtrzt sees krgzzzz yes from how Krzzzzzzzztzzzz..."
+            },
+            "sys_expe_lost_fleet_2": {
+                "outcome": "fleet_lost",
+                "text": "The last thing we received of the expedition were some unbelievable good close-ups of an opening black hole."
+            },
+            "sys_expe_lost_fleet_3": {
+                "outcome": "fleet_lost",
+                "text": "A nuclear breach on one of the commanding ships led to a chain reaction which destroyed the complete expedition in a spectacular explosion."
+            },
+            "sys_expe_lost_fleet_4": {
+                "outcome": "fleet_lost",
+                "text": "The expedition fleet has not returned from the hyperspacejump. Our scientists are still puzzled on what could have happened, the fleet however seems to be lost definitely."
+            },
+            "sys_expe_time_fast_1": {
+                "outcome": "speedup",
+                "text": "An unforeseen relay in the energy coils of the drive aggregates accelerated the return of the expedition. According to first reports it has however, nothing thrilling to report."
+            },
+            "sys_expe_time_fast_2": {
+                "outcome": "speedup",
+                "text": "A new daring commanding officer used an unstable wormhole as a shortcut to return home, with succes! The expedition, however, has not brought new knowledge itself."
+            },
+            "sys_expe_time_fast_3": {
+                "outcome": "speedup",
+                "text": "No unusual features in the investigated sector have been found on your expedition. The fleet, however, got into a solar wind at the return flight. Because of this your expedition returned a bit earlier as expected."
+            },
+            "sys_expe_time_slow_1": {
+                "outcome": "delay",
+                "text": "A miscalculation of the navigator at the expedition landed the fleet at a completely wrong place, the way back took substantially more time now."
+            },
+            "sys_expe_time_slow_2": {
+                "outcome": "delay",
+                "text": "For some unknown reasons the jump of the expedition fleet missed it`s target completely. The fleet almost would have come out in the heart of a sun. Fortunately it landed in a known system, the return will, however, last longer than thought originally."
+            },
+            "sys_expe_time_slow_3": {
+                "outcome": "delay",
+                "text": "The new navigation module still has a few bugs in it. The expedition fleet did not only go in the completely wrong direction, the complete deuterium was also consumed, because of this the return is delayed a little."
+            },
+            "sys_expe_time_slow_4": {
+                "outcome": "delay",
+                "text": "Your expedition got into a sector with amplified particle storms. The energy storages of the fleet overloaded themselves because of this and for all ships the main systems were cancelled. Your mechanics could prevent the worst but the expedition will return with some delay now."
+            },
+            "sys_expe_time_slow_5": {
+                "outcome": "delay",
+                "text": "The commandship of your expedition fleet collided with a strange ship which jumped directly in front of the fleet without early warning. The strange ship exploded and the damages to the leadership ship were considerable. Wanting to as soon as the roughest repairs are completed make your ships to themselves on the way back, since in this condition the expedition cannot be continued."
+            },
+            "sys_expe_time_slow_6": {
+                "outcome": "delay",
+                "text": "The star wind of a red giant distorted the jump of the expedition so that the ships navigationsystem calculated the reentry incorrect. As a result the expedition return somewhere in the emptiness between the stars and the destination."
+            },
+            "sys_expe_nothing_1": {
+                "outcome": "nothing",
+                "text": "This expedition brings nothing exciting from its journey except some curious, small little animals of an unknown marsh planet."
+            },
+            "sys_expe_nothing_2": {
+                "outcome": "nothing",
+                "text": "Your expedition has made lovely pictures of a supernova. This expedition, however has not brought any real new knowledge. But one has good chances of winning this years universal picture competition."
+            },
+            "sys_expe_nothing_3": {
+                "outcome": "nothing",
+                "text": "A computervirus distorted the navigation shortly after leaving a strange solar system. This made the entire expeditionfleet fly in circles for hours. Soy it can be said that the expedition was not very successful."
+            },
+            "sys_expe_nothing_4": {
+                "outcome": "nothing",
+                "text": "A life-form of pure energy has made all expedition members stare at hypnotic symbols on their screens for several days. When most were finally clear in the head again the expedition had to be cancelled due to a deuterium shortage."
+            },
+            "sys_expe_nothing_5": {
+                "outcome": "nothing",
+                "text": "We now know that red anomalies of class 5 not only have chaotic effects on the ships systems but that it also triggers massive hallucinations at the crew. However, nothing else has been discovered on this expedition."
+            },
+            "sys_expe_nothing_6": {
+                "outcome": "nothing",
+                "text": "Scans of this sector first promised to be good, but unfortunately we came back empty-handed."
+            },
+            "sys_expe_nothing_7": {
+                "outcome": "nothing",
+                "text": "Perhaps it was better if we did not stop on this remote planet to celebrate the captains birthday for a short while. A nasty yellow fever has forced the majortiy of the crew to be send to the ward. The acute staff shortage was the reason that the expedition failed."
+            },
+            "sys_expe_nothing_8": {
+                "outcome": "nothing",
+                "text": "Your expedition has found nothing else as the vast emptiness of space. There was not even a little asteroid, radiation particle or something else what could make this expedition at least a bit exciting."
+            },
+            "sys_expe_nothing_9": {
+                "outcome": "nothing",
+                "text": "A reactor malfuntion on the  commandship almost destroyed the complete expedition. Fortunately the technicians were more than capable and could prevented the worst. The repair however, took so much time that the expedition returned without achieving anything."
+            },
+            "sys_expe_attack_1_1_1": {
+                "outcome": "battle_pirates",
+                "text": "A space pirate in despair tried to commandeer our expeditions fleet."
+            },
+            "sys_expe_attack_1_1_2": {
+                "outcome": "battle_pirates",
+                "text": "Some primitive barbarians attacked us with spaceships, at least their ships were in horrible conditions. If the firepower was a serious threat we would have beene forced to reply with our firepower."
+            },
+            "sys_expe_attack_1_1_3": {
+                "outcome": "battle_pirates",
+                "text": "We have intercepted a couple of radio messages of some very drunk pirates. We apparently will be attacked."
+            },
+            "sys_expe_attack_1_1_4": {
+                "outcome": "battle_pirates",
+                "text": "We had to fight against some pirates who fortunately were outnumbered against us."
+            },
+            "sys_expe_attack_1_1_5": {
+                "outcome": "battle_pirates",
+                "text": "Our fleet reports that a certain Moa Tikarr and his crew requested the unconditional surrender of our fleet. If they are serious, they will have to find out that we can defend ourself very well."
+            },
+            "sys_expe_attack_1_2_1": {
+                "outcome": "battle_pirates",
+                "text": "Your expedition fleet had an unforseen encounter with some spacepirates."
+            },
+            "sys_expe_attack_1_2_2": {
+                "outcome": "battle_pirates",
+                "text": "We flew into an ambush of some starpirates! Unfortunately a fight was unavoidable."
+            },
+            "sys_expe_attack_1_2_3": {
+                "outcome": "battle_pirates",
+                "text": "The call for help of another expeditionfleet turned out to be a trap of some cunning pirates. A battle was unavoidable."
+            },
+            "sys_expe_attack_1_3_1": {
+                "outcome": "battle_pirates",
+                "text": "The intercepted signals did not came from some unknown aliens but of a secret pirate base! The pirates were not very happy by our presence in their sector."
+            },
+            "sys_expe_attack_1_3_2": {
+                "outcome": "battle_pirates",
+                "text": "The expedition fleet reported heavy fights with unidentified pirate ships!"
+            },
+            "sys_expe_attack_2_1_1": {
+                "outcome": "battle_aliens",
+                "text": "Your expedition fleet had an uninteresting first contact with new aliens."
+            },
+            "sys_expe_attack_2_1_2": {
+                "outcome": "battle_aliens",
+                "text": "Some strange ships have attacked the expedition fleet without early warning!"
+            },
+            "sys_expe_attack_2_1_3": {
+                "outcome": "battle_aliens",
+                "text": "Our expedition was attacked by a small group of unknown ships!"
+            },
+            "sys_expe_attack_2_1_4": {
+                "outcome": "battle_aliens",
+                "text": "The expedition fleet reports contact with unknown ships. The radio messages are not able to be decoded, however, the strange ships seem to activate their weapons."
+            },
+            "sys_expe_attack_2_2_1": {
+                "outcome": "battle_aliens",
+                "text": "An unknown specie attacks our expedition!"
+            },
+            "sys_expe_attack_2_2_2": {
+                "outcome": "battle_aliens",
+                "text": "Your expedition fleet has apparently violated the territory of a previously unknown but highly aggressive alien race."
+            },
+            "sys_expe_attack_2_2_3": {
+                "outcome": "battle_aliens",
+                "text": "The connection with our expedition fleet was disconnected abruptly. The last what we heard of the fleet was that it was taking heavy fire - the aggressors could not be identified."
+            },
+            "sys_expe_attack_2_3_1": {
+                "outcome": "battle_aliens",
+                "text": "Your expedition has come across an alien invasion fleet and reports massive battles!"
+            },
+            "sys_expe_attack_2_3_2": {
+                "outcome": "battle_aliens",
+                "text": "A large group of crystalline ships of unknown origin is on a direct collision course with our expedition fleet. We must prepare ourself for the worst."
+            }
+        },
+        "classHeads": {
+            "0": "Buildings",
+            "100": "Research",
+            "200": "Ships",
+            "400": "Planetary Defense",
+            "500": "Missiles",
+            "900": "Ressources"
+        },
+        "shortNames": {
+            "202": "Light Cargo",
+            "203": "Heavy Cargo",
+            "204": "Light Fighter",
+            "205": "Heavy Fighter",
+            "206": "Cruiser",
+            "207": "Battleship",
+            "208": "Colony Ship",
+            "209": "Recycler",
+            "210": "Spy Probe",
+            "211": "Planet Bomber",
+            "212": "Solar Satellite",
+            "213": "Star Fighter",
+            "214": "Battle Fortress",
+            "215": "Battle Cruiser",
+            "216": "Black Moon",
+            "217": "Battle Transporter",
+            "218": "Avatar",
+            "219": "Battle Recycler",
+            "220": "Dark Matter Collector",
+            "401": "Missile Launcher",
+            "402": "Light Laser Turret",
+            "403": "Heavy Laser Turret",
+            "404": "Gauss Cannon",
+            "405": "Ion Cannon",
+            "406": "Plasma Cannon",
+            "407": "Small Shield Dome",
+            "408": "Large Shield Dome",
+            "409": "Atmospheric Shield",
+            "410": "Gravitons Cannon",
+            "411": "Orbital Defence Platform"
+        }
+    },
+    "ru": {
+        "mg_type": {
+            "0": "Шпионаж",
+            "1": "Игроки",
+            "2": "Альянс",
+            "3": "Битвы",
+            "4": "Системные",
+            "5": "Транспорт",
+            "15": "Экспедиция",
+            "50": "Новости",
+            "99": "Постройки",
+            "100": "Все",
+            "999": "Исходящие"
+        },
+        "months": [
+            "Янв",
+            "Фев",
+            "Мар",
+            "Апр",
+            "Май",
+            "Июн",
+            "Июл",
+            "Авг",
+            "Сен",
+            "Окт",
+            "Ноя",
+            "Дек"
+        ],
+        "strings": {
+            "sys_mess_tower": "Командование флотом",
+            "sys_mess_qg": "Постройки",
+            "sys_mess_spy_report": "Шпионский доклад",
+            "sys_mess_spy_control": "Наблюдение",
+            "sys_mess_spy_activity": "Шпионаж",
+            "sys_mess_attack_report": "Боевой доклад",
+            "sys_irak_subject": "Ракетная атака",
+            "sys_mess_transport": "Транспортировка",
+            "sys_recy_report": "Доклад переработчиков",
+            "sys_stat_mess_stay": "Удерживающийся флот",
+            "sys_mess_fleetback": "Возвращение флота",
+            "sys_expe_report": "Доклад экспедиции",
+            "sys_colo_mess_from": "Колонизация",
+            "sys_colo_mess_report": "Доклад поселенцев",
+            "sys_buildlist": "Список строительства",
+            "sys_techlist": "Список исследований",
+            "sys_buildlist_fail": "Строительство невозможно",
+            "sys_mess_head": "Сканирование %s [%d:%d:%d] от %s",
+            "sys_mess_spy_lostproba": "Шанс на защиту от шпионажа: %d %% ",
+            "sys_mess_spy_destroyed": "<font color=\"red\">Ваши шпионские зонды были уничтожены.</font>",
+            "sys_mess_spy_ennemyfleet": "Чужой флот с планеты",
+            "sys_mess_spy_seen_at": "был обнаружен вблизи от планеты",
+            "sys_mess_spy_report_moon": "(Луна)",
+            "sys_tran_mess_owner": "Ваш флот достиг %s %s и доставил груз: %s %s, %s %s и %s %s.",
+            "sys_tran_mess_user": "Мирный флот из %s %s достиг %s %s и доставил груз: %s %s, %s %s и %s %s.",
+            "sys_tran_mess_back": "Флот вернулся на планету %s %s. На борту флота нет ресурсов.",
+            "sys_recy_gotten": "Ваш флот достиг обозначенных координат и переработал %s %s и %s %s.",
+            "sys_stat_mess": "Ваш флот достиг планеты %s и доставил груз: %s %s, %s %s и %s %s.",
+            "sys_fleet_won": "Один из ваших флотов вернулся с планеты %s %s и доставил %s %s, %s %s и %s %s",
+            "sys_expe_back_home": "Ваш флот вернулся из экспедиции.<br>Флот доставил груз: %s %s, %s %s, %s %s и %s %s.",
+            "sys_expe_back_home_without_dm": "Ваш флот вернулся из экспедиции ни с чем.",
+            "sys_expe_back_home_with_dm": "Ваш флот вернулся из экспедиции.<br>Найдено %s (%s), но корабли были сильно повреждены и их пришлось покинуть.<br>%s была доставлена на планету в аварийных капсулах.",
+            "sys_expe_found_ships_nothing": "Ни один корабль не подлежит ремонту.",
+            "sys_expe_attackname_1": "Пираты",
+            "sys_expe_attackname_2": "Инопланетяне",
+            "sys_colo_allisok": "Один из Ваших флотов достигает координат %s. Поселенцы начинают осваивать новую планету.",
+            "sys_colo_badpos": "Один из Ваших флотов достигает координат %s. Поселенцы нашли окружающую среду благоприятную для расширения империи. Они решили полностью преобразить планету.",
+            "sys_colo_notfree": "Один из Ваших флотов достигает координат %s. Поселенцы не нашли планету пригодную для жизни. Огорчённые, они вынуждены возвратиться домой.",
+            "sys_colo_maxcolo": "Один из Ваших флотов достигает координат %s. Но не может колонизировать планету. Максимальное количество планет: ",
+            "sys_colo_notech": "Один из Ваших флотов достигает координат %s. Когда поселенцы приблизились к планете, они обнаружили, что их оборудование не подходит для преобладающих климатических условий. Необходимо сильнее развивать технологии. Разочарованные, поселенцы возвращаются домой.",
+            "sys_irak_mess": "Межпланетные ракеты (%d) из %s упали на планету %s<br><br>",
+            "sys_irak_def": "%d межпланетных ракет были сбиты Вашими ракетами-перехватчиками.",
+            "sys_irak_no_def": "У планеты нет обороны",
+            "sys_irak_no_att": "Все Ваши межпланетные ракеты были сбиты ракетами-перехватчиками.",
+            "sys_attack_title": "Произошёл бой между следующими флотами:",
+            "sys_destruc_title": "Cледующие флоты участвовали в уничтожении луны:",
+            "sys_attack_attacker_pos": "Атакующий",
+            "sys_attack_defender_pos": "Обороняющийся",
+            "sys_ship_type": "Тип",
+            "sys_ship_count": "Количество",
+            "sys_ship_weapon": "Вооружение",
+            "sys_ship_shield": "Щиты",
+            "sys_ship_armour": "Броня",
+            "sys_destroyed": "Уничтожен",
+            "sys_attacker_won": "Атакующий выиграл битву.",
+            "sys_defender_won": "Обороняющийся выиграл битву.",
+            "sys_both_won": "Битва окончилась вничью",
+            "sys_stealed_ressources": "Атакующий получил",
+            "sys_and": "и",
+            "sys_attacker_lostunits": "Атакующий потерял",
+            "sys_defender_lostunits": "Обороняющийся потерял",
+            "sys_units": "",
+            "debree_field_1": "Теперь на этих пространственных координатах находится",
+            "debree_field_2": "",
+            "sys_moonproba": "Вероятность появления луны из обломков составила",
+            "sys_moonbuilt": "Огромные массы металла и кристаллов сталкиваются и образуют спутник на орбите планеты %s [%d:%d:%d].",
+            "fleet_attack_1": "Атакующий флот делает выстрелы общей мощностью",
+            "fleet_attack_2": "по обороняющемуся. Щиты обороняющегося поглощают",
+            "fleet_defs_1": "Обороняющийся флот делает выстрелы общей мощностью",
+            "fleet_defs_2": "по атакующему. Щиты атакующего поглощают",
+            "damage": "мощности выстрелов.",
+            "sys_raport_not_found": "Неверный ID боевого доклада",
+            "sys_raport_lost_contact": "Контакт с атакующим флотом потерян. Это означает, что он был уничтожен в первом раунде боя.",
+            "sys_lost": "Потери",
+            "sys_gain": "Добыча",
+            "sys_debris": "Поле обломков",
+            "type_planet_short_1": "П",
+            "type_planet_short_2": "ПО",
+            "type_planet_short_3": "Л",
+            "type_mission_1": "Атака",
+            "fl_simulate": "Симулировать",
+            "php_tdformat": "d. M Y, H:i:s"
+        },
+        "expedition": {
+            "sys_expe_blackholl_1": {
+                "outcome": "fleet_lost",
+                "text": "Часть Вашего флота засосало в чёрную дыру."
+            },
+            "sys_expe_blackholl_2": {
+                "outcome": "fleet_lost",
+                "text": "Ваш флот полностью засосало в чёрную дыру."
+            },
+            "sys_expe_found_ships": {
+                "outcome": "ships",
+                "text": "Ваша экспедиция обнаружила несколько кораблей в отличном состоянии..<br>К флоту присоединились: "
+            },
+            "sys_expe_found_ress_1_1": {
+                "outcome": "resources",
+                "text": "Ваша экспедиция нашла маленькое скопление астероидов, из которого можно добыть некоторые ресурсы."
+            },
+            "sys_expe_found_ress_1_2": {
+                "outcome": "resources",
+                "text": "На отдалённом астероиде было найдено некоторое количество ресурсов. Ресурсы подняты на борт."
+            },
+            "sys_expe_found_ress_1_3": {
+                "outcome": "resources",
+                "text": "Ваша экспедиция наталкнулась на очень старые обломки космических кораблей давно произошедшей битвы. Можно подобрать отдельные компоненты для повторного использования."
+            },
+            "sys_expe_found_ress_1_4": {
+                "outcome": "resources",
+                "text": "Экспедиция натолкнулась на астероид, заражённый радиоактивными веществами. Тем не менее, сканирование показало, что этот астероид богат сырьём. Использование беспилотных кораблей дало возможность загрузить на борт ресурсы."
+            },
+            "sys_expe_found_ress_2_1": {
+                "outcome": "resources",
+                "text": "Ваша экспедиция нашла древнее, полностью нагруженное грузовое судно, но без экипажа на борту. Ресурсы были перегружены в хранилища Ваших кораблей."
+            },
+            "sys_expe_found_ress_2_2": {
+                "outcome": "resources",
+                "text": "На небольшой луне с собственной атмосферой Ваша экспедиция нашла большое количество сырья. Наземные экипажи собрали эти природные богатства и переправили на борт."
+            },
+            "sys_expe_found_ress_2_3": {
+                "outcome": "resources",
+                "text": "Мы встретили небольшой конвой гражданских кораблей, которые остро нуждались в продовольствии и медикаментах. В обмен на это мы получили огромное количество ресурсов."
+            },
+            "sys_expe_found_ress_3_1": {
+                "outcome": "resources",
+                "text": "Ваша экспедиция сообщает об огромных обломках кораблей чужих. Учёные не смогли разобраться с их технологией, но некоторые составные части кораблей, которые могли быть использованы в качестве сырья, были погружены на борт."
+            },
+            "sys_expe_found_ress_3_2": {
+                "outcome": "resources",
+                "text": "Минеральный пояс вокруг неизвестной планеты содержит большое количество сырья. Экспедиция сообщает о полной загрузке трюмов."
+            },
+            "sys_expe_found_dm_1_1": {
+                "outcome": "darkmatter",
+                "text": "Экспедиции удалось поймать и законсервировать немного Тёмной материи."
+            },
+            "sys_expe_found_dm_1_2": {
+                "outcome": "darkmatter",
+                "text": "Ваша экспедиция обнаружила корабль-призрак, который перевозил небольшое количество Тёмной материи. Мы не смогли найти доказательство того, что произошло с его экипажем, однако, наши специалисты смогли переправить Тёмная материя с корабля-призрака на борт экспедиции."
+            },
+            "sys_expe_found_dm_1_3": {
+                "outcome": "darkmatter",
+                "text": "Мы наталкнулись на маленький корабль передставителя инопланетной расы, который в обмен на несколько простых математических расчётов предоставил нам небольшой контейнер с Тёмной материей."
+            },
+            "sys_expe_found_dm_1_4": {
+                "outcome": "darkmatter",
+                "text": "Мы нашли остатки корабля чужих. На борту был небольшой контейнер с Тёмной материей."
+            },
+            "sys_expe_found_dm_1_5": {
+                "outcome": "darkmatter",
+                "text": "Экспедиция следовала за какими-то странными сигналами и обнаружила маленьких размеров астероид, в ядре которого находились Тёмная материя. Астероид был доставлен на борт и учёные извлекли из него Тёмная материя."
+            },
+            "sys_expe_found_dm_2_1": {
+                "outcome": "darkmatter",
+                "text": "Нашей экспедиции удался уникальный эксперимент. Из затухающей звезды им удалось добыть Тёмную материю."
+            },
+            "sys_expe_found_dm_2_2": {
+                "outcome": "darkmatter",
+                "text": "Ваша экспедиция сообщает о странном спектральном явлении. Это привело к образованию Тёмной материи на энергетических щитах кораблей. Наши специалисты пытаются законсервировать как можно больше Тёмной материи, пока это явление не исчезло."
+            },
+            "sys_expe_found_dm_2_3": {
+                "outcome": "darkmatter",
+                "text": "Ваша экспедиция нашла древнюю космическую станцию, которая уже давно бесконтрольно парит в космосе. Сама станция была полностью бесполезна, однако, в одном из ее реакторов находилось небольшое количество Тёмной материи. Наши инженеры пытаются законсервировать как можно больше Тёмной материи."
+            },
+            "sys_expe_found_dm_3_1": {
+                "outcome": "darkmatter",
+                "text": "Спонтанное искажение пространства позволило Вашей экспедици заполучить некоторое количество Тёмной материи."
+            },
+            "sys_expe_found_dm_3_2": {
+                "outcome": "darkmatter",
+                "text": "Ваша экспедиция сообщает о первом контакте с представителем особого вида. По-видимому, это энергетическое существо, которое называло себя легорианец. Существо решило помочь пролетавшим мимо кораблям слаборазвитой цивилизации – контейнер с темной материей материализовался на борту одного из кораблей."
+            },
+            "sys_expe_found_ships_1_1": {
+                "outcome": "ships",
+                "text": "Мы натолкнулись на остатки предыдущей экспедиции. Наши техники пытаются найти среди обломков что-то летающее."
+            },
+            "sys_expe_found_ships_1_2": {
+                "outcome": "ships",
+                "text": "Мы нашли покинутую пиратскую базу. В ангаре находятся несколько старых кораблей. Наши инженеры пытаются найти корабли, которые ещё пригодны для полётов."
+            },
+            "sys_expe_found_ships_1_3": {
+                "outcome": "ships",
+                "text": "Наша экспедиция нашла планету, которая была почти полностью разрушена длительными войнами. На орбите находились различные корабельные обломки. Инженеры пытаются отремонтировать некоторые из них. Вероятно, мы сможем получить информацию о том, что здесь произошло."
+            },
+            "sys_expe_found_ships_1_4": {
+                "outcome": "ships",
+                "text": "Ваша экспедиция обнаружила старинную космическую крепость, которую покинули как будто бы целую вечность назад. В ангаре крепости было найдено несколько кораблей. Специалисты пытаются найти корабли, которые ещё пригодны для полётов. "
+            },
+            "sys_expe_found_ships_2_1": {
+                "outcome": "ships",
+                "text": "Мы нашли остатки армады Специалисты нашли несколько исправных кораблей и пытаются отремонтировать их."
+            },
+            "sys_expe_found_ships_2_2": {
+                "outcome": "ships",
+                "text": "Ваша экспедиция натолкнулась на старую автоматическую верфь. Несколько кораблей всё ещё находятся в стадии производства. Наши специалисты пытаются восстановить энергоснабжение верфи."
+            },
+            "sys_expe_found_ships_3_1": {
+                "outcome": "ships",
+                "text": "Мы нашли огромное кладбаще космических кораблей. Инженерам удалось вернуть к работе несколько кораблей."
+            },
+            "sys_expe_found_ships_3_2": {
+                "outcome": "ships",
+                "text": "Мы обнаружили планету с останками цивилизации. Единственным не разрушенных зданием является космическая станция на орбите планеты. Некоторые из наших инженеров и пилотов отправились туда, чтобы посмотреть, есть ли пригодные для полётов корабли."
+            },
+            "sys_expe_lost_fleet_1": {
+                "outcome": "fleet_lost",
+                "text": "от экспедиции осталась только следующая радиограмма: О Боже!... оно... похоже на..."
+            },
+            "sys_expe_lost_fleet_2": {
+                "outcome": "fleet_lost",
+                "text": "Последним, что было послано экспедицией, были несколько, отлично получившихся, снимков крупным планом раскрывающейся черной дыры."
+            },
+            "sys_expe_lost_fleet_3": {
+                "outcome": "fleet_lost",
+                "text": "Поломка ядерного реактора привела к цепной реакции, которая повлекла за собой невероятный взрыв, уничтоживший всю экспедицию."
+            },
+            "sys_expe_lost_fleet_4": {
+                "outcome": "fleet_lost",
+                "text": "Экспедиционный флот не возвратился после гиперскачка. Учёные всё ещё гадают, что могло произойти, однако, флот потерян навсегда."
+            },
+            "sys_expe_time_fast_1": {
+                "outcome": "speedup",
+                "text": "Непредвиденное обратное сцепление в энергетических приводах ускорило обратный скачок экспедиции, так что она теперь возвратится раньше, чем ожидалось. Согласно первым сообщениям, за время экспедиции не произошло ничего интересного."
+            },
+            "sys_expe_time_fast_2": {
+                "outcome": "speedup",
+                "text": "Очень смелый новый командир использовал нестабильный вихревой поток, чтобы уменьшить время обратного полёта – успешно. Однако, сама экспедиция не принесла ничего нового."
+            },
+            "sys_expe_time_fast_3": {
+                "outcome": "speedup",
+                "text": "Ваша экспедиция сообщила об отсутствии особенностей в исследованном секторе. Однако, флот при обратном скачке попал под солнечный ветер. Вследствие этого скачок несколько ускорился. Теперь экспедиция вернётся домой несколько раньше."
+            },
+            "sys_expe_time_slow_1": {
+                "outcome": "delay",
+                "text": "Халтурно собранный навигатор неправильно произвёл расчёты для прыжка, и поэтому флот не только приземлился в абсолютно другом месте, но и обратная дорога заняла невероятно много времени."
+            },
+            "sys_expe_time_slow_2": {
+                "outcome": "delay",
+                "text": "По неизвестным причинам скачок экспедиции был произведён неправильно. Экспедиция чуть было не вышла из скачка в центре солнца. К счастью этого не произошло и мы оказались в неизвестной системе. Обратный путь займёт больше времени, чем предполагалось изначально."
+            },
+            "sys_expe_time_slow_3": {
+                "outcome": "delay",
+                "text": "Новый модуль навигации работает, но всё ещё с некоторыми ошибками. Не только скачок был произведён в неправильном направлении, но и израсходовался весь запас топлива. Экспедиции пришлось возвращаться на импульсе. Возвращение займёт достаточно много времени."
+            },
+            "sys_expe_time_slow_4": {
+                "outcome": "delay",
+                "text": "Ваша экспедиция попала в сектор с сильным штормом частиц. Вследствие этого все основные системы вышли из строя. Инженеры смогли предотвратить наихудшее, однако, экспедиция вернётся с некоторым опозданием."
+            },
+            "sys_expe_time_slow_5": {
+                "outcome": "delay",
+                "text": "Флагманский корабль Вашей экспедиции столкнулся с неизвестным судном, которое нарвалось на него без предупреждения. Неизвестное судно взорвалось, нанеся флагману существенные повреждения. В этом состоянии движение невозможно. Как только поверхностный ремонт будет завершён, Ваши корабли начнут возвращаться домой."
+            },
+            "sys_expe_time_slow_6": {
+                "outcome": "delay",
+                "text": "Космический ветер красного гиганта сфальсифицировали скачок экспедиции так, что потребовалось некоторое время для расчета возврата. Кроме того, в секторе, в которой появилась экспедиция, не было ничего, не считая пустоты между звездами."
+            },
+            "sys_expe_nothing_1": {
+                "outcome": "nothing",
+                "text": "Экспедиция не принесла ничего особого, кроме какой-то странной зверушки с неизвестной болотной планеты."
+            },
+            "sys_expe_nothing_2": {
+                "outcome": "nothing",
+                "text": "Ваша экспедиция сделала красивые снимки сверхновой звезды. Тем не менее, экспедиция не принесла никаких новых сведений. Но есть хорошая возможность победить в конкурсе лучшего снимка вселенной в этом году."
+            },
+            "sys_expe_nothing_3": {
+                "outcome": "nothing",
+                "text": "Вскоре, после выхода из Солнечной системы, странный компьютерный вирус парализовал систему навигации. Это привело к тому, что экспедиционные корабли всё время летали по кругу. Излишне говорить, что экспедиция была не особо успешна."
+            },
+            "sys_expe_nothing_4": {
+                "outcome": "nothing",
+                "text": "Форма жизни из чистой энергии позаботилась о том, чтобы все члены экспедиционной команды целыми днями пристально смотрели на гипнотические образы на экранах. Когда, наконец, у большинства прояснилось в голове, экспедиция должна была прекратиться из-за острой нехватки дейтерия."
+            },
+            "sys_expe_nothing_5": {
+                "outcome": "nothing",
+                "text": "Ну, по крайней мере, теперь мы знаем, что красные аномалии пятого класса могут вызвать не только непредсказуемые воздействия на корабельные системы, но и массовые галлюцинации у экипажа. Однако, больше ничего эта экспедиция не принесла."
+            },
+            "sys_expe_nothing_6": {
+                "outcome": "nothing",
+                "text": "Не смотря на первые, многообещающие сканирования этого сектора экспедиция, к сожалению, возвращается с пустыми руками."
+            },
+            "sys_expe_nothing_7": {
+                "outcome": "nothing",
+                "text": "Вероятно, не нужно было праздновать день рождения капитана на этой отдаленной планете. Противная желтая лихорадка заставила большинство экипажа провести всю экспедицию в лазарете. Острая нехватка персонала привела к тому, что экспедиция потерпела неудачу."
+            },
+            "sys_expe_nothing_8": {
+                "outcome": "nothing",
+                "text": "Ваша экспедиция, в буквальном смысле, познакомилась с пустотой вселенной. Не было ни маленьких астероидов, ни излучения, ни частиц, ничего, что заинтересовало бы экспедицию."
+            },
+            "sys_expe_nothing_9": {
+                "outcome": "nothing",
+                "text": "Ошибка руководства, ответственного за реактор корабля чуть было не уничтожила всю экспедицию. К счастью, инженеры смогли предотвратить наихудшее. Тем не менее, ремонт реактора занял очень много времени, поэтому экспедиция вернулась с пустыми руками."
+            },
+            "sys_expe_attack_1_1_1": {
+                "outcome": "battle_pirates",
+                "text": "Пара отчаянных космических пиратов попыталась захватить наш флот."
+            },
+            "sys_expe_attack_1_1_2": {
+                "outcome": "battle_pirates",
+                "text": "Несколько примитивных варваров атаковали нас космическими кораблями, которые даже космическими кораблями назвать нельзя. Если обстрел примет серьёзный оборот, мы вынуждены будем ответить на огонь."
+            },
+            "sys_expe_attack_1_1_3": {
+                "outcome": "battle_pirates",
+                "text": "Мы перехватили несколько радиограмм очень пьяных пиратов. По-видимому, на нас должны напасть."
+            },
+            "sys_expe_attack_1_1_4": {
+                "outcome": "battle_pirates",
+                "text": "Мы должны были защищаться от нескольких пиратов, которых, к счастью, было не слишком много."
+            },
+            "sys_expe_attack_1_1_5": {
+                "outcome": "battle_pirates",
+                "text": "Ваши экспедиционные корабли сообщают, что некий Тикар Моа и его дикая свора требуют безусловный капитуляции Ваших флотов. Если они не шутят, они должны понимать, что все корабли прекрасно могут защищаться."
+            },
+            "sys_expe_attack_1_2_1": {
+                "outcome": "battle_pirates",
+                "text": "У Вашей экспедиции произошла неприятная встреча с космическими пиратами."
+            },
+            "sys_expe_attack_1_2_2": {
+                "outcome": "battle_pirates",
+                "text": "Мы попали в засаду нескольких космических пиратов. Бой, к сожалению, был неизбежен."
+            },
+            "sys_expe_attack_1_2_3": {
+                "outcome": "battle_pirates",
+                "text": "Крик о помощи, за которым следовала экспедиция, оказался ловушкой нескольких озлобленных космических пиратов. Бой был неизбежен."
+            },
+            "sys_expe_attack_1_3_1": {
+                "outcome": "battle_pirates",
+                "text": "Пойманные сигналы исходили не от инопланетной расы, а от секретной пиратской базы. Они были не в особом восторге от нашего появления."
+            },
+            "sys_expe_attack_1_3_2": {
+                "outcome": "battle_pirates",
+                "text": "Экспедиция сообщает о тяжёлых боях с неопознанными пиратскими кораблями."
+            },
+            "sys_expe_attack_2_1_1": {
+                "outcome": "battle_aliens",
+                "text": "Ваш экспедиционный флот испытал не особо дружественный первый контакт с неизвестной расой."
+            },
+            "sys_expe_attack_2_1_2": {
+                "outcome": "battle_aliens",
+                "text": "Несколько необычных с виду кораблей атаковали экспедицию без предупреждения."
+            },
+            "sys_expe_attack_2_1_3": {
+                "outcome": "battle_aliens",
+                "text": "Ваша экспедиция была атакована небольшой группой неизвестных кораблей."
+            },
+            "sys_expe_attack_2_1_4": {
+                "outcome": "battle_aliens",
+                "text": "Экспедиция сообщила о контакте с неизвестными кораблями. Радиограммы не расшифровываются, однако, чужие корабли, кажется, активируют своё оружие."
+            },
+            "sys_expe_attack_2_2_1": {
+                "outcome": "battle_aliens",
+                "text": "Неизвестные существа напали на Вашу экспедицию."
+            },
+            "sys_expe_attack_2_2_2": {
+                "outcome": "battle_aliens",
+                "text": "Ваша экспедиция пересекла космическую границу до сих пор неизвестной, но весьма агрессивной и воинственной инопланетной расы."
+            },
+            "sys_expe_attack_2_2_3": {
+                "outcome": "battle_aliens",
+                "text": "В скором времени связь с экспедицией была нарушена. Если мы правильно расшифровали последнее сообщение, флот находился под шквальным огнём - агрессоры не были идентифицированы."
+            },
+            "sys_expe_attack_2_3_1": {
+                "outcome": "battle_aliens",
+                "text": "Ваша экспедиция подверглась атаке чужих. Развязался ожесточённый бой."
+            },
+            "sys_expe_attack_2_3_2": {
+                "outcome": "battle_aliens",
+                "text": "Большое объединение кристаллических судов держит курс на Вашу экспедицию. Мы должны предполагать наихудшее."
+            }
+        },
+        "classHeads": {
+            "0": "Постройки",
+            "100": "Исследования",
+            "200": "Флот",
+            "400": "Оборона",
+            "500": "Ракеты",
+            "900": "Ресурсы"
+        },
+        "shortNames": {
+            "202": "М. трансп.",
+            "203": "Б. трансп.",
+            "204": "Л. истр.",
+            "205": "Т. истр.",
+            "206": "Крейсер",
+            "207": "Линкор",
+            "208": "Колонизатор",
+            "209": "Переработчик",
+            "210": "Шп. зонд",
+            "211": "Бомб.",
+            "212": "Солн. спутник",
+            "213": "Уничт.",
+            "214": "ЗС",
+            "215": "Лин. Кр.",
+            "216": "Сверхн. звезда",
+            "217": "Ул. трансп.",
+            "218": "Аватар",
+            "219": "Мега перераб.",
+            "220": "Сборщик ТМ",
+            "401": "РУ",
+            "402": "Лёг. лазер",
+            "403": "Тяж. лазер",
+            "404": "Гаусс",
+            "405": "Ион",
+            "406": "Плазма",
+            "407": "М. купол",
+            "408": "Б. купол",
+            "409": "П. купол",
+            "410": "Гравитонка",
+            "411": "Орб. база"
+        }
+    }
+}

@@ -1,0 +1,294 @@
+{
+ "name": "botfarm-build",
+ "seed": 1,
+ "gamespeed": 40,
+ "haltSpeed": 1,
+ "startUnix": 1793347417,
+ "tzOffsetSec": 7200,
+ "universe": {
+  "galaxies": 9,
+  "systems": 499,
+  "maxPlanets": 15,
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 0,
+  "resourceMultiplier": 22000,
+  "storageMultiplier": 5,
+  "maxDmMissions": 5,
+  "moonFactor": 1,
+  "moonChance": 20,
+  "topPoints": 1000000,
+  "galaxyDeuteriumCost": 10,
+  "unitTimeSec": 1
+ },
+ "player": {
+  "name": "vodoleyko1992",
+  "id": 4377,
+  "research": {
+   "106": 12,
+   "108": 12,
+   "109": 10,
+   "110": 14,
+   "111": 10,
+   "113": 12,
+   "114": 10,
+   "115": 12,
+   "117": 15,
+   "118": 8,
+   "120": 12,
+   "121": 7,
+   "122": 5,
+   "124": 9
+  },
+  "officers": {},
+  "darkMatter": 3981,
+  "vacation": false,
+  "spyMessagesMode": 0,
+  "maxPlanets": 6,
+  "rank": 194,
+  "points": 5000000,
+  "spyProbes": 3
+ },
+ "bodies": [
+  {
+   "id": 254102,
+   "type": "planet",
+   "name": "Главная планета",
+   "coords": "2:68:5",
+   "tempMax": 72,
+   "fieldsMax": 405,
+   "res": {
+    "metal": 50000000,
+    "crystal": 30000000,
+    "deuterium": 20000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 14,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {
+    "203": 5,
+    "210": 20,
+    "217": 1
+   },
+   "defense": {
+    "401": 100,
+    "402": 50,
+    "502": 10,
+    "503": 5
+   },
+   "image": "dschjungelplanet07"
+  },
+  {
+   "id": 254103,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:6",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 5000000,
+    "crystal": 3000000,
+    "deuterium": 1000000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {},
+   "image": "dschjungelplanet10"
+  },
+  {
+   "id": 254104,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:7",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 4000000,
+    "crystal": 2000000,
+    "deuterium": 900000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {}
+  },
+  {
+   "id": 254105,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:68:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 3000000,
+    "crystal": 1000000,
+    "deuterium": 800000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {}
+  },
+  {
+   "id": 254106,
+   "type": "planet",
+   "name": "Colony",
+   "coords": "2:70:8",
+   "tempMax": 40,
+   "fieldsMax": 300,
+   "res": {
+    "metal": 1000000,
+    "crystal": 500000,
+    "deuterium": 200000
+   },
+   "levels": {
+    "1": 30,
+    "2": 27,
+    "3": 25,
+    "4": 28,
+    "14": 10,
+    "15": 3,
+    "21": 12,
+    "22": 10,
+    "23": 9,
+    "24": 8,
+    "31": 12
+   },
+   "ships": {},
+   "defense": {}
+  }
+ ],
+ "others": [
+  {
+   "id": 3900,
+   "name": "EmptyInactive",
+   "status": "i",
+   "rank": 800,
+   "points": 53900,
+   "research": {
+    "106": 3,
+    "109": 3,
+    "110": 3,
+    "111": 3
+   },
+   "planets": [
+    {
+     "id": 302000,
+     "coords": "2:68:10",
+     "name": "Planet",
+     "res": {
+      "metal": 100000000,
+      "crystal": 60000000,
+      "deuterium": 20000000
+     },
+     "ships": {},
+     "defense": {},
+     "levels": {
+      "22": 9,
+      "23": 8,
+      "24": 7
+     },
+     "perHour": {
+      "metal": 100,
+      "crystal": 50,
+      "deuterium": 10
+     }
+    }
+   ]
+  },
+  {
+   "id": 3843,
+   "name": "Jon Snow",
+   "status": "",
+   "rank": 1,
+   "points": 1834221,
+   "protection": null,
+   "research": {
+    "106": 14,
+    "109": 14,
+    "110": 14,
+    "111": 14
+   },
+   "allyId": 12,
+   "allyName": "Nova Collective",
+   "allyTag": "NOVA",
+   "planets": [
+    {
+     "id": 301160,
+     "coords": "2:69:4",
+     "name": "Winterfell",
+     "res": {
+      "metal": 800000,
+      "crystal": 400000,
+      "deuterium": 100000
+     },
+     "ships": {
+      "204": 500,
+      "205": 100
+     },
+     "defense": {
+      "401": 500,
+      "402": 200
+     },
+     "lastActivity": 5,
+     "moon": {
+      "id": 301161,
+      "name": "Moon",
+      "diameter": 8944
+     }
+    }
+   ]
+  }
+ ],
+ "debris": [],
+ "flights": [],
+ "hostile": [],
+ "messages": [],
+ "script": [],
+ "combat": "sim",
+ "expeditionOutcomes": [],
+ "description": "botfarm buildShips: gamespeed 40, unit time 1 s; the empty inactive at 2:68:10 needs ~12 large cargos, home 254102 has 5 (+20 probes)."
+}

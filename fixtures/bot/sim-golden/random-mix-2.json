@@ -1,0 +1,172 @@
+{
+ "name": "random-mix-2",
+ "seed": 102,
+ "input": {
+  "attackers": [
+   {
+    "units": {
+     "215": 360
+    },
+    "tech": {
+     "weapons": 5,
+     "shielding": 5,
+     "armour": 11
+    }
+   }
+  ],
+  "defenders": [
+   {
+    "units": {
+     "213": 228
+    },
+    "tech": {
+     "weapons": 3,
+     "shielding": 5,
+     "armour": 15
+    }
+   }
+  ],
+  "planet": {
+   "metal": 9567138,
+   "crystal": 7111396,
+   "deuterium": 7110954
+  },
+  "fleetDebrisPct": 30,
+  "defDebrisPct": 30,
+  "keepOrder": false
+ },
+ "numbers": [
+  107,
+  95,
+  113,
+  134,
+  111,
+  106,
+  87,
+  154,
+  114,
+  97,
+  111,
+  68,
+  91,
+  119,
+  145,
+  154,
+  92,
+  93
+ ],
+ "ranges": [
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   80,
+   120
+  ],
+  [
+   80,
+   120
+  ]
+ ],
+ "expected": {
+  "won": "r",
+  "rounds": 5,
+  "attackers": [
+   [
+    [
+     215,
+     0
+    ]
+   ]
+  ],
+  "defenders": [
+   [
+    [
+     213,
+     210
+    ]
+   ]
+  ],
+  "debris": {
+   "attacker": {
+    "metal": 3240000,
+    "crystal": 4320000
+   },
+   "defender": {
+    "metal": 324000,
+    "crystal": 270000
+   }
+  },
+  "unitLost": {
+   "attacker": 25200000,
+   "defender": 1980000
+  },
+  "steal": {
+   "metal": 0,
+   "crystal": 0,
+   "deuterium": 0
+  },
+  "used": 18
+ }
+}

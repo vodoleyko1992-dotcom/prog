@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<!-- REAL PAGE: byte-for-byte copy of eu/pages/techtree.html saved from ogamex.eu/Aeternum (GALAXYZ 1.8.git) on 2026-10-30, only this comment added. Assets (./N_files/*) are not included. -->
+<!-- saved from url=(0049)https://ogamex.eu/Aeternum/game.php?page=techtree -->
+<html lang="en" class="no-js"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Technologies - Aeternum (New) - Aeterum (New)</title>
+    <meta name="generator" content="GALAXYZ 1.8.git">
+    <!-- 
+
+	-->
+        
+
+
+    <link rel="stylesheet" type="text/css" href="./12_files/boilerplate.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/main.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/jquery.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/jquery.fancybox.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/validationEngine.jquery.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/marquee.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/new_tooltip.css">
+    <link rel="stylesheet" href="./12_files/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/formate_cleaned_safe.css">
+    <link rel="stylesheet" type="text/css" href="./12_files/notify-metro.css">
+    <link rel="shortcut icon" href="https://ogamex.eu/Aeternum/favicon.ico" type="image/x-icon">
+    <script type="text/javascript">
+        var ServerTimezoneOffset = 0;
+        var serverTime 	= new Date(2026, 9, 30, 10, 06, 18);
+        var startTime = serverTime.getTime();
+        var localTime = serverTime;
+        var localTS = startTime;
+        var Gamename = document.title;
+        var Ready		= "Ready";
+        var Skin		= "./styles/theme/gow/";
+        var Lang		= "en";
+        var head_info	= "Info";
+        var auth		= 0;
+        var days 		= ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] 
+        var months 		= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] ;
+        var tdformat	= "[M] [D] [d] [H]:[i]:[s]";
+        var queryString	= "page=techtree";
+
+        setInterval(function() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+        }, 1000);
+    </script>
+    <script type="text/javascript" src="./12_files/jquery.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.ui.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.cookie.js"></script>
+    <script type="text/javascript" src="./12_files/main.js"></script>
+    <script type="text/javascript" src="./12_files/util.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.fancybox.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.validationEngine.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.validationEngine-en.js">
+    </script>
+    <script type="text/javascript" src="./12_files/tooltip.js"></script>
+    <script type="text/javascript" src="./12_files/base.js"></script>
+    <script type="text/javascript" src="./12_files/new_tooltip.js"></script>
+    <script type="text/javascript" src="./12_files/jquery.countdown.js"></script>
+    <script type="text/javascript" src="./12_files/topnav.js"></script>
+    <!--<script type="text/javascript" src="./scripts/game/notify.js"></script>-->
+    <!--<script type="text/javascript" src="./scripts/game/notify-metro.js"></script>-->
+    <script src="./12_files/fleetTable.js"></script>
+    
+    
+    <script type="text/javascript">
+        $(function() {
+            
+        });
+    </script>
+    <script type="text/javascript">
+        // <![CDATA[
+        function openWindow(url, width, height, options, name) {
+            width = width ? width : 800;
+            height = height ? height : 600;
+            options = options ? options : 'resizable=yes';
+            name = name ? name : 'openWindow';
+            window.open(
+                url,
+                name,
+                'screenX=' + (screen.width - width) / 2 + ',screenY=' + (screen.height - height) / 2 + ',width=' +
+                width + ',height=' + height + ',' + options
+            )
+        }
+        // ]]>
+    </script>
+    <script type="text/javascript">
+        jQuery(function($) {
+            $('._previous').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').prev()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:last').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+
+            $('._next').click(function() {
+                var previousPlanet = $('#planetSelector option:selected').removeAttr('selected').next()
+                    .attr('selected', 'selected');
+                if (previousPlanet.length < 1) {
+                    previousPlanet = $('#planetSelector option:first').attr('selected', 'selected');
+                }
+                $('#planetSelector').trigger('change');
+            });
+        });
+    </script>
+<meta content="extension" property="gosuslugi.plugin.extension.content"></head>
+
+<body id="techtree" class="full">
+    <div id="tooltip" class="tip"></div>
+<!-- START main.topnav -->
+<div id="boxBG">
+    <div id="page">
+        <a name="anchor" id="anchor"></a>
+        <div id="info" class="header">
+            <div id="clearAdvice"></div>
+            <div id="playerName">Player: <span class="textBeefy"><a href="https://ogamex.eu/Aeternum/game.php?page=settings">vodoleyko1992</a></span></div>
+            <div id="bar">
+                <ul>
+                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=buddyList" target="_self">Friendships</a></li>                    <li><a href="javascript:OpenPopup(&#39;?page=notes&#39;, &#39;notes&#39;, 720, 300);">Notes</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=statistics&amp;range=194" target="_self">Statistics</a>
+                    </li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=search" target="_self">Search</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=settings" target="_self">Options</a></li>
+                                        <li><a href="https://ogamex.eu/Aeternum/game.php?page=battleSimulator" target="_self">Simulator</a></li>                    <li><a href="https://ogamex.eu/Aeternum/game.php?page=GiveBonus" target="_self">Voucher code</a></li>                    <li><a href="https://ogamex.eu/" target="_self">
+                            <font style="color:red;">Logout</font>
+                        </a></li>
+                </ul>
+            </div>
+            <div id="clock" class="servertime">Oct Fri 30 10:06:23</div>
+            <div id="planetSelect">
+                <table>
+                    <tbody><tr>
+                        <td id="planetImage">
+                            <img src="./12_files/s_dschjungelplanet07.gif" alt="">
+                        </td>
+                        <td id="planetSelectorWrapper">
+                            <select id="planetSelector" style="margin-bottom:0px">
+                                <option value="254102" selected="selected">Главная планета [2:68:5]</option>
+<option value="254103">Colony [2:68:6]</option>
+<option value="254104">Colony [2:68:7]</option>
+<option value="254105">Colony [2:68:8]</option>
+
+                            </select>
+                            <div style="width: 145px;float: left;margin: 0 10px;margin-bottom: 37px;">
+                                <div class="_previous" style="width: calc(50% - 2px);background: #0d1014;float: left;border: 1px solid #212121;border-top: none;cursor:pointer">
+                                    &lt;</div>
+                                <div class="_next" style="width: calc(50% - 1px);background: #0d1014;float: left;border: 1px solid #212121;border-left: none;border-top: none;cursor:pointer">
+                                    &gt;</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody></table>
+            </div>
+
+            <div id="resTable">
+                <table>
+                    <tbody><tr>
+                                                                                                                        <td>
+                                        <img data-currentname="current_Metal" data-toolclass="tool_39" src="./12_files/metal.gif" alt="" class="tooltipHTML" title="
+                                    Metal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    1.494.765.194
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    3.416.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    1.932.927.923                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Crystal" data-toolclass="tool_39" src="./12_files/crystal.gif" alt="" class="tooltipHTML" title="
+                                    Crystal:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    265.033.617
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.863.925.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    822.497.302                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                    <td>
+                                        <img data-currentname="current_Deuterium" data-toolclass="tool_39" src="./12_files/deuterium.gif" alt="" class="tooltipHTML" title="
+                                    Deuterium:|
+                                    &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;current&#39;&gt;
+                                                    368.209.777
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Storage capacity:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span class=&#39;storage&#39; &gt;
+                                                    1.016.750.000
+                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Current production:&lt;/th&gt;
+                                            &lt;td&gt;
+                                                &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                    394.585.192                                                &lt;/span&gt;
+                                            &lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                                                                                                                <td>
+                                    <img data-currentname="current_Energy" data-toolclass="tool_39" src="./12_files/energy.gif" alt="" class="tooltipHTML" title="
+                                Energy:|
+                                &lt;table class=&#39;resourceTooltip tool_39&#39;&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Available: &lt;/th&gt;
+                                        &lt;td&gt;&lt;span class=&#39;current&#39;&gt;49.544&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Current production::&lt;/th&gt;
+                                        &lt;td&gt;
+                                            &lt;span style=&#39;color:lime&#39; class=&#39;undermark production&#39;&gt;
+                                                2.502                                            &lt;/span&gt;
+                                        &lt;/td&gt;
+                                    &lt;/tr&gt;
+                                    &lt;tr&gt;
+                                        &lt;th&gt;Consumption:&lt;/th&gt;
+                                        &lt;td&gt;&lt;span style=&#39;color:red&#39; class=&#39;undermark&#39;&gt;-47.042&lt;/span&gt;&lt;/td&gt;
+                                    &lt;/tr&gt;
+                                &lt;/table&gt;
+                            ">
+                                </td>
+
+                                                                                                                                                    <td>
+                                        <img data-currentname="current_Dark Matter" data-toolclass="tool_92" src="./12_files/darkmatter.gif" alt="" class="tooltipHTML" title="
+                                    Dark Matter:|
+                                    &lt;table class=&#39;resourceTooltip tool_92&#39;&gt;
+                                        &lt;tr&gt;
+                                            &lt;th&gt;Available: &lt;/th&gt;
+                                            &lt;td&gt;&lt;span class=&#39;current&#39;&gt;606&lt;/span&gt;&lt;/td&gt;
+                                        &lt;/tr&gt;
+                                    &lt;/table&gt;
+                                ">
+                                    </td>
+                                                                                    
+                    </tr>
+
+                    <tr>
+                                                                                    <td class="res_current tooltip" id="current_metal" data-real="1494765193.6819" data-tooltip-content="1.497.449.815">1.497&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_crystal" data-real="265033617.14344" data-tooltip-content="266.175.974">266&nbsp;M</td>
+                                                                                                                <td class="res_current tooltip" id="current_deuterium" data-real="368209777.29677" data-tooltip-content="368.757.812">368&nbsp;M</td>
+                                                                                                                                                <td class="res_current tooltip Imperium tooltipRight js_hideTipOnMobile" t="2.502 / 49.544">
+                                    <span>
+                                        2.5K&nbsp;/&nbsp;49.5K
+                                    </span>
+                                </td>
+                                                                                                                <td class="res_current tooltip" id="current_darkmatter" data-real="606" data-tooltip-content="606">
+                                    606
+                                </td>
+                                                    
+                    </tr>
+                </tbody></table>
+            </div>
+
+
+            <div id="officers" class="">
+                                                                    <a href="https://ogamex.eu/Aeternum/game.php?page=vote" class="tooltipHTML   commander js_hideTipOnMobile" title="Vote notification|You can vote and get free Dark Matter">
+                        <img class="glows" src="./12_files/alert.gif" width="30" height="30">
+                    </a>
+                            </div>
+
+
+
+            <div class="messages-section">
+                                    <a href="https://ogamex.eu/Aeternum/game.php?page=messages" class="messages-button tooltipBottom js_hideTipOnMobile" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Messages  &lt;/div&gt;">
+                        <span class="new-msg-count">
+                                2
+                        </span>                    </a>
+                    <a href="https://discord.gg/wjBcjvM" class="chat-button tooltipBottom js_hideTipOnMobile" target="_blank" title="&lt;div style=&#39;font-size:11px;&#39;&gt;Join our Discord server&lt;/div&gt;">
+                    </a>
+                            </div>
+
+            
+
+</div><!-- END main.topnav -->
+<!-- START main.navigation -->
+<div id="links">
+    <ul id="menuTable">
+        <li>
+            <span class="menu_icon">
+                                    <a class="Imperium tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=imperium" title="Empire" target="_self">
+                    </a>
+                            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=overview" target="_self">
+                <span class="textlabel">Overview</span>
+            </a>
+        </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Resources tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=resources" title="Resources" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=buildings" target="_self">
+                    <span class="textlabel">Buildings</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="FleetTrader tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=fleetDealer" title="Merchant of Fleets" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=trader" target="_self">
+                    <span class="textlabel">
+                        <font style="color:yellow">Market</font>
+                    </span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                                    <a class="Research tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=techtree" title="Technologies" target="_self">
+                    </a>
+                            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=research" target="_self">
+                    <span class="textlabel">Research</span>
+                </a>
+                    </li>
+        <li>
+            <span class="menu_icon">
+                <a class="Tersane tooltipRight js_hideTipOnMobile " href="https://ogamex.eu/Aeternum/game.php?page=tournament" title="Tournament" target="_self">
+                </a>
+            </span>
+                            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=fleet" target="_self">
+                    <span class="textlabel">Hangar</span>
+                </a>
+                    </li>
+
+                <li>
+            <span class="menu_icon">
+                <img src="./12_files/navi_ikon_defense_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=shipyard&amp;mode=defense" target="_self">
+                <span class="textlabel">Defenses</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Filo tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=transport" title="Transport" target="_self">
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=fleetTable" target="_self">
+                <span class="textlabel">Fleet</span>
+            </a>
+        </li>
+        
+                <li>
+            <span class="menu_icon">
+                <a class="Galaxy tooltipRight js_hideTipOnMobile" href="https://ogamex.eu/Aeternum/game.php?page=donatebis" title="Shop">
+
+                </a>
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=galaxy" target="_self">
+                <span class="textlabel">Galaxy</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./12_files/navi_ikon_alliance_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton " href="https://ogamex.eu/Aeternum/game.php?page=alliance" target="_self">
+                <span class="textlabel">Alliance</span>
+            </a>
+        </li>
+                        <li>
+            <span class="menu_icon">
+                <img src="./12_files/navi_ikon_premium_a.gif" height="29" width="38">
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=officier" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Officers</font>
+                </span>
+            </a>
+        </li>        <!--<li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=ressprem" target="_self">
+					<span class="textlabel"><font style="color:yellow">Black Market</font></span>
+				</a>
+		</li>-->
+        <li>
+            <span class="menu_icon">
+                <div class="Satinal"></div>
+            </span>
+            <a class="menubutton premiumHighligt " href="https://ogamex.eu/Aeternum/game.php?page=premium" target="_self">
+                <span class="textlabel">
+                    <font style="color:yellow">Premium</font>
+                </span>
+            </a>
+        </li>
+        <!-- <li>
+			<span class="menu_icon">
+				<div class="Satinal"></div>
+			</span>
+				<a class="menubutton premiumHighligt" href="game.php?page=satinal" target="_self">
+					<span class="textlabel"><font style="color:orange">satin_al</font></span>
+				</a>
+		</li> !-->
+
+
+
+            </ul>
+        <script type="text/javascript">
+        var viewShortlyNumber = 1;
+        		var vacation			= 0;
+        		        		        resourceTicker({
+            			available: (1494765193.681938),
+            			limit: [0, "3416925000"],
+            			production: 1932927923.2055,
+            			valueElem: "current_metal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (265033617.14343864),
+            			limit: [0, "1863925000"],
+            			production: 822497302.17436,
+            			valueElem: "current_crystal"
+        }, true);
+        		        		        		        resourceTicker({
+            			available: (368209777.2967718),
+            			limit: [0, "1016750000"],
+            			production: 394585191.6862,
+            			valueElem: "current_deuterium"
+        }, true);
+        		        		        		        		        		        		
+    </script>
+    
+            </div>
+<!-- END main.navigation -->
+<div id="inhalt">
+<script type="text/javascript">
+    var firstClick = false;
+
+    function eventHeader(content) {
+
+        $(content).toggle(300);
+
+        if (content == ".allFleetsEvent" && firstClick == false) {
+            $('.OvfleetEvents_').each(function(index) {
+                var height_ = $(this).outerHeight();
+                console.log(height_);
+                if (height_ < 7) {
+                    $(this).remove();
+                }
+            });
+            firstClick = true;
+        }
+    }
+
+    $(function() {
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(1)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents  > span:eq(2)').attr('data-hide', 'true');
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(1) > span').first().hide();
+		$('.allFleetsEvent > #OvfleetEvents > span:eq(2) > span').first().hide();
+        $('span[data-hide="true"]').prev().hide();
+    });
+</script>
+
+
+<div id="messages_collapsed" class="messpositionDiv" style="z-index:5;">
+                <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./12_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                    <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="851">00:14:06</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29">10:20:29</span>
+				<span><span class="flight ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>                 <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793348429396900" class="fleets" data-fleet-end-time="1793348429" data-fleet-time="851" style="display: none;">00:14:06</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:20:29" "="" data-hide="true" style="display: none;">10:20:29</span>
+				<span data-hide="true"><span class="flight ownharvest" style="display: none;">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> from Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a> reached the debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+            <div id="OvfleetContent">
+            <span style="text-align:center">
+    
+                <a class="OvfleetButton" href="javascript:eventHeader(&#39;.allFleetsEvent&#39;);" title="Activities"><img src="./12_files/dot.gif" width="15" height="15" alt=""></a>
+            </span>
+        </div>
+                <div class="allFleetsEvent">
+            <div id="OvfleetEvents" class="OvfleetEvents_" style="padding:5px 10px;background-color:#000">
+                <span id="fleettime_1793350031396900" class="fleets" data-fleet-end-time="1793350031" data-fleet-time="2453">00:40:48</span>
+				<span class="fleet_static_time" data-fleet-end-time="10:47:11" "="">10:47:11</span>
+				<span><span class="return ownharvest">One of your <a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" data-tooltip-content="&lt;table style=&#39;width:200px&#39;&gt;&lt;tr&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;Recycler:&lt;/td&gt;&lt;td style=&#39;width:50%;color:white&#39;&gt;8.290&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" class="tooltip ownharvest">Fleets</a><span class="textForBlind"> (8290 Recycler)</span> returns from debris <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=87" class="ownharvest">[2:87:8]</a> back to planet Planet Главная планета <a href="https://ogamex.eu/Aeternum/game.php?page=galaxy&amp;galaxy=2&amp;system=68" class="ownharvest">[2:68:5]</a>. Mission: Recycle</span></span>
+            </div>
+        </div>
+    
+    
+
+</div>
+<style type="text/css">
+    .allFleetsEvent {
+        display: none;
+    }
+
+    .d23 {}
+</style>
+
+<div id="tabs" style="min-width:650px;width:550px;" class="techtree-table ui-tabs ui-widget ui-widget-content ui-corner-all">
+	<ul style="padding-top: 11px;padding-left: 10px;" class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" role="tablist">
+		<li class="ui-state-default ui-corner-top ui-tabs-active ui-state-active" role="tab" tabindex="0" aria-controls="tabs-1" aria-labelledby="ui-id-1" aria-selected="true"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-1" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-1">Buildings</a></li>
+		<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-2" aria-labelledby="ui-id-2" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-2" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-2">Moon Buildings</a></li>
+		<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-3" aria-labelledby="ui-id-3" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-3" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-3">Research</a></li>
+		<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-4" aria-labelledby="ui-id-4" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-4" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-4">Fleet</a></li>
+		<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-5" aria-labelledby="ui-id-5" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-5" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-5">Defenses</a></li>
+		<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-6" aria-labelledby="ui-id-6" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-6" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-6">Missiles</a></li>
+				<li class="ui-state-default ui-corner-top" role="tab" tabindex="-1" aria-controls="tabs-7" aria-labelledby="ui-id-7" aria-selected="false"><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#tabs-7" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-7">Officers</a></li>
+
+	</ul>
+
+	<div id="tabs-1" aria-labelledby="ui-id-1" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="true" aria-hidden="false">
+		<table style="min-width:630px;width:550px;">
+																						<tbody><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(1)"><img src="./12_files/1.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(1)">Metal Mine</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(2)"><img src="./12_files/2.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(2)">Crystal Mine</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(3)"><img src="./12_files/3.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(3)">Deuterium Refinery</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(4)"><img src="./12_files/4.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(4)">Solar Power plant</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(6)"><img src="./12_files/6.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(6)">University</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(6)"><span style="color:lime;">Robot Factory (Level  20/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(6)"><span style="color:red;">Research Lab (Level  21/22)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(6)"><span style="color:lime;">Nanite Factory (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(6)"><span style="color:lime;">Computer Technology (Level  12/12)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(6)"><span style="color:lime;">Intergalactic Research Network (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(12)"><img src="./12_files/12.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(12)">Deuterium Power Plant</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(12)"><span style="color:lime;">Deuterium Refinery (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(12)"><span style="color:lime;">Energy Technology (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(14)"><img src="./12_files/14.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(14)">Robot Factory</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(15)"><img src="./12_files/15.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(15)">Nanite Factory</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(15)"><span style="color:lime;">Robot Factory (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(15)"><span style="color:lime;">Computer Technology (Level  10/10)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(21)"><img src="./12_files/21.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(21)">Shipyard</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(21)"><span style="color:lime;">Robot Factory (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(22)"><img src="./12_files/22.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(22)">Metal Storage</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(23)"><img src="./12_files/23.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(23)">Crystal Storage</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(24)"><img src="./12_files/24.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(24)">Deuterium Storage</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(31)"><img src="./12_files/31.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(31)">Research Lab</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(33)"><img src="./12_files/33.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(33)">Terraformer</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(33)"><span style="color:lime;">Nanite Factory (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(33)"><span style="color:lime;">Energy Technology (Level  12/12)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(34)"><img src="./12_files/34.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(34)">Alliance Depot</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																																									<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(44)"><img src="./12_files/44.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(44)">Missile Silo</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(44)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(71)"><img src="./12_files/71.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(71)">Light conveyor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(71)"><span style="color:lime;">Nanite Factory (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(71)"><span style="color:lime;">Shipyard (Level  14/14)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(72)"><img src="./12_files/72.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(72)">Average conveyor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(72)"><span style="color:lime;">Nanite Factory (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(72)"><span style="color:lime;">Shipyard (Level  14/14)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(73)"><img src="./12_files/73.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(73)">Heavy conveyor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(73)"><span style="color:lime;">Nanite Factory (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(73)"><span style="color:lime;">Shipyard (Level  18/18)</span></a>		
+												</td>
+			</tr>
+																																																																																																																																																																																																																																																																																																																																																																																																																																																		
+																																																																																																																																																																																																																																																																																																																																																																																																						</tbody></table>
+	</div>
+
+	<div id="tabs-2" aria-labelledby="ui-id-2" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:630px;width:550px;">
+																																																																																																									<tbody><tr>
+																																																													</tr><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(14)"><img src="./12_files/14.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(14)">Robot Factory</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(15)"><img src="./12_files/15.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(15)">Nanite Factory</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(15)"><span style="color:lime;">Robot Factory (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(15)"><span style="color:lime;">Computer Technology (Level  10/10)</span></a>		
+												</td>
+			</tr>
+																																																																	<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(41)"><img src="./12_files/41.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(41)">Moon base</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(42)"><img src="./12_files/42.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(42)">Phalax Sensor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(42)"><span style="color:red;">Moon base (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(43)"><img src="./12_files/43.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(43)">Jumpgate</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(43)"><span style="color:red;">Moon base (Level  0/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(43)"><span style="color:lime;">Hyperspace Technology (Level  7/7)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(44)"><img src="./12_files/44.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(44)">Missile Silo</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(44)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																				
+																																																																																																																																																																																																																																																																																																																																																																																																								</tbody></table>
+	</div>
+
+	<div id="tabs-3" aria-labelledby="ui-id-3" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:630px;width:550px;">
+																																																																																																																																							<tbody><tr>
+																																																																																																																																																																		</tr><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(106)"><img src="./12_files/106.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(106)">Spy Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(106)"><span style="color:lime;">Research Lab (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(108)"><img src="./12_files/108.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(108)">Computer Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(108)"><span style="color:lime;">Research Lab (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(109)"><img src="./12_files/109.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(109)">Weapons Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(109)"><span style="color:lime;">Research Lab (Level  4/4)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(110)"><img src="./12_files/110.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(110)">Shield Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(110)"><span style="color:lime;">Energy Technology (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(110)"><span style="color:lime;">Research Lab (Level  6/6)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(111)"><img src="./12_files/111.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(111)">Armour Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(111)"><span style="color:lime;">Research Lab (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(113)"><img src="./12_files/113.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(113)">Energy Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(113)"><span style="color:lime;">Research Lab (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(114)"><img src="./12_files/114.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(114)">Hyperspace Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(114)"><span style="color:lime;">Energy Technology (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(114)"><span style="color:lime;">Shield Technology (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(114)"><span style="color:lime;">Research Lab (Level  7/7)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(115)"><img src="./12_files/115.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(115)">Combustion Engine</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(115)"><span style="color:lime;">Energy Technology (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(115)"><span style="color:lime;">Research Lab (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(117)"><img src="./12_files/117.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(117)">Impulse Engine</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(117)"><span style="color:lime;">Energy Technology (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(117)"><span style="color:lime;">Research Lab (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(118)"><img src="./12_files/118.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(118)">Hyperspace Engine</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(118)"><span style="color:lime;">Hyperspace Technology (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(118)"><span style="color:lime;">Research Lab (Level  7/7)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(120)"><img src="./12_files/120.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(120)">Laser Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(120)"><span style="color:lime;">Research Lab (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(120)"><span style="color:lime;">Energy Technology (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(121)"><img src="./12_files/121.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(121)">Ion Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(121)"><span style="color:lime;">Research Lab (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(121)"><span style="color:lime;">Laser Technology (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(121)"><span style="color:lime;">Energy Technology (Level  4/4)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(122)"><img src="./12_files/122.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(122)">Plasma Technology</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(122)"><span style="color:lime;">Research Lab (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(122)"><span style="color:lime;">Energy Technology (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(122)"><span style="color:lime;">Laser Technology (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(122)"><span style="color:lime;">Ion Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(123)"><img src="./12_files/123.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(123)">Intergalactic Research Network</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(123)"><span style="color:lime;">Research Lab (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(123)"><span style="color:lime;">Computer Technology (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(123)"><span style="color:lime;">Hyperspace Technology (Level  8/8)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(124)"><img src="./12_files/124.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(124)">Expedition Research</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(124)"><span style="color:lime;">Spy Technology (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(124)"><span style="color:lime;">Impulse Engine (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(124)"><span style="color:lime;">Research Lab (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(131)"><img src="./12_files/131.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(131)">Mineral Research</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(131)"><span style="color:lime;">Research Lab (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(131)"><span style="color:lime;">Energy Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(132)"><img src="./12_files/132.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(132)">Semi-Crystals Research</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(132)"><span style="color:lime;">Research Lab (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(132)"><span style="color:lime;">Energy Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(133)"><img src="./12_files/133.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(133)">Fuel Research</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(133)"><span style="color:lime;">Research Lab (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(133)"><span style="color:lime;">Energy Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(199)"><img src="./12_files/199.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(199)">Graviton Research</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(199)"><span style="color:lime;">Research Lab (Level  12/12)</span></a>		
+												</td>
+			</tr>
+																																																																																																																																																																																																																																																																																																																										
+																																																																																																																																																																																																																																																																																</tbody></table>
+	</div>
+
+	<div id="tabs-4" aria-labelledby="ui-id-4" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:230px;width:550px;">
+																																																																																																																																																																																																																																																																																										<tbody><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(202)"><img src="./12_files/202.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(202)">Light Cargo</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(202)"><span style="color:lime;">Shipyard (Level  2/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(202)"><span style="color:lime;">Combustion Engine (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(203)"><img src="./12_files/203.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(203)">Heavy Cargo</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(203)"><span style="color:lime;">Shipyard (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(203)"><span style="color:lime;">Combustion Engine (Level  6/6)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(204)"><img src="./12_files/204.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(204)">Light Fighter</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(204)"><span style="color:lime;">Shipyard (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(204)"><span style="color:lime;">Combustion Engine (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(205)"><img src="./12_files/205.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(205)">Heavy Fighter</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(205)"><span style="color:lime;">Shipyard (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(205)"><span style="color:lime;">Armour Technology (Level  2/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(205)"><span style="color:lime;">Impulse Engine (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(206)"><img src="./12_files/206.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(206)">Cruiser</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(206)"><span style="color:lime;">Shipyard (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(206)"><span style="color:lime;">Impulse Engine (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(206)"><span style="color:lime;">Ion Technology (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(207)"><img src="./12_files/207.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(207)">Battleship</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(207)"><span style="color:lime;">Shipyard (Level  7/7)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(207)"><span style="color:lime;">Hyperspace Engine (Level  4/4)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(208)"><img src="./12_files/208.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(208)">Colony Ship</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(208)"><span style="color:lime;">Shipyard (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(208)"><span style="color:lime;">Impulse Engine (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(209)"><img src="./12_files/209.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(209)">Recycler</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(209)"><span style="color:lime;">Shipyard (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(209)"><span style="color:lime;">Combustion Engine (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(209)"><span style="color:lime;">Shield Technology (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(210)"><img src="./12_files/210.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(210)">Spy Probe</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(210)"><span style="color:lime;">Shipyard (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(210)"><span style="color:lime;">Combustion Engine (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(210)"><span style="color:lime;">Spy Technology (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(211)"><img src="./12_files/211.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(211)">Planet Bomber</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(211)"><span style="color:lime;">Impulse Engine (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(211)"><span style="color:lime;">Shipyard (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(211)"><span style="color:lime;">Plasma Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(212)"><img src="./12_files/212.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(212)">Solar Satellite</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(212)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(213)"><img src="./12_files/213.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(213)">Star Fighter</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(213)"><span style="color:lime;">Shipyard (Level  9/9)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(213)"><span style="color:red;">Hyperspace Engine (Level  4/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(213)"><span style="color:lime;">Hyperspace Technology (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(214)"><img src="./12_files/214.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(214)">Battle Fortress</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(214)"><span style="color:lime;">Shipyard (Level  12/12)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(214)"><span style="color:red;">Hyperspace Engine (Level  4/7)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(214)"><span style="color:lime;">Hyperspace Technology (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(214)"><span style="color:red;">Graviton Research (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(215)"><img src="./12_files/215.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(215)">Battle Cruiser</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(215)"><span style="color:lime;">Hyperspace Technology (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(215)"><span style="color:red;">Laser Technology (Level  10/12)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(215)"><span style="color:red;">Hyperspace Engine (Level  4/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(215)"><span style="color:lime;">Shipyard (Level  8/8)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(216)"><img src="./12_files/216.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(216)">Black Moon</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:lime;">Spy Technology (Level  12/12)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:lime;">Shipyard (Level  15/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Weapons Technology (Level  2/14)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Shield Technology (Level  7/14)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Armour Technology (Level  6/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Hyperspace Technology (Level  8/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Laser Technology (Level  10/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(216)"><span style="color:red;">Graviton Research (Level  0/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(217)"><img src="./12_files/217.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(217)">Battle Transporter</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(217)"><span style="color:red;">Armour Technology (Level  6/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(217)"><span style="color:lime;">Shipyard (Level  14/14)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(217)"><span style="color:red;">Hyperspace Technology (Level  8/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(217)"><span style="color:red;">Shield Technology (Level  7/14)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(217)"><span style="color:red;">Impulse Engine (Level  7/15)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(218)"><img src="./12_files/218.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(218)">Avatar</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:lime;">Shipyard (Level  18/18)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Weapons Technology (Level  2/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Shield Technology (Level  7/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Armour Technology (Level  6/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Hyperspace Technology (Level  8/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Hyperspace Engine (Level  4/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Laser Technology (Level  10/25)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(218)"><span style="color:red;">Graviton Research (Level  0/8)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(219)"><img src="./12_files/219.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(219)">Battle Recycler</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(219)"><span style="color:lime;">Shipyard (Level  15/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(219)"><span style="color:red;">Weapons Technology (Level  2/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(219)"><span style="color:red;">Shield Technology (Level  7/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(219)"><span style="color:red;">Armour Technology (Level  6/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(219)"><span style="color:red;">Hyperspace Engine (Level  4/8)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(220)"><img src="./12_files/220.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(220)">Dark Matter Collector</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(220)"><span style="color:lime;">Shipyard (Level  9/9)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(220)"><span style="color:lime;">Hyperspace Technology (Level  5/5)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(220)"><span style="color:red;">Hyperspace Engine (Level  4/6)</span></a>		
+												</td>
+			</tr>
+																																																																																																																																																																																																		
+																																																																																																																																																																										</tbody></table>
+	</div>
+
+	<div id="tabs-5" aria-labelledby="ui-id-5" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:630px;width:550px;">
+																																																																																																																																																																																																																																																																																																																																																																																																																	<tbody><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(401)"><img src="./12_files/401.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(401)">Missile Launcher</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(401)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(402)"><img src="./12_files/402.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(402)">Light Laser Turret</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(402)"><span style="color:lime;">Energy Technology (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(402)"><span style="color:lime;">Shipyard (Level  2/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(402)"><span style="color:lime;">Laser Technology (Level  3/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(403)"><img src="./12_files/403.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(403)">Heavy Laser Turret</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(403)"><span style="color:lime;">Energy Technology (Level  3/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(403)"><span style="color:lime;">Shipyard (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(403)"><span style="color:lime;">Laser Technology (Level  6/6)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(404)"><img src="./12_files/404.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(404)">Gauss Cannon</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(404)"><span style="color:lime;">Shipyard (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(404)"><span style="color:lime;">Energy Technology (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(404)"><span style="color:red;">Weapons Technology (Level  2/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(404)"><span style="color:lime;">Shield Technology (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(405)"><img src="./12_files/405.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(405)">Ion Cannon</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(405)"><span style="color:lime;">Shipyard (Level  4/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(405)"><span style="color:lime;">Ion Technology (Level  4/4)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(406)"><img src="./12_files/406.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(406)">Plasma Cannon</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(406)"><span style="color:lime;">Shipyard (Level  8/8)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(406)"><span style="color:lime;">Plasma Technology (Level  7/7)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(407)"><img src="./12_files/407.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(407)">Small Shield Dome</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(407)"><span style="color:lime;">Shield Technology (Level  2/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(407)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(408)"><img src="./12_files/408.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(408)">Large Shield Dome</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(408)"><span style="color:lime;">Shield Technology (Level  6/6)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(408)"><span style="color:lime;">Shipyard (Level  6/6)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(409)"><img src="./12_files/409.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(409)">Atmospheric Shield</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(409)"><span style="color:red;">Guardian (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(410)"><img src="./12_files/410.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(410)">Gravitons Cannon</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(410)"><span style="color:red;">Graviton Research (Level  0/7)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(410)"><span style="color:lime;">Shipyard (Level  18/18)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(410)"><span style="color:red;">Weapons Technology (Level  2/20)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(411)"><img src="./12_files/411.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(411)">Orbital Defence Platform</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Graviton Research (Level  0/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Shield Technology (Level  7/22)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Plasma Technology (Level  7/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Computer Technology (Level  12/15)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Armour Technology (Level  6/25)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Energy Technology (Level  12/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Minister of Defence (Level  0/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(411)"><span style="color:red;">Shipyard (Level  18/20)</span></a>		
+												</td>
+			</tr>
+																																																																																																																										
+																																																																																																		</tbody></table>
+	</div>
+
+	<div id="tabs-6" aria-labelledby="ui-id-6" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:630px;width:550px;">
+																																																																																																																																																																																																																																																																																																																																																																																																																																													<tbody><tr>
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																																										</tr><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(502)"><img src="./12_files/502.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(502)">Interceptor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(502)"><span style="color:red;">Missile Silo (Level  0/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(502)"><span style="color:lime;">Shipyard (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(503)"><img src="./12_files/503.png" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(503)">Interplanetary missiles</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(503)"><span style="color:red;">Missile Silo (Level  0/4)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(503)"><span style="color:lime;">Shipyard (Level  1/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(503)"><span style="color:lime;">Impulse Engine (Level  1/1)</span></a>		
+												</td>
+			</tr>
+																																																																																																								
+																																																																																</tbody></table>
+	</div>
+
+	<div id="tabs-7" aria-labelledby="ui-id-7" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;">
+		<table style="min-width:630px;width:550px;">
+																																																																																																																																																																																																																																																																																																																																																																																																																																																															<tbody><tr>
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																													</tr><tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(601)"><img src="./12_files/601.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(601)">Geologist</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(602)"><img src="./12_files/602.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(602)">Admiral</a></span></td>
+	<td>
+	
+															</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(603)"><img src="./12_files/603.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(603)">Engineer</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(603)"><span style="color:lime;">Geologist (Level  5/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(604)"><img src="./12_files/604.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(604)">Technocrat</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(604)"><span style="color:red;">Admiral (Level  0/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(605)"><img src="./12_files/605.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(605)">Constructor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(605)"><span style="color:lime;">Geologist (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(605)"><span style="color:lime;">Engineer (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(606)"><img src="./12_files/606.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(606)">Scientologist</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(606)"><span style="color:lime;">Geologist (Level  10/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(606)"><span style="color:lime;">Engineer (Level  2/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(607)"><img src="./12_files/607.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(607)">Storage expert</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(607)"><span style="color:red;">Constructor (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(608)"><img src="./12_files/608.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(608)">Minister of Defence</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(608)"><span style="color:red;">Scientologist (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(609)"><img src="./12_files/609.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(609)">Guardian</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Geologist (Level  18/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Engineer (Level  4/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Constructor (Level  0/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Scientologist (Level  0/3)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Storage expert (Level  0/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(609)"><span style="color:red;">Minister of Defence (Level  0/2)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(610)"><img src="./12_files/610.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(610)">Spy</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(610)"><span style="color:red;">Admiral (Level  0/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(610)"><span style="color:red;">Technocrat (Level  0/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(611)"><img src="./12_files/611.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(611)">Commander</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(611)"><span style="color:red;">Admiral (Level  0/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(611)"><span style="color:red;">Technocrat (Level  0/5)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(612)"><img src="./12_files/612.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(612)">Destroyer</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(612)"><span style="color:red;">Spy (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(613)"><img src="./12_files/613.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(613)">General</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(613)"><span style="color:red;">Commander (Level  0/1)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(614)"><img src="./12_files/614.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(614)">Emperor</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">Admiral (Level  0/20)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">Technocrat (Level  0/10)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">Spy (Level  0/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">Commander (Level  0/2)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">Destroyer (Level  0/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(614)"><span style="color:red;">General (Level  0/3)</span></a>		
+												</td>
+			</tr>
+																							<tr>
+				<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(615)"><img src="./12_files/615.jpg" width="50" height="50"></a></span></td>
+	<td><span><a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" class="main" onclick="return Dialog.info(615)">Raider</a></span></td>
+	<td>
+	
+									<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(615)"><span style="color:red;">Emperor (Level  0/1)</span></a><br>					<a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.info(615)"><span style="color:red;">Guardian (Level  0/1)</span></a>		
+												</td>
+			</tr>
+								
+								</tbody></table>
+	</div>
+</div>
+
+<script type="text/javascript">
+	
+	$(function() {
+	$('#tabs').tabs();
+});
+
+</script>
+</div>
+<div id="rechts">
+	<div id="norm">
+		<div id="myWorlds">
+			<div id="myWorlds">
+				<div id="countColonies">
+					<p class="textCenter"><span>[4 / 6]</span> My planets</p>
+				</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254102" class="planetlink  active active-planet planetPic reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Главная планета [2:68:5]&lt;/b&gt;&lt;br&gt;
+				32°C to 72°C&lt;br&gt;
+				20.000 km (259 / 405)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254102&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254102&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254102&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254102&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254102&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254102&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254102&amp;galaxy=2&amp;system=68&amp;position=5&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./12_files/s_dschjungelplanet07.gif">
+								<span class="planet-name">Главная планета</span>
+								<span class="planet-koords">[2:68:5]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254103" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:6]&lt;/b&gt;&lt;br&gt;
+				20°C to 60°C&lt;br&gt;
+				18.627 km (85 / 347)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254103&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254103&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254103&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254103&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254103&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254103&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254103&amp;galaxy=2&amp;system=68&amp;position=6&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./12_files/s_dschjungelplanet10.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:6]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254104" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:7]&lt;/b&gt;&lt;br&gt;
+				22°C to 62°C&lt;br&gt;
+				20.808 km (78 / 433)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254104&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254104&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254104&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254104&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254104&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254104&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254104&amp;galaxy=2&amp;system=68&amp;position=7&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./12_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:7]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+									<div id="planetList">
+						<div class="smallplanet">
+
+							<a href="https://ogamex.eu/Aeternum/game.php?page=overview&amp;cp=254105" class="planetlink   reloadTips tooltipRight tooltipClose js_hideTipOnMobile" title="
+				&lt;div style=&#39;text-align:left&#39;&gt;
+				&lt;b&gt;Colony [2:68:8]&lt;/b&gt;&lt;br&gt;
+				-10°C to 30°C&lt;br&gt;
+				22.671 km (129 / 514)&lt;br&gt;
+
+				&lt;a href=&#39;game.php?page=overview&amp;cp=254105&#39;&gt;Overview&lt;/a&gt;&lt;br&gt;
+								&lt;a href=&#39;game.php?page=buildings&amp;cp=254105&#39;&gt;Buildings&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=research&amp;cp=254105&#39;&gt;Research&lt;/a&gt;&lt;br&gt;
+
+								&lt;a href=&#39;game.php?page=shipyard&amp;cp=254105&#39;&gt;Hangar&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=shipyard&amp;mode=defense&amp;cp=254105&#39;&gt;Defenses&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=fleetTable&amp;cp=254105&#39;&gt;Fleet&lt;/a&gt;&lt;br&gt;
+												&lt;a href=&#39;game.php?page=galaxy&amp;cp=254105&amp;galaxy=2&amp;system=68&amp;position=8&#39;&gt;Galaxy&lt;/a&gt;
+								&lt;/div&gt;">
+								<img class="planetPic" src="./12_files/s_normaltempplanet02.gif">
+								<span class="planet-name">Colony</span>
+								<span class="planet-koords">[2:68:8]
+																</span>
+							</a>
+
+							
+
+
+
+						</div>
+					</div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+</div>
+<img src="./12_files/cronjob.php" alt="">
+<div class="gototop"></div>
+<div class="clear"></div>
+<script type="text/javascript">
+    $(window).scroll(function() {
+        if ($(this).scrollTop() >= 50) { // If page is scrolled more than 50px
+            $('#return-to-top').fadeIn(200); // Fade in the arrow
+        } else {
+            $('#return-to-top').fadeOut(200); // Else fade out the arrow
+        }
+    });
+    $('#return-to-top').click(function() { // When arrow is clicked
+        $('body,html').animate({
+            scrollTop: 0 // Scroll to top of body
+        }, 500);
+    });
+</script>
+
+<div id="siteFooter" class="clearfloat">
+    <div class="fcontent">
+        <div class="fleft textLeft">
+            <b>© 2026 - OGAMEX</b>
+
+             </div>
+        <div class="fright textRight">
+            <a href="https://ogamex.eu/Aeternum/game.php?page=banList" target="_self">
+                <font style="color:red;">Banned</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=records" target="_self">
+                <font style="color:orange;">Records</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=battleHall" target="_self">
+                <font style="color:#6F9FC8;">Hall of Fame</font>
+            </a> |
+            <!--<a href="game.php?page=questions" target="_self">FAQ</a> |-->
+
+            <a href="https://ogamex.eu/Aeternum/game.php?page=ticket" target="_self">Support</a> |            <a href="https://ogamex.eu/Aeternum/index.php?page=rules" target="rules">Rules</a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=vote" target="_self">
+                <font style="color:green;">Vote &amp; Reward</font>
+            </a> |
+            <a href="https://ogamex.eu/Aeternum/game.php?page=techtree#" onclick="return Dialog.Server();">
+                <font style="color:green;">Game information</font>
+            </a>
+        </div>
+        <br class="clearfloat">
+    </div>
+</div>
+
+
+<div id="fancybox-tmp"></div><div id="fancybox-loading"><div></div></div><div id="fancybox-overlay"></div><div id="fancybox-wrap"><div id="fancybox-outer"><div class="fancybox-bg" id="fancybox-bg-n"></div><div class="fancybox-bg" id="fancybox-bg-ne"></div><div class="fancybox-bg" id="fancybox-bg-e"></div><div class="fancybox-bg" id="fancybox-bg-se"></div><div class="fancybox-bg" id="fancybox-bg-s"></div><div class="fancybox-bg" id="fancybox-bg-sw"></div><div class="fancybox-bg" id="fancybox-bg-w"></div><div class="fancybox-bg" id="fancybox-bg-nw"></div><div id="fancybox-content"></div><a id="fancybox-close"></a><div id="fancybox-title"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a></div></div></body></html>

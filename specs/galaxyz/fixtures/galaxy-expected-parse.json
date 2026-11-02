@@ -1,0 +1,4466 @@
+{
+ "real-galaxy": {
+  "parser": "parseSystem",
+  "result": {
+   "ok": true,
+   "layout": "galaxyz",
+   "galaxy": 2,
+   "system": 68,
+   "maxPlanets": 15,
+   "rows": [
+    {
+     "position": 1,
+     "coords": "2:68:1",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=1&planettype=1&target_mission=7",
+      "fieldsMin": 215,
+      "fieldsMax": 244,
+      "tempMin": 220,
+      "tempMax": 260
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 2,
+     "coords": "2:68:2",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=2&planettype=1&target_mission=7",
+      "fieldsMin": 219,
+      "fieldsMax": 248,
+      "tempMin": 170,
+      "tempMax": 210
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 3,
+     "coords": "2:68:3",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=3&planettype=1&target_mission=7",
+      "fieldsMin": 222,
+      "fieldsMax": 307,
+      "tempMin": 120,
+      "tempMax": 160
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 4,
+     "coords": "2:68:4",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=4&planettype=1&target_mission=7",
+      "fieldsMin": 277,
+      "fieldsMax": 453,
+      "tempMin": 70,
+      "tempMax": 110
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 5,
+     "coords": "2:68:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet07",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Главная планета",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Главная планета"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": "*"
+    },
+    {
+     "position": 6,
+     "coords": "2:68:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet10",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 7,
+     "coords": "2:68:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 8,
+     "coords": "2:68:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 50
+    },
+    {
+     "position": 9,
+     "coords": "2:68:9",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=9&planettype=1&target_mission=7",
+      "fieldsMin": 360,
+      "fieldsMax": 530,
+      "tempMin": 20,
+      "tempMax": 60
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 10,
+     "coords": "2:68:10",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=10&planettype=1&target_mission=7",
+      "fieldsMin": 345,
+      "fieldsMax": 547,
+      "tempMin": 10,
+      "tempMax": 50
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 11,
+     "coords": "2:68:11",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=11&planettype=1&target_mission=7",
+      "fieldsMin": 332,
+      "fieldsMax": 455,
+      "tempMin": 0,
+      "tempMax": 40
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 12,
+     "coords": "2:68:12",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=12&planettype=1&target_mission=7",
+      "fieldsMin": 305,
+      "fieldsMax": 382,
+      "tempMin": -10,
+      "tempMax": 30
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 13,
+     "coords": "2:68:13",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=13&planettype=1&target_mission=7",
+      "fieldsMin": 246,
+      "fieldsMax": 272,
+      "tempMin": -50,
+      "tempMax": -10
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 14,
+     "coords": "2:68:14",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=14&planettype=1&target_mission=7",
+      "fieldsMin": 184,
+      "fieldsMax": 211,
+      "tempMin": -90,
+      "tempMax": -50
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 15,
+     "coords": "2:68:15",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=15&planettype=1&target_mission=7",
+      "fieldsMin": 149,
+      "fieldsMax": 169,
+      "tempMin": -130,
+      "tempMax": -90
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    }
+   ],
+   "positions": [
+    {
+     "position": 5,
+     "coords": "2:68:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet07",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Главная планета",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Главная планета"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": "*"
+    },
+    {
+     "position": 6,
+     "coords": "2:68:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet10",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 7,
+     "coords": "2:68:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 8,
+     "coords": "2:68:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 50
+    }
+   ],
+   "header": {
+    "probes": 102,
+    "recyclers": 0,
+    "gigaRecyclers": 0,
+    "missiles": 0,
+    "slotsUsed": 1,
+    "slotsMax": 13,
+    "colonizedText": "(1 Existing planets)",
+    "missileForm": false
+   },
+   "error": null
+  }
+ },
+ "galaxy-live-synthetic-system": {
+  "parser": "parseSystem",
+  "result": {
+   "ok": true,
+   "layout": "galaxyz",
+   "galaxy": 2,
+   "system": 68,
+   "maxPlanets": 15,
+   "rows": [
+    {
+     "position": 1,
+     "coords": "2:68:1",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Arrakis",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       6
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 2,
+     "coords": "2:68:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 3,
+     "coords": "2:68:3",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Winterfell",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 4,
+     "coords": "2:68:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Exile",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 5,
+     "coords": "2:68:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet07",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Главная планета",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Главная планета"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": "*"
+    },
+    {
+     "position": 6,
+     "coords": "2:68:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet10",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 7,
+     "coords": "2:68:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 8,
+     "coords": "2:68:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 50
+    },
+    {
+     "position": 9,
+     "coords": "2:68:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Little One",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 10,
+     "coords": "2:68:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet King's Landing",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       6
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 11,
+     "coords": "2:68:11",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Hauptplanet",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 12,
+     "coords": "2:68:12",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=12&planettype=1&target_mission=7",
+      "fieldsMin": 305,
+      "fieldsMax": 382,
+      "tempMin": -10,
+      "tempMax": 30
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 13,
+     "coords": "2:68:13",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=13&planettype=1&target_mission=7",
+      "fieldsMin": 246,
+      "fieldsMax": 272,
+      "tempMin": -50,
+      "tempMax": -10
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 14,
+     "coords": "2:68:14",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=14&planettype=1&target_mission=7",
+      "fieldsMin": 184,
+      "fieldsMax": 211,
+      "tempMin": -90,
+      "tempMax": -50
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 15,
+     "coords": "2:68:15",
+     "kind": "empty",
+     "colonize": {
+      "link": "https://ogamex.eu/Aeternum/game.php?page=fleetTable&galaxy=2&system=68&planet=15&planettype=1&target_mission=7",
+      "fieldsMin": 149,
+      "fieldsMax": 169,
+      "tempMin": -130,
+      "tempMax": -90
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    }
+   ],
+   "positions": [
+    {
+     "position": 1,
+     "coords": "2:68:1",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Arrakis",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       6
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 2,
+     "coords": "2:68:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 3,
+     "coords": "2:68:3",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Winterfell",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 4,
+     "coords": "2:68:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Exile",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 5,
+     "coords": "2:68:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet07",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Главная планета",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Главная планета"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": "*"
+    },
+    {
+     "position": 6,
+     "coords": "2:68:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "dschjungelplanet10",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 7,
+     "coords": "2:68:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 49
+    },
+    {
+     "position": 8,
+     "coords": "2:68:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Colony",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": null,
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 50
+    },
+    {
+     "position": 9,
+     "coords": "2:68:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Little One",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 10,
+     "coords": "2:68:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet King's Landing",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       6
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 11,
+     "coords": "2:68:11",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": "jungle_2",
+      "tooltipTitle": "Planet Hauptplanet",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    }
+   ],
+   "header": {
+    "probes": 102,
+    "recyclers": 0,
+    "gigaRecyclers": 0,
+    "missiles": 0,
+    "slotsUsed": 1,
+    "slotsMax": 13,
+    "colonizedText": "(1 Existing planets)",
+    "missileForm": false
+   },
+   "error": null
+  }
+ },
+ "galaxy-upstream-missile": {
+  "parser": "parseSystem",
+  "result": {
+   "ok": true,
+   "layout": "upstream",
+   "galaxy": 2,
+   "system": 70,
+   "maxPlanets": 15,
+   "rows": [
+    {
+     "position": 1,
+     "coords": "2:70:1",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=1&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 2,
+     "coords": "2:70:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": null,
+      "tooltipTitle": "Planet Arrakis [2:70:2]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       10
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": "https://example.org/aet"
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 3,
+     "coords": "2:70:3",
+     "kind": "destroyed",
+     "colonize": null,
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null,
+     "destroyedText": "Planet destroyed"
+    },
+    {
+     "position": 4,
+     "coords": "2:70:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:4]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 5,
+     "coords": "2:70:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": null,
+      "tooltipTitle": "Planet Hauptplanet [2:70:5]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 6,
+     "coords": "2:70:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": null,
+      "tooltipTitle": "Planet Winterfell [2:70:6]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Member",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 7,
+     "coords": "2:70:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": null,
+      "tooltipTitle": "Planet Exile [2:70:7]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 8,
+     "coords": "2:70:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": null,
+      "tooltipTitle": "Planet Little One [2:70:8]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 9,
+     "coords": "2:70:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet King's Landing [2:70:9]",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       9
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 10,
+     "coords": "2:70:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:10]",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": {
+      "id": null,
+      "name": "Moon",
+      "diameter": 5196,
+      "tempMin": -12,
+      "missions": [
+       3,
+       4
+      ]
+     },
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 52
+    },
+    {
+     "position": 11,
+     "coords": "2:70:11",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=11&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 12,
+     "coords": "2:70:12",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=12&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 13,
+     "coords": "2:70:13",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=13&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 14,
+     "coords": "2:70:14",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=14&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 15,
+     "coords": "2:70:15",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=15&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    }
+   ],
+   "positions": [
+    {
+     "position": 2,
+     "coords": "2:70:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": null,
+      "tooltipTitle": "Planet Arrakis [2:70:2]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       10
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": "https://example.org/aet"
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 3,
+     "coords": "2:70:3",
+     "kind": "destroyed",
+     "colonize": null,
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null,
+     "destroyedText": "Planet destroyed"
+    },
+    {
+     "position": 4,
+     "coords": "2:70:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:4]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 5,
+     "coords": "2:70:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": null,
+      "tooltipTitle": "Planet Hauptplanet [2:70:5]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 6,
+     "coords": "2:70:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": null,
+      "tooltipTitle": "Planet Winterfell [2:70:6]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Member",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 7,
+     "coords": "2:70:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": null,
+      "tooltipTitle": "Planet Exile [2:70:7]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 8,
+     "coords": "2:70:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": null,
+      "tooltipTitle": "Planet Little One [2:70:8]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 9,
+     "coords": "2:70:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet King's Landing [2:70:9]",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       9
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 10,
+     "coords": "2:70:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:10]",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": {
+      "id": null,
+      "name": "Moon",
+      "diameter": 5196,
+      "tempMin": -12,
+      "missions": [
+       3,
+       4
+      ]
+     },
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 52
+    }
+   ],
+   "header": {
+    "probes": 102,
+    "recyclers": 0,
+    "gigaRecyclers": 0,
+    "missiles": 25,
+    "slotsUsed": 1,
+    "slotsMax": 13,
+    "colonizedText": null,
+    "missileForm": true
+   },
+   "error": null
+  }
+ },
+ "galaxy-upstream-nodeuterium": {
+  "parser": "parseSystem",
+  "result": {
+   "ok": false,
+   "layout": null,
+   "galaxy": null,
+   "system": null,
+   "maxPlanets": null,
+   "rows": [],
+   "positions": [],
+   "header": {},
+   "error": "Information You dont have enough deuterium to view the galaxyBack"
+  }
+ },
+ "galaxy-upstream-phalanx": {
+  "parser": "parsePhalanx",
+  "result": {
+   "coords": "2:70:2",
+   "name": "Arrakis",
+   "error": null,
+   "fleets": [
+    {
+     "key": "fleettime_0",
+     "endUnix": 1793349900,
+     "restSec": 2483,
+     "status": "flight",
+     "cls": "flight attack",
+     "coords": [
+      "2:70:2",
+      "2:74:11"
+     ],
+     "text": "A fleet (1200 Light Fighter) from player Flor from Planet Arrakis [2:70:2] is on its way to the Planet Ice [2:74:11]. Mission: Attack"
+    },
+    {
+     "key": "fleettime_1",
+     "endUnix": 1793353500,
+     "restSec": 6083,
+     "status": "return",
+     "cls": "return attack",
+     "coords": [
+      "2:74:11",
+      "2:70:2"
+     ],
+     "text": "A fleet (1200 Light Fighter) from player Flor returns from Planet Ice [2:74:11] to Planet Arrakis [2:70:2]. Mission: Attack"
+    }
+   ]
+  }
+ },
+ "galaxy-upstream-playercard": {
+  "parser": "parsePlayerCard",
+  "result": {
+   "id": 3843,
+   "name": "Jon Snow",
+   "homePlanet": "Castle Black",
+   "homeCoords": "2:70:9",
+   "allianceId": 12,
+   "allianceName": "Nova Collective",
+   "points": {
+    "buildings": 612004,
+    "research": 301220,
+    "fleet": 800512,
+    "defense": 120485,
+    "total": 1834221
+   },
+   "ranks": {
+    "buildings": 3,
+    "research": 1,
+    "fleet": 1,
+    "defense": 7,
+    "total": 1
+   },
+   "fights": {
+    "won": {
+     "count": 42,
+     "pct": 84
+    },
+    "draw": {
+     "count": 3,
+     "pct": 6
+    },
+    "lost": {
+     "count": 5,
+     "pct": 10
+    },
+    "total": {
+     "count": 50,
+     "pct": 100
+    }
+   },
+   "units": {
+    "destroyed": 1250300,
+    "lost": 80120
+   },
+   "debris": {
+    "metal": 32000000,
+    "crystal": 14500000
+   }
+  }
+ },
+ "galaxy-upstream-search-alliances": {
+  "parser": "parseSearchResult",
+  "result": {
+   "kind": "alliance",
+   "rows": [
+    {
+     "tag": "AET",
+     "name": "Aeternum Guard",
+     "members": 14,
+     "points": 1544020
+    },
+    {
+     "tag": "NOVA",
+     "name": "Nova Collective",
+     "members": 8,
+     "points": 1834221
+    }
+   ]
+  }
+ },
+ "galaxy-upstream-search-players": {
+  "parser": "parseSearchResult",
+  "result": {
+   "kind": "player",
+   "rows": [
+    {
+     "id": 3843,
+     "name": "Jon Snow",
+     "allianceId": 12,
+     "allianceName": "Nova Collective",
+     "homePlanet": "Castle Black",
+     "coords": "2:70:9",
+     "rank": 1
+    },
+    {
+     "id": 4359,
+     "name": "terror",
+     "allianceId": null,
+     "allianceName": null,
+     "homePlanet": "Little One",
+     "coords": "2:70:8",
+     "rank": 530
+    }
+   ]
+  }
+ },
+ "galaxy-upstream-statistics-alliances": {
+  "parser": "parseStatistics",
+  "result": {
+   "who": 2,
+   "type": 1,
+   "range": 1,
+   "updated": "30. Oct 2026, 10:00:02",
+   "rows": [
+    {
+     "kind": "alliance",
+     "rank": 1,
+     "change": 1,
+     "id": 12,
+     "name": "Nova Collective",
+     "members": 8,
+     "points": 2401200,
+     "perMember": 300150
+    },
+    {
+     "kind": "alliance",
+     "rank": 2,
+     "change": -1,
+     "id": 7,
+     "name": "Aeternum Guard",
+     "members": 14,
+     "points": 2210000,
+     "perMember": 157857
+    },
+    {
+     "kind": "alliance",
+     "rank": 3,
+     "change": 0,
+     "id": 19,
+     "name": "Night Watch",
+     "members": 1,
+     "points": 990112,
+     "perMember": 990112
+    }
+   ]
+  }
+ },
+ "galaxy-upstream-statistics-players": {
+  "parser": "parseStatistics",
+  "result": {
+   "who": 1,
+   "type": 1,
+   "range": 1,
+   "updated": "30. Oct 2026, 10:00:02",
+   "rows": [
+    {
+     "kind": "player",
+     "rank": 1,
+     "change": 0,
+     "id": 3843,
+     "name": "Jon Snow",
+     "me": false,
+     "allianceId": 12,
+     "allianceName": "Nova Collective",
+     "points": 1834221
+    },
+    {
+     "kind": "player",
+     "rank": 2,
+     "change": 2,
+     "id": 3837,
+     "name": "Flor",
+     "me": false,
+     "allianceId": 7,
+     "allianceName": "Aeternum Guard",
+     "points": 1544020
+    },
+    {
+     "kind": "player",
+     "rank": 3,
+     "change": -1,
+     "id": 3836,
+     "name": "Severian",
+     "me": false,
+     "allianceId": 19,
+     "allianceName": "Night Watch",
+     "points": 990112
+    },
+    {
+     "kind": "player",
+     "rank": 4,
+     "change": 5,
+     "id": 4377,
+     "name": "vodoleyko1992",
+     "me": true,
+     "allianceId": 12,
+     "allianceName": "Nova Collective",
+     "points": 489
+    },
+    {
+     "kind": "player",
+     "rank": 5,
+     "change": -3,
+     "id": 3839,
+     "name": "Txemin",
+     "me": false,
+     "allianceId": null,
+     "allianceName": null,
+     "points": 412
+    }
+   ]
+  }
+ },
+ "galaxy-upstream-system": {
+  "parser": "parseSystem",
+  "result": {
+   "ok": true,
+   "layout": "upstream",
+   "galaxy": 2,
+   "system": 70,
+   "maxPlanets": 15,
+   "rows": [
+    {
+     "position": 1,
+     "coords": "2:70:1",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=1&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 2,
+     "coords": "2:70:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": null,
+      "tooltipTitle": "Planet Arrakis [2:70:2]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       10
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": "https://example.org/aet"
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 3,
+     "coords": "2:70:3",
+     "kind": "destroyed",
+     "colonize": null,
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null,
+     "destroyedText": "Planet destroyed"
+    },
+    {
+     "position": 4,
+     "coords": "2:70:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:4]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 5,
+     "coords": "2:70:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": null,
+      "tooltipTitle": "Planet Hauptplanet [2:70:5]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 6,
+     "coords": "2:70:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": null,
+      "tooltipTitle": "Planet Winterfell [2:70:6]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Member",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 7,
+     "coords": "2:70:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": null,
+      "tooltipTitle": "Planet Exile [2:70:7]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 8,
+     "coords": "2:70:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": null,
+      "tooltipTitle": "Planet Little One [2:70:8]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 9,
+     "coords": "2:70:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet King's Landing [2:70:9]",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       9
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 10,
+     "coords": "2:70:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:10]",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": {
+      "id": null,
+      "name": "Moon",
+      "diameter": 5196,
+      "tempMin": -12,
+      "missions": [
+       3,
+       4
+      ]
+     },
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 52
+    },
+    {
+     "position": 11,
+     "coords": "2:70:11",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=11&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 12,
+     "coords": "2:70:12",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=12&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 13,
+     "coords": "2:70:13",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=13&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 14,
+     "coords": "2:70:14",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=14&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 15,
+     "coords": "2:70:15",
+     "kind": "empty",
+     "colonize": {
+      "link": "?page=fleetTable&galaxy=2&system=70&planet=15&planettype=1&target_mission=7",
+      "fieldsMin": null,
+      "fieldsMax": null,
+      "tempMin": null,
+      "tempMax": null
+     },
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null
+    }
+   ],
+   "positions": [
+    {
+     "position": 2,
+     "coords": "2:70:2",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301120,
+      "image": "dschjungelplanet04",
+      "biome": null,
+      "tooltipTitle": "Planet Arrakis [2:70:2]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Arrakis"
+     },
+     "moon": {
+      "id": 301121,
+      "name": "Mond",
+      "diameter": 8944,
+      "tempMin": -27,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       10
+      ]
+     },
+     "debris": {
+      "metal": 120000,
+      "crystal": 45000,
+      "deuterium": null,
+      "recycleTargetId": 301120,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3837,
+      "name": "Flor",
+      "rank": 12,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "AET",
+      "rel": "friend",
+      "id": 7,
+      "rank": 2,
+      "members": 14,
+      "title": "Alliance Aeternum Guard 14 Members",
+      "web": "https://example.org/aet"
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 3,
+     "coords": "2:70:3",
+     "kind": "destroyed",
+     "colonize": null,
+     "planet": null,
+     "moon": null,
+     "debris": null,
+     "player": null,
+     "alliance": null,
+     "actions": null,
+     "own": false,
+     "activity": null,
+     "destroyedText": "Planet destroyed"
+    },
+    {
+     "position": 4,
+     "coords": "2:70:4",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301140,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:4]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": true,
+      "name": "Colony"
+     },
+     "moon": null,
+     "debris": {
+      "metal": 3400,
+      "crystal": 1100,
+      "deuterium": null,
+      "recycleTargetId": 301140,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3839,
+      "name": "Txemin",
+      "rank": 455,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "i",
+      "classes": [
+       "inactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": true,
+      "empty": false
+     },
+     "own": false,
+     "activity": 37
+    },
+    {
+     "position": 5,
+     "coords": "2:70:5",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301150,
+      "image": "wasserplanet03",
+      "biome": null,
+      "tooltipTitle": "Planet Hauptplanet [2:70:5]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Hauptplanet"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3833,
+      "name": "Geronimo",
+      "rank": 1201,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": true,
+       "longinactive": true,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "I",
+      "classes": [
+       "inactive",
+       "longinactive"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 6,
+     "coords": "2:70:6",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301160,
+      "image": "eisplanet01",
+      "biome": null,
+      "tooltipTitle": "Planet Winterfell [2:70:6]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Winterfell"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3836,
+      "name": "Severian",
+      "rank": 88,
+      "status": {
+       "vacation": true,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "v",
+      "classes": [
+       "vacation"
+      ]
+     },
+     "alliance": {
+      "tag": "NW",
+      "rel": "enemy",
+      "id": 19,
+      "rank": 40,
+      "members": 1,
+      "title": "Alliance Night Watch 1 Member",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": false,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 7,
+     "coords": "2:70:7",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301170,
+      "image": "trockenplanet05",
+      "biome": null,
+      "tooltipTitle": "Planet Exile [2:70:7]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Exile"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 3844,
+      "name": "marusic01",
+      "rank": 301,
+      "status": {
+       "vacation": true,
+       "banned": true,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "vb",
+      "classes": [
+       "vacation",
+       "banned"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": null
+    },
+    {
+     "position": 8,
+     "coords": "2:70:8",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301180,
+      "image": "normaltempplanet06",
+      "biome": null,
+      "tooltipTitle": "Planet Little One [2:70:8]",
+      "missions": [
+       1,
+       3,
+       5,
+       6,
+       10
+      ],
+      "phalanx": false,
+      "name": "Little One"
+     },
+     "moon": null,
+     "debris": null,
+     "player": {
+      "id": 4359,
+      "name": "terror",
+      "rank": 530,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": true,
+       "strong": false
+      },
+      "statusLetters": "n",
+      "classes": [
+       "noob"
+      ]
+     },
+     "alliance": null,
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": true,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": 23
+    },
+    {
+     "position": 9,
+     "coords": "2:70:9",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": 301190,
+      "image": "gasplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet King's Landing [2:70:9]",
+      "missions": [
+       1,
+       3,
+       5,
+       6
+      ],
+      "phalanx": false,
+      "name": "King's Landing"
+     },
+     "moon": {
+      "id": 301191,
+      "name": "Moon",
+      "diameter": 7450,
+      "tempMin": -61,
+      "missions": [
+       1,
+       3,
+       4,
+       5,
+       6,
+       9
+      ]
+     },
+     "debris": {
+      "metal": 9800000,
+      "crystal": 4100000,
+      "deuterium": null,
+      "recycleTargetId": 301190,
+      "canRecycle": true
+     },
+     "player": {
+      "id": 3843,
+      "name": "Jon Snow",
+      "rank": 1,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": true
+      },
+      "statusLetters": "s",
+      "classes": [
+       "strong"
+      ]
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": true,
+      "message": true,
+      "buddy": true,
+      "missile": false,
+      "phalanx": false,
+      "empty": false
+     },
+     "own": false,
+     "activity": "*"
+    },
+    {
+     "position": 10,
+     "coords": "2:70:10",
+     "kind": "planet",
+     "colonize": null,
+     "planet": {
+      "id": null,
+      "image": "normaltempplanet02",
+      "biome": null,
+      "tooltipTitle": "Planet Colony [2:70:10]",
+      "missions": [
+       3,
+       4
+      ],
+      "phalanx": false,
+      "name": "Colony"
+     },
+     "moon": {
+      "id": null,
+      "name": "Moon",
+      "diameter": 5196,
+      "tempMin": -12,
+      "missions": [
+       3,
+       4
+      ]
+     },
+     "debris": null,
+     "player": {
+      "id": 4377,
+      "name": "vodoleyko1992",
+      "rank": 194,
+      "status": {
+       "vacation": false,
+       "banned": false,
+       "inactive": false,
+       "longinactive": false,
+       "noob": false,
+       "strong": false
+      },
+      "statusLetters": "",
+      "classes": []
+     },
+     "alliance": {
+      "tag": "NOVA",
+      "rel": "member",
+      "id": 12,
+      "rank": 1,
+      "members": 8,
+      "title": "Alliance Nova Collective 8 Members",
+      "web": null
+     },
+     "actions": {
+      "spy": false,
+      "message": false,
+      "buddy": false,
+      "missile": false,
+      "phalanx": false,
+      "empty": true
+     },
+     "own": true,
+     "activity": 52
+    }
+   ],
+   "header": {
+    "probes": 102,
+    "recyclers": 0,
+    "gigaRecyclers": 0,
+    "missiles": 25,
+    "slotsUsed": 1,
+    "slotsMax": 13,
+    "colonizedText": null,
+    "missileForm": false
+   },
+   "error": null
+  }
+ }
+}

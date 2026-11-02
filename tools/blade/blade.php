@@ -1,0 +1,289 @@
+<?php
+/**
+ * Minimal Blade renderer used ONLY to produce fixtures from the real OgameX
+ * Blade templates with stubbed services. Not shipped with the extensions.
+ */
+
+const OGX_SRC = '/tmp/claude-0/-home-claude/1ebb7366-d4fd-5fac-899e-5244b2310d13/scratchpad/src/OGameX';
+const OGX_ORIGIN = 'http://localhost';
+
+// ---------------------------------------------------------------- compiler
+function blade_balanced(string $s, int $pos): array
+{
+    // $pos points at '('. Returns [inner, endPosAfterClosingParen]
+    $depth = 0; $len = strlen($s); $q = null;
+    for ($i = $pos; $i < $len; $i++) {
+        $c = $s[$i];
+        if ($q !== null) {
+            if ($c === '\\') { $i++; continue; }
+            if ($c === $q) { $q = null; }
+            continue;
+        }
+        if ($c === '"' || $c === "'") { $q = $c; continue; }
+        if ($c === '(') { $depth++; }
+        elseif ($c === ')') { $depth--; if ($depth === 0) { return [substr($s, $pos + 1, $i - $pos - 1), $i + 1]; } }
+    }
+    throw new RuntimeException('Unbalanced parens at ' . $pos);
+}
+
+function blade_compile(string $src): string
+{
+    $src = preg_replace('/\{\{--.*?--\}\}/s', '', $src);
+    // @php ... @endphp
+    $src = preg_replace_callback('/@php(?!\s*\()(.*?)@endphp/s', fn($m) => '<?php ' . $m[1] . ' ?>', $src);
+    // raw echos
+    $src = preg_replace_callback('/\{!!\s*(.+?)\s*!!\}(\r?\n)?/s', function ($m) {
+        return '<?php echo ' . $m[1] . '; ?>' . (isset($m[2]) ? $m[2] . $m[2] : '');
+    }, $src);
+    // escaped echos
+    $src = preg_replace_callback('/(@)?\{\{\s*(.+?)\s*\}\}(\r?\n)?/s', function ($m) {
+        if ($m[1] === '@') { return substr($m[0], 1); }
+        return '<?php echo e(' . $m[2] . '); ?>' . (isset($m[3]) ? $m[3] . $m[3] : '');
+    }, $src);
+
+    // directives
+    $out = '';
+    $len = strlen($src);
+    $i = 0;
+    $withArgs = ['if', 'elseif', 'foreach', 'include', 'lang', 'json', 'vite', 'extends', 'section', 'yield', 'isset', 'unless', 'empty', 'switch', 'case', 'for', 'forelse'];
+    $noArgs = ['else', 'endif', 'endforeach', 'endsection', 'endisset', 'endunless', 'endempty', 'csrf', 'break', 'default', 'endswitch', 'endfor', 'empty', 'endforelse'];
+    $GLOBALS['__firstCase'] = false;
+    while ($i < $len) {
+        $at = strpos($src, '@', $i);
+        if ($at === false) { $out .= substr($src, $i); break; }
+        $out .= substr($src, $i, $at - $i);
+        // skip inside php blocks
+        $phpOpen = strrpos($out, '<?php');
+        $phpClose = strrpos($out, '?>');
+        $inPhp = ($phpOpen !== false && ($phpClose === false || $phpClose < $phpOpen));
+        // Laravel compiles "@switch(x) @case(y)" into one PHP block, so the first @case is inside it.
+        if ($inPhp && !($GLOBALS['__firstCase'] && preg_match('/\G@case\b/', $src, $mm, 0, $at))) { $out .= '@'; $i = $at + 1; continue; }
+        if (!preg_match('/\G@([a-zA-Z]+)/', $src, $m, 0, $at)) { $out .= '@'; $i = $at + 1; continue; }
+        $name = $m[1];
+        $after = $at + strlen($m[0]);
+        if (in_array($name, $withArgs, true)) {
+            $j = $after;
+            while ($j < $len && ($src[$j] === ' ' || $src[$j] === "\t")) { $j++; }
+            if ($j < $len && $src[$j] === '(') {
+                [$args, $end] = blade_balanced($src, $j);
+                $out .= blade_directive($name, $args);
+                $i = $end;
+                // PHP eats one newline after the closing tag automatically
+                continue;
+            }
+        }
+        if (in_array($name, $noArgs, true)) {
+            $out .= blade_directive($name, null);
+            $i = $after;
+            continue;
+        }
+        $out .= '@';
+        $i = $at + 1;
+    }
+    return $out;
+}
+
+function blade_directive(string $name, ?string $args): string
+{
+    switch ($name) {
+        case 'if': return "<?php if($args): ?>";
+        case 'elseif': return "<?php elseif($args): ?>";
+        case 'else': return '<?php else: ?>';
+        case 'endif': return '<?php endif; ?>';
+        case 'unless': return "<?php if(!($args)): ?>";
+        case 'endunless': return '<?php endif; ?>';
+        case 'isset': return "<?php if(isset($args)): ?>";
+        case 'endisset': return '<?php endif; ?>';
+        case 'empty':
+            // @empty without arguments is the else-branch of @forelse.
+            if ($args === null) { $n = array_pop($GLOBALS['__forelse']); return "<?php endforeach; array_pop(\$__ls); if (\$__fe$n): ?>"; }
+            return "<?php if(empty($args)): ?>";
+        case 'forelse':
+            $GLOBALS['__forelse'][] = $n = ($GLOBALS['__forelseN'] = ($GLOBALS['__forelseN'] ?? 0) + 1);
+            return "<?php \$__fe$n = true; \$__ls[] = 0; foreach($args): \$__fe$n = false; \$__ls[count(\$__ls) - 1]++; \$loop = (object)['iteration' => end(\$__ls), 'index' => end(\$__ls) - 1, 'first' => end(\$__ls) === 1, 'even' => end(\$__ls) % 2 === 0, 'odd' => end(\$__ls) % 2 === 1]; ?>";
+        case 'endforelse': return '<?php endif; ?>';
+        case 'endempty': return '<?php endif; ?>';
+        case 'foreach':
+            // Supports $loop->iteration/index/first/even/odd (Blade loop variable, simplified).
+            return "<?php \$__ls[] = 0; foreach($args): \$__ls[count(\$__ls) - 1]++; \$loop = (object)['iteration' => end(\$__ls), 'index' => end(\$__ls) - 1, 'first' => end(\$__ls) === 1, 'even' => end(\$__ls) % 2 === 0, 'odd' => end(\$__ls) % 2 === 1]; ?>";
+        case 'endforeach': return '<?php endforeach; array_pop($__ls); ?>';
+        case 'switch': $GLOBALS['__firstCase'] = true; return "<?php switch($args):";
+        case 'case':
+            if ($GLOBALS['__firstCase']) { $GLOBALS['__firstCase'] = false; return " case ($args): ?>"; }
+            return "<?php case ($args): ?>";
+        case 'break': return '<?php break; ?>';
+        case 'default': return '<?php default: ?>';
+        case 'endswitch': return '<?php endswitch; ?>';
+        case 'for': return "<?php for($args): ?>";
+        case 'endfor': return '<?php endfor; ?>';
+        case 'include': return "<?php echo blade_include_args(get_defined_vars(), $args); ?>";
+        case 'lang': return "<?php echo __($args); ?>";
+        case 'json': return "<?php echo json_encode($args, 15); ?>";
+        case 'vite': return '<?php echo blade_vite(); ?>';
+        case 'extends': return "<?php \$__extends = $args; ?>";
+        case 'section': return "<?php ob_start(); \$__section = $args; ?>";
+        case 'endsection': return "<?php \$GLOBALS['__sections'][\$__section] = ob_get_clean(); ?>";
+        case 'yield': return "<?php echo \$GLOBALS['__sections'][$args] ?? ''; ?>";
+        case 'csrf': return '<?php echo csrf_field(); ?>';
+    }
+    return '';
+}
+
+function blade_include_args(array $vars, string $view, array $data = []): string
+{
+    foreach (array_keys($vars) as $k) { if (str_starts_with($k, '__')) { unset($vars[$k]); } }
+    return blade_render($view, array_merge($vars, $data));
+}
+
+function blade_render(string $__view, array $__data = []): string
+{
+    $__file = OGX_SRC . '/resources/views/' . str_replace('.', '/', $__view) . '.blade.php';
+    $__compiled = blade_compile(file_get_contents($__file));
+    // Fixtures use a fixed "now": make time() in templates deterministic.
+    $__compiled = preg_replace('/(?<![\w>$:\\\\])time\(\)/', 'blade_now()', $__compiled);
+    $__tmp = sys_get_temp_dir() . '/blade_' . md5($__view) . '.php';
+    file_put_contents($__tmp, $__compiled);
+    foreach (array_keys($__data) as $__k) { if (str_starts_with($__k, '__')) { unset($__data[$__k]); } }
+    extract($__data);
+    $__extends = null;
+    ob_start();
+    include $__tmp;
+    $__out = ob_get_clean();
+    if ($__extends) {
+        $__parent = $__data;
+        return blade_render($__extends, $__parent);
+    }
+    return $__out;
+}
+
+function blade_vite(): string
+{
+    // Production output of laravel-vite-plugin for
+    // @vite(['resources/css/ingame.css', 'resources/js/ingame.js']) with Vite::useScriptTagAttributes(['type' => false]).
+    // Hashes are sample values.
+    return '<link rel="preload" as="style" href="' . OGX_ORIGIN . '/build/assets/ingame-B7lWkX3v.css" />'
+        . '<link rel="modulepreload" href="' . OGX_ORIGIN . '/build/assets/ingame-5d1c9e2a.js" />'
+        . '<link rel="stylesheet" href="' . OGX_ORIGIN . '/build/assets/ingame-B7lWkX3v.css" />'
+        . '<script src="' . OGX_ORIGIN . '/build/assets/ingame-5d1c9e2a.js"></script>';
+}
+
+// ---------------------------------------------------------------- helpers
+function e($v): string
+{
+    if ($v instanceof BackedEnum) { $v = $v->value; }
+    return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8', true);
+}
+
+$GLOBALS['__lang'] = [];
+function __($key, array $replace = [])
+{
+    $parts = explode('.', $key);
+    $file = $parts[0];
+    $value = null;
+    if (count($parts) > 1 && preg_match('/^[a-z_]+$/i', $file) && is_file(OGX_SRC . "/resources/lang/en/$file.php")) {
+        if (!isset($GLOBALS['__lang'][$file])) { $GLOBALS['__lang'][$file] = include OGX_SRC . "/resources/lang/en/$file.php"; }
+        $value = $GLOBALS['__lang'][$file];
+        foreach (array_slice($parts, 1) as $p) {
+            if (is_array($value) && array_key_exists($p, $value)) { $value = $value[$p]; } else { $value = null; break; }
+        }
+    }
+    if ($value === null) { $value = $key; }
+    if (is_string($value)) {
+        foreach ($replace as $k => $r) { $value = str_replace(':' . $k, (string)$r, $value); }
+    }
+    return $value;
+}
+
+function blade_routes(): array
+{
+    static $routes = null;
+    if ($routes !== null) { return $routes; }
+    $routes = [];
+    $web = file_get_contents(OGX_SRC . '/routes/web.php');
+    preg_match_all("/Route::(?:get|post|delete|match)\((?:\[[^\]]*\],\s*)?'([^']+)'.*?->name\('([^']+)'\)/", $web, $m, PREG_SET_ORDER);
+    foreach ($m as $r) { $routes[$r[2]] = '/' . ltrim($r[1], '/'); }
+    $routes['logout'] = '/logout';
+    $routes['impersonate.leave'] = '/impersonate/leave';
+    return $routes;
+}
+
+function route(string $name, array $params = []): string
+{
+    $routes = blade_routes();
+    if (!isset($routes[$name])) { throw new RuntimeException("Unknown route $name"); }
+    $path = $routes[$name];
+    foreach ($params as $k => $v) {
+        if (str_contains($path, '{' . $k . '}')) { $path = str_replace('{' . $k . '}', (string)$v, $path); unset($params[$k]); }
+    }
+    $url = OGX_ORIGIN . ($path === '/' ? '' : $path);
+    if ($params) { $url .= '?' . http_build_query($params); }
+    return $url;
+}
+
+function asset(string $p): string { return OGX_ORIGIN . '/' . ltrim($p, '/'); }
+function csrf_token(): string { return $GLOBALS['__ctx']['csrf']; }
+function csrf_field(): string { return '<input type="hidden" name="_token" value="' . csrf_token() . '" autocomplete="off">'; }
+function env($k, $d = null) { return $d; }
+function config($k, $d = null) { return ['app.name' => 'OGameX'][$k] ?? $d; }
+function session($k = null) { return null; }
+function now() { return \Carbon\Carbon::now(); }
+function blade_now(): int { return $GLOBALS['__ctx']['now']; }
+
+/** Minimal Illuminate\Support\Collection stand-in (only what the fleet views use). */
+class BladeCollection implements JsonSerializable, IteratorAggregate, Countable
+{
+    public function __construct(public array $items = []) {}
+    public function map(callable $f) { $r = []; foreach ($this->items as $k => $v) { $r[$k] = $f($v, $k); } return new BladeCollection($r); }
+    public function mapWithKeys(callable $f) { $r = []; foreach ($this->items as $k => $v) { foreach ($f($v, $k) as $kk => $vv) { $r[$kk] = $vv; } } return new BladeCollection($r); }
+    public function values() { return new BladeCollection(array_values($this->items)); }
+    public function pluck(string $p) { return new BladeCollection(array_map(fn($v) => is_array($v) ? $v[$p] : $v->$p, array_values($this->items))); }
+    public function implode(string $glue) { return implode($glue, $this->items); }
+    public function toArray() { return $this->items; }
+    public function jsonSerialize(): mixed { return $this->items; }
+    public function getIterator(): Iterator { return new ArrayIterator($this->items); }
+    public function count(): int { return count($this->items); }
+    public function isEmpty(): bool { return count($this->items) === 0; }
+    public function isNotEmpty(): bool { return count($this->items) > 0; }
+}
+function collect($items = []) { return new BladeCollection(is_array($items) ? $items : iterator_to_array($items)); }
+
+class BladeUrl { public function current() { return OGX_ORIGIN . $GLOBALS['__ctx']['path']; } }
+function url($p = null) { return $p === null ? new BladeUrl() : OGX_ORIGIN . '/' . ltrim($p, '/'); }
+
+class BladeRequest
+{
+    public function url() { return OGX_ORIGIN . $GLOBALS['__ctx']['path']; }
+    public function query($k = null) { $q = $GLOBALS['__ctx']['query']; return $k === null ? $q : ($q[$k] ?? null); }
+}
+function request($k = null, $d = null)
+{
+    // request('key', default) reads the query (galaxy/search fixtures); request() returns the request object.
+    if ($k !== null) { return $GLOBALS['__ctx']['query'][$k] ?? $d; }
+    return new BladeRequest();
+}
+
+class BladeApp
+{
+    public function getLocale() { return 'en'; }
+}
+function app($abstract = null, array $parameters = [])
+{
+    if ($abstract === null) { return new BladeApp(); }
+    // Optional per-fixture resolver (galaxy/buddies fixtures resolve PlayerService/HighscoreService in views).
+    if (isset($GLOBALS['__ctx']['app']) && ($r = ($GLOBALS['__ctx']['app'])($abstract, $parameters)) !== null) { return $r; }
+    if ($abstract === \OGame\Services\SettingsService::class) { return $GLOBALS['__ctx']['settings']; }
+    if ($abstract === \OGame\Services\HalvingService::class) { return new \OGame\Services\HalvingService(); }
+    return null;
+}
+class BladeAuthUser { public $alliance_id = null; }
+class BladeAuth { public function user() { return new BladeAuthUser(); } public function id() { return $GLOBALS['__ctx']['player']->getId(); } }
+function auth() { return new BladeAuth(); }
+
+class Request { public static function is(string $pattern): bool { $p = ltrim($GLOBALS['__ctx']['path'], '/'); $re = '#^' . str_replace('\*', '.*', preg_quote($pattern, '#')) . '$#'; return (bool)preg_match($re, $p); } }
+class URL { public static function to($p) { return OGX_ORIGIN . ($p === '/' ? '' : '/' . ltrim($p, '/')); } }
+class Session { public static function has($k) { return false; } public static function get($k) { return null; } }
+
+require_once OGX_SRC . '/app/Models/Planet/Coordinate.php';
+require_once OGX_SRC . '/app/Enums/CharacterClass.php';
+require_once OGX_SRC . '/app/Models/Enums/PlanetType.php';
+require_once __DIR__ . '/stubs.php';

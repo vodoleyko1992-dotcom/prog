@@ -1,0 +1,3975 @@
+{
+ "buildings-details-panel-HYPOTHETICAL.html": {
+  "page": {
+   "page": "buildings",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [
+   {
+    "id": 1,
+    "level": 30,
+    "maxLevel": 255,
+    "factor": 1.5,
+    "cost": {
+     "901": {
+      "base": 11505063,
+      "have": 2064425065,
+      "shown": 11505063
+     },
+     "902": {
+      "base": 2876265,
+      "have": 1126197944,
+      "shown": 2876265
+     }
+    },
+    "flags": {
+     "techOk": true,
+     "roomOk": true,
+     "maxReached": false,
+     "buyable": true,
+     "busy": false
+    },
+    "targetLevel": 31,
+    "buttonDisabled": false,
+    "form": {
+     "action": "game.php?page=buildings",
+     "fields": {
+      "cmd": "insert",
+      "building": "1",
+      "level": "31"
+     }
+    }
+   }
+  ],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-real-buildings.html": {
+  "page": {
+   "page": "buildings",
+   "mode": null,
+   "cp": null
+  },
+  "list": [
+   {
+    "id": 1,
+    "name": "Metal Mine",
+    "kind": "building",
+    "cssKey": "metal_mine",
+    "value": 38,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "1"
+     }
+    }
+   },
+   {
+    "id": 2,
+    "name": "Crystal Mine",
+    "kind": "building",
+    "cssKey": "crystal_mine",
+    "value": 35,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "2"
+     }
+    }
+   },
+   {
+    "id": 3,
+    "name": "Deuterium Refinery",
+    "kind": "building",
+    "cssKey": "deuterium_sintetizer",
+    "value": 33,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "3"
+     }
+    }
+   },
+   {
+    "id": 4,
+    "name": "Solar Power plant",
+    "kind": "building",
+    "cssKey": "solar_plant",
+    "value": 30,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "4"
+     }
+    }
+   },
+   {
+    "id": 6,
+    "name": "University",
+    "kind": "building",
+    "cssKey": "university",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 12,
+    "name": "Deuterium Power Plant",
+    "kind": "building",
+    "cssKey": "fusion_plant",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "12"
+     }
+    }
+   },
+   {
+    "id": 14,
+    "name": "Robot Factory",
+    "kind": "building",
+    "cssKey": "robot_factory",
+    "value": 20,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "14"
+     }
+    }
+   },
+   {
+    "id": 15,
+    "name": "Nanite Factory",
+    "kind": "building",
+    "cssKey": "nano_factory",
+    "value": 10,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": false,
+    "reason": "unavailable",
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "15"
+     }
+    }
+   },
+   {
+    "id": 21,
+    "name": "Shipyard",
+    "kind": "building",
+    "cssKey": "hangar",
+    "value": 18,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "21"
+     }
+    }
+   },
+   {
+    "id": 22,
+    "name": "Metal Storage",
+    "kind": "building",
+    "cssKey": "metal_store",
+    "value": 18,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "22"
+     }
+    }
+   },
+   {
+    "id": 23,
+    "name": "Crystal Storage",
+    "kind": "building",
+    "cssKey": "crystal_store",
+    "value": 17,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "23"
+     }
+    }
+   },
+   {
+    "id": 24,
+    "name": "Deuterium Storage",
+    "kind": "building",
+    "cssKey": "deuterium_store",
+    "value": 16,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "24"
+     }
+    }
+   },
+   {
+    "id": 31,
+    "name": "Research Lab",
+    "kind": "building",
+    "cssKey": "laboratory",
+    "value": 21,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": false,
+    "reason": "unavailable",
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "31"
+     }
+    }
+   },
+   {
+    "id": 33,
+    "name": "Terraformer",
+    "kind": "building",
+    "cssKey": "terraformer",
+    "value": 1,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "33"
+     }
+    }
+   },
+   {
+    "id": 34,
+    "name": "Alliance Depot",
+    "kind": "building",
+    "cssKey": "ally_deposit",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "34"
+     }
+    }
+   },
+   {
+    "id": 44,
+    "name": "Missile Silo",
+    "kind": "building",
+    "cssKey": "silo",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "44"
+     }
+    }
+   },
+   {
+    "id": 71,
+    "name": "Light conveyor",
+    "kind": "building",
+    "cssKey": "conveyor1",
+    "value": 1,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "71"
+     }
+    }
+   },
+   {
+    "id": 72,
+    "name": "Average conveyor",
+    "kind": "building",
+    "cssKey": "conveyor2",
+    "value": 1,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "72"
+     }
+    }
+   },
+   {
+    "id": 73,
+    "name": "Heavy conveyor",
+    "kind": "building",
+    "cssKey": "conveyor3",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=buildings",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "building": "73"
+     }
+    }
+   }
+  ],
+  "queueBox": {
+   "title": "Buildings under construction",
+   "empty": true,
+   "timers": [],
+   "upstream": null,
+   "html": ""
+  },
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": true
+   },
+   {
+    "cp": 254104,
+    "building": true
+   },
+   {
+    "cp": 254105,
+    "building": true
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-real-overview.html": {
+  "page": {
+   "page": "overview",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {
+   "building": {
+    "idle": true,
+    "title": "Buildings",
+    "text": null,
+    "restSeconds": null
+   },
+   "research": {
+    "idle": true,
+    "title": "Research",
+    "text": null,
+    "restSeconds": null
+   },
+   "shipyard": {
+    "idle": true,
+    "title": "Hangar",
+    "text": null,
+    "restSeconds": null
+   }
+  },
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": true
+   },
+   {
+    "cp": 254104,
+    "building": true
+   },
+   {
+    "cp": 254105,
+    "building": true
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-real-research.html": {
+  "page": {
+   "page": "research",
+   "mode": null,
+   "cp": null
+  },
+  "list": [
+   {
+    "id": 106,
+    "name": "Spy Technology",
+    "kind": "research",
+    "cssKey": "spy_tech",
+    "value": 12,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "106"
+     }
+    }
+   },
+   {
+    "id": 108,
+    "name": "Computer Technology",
+    "kind": "research",
+    "cssKey": "computer_tech",
+    "value": 12,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "108"
+     }
+    }
+   },
+   {
+    "id": 109,
+    "name": "Weapons Technology",
+    "kind": "research",
+    "cssKey": "military_tech",
+    "value": 2,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "109"
+     }
+    }
+   },
+   {
+    "id": 110,
+    "name": "Shield Technology",
+    "kind": "research",
+    "cssKey": "defence_tech",
+    "value": 7,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "110"
+     }
+    }
+   },
+   {
+    "id": 111,
+    "name": "Armour Technology",
+    "kind": "research",
+    "cssKey": "shield_tech",
+    "value": 6,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "111"
+     }
+    }
+   },
+   {
+    "id": 113,
+    "name": "Energy Technology",
+    "kind": "research",
+    "cssKey": "energy_tech",
+    "value": 12,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "113"
+     }
+    }
+   },
+   {
+    "id": 114,
+    "name": "Hyperspace Technology",
+    "kind": "research",
+    "cssKey": "hyperspace_tech",
+    "value": 8,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "114"
+     }
+    }
+   },
+   {
+    "id": 115,
+    "name": "Combustion Engine",
+    "kind": "research",
+    "cssKey": "combustion_tech",
+    "value": 12,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "115"
+     }
+    }
+   },
+   {
+    "id": 117,
+    "name": "Impulse Engine",
+    "kind": "research",
+    "cssKey": "impulse_motor_tech",
+    "value": 7,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "117"
+     }
+    }
+   },
+   {
+    "id": 118,
+    "name": "Hyperspace Engine",
+    "kind": "research",
+    "cssKey": "hyperspace_motor_tech",
+    "value": 4,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "118"
+     }
+    }
+   },
+   {
+    "id": 120,
+    "name": "Laser Technology",
+    "kind": "research",
+    "cssKey": "laser_tech",
+    "value": 10,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "120"
+     }
+    }
+   },
+   {
+    "id": 121,
+    "name": "Ion Technology",
+    "kind": "research",
+    "cssKey": "ionic_tech",
+    "value": 5,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "121"
+     }
+    }
+   },
+   {
+    "id": 122,
+    "name": "Plasma Technology",
+    "kind": "research",
+    "cssKey": "buster_tech",
+    "value": 7,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "122"
+     }
+    }
+   },
+   {
+    "id": 123,
+    "name": "Intergalactic Research Network",
+    "kind": "research",
+    "cssKey": "intergalactic_tech",
+    "value": 5,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "123"
+     }
+    }
+   },
+   {
+    "id": 124,
+    "name": "Expedition Research",
+    "kind": "research",
+    "cssKey": "expedition_tech",
+    "value": 6,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "124"
+     }
+    }
+   },
+   {
+    "id": 131,
+    "name": "Mineral Research",
+    "kind": "research",
+    "cssKey": "metal_proc_tech",
+    "value": 8,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "131"
+     }
+    }
+   },
+   {
+    "id": 132,
+    "name": "Semi-Crystals Research",
+    "kind": "research",
+    "cssKey": "crystal_proc_tech",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "132"
+     }
+    }
+   },
+   {
+    "id": 133,
+    "name": "Fuel Research",
+    "kind": "research",
+    "cssKey": "deuterium_proc_tech",
+    "value": 8,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=research",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "tech": "133"
+     }
+    }
+   },
+   {
+    "id": 199,
+    "name": "Graviton Research",
+    "kind": "research",
+    "cssKey": "graviton_tech",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "unavailable",
+    "form": null
+   }
+  ],
+  "queueBox": {
+   "title": "Research under construction",
+   "empty": true,
+   "timers": [],
+   "upstream": null,
+   "html": ""
+  },
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": true
+   },
+   {
+    "cp": 254104,
+    "building": true
+   },
+   {
+    "cp": 254105,
+    "building": true
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-real-resources.html": {
+  "page": {
+   "page": "resources",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": false
+   },
+   {
+    "cp": 254104,
+    "building": false
+   },
+   {
+    "cp": 254105,
+    "building": false
+   }
+  ],
+  "resources": {
+   "settings": {
+    "1": 100,
+    "2": 100,
+    "3": 100,
+    "4": 100,
+    "212": 100
+   },
+   "rows": [
+    {
+     "label": "Basic Production",
+     "id": null,
+     "name": "Basic Production",
+     "level": null,
+     "metal": 440000,
+     "crystal": 220000,
+     "deuterium": 0,
+     "energy": 0,
+     "percent": null,
+     "rawCells": [
+      "440.000",
+      "220.000",
+      "0",
+      "0"
+     ]
+    },
+    {
+     "label": "Metal Mine (Level 38)",
+     "id": 1,
+     "name": "Metal Mine",
+     "level": 38,
+     "metal": 938100934,
+     "crystal": 0,
+     "deuterium": 0,
+     "energy": -14214,
+     "percent": 100,
+     "rawCells": [
+      "938.100.934",
+      "0",
+      "0",
+      "-14.214"
+     ]
+    },
+    {
+     "label": "Crystal Mine (Level 35)",
+     "id": 2,
+     "name": "Crystal Mine",
+     "level": 35,
+     "metal": 0,
+     "crystal": 432777527,
+     "deuterium": 0,
+     "energy": -9836,
+     "percent": 100,
+     "rawCells": [
+      "0",
+      "432.777.527",
+      "0",
+      "-9.836"
+     ]
+    },
+    {
+     "label": "Deuterium Refinery (Level 33)",
+     "id": 3,
+     "name": "Deuterium Refinery",
+     "level": 33,
+     "metal": 0,
+     "crystal": 0,
+     "deuterium": 191546210,
+     "energy": -22993,
+     "percent": 100,
+     "rawCells": [
+      "0",
+      "0",
+      "191.546.210",
+      "-22.993"
+     ]
+    },
+    {
+     "label": "Solar Power plant (Level 30)",
+     "id": 4,
+     "name": "Solar Power plant",
+     "level": 30,
+     "metal": 0,
+     "crystal": 0,
+     "deuterium": 0,
+     "energy": 10470,
+     "percent": 100,
+     "rawCells": [
+      "0",
+      "0",
+      "0",
+      "10.470"
+     ]
+    },
+    {
+     "label": "Solar Satellite (Quantity 797)",
+     "id": 212,
+     "name": "Solar Satellite",
+     "level": 797,
+     "metal": 0,
+     "crystal": 0,
+     "deuterium": 0,
+     "energy": 30817,
+     "percent": 100,
+     "rawCells": [
+      "0",
+      "0",
+      "0",
+      "30.817"
+     ]
+    },
+    {
+     "label": "Bonus (Officers/Bonus):",
+     "id": null,
+     "name": "Bonus (Officers/Bonus):",
+     "level": null,
+     "metal": 994386990,
+     "crystal": 389499775,
+     "deuterium": 203038982,
+     "energy": 8257,
+     "percent": null,
+     "rawCells": [
+      "994.386.990",
+      "389.499.775",
+      "203.038.982",
+      "8.257"
+     ]
+    },
+    {
+     "label": "Storage capacity",
+     "id": null,
+     "name": "Storage capacity",
+     "level": null,
+     "metal": 3417,
+     "crystal": 1864,
+     "deuterium": 1017,
+     "energy": 0,
+     "percent": null,
+     "rawCells": [
+      "3.417 M",
+      "1.864 M",
+      "1.017 M",
+      "-"
+     ]
+    },
+    {
+     "label": "Total:",
+     "id": null,
+     "name": "Total:",
+     "level": null,
+     "metal": 1932927923,
+     "crystal": 822497302,
+     "deuterium": 394585192,
+     "energy": 2502,
+     "percent": null,
+     "rawCells": [
+      "1.932.927.923",
+      "822.497.302",
+      "394.585.192",
+      "2.502"
+     ]
+    },
+    {
+     "label": "Daily Production:",
+     "id": null,
+     "name": "Daily Production:",
+     "level": null,
+     "metal": 46390270157,
+     "crystal": 19739935252,
+     "deuterium": 9470044600,
+     "energy": 2502,
+     "percent": null,
+     "rawCells": [
+      "46.390.270.157",
+      "19.739.935.252",
+      "9.470.044.600",
+      "2.502"
+     ]
+    },
+    {
+     "label": "Weekly Production:",
+     "id": null,
+     "name": "Weekly Production:",
+     "level": null,
+     "metal": 324731891099,
+     "crystal": 138179546765,
+     "deuterium": 66290312203,
+     "energy": 2502,
+     "percent": null,
+     "rawCells": [
+      "324.731.891.099",
+      "138.179.546.765",
+      "66.290.312.203",
+      "2.502"
+     ]
+    }
+   ]
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-real-shipyard-defense.html": {
+  "page": {
+   "page": "shipyard",
+   "mode": "defense",
+   "cp": null
+  },
+  "list": [
+   {
+    "id": 407,
+    "name": "Small Shield Dome",
+    "kind": "unit",
+    "cssKey": "407",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[407]": "1"
+     }
+    }
+   },
+   {
+    "id": 408,
+    "name": "Large Shield Dome",
+    "kind": "unit",
+    "cssKey": "408",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[408]": "1"
+     }
+    }
+   },
+   {
+    "id": 409,
+    "name": "Atmospheric Shield",
+    "kind": "unit",
+    "cssKey": "409",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 411,
+    "name": "Orbital Defence Platform",
+    "kind": "unit",
+    "cssKey": "411",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 502,
+    "name": "Interceptor",
+    "kind": "unit",
+    "cssKey": "502",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 503,
+    "name": "Interplanetary missiles",
+    "kind": "unit",
+    "cssKey": "503",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 401,
+    "name": "Missile Launcher",
+    "kind": "unit",
+    "cssKey": "401",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[401]": "1"
+     }
+    }
+   },
+   {
+    "id": 402,
+    "name": "Light Laser Turret",
+    "kind": "unit",
+    "cssKey": "402",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[402]": "1"
+     }
+    }
+   },
+   {
+    "id": 403,
+    "name": "Heavy Laser Turret",
+    "kind": "unit",
+    "cssKey": "403",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[403]": "1"
+     }
+    }
+   },
+   {
+    "id": 404,
+    "name": "Gauss Cannon",
+    "kind": "unit",
+    "cssKey": "404",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 405,
+    "name": "Ion Cannon",
+    "kind": "unit",
+    "cssKey": "405",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[405]": "1"
+     }
+    }
+   },
+   {
+    "id": 406,
+    "name": "Plasma Cannon",
+    "kind": "unit",
+    "cssKey": "406",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[406]": "1"
+     }
+    }
+   },
+   {
+    "id": 410,
+    "name": "Gravitons Cannon",
+    "kind": "unit",
+    "cssKey": "410",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   }
+  ],
+  "queueBox": {
+   "title": "Ships under construction",
+   "empty": true,
+   "timers": [],
+   "upstream": null,
+   "html": ""
+  },
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": true
+   },
+   {
+    "cp": 254104,
+    "building": true
+   },
+   {
+    "cp": 254105,
+    "building": true
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": {
+   "items": [],
+   "elapsedOnCurrent": 0,
+   "totalSeconds": 0
+  }
+ },
+ "buildings-real-shipyard-fleet.html": {
+  "page": {
+   "page": "shipyard",
+   "mode": "fleet",
+   "cp": null
+  },
+  "list": [
+   {
+    "id": 208,
+    "name": "Colony Ship",
+    "kind": "unit",
+    "cssKey": "208",
+    "value": 2,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[208]": "1"
+     }
+    }
+   },
+   {
+    "id": 220,
+    "name": "Dark Matter Collector",
+    "kind": "unit",
+    "cssKey": "220",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 202,
+    "name": "Light Cargo",
+    "kind": "unit",
+    "cssKey": "202",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[202]": "1"
+     }
+    }
+   },
+   {
+    "id": 203,
+    "name": "Heavy Cargo",
+    "kind": "unit",
+    "cssKey": "203",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[203]": "1"
+     }
+    }
+   },
+   {
+    "id": 204,
+    "name": "Light Fighter",
+    "kind": "unit",
+    "cssKey": "204",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[204]": "1"
+     }
+    }
+   },
+   {
+    "id": 205,
+    "name": "Heavy Fighter",
+    "kind": "unit",
+    "cssKey": "205",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[205]": "1"
+     }
+    }
+   },
+   {
+    "id": 210,
+    "name": "Spy Probe",
+    "kind": "unit",
+    "cssKey": "210",
+    "value": 102,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[210]": "1"
+     }
+    }
+   },
+   {
+    "id": 212,
+    "name": "Solar Satellite",
+    "kind": "unit",
+    "cssKey": "212",
+    "value": 797,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[212]": "1"
+     }
+    }
+   },
+   {
+    "id": 206,
+    "name": "Cruiser",
+    "kind": "unit",
+    "cssKey": "206",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[206]": "1"
+     }
+    }
+   },
+   {
+    "id": 207,
+    "name": "Battleship",
+    "kind": "unit",
+    "cssKey": "207",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[207]": "1"
+     }
+    }
+   },
+   {
+    "id": 209,
+    "name": "Recycler",
+    "kind": "unit",
+    "cssKey": "209",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[209]": "1"
+     }
+    }
+   },
+   {
+    "id": 211,
+    "name": "Planet Bomber",
+    "kind": "unit",
+    "cssKey": "211",
+    "value": 0,
+    "requirementsMet": true,
+    "hasForm": true,
+    "canStart": true,
+    "reason": null,
+    "form": {
+     "action": "https://ogamex.eu/Aeternum/game.php?page=shipyard",
+     "method": "post",
+     "fields": {
+      "cmd": "insert",
+      "fmenge[211]": "1"
+     }
+    }
+   },
+   {
+    "id": 213,
+    "name": "Star Fighter",
+    "kind": "unit",
+    "cssKey": "213",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 215,
+    "name": "Battle Cruiser",
+    "kind": "unit",
+    "cssKey": "215",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 217,
+    "name": "Battle Transporter",
+    "kind": "unit",
+    "cssKey": "217",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 219,
+    "name": "Battle Recycler",
+    "kind": "unit",
+    "cssKey": "219",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 214,
+    "name": "Battle Fortress",
+    "kind": "unit",
+    "cssKey": "214",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 216,
+    "name": "Black Moon",
+    "kind": "unit",
+    "cssKey": "216",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   },
+   {
+    "id": 218,
+    "name": "Avatar",
+    "kind": "unit",
+    "cssKey": "218",
+    "value": 0,
+    "requirementsMet": false,
+    "hasForm": false,
+    "canStart": false,
+    "reason": "requirements",
+    "form": null
+   }
+  ],
+  "queueBox": {
+   "title": "Ships under construction",
+   "empty": true,
+   "timers": [],
+   "upstream": null,
+   "html": ""
+  },
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": true
+   },
+   {
+    "cp": 254104,
+    "building": true
+   },
+   {
+    "cp": 254105,
+    "building": true
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": {
+   "items": [],
+   "elapsedOnCurrent": 0,
+   "totalSeconds": 0
+  }
+ },
+ "buildings-real-techtree.html": {
+  "page": {
+   "page": "techtree",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [
+   {
+    "cp": 254102,
+    "building": false
+   },
+   {
+    "cp": 254103,
+    "building": false
+   },
+   {
+    "cp": 254104,
+    "building": false
+   },
+   {
+    "cp": 254105,
+    "building": false
+   }
+  ],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [
+   {
+    "id": 1,
+    "name": "Metal Mine",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 2,
+    "name": "Crystal Mine",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 3,
+    "name": "Deuterium Refinery",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 4,
+    "name": "Solar Power plant",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 6,
+    "name": "University",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Robot Factory",
+      "have": 20,
+      "need": 20,
+      "met": true,
+      "id": 14
+     },
+     {
+      "name": "Research Lab",
+      "have": 21,
+      "need": 22,
+      "met": false,
+      "id": 31
+     },
+     {
+      "name": "Nanite Factory",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 15
+     },
+     {
+      "name": "Computer Technology",
+      "have": 12,
+      "need": 12,
+      "met": true,
+      "id": 108
+     },
+     {
+      "name": "Intergalactic Research Network",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 123
+     }
+    ]
+   },
+   {
+    "id": 12,
+    "name": "Deuterium Power Plant",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Deuterium Refinery",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 3
+     },
+     {
+      "name": "Energy Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 14,
+    "name": "Robot Factory",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 15,
+    "name": "Nanite Factory",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Robot Factory",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 14
+     },
+     {
+      "name": "Computer Technology",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 108
+     }
+    ]
+   },
+   {
+    "id": 21,
+    "name": "Shipyard",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Robot Factory",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 14
+     }
+    ]
+   },
+   {
+    "id": 22,
+    "name": "Metal Storage",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 23,
+    "name": "Crystal Storage",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 24,
+    "name": "Deuterium Storage",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 31,
+    "name": "Research Lab",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 33,
+    "name": "Terraformer",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Nanite Factory",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 15
+     },
+     {
+      "name": "Energy Technology",
+      "have": 12,
+      "need": 12,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 34,
+    "name": "Alliance Depot",
+    "tab": "tabs-1",
+    "reqs": []
+   },
+   {
+    "id": 44,
+    "name": "Missile Silo",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 71,
+    "name": "Light conveyor",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Nanite Factory",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 15
+     },
+     {
+      "name": "Shipyard",
+      "have": 14,
+      "need": 14,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 72,
+    "name": "Average conveyor",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Nanite Factory",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 15
+     },
+     {
+      "name": "Shipyard",
+      "have": 14,
+      "need": 14,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 73,
+    "name": "Heavy conveyor",
+    "tab": "tabs-1",
+    "reqs": [
+     {
+      "name": "Nanite Factory",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 15
+     },
+     {
+      "name": "Shipyard",
+      "have": 18,
+      "need": 18,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 14,
+    "name": "Robot Factory",
+    "tab": "tabs-2",
+    "reqs": []
+   },
+   {
+    "id": 15,
+    "name": "Nanite Factory",
+    "tab": "tabs-2",
+    "reqs": [
+     {
+      "name": "Robot Factory",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 14
+     },
+     {
+      "name": "Computer Technology",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 108
+     }
+    ]
+   },
+   {
+    "id": 41,
+    "name": "Moon base",
+    "tab": "tabs-2",
+    "reqs": []
+   },
+   {
+    "id": 42,
+    "name": "Phalax Sensor",
+    "tab": "tabs-2",
+    "reqs": [
+     {
+      "name": "Moon base",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 41
+     }
+    ]
+   },
+   {
+    "id": 43,
+    "name": "Jumpgate",
+    "tab": "tabs-2",
+    "reqs": [
+     {
+      "name": "Moon base",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 41
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 7,
+      "need": 7,
+      "met": true,
+      "id": 114
+     }
+    ]
+   },
+   {
+    "id": 44,
+    "name": "Missile Silo",
+    "tab": "tabs-2",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 106,
+    "name": "Spy Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 108,
+    "name": "Computer Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 109,
+    "name": "Weapons Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 110,
+    "name": "Shield Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Research Lab",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 111,
+    "name": "Armour Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 113,
+    "name": "Energy Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 114,
+    "name": "Hyperspace Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Shield Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 110
+     },
+     {
+      "name": "Research Lab",
+      "have": 7,
+      "need": 7,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 115,
+    "name": "Combustion Engine",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Research Lab",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 117,
+    "name": "Impulse Engine",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Research Lab",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 118,
+    "name": "Hyperspace Engine",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Hyperspace Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 114
+     },
+     {
+      "name": "Research Lab",
+      "have": 7,
+      "need": 7,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 120,
+    "name": "Laser Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Energy Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 121,
+    "name": "Ion Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Laser Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 120
+     },
+     {
+      "name": "Energy Technology",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 122,
+    "name": "Plasma Technology",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Energy Technology",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Laser Technology",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 120
+     },
+     {
+      "name": "Ion Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 121
+     }
+    ]
+   },
+   {
+    "id": 123,
+    "name": "Intergalactic Research Network",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Computer Technology",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 108
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 114
+     }
+    ]
+   },
+   {
+    "id": 124,
+    "name": "Expedition Research",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Spy Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 106
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 117
+     },
+     {
+      "name": "Research Lab",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 131,
+    "name": "Mineral Research",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Energy Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 132,
+    "name": "Semi-Crystals Research",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Energy Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 133,
+    "name": "Fuel Research",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 31
+     },
+     {
+      "name": "Energy Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 113
+     }
+    ]
+   },
+   {
+    "id": 199,
+    "name": "Graviton Research",
+    "tab": "tabs-3",
+    "reqs": [
+     {
+      "name": "Research Lab",
+      "have": 12,
+      "need": 12,
+      "met": true,
+      "id": 31
+     }
+    ]
+   },
+   {
+    "id": 202,
+    "name": "Light Cargo",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Combustion Engine",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 115
+     }
+    ]
+   },
+   {
+    "id": 203,
+    "name": "Heavy Cargo",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Combustion Engine",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 115
+     }
+    ]
+   },
+   {
+    "id": 204,
+    "name": "Light Fighter",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Combustion Engine",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 115
+     }
+    ]
+   },
+   {
+    "id": 205,
+    "name": "Heavy Fighter",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Armour Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 111
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 117
+     }
+    ]
+   },
+   {
+    "id": 206,
+    "name": "Cruiser",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 117
+     },
+     {
+      "name": "Ion Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 121
+     }
+    ]
+   },
+   {
+    "id": 207,
+    "name": "Battleship",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 7,
+      "need": 7,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 118
+     }
+    ]
+   },
+   {
+    "id": 208,
+    "name": "Colony Ship",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 117
+     }
+    ]
+   },
+   {
+    "id": 209,
+    "name": "Recycler",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Combustion Engine",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 115
+     },
+     {
+      "name": "Shield Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 110
+     }
+    ]
+   },
+   {
+    "id": 210,
+    "name": "Spy Probe",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Combustion Engine",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 115
+     },
+     {
+      "name": "Spy Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 106
+     }
+    ]
+   },
+   {
+    "id": 211,
+    "name": "Planet Bomber",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Impulse Engine",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 117
+     },
+     {
+      "name": "Shipyard",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Plasma Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 122
+     }
+    ]
+   },
+   {
+    "id": 212,
+    "name": "Solar Satellite",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 213,
+    "name": "Star Fighter",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 9,
+      "need": 9,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 6,
+      "met": false,
+      "id": 118
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 114
+     }
+    ]
+   },
+   {
+    "id": 214,
+    "name": "Battle Fortress",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 12,
+      "need": 12,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 7,
+      "met": false,
+      "id": 118
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 114
+     },
+     {
+      "name": "Graviton Research",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 199
+     }
+    ]
+   },
+   {
+    "id": 215,
+    "name": "Battle Cruiser",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Hyperspace Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 114
+     },
+     {
+      "name": "Laser Technology",
+      "have": 10,
+      "need": 12,
+      "met": false,
+      "id": 120
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 5,
+      "met": false,
+      "id": 118
+     },
+     {
+      "name": "Shipyard",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 216,
+    "name": "Black Moon",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Spy Technology",
+      "have": 12,
+      "need": 12,
+      "met": true,
+      "id": 106
+     },
+     {
+      "name": "Shipyard",
+      "have": 15,
+      "need": 15,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Weapons Technology",
+      "have": 2,
+      "need": 14,
+      "met": false,
+      "id": 109
+     },
+     {
+      "name": "Shield Technology",
+      "have": 7,
+      "need": 14,
+      "met": false,
+      "id": 110
+     },
+     {
+      "name": "Armour Technology",
+      "have": 6,
+      "need": 15,
+      "met": false,
+      "id": 111
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 8,
+      "need": 10,
+      "met": false,
+      "id": 114
+     },
+     {
+      "name": "Laser Technology",
+      "have": 10,
+      "need": 20,
+      "met": false,
+      "id": 120
+     },
+     {
+      "name": "Graviton Research",
+      "have": 0,
+      "need": 3,
+      "met": false,
+      "id": 199
+     }
+    ]
+   },
+   {
+    "id": 217,
+    "name": "Battle Transporter",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Armour Technology",
+      "have": 6,
+      "need": 10,
+      "met": false,
+      "id": 111
+     },
+     {
+      "name": "Shipyard",
+      "have": 14,
+      "need": 14,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 8,
+      "need": 10,
+      "met": false,
+      "id": 114
+     },
+     {
+      "name": "Shield Technology",
+      "have": 7,
+      "need": 14,
+      "met": false,
+      "id": 110
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 7,
+      "need": 15,
+      "met": false,
+      "id": 117
+     }
+    ]
+   },
+   {
+    "id": 218,
+    "name": "Avatar",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 18,
+      "need": 18,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Weapons Technology",
+      "have": 2,
+      "need": 20,
+      "met": false,
+      "id": 109
+     },
+     {
+      "name": "Shield Technology",
+      "have": 7,
+      "need": 20,
+      "met": false,
+      "id": 110
+     },
+     {
+      "name": "Armour Technology",
+      "have": 6,
+      "need": 20,
+      "met": false,
+      "id": 111
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 8,
+      "need": 15,
+      "met": false,
+      "id": 114
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 20,
+      "met": false,
+      "id": 118
+     },
+     {
+      "name": "Laser Technology",
+      "have": 10,
+      "need": 25,
+      "met": false,
+      "id": 120
+     },
+     {
+      "name": "Graviton Research",
+      "have": 0,
+      "need": 8,
+      "met": false,
+      "id": 199
+     }
+    ]
+   },
+   {
+    "id": 219,
+    "name": "Battle Recycler",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 15,
+      "need": 15,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Weapons Technology",
+      "have": 2,
+      "need": 15,
+      "met": false,
+      "id": 109
+     },
+     {
+      "name": "Shield Technology",
+      "have": 7,
+      "need": 15,
+      "met": false,
+      "id": 110
+     },
+     {
+      "name": "Armour Technology",
+      "have": 6,
+      "need": 15,
+      "met": false,
+      "id": 111
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 8,
+      "met": false,
+      "id": 118
+     }
+    ]
+   },
+   {
+    "id": 220,
+    "name": "Dark Matter Collector",
+    "tab": "tabs-4",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 9,
+      "need": 9,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Hyperspace Technology",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 114
+     },
+     {
+      "name": "Hyperspace Engine",
+      "have": 4,
+      "need": 6,
+      "met": false,
+      "id": 118
+     }
+    ]
+   },
+   {
+    "id": 401,
+    "name": "Missile Launcher",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 402,
+    "name": "Light Laser Turret",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Shipyard",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Laser Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 120
+     }
+    ]
+   },
+   {
+    "id": 403,
+    "name": "Heavy Laser Turret",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Energy Technology",
+      "have": 3,
+      "need": 3,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Shipyard",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Laser Technology",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 120
+     }
+    ]
+   },
+   {
+    "id": 404,
+    "name": "Gauss Cannon",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Energy Technology",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 113
+     },
+     {
+      "name": "Weapons Technology",
+      "have": 2,
+      "need": 3,
+      "met": false,
+      "id": 109
+     },
+     {
+      "name": "Shield Technology",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 110
+     }
+    ]
+   },
+   {
+    "id": 405,
+    "name": "Ion Cannon",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Ion Technology",
+      "have": 4,
+      "need": 4,
+      "met": true,
+      "id": 121
+     }
+    ]
+   },
+   {
+    "id": 406,
+    "name": "Plasma Cannon",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shipyard",
+      "have": 8,
+      "need": 8,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Plasma Technology",
+      "have": 7,
+      "need": 7,
+      "met": true,
+      "id": 122
+     }
+    ]
+   },
+   {
+    "id": 407,
+    "name": "Small Shield Dome",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shield Technology",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 110
+     },
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 408,
+    "name": "Large Shield Dome",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Shield Technology",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 110
+     },
+     {
+      "name": "Shipyard",
+      "have": 6,
+      "need": 6,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 409,
+    "name": "Atmospheric Shield",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Guardian",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 609
+     }
+    ]
+   },
+   {
+    "id": 410,
+    "name": "Gravitons Cannon",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Graviton Research",
+      "have": 0,
+      "need": 7,
+      "met": false,
+      "id": 199
+     },
+     {
+      "name": "Shipyard",
+      "have": 18,
+      "need": 18,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Weapons Technology",
+      "have": 2,
+      "need": 20,
+      "met": false,
+      "id": 109
+     }
+    ]
+   },
+   {
+    "id": 411,
+    "name": "Orbital Defence Platform",
+    "tab": "tabs-5",
+    "reqs": [
+     {
+      "name": "Graviton Research",
+      "have": 0,
+      "need": 10,
+      "met": false,
+      "id": 199
+     },
+     {
+      "name": "Shield Technology",
+      "have": 7,
+      "need": 22,
+      "met": false,
+      "id": 110
+     },
+     {
+      "name": "Plasma Technology",
+      "have": 7,
+      "need": 20,
+      "met": false,
+      "id": 122
+     },
+     {
+      "name": "Computer Technology",
+      "have": 12,
+      "need": 15,
+      "met": false,
+      "id": 108
+     },
+     {
+      "name": "Armour Technology",
+      "have": 6,
+      "need": 25,
+      "met": false,
+      "id": 111
+     },
+     {
+      "name": "Energy Technology",
+      "have": 12,
+      "need": 20,
+      "met": false,
+      "id": 113
+     },
+     {
+      "name": "Minister of Defence",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 608
+     },
+     {
+      "name": "Shipyard",
+      "have": 18,
+      "need": 20,
+      "met": false,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 502,
+    "name": "Interceptor",
+    "tab": "tabs-6",
+    "reqs": [
+     {
+      "name": "Missile Silo",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 44
+     },
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     }
+    ]
+   },
+   {
+    "id": 503,
+    "name": "Interplanetary missiles",
+    "tab": "tabs-6",
+    "reqs": [
+     {
+      "name": "Missile Silo",
+      "have": 0,
+      "need": 4,
+      "met": false,
+      "id": 44
+     },
+     {
+      "name": "Shipyard",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 21
+     },
+     {
+      "name": "Impulse Engine",
+      "have": 1,
+      "need": 1,
+      "met": true,
+      "id": 117
+     }
+    ]
+   },
+   {
+    "id": 601,
+    "name": "Geologist",
+    "tab": "tabs-7",
+    "reqs": []
+   },
+   {
+    "id": 602,
+    "name": "Admiral",
+    "tab": "tabs-7",
+    "reqs": []
+   },
+   {
+    "id": 603,
+    "name": "Engineer",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Geologist",
+      "have": 5,
+      "need": 5,
+      "met": true,
+      "id": 601
+     }
+    ]
+   },
+   {
+    "id": 604,
+    "name": "Technocrat",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Admiral",
+      "have": 0,
+      "need": 5,
+      "met": false,
+      "id": 602
+     }
+    ]
+   },
+   {
+    "id": 605,
+    "name": "Constructor",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Geologist",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 601
+     },
+     {
+      "name": "Engineer",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 603
+     }
+    ]
+   },
+   {
+    "id": 606,
+    "name": "Scientologist",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Geologist",
+      "have": 10,
+      "need": 10,
+      "met": true,
+      "id": 601
+     },
+     {
+      "name": "Engineer",
+      "have": 2,
+      "need": 2,
+      "met": true,
+      "id": 603
+     }
+    ]
+   },
+   {
+    "id": 607,
+    "name": "Storage expert",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Constructor",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 605
+     }
+    ]
+   },
+   {
+    "id": 608,
+    "name": "Minister of Defence",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Scientologist",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 606
+     }
+    ]
+   },
+   {
+    "id": 609,
+    "name": "Guardian",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Geologist",
+      "have": 18,
+      "need": 20,
+      "met": false,
+      "id": 601
+     },
+     {
+      "name": "Engineer",
+      "have": 4,
+      "need": 10,
+      "met": false,
+      "id": 603
+     },
+     {
+      "name": "Constructor",
+      "have": 0,
+      "need": 3,
+      "met": false,
+      "id": 605
+     },
+     {
+      "name": "Scientologist",
+      "have": 0,
+      "need": 3,
+      "met": false,
+      "id": 606
+     },
+     {
+      "name": "Storage expert",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 607
+     },
+     {
+      "name": "Minister of Defence",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 608
+     }
+    ]
+   },
+   {
+    "id": 610,
+    "name": "Spy",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Admiral",
+      "have": 0,
+      "need": 10,
+      "met": false,
+      "id": 602
+     },
+     {
+      "name": "Technocrat",
+      "have": 0,
+      "need": 5,
+      "met": false,
+      "id": 604
+     }
+    ]
+   },
+   {
+    "id": 611,
+    "name": "Commander",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Admiral",
+      "have": 0,
+      "need": 10,
+      "met": false,
+      "id": 602
+     },
+     {
+      "name": "Technocrat",
+      "have": 0,
+      "need": 5,
+      "met": false,
+      "id": 604
+     }
+    ]
+   },
+   {
+    "id": 612,
+    "name": "Destroyer",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Spy",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 610
+     }
+    ]
+   },
+   {
+    "id": 613,
+    "name": "General",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Commander",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 611
+     }
+    ]
+   },
+   {
+    "id": 614,
+    "name": "Emperor",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Admiral",
+      "have": 0,
+      "need": 20,
+      "met": false,
+      "id": 602
+     },
+     {
+      "name": "Technocrat",
+      "have": 0,
+      "need": 10,
+      "met": false,
+      "id": 604
+     },
+     {
+      "name": "Spy",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 610
+     },
+     {
+      "name": "Commander",
+      "have": 0,
+      "need": 2,
+      "met": false,
+      "id": 611
+     },
+     {
+      "name": "Destroyer",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 612
+     },
+     {
+      "name": "General",
+      "have": 0,
+      "need": 3,
+      "met": false,
+      "id": 613
+     }
+    ]
+   },
+   {
+    "id": 615,
+    "name": "Raider",
+    "tab": "tabs-7",
+    "reqs": [
+     {
+      "name": "Emperor",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 614
+     },
+     {
+      "name": "Guardian",
+      "have": 0,
+      "need": 1,
+      "met": false,
+      "id": 609
+     }
+    ]
+   }
+  ],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-upstream-buildings.html": {
+  "page": {
+   "page": "buildings",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [
+   {
+    "position": 1,
+    "id": 1,
+    "name": "Metal Mine",
+    "level": 31,
+    "planet": null,
+    "endUnix": 1793398866,
+    "restSeconds": 45866,
+    "totalSeconds": 47066,
+    "cancel": {
+     "cmd": "cancel"
+    }
+   },
+   {
+    "position": 2,
+    "id": 2,
+    "name": "Crystal Mine",
+    "level": 28,
+    "planet": null,
+    "endUnix": 1793412253,
+    "restSeconds": null,
+    "totalSeconds": null,
+    "cancel": {
+     "cmd": "remove",
+     "listid": 2
+    }
+   },
+   {
+    "position": 3,
+    "id": 1,
+    "name": "Metal Mine",
+    "level": 32,
+    "planet": null,
+    "endUnix": 1793482852,
+    "restSeconds": null,
+    "totalSeconds": null,
+    "cancel": {
+     "cmd": "remove",
+     "listid": 3
+    }
+   }
+  ],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-upstream-research.html": {
+  "page": {
+   "page": "research",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [
+   {
+    "position": 1,
+    "id": null,
+    "name": "Plasma Technology",
+    "level": 8,
+    "planet": null,
+    "endUnix": 1793371267,
+    "restSeconds": 18267,
+    "totalSeconds": 21267,
+    "cancel": {
+     "cmd": "cancel"
+    }
+   },
+   {
+    "position": 2,
+    "id": null,
+    "name": "Weapons Technology",
+    "level": 19,
+    "planet": "Colony",
+    "endUnix": 1800630639,
+    "restSeconds": null,
+    "totalSeconds": null,
+    "cancel": {
+     "cmd": "remove",
+     "listid": 2
+    }
+   }
+  ],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-upstream-resources.html": {
+  "page": {
+   "page": "resources",
+   "mode": null,
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {
+    "1": 100,
+    "2": 100,
+    "3": 100,
+    "4": 100,
+    "12": 80,
+    "212": 100
+   },
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": null
+ },
+ "buildings-upstream-shipyard-defense.html": {
+  "page": {
+   "page": "shipyard",
+   "mode": "defense",
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": {
+   "items": [
+    {
+     "index": 0,
+     "id": 203,
+     "name": "Heavy Cargo",
+     "count": 500,
+     "perUnitSeconds": 33
+    },
+    {
+     "index": 1,
+     "id": 207,
+     "name": "Battleship",
+     "count": 25,
+     "perUnitSeconds": 166
+    },
+    {
+     "index": 2,
+     "id": 401,
+     "name": "Missile Launcher",
+     "count": 1000,
+     "perUnitSeconds": 5
+    }
+   ],
+   "elapsedOnCurrent": 37,
+   "totalSeconds": 25613
+  }
+ },
+ "buildings-upstream-shipyard-fleet.html": {
+  "page": {
+   "page": "shipyard",
+   "mode": "fleet",
+   "cp": null
+  },
+  "list": [],
+  "queueBox": null,
+  "overviewBoxes": {},
+  "planetsBuilding": [],
+  "resources": {
+   "settings": {},
+   "rows": []
+  },
+  "techtree": [],
+  "panels": [],
+  "upstreamQueue": [],
+  "upstreamShipyardQueue": {
+   "items": [
+    {
+     "index": 0,
+     "id": 203,
+     "name": "Heavy Cargo",
+     "count": 500,
+     "perUnitSeconds": 33
+    },
+    {
+     "index": 1,
+     "id": 207,
+     "name": "Battleship",
+     "count": 25,
+     "perUnitSeconds": 166
+    },
+    {
+     "index": 2,
+     "id": 401,
+     "name": "Missile Launcher",
+     "count": 1000,
+     "perUnitSeconds": 5
+    }
+   ],
+   "elapsedOnCurrent": 37,
+   "totalSeconds": 25613
+  }
+ }
+}

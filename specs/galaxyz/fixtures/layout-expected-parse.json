@@ -1,0 +1,1294 @@
+{
+ "real-overview": {
+  "live": {
+   "detect": {
+    "ok": true,
+    "generator": "GALAXYZ 1.8.git",
+    "engine": "galaxyz",
+    "version": "1.8.git",
+    "window": "full",
+    "layout": "galaxyz"
+   },
+   "route": {
+    "page": "overview",
+    "pageKey": "overview",
+    "mode": "show",
+    "cp": null,
+    "bodyId": "overview",
+    "queryString": "page=overview",
+    "universeBase": "file:///tmp/claude-0/-home-claude/1ebb7366-d4fd-5fac-899e-5244b2310d13/scratchpad/eu/pages/overview.html"
+   },
+   "time": {
+    "wallMs": 1793354617000,
+    "userOffsetSec": 0,
+    "renderUnix": 1793347417,
+    "tzOffsetMs": 7200000,
+    "clockText": "Oct Fri 30 10:03:43"
+   },
+   "player": {
+    "name": "vodoleyko1992",
+    "id": null,
+    "rank": 194,
+    "unreadMessages": 2,
+    "vacation": false,
+    "authLevel": 0,
+    "lang": "en",
+    "skin": "./styles/theme/gow/"
+   },
+   "planets": [
+    {
+     "id": 254102,
+     "name": "Главная планета",
+     "coords": "2:68:5",
+     "type": "planet",
+     "selected": true,
+     "image": "dschjungelplanet07",
+     "active": true,
+     "building": false,
+     "tooltip": {
+      "tempMin": 32,
+      "tempMax": 72,
+      "diameter": 20000,
+      "fieldsUsed": 259,
+      "fieldsMax": 405
+     },
+     "moonId": null
+    },
+    {
+     "id": 254103,
+     "name": "Colony",
+     "coords": "2:68:6",
+     "type": "planet",
+     "selected": false,
+     "image": "dschjungelplanet10",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 20,
+      "tempMax": 60,
+      "diameter": 18627,
+      "fieldsUsed": 81,
+      "fieldsMax": 347
+     },
+     "moonId": null
+    },
+    {
+     "id": 254104,
+     "name": "Colony",
+     "coords": "2:68:7",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 22,
+      "tempMax": 62,
+      "diameter": 20808,
+      "fieldsUsed": 77,
+      "fieldsMax": 433
+     },
+     "moonId": null
+    },
+    {
+     "id": 254105,
+     "name": "Colony",
+     "coords": "2:68:8",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": -10,
+      "tempMax": 30,
+      "diameter": 22671,
+      "fieldsUsed": 128,
+      "fieldsMax": 514
+     },
+     "moonId": null
+    }
+   ],
+   "planetCount": {
+    "used": 4,
+    "max": 6
+   },
+   "current": {
+    "id": 254102,
+    "name": "Главная планета",
+    "coords": "2:68:5",
+    "type": "planet",
+    "image": "dschjungelplanet07"
+   },
+   "resources": {
+    "metal": {
+     "amount": 1408320361.5606675,
+     "storage": 3416925000,
+     "perHour": 1932927923.2055,
+     "dataReal": 1408320361.5607,
+     "tooltip": {
+      "available": 1408320362,
+      "storage": 3416925000,
+      "production": 1932927923
+     }
+    },
+    "crystal": {
+     "amount": 228249710.0184198,
+     "storage": 1863925000,
+     "perHour": 822497302.17436,
+     "dataReal": 228249710.01842,
+     "tooltip": {
+      "available": 228249710,
+      "storage": 1863925000,
+      "production": 822497302
+     }
+    },
+    "deuterium": {
+     "amount": 350563050.6686126,
+     "storage": 1016750000,
+     "perHour": 394585191.6862,
+     "dataReal": 350563050.66861,
+     "tooltip": {
+      "available": 350563051,
+      "storage": 1016750000,
+      "production": 394585192
+     }
+    },
+    "energy": {
+     "available": 438,
+     "production": 47480,
+     "consumption": 47042
+    },
+    "darkmatter": 3981
+   },
+   "events": [
+    {
+     "key": "1793348429396900",
+     "fleetId": 396900,
+     "endUnix": 1793348429,
+     "restSec": 1012,
+     "status": "flight",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+    },
+    {
+     "key": "1793350031396900",
+     "fleetId": 396900,
+     "endUnix": 1793350031,
+     "restSec": 2614,
+     "status": "return",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+    }
+   ],
+   "overview": {
+    "planetName": "Главная планета",
+    "diameter": 20000,
+    "fieldsUsed": 259,
+    "fieldsMax": 405,
+    "tempMin": 32,
+    "tempMax": 72,
+    "coords": "2:68:5",
+    "points": 489,
+    "rank": 194,
+    "players": 547,
+    "onlinePlayers": 4,
+    "moonId": null,
+    "constructions": [
+     {
+      "box": "buildings",
+      "title": "Buildings",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     },
+     {
+      "box": "research",
+      "title": "Research",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     },
+     {
+      "box": "shipyard",
+      "title": "Hangar",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     }
+    ],
+    "events": [
+     {
+      "key": "1793348429396900",
+      "fleetId": 396900,
+      "endUnix": 1793348429,
+      "restSec": 1012,
+      "status": "flight",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+     },
+     {
+      "key": "1793350031396900",
+      "fleetId": 396900,
+      "endUnix": 1793350031,
+      "restSec": 2614,
+      "status": "return",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "layout-live-synthetic-moon": {
+  "live": {
+   "detect": {
+    "ok": true,
+    "generator": "GALAXYZ 1.8.git",
+    "engine": "galaxyz",
+    "version": "1.8.git",
+    "window": "full",
+    "layout": "galaxyz"
+   },
+   "route": {
+    "page": "overview",
+    "pageKey": "overview",
+    "mode": "show",
+    "cp": null,
+    "bodyId": "overview",
+    "queryString": "page=overview",
+    "universeBase": "file:///tmp/claude-0/-home-claude/1ebb7366-d4fd-5fac-899e-5244b2310d13/scratchpad/ogx/specs/galaxyz/fixtures/layout-live-synthetic-moon.html"
+   },
+   "time": {
+    "wallMs": 1793354617000,
+    "userOffsetSec": 0,
+    "renderUnix": 1793347417,
+    "tzOffsetMs": 7200000,
+    "clockText": "Oct Fri 30 10:03:43"
+   },
+   "player": {
+    "name": "TestPlayer",
+    "id": null,
+    "rank": 194,
+    "unreadMessages": 2,
+    "vacation": false,
+    "authLevel": 0,
+    "lang": "en",
+    "skin": "./styles/theme/gow/"
+   },
+   "planets": [
+    {
+     "id": 254102,
+     "name": "Главная планета",
+     "coords": "2:68:5",
+     "type": "planet",
+     "selected": false,
+     "image": "dschjungelplanet07",
+     "active": false,
+     "building": false,
+     "tooltip": {
+      "tempMin": 32,
+      "tempMax": 72,
+      "diameter": 20000,
+      "fieldsUsed": 259,
+      "fieldsMax": 405
+     },
+     "moonId": 254110
+    },
+    {
+     "id": 254103,
+     "name": "Colony",
+     "coords": "2:68:6",
+     "type": "planet",
+     "selected": false,
+     "image": "dschjungelplanet10",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 20,
+      "tempMax": 60,
+      "diameter": 18627,
+      "fieldsUsed": 81,
+      "fieldsMax": 347
+     },
+     "moonId": null
+    },
+    {
+     "id": 254104,
+     "name": "Colony",
+     "coords": "2:68:7",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 22,
+      "tempMax": 62,
+      "diameter": 20808,
+      "fieldsUsed": 77,
+      "fieldsMax": 433
+     },
+     "moonId": null
+    },
+    {
+     "id": 254105,
+     "name": "Colony",
+     "coords": "2:68:8",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": -10,
+      "tempMax": 30,
+      "diameter": 22671,
+      "fieldsUsed": 128,
+      "fieldsMax": 514
+     },
+     "moonId": null
+    },
+    {
+     "id": 254110,
+     "name": "Moon",
+     "coords": "2:68:5",
+     "type": "moon",
+     "selected": true,
+     "image": null,
+     "active": true,
+     "building": null,
+     "tooltip": {
+      "tempMin": -8,
+      "tempMax": 32,
+      "diameter": 8888,
+      "fieldsUsed": 1,
+      "fieldsMax": 1
+     },
+     "moonId": null,
+     "planetId": 254102
+    }
+   ],
+   "planetCount": {
+    "used": 4,
+    "max": 6
+   },
+   "current": {
+    "id": 254110,
+    "name": "Moon",
+    "coords": "2:68:5",
+    "type": "moon",
+    "image": "mond"
+   },
+   "resources": {
+    "metal": {
+     "amount": 1408320361.5606675,
+     "storage": 3416925000,
+     "perHour": 0,
+     "dataReal": 1408320361.5607,
+     "tooltip": {
+      "available": 1408320362,
+      "storage": 3416925000,
+      "production": 1932927923
+     }
+    },
+    "crystal": {
+     "amount": 228249710.0184198,
+     "storage": 1863925000,
+     "perHour": 0,
+     "dataReal": 228249710.01842,
+     "tooltip": {
+      "available": 228249710,
+      "storage": 1863925000,
+      "production": 822497302
+     }
+    },
+    "deuterium": {
+     "amount": 350563050.6686126,
+     "storage": 1016750000,
+     "perHour": 0,
+     "dataReal": 350563050.66861,
+     "tooltip": {
+      "available": 350563051,
+      "storage": 1016750000,
+      "production": 394585192
+     }
+    },
+    "energy": {
+     "available": 438,
+     "production": 47480,
+     "consumption": 47042
+    },
+    "darkmatter": 3981
+   },
+   "events": [
+    {
+     "key": "1793348429396900",
+     "fleetId": 396900,
+     "endUnix": 1793348429,
+     "restSec": 1012,
+     "status": "flight",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+    },
+    {
+     "key": "1793350031396900",
+     "fleetId": 396900,
+     "endUnix": 1793350031,
+     "restSec": 2614,
+     "status": "return",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+    }
+   ],
+   "overview": {
+    "planetName": "Moon",
+    "diameter": 8888,
+    "fieldsUsed": 1,
+    "fieldsMax": 1,
+    "tempMin": -8,
+    "tempMax": 32,
+    "coords": "2:68:5",
+    "points": 489,
+    "rank": 194,
+    "players": 547,
+    "onlinePlayers": 4,
+    "moonId": null,
+    "constructions": [
+     {
+      "box": "buildings",
+      "title": "Buildings",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     },
+     {
+      "box": "research",
+      "title": "Research",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     },
+     {
+      "box": "shipyard",
+      "title": "Hangar",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     }
+    ],
+    "events": [
+     {
+      "key": "1793348429396900",
+      "fleetId": 396900,
+      "endUnix": 1793348429,
+      "restSec": 1012,
+      "status": "flight",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+     },
+     {
+      "key": "1793350031396900",
+      "fleetId": 396900,
+      "endUnix": 1793350031,
+      "restSec": 2614,
+      "status": "return",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "layout-live-synthetic-planet": {
+  "live": {
+   "detect": {
+    "ok": true,
+    "generator": "GALAXYZ 1.8.git",
+    "engine": "galaxyz",
+    "version": "1.8.git",
+    "window": "full",
+    "layout": "galaxyz"
+   },
+   "route": {
+    "page": "overview",
+    "pageKey": "overview",
+    "mode": "show",
+    "cp": null,
+    "bodyId": "overview",
+    "queryString": "page=overview",
+    "universeBase": "file:///tmp/claude-0/-home-claude/1ebb7366-d4fd-5fac-899e-5244b2310d13/scratchpad/ogx/specs/galaxyz/fixtures/layout-live-synthetic-planet.html"
+   },
+   "time": {
+    "wallMs": 1793354617000,
+    "userOffsetSec": 0,
+    "renderUnix": 1793347417,
+    "tzOffsetMs": 7200000,
+    "clockText": "Oct Fri 30 10:03:43"
+   },
+   "player": {
+    "name": "TestPlayer",
+    "id": null,
+    "rank": 194,
+    "unreadMessages": 2,
+    "vacation": false,
+    "authLevel": 0,
+    "lang": "en",
+    "skin": "./styles/theme/gow/"
+   },
+   "planets": [
+    {
+     "id": 254102,
+     "name": "Главная планета",
+     "coords": "2:68:5",
+     "type": "planet",
+     "selected": true,
+     "image": "dschjungelplanet07",
+     "active": true,
+     "building": false,
+     "tooltip": {
+      "tempMin": 32,
+      "tempMax": 72,
+      "diameter": 20000,
+      "fieldsUsed": 259,
+      "fieldsMax": 405
+     },
+     "moonId": 254110
+    },
+    {
+     "id": 254103,
+     "name": "Colony",
+     "coords": "2:68:6",
+     "type": "planet",
+     "selected": false,
+     "image": "dschjungelplanet10",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 20,
+      "tempMax": 60,
+      "diameter": 18627,
+      "fieldsUsed": 81,
+      "fieldsMax": 347
+     },
+     "moonId": null
+    },
+    {
+     "id": 254104,
+     "name": "Colony",
+     "coords": "2:68:7",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": 22,
+      "tempMax": 62,
+      "diameter": 20808,
+      "fieldsUsed": 77,
+      "fieldsMax": 433
+     },
+     "moonId": null
+    },
+    {
+     "id": 254105,
+     "name": "Colony",
+     "coords": "2:68:8",
+     "type": "planet",
+     "selected": false,
+     "image": "normaltempplanet02",
+     "active": false,
+     "building": true,
+     "tooltip": {
+      "tempMin": -10,
+      "tempMax": 30,
+      "diameter": 22671,
+      "fieldsUsed": 128,
+      "fieldsMax": 514
+     },
+     "moonId": null
+    },
+    {
+     "id": 254110,
+     "name": "Moon",
+     "coords": "2:68:5",
+     "type": "moon",
+     "selected": false,
+     "image": null,
+     "active": false,
+     "building": null,
+     "tooltip": {
+      "tempMin": -8,
+      "tempMax": 32,
+      "diameter": 8888,
+      "fieldsUsed": 1,
+      "fieldsMax": 1
+     },
+     "moonId": null,
+     "planetId": 254102
+    }
+   ],
+   "planetCount": {
+    "used": 4,
+    "max": 6
+   },
+   "current": {
+    "id": 254102,
+    "name": "Главная планета",
+    "coords": "2:68:5",
+    "type": "planet",
+    "image": "dschjungelplanet07"
+   },
+   "resources": {
+    "metal": {
+     "amount": 1408320361.5606675,
+     "storage": 3416925000,
+     "perHour": 1932927923.2055,
+     "dataReal": 1408320361.5607,
+     "tooltip": {
+      "available": 1408320362,
+      "storage": 3416925000,
+      "production": 1932927923
+     }
+    },
+    "crystal": {
+     "amount": 228249710.0184198,
+     "storage": 1863925000,
+     "perHour": 822497302.17436,
+     "dataReal": 228249710.01842,
+     "tooltip": {
+      "available": 228249710,
+      "storage": 1863925000,
+      "production": 822497302
+     }
+    },
+    "deuterium": {
+     "amount": 350563050.6686126,
+     "storage": 1016750000,
+     "perHour": 394585191.6862,
+     "dataReal": 350563050.66861,
+     "tooltip": {
+      "available": 350563051,
+      "storage": 1016750000,
+      "production": 394585192
+     }
+    },
+    "energy": {
+     "available": 438,
+     "production": 47480,
+     "consumption": 47042
+    },
+    "darkmatter": 3981
+   },
+   "events": [
+    {
+     "key": "1793348429396900",
+     "fleetId": 396900,
+     "endUnix": 1793348429,
+     "restSec": 1012,
+     "status": "flight",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+    },
+    {
+     "key": "1793348917397001",
+     "fleetId": 397001,
+     "endUnix": 1793348917,
+     "restSec": 1500,
+     "status": "flight",
+     "own": false,
+     "style": "attack",
+     "cssType": "attack",
+     "mission": 1,
+     "from": "3:120:9",
+     "to": "2:68:5",
+     "hostile": true,
+     "ownerId": 777,
+     "acs": false,
+     "shipsText": "1200 Light Fighter",
+     "cargoText": null,
+     "text": "A hostile Fleets (1200 Light Fighter) from player Raider [PM] from Planet Raidbase [3:120:9] reached the Planet Главная планета [2:68:5]. Mission: Attack"
+    },
+    {
+     "key": "1793350031396900",
+     "fleetId": 396900,
+     "endUnix": 1793350031,
+     "restSec": 2614,
+     "status": "return",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+    }
+   ],
+   "overview": {
+    "planetName": "Главная планета",
+    "diameter": 20000,
+    "fieldsUsed": 259,
+    "fieldsMax": 405,
+    "tempMin": 32,
+    "tempMax": 72,
+    "coords": "2:68:5",
+    "points": 489,
+    "rank": 194,
+    "players": 547,
+    "onlinePlayers": 4,
+    "moonId": 254110,
+    "constructions": [
+     {
+      "box": "buildings",
+      "title": "Buildings",
+      "idle": false,
+      "restSec": 3600,
+      "text": "Metal Mine (40) 01:00:00"
+     },
+     {
+      "box": "research",
+      "title": "Research",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     },
+     {
+      "box": "shipyard",
+      "title": "Hangar",
+      "idle": true,
+      "restSec": null,
+      "text": "There is currently nothing being produced in the hangar."
+     }
+    ],
+    "events": [
+     {
+      "key": "1793348429396900",
+      "fleetId": 396900,
+      "endUnix": 1793348429,
+      "restSec": 1012,
+      "status": "flight",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) from Planet Главная планета [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+     },
+     {
+      "key": "1793348917397001",
+      "fleetId": 397001,
+      "endUnix": 1793348917,
+      "restSec": 1500,
+      "status": "flight",
+      "own": false,
+      "style": "attack",
+      "cssType": "attack",
+      "mission": 1,
+      "from": "3:120:9",
+      "to": "2:68:5",
+      "hostile": true,
+      "ownerId": 777,
+      "acs": false,
+      "shipsText": "1200 Light Fighter",
+      "cargoText": null,
+      "text": "A hostile Fleets (1200 Light Fighter) from player Raider [PM] from Planet Raidbase [3:120:9] reached the Planet Главная планета [2:68:5]. Mission: Attack"
+     },
+     {
+      "key": "1793350031396900",
+      "fleetId": 396900,
+      "endUnix": 1793350031,
+      "restSec": 2614,
+      "status": "return",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Главная планета [2:68:5]. Mission: Recycle"
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ },
+ "layout-upstream-overview": {
+  "live": {
+   "detect": {
+    "ok": true,
+    "generator": "2Moons 1.8.git",
+    "engine": "2moons",
+    "version": "1.8.git",
+    "window": "full",
+    "layout": "upstream"
+   },
+   "route": {
+    "page": "overview",
+    "pageKey": "overview",
+    "mode": "show",
+    "cp": null,
+    "bodyId": "overview",
+    "queryString": "page=overview",
+    "universeBase": "file:///tmp/claude-0/-home-claude/1ebb7366-d4fd-5fac-899e-5244b2310d13/scratchpad/ogx/specs/galaxyz/fixtures/layout-upstream-overview.html"
+   },
+   "time": {
+    "wallMs": 1793354617000,
+    "userOffsetSec": 0,
+    "renderUnix": 1793347417,
+    "tzOffsetMs": 7200000,
+    "clockText": "Oct Fri 30 10:03:37"
+   },
+   "player": {
+    "name": "TestPlayer",
+    "id": null,
+    "rank": null,
+    "unreadMessages": 2,
+    "vacation": false,
+    "authLevel": 0,
+    "lang": "en",
+    "skin": "./styles/theme/gow/"
+   },
+   "planets": [
+    {
+     "id": 254102,
+     "name": "Homeworld",
+     "coords": "2:68:5",
+     "type": "planet",
+     "selected": true,
+     "image": null,
+     "active": null,
+     "building": null,
+     "tooltip": null,
+     "moonId": 254110
+    },
+    {
+     "id": 254103,
+     "name": "Colony",
+     "coords": "2:68:6",
+     "type": "planet",
+     "selected": false,
+     "image": null,
+     "active": null,
+     "building": null,
+     "tooltip": null,
+     "moonId": null
+    },
+    {
+     "id": 254110,
+     "name": "Moon",
+     "coords": "2:68:5",
+     "type": "moon",
+     "selected": false,
+     "image": null,
+     "active": null,
+     "building": null,
+     "tooltip": null,
+     "moonId": null,
+     "planetId": 254102
+    }
+   ],
+   "planetCount": null,
+   "current": {
+    "id": 254102,
+    "name": "Homeworld",
+    "coords": "2:68:5",
+    "type": "planet",
+    "image": "dschjungelplanet07"
+   },
+   "resources": {
+    "metal": {
+     "amount": 1408320361.5607,
+     "storage": 3416925000,
+     "perHour": 1932927923.2055,
+     "dataReal": 1408320361.5607,
+     "tooltip": null
+    },
+    "crystal": {
+     "amount": 228249710.01842,
+     "storage": 1863925000,
+     "perHour": 822497302.17436,
+     "dataReal": 228249710.01842,
+     "tooltip": null
+    },
+    "deuterium": {
+     "amount": 350563050.66861,
+     "storage": 1016750000,
+     "perHour": 394585191.6862,
+     "dataReal": 350563050.66861,
+     "tooltip": null
+    },
+    "energy": {
+     "available": 438,
+     "production": 47480,
+     "consumption": 47042
+    },
+    "darkmatter": 3981
+   },
+   "events": [
+    {
+     "key": "1793348429396900",
+     "fleetId": 396900,
+     "endUnix": 1793348429,
+     "restSec": 1012,
+     "status": "flight",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) from Planet Homeworld [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+    },
+    {
+     "key": "1793348917397001",
+     "fleetId": 397001,
+     "endUnix": 1793348917,
+     "restSec": 1500,
+     "status": "flight",
+     "own": false,
+     "style": "attack",
+     "cssType": "attack",
+     "mission": 1,
+     "from": "3:120:9",
+     "to": "2:68:5",
+     "hostile": true,
+     "ownerId": 777,
+     "acs": false,
+     "shipsText": "1200 Light Fighter; 300 Cruiser",
+     "cargoText": null,
+     "text": "A hostile Fleets (1200 Light Fighter; 300 Cruiser) from player Raider [PM] from Planet Raidbase [3:120:9] reached the Planet Homeworld [2:68:5]. Mission: Attack"
+    },
+    {
+     "key": "1793349617397050",
+     "fleetId": 397050,
+     "endUnix": 1793349617,
+     "restSec": 2200,
+     "status": "holding",
+     "own": false,
+     "style": "hold",
+     "cssType": "hold",
+     "mission": 5,
+     "from": "2:70:4",
+     "to": "2:68:5",
+     "hostile": false,
+     "ownerId": 888,
+     "acs": false,
+     "shipsText": "50 Battleship",
+     "cargoText": null,
+     "text": "A friendly Fleets (50 Battleship) from player Friend [PM] from Planet Allyhome [2:70:4] is in Orbit of the Planet Homeworld [2:68:5]. Mission: Hold"
+    },
+    {
+     "key": "1793350031396900",
+     "fleetId": 396900,
+     "endUnix": 1793350031,
+     "restSec": 2614,
+     "status": "return",
+     "own": true,
+     "style": "harvest",
+     "cssType": "ownharvest",
+     "mission": 8,
+     "from": "2:68:5",
+     "to": "2:87:8",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "8290 Recycler",
+     "cargoText": null,
+     "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Homeworld [2:68:5]. Mission: Recycle"
+    },
+    {
+     "key": "1793350817397100",
+     "fleetId": 397100,
+     "endUnix": 1793350817,
+     "restSec": 3400,
+     "status": "flight",
+     "own": true,
+     "style": "transport",
+     "cssType": "owntransport",
+     "mission": 3,
+     "from": "2:68:5",
+     "to": "2:68:6",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "500 Heavy Cargo",
+     "cargoText": "Ressources: 1000000 Metal; 500000 Crystal; 0 Deuterium",
+     "text": "One of your Fleets (500 Heavy Cargo) from Planet Homeworld [2:68:5] reached the Planet Colony [2:68:6]. Mission: Transport (Ressources: 1000000 Metal; 500000 Crystal; 0 Deuterium)"
+    },
+    {
+     "key": "1793354617397200",
+     "fleetId": 397200,
+     "endUnix": 1793354617,
+     "restSec": 7200,
+     "status": "holding",
+     "own": true,
+     "style": "transport",
+     "cssType": "owntransport",
+     "mission": 15,
+     "from": "2:68:5",
+     "to": "2:68:16",
+     "hostile": false,
+     "ownerId": null,
+     "acs": false,
+     "shipsText": "100 Light Cargo",
+     "cargoText": null,
+     "text": "One of your Fleets (100 Light Cargo) from Planet Homeworld [2:68:5] is on a Expedition to Position [2:68:16]. Mission: Expedition"
+    }
+   ],
+   "overview": {
+    "planetName": "Homeworld",
+    "diameter": 20000,
+    "fieldsUsed": 259,
+    "fieldsMax": 405,
+    "tempMin": 32,
+    "tempMax": 72,
+    "coords": "2:68:5",
+    "points": 489,
+    "rank": 194,
+    "players": 547,
+    "onlinePlayers": null,
+    "moonId": 254110,
+    "constructions": [
+     {
+      "box": "buildings",
+      "title": null,
+      "idle": false,
+      "restSec": 3600,
+      "text": "Metal Mine (40)01h 00m 00s"
+     }
+    ],
+    "events": [
+     {
+      "key": "1793348429396900",
+      "fleetId": 396900,
+      "endUnix": 1793348429,
+      "restSec": 1012,
+      "status": "flight",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) from Planet Homeworld [2:68:5] reached the debris [2:87:8]. Mission: Recycle"
+     },
+     {
+      "key": "1793348917397001",
+      "fleetId": 397001,
+      "endUnix": 1793348917,
+      "restSec": 1500,
+      "status": "flight",
+      "own": false,
+      "style": "attack",
+      "cssType": "attack",
+      "mission": 1,
+      "from": "3:120:9",
+      "to": "2:68:5",
+      "hostile": true,
+      "ownerId": 777,
+      "acs": false,
+      "shipsText": "1200 Light Fighter; 300 Cruiser",
+      "cargoText": null,
+      "text": "A hostile Fleets (1200 Light Fighter; 300 Cruiser) from player Raider [PM] from Planet Raidbase [3:120:9] reached the Planet Homeworld [2:68:5]. Mission: Attack"
+     },
+     {
+      "key": "1793349617397050",
+      "fleetId": 397050,
+      "endUnix": 1793349617,
+      "restSec": 2200,
+      "status": "holding",
+      "own": false,
+      "style": "hold",
+      "cssType": "hold",
+      "mission": 5,
+      "from": "2:70:4",
+      "to": "2:68:5",
+      "hostile": false,
+      "ownerId": 888,
+      "acs": false,
+      "shipsText": "50 Battleship",
+      "cargoText": null,
+      "text": "A friendly Fleets (50 Battleship) from player Friend [PM] from Planet Allyhome [2:70:4] is in Orbit of the Planet Homeworld [2:68:5]. Mission: Hold"
+     },
+     {
+      "key": "1793350031396900",
+      "fleetId": 396900,
+      "endUnix": 1793350031,
+      "restSec": 2614,
+      "status": "return",
+      "own": true,
+      "style": "harvest",
+      "cssType": "ownharvest",
+      "mission": 8,
+      "from": "2:68:5",
+      "to": "2:87:8",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "8290 Recycler",
+      "cargoText": null,
+      "text": "One of your Fleets (8290 Recycler) returns from debris [2:87:8] back to planet Planet Homeworld [2:68:5]. Mission: Recycle"
+     },
+     {
+      "key": "1793350817397100",
+      "fleetId": 397100,
+      "endUnix": 1793350817,
+      "restSec": 3400,
+      "status": "flight",
+      "own": true,
+      "style": "transport",
+      "cssType": "owntransport",
+      "mission": 3,
+      "from": "2:68:5",
+      "to": "2:68:6",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "500 Heavy Cargo",
+      "cargoText": "Ressources: 1000000 Metal; 500000 Crystal; 0 Deuterium",
+      "text": "One of your Fleets (500 Heavy Cargo) from Planet Homeworld [2:68:5] reached the Planet Colony [2:68:6]. Mission: Transport (Ressources: 1000000 Metal; 500000 Crystal; 0 Deuterium)"
+     },
+     {
+      "key": "1793354617397200",
+      "fleetId": 397200,
+      "endUnix": 1793354617,
+      "restSec": 7200,
+      "status": "holding",
+      "own": true,
+      "style": "transport",
+      "cssType": "owntransport",
+      "mission": 15,
+      "from": "2:68:5",
+      "to": "2:68:16",
+      "hostile": false,
+      "ownerId": null,
+      "acs": false,
+      "shipsText": "100 Light Cargo",
+      "cargoText": null,
+      "text": "One of your Fleets (100 Light Cargo) from Planet Homeworld [2:68:5] is on a Expedition to Position [2:68:16]. Mission: Expedition"
+     }
+    ]
+   }
+  },
+  "sameAsDomParser": true
+ }
+}

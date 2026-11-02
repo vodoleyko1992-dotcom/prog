@@ -1,0 +1,240 @@
+
+<script type="text/javascript">
+    // BBCode parser for buddy request previews
+    window.buddyBBCodeParser = function(text) {
+        if (!text) return '';
+        var html = text
+            .replace(/\[b\](.*?)\[\/b\]/gi, '<strong style="font-weight:bold">$1</strong>')
+            .replace(/\[i\](.*?)\[\/i\]/gi, '<em style="font-style:italic">$1</em>')
+            .replace(/\[u\](.*?)\[\/u\]/gi, '<span style="text-decoration:underline">$1</span>')
+            .replace(/\[s\](.*?)\[\/s\]/gi, '<span style="text-decoration:line-through">$1</span>')
+            .replace(/\[sup\](.*?)\[\/sup\]/gi, '<sup>$1</sup>')
+            .replace(/\[sub\](.*?)\[\/sub\]/gi, '<sub>$1</sub>')
+            .replace(/\[color=(.*?)\](.*?)\[\/color\]/gi, '<span style="color:$1">$2</span>')
+            .replace(/\[size=(\d+)\](.*?)\[\/size\]/gi, '<span style="font-size:$1px">$2</span>')
+            .replace(/\[url=(.*?)\](.*?)\[\/url\]/gi, '<a href="$1" target="_blank" style="color:#6f9fc8;text-decoration:underline">$2</a>')
+            .replace(/\[url\](.*?)\[\/url\]/gi, '<a href="$1" target="_blank" style="color:#6f9fc8;text-decoration:underline">$1</a>')
+            .replace(/\n/g, '<br>');
+        return '<div style="color:#fff;padding:5px">' + html + '</div>';
+    };
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Alliance Information</title>
+    <link rel="stylesheet" href="http://localhost/css/ingame.css">
+    <style>
+        body {
+            color: #848484;
+            font: 100 12px Verdana, Arial, SunSans-Regular, Sans-Serif;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        #allianceInfo td, #allianceInfo th{
+            background-color:#0D1014;
+            font: 12px Verdana, Arial, SunSans-Regular, Sans-Serif;
+            text-align:center;
+        }
+
+        #allianceInfo .allyText {
+            padding:5px;
+            text-align:left;
+        }
+
+        #allianceInfo ul, ol {
+            list-style-position:outside;
+            list-style-type:square;
+            list-style-image:inherit;
+            margin: 20px 0 20px 20px;
+            padding:0;
+        }
+
+        #allianceInfo li {
+            display:list-item;
+        }
+
+        /* beware: keep the following in sync with 02base.css */
+        .alliance_class.small {
+            margin-left: 22px;
+            position: relative;
+        }
+        .alliance_class.small:before {
+            content: '';
+            position: absolute;
+            left: -23px;
+            top: -3px;
+            width: 20px;
+            height: 20px;
+        }
+        .alliance_class.small.none:before {
+            background: url("http://localhost/img/alliance/91f4cdf171328d7cef3443860cd063.png") no-repeat;
+        }
+        .alliance_class.small.explorer:before {
+            background: url("http://localhost/img/alliance/bb0ff2146d93887ff9bf2a14a25a45.png") no-repeat;
+        }
+        .alliance_class.small.trader:before {
+            background: url("http://localhost/img/alliance/02614bfe12340c2d8f89ce58ad83c7.png") no-repeat;
+        }
+        .alliance_class.small.warrior:before {
+            background: url("http://localhost/img/alliance/f2435fcc1304b0d181323254d3d3ec.png") no-repeat;
+        }
+        /* beware: keep the stuff above in sync with 02base.css */
+    </style>
+</head>
+<body class="no-touch">
+    <div id="allianceInfo">
+        <center>
+            <table width="519" cellpadding="0" cellspacing="0">
+                <tbody>
+                    <tr>
+                        <td style="background-color:#13181D; font-weight:bold;" colspan="2">
+                            Alliance Information
+                        </td>
+                    </tr>
+                                        <tr>
+                        <td>Tag</td>
+                        <td>
+                            NOVA
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td>
+                            Nova Collective
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Member</td>
+                        <td>
+                            8
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Alliance highscore</td>
+                        <td>
+                            3
+                        </td>
+                    </tr>
+                                            <tr>
+                            <td colspan="2" height="100" class="textLeft allyText" id="allianceTextContent">
+                                [b]Nova Collective[/b] - miners and traders. Apply if you have 50k+ points.
+                            </td>
+                        </tr>
+                                                        </tbody>
+            </table>
+
+                            <center style="margin-top: 20px;">
+                    <button class="btn_blue" id="applyToAllianceBtn" style="padding: 5px 20px;">
+                        Apply to Alliance
+                    </button>
+                </center>
+                    </center>
+
+        <div id="decisionTB" style="display:none;">
+            <div id="errorBoxDecision" class="errorBox TBfixedPosition">
+                <div class="head"><h4 id="errorBoxDecisionHead">-</h4></div>
+                <div class="middle">
+                    <span id="errorBoxDecisionContent">-</span>
+                    <div class="response">
+                        <div style="float:left; width:180px;">
+                            <a href="javascript:void(0);" class="yes"><span id="errorBoxDecisionYes">.</span></a>
+                        </div>
+                        <div style="float:left; width:180px;">
+                            <a href="javascript:void(0);" class="no"><span id="errorBoxDecisionNo">.</span></a>
+                        </div>
+                        <br class="clearfloat">
+                    </div>
+                </div>
+                <div class="foot"></div>
+            </div>
+        </div>
+
+        <div id="fadeBox" class="fadeBox fixedPostion" style="display:none;" role="alert">
+            <span id="fadeBoxStyle" class="success"></span>
+            <p id="fadeBoxContent"></p>
+        </div>
+
+        <div id="notifyTB" style="display:none;">
+            <div id="errorBoxNotify" class="errorBox TBfixedPosition">
+                <div class="head"><h4 id="errorBoxNotifyHead">-</h4></div>
+                <div class="middle">
+                    <span id="errorBoxNotifyContent">-</span>
+                    <div class="response">
+                        <div>
+                            <a href="javascript:void(0);" class="ok">
+                                <span id="errorBoxNotifyOk">.</span>
+                            </a>
+                        </div>
+                        <br class="clearfloat">
+                    </div>
+                </div>
+                <div class="foot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="http://localhost/js/ingame.js"></script>
+    <script type="text/javascript">
+        isMobile = false;
+        isMobileApp = false;
+        LocalizationStrings = {"attention":"Caution","yes":"yes","no":"No","ok":"Ok","redirectMessage":"By following this link, you will leave OGame. Do you wish to continue?"};
+        var allyHome = '';
+
+        initAllianceInfo();
+        initBBCodes();
+
+        // Parse BBCode in alliance text on page load
+        $(document).ready(function() {
+            var allianceTextElement = document.getElementById('allianceTextContent');
+            if (allianceTextElement && typeof window.buddyBBCodeParser === 'function') {
+                var rawText = allianceTextElement.textContent.trim();
+                if (rawText) {
+                    allianceTextElement.innerHTML = window.buddyBBCodeParser(rawText);
+                }
+            }
+
+            // Handle apply to alliance button
+            $('#applyToAllianceBtn').on('click', function() {
+                errorBoxDecision(
+                    LocalizationStrings.attention,
+                    "Do you want to apply to this alliance?",
+                    LocalizationStrings.yes,
+                    LocalizationStrings.no,
+                    function() {
+                        $.ajax({
+                            url: 'http://localhost/alliance/apply',
+                            type: 'POST',
+                            data: {
+                                alliance_id: 12,
+                                message: '',
+                                _token: 'Xq2mZ8vR4kL0pT6yB1nW9cE3sH7jD5fA2gU8iO4e'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    fadeBox(response.message || "Application submitted successfully", false);
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 2000);
+                                } else {
+                                    fadeBox(response.message || "Failed to submit application", true);
+                                }
+                            },
+                            error: function(xhr) {
+                                var errorMessage = "Failed to submit application";
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                fadeBox(errorMessage, true);
+                            }
+                        });
+                    }
+                );
+            });
+        });
+    </script>
+</body>
+</html>
