@@ -1,9 +1,0 @@
-{
- "_path": "/game/clans/items/catalog",
- "_status": 403,
- "data": {
-  "error": "clan_manage_forbidden",
-  "messageUk": "Доступ лише для лідера або заступника клану.",
-  "messageRu": "Доступ только для лідера або заступника клана."
- }
-}

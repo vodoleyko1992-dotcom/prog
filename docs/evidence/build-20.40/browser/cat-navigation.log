@@ -1,2 +1,0 @@
-PASS actual MV3 cat navigation {"case":"single navigation then immediate new-document combat","views":1,"navigations":1,"newDocumentFirstActionMs":167}
-PASS actual MV3 cat navigation {"case":"Stop while document loads","views":1,"navigations":1,"newDocumentFirstActionMs":null}

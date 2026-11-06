@@ -1,1 +1,0 @@
-PASS actual MV3 server clock offset → midnight → both quotas reset → one daily reroll → popup reload
