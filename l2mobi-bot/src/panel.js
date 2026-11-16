@@ -1,4 +1,4 @@
-/* L2Mobi Bot 1.1 — большое меню слева (как в старом боте): сводка, разделы с настройками, журнал и выгрузка логов. */
+/* L2Mobi Bot 1.2 — большое меню слева (как в старом боте): сводка, разделы с настройками, журнал и выгрузка логов. */
 (function (root) {
   'use strict';
   var E = root.L2MEngine, J = root.L2MJournal;
@@ -31,7 +31,7 @@ button:hover{filter:brightness(1.15)}
 .task b{color:#ffd76a}
 .chips{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
 .chip{font-size:11px;padding:2px 7px;border:1px solid #4a3a20;border-radius:9px;background:#120e07;white-space:nowrap}
-.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px 10px;border-bottom:1px solid #3d3116}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px;border-bottom:1px solid #3d3116}
 .nav div{padding:6px 4px;text-align:center;border:1px solid #3d3116;border-radius:7px;background:#0f0c07;color:#c8b88a;cursor:pointer;font-size:12px;white-space:nowrap}
 .nav div.act{background:#3a2f18;border-color:#d4a017;color:#ffd76a}
 .body{flex:1;overflow:auto;padding:10px}
@@ -53,6 +53,9 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
 .sk img{width:22px;height:22px;border-radius:3px}
 .sk .n{flex:1}
 .bf{display:inline-flex;align-items:center;gap:3px;margin:2px 8px 2px 0;font-size:12px}
+.tk{display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed #2e2614;font-size:12px}
+.tk .n{flex:1}.tk.off{opacity:.45}.tk.held .n{color:#ffb070}.tk button{padding:2px 6px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px;border-bottom:1px dashed #2e2614;text-align:right}td:first-child,th:first-child{text-align:left}th{color:#a89870;font-weight:400}
 .foot{padding:5px 10px;border-top:1px solid #3d3116;font-size:10.5px;color:#8a7a5a}
 `;
 
@@ -62,7 +65,7 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
     50: 'Wild Magic', 8: 'Dance of Concentration', 9: 'Dance of Fury', 10: 'Dance of Inspiration', 11: 'Dance of Mystic', 12: 'Dance of Warrior',
     34: 'Dance of the Vampire', 35: 'Sirens Dance', 22: 'Song of Hunter', 23: 'Song of Vitality', 24: 'Song of Warding', 25: 'Song of Water',
     26: 'Song of Wind', 53: 'Song of Life', 36: 'Chant of Magnus', 37: 'Prophecy of Water', 38: 'Chant of Victory', 64: 'Victory of Paagrio' };
-  var SECTIONS = [['main', '◈ Обзор'], ['hunt', '◎ Охота'], ['skills', '✦ Умения'], ['buff', '✚ Бафф/отдых'], ['altar', '⚑ Алтарь'], ['log', '☰ Журнал']];
+  var SECTIONS = [['main', '◈ Обзор'], ['hunt', '◎ Охота'], ['skills', '✦ Умения'], ['buff', '✚ Бафф'], ['altar', '⚑ Алтарь'], ['tasks', '⚙ Задачи'], ['mobs', '☠ Мобы'], ['log', '☰ Журнал']];
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function pct(a, b) { return b > 0 ? Math.max(0, Math.min(100, Math.round(a * 100 / b))) : 0; }
@@ -96,7 +99,7 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
       '<div class="nav">' + SECTIONS.map(function (s) { return '<div data-s="' + s[0] + '">' + s[1] + '</div>'; }).join('') + '</div>' +
       '<div class="body">' +
       '<div data-p="main"></div>' +
-      '<div data-p="hunt"></div><div data-p="skills"></div><div data-p="buff"></div><div data-p="altar"></div><div data-p="log"></div>' +
+      '<div data-p="hunt"></div><div data-p="skills"></div><div data-p="buff"></div><div data-p="altar"></div><div data-p="tasks"></div><div data-p="mobs"></div><div data-p="log"></div>' +
       '</div><div class="foot">L2Mobi Bot ' + esc(E.VERSION) + ' · настройки сохраняются сами</div>';
     var $ = function (s) { return dock.querySelector(s); };
     $('#hide').onclick = tab.onclick;
@@ -124,12 +127,22 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
       chk('whiteOnly', 'Только мобы с белым именем') + txt('blacklist', 'Не трогать (имена через запятую)') + '</div>' +
       '<div class="card"><h4>Бой</h4>' + txt('skills', 'Порядок умений (id через запятую)', 'Пусто — боевые умения с панели, сильнее — раньше. Список — в разделе «Умения».') +
       chk('useAttack', 'Обычная атака, пока умения на откате') + chk('loot', 'Забирать добычу') +
-      num('minDelay', 'Мин. пауза между ударами, сек', 'дальше бот ждёт только каст игры') + chk('stopOnDeath', 'Остановиться при смерти') + '</div>' +
+      num('minDelay', 'Мин. пауза между ударами, сек', 'дальше бот ждёт только каст игры') + chk('preferBest', 'Выбирать самых выгодных мобов', 'по опыту в секунду из своих боёв и базы мобов') + '</div>' +
+      '<div class="card"><h4>Выживание</h4>' + chk('stopOnDeath', 'Остановиться при смерти', 'выкл. — бот сам вернётся и уйдёт на другое место') +
+      num('avoidAfterDeath', 'Не трогать моба, от которого погиб, мин') + num('healAt', 'В бою лечиться умением, если HP ниже, %', 'Самолечение и другие лечащие умения с панели') + '</div>' +
       '<div class="card"><h4>Место кача</h4>' + chk('autoMove', 'Самому менять место по уровню', 'берёт мобов из «Куда качаться», бежит к ним') +
-      chk('avoidAgro', 'Не идти к агрессивным мобам') + num('emptyTries', 'Сколько раз «мобов нет», прежде чем уйти') + num('emptyWait', 'Пауза, если мобов нет, сек') + '</div>';
+      chk('avoidAgro', 'Не идти к агрессивным мобам') + num('emptyTries', 'Сколько раз «мобов нет», прежде чем уйти') + num('emptyWait', 'Пауза, если мобов нет, сек') + '</div>' +
+      '<div class="card"><h4>Самостоятельность</h4>' + num('stuckMin', 'Нет прогресса столько минут — сменить место', 'три раза подряд — остановка с причиной') +
+      num('dailyKills', 'Суточный лимит боёв (0 — без лимита)') + '</div>';
+    $('[data-p=tasks]').innerHTML =
+      '<div class="card"><h4>Очередь задач</h4><div class="hint" style="margin-bottom:5px">Бот каждый шаг берёт самую важную задачу, которой пора. Задача с 3 сбоями подряд отдыхает 30 мин, остальное работает.</div><div id="tklist"></div></div>' +
+      '<div class="card"><h4>Настройки в файл</h4><div class="row"><button id="cfgOut">💾 Сохранить в файл</button><button id="cfgIn">📂 Загрузить</button></div>' +
+      '<div class="hint">Перенос настроек между браузерами и компьютерами.</div><input type="file" id="cfgFile" accept=".json,application/json" style="display:none"></div>';
+    $('[data-p=mobs]').innerHTML =
+      '<div class="card"><h4>Чему бот научился</h4><div class="hint" style="margin-bottom:5px">По своим боям: средняя длина боя и опыт. Лучшие сверху — их бот выбирает чаще.</div><div id="mobtab"></div></div>';
     $('[data-p=skills]').innerHTML =
       '<div class="card"><h4>Учёба</h4>' + chk('autoLearn', 'Учить новые умения у магистра', 'после нового уровня и раз в 30 мин; умения с книгой — только если книга есть') +
-      chk('autoHotbar', 'Ставить новые боевые умения на панель боя') + '<div class="row"><button id="learn">Выучить сейчас</button></div></div>' +
+      chk('autoHotbar', 'Ставить новые боевые и лечащие умения на панель боя') + num('bookRetryH', 'Умение «нужна книга» не пробовать снова, ч') + '<div class="row"><button id="learn">Выучить сейчас</button></div></div>' +
       '<div class="card"><h4>Умения на панели</h4><div id="sklist"></div></div>';
     $('[data-p=buff]').innerHTML =
       '<div class="card"><h4>Отдых</h4>' + num('restHp', 'Отдых, если HP ниже, %') + num('restMp', 'Отдых, если MP ниже, %') + num('restUntil', 'Отдыхать до, %') +
@@ -160,6 +173,19 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
     $('#buffnow').onclick = function () { E.buffNow(); };
     $('#altar').onclick = function () { E.dailyNow(); };
     $('#learn').onclick = function () { E.learnNow(); };
+    $('#tklist').onclick = function (ev) { var k = ev.target && ev.target.dataset && ev.target.dataset.rel; if (k) E.releaseTask(k); };
+    $('#cfgOut').onclick = function () {
+      var b = new Blob([JSON.stringify({ kind: 'l2mobi-bot-settings', version: E.VERSION, cfg: E.exportCfg() }, null, 1)], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'l2mobi-settings.json'; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    };
+    $('#cfgIn').onclick = function () { $('#cfgFile').click(); };
+    $('#cfgFile').onchange = function () {
+      var f = this.files && this.files[0]; if (!f) return;
+      f.text().then(function (t) { var o = JSON.parse(t); var n = E.importCfg(o.cfg || o); fillCfg(); E.log('Настройки загружены из файла: ' + n); })
+        .catch(function (e) { E.log('Файл настроек не прочитан: ' + e.message); });
+      this.value = '';
+    };
 
     function fillCfg() {
       var c = E.cfg;
@@ -193,7 +219,8 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
       var pill = $('#pill'); pill.textContent = S.running ? '● работает' : '○ стоит'; pill.className = 'pill' + (S.running ? ' run' : '');
       tab.classList.toggle('on', !!S.running);
       $('#start').disabled = S.running; $('#stop').disabled = !S.running;
-      $('#task').innerHTML = '<b>' + esc(S.task || (S.running ? 'Работа' : 'Бот стоит')) + ':</b> ' + esc(S.status) + (S.lock ? ' <span class="hint">(' + esc(S.lock) + ')</span>' : '');
+      $('#task').innerHTML = '<b>' + esc(S.task || (S.running ? 'Работа' : 'Бот стоит')) + ':</b> ' + esc(S.status) + (S.lock ? ' <span class="hint">(' + esc(S.lock) + ')</span>' : '') +
+        (S.running && S.place ? '<br><span class="hint">Место: ' + esc(S.place) + '</span>' : '');
       var s = S.sess;
       $('#chips').innerHTML = '<span class="chip">⚔ ' + fmt(s ? s.kills : S.kills) + '</span><span class="chip">💰 ' + fmt(s ? s.adena : S.adena) + '</span>' +
         (me.exp != null ? '<span class="chip">✨ ' + me.exp + '%</span>' : '') + ((s ? s.levels : S.levelUps) ? '<span class="chip">⬆ ' + (s ? s.levels : S.levelUps) + '</span>' : '') +
@@ -223,6 +250,20 @@ input{font:inherit;background:#0c0a06;color:#efe6d6;border:1px solid #3d3116;bor
           var kind = i.kind === 'attack' ? '⚔ атака' + (i.power ? ', сила ' + i.power : '') : i.kind === 'heal' ? '✚ лечение' : i.kind ? 'другое' : '?';
           return '<div class="sk"><img src="/img/skills/skill' + esc(id) + '_0.jpg" alt=""><span class="n">' + esc(i.name || ('умение ' + id)) + ' <span class="hint">#' + esc(id) + '</span></span><span class="hint">' + kind + '</span></div>';
         }).join('') : '<span class="hint">Появятся после первого боя.</span>';
+      }
+      if (sec === 'tasks') {
+        $('#tklist').innerHTML = E.tasks().map(function (t) {
+          var st = !t.on ? 'выкл.' : t.held ? 'пауза ' + t.held + ' мин' : t.runs ? '✓ ' + new Date(t.lastOk).toLocaleTimeString('ru') : 'ждёт';
+          return '<div class="tk' + (t.on ? '' : ' off') + (t.held ? ' held' : '') + '" title="' + esc(t.holdWhy || t.lastErr) + '"><span class="n">' + esc(t.title) +
+            (t.holdWhy ? '<br><span class="hint">' + esc(t.holdWhy) + '</span>' : '') + '</span><span class="hint">' + esc(st) + '</span>' +
+            (t.held ? '<button data-rel="' + esc(t.key) + '">снять</button>' : '') + '</div>';
+        }).join('');
+      }
+      if (sec === 'mobs') {
+        var top = E.mobTop(30);
+        $('#mobtab').innerHTML = top.length ? '<table><tr><th>Моб</th><th>боёв</th><th>сек</th><th>опыт</th><th>оп/с</th><th>☠</th></tr>' + top.map(function (m) {
+          return '<tr><td>' + esc(m.name) + '</td><td>' + m.n + '</td><td>' + m.secs + '</td><td>' + fmt(m.exp) + '</td><td>' + (m.rate != null ? m.rate.toFixed(1) : '—') + '</td><td>' + (m.deaths || '') + '</td></tr>';
+        }).join('') + '</table>' : '<span class="hint">Появится после первых боёв.</span>';
       }
       if (sec === 'buff') $('#bufinfo').textContent = S.lastBuff ? 'последний: ' + new Date(S.lastBuff).toLocaleTimeString('ru') : '';
       if (sec === 'altar') $('#altinfo').textContent = S.lastDaily ? 'забрано: ' + S.lastDaily : '';

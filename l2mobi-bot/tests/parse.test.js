@@ -66,6 +66,7 @@ test('тревоги: страница входа и капча', () => {
   assert.deepStrictEqual(P.detectAlerts(fx('map.html')), []);
   assert.deepStrictEqual(P.detectAlerts('<div>Вас убил Зеленый Гриб нанес урона.</div>'), []);
   assert.deepStrictEqual(P.detectAlerts('<div class="l2-bar-text">HP 0/211</div>'), ['dead']);
+  assert.deepStrictEqual(P.detectAlerts(fx('dead.html')), ['dead']); // «Вас убили.» + «В город» (index.php?doa=1)
 });
 
 test('магистр, описание умения, панель', () => {
@@ -94,6 +95,7 @@ test('выбор моба (−5…+9) и действия', () => {
   global.chrome = undefined;
   global.document = { cookie: '' };
   require('../src/net.js');
+  require('../src/core.js');
   require('../src/journal.js');
   require('../src/engine.js');
   const E = global.L2MEngine;

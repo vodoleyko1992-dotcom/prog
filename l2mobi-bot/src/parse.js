@@ -194,7 +194,7 @@
     if (/заблокирован|забанен|бан до|banned/.test(t)) a.push('ban');
     // «Вас убил …» бывает и в старом журнале боя, поэтому смерть — только по явному состоянию или HP 0.
     var bars = parseBars(html);
-    if (/вы мертвы|вы погибли\.|воскресить|воскрешение|вернуться в город после смерти/.test(t) || (bars.maxHp && bars.hp <= 0)) a.push('dead');
+    if (/вас убили\.|index\.php\?doa=1|вы мертвы|вы погибли\.|воскресить|воскрешение|вернуться в город после смерти/.test(t) || (bars.maxHp && bars.hp <= 0)) a.push('dead');
     if (/name="telefon"/.test(String(html || ''))) a.push('logout');
     return a;
   }
@@ -224,16 +224,21 @@
     return r;
   }
 
+  /** Вид умения по описанию: heal (лечит себя/цель), attack (бьёт противника), other. */
+  function skillKind(text, power) {
+    text = String(text || '');
+    if (/восстанавлива\w*[^.]{0,25}\bhp\b|лечит|исцел/i.test(text)) return 'heal';
+    if (/противник|врага|цель/i.test(text) && power) return 'attack';
+    return 'other';
+  }
+
   /** Описание умения (magister.php?&des=ID&dl=L): {name, text, power, kind: attack|heal|other} */
   function parseSkillDesc(html) {
     var t = pageText(html).split('\n');
     var i = t.findIndex(function (l) { return /уровень/.test(l) && / - \d+ уровень/.test(l); });
     var name = t[i + 1] || '', text = t[i + 2] || '';
     var pw = /Power:\s*(\d+)/i.exec(text);
-    var kind = 'other';
-    if (/восстанавливает\s+hp|лечит/i.test(text)) kind = 'heal';
-    else if (/противник|врага|цель/i.test(text) && pw) kind = 'attack';
-    return { name: name, text: text, power: pw ? +pw[1] : 0, kind: kind };
+    return { name: name, text: text, power: pw ? +pw[1] : 0, kind: skillKind(text, pw ? +pw[1] : 0) };
   }
 
   /** Ячейки панели умений со страницы actions.php: [{slot, skill: 'attack'|id|null}] */
@@ -279,7 +284,7 @@
   }
 
   var api = {
-    decodeEntities: decodeEntities, stripTags: stripTags, pageText: pageText, links: links, query: query,
+    decodeEntities: decodeEntities, stripTags: stripTags, skillKind: skillKind, pageText: pageText, links: links, query: query,
     parseMapMobs: parseMapMobs, parseBars: parseBars, parseHotbar: parseHotbar, isEditMode: isEditMode, parseCooldowns: parseCooldowns, parseCasting: parseCasting, parseBattleLog: parseBattleLog,
     parseTargetHud: parseTargetHud, parseBattleJson: parseBattleJson, parseBattleEnd: parseBattleEnd,
     parseParameters: parseParameters, parseHeroHeader: parseHeroHeader, parseAdena: parseAdena,
