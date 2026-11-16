@@ -52,3 +52,14 @@ test('кнопки во время работы ставят задачу пер
   assert.equal(T.sched.next(E.cfg, st).key, 'buff');
   st.running = false; st.force = {};
 });
+
+test('опыт за бой берётся из журнала следующего боя', () => {
+  assert.equal(T.expFromLog(['| Получено 241 Адена', 'Вы получили 4419exp и 162sp.']), 4419);
+  assert.equal(T.expFromLog(['Цель слишком далеко']), 0);
+  T.winPending({ mob: 'Лирейн', t0: Date.now() - 4000, hits: 3 }, 0);
+  T.flushPending(T.expFromLog(['Вы получили 5000exp и 200sp.']));
+  T.winPending({ mob: 'Лирейн', t0: Date.now() - 4000, hits: 3 }, 0);
+  T.flushPending(5000);
+  const r = T.mstats.top().find(m => m.name === 'Лирейн');
+  assert.equal(r.n, 2); assert.equal(r.exp, 5000); assert.ok(r.rate > 1000);
+});
