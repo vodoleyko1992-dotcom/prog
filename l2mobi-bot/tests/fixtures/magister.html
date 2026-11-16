@@ -1,0 +1,411 @@
+<html><body><center><small><b>Hero - 10 уровень&nbsp;&nbsp;&nbsp;</b></small></center><br /><p><strong>Доступные магии</strong></p><a href="magister.php?get=118"><img src="img/skills/skill118_0.jpg" /></a> <a href="magister.php?&des=118&dl=1">Движение Мага 1</a>(0 sp)<hr /><a href="magister.php?get=146"><img src="img/skills/skill146_0.jpg" /></a> <a href="magister.php?&des=146&dl=1">Anti Magic 1</a>(240 sp)<hr /><a href="magister.php?get=163"><img src="img/skills/skill163_0.jpg" /></a> <a href="magister.php?&des=163&dl=1">Искусное Колдовство 1</a>(0 sp)<hr /><a href="magister.php?get=214"><img src="img/skills/skill214_0.jpg" /></a> <a href="magister.php?&des=214&dl=1">Восстановление Маны 1</a>(0 sp)<hr /><a href="magister.php?get=244"><img src="img/skills/skill244_0.jpg" /></a> <a href="magister.php?&des=244&dl=1">Экипировка Брони 1</a>(470 sp)<hr /><a href="magister.php?get=249"><img src="img/skills/skill249_0.jpg" /></a> <a href="magister.php?&des=249&dl=1">Weapon Mastery 1</a>(470 sp)<hr /><a href="magister.php?get=1011"><img src="img/skills/skill1011_0.jpg" /></a> <a href="magister.php?&des=1011&dl=1">Лечение 1</a>(160 sp)<br /><img src="img/items/1152.jpg"/><a href="item_profile.php?itemid=1152">Книга Заклинаний: Лечение</a><hr /><a href="magister.php?get=1012"><img src="img/skills/skill1012_0.jpg" /></a> <a href="magister.php?&des=1012&dl=1">Излечить Отравление 1</a>(470 sp)<br /><img src="img/items/1053.jpg"/><a href="item_profile.php?itemid=1053">Книга Заклинаний: Излечить Отравление</a><hr /><a href="magister.php?get=1040"><img src="img/skills/skill1040_0.jpg" /></a> <a href="magister.php?&des=1040&dl=1">Щит 1</a>(470 sp)<br /><img src="img/items/1058.jpg"/><a href="item_profile.php?itemid=1058">Книга Заклинаний: Щит</a><hr /><a href="magister.php?get=1068"><img src="img/skills/skill1068_0.jpg" /></a> <a href="magister.php?&des=1068&dl=1">Могущество 1</a>(470 sp)<br /><img src="img/items/1048.jpg"/><a href="item_profile.php?itemid=1048">Книга Заклинаний: Могущество</a><hr /><a href="magister.php?get=1168"><img src="img/skills/skill1168_0.jpg" /></a> <a href="magister.php?&des=1168&dl=1">Проклятие: Яд 1</a>(470 sp)<br /><img src="img/items/1055.jpg"/><a href="item_profile.php?itemid=1055">Книга Заклинаний: Проклятие: Яд</a><hr /><a href="magister.php?get=1177"><img src="img/skills/skill1177_0.jpg" /></a> <a href="magister.php?&des=1177&dl=2">Удар Ветра 2</a>(240 sp)<hr /><a href="magister.php?get=1184"><img src="img/skills/skill1184_0.jpg" /></a> <a href="magister.php?&des=1184&dl=1">Ледяной Шип 1</a>(240 sp)<br /><img src="img/items/1049.jpg"/><a href="item_profile.php?itemid=1049">Книга Заклинаний: Ледяной Шип</a><hr /><a href="magister.php?get=1216"><img src="img/skills/skill1216_0.jpg" /></a> <a href="magister.php?&des=1216&dl=1">Самолечение 1</a>(0 sp)<hr /><a href="magister.php?get=194"><img src="img/skills/skill194_0.jpg" /></a> <a href="magister.php?&des=194&dl=1">Везение 1</a>(0 sp)<hr /><a href="magister.php?get=1320"><img src="img/skills/skill1320_0.jpg" /></a> <a href="magister.php?&des=1320&dl=1">Создать Обычный Предмет 1</a>(0 sp)<hr /><a href="magister.php?get=1322"><img src="img/skills/skill1322_0.jpg" /></a> <a href="magister.php?&des=1322&dl=1">Обычное Ремесло 1</a>(0 sp)<hr /><hr /><font color="#00ff00">У Вас 1558 Skill Points...</font>
+
+   <style>
+
+ /* ИСПРАВЛЕННЫЙ CSS - ОДИНАКОВЫЕ ОТСТУПЫ МЕЖДУ ВСЕМИ КНОПКАМИ */
+
+.game-content {
+    flex: 1;
+    background: radial-gradient(circle at center, #2a2a4a 0%, #1a1a2e 70%);
+    position: relative;
+    overflow: hidden;
+    /* Добавь отступ снизу для fixed меню */
+    padding-bottom: 84px;
+}
+
+.bottom-menu {
+    background: linear-gradient(180deg, 
+        rgba(15, 15, 35, 0.95) 0%, 
+        rgba(25, 25, 60, 0.98) 50%, 
+        rgba(10, 10, 30, 1) 100%);
+    border-top: 3px solid #b8860b;
+    box-shadow: 
+        0 -5px 20px rgba(184, 134, 11, 0.3),
+        inset 0 1px 0 rgba(255, 215, 0, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 12px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    /* Убираем gap отсюда */
+}
+
+.menu-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    height: 60px;
+    /* еЕДИНЫЙ gap для ВСЕХ кнопок */
+    gap: 4px !important;
+}
+
+/* УДАЛЯЕМ ВСЕ группы - они ломают равномерность */
+.menu-center,
+.menu-left,
+.menu-right {
+    display: none !important;
+}
+
+.menu-btnH {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important; /* Только внутри кнопки */
+    width: 48px; /* фИКСИРОВАННАЯ ширина для всех */
+    height: 100%;
+    padding: 4px 6px;
+    flex-shrink: 0; /* Не сжимается */
+    color: #e6d6a3;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.menu-btn {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important; /* Только внутри кнопки */
+    width: 76px; /* фИКСИРОВАННАЯ ширина для всех */
+    height: 100%;
+    padding: 4px 6px;
+    flex-shrink: 0; /* Не сжимается */
+    color: #e6d6a3;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Иконка */
+.menu-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.menu-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* Текст */
+.menu-text {
+    font-size: 10px !important;
+    line-height: 1.1;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+/* Остальные стили без изменений */
+.menu-btn:hover {
+    color: #ffd700 !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 5px 15px rgba(184, 134, 11, 0.4),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    background: rgba(184, 134, 11, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.menu-btnH:hover {
+    color: #ffd700 !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 5px 15px rgba(184, 134, 11, 0.4),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    background: rgba(184, 134, 11, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.mammon-btn {
+    background: linear-gradient(145deg, rgba(139, 69, 19, 0.3), rgba(205, 133, 63, 0.2));
+    border-color: rgba(205, 133, 63, 0.6);
+    animation: mammonPulse 2s ease-in-out infinite;
+    opacity: 1; /* Показываем всегда для теста */
+    visibility: visible;
+}
+
+@keyframes mammonPulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(205, 133, 63, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(205, 133, 63, 0.8), 0 0 40px rgba(255, 215, 0, 0.3);
+        transform: scale(1.05);
+    }
+}
+
+@media (max-width: 768px) {
+    
+    
+    .menu-container {
+        padding: 0 6px;
+        gap: 1px !important;
+    }
+    .menu-btn {
+        width: 54px;
+        padding: 3px 4px;
+    }
+    .menu-icon {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    .menu-text {
+        font-size: 9px !important;
+    }
+    
+    
+}
+
+    </style>
+
+
+
+    <nav class="bottom-menu">
+        <div class="menu-container">
+
+                
+                      
+                <a href="/player.php?parameters" class="menu-btn" title="Профиль">
+                    <span class="menu-icon"><img src="/img/newicons/parameters.png"></span>
+                    <span class="menu-text">Профиль</span>
+                </a>
+                <a href="/player.php?skills" class="menu-btn" title="Магия">
+                    <span class="menu-icon"><img src="/img/newicons/skills.png"></span>
+                    <span class="menu-text">Магия</span>
+                </a>
+
+                <a href="/town.php" class="menu-btn" title="Город">
+                    <span class="menu-icon"><img src="/img/newicons/tow_big.png"></span>
+                    <span class="menu-text">Город</span>
+                </a>
+
+                <a href="/actions.php" class="menu-btn" title="Действия">
+                    <span class="menu-icon"><img src="/img/newicons/hand_big.png"></span>
+                    <span class="menu-text">Действия</span>
+                </a>
+                
+                <a href="/inventory.php" class="menu-btn" title="Инвентарь">
+                    <span class="menu-icon"><img src="/img/newicons/inv_big.png"></span>
+                    <span class="menu-text">Инвентарь</span>
+                </a>
+                
+                <a href="/other.php" class="menu-btn" title="Настройки">
+                    <span class="menu-icon"><img src="/img/newicons/mol_big.png"></span>
+                    <span class="menu-text">Опции</span>
+                </a>
+                
+      
+        </div>
+    </nav>
+
+
+<hr class="l2-divider" />
+<style>
+.l2-button-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px; /* Плотное расположение кнопок, как на скрине */
+    padding: 10px 0;
+    flex-wrap: wrap;
+}
+
+.l2-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #ffffff;
+    position: relative;
+    min-width: 55px; /* Фиксируем минимальную ширину */
+}
+
+.l2-btn-icon {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    display: block;
+    margin-bottom: 4px; /* Маленький отступ до текста, чтобы не слипалось */
+}
+
+.btn-label {
+font-size: 9px;
+font-weight: 800;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: #FAE7B5; /* было #d4cfc7 */
+line-height: 1;
+margin: 0;
+font-family: Arial, sans-serif;
+}
+
+/* Бейдж "New" */
+.btn-badge.new {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background-color: #ff3333;
+    border: 2px solid #000;
+    border-radius: 50%;
+    box-shadow: 0 0 3px rgba(255, 51, 51, 0.8);
+}
+
+
+
+.l2-btn-premium {
+    display: inline-block;
+    padding: 12px 24px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(to bottom, #2a2a35, #1a1a22);
+    border: 2px solid #4a4a55;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.l2-btn-premium:hover {
+    background: linear-gradient(to bottom, #3a3a45, #252530);
+    border-color: #7a7a88;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.l2-btn-premium .btn-label {
+    position: relative;
+    z-index: 2;
+    letter-spacing: 1px;
+}
+
+
+</style>
+
+
+
+ 
+
+
+
+
+<div class="l2-button-bar">
+    
+    <!-- Новости -->
+    <a href="social.php?news" class="l2-btn">
+        <img src="img/menu/news.png" alt="Новости" class="l2-btn-icon">
+        <span class="btn-label">Новости</span>
+            </a>
+
+    <!-- Форум -->
+    <a href="social.php?forum" class="l2-btn">
+        <img src="img/menu/forum.png" alt="Форум" class="l2-btn-icon">
+        <span class="btn-label">Форум</span>
+            </a>
+
+    <!-- ГМ-Шоп -->
+    <a href="gmshop.php" class="l2-btn">
+        <img src="img/menu/gmshop.png" alt="ГМ-Шоп" class="l2-btn-icon">
+        <span class="btn-label">ГМ-Шоп</span>
+    </a>
+
+    <!-- Центр помощи -->
+    <!-- Проверьте имя файла: в вашем запросе было sipport.png, возможно, это опечатка и файл support.png -->
+<a href="/support.php" class="l2-btn">
+    <img src="img/menu/support.png" alt="Центр помощи" class="l2-btn-icon">
+    <span class="btn-label">Поддержка</span>
+    </a>
+
+    <!-- Алтарь героя -->
+    <!-- ВАЖНО: Путь должен вести к картинке (png), а не к скрипту. Если файл altar.php генерирует картинку - ок. Если это картинка - переименуйте в altar.png -->
+    <a href="/daily_altar.php" class="l2-btn">
+        <img src="img/menu/altar.png" alt="Алтарь героя" class="l2-btn-icon">
+        <span class="btn-label">Алтарь</span>
+    </a>
+
+</div>
+
+
+
+
+
+<hr /><center><a href="social.php?chat&ss=aHR0cHM6Ly9sMm1vYmkucHJvL21hZ2lzdGVyLnBocD9uaWQ9MzAxNDQmbGVhcm5za2lsbHM="><img src="img/ssilka.png" /></a><br/> 
+<style>
+.l2-promo-link {
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+    text-decoration: none;
+    color: #ffffff;
+    background: linear-gradient(180deg, #220033 0%, #000000 100%);
+    border: 2px solid #ff00ff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.1;
+}
+.l2-promo-link::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+}
+.neon-text {
+    color: #fff;
+    text-shadow: 
+        0 0 3px #fff, 
+        0 0 6px #ff00ff, 
+        0 0 12px #ff00ff;
+}
+.promo-timer {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    color: #ffaa00;
+    text-align: center;
+    text-shadow: 0 0 5px rgba(255, 170, 0, 0.7);
+}
+</style>
+
+<a href="akciya.php" class="l2-promo-link">
+    <span class="neon-text"></body></html>

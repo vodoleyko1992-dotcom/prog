@@ -64,22 +64,48 @@ test('тревоги: страница входа и капча', () => {
   assert.deepStrictEqual(P.detectAlerts(fx('login.html')), ['logout']);
   assert.deepStrictEqual(P.detectAlerts('<div>Введите код с картинки</div>'), ['captcha']);
   assert.deepStrictEqual(P.detectAlerts(fx('map.html')), []);
+  assert.deepStrictEqual(P.detectAlerts('<div>Вас убил Зеленый Гриб нанес урона.</div>'), []);
+  assert.deepStrictEqual(P.detectAlerts('<div class="l2-bar-text">HP 0/211</div>'), ['dead']);
 });
 
-test('выбор моба и действия', () => {
+test('магистр, описание умения, панель', () => {
+  const m = P.parseMagister(fx('magister.html'));
+  assert.strictEqual(m.sp, 1558);
+  assert.ok(m.list.length >= 15);
+  assert.deepStrictEqual(m.list.find((x) => x.id === '1177'), { id: '1177', level: 2, name: 'Удар Ветра', sp: 240, book: null });
+  assert.strictEqual(m.list.find((x) => x.id === '1184').book, 1049);
+  assert.deepStrictEqual(P.parseSkillDesc(fx('skill-desc.html')).name, 'Проклятие: Яд');
+  assert.deepStrictEqual(P.parseSkillDesc('<div>Hero - 10 уровень</div><div>Удар Ветра</div><div>Атакакует противника сильным порывом ветра. Power: 15.</div>'),
+    { name: 'Удар Ветра', text: 'Атакакует противника сильным порывом ветра. Power: 15.', power: 15, kind: 'attack' });
+  const slots = P.parseSlots(fx('hotbar-edit.html'));
+  assert.deepStrictEqual(slots.filter((x) => x.skill), [{ slot: 0, skill: 'attack' }, { slot: 1, skill: '1177' }]);
+  assert.ok(slots.length >= 10);
+  assert.deepStrictEqual(P.parseSlotSkills(fx('slot-skills.html')).map((x) => x.id), ['1177', '27']);
+});
+
+test('куда качаться и карточка моба', () => {
+  assert.deepStrictEqual(P.parseNearby(fx('nearby.html')).map((x) => x.level), [6, 7, 9]);
+  const d = P.parseDroplist(fx('droplist.html'));
+  assert.deepStrictEqual(d, { name: 'Зеленый Гриб', level: 9, agro: false, run: 'map.php?map&move_x=-9513&move_y=23544', x: -9513, y: 23544 });
+  assert.deepStrictEqual(P.parseMapCoords('<div>× 1.0</div><div>606 : 1417</div>'), { x: 606, y: 1417 });
+});
+
+test('выбор моба (−5…+9) и действия', () => {
   global.chrome = undefined;
   global.document = { cookie: '' };
   require('../src/net.js');
+  require('../src/journal.js');
   require('../src/engine.js');
   const E = global.L2MEngine;
   E._test.setHero({ name: 'Hero', level: 7 });
-  const mobs = [{ name: 'Гремлин', level: 1, href: 'a' }, { name: 'Бес', level: 6, href: 'b' }, { name: 'Орк', level: 12, href: 'c' }];
+  const mobs = [{ name: 'Гремлин', level: 1, href: 'a' }, { name: 'Бес', level: 6, href: 'b' }, { name: 'Орк', level: 16, href: 'c' }, { name: 'Дракон', level: 17, href: 'd' }];
+  assert.strictEqual(E._test.pickMob(mobs).href, 'c');
+  E.setCfg({ blacklist: 'Орк' });
   assert.strictEqual(E._test.pickMob(mobs).href, 'b');
-  E.setCfg({ blacklist: 'Бес' });
-  assert.strictEqual(E._test.pickMob(mobs).href, 'a');
-  E.setCfg({ maxLvlBelow: 3 });
+  E.setCfg({ maxLvlBelow: 0 });
   assert.strictEqual(E._test.pickMob(mobs), null);
-  const hb = { attack: 'battle.php?x&attack', skills: [{ id: '1177', href: 'battle.php?x&go=1177' }] };
+  const hb = { attack: 'battle.php?x&attack', skills: [{ id: '27', href: 'battle.php?x&go=27' }, { id: '1177', href: 'battle.php?x&go=1177' }] };
+  assert.deepStrictEqual(E._test.rotation(hb), ['1177']);
   assert.strictEqual(E._test.chooseAction(hb, 0).skill, '1177');
   E.state.cd['1177'] = 10_000;
   assert.strictEqual(E._test.chooseAction(hb, 5_000).label, 'атака');

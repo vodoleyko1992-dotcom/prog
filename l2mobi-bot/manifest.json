@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "L2Mobi Bot",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Помощник для l2mobi.pro: автофарм, бафф, отдых, награды Алтаря",
   "permissions": ["storage", "notifications"],
   "host_permissions": ["https://l2mobi.pro/*", "https://*.l2mobi.pro/*"],
@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["https://l2mobi.pro/*", "https://*.l2mobi.pro/*"],
-      "js": ["src/parse.js", "src/net.js", "src/engine.js", "src/panel.js", "src/content.js"],
+      "js": ["src/parse.js", "src/net.js", "src/journal.js", "src/engine.js", "src/panel.js", "src/content.js"],
       "run_at": "document_idle"
     }
   ],
