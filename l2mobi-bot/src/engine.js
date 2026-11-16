@@ -7,7 +7,7 @@
   'use strict';
   var P = root.L2MParse, N = root.L2MNet, C = root.L2MCore;
   var J = root.L2MJournal || { ev: function () {} };
-  var VERSION = '1.2';
+  var VERSION = '1.3';
 
   var DEFAULTS = {
     skills: '',          // id умений через запятую в порядке приоритета ('' = боевые с панели, сильнее — раньше)
@@ -43,7 +43,7 @@
     sess: null, lastBuff: 0, lastDaily: '', lastLearnLvl: 0, lastLearnT: 0,
     knownSkills: [], skillInfo: {}, cd: {}, log: [], lastFight: null, place: null,
     dead: false, avoid: {}, day: { key: '', kills: 0 }, needMove: false, curMob: null, beat: 0, now: '', next: '',
-    noBook: {}, firstDelay: 0, force: {}
+    noBook: {}, force: {}, pendingWin: null
   };
   var rec = C.createRecovery(), wd = C.createWatchdog(), mstats = C.createMobStats(), db = C.mobDbIndex(root.L2MMobs);
   var cfg = Object.assign({}, DEFAULTS);
@@ -380,14 +380,38 @@
     var loot = end.loot.filter(function (x) { return x !== '⚔'; });
     var secs = f ? ((Date.now() - f.t0) / 1000).toFixed(1) : '?';
     if (f) {
-      S.lastFight = { name: f.name, secs: +secs, hits: f.hits, exp: end.exp }; if (S.sess) { S.sess.fightMs += Date.now() - f.t0; S.sess.expPts += end.exp || 0; }
-      mstats.win(f.mob, Date.now() - f.t0, end.exp, f.hits);
+      S.lastFight = { name: f.name, secs: +secs, hits: f.hits }; if (S.sess) S.sess.fightMs += Date.now() - f.t0;
+      winPending(f, end.exp);
     }
     dayCount();
     wd.progress('kill:' + S.kills);
     log('✔ ' + (f ? f.name + ' за ' + secs + ' с, ' + f.hits + ' ударов' : 'Победа') + (loot.length ? ' — ' + loot.join(', ') : ''), 'win', { mob: f && f.name, secs: +secs, hits: f && f.hits, loot: loot, adena: adena, levelUp: end.levelUp });
     if (end.levelUp) await refreshMe(); // учёбу запустит планировщик (новый уровень)
     save();
+  }
+
+  /* Опыт за бой l2mobi пишет не на странице добычи, а строкой «Вы получили N exp и M sp.»
+     в журнале СЛЕДУЮЩЕГО боя (лог John 22:35: у всех мобов было exp 0). Победу держим «в ожидании»,
+     опыт засчитываем, когда откроется следующий бой. */
+  function winPending(f, exp) {
+    flushPending(null);
+    S.pendingWin = { mob: f.mob, ms: Date.now() - f.t0, hits: f.hits };
+    if (exp) flushPending(exp);
+  }
+  function flushPending(exp) {
+    var p = S.pendingWin; if (!p) return;
+    S.pendingWin = null;
+    mstats.win(p.mob, p.ms, exp || 0, p.hits);
+    if (exp && S.sess) S.sess.expPts += exp;
+    if (S.lastFight && exp) S.lastFight.exp = exp;
+    if (exp) J.ev('exp', p.mob + ': ' + exp + ' exp');
+  }
+  function expFromLog(lines) {
+    for (var i = 0; i < Math.min(lines.length, 10); i++) {
+      var m = /получили\s*([\d\s]+?)\s*exp/i.exec(lines[i]);
+      if (m) return +m[1].replace(/\D/g, '');
+    }
+    return 0;
   }
 
   function isEnd(r) { return r.battleEnd || /ЗАБРАТЬ ВСЕ|ДОБЫЧА\s*\(/.test(r.text); }
@@ -406,6 +430,7 @@
     if (!hb.attack && !hb.skills.length && P.isEditMode(r.text)) { setLockedHotbar(); r = await page(mob.href, 'map.php'); hb = P.parseHotbar(r.text); }
     if (!hb.attack && !hb.skills.length) { log('Моб ' + mob.name + ' недоступен', 'lost'); snap('no-hotbar', r); return 'skip'; }
     rememberSkills(hb);
+    flushPending(expFromLog(P.parseBattleLog(r.text)));
     var ref = mob.href, lastSig = '', still = 0;
     for (var step = 0; step < 150 && !stopReq; step++) {
       var bars = P.parseBars(r.text); if (bars.maxHp) Object.assign(S.me, bars);
@@ -418,15 +443,15 @@
       if (sig === lastSig) still++; else { still = 0; lastSig = sig; }
       if (still >= 10) { log('Бой без изменений 10 ходов — выхожу к карте', 'lost', { log: blog.slice(0, 5) }); snap('stuck', r); return 'stuck'; }
       var now = N.serverNow();
-      var act = chooseAction(hb, now);
       var castWait = cast ? cast.casting * 1000 - now + 150 : 0;
-      if (step === 1) {
-        // «Цель слишком далеко» на первом ударе: моб ещё подходит — в следующих боях первый удар чуть позже.
-        if (/слишком далеко/i.test(blog[0] || '')) { S.firstDelay = Math.min(1500, S.firstDelay + 250); J.ev('far', 'первый удар позже: ' + S.firstDelay + ' мс'); }
-        else S.firstDelay = Math.max(0, S.firstDelay - 25);
-      }
-      var wait = step === 0 ? Math.max(castWait, S.firstDelay) : Math.max(castWait, cfg.minDelay * 1000);
-      if (act && !act.skill && cast && cast.PN) wait = Math.max(wait, step === 0 ? 0 : cast.PN * 1000 - 300);
+      // «Цель слишком далеко»: удар не прошёл и каста нет — повторяем сразу, без паузы
+      // (задержка первого удара из 1.2 не помогала и только удлиняла бои).
+      var far = step > 0 && /слишком далеко/i.test(blog[0] || '');
+      if (far) J.ev('far', 'повтор сразу');
+      // Действие выбираем на момент конца каста: умение, которое к тому времени откатится, лучше слабой обычной атаки.
+      var act = chooseAction(hb, now + Math.max(0, castWait));
+      var wait = step === 0 || far ? Math.max(castWait, 0) : Math.max(castWait, cfg.minDelay * 1000);
+      if (act && !act.skill && cast && cast.PN && step > 0 && !far) wait = Math.max(wait, cast.PN * 1000 - 300);
       J.ev('hit', act ? act.label : 'жду', { step: step, me: [S.me.hp, S.me.maxHp, S.me.mp, S.me.maxMp], mob: hud ? [hud.hp, hud.maxHp] : null, wait: Math.round(wait), log: blog[0] });
       if (wait > 0) await sleep(jitter(wait));
       if (!act) { await sleep(500); r = await page(ref, ref); continue; }
@@ -434,11 +459,13 @@
       ref = act.href; f.hits++;
       if (isEnd(r)) { await finishBattle(r.text, f); return 'win'; }
       if (/\/map\.php/.test(r.url) || !/l2-target-hud/.test(r.text)) {
-        // 1.1 так «побеждал», а герой на самом деле погиб (лог John 16.11): сверяем HP.
-        await refreshMe();
-        S.kills++; if (S.sess) S.sess.kills++; dayCount(); wd.progress('kill:' + S.kills);
-        log('✔ ' + f.name + ' — бой закончился без страницы добычи', 'win', { mob: f.name, secs: (Date.now() - f.t0) / 1000, hits: f.hits, noLoot: true });
-        return 'lost';
+        // Моб убит, добычи нет — игра сразу вернула на карту. (Смерть ловит page() по «Вас убили.»)
+        S.kills++; if (S.sess) { S.sess.kills++; S.sess.fightMs += Date.now() - f.t0; } dayCount(); wd.progress('kill:' + S.kills);
+        S.lastFight = { name: f.name, secs: +((Date.now() - f.t0) / 1000).toFixed(1), hits: f.hits };
+        winPending(f, 0);
+        log('✔ ' + f.name + ' за ' + S.lastFight.secs + ' с, ' + f.hits + ' ударов — добычи нет', 'win', { mob: f.name, secs: S.lastFight.secs, hits: f.hits, noLoot: true });
+        save();
+        return 'win';
       }
       var nhb = P.parseHotbar(r.text);
       if (nhb.attack || nhb.skills.length) hb = nhb;
@@ -600,7 +627,7 @@
   function save() {
     try {
       chrome.storage.local.set({ [KEY]: {
-        v11: true, v12: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, firstDelay: S.firstDelay, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
+        v11: true, v12: true, v13: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
         lastLearnLvl: S.lastLearnLvl, lastLearnT: S.lastLearnT,
         stats: { kills: S.kills, adena: S.adena, deaths: S.deaths, levelUps: S.levelUps, learned: S.learned }, log: S.log.slice(0, 100)
       } });
@@ -617,8 +644,8 @@
             if (!v.v11) { delete c.maxLvlAbove; delete c.maxLvlBelow; delete c.minDelay; delete c.emptyWait; }
             // 1.2: после смерти не стоять, а возвращаться
             if (!v.v12) { delete c.stopOnDeath; if (c.restHp === 40) delete c.restHp; }
-            S.avoid = v.avoid || {}; S.day = v.day || { key: '', kills: 0 }; S.noBook = v.noBook || {}; S.firstDelay = +v.firstDelay || 0;
-            mstats.importState(v.mobStats); sched.importState(v.sched);
+            S.avoid = v.avoid || {}; S.day = v.day || { key: '', kills: 0 }; S.noBook = v.noBook || {};
+            if (v.v13) mstats.importState(v.mobStats); // 1.2 писал опыт 0 — начинаем учёт заново sched.importState(v.sched);
             cfg = Object.assign({}, DEFAULTS, c);
             S.lastBuff = v.lastBuff || 0; S.lastDaily = v.lastDaily || ''; S.knownSkills = v.knownSkills || [];
             S.skillInfo = v.skillInfo || {};
@@ -631,7 +658,7 @@
         });
       } catch (e) { res({}); }
     }).then(function (v) {
-      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true }); chrome.storage.local.set(o); } catch (e) {}
+      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true, v13: true }); chrome.storage.local.set(o); } catch (e) {}
       return v;
     });
   }
@@ -659,6 +686,6 @@
     mobTop: function (n) { return mstats.top(n); }, exportCfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     importCfg: function (o) { var c = {}; Object.keys(DEFAULTS).forEach(function (k) { if (o && o[k] !== undefined && typeof o[k] === typeof DEFAULTS[k]) c[k] = o[k]; }); setCfg(c); return Object.keys(c).length; },
     buffNow: wrap(buffIfNeeded, 'Бафф', 'buff'), dailyNow: wrap(dailyIfNeeded, 'Алтарь', 'daily'), learnNow: wrap(learnSkills, 'Умения', 'learn'),
-    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, mstats: mstats, sched: sched, placeScore: placeScore, services: SERVICES }
+    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
