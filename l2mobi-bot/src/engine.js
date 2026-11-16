@@ -7,7 +7,7 @@
   'use strict';
   var P = root.L2MParse, N = root.L2MNet, C = root.L2MCore;
   var J = root.L2MJournal || { ev: function () {} };
-  var VERSION = '1.4';
+  var VERSION = '1.5';
 
   var DEFAULTS = {
     skills: '',          // id умений через запятую в порядке приоритета ('' = боевые с панели, сильнее — раньше)
@@ -34,7 +34,10 @@
     dailyKills: 0,       // суточный лимит боёв (0 — без лимита)
     stuckMin: 10,        // нет прогресса столько минут — сменить место; три раза подряд — стоп
     healAt: 45,          // в бою лечиться умением (Самолечение и т.п.), если HP ниже, %
-    bookRetryH: 6        // умение «нужна книга» не пробовать снова столько часов (или пока не будет нового уровня)
+    bookRetryH: 6,       // умение «нужна книга» не пробовать снова столько часов (или пока не будет нового уровня)
+    buyBooks: true,      // 1.5: покупать книги заклинаний у Баринеля (Глудио) и сразу учить
+    bookMaxPrice: 20000, // не дороже, аден за книгу
+    adenaKeep: 0         // не тратить на книги, если адены меньше (0 — не проверять)
   };
 
   var S = {
@@ -77,12 +80,12 @@
   class Dead extends Error {}
   var myGen = 0; // поколение цикла: старый цикл после Стоп→Старт или перезапуска сторожем сам выходит
 
-  async function page(path, referer) {
+  async function page(path, referer, body) {
     if (stopReq) throw new Stop();
     if (myGen !== gen) throw new Stop('перезапуск');
     S.beat = Date.now();
     var t0 = Date.now(), r;
-    try { r = await N.get(path, { referer: referer }); }
+    try { r = body ? await N.post(path, body, { referer: referer }) : await N.get(path, { referer: referer }); }
     catch (e) { J.ev('req', path, { err: String(e && e.message || e), ms: Date.now() - t0 }); throw e; }
     var al = P.detectAlerts(r.text);
     J.ev('req', String(path).slice(0, 160), { st: r.status, ms: Date.now() - t0, kb: Math.round(r.text.length / 1024), url: r.url.replace(location.origin, ''), end: r.battleEnd || undefined, al: al.length ? al : undefined });
@@ -214,14 +217,23 @@
     if (!cfg.autoLearn) return;
     if (!force && S.lastLearnLvl === lvl() && Date.now() - S.lastLearnT < 30 * 60000) return;
     setStatus('учу умения у магистра', 'Умения');
-    var failed = {}, learned = [];
+    var failed = {}, learned = [], boughtNow = {};
     for (var step = 0; step < 25 && !stopReq; step++) {
       var r = await page('magister.php?learnskills');
       var m = P.parseMagister(r.text);
+      if (m.sp != null) S.sp = m.sp;
       var can = m.list.filter(function (x) { var k = x.id + ':' + x.level; return (m.sp == null || x.sp <= m.sp) && !failed[k] && !(S.noBook[k] > Date.now() - cfg.bookRetryH * 3600000); })
-        .sort(function (a, b) { return (a.book ? 1 : 0) - (b.book ? 1 : 0) || a.sp - b.sp; });
+      // книжные: сначала боевые, потом лечение, потом остальное (вид — по описанию умения, кэшируется)
+      if (cfg.buyBooks) for (var q = 0; q < can.length; q++) if (can[q].book && !S.skillInfo[can[q].id]) await skillInfo(can[q].id, can[q].level);
+      var rank = function (x) { if (!x.book) return 0; var k = (S.skillInfo[x.id] || {}).kind; return k === 'attack' ? 1 : k === 'heal' ? 2 : 3; };
+      can.sort(function (a, b) { return rank(a) - rank(b) || a.sp - b.sp; });
       if (!can.length) break;
       var pick = can[0];
+      if (pick.book && cfg.buyBooks && !boughtNow[pick.book]) {
+        var b = await buyBook(pick);
+        boughtNow[pick.book] = 1;
+        if (b === 'no') { failed[pick.id + ':' + pick.level] = 1; S.noBook[pick.id + ':' + pick.level] = Date.now(); continue; }
+      }
       var r2 = await page('magister.php?get=' + pick.id, 'magister.php?learnskills');
       var m2 = P.parseMagister(r2.text);
       var still = m2.list.some(function (x) { return x.id === pick.id && x.level === pick.level; });
@@ -236,6 +248,40 @@
     S.lastLearnLvl = lvl(); S.lastLearnT = Date.now();
     await syncHotbar();
     save();
+  }
+
+  /* ---------- книги заклинаний (1.5) ----------
+     Продавец книг Баринель (Глудио): buy.php?nid=31417&bid=3141700 — список, покупка с любой точки карты:
+     POST buy.php?bid=171&nid=31417&buy=<книга>&y, count=1 → «Успешно куплено!». Книга 75–1800 аден.
+     Потом magister.php?get=<умение> учит (книга тратится). */
+  var BOOK_SHOPS = ['buy.php?nid=31417&bid=3141700'];
+  var shop = null, shopAt = 0;
+  async function bookShop() {
+    if (shop && Date.now() - shopAt < 3600000) return shop;
+    shop = {};
+    for (var i = 0; i < BOOK_SHOPS.length; i++) {
+      var r = await page(BOOK_SHOPS[i], 'npc.php?nid=31417&tymop=npc');
+      var list = P.parseBookShop(r.text);
+      Object.keys(list).forEach(function (k) { if (!shop[k]) shop[k] = list[k]; });
+    }
+    shopAt = Date.now();
+    J.ev('book', 'книг у продавца: ' + Object.keys(shop).length);
+    return shop;
+  }
+  /** 'ok' — куплена, 'no' — купить нельзя (нет в продаже/дорого/нет адены). */
+  async function buyBook(skill) {
+    var sh = await bookShop(), b = sh[String(skill.book)];
+    if (!b) { J.ev('book', 'книги нет у продавца: ' + skill.name, { book: skill.book }); return 'no'; }
+    if (b.price > cfg.bookMaxPrice) { J.ev('book', 'дорого: ' + b.name + ' ' + b.price, b); return 'no'; }
+    if (cfg.adenaKeep > 0 && S.me.adena != null && S.me.adena - b.price < cfg.adenaKeep) { J.ev('book', 'мало адены на ' + b.name, b); return 'no'; }
+    setStatus('покупаю ' + b.name, 'Умения');
+    var path = 'buy.php?bid=' + b.bid + '&nid=' + b.nid + '&buy=' + b.item + '&y';
+    var r = await page(path, 'forms.php?bid=' + b.bid + '&nid=' + b.nid + '&bbuy=' + b.item, 'count=1&send=%C4%E0%EB%E5%E5'); // «Далее» в windows-1251
+    var ok = /Успешно куплено/i.test(P.pageText(r.text));
+    if (!ok) { snap('book-buy', r); log('📕 Не удалось купить ' + b.name + ' (' + b.price + ' аден)', 'book', b); return 'no'; }
+    S.booksBought = (S.booksBought || 0) + 1;
+    log('📗 Куплена ' + b.name + ' за ' + b.price + ' аден', 'book', b);
+    return 'ok';
   }
 
   /** Новые боевые умения — на свободные ячейки панели боя. */
@@ -667,7 +713,7 @@
   function save() {
     try {
       chrome.storage.local.set({ [KEY]: {
-        v11: true, v12: true, v13: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
+        v11: true, v12: true, v13: true, v15: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
         lastLearnLvl: S.lastLearnLvl, lastLearnT: S.lastLearnT,
         stats: { kills: S.kills, adena: S.adena, deaths: S.deaths, levelUps: S.levelUps, learned: S.learned }, log: S.log.slice(0, 100)
       } });
@@ -684,7 +730,7 @@
             if (!v.v11) { delete c.maxLvlAbove; delete c.maxLvlBelow; delete c.minDelay; delete c.emptyWait; }
             // 1.2: после смерти не стоять, а возвращаться
             if (!v.v12) { delete c.stopOnDeath; if (c.restHp === 40) delete c.restHp; }
-            S.avoid = v.avoid || {}; S.day = v.day || { key: '', kills: 0 }; S.noBook = v.noBook || {};
+            S.avoid = v.avoid || {}; S.day = v.day || { key: '', kills: 0 }; S.noBook = v.v15 ? (v.noBook || {}) : {}; // 1.5: книги теперь покупаются — пробуем заново
             if (v.v13) mstats.importState(v.mobStats); // 1.2 писал опыт 0 — начинаем учёт заново sched.importState(v.sched);
             cfg = Object.assign({}, DEFAULTS, c);
             S.lastBuff = v.lastBuff || 0; S.lastDaily = v.lastDaily || ''; S.knownSkills = v.knownSkills || [];
@@ -698,7 +744,7 @@
         });
       } catch (e) { res({}); }
     }).then(function (v) {
-      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true, v13: true }); chrome.storage.local.set(o); } catch (e) {}
+      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true, v13: true, v15: true }); chrome.storage.local.set(o); } catch (e) {}
       return v;
     });
   }
@@ -726,6 +772,6 @@
     mobTop: function (n) { return mstats.top(n); }, exportCfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     importCfg: function (o) { var c = {}; Object.keys(DEFAULTS).forEach(function (k) { if (o && o[k] !== undefined && typeof o[k] === typeof DEFAULTS[k]) c[k] = o[k]; }); setCfg(c); return Object.keys(c).length; },
     buffNow: wrap(buffIfNeeded, 'Бафф', 'buff'), dailyNow: wrap(dailyIfNeeded, 'Алтарь', 'daily'), learnNow: wrap(learnSkills, 'Умения', 'learn'),
-    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates }
+    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, buyBook: buyBook, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

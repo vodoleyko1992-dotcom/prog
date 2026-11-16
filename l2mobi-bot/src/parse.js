@@ -194,7 +194,7 @@
     if (/заблокирован|забанен|бан до|banned/.test(t)) a.push('ban');
     // «Вас убил …» бывает и в старом журнале боя, поэтому смерть — только по явному состоянию или HP 0.
     var bars = parseBars(html);
-    if (/вас убили\.|index\.php\?doa=1|вы мертвы|вы погибли\.|воскресить|воскрешение|вернуться в город после смерти/.test(t) || (bars.maxHp && bars.hp <= 0)) a.push('dead');
+    if (/вас убили\.|index\.php\?doa=1|вы мертвы|вы погибли\.|вернуться в город после смерти/.test(t) || (bars.maxHp && bars.hp <= 0)) a.push('dead');
     if (/name="telefon"/.test(String(html || ''))) a.push('logout');
     return a;
   }
@@ -222,6 +222,16 @@
       r.list.push({ id: g[1], level: +d[2], name: decodeEntities(d[3]).replace(/\s+\d+$/, '').trim(), sp: +d[4], book: b ? +b[1] : null });
     });
     return r;
+  }
+
+  /** Продавец книг (buy.php?nid=31417&bid=3141700, Баринель, Глудио):
+      книга → { item, bid, nid, price, name }. Покупка: POST buy.php?bid=&nid=&buy=ITEM&y (count=1). */
+  function parseBookShop(html) {
+    var s = String(html || ''), out = {}, i = s.indexOf('Для покупки');
+    if (i >= 0) s = s.slice(i);
+    var re = /buy\.php\?bid=(\d+)&(?:amp;)?nid=(\d+)&(?:amp;)?buy=(\d+)&(?:amp;)?c"[\s\S]*?itemid=\d+">([^<]+)<\/a>\s*<br\s*\/?>\s*<img[^>]*>\s*([\d\s]+)/g, m;
+    while ((m = re.exec(s))) out[m[3]] = { item: +m[3], bid: m[1], nid: m[2], name: decodeEntities(m[4]).trim(), price: +m[5].replace(/\D/g, '') };
+    return out;
   }
 
   /** Вид умения по описанию: heal (лечит себя/цель), attack (бьёт противника), other. */
@@ -284,7 +294,7 @@
   }
 
   var api = {
-    decodeEntities: decodeEntities, stripTags: stripTags, skillKind: skillKind, pageText: pageText, links: links, query: query,
+    decodeEntities: decodeEntities, stripTags: stripTags, skillKind: skillKind, parseBookShop: parseBookShop, pageText: pageText, links: links, query: query,
     parseMapMobs: parseMapMobs, parseBars: parseBars, parseHotbar: parseHotbar, isEditMode: isEditMode, parseCooldowns: parseCooldowns, parseCasting: parseCasting, parseBattleLog: parseBattleLog,
     parseTargetHud: parseTargetHud, parseBattleJson: parseBattleJson, parseBattleEnd: parseBattleEnd,
     parseParameters: parseParameters, parseHeroHeader: parseHeroHeader, parseAdena: parseAdena,

@@ -18,6 +18,9 @@
       // В Firefox content.fetch ходит от имени страницы (как в Chrome), обычный fetch — от расширения.
       var f = (typeof content !== 'undefined' && content && content.fetch) ? content.fetch.bind(content) : fetch;
       var res = await f(url, {
+        method: opts.body ? 'POST' : 'GET',
+        headers: opts.body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : undefined,
+        body: opts.body || undefined,
         credentials: 'include',
         cache: 'no-store',
         redirect: 'follow',
@@ -37,7 +40,10 @@
     } finally { if (timer) clearTimeout(timer); }
   }
 
+  /** POST формы игры. body — строка x-www-form-urlencoded (кириллицу кодировать в windows-1251). */
+  function post(path, body, opts) { return get(path, Object.assign({}, opts || {}, { body: body })); }
+
   function serverNow() { return Date.now() + skewMs; }
 
-  root.L2MNet = { get: get, serverNow: serverNow };
+  root.L2MNet = { get: get, post: post, serverNow: serverNow };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -142,7 +142,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
       '<div class="card"><h4>Чему бот научился</h4><div class="hint" style="margin-bottom:5px">По своим боям: средняя длина боя и опыт. Лучшие сверху — их бот выбирает чаще.</div><div id="mobtab"></div></div>';
     $('[data-p=skills]').innerHTML =
       '<div class="card"><h4>Учёба</h4>' + chk('autoLearn', 'Учить новые умения у магистра', 'после нового уровня и раз в 30 мин; умения с книгой — только если книга есть') +
-      chk('autoHotbar', 'Ставить новые боевые и лечащие умения на панель боя') + num('bookRetryH', 'Умение «нужна книга» не пробовать снова, ч') + '<div class="row"><button id="learn">Выучить сейчас</button></div></div>' +
+      chk('autoHotbar', 'Ставить новые боевые и лечащие умения на панель боя') + chk('buyBooks', 'Покупать книги заклинаний и сразу учить', 'Баринель (Глудио), 75–1800 аден, работает с любого места') + num('bookMaxPrice', 'Книга не дороже, аден') + num('bookRetryH', 'Не купилось/не выучилось — не пробовать снова, ч') + '<div class="row"><button id="learn">Выучить сейчас</button></div></div>' +
       '<div class="card"><h4>Умения на панели</h4><div id="sklist"></div></div>';
     $('[data-p=buff]').innerHTML =
       '<div class="card"><h4>Отдых</h4>' + num('restHp', 'Отдых, если HP ниже, %') + num('restMp', 'Отдых, если MP ниже, %') + num('restUntil', 'Отдыхать до, %') +
