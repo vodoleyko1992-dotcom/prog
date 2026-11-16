@@ -63,3 +63,14 @@ test('опыт за бой берётся из журнала следующег
   const r = T.mstats.top().find(m => m.name === 'Лирейн');
   assert.equal(r.n, 2); assert.equal(r.exp, 5000); assert.ok(r.rate > 1000);
 });
+
+test('дальний переход по базе мобов: уровень −1…+6, без агро, ближе лучше', () => {
+  T.setHero({ name: 'Hero', level: 19 });
+  E.setCfg({ maxLvlAbove: 9, avoidAgro: true, blacklist: '' });
+  const c = T.dbCandidates([{ name: 'Сыщик Болотных Зомби', level: 14 }], 19);
+  assert.ok(c.length > 5);
+  for (const x of c) { assert.ok(x.level >= 18 && x.level <= 25); }
+  const m = require('../data/mobs.js');
+  assert.ok(c.every(x => !m.find(r => r[0] === x.eid)[5]));
+  assert.ok(c[0].dist != null);
+});

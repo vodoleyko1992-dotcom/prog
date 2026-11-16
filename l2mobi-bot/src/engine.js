@@ -7,7 +7,7 @@
   'use strict';
   var P = root.L2MParse, N = root.L2MNet, C = root.L2MCore;
   var J = root.L2MJournal || { ev: function () {} };
-  var VERSION = '1.3';
+  var VERSION = '1.4';
 
   var DEFAULTS = {
     skills: '',          // id умений через запятую в порядке приоритета ('' = боевые с панели, сильнее — раньше)
@@ -296,9 +296,10 @@
     var near = P.parseNearby((await page('help.php?top=8')).text);
     var black = names(cfg.blacklist), l = lvl();
     var here = {}; (mobsHere || []).forEach(function (m) { here[m.name] = 1; });
-    var cand = near.filter(function (m) { return inRange(m.level) && !moveFailed[m.eid] && !here[m.name] && !avoided(m.name) && black.indexOf(m.name.toLowerCase()) < 0; })
+    // 1.4: идти стоит только к мобам не ниже героя −2 — иначе бот «переходил» на то же место (лог 22:47).
+    var cand = near.filter(function (m) { return inRange(m.level) && m.level >= l - 2 && !moveFailed[m.eid] && !here[m.name] && !avoided(m.name) && black.indexOf(m.name.toLowerCase()) < 0; })
       .sort(function (a, b) { return placeScore(b, l) - placeScore(a, l); });
-    J.ev('move', 'кандидаты', { near: near, cand: cand.map(function (c) { return c.name + ' ' + c.level; }) });
+    J.ev('move', 'кандидаты рядом', { near: near.map(function (c) { return c.name + ' ' + c.level; }), cand: cand.map(function (c) { return c.name + ' ' + c.level; }) });
     for (var i = 0; i < cand.length && !stopReq; i++) {
       var d = P.parseDroplist((await page('droplist.php?eid=' + cand[i].eid, 'help.php?top=8')).text);
       if (cfg.avoidAgro && d.agro) { moveFailed[cand[i].eid] = 1; continue; }
@@ -306,10 +307,42 @@
       log('🏃 Иду к мобам: ' + cand[i].name + ' [' + cand[i].level + ']', 'move', { eid: cand[i].eid, x: d.x, y: d.y });
       S.place = cand[i].name + ' [' + cand[i].level + ']';
       await page(d.run, 'droplist.php?eid=' + cand[i].eid);
-      return await walkUntilMobs(cand[i]);
+      return await walkUntilMobs(cand[i], 10);
     }
-    J.ev('move', 'подходящих мобов рядом нет', { lvl: l });
+    // Рядом ничего — дальний переход по базе мобов (уровень героя −1…+6, ближе и выгоднее — лучше).
+    var far = dbCandidates(mobsHere || [], l)[0];
+    if (far) {
+      log('🧭 Рядом мобов по уровню нет — иду в новый район: ' + far.name + ' [' + far.level + ']' + (far.dist != null ? ', ~' + Math.round(far.dist / 1000) + ' тыс. шагов' : ''), 'move', far);
+      S.place = far.name + ' [' + far.level + ']';
+      await page('map.php?map&move_x=' + far.x + '&move_y=' + far.y, 'map.php');
+      return await walkUntilMobs(far, 25);
+    }
+    J.ev('move', 'подходящих мест нет ни рядом, ни в базе', { lvl: l });
     return false;
+  }
+
+  /** Где герой сейчас: средние координаты (по базе) мобов на его карте. */
+  function herePos(mobsHere) {
+    var xs = 0, ys = 0, n = 0;
+    (mobsHere || []).forEach(function (m) { var r = db.byName(m.name); if (r && r[6] != null) { xs += r[6]; ys += r[7]; n++; } });
+    if (!n && S.lastPos) return S.lastPos;
+    return n ? (S.lastPos = { x: xs / n, y: ys / n }) : null;
+  }
+  /** Кандидаты из базы мобов для дальнего перехода, лучшие первыми. */
+  function dbCandidates(mobsHere, l) {
+    var pos = herePos(mobsHere), black = names(cfg.blacklist), out = [];
+    (root.L2MMobs || []).forEach(function (r) {
+      var lv = r[2]; if (r[6] == null || lv < l - 1 || lv > l + Math.min(6, +cfg.maxLvlAbove)) return;
+      if (cfg.avoidAgro && r[5]) return;
+      if (moveFailed[r[0]] || avoided(r[1]) || black.indexOf(r[1].toLowerCase()) >= 0) return;
+      var dist = pos ? Math.sqrt(Math.pow(r[6] - pos.x, 2) + Math.pow(r[7] - pos.y, 2)) : null;
+      // соседи того же уровня рядом (в радиусе 6000) — значит, там целый район, а не один моб
+      var nb = 0;
+      (root.L2MMobs || []).forEach(function (q) { if (q !== r && q[6] != null && Math.abs(q[2] - (l + 2)) <= 4 && Math.abs(q[6] - r[6]) < 6000 && Math.abs(q[7] - r[7]) < 6000) nb++; });
+      var sc = -Math.abs(lv - (l + 3)) + Math.min(nb, 6) * 0.4 + (r[4] ? Math.log(1 + r[3] / r[4] * 10) : 0) - (dist != null ? dist / 15000 : 0);
+      out.push({ eid: r[0], name: r[1], level: lv, x: r[6], y: r[7], dist: dist, score: +sc.toFixed(2), db: true });
+    });
+    return out.sort(function (a, b) { return b.score - a.score; });
   }
 
   /** Место кача: чем выгоднее моб (опыт за HP из базы или выученный опыт/сек) и ближе к ур.+3, тем лучше. */
@@ -321,20 +354,27 @@
     return s;
   }
 
-  async function walkUntilMobs(target) {
+  /** Ждём, пока герой дойдёт: пришёл, когда рядом целевой моб или моб не ниже героя −2 (не «мелочь» старого места). */
+  async function walkUntilMobs(target, maxMin) {
     var last = null, same = 0, t0 = Date.now();
-    while (!stopReq && Date.now() - t0 < 10 * 60000) {
+    while (!stopReq && Date.now() - t0 < (maxMin || 10) * 60000) {
       await sleep(4000);
       var m = await page('map.php');
       var mobs = P.parseMapMobs(m.text);
-      var good = pickMob(mobs);
+      var l = lvl();
+      var good = pickMob(mobs.filter(function (x) { return x.name === target.name || x.level >= l - 2; }));
       var c = P.parseMapCoords(m.text);
-      setStatus('в пути к ' + target.name + (c ? ' (' + c.x + ':' + c.y + ')' : ''), 'Переход');
+      setStatus('в пути к ' + target.name + (c ? ' (' + c.x + ':' + c.y + ')' : '') + ', ' + Math.round((Date.now() - t0) / 1000) + ' с', 'Переход');
       var key = c ? c.x + ':' + c.y : '';
-      if (good) { log('Пришёл: рядом ' + good.name + ' [' + good.level + '] за ' + Math.round((Date.now() - t0) / 1000) + ' с', 'move'); wd.progress('move:' + key); return true; }
+      if (good) { log('Пришёл: рядом ' + good.name + ' [' + good.level + '] за ' + Math.round((Date.now() - t0) / 1000) + ' с', 'move'); wd.progress('move:' + key); S.lastPos = null; return true; }
       if (key !== last) wd.progress('walk:' + key);
-      if (key && key === last) { if (++same >= 3) { J.ev('move', 'стою на месте, мобов нет', { at: key }); moveFailed[target.eid] = 1; return false; } }
-      else same = 0;
+      if (key && key === last) {
+        if (++same >= 3) {
+          // дошли (стоим), но нужных мобов нет — пусть охота бьёт то, что есть; место не повторяем
+          J.ev('move', 'стою на месте, нужных мобов нет', { at: key, mobs: mobs.map(function (x) { return x.name + ' ' + x.level; }) });
+          moveFailed[target.eid] = 1; return pickMob(mobs) != null;
+        }
+      } else same = 0;
       last = key;
     }
     return false;
@@ -534,7 +574,7 @@
     { key: 'rest', title: '☕ Отдых', prio: 60, enabled: function () { return true; },
       due: function () { return !S.me.maxHp || hpPct() < cfg.restHp || mpPct() < cfg.restMp; }, run: restIfNeeded },
     { key: 'move', title: '🏃 Смена места кача', prio: 50, enabled: function (c) { return c.autoMove; }, due: function () { return S.needMove; },
-      run: async function () { S.needMove = false; var ok = await relocate(S.mobsHere || []); if (!ok) throw new Error('новое место не найдено'); } },
+      run: async function () { S.needMove = false; var ok = await relocate(S.mobsHere || []); if (!ok) { sched.hold('move', 10, 'новое место не найдено'); J.ev('move', 'пауза перехода 10 мин'); } } },
     { key: 'hunt', title: '⚔ Охота', prio: 10, enabled: function () { return true; }, due: function () { return true; }, run: huntStep }
   ];
   var sched = C.createScheduler(SERVICES);
@@ -686,6 +726,6 @@
     mobTop: function (n) { return mstats.top(n); }, exportCfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     importCfg: function (o) { var c = {}; Object.keys(DEFAULTS).forEach(function (k) { if (o && o[k] !== undefined && typeof o[k] === typeof DEFAULTS[k]) c[k] = o[k]; }); setCfg(c); return Object.keys(c).length; },
     buffNow: wrap(buffIfNeeded, 'Бафф', 'buff'), dailyNow: wrap(dailyIfNeeded, 'Алтарь', 'daily'), learnNow: wrap(learnSkills, 'Умения', 'learn'),
-    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES }
+    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
