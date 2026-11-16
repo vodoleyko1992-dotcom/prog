@@ -1,19 +1,57 @@
 {
   "manifest_version": 3,
   "name": "L2Mobi Bot",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Помощник для l2mobi.pro: автофарм, бафф, отдых, награды Алтаря",
-  "permissions": ["storage", "notifications"],
-  "host_permissions": ["https://l2mobi.pro/*", "https://*.l2mobi.pro/*"],
-  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
-  "action": { "default_title": "L2Mobi Bot", "default_icon": { "16": "icons/16.png", "48": "icons/48.png" } },
-  "background": { "service_worker": "background.js", "scripts": ["background.js"] },
+  "permissions": [
+    "storage",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://l2mobi.pro/*",
+    "https://*.l2mobi.pro/*"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "L2Mobi Bot",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": [
+      "background.js"
+    ]
+  },
   "content_scripts": [
     {
-      "matches": ["https://l2mobi.pro/*", "https://*.l2mobi.pro/*"],
-      "js": ["src/parse.js", "src/net.js", "src/journal.js", "src/engine.js", "src/panel.js", "src/content.js"],
+      "matches": [
+        "https://l2mobi.pro/*",
+        "https://*.l2mobi.pro/*"
+      ],
+      "js": [
+        "data/mobs.js",
+        "src/parse.js",
+        "src/net.js",
+        "src/core.js",
+        "src/journal.js",
+        "src/engine.js",
+        "src/panel.js",
+        "src/content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "browser_specific_settings": { "gecko": { "id": "l2mobi-bot@local", "strict_min_version": "121.0" } }
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "l2mobi-bot@local",
+      "strict_min_version": "121.0"
+    }
+  }
 }

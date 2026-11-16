@@ -14,6 +14,10 @@
   setInterval(function () {
     if (E.state.running) setLock({ id: ME, t: Date.now() });
   }, 5000);
+  // Сторож вкладки (как watchdog старого бота): цикл работает, но 3 мин нет ни запросов, ни пауз — перезапуск.
+  setInterval(function () {
+    if (E.state.running && E.state.beat && Date.now() - E.state.beat > 180000) E.kick('нет действий 3 мин');
+  }, 30000);
   window.addEventListener('pagehide', function () {
     if (E.state.running) setLock({ id: ME, t: 0, resume: true });
   });
