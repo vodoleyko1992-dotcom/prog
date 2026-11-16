@@ -1,6 +1,6 @@
 {
   "name": "l2mobi-bot",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0",
   "scripts": { "test": "node --test tests/*.test.js" }
 }
