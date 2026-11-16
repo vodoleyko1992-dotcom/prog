@@ -1,0 +1,200 @@
+<html><body><center><small><b>Hero - 10 уровень&nbsp;&nbsp;&nbsp;</b></small></center><br /><div><strong>Проклятие: Яд<br /></strong><img src="img/skills/skill1168_0.jpg"/><hr />Отравляет противника ядом. Мощность: 1.</center>
+
+   <style>
+
+ /* ИСПРАВЛЕННЫЙ CSS - ОДИНАКОВЫЕ ОТСТУПЫ МЕЖДУ ВСЕМИ КНОПКАМИ */
+
+.game-content {
+    flex: 1;
+    background: radial-gradient(circle at center, #2a2a4a 0%, #1a1a2e 70%);
+    position: relative;
+    overflow: hidden;
+    /* Добавь отступ снизу для fixed меню */
+    padding-bottom: 84px;
+}
+
+.bottom-menu {
+    background: linear-gradient(180deg, 
+        rgba(15, 15, 35, 0.95) 0%, 
+        rgba(25, 25, 60, 0.98) 50%, 
+        rgba(10, 10, 30, 1) 100%);
+    border-top: 3px solid #b8860b;
+    box-shadow: 
+        0 -5px 20px rgba(184, 134, 11, 0.3),
+        inset 0 1px 0 rgba(255, 215, 0, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 12px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    /* Убираем gap отсюда */
+}
+
+.menu-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    height: 60px;
+    /* еЕДИНЫЙ gap для ВСЕХ кнопок */
+    gap: 4px !important;
+}
+
+/* УДАЛЯЕМ ВСЕ группы - они ломают равномерность */
+.menu-center,
+.menu-left,
+.menu-right {
+    display: none !important;
+}
+
+.menu-btnH {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important; /* Только внутри кнопки */
+    width: 48px; /* фИКСИРОВАННАЯ ширина для всех */
+    height: 100%;
+    padding: 4px 6px;
+    flex-shrink: 0; /* Не сжимается */
+    color: #e6d6a3;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.menu-btn {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important; /* Только внутри кнопки */
+    width: 76px; /* фИКСИРОВАННАЯ ширина для всех */
+    height: 100%;
+    padding: 4px 6px;
+    flex-shrink: 0; /* Не сжимается */
+    color: #e6d6a3;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Иконка */
+.menu-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.menu-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* Текст */
+.menu-text {
+    font-size: 10px !important;
+    line-height: 1.1;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+/* Остальные стили без изменений */
+.menu-btn:hover {
+    color: #ffd700 !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 5px 15px rgba(184, 134, 11, 0.4),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    background: rgba(184, 134, 11, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.menu-btnH:hover {
+    color: #ffd700 !important;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 5px 15px rgba(184, 134, 11, 0.4),
+        0 0 20px rgba(255, 215, 0, 0.3);
+    background: rgba(184, 134, 11, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.mammon-btn {
+    background: linear-gradient(145deg, rgba(139, 69, 19, 0.3), rgba(205, 133, 63, 0.2));
+    border-color: rgba(205, 133, 63, 0.6);
+    animation: mammonPulse 2s ease-in-out infinite;
+    opacity: 1; /* Показываем всегда для теста */
+    visibility: visible;
+}
+
+@keyframes mammonPulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(205, 133, 63, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(205, 133, 63, 0.8), 0 0 40px rgba(255, 215, 0, 0.3);
+        transform: scale(1.05);
+    }
+}
+
+@media (max-width: 768px) {
+    
+    
+    .menu-container {
+        padding: 0 6px;
+        gap: 1px !important;
+    }
+    .menu-btn {
+        width: 54px;
+        padding: 3px 4px;
+    }
+    .menu-icon {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    .menu-text {
+        font-size: 9px !important;
+    }
+    
+    
+}
+
+    </style>
+
+
+
+    <nav class="bottom-menu">
+        <div class="menu-container">
+
+                
+                      
+                <a href="/player.php?parameters" class="menu-btn" title="</div></body></html>

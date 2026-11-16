@@ -26,7 +26,7 @@
     origStart();
   };
 
-  E.load().then(function (saved) {
+  (window.L2MJournal ? window.L2MJournal.load() : Promise.resolve()).then(function () { return E.load(); }).then(function (saved) {
     window.L2MPanel.mount();
     // Продолжить после перехода по страницам игры, если бот работал.
     if (saved && saved.running) {

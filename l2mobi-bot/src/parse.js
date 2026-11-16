@@ -192,7 +192,9 @@
     var a = [];
     if (/капч|captcha|проверка на бота|введите код|вы робот/.test(t)) a.push('captcha');
     if (/заблокирован|забанен|бан до|banned/.test(t)) a.push('ban');
-    if (/вы погибли|вы мертвы|вы были убиты|вас убил|воскресить|воскрешение/.test(t)) a.push('dead');
+    // «Вас убил …» бывает и в старом журнале боя, поэтому смерть — только по явному состоянию или HP 0.
+    var bars = parseBars(html);
+    if (/вы мертвы|вы погибли\.|воскресить|воскрешение|вернуться в город после смерти/.test(t) || (bars.maxHp && bars.hp <= 0)) a.push('dead');
     if (/name="telefon"/.test(String(html || ''))) a.push('logout');
     return a;
   }
@@ -206,12 +208,84 @@
     return r;
   }
 
+
+  /** Магистр (magister.php?learnskills): {sp, list:[{id, name, level, sp, book}]} */
+  function parseMagister(html) {
+    var s = String(html || ''), r = { sp: null, list: [] };
+    var m = /У Вас\s+(\d+)\s+Skill Points/.exec(pageText(s)); if (m) r.sp = +m[1];
+    var i = s.indexOf('Доступные магии'); if (i < 0) return r;
+    s.slice(i).split(/<hr\s*\/?>/i).forEach(function (chunk) {
+      var g = /magister\.php\?get=(\d+)"/.exec(chunk);
+      var d = /des=(\d+)&(?:amp;)?dl=(\d+)"[^>]*>([^<]+)<\/a>\s*\((\d+)\s*sp\)/.exec(chunk);
+      if (!g || !d) return;
+      var b = /item_profile\.php\?itemid=(\d+)/.exec(chunk);
+      r.list.push({ id: g[1], level: +d[2], name: decodeEntities(d[3]).replace(/\s+\d+$/, '').trim(), sp: +d[4], book: b ? +b[1] : null });
+    });
+    return r;
+  }
+
+  /** Описание умения (magister.php?&des=ID&dl=L): {name, text, power, kind: attack|heal|other} */
+  function parseSkillDesc(html) {
+    var t = pageText(html).split('\n');
+    var i = t.findIndex(function (l) { return /уровень/.test(l) && / - \d+ уровень/.test(l); });
+    var name = t[i + 1] || '', text = t[i + 2] || '';
+    var pw = /Power:\s*(\d+)/i.exec(text);
+    var kind = 'other';
+    if (/восстанавливает\s+hp|лечит/i.test(text)) kind = 'heal';
+    else if (/противник|врага|цель/i.test(text) && pw) kind = 'attack';
+    return { name: name, text: text, power: pw ? +pw[1] : 0, kind: kind };
+  }
+
+  /** Ячейки панели умений со страницы actions.php: [{slot, skill: 'attack'|id|null}] */
+  function parseSlots(html) {
+    var out = [], re = /<a href="actions\.php\?addsc=(\d+)"[^>]*>\s*<img src="img\/(?:skills\/(attack|skill(\d+)_\d+)|(addskill))\.jpg"/g, m;
+    while ((m = re.exec(String(html || '')))) out.push({ slot: +m[1], skill: m[2] === 'attack' ? 'attack' : (m[3] || null) });
+    return out;
+  }
+
+  /** Список умений для ячейки (actions.php?addsc=N&skills): [{id, name, level}] */
+  function parseSlotSkills(html) {
+    var out = [], re = /actions\.php\?addsc=\d+&(?:amp;)?skill=(\d+)"[\s\S]*?des=\1&(?:amp;)?dl=(\d+)"[^>]*>([^<]+)</g, m, seen = {};
+    while ((m = re.exec(String(html || '')))) { if (seen[m[1]]) continue; seen[m[1]] = 1; out.push({ id: m[1], level: +m[2], name: decodeEntities(m[3]).trim() }); }
+    return out;
+  }
+
+  /** «Куда качаться» (help.php?top=8): живые мобы рядом [{eid, name, level, count}] */
+  function parseNearby(html) {
+    var by = {}, re = /droplist\.php\?eid=(\d+)"[^>]*>([\s\S]*?)<\/a>/g, m;
+    while ((m = re.exec(String(html || '')))) {
+      var t = stripTags(m[2]), lv = /^(.*?)\s+(\d+)$/.exec(t);
+      if (!lv) continue;
+      if (!by[m[1]]) by[m[1]] = { eid: +m[1], name: lv[1], level: +lv[2], count: 0 };
+      by[m[1]].count++;
+    }
+    return Object.keys(by).map(function (k) { return by[k]; });
+  }
+
+  /** Карточка моба (droplist.php?eid=): {name, level, agro, run, tp} */
+  function parseDroplist(html) {
+    var t = pageText(html), r = {};
+    var m = /\n([^\n]+)\nLevel:\n(\d+)/.exec(t); if (m) { r.name = m[1].trim(); r.level = +m[2]; }
+    m = /Агро:\n(ДА|НЕТ)/.exec(t); if (m) r.agro = m[1] === 'ДА';
+    m = /href="(map\.php\?map&(?:amp;)?move_x=(-?\d+)&(?:amp;)?move_y=(-?\d+))"/.exec(String(html || ''));
+    if (m) { r.run = decodeEntities(m[1]); r.x = +m[2]; r.y = +m[3]; }
+    return r;
+  }
+
+  /** Координаты героя на карте (режим карты): {x, y} */
+  function parseMapCoords(html) {
+    var m = /(?:^|\n)(-?\d+) : (-?\d+)(?:\n|$)/.exec(pageText(html));
+    return m ? { x: +m[1], y: +m[2] } : null;
+  }
+
   var api = {
     decodeEntities: decodeEntities, stripTags: stripTags, pageText: pageText, links: links, query: query,
     parseMapMobs: parseMapMobs, parseBars: parseBars, parseHotbar: parseHotbar, isEditMode: isEditMode, parseCooldowns: parseCooldowns, parseCasting: parseCasting, parseBattleLog: parseBattleLog,
     parseTargetHud: parseTargetHud, parseBattleJson: parseBattleJson, parseBattleEnd: parseBattleEnd,
     parseParameters: parseParameters, parseHeroHeader: parseHeroHeader, parseAdena: parseAdena,
-    parseBuffer: parseBuffer, parseAltarClaims: parseAltarClaims, detectAlerts: detectAlerts, townTokens: townTokens
+    parseBuffer: parseBuffer, parseAltarClaims: parseAltarClaims, detectAlerts: detectAlerts, townTokens: townTokens,
+    parseMagister: parseMagister, parseSkillDesc: parseSkillDesc, parseSlots: parseSlots, parseSlotSkills: parseSlotSkills,
+    parseNearby: parseNearby, parseDroplist: parseDroplist, parseMapCoords: parseMapCoords
   };
   root.L2MParse = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
