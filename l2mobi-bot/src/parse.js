@@ -1,0 +1,218 @@
+/* L2Mobi Bot — разбор страниц l2mobi.pro. Чистые функции: работают и в браузере, и в Node (тесты). */
+(function (root) {
+  'use strict';
+
+  function decodeEntities(s) {
+    return String(s || '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(+n); });
+  }
+
+  function stripTags(s) {
+    return decodeEntities(String(s || '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
+  }
+
+  /** Видимый текст страницы без скриптов, стилей и PHP-предупреждений. */
+  function pageText(html) {
+    var s = String(html || '')
+      .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<br\s*\/?>|<\/div>|<\/p>|<\/tr>|<\/li>/gi, '\n')
+      .replace(/<[^>]*>/g, ' ');
+    return decodeEntities(s).split('\n')
+      .map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
+      .filter(function (l) { return l && !/^(Notice|Warning)\s*:/.test(l); })
+      .join('\n');
+  }
+
+  function links(html) {
+    var out = [];
+    var re = /<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, m;
+    while ((m = re.exec(String(html || '')))) out.push({ href: decodeEntities(m[1]), text: stripTags(m[2]) });
+    return out;
+  }
+
+  function query(href) {
+    var q = {}, i = href.indexOf('?');
+    if (i < 0) return q;
+    href.slice(i + 1).split('&').forEach(function (p) {
+      if (!p) return;
+      var j = p.indexOf('=');
+      var k = j < 0 ? p : p.slice(0, j);
+      q[k] = j < 0 ? '' : p.slice(j + 1);
+    });
+    return q;
+  }
+
+  /** Мобы рядом со страницы map.php: [{href, name, level, hp, color}] */
+  function parseMapMobs(html) {
+    var out = [];
+    var re = /<a\s+href="(battle\.php\?[^"]*tymop=mob[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, m;
+    while ((m = re.exec(String(html || '')))) {
+      var body = m[2];
+      var nm = /<span[^>]*?(?:color:\s*([#\w]+))?[^>]*>([^<]*\[\d+\][^<]*)<\/span>/i.exec(body);
+      var text = stripTags(body);
+      var lv = /^(.*?)\s*\[(\d+)\]/.exec(nm ? decodeEntities(nm[2]).trim() : text);
+      var hp = /HP:\s*(\d+)/.exec(text);
+      if (!lv) continue;
+      out.push({
+        href: decodeEntities(m[1]),
+        name: lv[1].trim(),
+        level: +lv[2],
+        hp: hp ? +hp[1] : 0,
+        color: nm && nm[1] ? nm[1].toLowerCase() : ''
+      });
+    }
+    return out;
+  }
+
+  /** Полоски CP/HP/MP/EXP со страницы боя (или любой с .l2-bar-text). */
+  function parseBars(html) {
+    var r = {};
+    var re = /l2-bar-text">\s*(CP|HP|MP)\s+(-?\d+)\s*\/\s*(\d+)/g, m;
+    while ((m = re.exec(String(html || '')))) {
+      var k = m[1].toLowerCase();
+      if (r[k]) continue;
+      r[k] = +m[2]; r['max' + m[1][0] + m[1].slice(1).toLowerCase()] = +m[3];
+    }
+    var e = /l2-bar-text">\s*EXP\s+([\d.]+)%/.exec(String(html || ''));
+    if (e) r.exp = +e[1];
+    return r;
+  }
+
+  /** Панель умений на странице боя: {attack: href|null, skills: [{id, href, icon}]} */
+  function parseHotbar(html) {
+    var res = { attack: null, skills: [], items: [] };
+    var seen = {};
+    links(html).forEach(function (l) {
+      if (l.href.indexOf('battle.php?') !== 0 && l.href.indexOf('/battle.php?') !== 0) return;
+      var q = query(l.href);
+      if ('attack' in q) { if (!res.attack) res.attack = l.href; return; }
+      if (q.go && /^\d+$/.test(q.go) && !seen['g' + q.go]) { seen['g' + q.go] = 1; res.skills.push({ id: q.go, href: l.href }); }
+      if (q.use && /^\d+$/.test(q.use) && !seen['u' + q.use]) { seen['u' + q.use] = 1; res.items.push({ id: q.use, href: l.href }); }
+    });
+    return res;
+  }
+
+  /** Откаты умений из панели: {skillId: unixSec} (атрибут data-cd-end в ячейке). */
+  function parseCooldowns(html) {
+    var r = {}, re = /<div class="l2bar-slot[^"]*">([\s\S]*?)<\/div>\s*(?=<div class="l2bar-slot|<\/div>)/g, m;
+    var s = String(html || '');
+    while ((m = re.exec(s))) {
+      var g = /[?&](?:amp;)?go=(\d+)/.exec(m[1]), c = /data-cd-end="(\d+)"/.exec(m[1]);
+      if (g && c) r[g[1]] = +c[1];
+    }
+    return r;
+  }
+
+  /** Время конца каста со страницы боя: window.L2B = {casting: N, PN: x} */
+  function parseCasting(html) {
+    var m = /window\.L2B\s*=\s*\{\s*casting:\s*(\d+)\s*,\s*PN:\s*([\d.]+)/.exec(String(html || ''));
+    return m ? { casting: +m[1], PN: +m[2] } : null;
+  }
+
+  /** Строки боевого журнала со страницы боя (до чата). */
+  function parseBattleLog(html) {
+    var t = pageText(html).split('\n');
+    var i = t.indexOf('▼'), j = t.indexOf('ALL');
+    if (i < 0) return [];
+    return t.slice(i + 1, j > i ? j : i + 12).filter(function (l) { return l && l !== '▲' && l !== '▼'; });
+  }
+
+  function isEditMode(html) { return /l2bar-lock-open/.test(String(html || '')) && !/battle\.php\?[^"]*&attack/.test(String(html || '')); }
+
+  function parseTargetHud(html) {
+    var m = /l2-target-hud-name">([^<]*)<[\s\S]*?title="HP:\s*(\d+)\s*\/\s*(\d+)"/.exec(String(html || ''));
+    return m ? { name: decodeEntities(m[1]).trim(), hp: +m[2], maxHp: +m[3] } : null;
+  }
+
+  /** Ответ battle_ajax.php (JSON). Возвращает null, если это не JSON. */
+  function parseBattleJson(text) {
+    try { var d = JSON.parse(text); return d && typeof d === 'object' ? d : null; } catch (e) { return null; }
+  }
+
+  /** Итог боя со страницы конца боя. */
+  function parseBattleEnd(html) {
+    var t = pageText(html);
+    var r = { adena: 0, exp: 0, sp: 0, loot: [], text: t };
+    var m;
+    if ((m = /Получено\s+([\d\s,]+)\s*Адена/i.exec(t))) r.adena = +m[1].replace(/\D/g, '');
+    if ((m = /получили\s+([\d\s,]+)\s*exp\s*и\s*([\d\s,]+)\s*sp/i.exec(t))) { r.exp = +m[1].replace(/\D/g, ''); r.sp = +m[2].replace(/\D/g, ''); }
+    r.levelUp = /повысили уровень/i.test(t);
+    r.takeAll = links(html).some(function (l) { return /ЗАБРАТЬ ВСЕ/i.test(l.text); });
+    var lootBlock = /ДОБЫЧА\s*\((\d+)\)([\s\S]*?)ЗАБРАТЬ ВСЕ/i.exec(t);
+    if (lootBlock) r.loot = lootBlock[2].split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    return r;
+  }
+
+  /** Состояние героя со страницы player.php?parameters */
+  function parseParameters(html) {
+    var t = pageText(html), r = {};
+    var m = /Ур\.\s*(\d+)/.exec(t); if (m) r.level = +m[1];
+    ['HP', 'CP', 'MP'].forEach(function (k) {
+      var mm = new RegExp('(?:^|\\n)' + k + '\\n(\\d+)\\s*/\\s*(\\d+)').exec(t) || new RegExp('(?:^|\\n)' + k + '\\n(\\d+)\\n(\\d+)').exec(t);
+      if (mm) { r[k.toLowerCase()] = +mm[1]; r['max' + k[0] + k.slice(1).toLowerCase()] = +mm[2]; }
+    });
+    m = /Exp\n([\d.]+)%/.exec(t); if (m) r.exp = +m[1];
+    m = /(?:^|\n)SP\n(\d+)/.exec(t); if (m) r.sp = +m[1];
+    return r;
+  }
+
+  /** Шапка героя: «Kaelthys - 7 уровень» */
+  function parseHeroHeader(html) {
+    var m = /(?:^|\n)([^\n]+?)\s+-\s+(\d+)\s+уровень/.exec(pageText(html));
+    return m ? { name: m[1].trim(), level: +m[2] } : null;
+  }
+
+  function parseAdena(html) {
+    var m = /Адена\s*\(([\d,\s]+)\)/.exec(pageText(html));
+    return m ? +m[1].replace(/\D/g, '') : null;
+  }
+
+  /** VIP-баффер (buffer_vip_40.php) и обычный (buffer2.php): [{id, skill, name, href}] */
+  function parseBuffer(html, page) {
+    var out = [], re = new RegExp('href="(' + (page || 'buffer_vip_40\\.php') + '\\?buff=(\\d+))"[\\s\\S]{0,300}?des=(\\d+)&(?:amp;)?dl=\\d+"[^>]*>([^<]+)<', 'g'), m;
+    while ((m = re.exec(String(html || '')))) out.push({ href: decodeEntities(m[1]), id: +m[2], skill: +m[3], name: decodeEntities(m[4]).trim() });
+    return out;
+  }
+
+  /** Ссылки Алтаря, которые можно забрать: награда за вход, задания, колесо. */
+  function parseAltarClaims(html) {
+    return links(html).filter(function (l) {
+      return /^\/?daily_altar\.php\?(claim_streak|claim_task|spin)=/.test(l.href);
+    }).map(function (l) { return l.href; });
+  }
+
+  /** Тревожные признаки: капча, бан, смерть, выход из игры. */
+  function detectAlerts(html) {
+    var t = pageText(html).toLowerCase();
+    var a = [];
+    if (/капч|captcha|проверка на бота|введите код|вы робот/.test(t)) a.push('captcha');
+    if (/заблокирован|забанен|бан до|banned/.test(t)) a.push('ban');
+    if (/вы погибли|вы мертвы|вы были убиты|вас убил|воскресить|воскрешение/.test(t)) a.push('dead');
+    if (/name="telefon"/.test(String(html || ''))) a.push('logout');
+    return a;
+  }
+
+  function townTokens(html) {
+    var r = {};
+    links(html).forEach(function (l) {
+      var q = query(l.href);
+      if (/^\/?town\.php/.test(l.href) && q.go && q.tk) r[q.go] = l.href;
+    });
+    return r;
+  }
+
+  var api = {
+    decodeEntities: decodeEntities, stripTags: stripTags, pageText: pageText, links: links, query: query,
+    parseMapMobs: parseMapMobs, parseBars: parseBars, parseHotbar: parseHotbar, isEditMode: isEditMode, parseCooldowns: parseCooldowns, parseCasting: parseCasting, parseBattleLog: parseBattleLog,
+    parseTargetHud: parseTargetHud, parseBattleJson: parseBattleJson, parseBattleEnd: parseBattleEnd,
+    parseParameters: parseParameters, parseHeroHeader: parseHeroHeader, parseAdena: parseAdena,
+    parseBuffer: parseBuffer, parseAltarClaims: parseAltarClaims, detectAlerts: detectAlerts, townTokens: townTokens
+  };
+  root.L2MParse = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);

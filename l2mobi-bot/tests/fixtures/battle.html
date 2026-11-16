@@ -1,0 +1,181 @@
+<html><body><center><small><b>Hero - 8 уровень&nbsp;&nbsp;&nbsp;</b></small></center><table class="l2-battle-stats-table"><tr><td class="l2-battle-bars"><div class="l2-bar"><div class="l2-bar-track"><div class="l2-bar-fill l2-fill-cp" style="width:100%;"></div><div class="l2-bar-text">CP 90/90</div></div></div><div class="l2-bar"><div class="l2-bar-track"><div class="l2-bar-fill l2-fill-hp" style="width:56%;"></div><div class="l2-bar-text">HP 102/181</div></div></div><div class="l2-bar"><div class="l2-bar-track"><div class="l2-bar-fill l2-fill-mp" style="width:100%;"></div><div class="l2-bar-text">MP 123/123</div></div></div><div class="l2-bar l2-bar--exp"><div class="l2-bar-track"><div class="l2-bar-fill l2-fill-exp" style="width:99.48%;"></div><div class="l2-bar-text">EXP 99%</div></div></div></td><td class="l2-battle-buffs"></td></tr></table>        <div class="l2-game-container" id="gameContainer">
+            <div class="l2-enemy" id="enemy" style="background: url('https://l2mobi.pro/battle/38-male-217-160-0-0-614-0-0-0-sword-4.jpg') center/cover;"></div>
+            <div class="l2-target-hud"><div class="l2-target-hud-name">Бес [6]<span class="l2-hud-close">&#10005;</span></div><div class="l2-hud-bars"><div class="l2-hud-bar"><div class="l2-hud-bar-fill l2-hud-hp-low" style="width:23%;" title="HP: 35 / 147"></div></div></div></div>            <div class="l2-particles-pool" id="particlesPool"></div>
+        </div>
+        <script>
+        var enemy = document.getElementById("enemy");
+        var container = document.getElementById("gameContainer");
+        var pool = document.getElementById("particlesPool");
+        window.addEventListener("load", function() {
+            setTimeout(function() { hitEnemy(43); }, 100);
+        });
+        enemy.addEventListener("click", function(e) {
+            var damage = 43;
+            hitEnemy(damage, e.clientX - enemy.getBoundingClientRect().left, e.clientY - enemy.getBoundingClientRect().top);
+        });
+        function hitEnemy(damage, x, y) {
+            enemy.style.animationPlayState = "running";
+            enemy.classList.add("l2-hit-flash");
+            setTimeout(function() { enemy.style.animationPlayState = "paused"; enemy.classList.remove("l2-hit-flash"); }, 300);
+            if (!x || !y) {
+                x = enemy.offsetWidth / 2 + (Math.random() - 0.5) * enemy.offsetWidth * 0.8;
+                y = enemy.offsetHeight / 2 + (Math.random() - 0.5) * enemy.offsetHeight * 0.8;
+            }
+            var bloodCount = Math.floor(Math.random() * 66) + 15;
+            for(var i = 0; i < bloodCount; i++) { createBloodParticle(x, y); }
+            createDamageText(x, y, damage);
+            setTimeout(function() {
+                var els = document.querySelectorAll(".l2-blood-particle, .l2-damage-text");
+                for(var j = 0; j < els.length; j++) { els[j].remove(); }
+            }, 2000);
+        }
+        function createBloodParticle(x, y) {
+            var particle = document.createElement("div");
+            particle.className = "l2-blood-particle";
+            particle.style.left = (x + (Math.random() - 0.5) * 40) + "px";
+            particle.style.top = (y + (Math.random() - 0.5) * 20) + "px";
+            particle.style.setProperty("--vx", (Math.random() - 0.5) * 120 + "px");
+            particle.style.setProperty("--vy", (-Math.random() * 80 - 20) + "px");
+            particle.style.animationDelay = Math.random() * 0.2 + "s";
+            container.appendChild(particle);
+        }
+        function createDamageText(x, y, damage) {
+            var text = document.createElement("div");
+            text.className = "l2-damage-text" + (damage >= 500 ? " l2-crit" : "");
+            text.textContent = "-" + damage;
+            text.style.left = x + "px";
+            text.style.top = (y - 15) + "px";
+            text.style.animationDelay = "0.1s";
+            container.appendChild(text);
+        }
+        </script>
+        <div class="l2bar-wrap"><a href="javascript:void(0)" id="l2bar-toggle-btn" class="l2bar-toggle" onclick="l2barStep()">&#9650;</a><div class="l2bar-extra-row" id="l2bar-extra-2"><div class="l2bar-row"><span class="l2bar-num">2</span><div class="l2bar-slots scrollable"><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div></div></div></div><div class="l2bar-extra-row" id="l2bar-extra-3"><div class="l2bar-row"><span class="l2bar-num">3</span><div class="l2bar-slots scrollable"><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div></div></div></div><div class="l2bar-extra-row" id="l2bar-extra-4"><div class="l2bar-row"><span class="l2bar-num">4</span><div class="l2bar-slots scrollable"><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div></div></div></div><div class="l2bar-row"><span class="l2bar-num">1</span><div class="l2bar-slots scrollable"><div class="l2bar-slot"><a href="battle.php?spid=27883&eid=20004&edt=1794825972&mdt=1&t=&tymop=mob&attack" data-sfx="sounds/onehand_shot.wav"><img src="img/skills/attack.jpg" alt="" /></a><span class="l2bar-key">1</span></div><div class="l2bar-slot"><a href="battle.php?spid=27883&eid=20004&edt=1794825972&mdt=1&t=&tymop=mob&go=1177" data-sfx="sounds/wind_strike_shot.wav"><img src="img/skills/skill1177_0.jpg" alt="" /></a><span class="l2bar-key">2</span></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div><div class="l2bar-slot l2bar-locked"></div></div></div><div class="l2bar-lockline"><a href="javascript:void(0)" id="l2bar-lock-btn" class="l2bar-lock" onclick="l2barLockToggle()" title="Режим использования. Нажмите, чтобы редактировать умения.">&#128274;</a></div></div>
+<script type="text/javascript">
+function l2barGetCookie(n) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)'));
+    return m ? m[1] : null;
+}
+
+function l2barLockToggle() {
+    var cur = l2barGetCookie('rr');
+    var nv = (cur == '1') ? '0' : '1';
+    document.cookie = 'rr=' + nv + '; path=/; max-age=31536000';
+    window.location.reload();
+}
+
+function l2barStep() {
+    var opened = 0;
+    var els = [2, 3, 4];
+    for (var i = 0; i < els.length; i++) {
+        var e = document.getElementById('l2bar-extra-' + els[i]);
+        if (e && e.className.indexOf('open') !== -1) opened++;
+    }
+
+    if (opened < 3) {
+        var next = els[opened];
+        var el = document.getElementById('l2bar-extra-' + next);
+        if (el) el.className = 'l2bar-extra-row open';
+        opened++;
+    } else {
+        for (var j = 0; j < els.length; j++) {
+            var el2 = document.getElementById('l2bar-extra-' + els[j]);
+            if (el2) el2.className = 'l2bar-extra-row';
+        }
+        opened = 0;
+    }
+
+    document.cookie = 'l2bar_open=' + opened + '; path=/; max-age=31536000';
+
+    var b = document.getElementById('l2bar-toggle-btn');
+    if (b) b.innerHTML = (opened >= 3) ? '\u25BC' : '\u25B2';
+}
+/* ===== ZVUK UDAROV ===== */
+function l2sfxPlay(src) {
+    if (!src) return;
+    var a = document.getElementById('l2sfx-el');
+    if (!a) {
+        a = document.createElement('audio');
+        a.id = 'l2sfx-el';
+        a.preload = 'auto';
+        document.body.appendChild(a);
+    }
+    a.src = src;
+    try {
+        a.currentTime = 0;
+        var p = a.play();
+        if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+}
+
+// 1. Klik na slot so zvukom - zapominaem zvuk pered perehodom na battle.php
+document.addEventListener('click', function (e) {
+    var el = e.target;
+    while (el && el !== document) {
+        if (el.tagName === 'A' && el.getAttribute('data-sfx')) {
+            try { sessionStorage.setItem('l2sfx_play', el.getAttribute('data-sfx')); } catch (err) {}
+            break;
+        }
+        el = el.parentNode;
+    }
+}, true);
+
+// 2. Posle perehoda: flag est - igraem zvuk
+(function () {
+    var f = null;
+    try {
+        f = sessionStorage.getItem('l2sfx_play');
+        if (f) sessionStorage.removeItem('l2sfx_play');
+    } catch (err) {}
+    if (f) l2sfxPlay(f);
+})();
+/* ===== ЖИВОЙ ОТКАТ СКИЛЛОВ ===== */
+var l2barCdOffset = new Date().getTime() - 1794826038 * 1000;
+
+function l2barCdFmt(sec) {
+    if (sec >= 3600) {
+        var h = Math.floor(sec / 3600),
+            m = Math.floor((sec % 3600) / 60),
+            s = Math.floor(sec % 60);
+        return h + ':' + ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2);
+    }
+    if (sec >= 60) {
+        var m2 = Math.floor(sec / 60), s2 = Math.floor(sec % 60);
+        return m2 + ':' + ('0' + s2).slice(-2);
+    }
+    if (sec >= 10) return '' + Math.floor(sec);
+    if (sec >= 3)  return sec.toFixed(1);
+    return sec.toFixed(2);
+}
+
+function l2barCdCollect() {
+    l2barCdNodes = [];
+    var els = document.getElementsByTagName('div');
+    for (var i = 0; i < els.length; i++) {
+        var c = els[i].className;
+        if (c && (' ' + c + ' ').indexOf(' l2bar-cd ') !== -1 && els[i].getAttribute('data-cd-end')) {
+            l2barCdNodes.push(els[i]);
+        }
+    }
+}
+
+function l2barCdTick() {
+    var now = (new Date().getTime() - l2barCdOffset) / 1000;
+    for (var i = 0; i < l2barCdNodes.length; i++) {
+        var el = l2barCdNodes[i];
+        var left = parseFloat(el.getAttribute('data-cd-end')) - now;
+        var txt = el.firstChild;
+        if (left <= 0) {
+            el.style.display = 'none';
+            continue;
+        }
+        el.style.display = 'flex';
+        if (txt) txt.innerHTML = l2barCdFmt(left);
+    }
+}
+
+l2barCdCollect();
+l2barCdTick();
+setInterval(l2barCdTick, 100);
+
+</script>
+<div class="l2pc-chat"><div class="l2pc-pane l2pc-sys"><div class="l2pc-arrow l2pc-up" id="l2SysUp">&#9650;</div><div class="l2pc-arrow l2pc-down" id="l2SysDn">&#9660;</div><div class="l2pc-scroll" id="l2SysBox"><font color="#93935B">Ты нанес 43 урона. <font color="#ED04D2">(х1)</font></font> <font color="#93935B">(х2)</font><br /><font color="#AD3636">Бес нанес 12 урона. (x1)</font><br /><font color="#AD3636">Бес нанес 26 урона. (x1)</font><br /><font color="#93935B">Ты нанес 14 урона. (х1)</font><br /><font color="#AD3636">Бес нанес 25 урона. (x1)</font></div></div><div class="l2pc-pane l2pc-chatbox"><div class="l2pc-arrow l2pc-up" id="l2ChatUp">&#9650;</div><div class="l2pc-arrow l2pc-down" id="l2ChatDn">&#9660;</div><div class="l2pc-pane-label">ALL</div><script>window.L2B = {casting: 1794826039, PN: 1.2820512820513};</script></body></html>
