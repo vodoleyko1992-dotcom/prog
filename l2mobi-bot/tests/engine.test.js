@@ -74,3 +74,22 @@ test('дальний переход по базе мобов: уровень −
   assert.ok(c.every(x => !m.find(r => r[0] === x.eid)[5]));
   assert.ok(c[0].dist != null);
 });
+
+test('покупка книги: POST с count=1, «Успешно куплено!»', async () => {
+  const fs = require('fs'), path = require('path');
+  const N = globalThis.L2MNet, calls = [];
+  const shopHtml = fs.readFileSync(path.join(__dirname, 'fixtures', 'book-shop.html'), 'utf8');
+  const og = N.get, op = N.post;
+  N.get = async (p) => { calls.push(['GET', p]); return { status: 200, url: 'https://l2mobi.pro/' + p, text: shopHtml }; };
+  N.post = async (p, body) => { calls.push(['POST', p, body]); return { status: 200, url: 'https://l2mobi.pro/buy.php', text: '<div>Успешно куплено!</div>' }; };
+  try {
+    E.setCfg({ buyBooks: true, bookMaxPrice: 20000, adenaKeep: 0 });
+    assert.equal(await T.buyBook({ id: '1184', level: 1, name: 'Ледяной Шип', book: 1049 }), 'ok');
+    const post = calls.find(c => c[0] === 'POST');
+    assert.equal(post[1], 'buy.php?bid=171&nid=31417&buy=1049&y');
+    assert.equal(post[2], 'count=1&send=%C4%E0%EB%E5%E5');
+    assert.equal(await T.buyBook({ id: '9', level: 1, name: 'Нет', book: 99999 }), 'no');
+    E.setCfg({ bookMaxPrice: 50 });
+    assert.equal(await T.buyBook({ id: '1184', level: 1, name: 'Ледяной Шип', book: 1049 }), 'no');
+  } finally { N.get = og; N.post = op; }
+});

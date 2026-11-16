@@ -67,6 +67,7 @@ test('тревоги: страница входа и капча', () => {
   assert.deepStrictEqual(P.detectAlerts('<div>Вас убил Зеленый Гриб нанес урона.</div>'), []);
   assert.deepStrictEqual(P.detectAlerts('<div class="l2-bar-text">HP 0/211</div>'), ['dead']);
   assert.deepStrictEqual(P.detectAlerts(fx('dead.html')), ['dead']); // «Вас убили.» + «В город» (index.php?doa=1)
+  assert.deepStrictEqual(P.detectAlerts(fx('book-shop.html')), []); // «Книга Заклинаний: Воскрешение» — не смерть
 });
 
 test('магистр, описание умения, панель', () => {
@@ -111,4 +112,11 @@ test('выбор моба (−5…+9) и действия', () => {
   assert.strictEqual(E._test.chooseAction(hb, 0).skill, '1177');
   E.state.cd['1177'] = 10_000;
   assert.strictEqual(E._test.chooseAction(hb, 5_000).label, 'атака');
+});
+
+test('продавец книг: книга → ссылка покупки и цена', () => {
+  const shop = P.parseBookShop(fx('book-shop.html'));
+  assert.ok(Object.keys(shop).length > 50);
+  assert.deepStrictEqual(shop['1049'], { item: 1049, bid: '171', nid: '31417', name: 'Книга Заклинаний: Ледяной Шип', price: 100 });
+  assert.equal(shop['1294'].price, 75);
 });
