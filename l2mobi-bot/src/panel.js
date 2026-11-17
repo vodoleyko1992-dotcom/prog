@@ -86,8 +86,8 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
       dock.classList.toggle('closed', !open);
       tab.textContent = open ? '‹' : '🤖';
       // На широком экране сдвигаем игру вправо, чтобы меню её не закрывало.
-      var push = open && window.innerWidth >= W + 420;
-      document.documentElement.style.marginLeft = push ? W + 'px' : '';
+      // 1.7: игру больше не сдвигаем (John: «бот смещает меню игры») — меню поверх, сворачивается кнопкой ‹.
+      document.documentElement.style.marginLeft = '';
     }
     tab.onclick = function () { open = !open; ls('l2mbot_open', open ? '1' : '0'); layout(); };
     window.addEventListener('resize', layout);
@@ -129,7 +129,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
       chk('useAttack', 'Обычная атака, пока умения на откате') + chk('loot', 'Забирать добычу') +
       num('minDelay', 'Мин. пауза между ударами, сек', 'дальше бот ждёт только каст игры') + chk('preferBest', 'Выбирать самых выгодных мобов', 'по опыту в секунду из своих боёв и базы мобов') + '</div>' +
       '<div class="card"><h4>Выживание</h4>' + chk('stopOnDeath', 'Остановиться при смерти', 'выкл. — бот сам вернётся и уйдёт на другое место') +
-      num('avoidAfterDeath', 'Не трогать моба, от которого погиб, мин') + num('healAt', 'В бою лечиться умением, если HP ниже, %', 'Самолечение и другие лечащие умения с панели') + '</div>' +
+      num('avoidAfterDeath', 'Не трогать моба, от которого погиб, мин') + num('healAt', 'В бою лечиться умением, если HP ниже, %', 'Самолечение и другие лечащие умения с панели') + num('drainAt', 'Вампирик первым, если HP ниже, %', 'Прикосновение Вампира: бьёт и лечит') + '</div>' +
       '<div class="card"><h4>Место кача</h4>' + chk('autoMove', 'Самому менять место по уровню', 'берёт мобов из «Куда качаться», бежит к ним') +
       chk('avoidAgro', 'Не идти к агрессивным мобам') + num('emptyTries', 'Сколько раз «мобов нет», прежде чем уйти') + num('emptyWait', 'Пауза, если мобов нет, сек') + '</div>' +
       '<div class="card"><h4>Самостоятельность</h4>' + num('stuckMin', 'Нет прогресса столько минут — сменить место', 'три раза подряд — остановка с причиной') +
@@ -247,7 +247,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
         Object.keys(S.skillInfo).forEach(function (k) { if (ids.indexOf(k) < 0) ids.push(k); });
         $('#sklist').innerHTML = ids.length ? ids.map(function (id) {
           var i = S.skillInfo[id] || {};
-          var kind = i.kind === 'attack' ? '⚔ атака' + (i.power ? ', сила ' + i.power : '') : i.kind === 'heal' ? '✚ лечение' : i.kind ? 'другое' : '?';
+          var kind = i.kind === 'attack' ? '⚔ атака' + (i.power ? ', сила ' + i.power : '') : i.kind === 'drain' ? '🩸 удар+лечение' + (i.power ? ', сила ' + i.power : '') : i.kind === 'heal' ? '✚ лечение' : i.kind ? 'другое' : '?';
           return '<div class="sk"><img src="/img/skills/skill' + esc(id) + '_0.jpg" alt=""><span class="n">' + esc(i.name || ('умение ' + id)) + ' <span class="hint">#' + esc(id) + '</span></span><span class="hint">' + kind + '</span></div>';
         }).join('') : '<span class="hint">Появятся после первого боя.</span>';
       }

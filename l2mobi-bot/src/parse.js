@@ -234,9 +234,12 @@
     return out;
   }
 
-  /** Вид умения по описанию: heal (лечит себя/цель), attack (бьёт противника), other. */
+  /** Вид умения по описанию: drain (бьёт и лечит), heal (лечит), attack (бьёт противника), other. */
   function skillKind(text, power) {
     text = String(text || '');
+    var foe = /противник|врага|цель/i.test(text);
+    // «Высасывает HP противника и восстанавливает HP персонажа» (Прикосновение Вампира) — удар с лечением
+    if (/высасыва|поглоща/i.test(text) && foe) return 'drain';
     if (/восстанавлива\w*[^.]{0,25}\bhp\b|лечит|исцел/i.test(text)) return 'heal';
     if (/противник|врага|цель/i.test(text) && power) return 'attack';
     return 'other';
