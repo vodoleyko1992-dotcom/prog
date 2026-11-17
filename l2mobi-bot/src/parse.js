@@ -242,14 +242,68 @@
     if (/высасыва|поглоща/i.test(text) && foe) return 'drain';
     if (/восстанавлива\w*[^.]{0,25}\bhp\b|лечит|исцел/i.test(text)) return 'heal';
     if (/противник|врага|цель/i.test(text) && power) return 'attack';
+    // 1.8: «Атакующее заклинание тьмы…» (Вспышка Теней, power 39) не называет цель — раньше считалось «прочим» и не использовалось
+    if (/атакующ|наносит\s+урон|урона противнику/i.test(text) && power && !/вызыва\w*\s+(тень|гекат|кот|сущест)/i.test(text)) return 'attack';
     return 'other';
+  }
+
+  function cleanSkillName(n) { return String(n || '').replace(/^Забрать Сундук Удачи\s*/, '').trim(); }
+  /** 1.8: призыв (Призвать Тень / Гекату …) — по имени или описанию */
+  function isSummonSkill(name, text) { return /^призвать\s/i.test(String(name || '')) || /^вызывает\s/i.test(String(text || '')); }
+
+  /** 1.8: активные баффы героя (index.php, battle.php): [{skill, sec}] из ряда l2-buff-row («57м», «1ч», «40с»). */
+  function parseBuffs(html) {
+    var s = String(html || ''), i = s.indexOf('l2-buff-row"');
+    if (i < 0) return [];
+    s = s.slice(i, i + 30000); var j = s.indexOf('l2-divider'); if (j > 0) s = s.slice(0, j);
+    var out = [], re = /skill(\d+)_\d+\.jpg[^>]*>\s*<span class="buff-timer[^"]*">\s*([^<]*)</g, m;
+    while ((m = re.exec(s))) out.push({ skill: m[1], sec: timerSec(m[2]) });
+    return out;
+  }
+  function timerSec(t) {
+    t = String(t || ''); var sec = 0, m, re = /(\d+)\s*([чмс])/g, any = false;
+    while ((m = re.exec(t))) { any = true; sec += +m[1] * (m[2] === 'ч' ? 3600 : m[2] === 'м' ? 60 : 1); }
+    if (!any && /^\d+:\d+$/.test(t.trim())) { var p = t.trim().split(':'); sec = +p[0] * 60 + +p[1]; any = true; }
+    return any ? sec : null;
+  }
+  /** 1.8: профили VIP-баффа (_profiles40.php): [{id, name, count, cost}] */
+  function parseProfiles(html) {
+    var s = String(html || ''), out = [], seen = {}, re = /_profiles40\.php\?id=(\d+)"[^>]*>([\s\S]{0,400}?)(?=<a |$)/g, m;
+    while ((m = re.exec(s))) {
+      if (seen[m[1]]) continue;
+      var t = decodeEntities(stripTags(m[2])).replace(/\s+/g, ' ').trim();
+      var c = /Баффов:\s*(\d+)/.exec(t), cost = /Применение:\s*([\d\s]+)/.exec(t);
+      if (!c) continue;
+      seen[m[1]] = 1;
+      out.push({ id: m[1], name: t.replace(/^[^\wА-Яа-яЁё]+/, '').split(/\s+Баффов:/)[0].trim(), count: +c[1], cost: cost ? +cost[1].replace(/\D/g, '') : 0 });
+    }
+    return out;
+  }
+  /** 1.8: ХП/МП призванного существа на панели (actions.php): {hp, mp} или null — призыва нет. */
+  function parsePet(html) {
+    var m = /l2bar-pet-hp"[^>]*>[\s\S]{0,80}?ХП:\s*(\d+)[\s\S]{0,80}?МП:\s*(\d+)/.exec(String(html || ''));
+    return m ? { hp: +m[1], mp: +m[2] } : null;
+  }
+  /** 1.8: удар по герою в шапке страницы («L2 MOBI / Громила -133 / Чат»): {name, dmg} или null */
+  function headerHit(html) {
+    var t = pageText(html).split('\n').slice(0, 6);
+    for (var i = 0; i < t.length; i++) { var m = /^(\S.{0,40}?) -(\d+)$/.exec(t[i].trim()); if (m && !/L2 MOBI/.test(m[1])) return { name: m[1].trim(), dmg: +m[2] }; }
+    return null;
+  }
+  /** 1.8: кто бьёт героя по журналу боя: имена «X нанес N урона», кроме текущей цели. */
+  function attackers(lines, target) {
+    var out = [];
+    (lines || []).forEach(function (l) { var m = /^(.+?) нанес(?:ла)? \d+ урона/.exec(String(l || '').trim()); if (m && m[1] !== 'Вы' && m[1] !== target && out.indexOf(m[1]) < 0) out.push(m[1]); });
+    return out;
   }
 
   /** Описание умения (magister.php?&des=ID&dl=L): {name, text, power, kind: attack|heal|other} */
   function parseSkillDesc(html) {
     var t = pageText(html).split('\n');
     var i = t.findIndex(function (l) { return /уровень/.test(l) && / - \d+ уровень/.test(l); });
-    var name = t[i + 1] || '', text = t[i + 2] || '';
+    // 1.8: строка «Забрать Сундук Удачи» (ссылка в шапке) прилипала к имени умения
+    var j = i + 1; while (/^Забрать Сундук Удачи\s*$/.test(t[j] || '')) j++;
+    var name = cleanSkillName(t[j] || ''), text = t[j + 1] || '';
     var pw = /Power:\s*(\d+)/i.exec(text);
     return { name: name, text: text, power: pw ? +pw[1] : 0, kind: skillKind(text, pw ? +pw[1] : 0) };
   }
@@ -303,7 +357,8 @@
     parseParameters: parseParameters, parseHeroHeader: parseHeroHeader, parseAdena: parseAdena,
     parseBuffer: parseBuffer, parseAltarClaims: parseAltarClaims, detectAlerts: detectAlerts, townTokens: townTokens,
     parseMagister: parseMagister, parseSkillDesc: parseSkillDesc, parseSlots: parseSlots, parseSlotSkills: parseSlotSkills,
-    parseNearby: parseNearby, parseDroplist: parseDroplist, parseMapCoords: parseMapCoords
+    parseNearby: parseNearby, parseDroplist: parseDroplist, parseMapCoords: parseMapCoords,
+    parseBuffs: parseBuffs, timerSec: timerSec, parseProfiles: parseProfiles, parsePet: parsePet, attackers: attackers, headerHit: headerHit, isSummonSkill: isSummonSkill, cleanSkillName: cleanSkillName
   };
   root.L2MParse = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

@@ -133,3 +133,86 @@ test('учёба: копит SP на боевое умение, групповы
     assert.equal(calls.filter(c => c === 'magister.php?learnskills').length, 1); // список берётся из ответа «get»
   } finally { N.get = og; }
 });
+
+test('1.8: бафф профилем — старые баффы мало/кончаются → снять и применить профиль', async () => {
+  const fs = require('fs'), path = require('path'), N = globalThis.L2MNet, st = E.state, calls = [];
+  const prof = fs.readFileSync(path.join(__dirname, 'fixtures', 'profiles40.html'), 'utf8');
+  const chip = (id, t) => `<div class="buff-chip"><img src="img/buffs/skill${id}_0.jpg" alt="" /><span class="buff-timer">${t}</span></div>`;
+  let active = [chip(1068, '49м'), chip(1040, '49м')], applied = false;
+  const og = N.get;
+  N.get = async (p) => { calls.push(p);
+    let text = '<div>x</div>';
+    if (p === '_profiles40.php') text = prof;
+    else if (/id=207&s$/.test(p)) { if (active.length) text = '<div>У вас уже есть активные баффы. Повторное использование профиля невозможно.</div>'; else { applied = true; active = Array.from({ length: 35 }, (_, i) => chip(1000 + i, '59м')); text = '<div>Баффы применены</div>'; } }
+    else if (/buff=27/.test(p)) active = [];
+    else if (p === 'index.php') text = '<div class="l2-buff-row">' + active.join('') + '</div><hr class="l2-divider" />';
+    return { status: 200, url: 'https://l2mobi.pro/' + p, text }; };
+  try {
+    T.setHero({ name: 'Hero', level: 27 }); E.setCfg({ buffVip: true, buffProfile: 'auto', buffs: '' });
+    assert.equal(await T.buffProfile(), true);
+    assert.ok(applied); assert.ok(calls.some(c => /_profiles40\.php\?buff=27/.test(c)));
+    assert.equal(st.buffCount, 35); assert.equal(Math.round(st.buffLeft / 60), 59);
+    // баффы свежие и полные — повторно не снимаем
+    calls.length = 0; assert.equal(await T.buffProfile(), true); assert.ok(!calls.some(c => /buff=27/.test(c)));
+    // срок по таймерам: 59 мин — рано; 2 мин — пора
+    st.buffTry = 0; st.force = {}; assert.equal(T.buffDue(), false);
+    st.buffLeft = 120; st.buffSeenAt = Date.now(); assert.equal(T.buffDue(), true);
+    st.buffTry = Date.now(); assert.equal(T.buffDue(), false); // не чаще раза в 5 мин
+    // 40+ — профиль не используется
+    T.setHero({ name: 'Hero', level: 40 }); assert.equal(T.services.find(s => s.key === 'buff').enabled(E.cfg), false);
+  } finally { N.get = og; T.setHero({ name: 'Hero', level: 27 }); }
+});
+
+test('1.8: таймеры баффов со страницы боя; бой без баффов → пора баффаться', () => {
+  const st = E.state;
+  T.noteBuffs('<div class="l2-target-hud"></div><div class="l2-buff-row"><div class="buff-chip"><img src="img/buffs/skill1085_0.jpg" alt="" /><span class="buff-timer">7м</span></div></div>', true);
+  assert.equal(st.buffLeft, 420);
+  T.noteBuffs('<div class="l2-target-hud"></div>', true); assert.equal(st.buffLeft, 0);
+  st.buffTry = 0; assert.equal(T.buffDue(), true);
+});
+
+test('1.8: призыв — Тень есть → ничего; нет и откат прошёл → призвать (Гекату не берём)', async () => {
+  const N = globalThis.L2MNet, st = E.state, calls = [];
+  st.skillInfo['1128'] = { name: 'Призвать Тень', kind: 'other', text: 'Вызывает Тень. Для вызова требуется 3 кристалла D класса. Отнимает 30% от получаемого опыта.' };
+  st.skillInfo['1228'] = { name: 'Призвать Гекату', kind: 'other', text: 'Вызывает Silhouette… Отнимает 90% от получаемого опыта' };
+  let pet = false;
+  const bar = () => '<div class="l2bar-slot"><a href="actions.php?t=5&go=1228"><img/></a></div><div class="l2bar-slot"><a href="actions.php?t=5&go=1128"><img/></a></div>' + (pet ? '<div class="l2bar-pet-hp"><font>ХП:978</font> <font>МП:279</font></div>' : '');
+  const og = N.get;
+  N.get = async (p) => { calls.push(p); if (/go=1128/.test(p)) pet = true; return { status: 200, url: 'https://l2mobi.pro/' + p, text: bar() }; };
+  try {
+    await T.summonIfNeeded();
+    assert.ok(calls.includes('actions.php?t=5&go=1128')); assert.ok(!calls.some(c => /go=1228/.test(c)));
+    assert.deepEqual(st.pet, { hp: 978, mp: 279 });
+    calls.length = 0; await T.summonIfNeeded(); assert.ok(!calls.some(c => /go=/.test(c)));
+  } finally { N.get = og; }
+});
+
+test('1.8: учёба не покупает и не учит призывы', async () => {
+  const N = globalThis.L2MNet, st = E.state, got = [];
+  const row = (id, name, lv, sp) => `<a href="magister.php?get=${id}"><img/></a> <a href="magister.php?&des=${id}&dl=${lv}">${name} ${lv}</a>(${sp} sp)<br />`;
+  st.skillInfo = { '1228': { name: 'Призвать Гекату', kind: 'other', text: 'Вызывает Silhouette', level: 1 }, '1266': { name: 'Вспышка Теней', kind: 'attack', power: 39, level: 1 } };
+  st.noBook = {}; st.hotbarAt = Date.now();
+  const og = N.get;
+  N.get = async (p) => { const m = /get=(\d+)/.exec(p); if (m) got.push(m[1]);
+    const rows = []; if (!got.includes('1266')) rows.push(row('1266', 'Вспышка Теней', 1, 100)); rows.push(row('1228', 'Призвать Гекату', 1, 10));
+    return { status: 200, url: 'https://l2mobi.pro/' + p, text: '<div>У Вас 5000 Skill Points</div>Доступные магии<hr />' + rows.join('<hr />') + '<hr />' }; };
+  try { E.setCfg({ autoLearn: true, buyBooks: false, learnSummon: false }); await T.learn(); assert.deepEqual(got, ['1266']); }
+  finally { N.get = og; }
+});
+
+test('1.8: бьют во время отдыха — отдых прерывается, охота отвечает обидчику', async () => {
+  const N = globalThis.L2MNet, st = E.state;
+  let hp = 300;
+  const og = N.get;
+  N.get = async (p) => { if (p === 'player.php?parameters') hp -= 60;
+    return { status: 200, url: 'https://l2mobi.pro/' + p, text: '<div>L2 MOBI</div><div>Громила -133</div><div>Ур. 27</div><div>HP</div><div>' + hp + ' / 693</div><div>CP</div><div>289 / 289</div><div>MP</div><div>100 / 562</div>' }; };
+  const sl = globalThis.setTimeout;
+  try {
+    E.setCfg({ fightBack: true, fullRestore: false, restHp: 50, restMp: 20 });
+    st.me = { hp: 300, maxHp: 693, mp: 100, maxMp: 562 }; st.hitBy = {}; st.underAttack = 0;
+    globalThis.setTimeout = (f) => sl(f, 0);
+    await T.restIfNeeded();
+    assert.ok(st.underAttack > 0); assert.equal(T.lastAttacker(), 'Громила');
+    assert.notEqual(T.services.find(s => s.key === 'rest').due(), true);
+  } finally { N.get = og; globalThis.setTimeout = sl; st.underAttack = 0; }
+});
