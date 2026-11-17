@@ -120,3 +120,20 @@ test('продавец книг: книга → ссылка покупки и �
   assert.deepStrictEqual(shop['1049'], { item: 1049, bid: '171', nid: '31417', name: 'Книга Заклинаний: Ледяной Шип', price: 100 });
   assert.equal(shop['1294'].price, 75);
 });
+
+test('1.8: профили VIP-баффа, таймеры баффов, призыв, кто бьёт', () => {
+  const fs = require('fs'), path = require('path'), P = globalThis.L2MParse || require('../src/parse.js');
+  const fx = f => fs.readFileSync(path.join(__dirname, 'fixtures', f), 'utf8');
+  assert.deepEqual(P.parseProfiles(fx('profiles40.html')), [{ id: '207', name: 'МОЙ 1', count: 35, cost: 3500 }]);
+  const b = P.parseBuffs(fx('buffs.html'));
+  assert.equal(b.length, 17); assert.deepEqual(b[0], { skill: '1068', sec: 2940 });
+  assert.equal(P.timerSec('1ч 5м'), 3900); assert.equal(P.timerSec('40с'), 40);
+  assert.deepEqual(P.parsePet(fx('actions-pet.html')), { hp: 978, mp: 279 });
+  assert.equal(P.parsePet('<div>нет</div>'), null);
+  assert.deepEqual(P.attackers(['Громила нанес 147 урона...', 'Вы нанесли 300 урона.', 'Офицер Гноллов нанес 5 урона. (x1)'], 'Офицер Гноллов'), ['Громила']);
+  assert.deepEqual(P.headerHit('<div>L2 MOBI</div><div>Громила -133</div><a>Чат</a>'), { name: 'Громила', dmg: 133 });
+  assert.equal(P.skillKind('Атакующее заклинание тьмы, теневая искра. Сверх-удар доступен. Power: 39.', 39), 'attack');
+  assert.equal(P.skillKind('Вызывает Тень. Для вызова требуется 3 кристалла D класса. Отнимает 30% от получаемого опыта.', 0), 'other');
+  assert.equal(P.isSummonSkill('Призвать Гекату', ''), true);
+  assert.equal(P.cleanSkillName('Забрать Сундук Удачи Смерч'), 'Смерч');
+});

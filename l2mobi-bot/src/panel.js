@@ -147,9 +147,14 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
     $('[data-p=buff]').innerHTML =
       '<div class="card"><h4>Отдых</h4>' + num('restHp', 'Отдых, если HP ниже, %') + num('restMp', 'Отдых, если MP ниже, %') + num('restUntil', 'Отдыхать до, %') +
       chk('fullRestore', '«Полное восстановление» у баффера вместо ожидания') + '</div>' +
-      '<div class="card"><h4>Бафф</h4>' + chk('buffVip', 'VIP-баффер (100 аден, 1 час, бесплатно до 40 ур.)') + num('buffEvery', 'Перебафф каждые, мин') +
+      '<div class="card"><h4>Бафф</h4>' + chk('buffVip', 'VIP-баффер (100 аден за бафф, 1 час)') +
+        txt('buffProfile', 'Профиль VIP-баффа до 40 ур.', 'auto — первый ваш профиль из «Мои профили»; номер — этот профиль; пусто — баффать отмеченными ниже') +
+        num('buffLeftMin', 'Перебафф, когда до конца осталось, мин', 'таймеры баффов видны на странице боя') + num('buffEvery', 'Если таймеров не видно — перебафф каждые, мин') +
       '<div>' + Object.keys(BUFF_NAMES).map(function (id) { return '<label class="bf"><input type="checkbox" data-buff="' + id + '">' + esc(BUFF_NAMES[id]) + '</label>'; }).join('') + '</div>' +
-      '<div class="row"><button id="buffnow">Баффнуть сейчас</button><span class="hint" id="bufinfo"></span></div></div>';
+      '<div class="row"><button id="buffnow">Баффнуть сейчас</button><span class="hint" id="bufinfo"></span></div></div>' +
+      '<div class="card"><h4>Призыв</h4>' + chk('keepSummon', 'Держать Тень: призвать снова, если пропала', 'нужно 3 кристалла D, откат ~6 ч, Тень забирает 30% опыта') +
+      chk('learnSummon', 'Покупать книги и учить призывы сами', 'выкл.: Геката забирает 90% опыта') + '<div class="row"><button id="summonnow">Проверить призыв</button><span class="hint" id="petinfo"></span></div></div>' +
+      '<div class="card"><h4>Защита</h4>' + chk('fightBack', 'Бьют во время отдыха — ответить обидчику', 'если HP меньше 35% — свиток возврата с панели') + '</div>';
     $('[data-p=altar]').innerHTML =
       '<div class="card"><h4>Алтарь Героя</h4>' + chk('daily', 'Каждый день забирать награду за вход, задания и колесо') +
       '<div class="row"><button id="altar">Забрать сейчас</button><span class="hint" id="altinfo"></span></div></div>';
@@ -171,6 +176,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
     $('#exC').onclick = function () { J.clear(); render(E.state); };
     $('#clr').onclick = function () { E.resetStats(); };
     $('#buffnow').onclick = function () { E.buffNow(); };
+    $('#summonnow').onclick = function () { E.summonNow(); };
     $('#altar').onclick = function () { E.dailyNow(); };
     $('#learn').onclick = function () { E.learnNow(); };
     $('#tklist').onclick = function (ev) { var k = ev.target && ev.target.dataset && ev.target.dataset.rel; if (k) E.releaseTask(k); };
@@ -265,7 +271,9 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
           return '<tr><td>' + esc(m.name) + '</td><td>' + m.n + '</td><td>' + m.secs + '</td><td>' + fmt(m.exp) + '</td><td>' + (m.rate != null ? m.rate.toFixed(1) : '—') + '</td><td>' + (m.deaths || '') + '</td></tr>';
         }).join('') + '</table>' : '<span class="hint">Появится после первых боёв.</span>';
       }
-      if (sec === 'buff') $('#bufinfo').textContent = S.lastBuff ? 'последний: ' + new Date(S.lastBuff).toLocaleTimeString('ru') : '';
+      if (sec === 'buff') { var bl = S.buffLeft == null ? null : Math.max(0, S.buffLeft - Math.round((Date.now() - S.buffSeenAt) / 1000));
+        $('#bufinfo').textContent = (S.lastBuff ? 'последний: ' + new Date(S.lastBuff).toLocaleTimeString('ru') : '') + (bl != null ? ' · баффов ' + (S.buffCount || 0) + ', осталось ' + Math.round(bl / 60) + ' мин' : '');
+        $('#petinfo').textContent = S.pet ? 'призыв: ХП ' + S.pet.hp + ' МП ' + S.pet.mp : (S.petAt ? 'призыва нет' : ''); }
       if (sec === 'altar') $('#altinfo').textContent = S.lastDaily ? 'забрано: ' + S.lastDaily : '';
     }
     function cell(k, v, s) { return '<div class="cell"><div class="k">' + k + '</div><div class="v">' + esc(typeof v === 'number' ? fmt(v) : v) + '</div><div class="s">' + esc(s) + '</div></div>'; }
