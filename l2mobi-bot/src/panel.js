@@ -146,7 +146,10 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
       '<div class="card"><h4>Умения на панели</h4><div id="sklist"></div></div>';
     $('[data-p=buff]').innerHTML =
       '<div class="card"><h4>Отдых</h4>' + num('restHp', 'Отдых, если HP ниже, %') + num('restMp', 'Отдых, если MP ниже, %') + num('restUntil', 'Отдыхать до, %') +
-      chk('fullRestore', '«Полное восстановление» у баффера вместо ожидания') + '</div>' +
+      chk('fullRestore', '«Полное восстановление» у баффера вместо ожидания', 'работает только у города') + '</div>' +
+      '<div class="card"><h4>Мана (MP)</h4>' + num('manaAt', 'Самобичевание (HP → MP), если MP ниже, %', 'только в бою; при MP ниже порога отдыха бот не садится, а восполняет MP так') +
+      num('manaHp', '…и если HP не ниже, %') + num('mpSave', 'MP ниже, % — бить самым экономным умением', 'расход MP бот меряет сам') +
+      chk('manaPotion', 'Зелье маны с панели, если MP ниже 15%') + '<div class="hint" id="manainfo"></div></div>' +
       '<div class="card"><h4>Бафф</h4>' + chk('buffVip', 'VIP-баффер (100 аден за бафф, 1 час)') +
         txt('buffProfile', 'Профиль VIP-баффа до 40 ур.', 'auto — первый ваш профиль из «Мои профили»; номер — этот профиль; пусто — баффать отмеченными ниже') +
         num('buffLeftMin', 'Перебафф, когда до конца осталось, мин', 'таймеры баффов видны на странице боя') + num('buffEvery', 'Если таймеров не видно — перебафф каждые, мин') +
@@ -273,6 +276,7 @@ table{width:100%;border-collapse:collapse;font-size:11.5px}td,th{padding:3px 4px
       }
       if (sec === 'buff') { var bl = S.buffLeft == null ? null : Math.max(0, S.buffLeft - Math.round((Date.now() - S.buffSeenAt) / 1000));
         $('#bufinfo').textContent = (S.lastBuff ? 'последний: ' + new Date(S.lastBuff).toLocaleTimeString('ru') : '') + (bl != null ? ' · баффов ' + (S.buffCount || 0) + ', осталось ' + Math.round(bl / 60) + ' мин' : '');
+        var ms = S.manaStat || {}; $('#manainfo').textContent = ms.n ? 'Самобичевание: ' + ms.n + ' раз, +' + ms.gain + ' MP' + (ms.bad >= 3 ? ' (не работает — выключено)' : '') : '';
         $('#petinfo').textContent = S.pet ? 'призыв: ХП ' + S.pet.hp + ' МП ' + S.pet.mp : (S.petAt ? 'призыва нет' : ''); }
       if (sec === 'altar') $('#altinfo').textContent = S.lastDaily ? 'забрано: ' + S.lastDaily : '';
     }

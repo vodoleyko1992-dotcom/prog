@@ -7,7 +7,7 @@
   'use strict';
   var P = root.L2MParse, N = root.L2MNet, C = root.L2MCore;
   var J = root.L2MJournal || { ev: function () {} };
-  var VERSION = '1.8';
+  var VERSION = '1.9';
 
   var DEFAULTS = {
     skills: '',          // id умений через запятую в порядке приоритета ('' = боевые с панели, сильнее — раньше)
@@ -44,7 +44,11 @@
     buffLeftMin: 3,      // 1.8: перебафф, когда до конца баффов осталось столько минут (таймеры видны на странице боя)
     keepSummon: false,   // 1.8: держать призыв (Тень): призвать снова, если пропал и откат прошёл
     learnSummon: false,  // 1.8: не покупать книги и не учить призывы сами (Геката забирает 90% опыта, Тень 30%)
-    fightBack: true      // 1.8: бьют во время отдыха — ответить обидчику (или свиток возврата при малом HP)
+    fightBack: true,     // 1.8: бьют во время отдыха — ответить обидчику (или свиток возврата при малом HP)
+    manaAt: 45,          // 1.9: Самобичевание (HP → MP) в бою, если MP ниже, %
+    manaHp: 55,          //      …и HP не ниже, % (HP потом добирает вампирик)
+    manaPotion: true,    // 1.9: зелье маны с панели, если MP ниже 15% и Самобичевания нет
+    mpSave: 35           // 1.9: MP ниже, % — бить умением с лучшим «урон на 1 MP» (бот сам меряет расход MP)
   };
 
   var S = {
@@ -54,6 +58,7 @@
     knownSkills: [], skillInfo: {}, cd: {}, log: [], lastFight: null, place: null,
     dead: false, avoid: {}, day: { key: '', kills: 0 }, needMove: false, curMob: null, beat: 0, now: '', next: '',
     noBook: {}, force: {}, pendingWin: null,
+    mpCost: {}, manaStat: { n: 0, gain: 0, bad: 0 }, restoreFailAt: 0,
     buffLeft: null, buffSeenAt: 0, buffTry: 0, pet: null, petAt: 0, hitBy: {}, underAttack: 0
   };
   var rec = C.createRecovery(), wd = C.createWatchdog(), mstats = C.createMobStats(), db = C.mobDbIndex(root.L2MMobs);
@@ -152,12 +157,15 @@
     if (!me.maxHp) me = await refreshMe();
     var hp = pct(me.hp, me.maxHp), mp = pct(me.mp, me.maxMp);
     if (hp >= cfg.restHp && mp >= cfg.restMp) return;
-    if (cfg.fullRestore) {
+    if (hp >= cfg.restHp && manaReady()) { J.ev('rest', 'MP ' + mp + '% — не отдыхаю, восполню Самобичеванием в бою'); return; }
+    if (cfg.fullRestore && Date.now() - S.restoreFailAt > 30 * 60000) {
       setStatus('восстановление у баффера', 'Отдых');
       await openBufferPage(false);
       await page('buffer2.php?buff=28', 'buffer2.php');
       me = await refreshMe();
       log('Полное восстановление: HP ' + pct(me.hp, me.maxHp) + '% MP ' + pct(me.mp, me.maxMp) + '%', 'rest');
+      // 1.9: лог 15:42 — «Полное восстановление» вдали от города не работает («далеко от города»), MP оставалось 13–16%
+      if (pct(me.mp, me.maxMp) <= mp + 5) { S.restoreFailAt = Date.now(); J.ev('rest', 'восстановление у баффера не сработало (далеко от города?) — 30 мин не пробую'); }
       if (pct(me.hp, me.maxHp) >= cfg.restHp && pct(me.mp, me.maxMp) >= cfg.restMp) return;
     }
     log('Отдых: HP ' + hp + '% MP ' + mp + '%', 'rest');
@@ -412,7 +420,7 @@
   function learnRank(x) {
     var i = S.skillInfo[x.id] || {}, n = x.name || i.name;
     if (groupSkill(n)) return 4;
-    return i.kind === 'attack' || i.kind === 'drain' ? 0 : i.kind === 'heal' ? 1 : 2;
+    return i.kind === 'attack' || i.kind === 'drain' || i.kind === 'mana' ? 0 : i.kind === 'heal' ? 1 : 2;
   }
 
   /** Новые боевые умения — на свободные ячейки панели боя. */
@@ -430,7 +438,7 @@
       for (var i = 0; i < list.length && free.length; i++) {
         var sk = list[i];
         var inf = await skillInfo(sk.id, sk.level);
-        if (used[sk.id] != null || (inf.kind !== 'attack' && inf.kind !== 'heal' && inf.kind !== 'drain') || groupSkill(inf.name || sk.name)) continue;
+        if (used[sk.id] != null || (inf.kind !== 'attack' && inf.kind !== 'heal' && inf.kind !== 'drain' && inf.kind !== 'mana') || groupSkill(inf.name || sk.name)) continue;
         var slot = free.shift();
         await page('actions.php?addsc=' + slot + '&skill=' + sk.id, 'actions.php?addsc=' + slot + '&skills');
         added.push(sk.name);
@@ -580,9 +588,35 @@
   }
   /** mobPct — сколько HP у моба (%). Лечение не нужно, если моба добьём одним-двумя ударами:
       в логе 17.11 бот чередовал «лечение — удар» по 18 с на одного моба. */
+  /* ---------- MP (1.9) ----------
+     Самобичевание (1157): HP → MP, работает только в бою (с actions.php вне боя — без эффекта, проверено 17.11).
+     Бот меряет, сколько MP оно дало; три раза подряд без прибавки — больше не использует. */
+  function manaSkillId() {
+    var ids0 = Object.keys(S.skillInfo).filter(function (k) { return (S.skillInfo[k] || {}).kind === 'mana' && S.knownSkills.indexOf(k) >= 0; });
+    return ids0[0] || null;
+  }
+  function manaReady(now) {
+    var id = manaSkillId(); if (!id || S.manaStat.bad >= 3) return false;
+    return !(S.cd[id] > (now || N.serverNow()) + 20000);
+  }
+  /** Расход MP по умениям: разница MP до и после удара (скользящее среднее). */
+  function noteMpCost(id, before, after) {
+    if (!id || before == null || after == null) return;
+    var d = before - after; if (d <= 0 || d > 300) return;
+    var c = S.mpCost[id]; S.mpCost[id] = c ? Math.round((c * 3 + d) / 4) : d;
+  }
   function chooseAction(hb, now, mobPct) {
-    var hp = S.me.maxHp ? pct(S.me.hp, S.me.maxHp) : 100;
+    var hp = S.me.maxHp ? pct(S.me.hp, S.me.maxHp) : 100, mp = S.me.maxMp ? pct(S.me.mp, S.me.maxMp) : 100;
     var mobAlmostDead = mobPct != null && mobPct <= 25;
+    // 1.9: MP мало, HP хватает — Самобичевание (вместо отдыха по 200 с, лог 15:42: отдых = 31% времени)
+    if (mp < cfg.manaAt && hp >= cfg.manaHp && S.manaStat.bad < 3) {
+      var mn = hb.skills.find(function (s) { var i = S.skillInfo[s.id]; return i && i.kind === 'mana' && !(S.cd[s.id] > now); });
+      if (mn) return { href: mn.href, label: 'самобичевание ' + mn.id, skill: mn.id, mana: true };
+    }
+    if (cfg.manaPotion && mp < 15 && !manaReady(now) && hb.items && Date.now() - (S.potionAt || 0) > 15000) {
+      var pot = hb.items.find(function (x) { return x.id === '728' || x.id === '726' || x.id === '1539'; });
+      if (pot) { S.potionAt = Date.now(); return { href: pot.href, label: 'зелье маны ' + pot.id, item: pot.id, mana: true }; }
+    }
     if (hp < cfg.healAt && !mobAlmostDead) {
       var heal = bestReady(hb, 'heal', now) || bestReady(hb, 'drain', now);
       if (heal) return { href: heal.href, label: 'лечение ' + heal.id, skill: heal.id, heal: true };
@@ -593,6 +627,7 @@
       if (dr) return { href: dr.href, label: 'вампирик ' + dr.id, skill: dr.id };
     }
     var order = rotation(hb);
+    if (mp < cfg.mpSave) order = order.slice().sort(function (a, b) { return eff(b) - eff(a); });
     for (var i = 0; i < order.length; i++) {
       var sk = hb.skills.find(function (s) { return s.id === order[i]; });
       if (sk && !(S.cd[sk.id] > now)) return { href: sk.href, label: 'умение ' + sk.id, skill: sk.id };
@@ -600,6 +635,9 @@
     if (cfg.useAttack && hb.attack) return { href: hb.attack, label: 'атака' };
     return null;
   }
+
+  /** Урон на 1 MP (power ÷ замеренный расход); пока не замерено — просто power. */
+  function eff(id) { var i = S.skillInfo[id] || {}, c = S.mpCost[id]; return c ? (i.power || 1) / c : (i.power || 1) / 30; }
 
   async function finishBattle(endText, f) {
     var end = P.parseBattleEnd(endText);
@@ -687,8 +725,18 @@
       J.ev('hit', act ? act.label : 'жду', { step: step, me: [S.me.hp, S.me.maxHp, S.me.mp, S.me.maxMp], mob: hud ? [hud.hp, hud.maxHp] : null, wait: Math.round(wait), log: blog[0] });
       if (wait > 0) await sleep(jitter(wait));
       if (!act) { await sleep(500); r = await page(ref, ref); continue; }
+      var mpBefore = S.me.mp, hpBefore = S.me.hp;
       r = await page(act.href, ref);
       ref = act.href; f.hits++;
+      var nb = P.parseBars(r.text);
+      if (nb.maxMp && act.skill) {
+        if (act.mana) {
+          var gain = nb.mp - mpBefore; S.manaStat.n++; S.manaStat.gain += Math.max(0, gain);
+          if (gain > 5) S.manaStat.bad = 0; else S.manaStat.bad++;
+          J.ev('mana', 'Самобичевание: MP ' + (gain >= 0 ? '+' : '') + gain + ', HP ' + (nb.hp - hpBefore), { mp: [mpBefore, nb.mp], hp: [hpBefore, nb.hp], bad: S.manaStat.bad });
+          if (S.manaStat.bad === 3) log('Самобичевание не прибавляет MP — больше не использую (до перезапуска)', 'mana');
+        } else if (!act.heal) noteMpCost(act.skill, mpBefore, nb.mp);
+      }
       if (isEnd(r)) { await finishBattle(r.text, f); return 'win'; }
       if (/\/map\.php/.test(r.url) || !/l2-target-hud/.test(r.text)) {
         // Моб убит, добычи нет — игра сразу вернула на карту. (Смерть ловит page() по «Вас убили.»)
@@ -760,13 +808,13 @@
       run: async function () { setStatus('суточный лимит ' + cfg.dailyKills + ' боёв — жду новых суток', 'Лимит'); wd.progress('limit:' + Math.floor(Date.now() / 300000)); await sleep(60000); } },
     { key: 'daily', title: '⚑ Алтарь (раз в день)', prio: 90, enabled: function (c) { return c.daily || S.force.daily; }, due: function () { return S.force.daily || S.lastDaily !== today(); }, run: function () { delete S.force.daily; return dailyIfNeeded(true); } },
     { key: 'learn', title: '✦ Учёба умений', prio: 80, enabled: function (c) { return c.autoLearn || S.force.learn; },
-      due: function () { return S.force.learn || S.lastLearnLvl !== lvl() || Date.now() - S.lastLearnT > 15 * 60000; }, run: function () { delete S.force.learn; return learnSkills(true); } },
+      due: function () { return S.force.learn || !S.hotbarAt || S.lastLearnLvl !== lvl() || Date.now() - S.lastLearnT > 15 * 60000; }, run: function () { delete S.force.learn; return learnSkills(true); } },
     { key: 'buff', title: '✚ Бафф', prio: 70, enabled: function (c) { return ids(c.buffs).length > 0 || useProfile(); },
       due: buffDue, run: function () { delete S.force.buff; return buffIfNeeded(true); } },
     { key: 'summon', title: '🐾 Призыв (Тень)', prio: 65, enabled: function (c) { return c.keepSummon || S.force.summon; },
       due: function () { return S.force.summon || Date.now() - S.petAt > 5 * 60000; }, run: function () { delete S.force.summon; return summonIfNeeded(); } },
     { key: 'rest', title: '☕ Отдых', prio: 60, enabled: function () { return true; },
-      due: function () { return (!S.me.maxHp || hpPct() < cfg.restHp || mpPct() < cfg.restMp) && !(S.underAttack && Date.now() - S.underAttack < 60000); }, run: restIfNeeded },
+      due: function () { return (!S.me.maxHp || hpPct() < cfg.restHp || (mpPct() < cfg.restMp && !manaReady())) && !(S.underAttack && Date.now() - S.underAttack < 60000); }, run: restIfNeeded },
     { key: 'move', title: '🏃 Смена места кача', prio: 50, enabled: function (c) { return c.autoMove; }, due: function () { return S.needMove; },
       run: async function () { S.needMove = false; var ok = await relocate(S.mobsHere || []); if (!ok) { sched.hold('move', 10, 'новое место не найдено'); J.ev('move', 'пауза перехода 10 мин'); } } },
     { key: 'hunt', title: '⚔ Охота', prio: 10, enabled: function () { return true; }, due: function () { return true; }, run: huntStep }
@@ -800,7 +848,7 @@
     // HP на карте не видно: если по последнему бою мало — сверить и отдохнуть ДО боя (смерть в логе 16.11: бой начат с 32% HP).
     if (S.me.maxHp && pct(S.me.hp, S.me.maxHp) < cfg.restHp + 10 && !(S.hitBy[mob.name] > Date.now() - 60000)) {
       await refreshMe();
-      if (pct(S.me.hp, S.me.maxHp) < cfg.restHp || pct(S.me.mp, S.me.maxMp) < cfg.restMp) return;
+      if (pct(S.me.hp, S.me.maxHp) < cfg.restHp || (pct(S.me.mp, S.me.maxMp) < cfg.restMp && !manaReady())) return;
     }
     var res = await fight(mob);
     S.curMob = null;
@@ -869,8 +917,8 @@
   function save() {
     try {
       chrome.storage.local.set({ [KEY]: {
-        v11: true, v12: true, v13: true, v15: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
-        lastLearnLvl: S.lastLearnLvl, lastLearnT: S.lastLearnT,
+        v11: true, v12: true, v13: true, v15: true, v19: true, cfg: cfg, running: S.running, avoid: S.avoid, day: S.day, noBook: S.noBook, mobStats: mstats.exportState(), sched: sched.exportState(), lastBuff: S.lastBuff, lastDaily: S.lastDaily, knownSkills: S.knownSkills, skillInfo: S.skillInfo,
+        lastLearnLvl: S.lastLearnLvl, lastLearnT: S.lastLearnT, mpCost: S.mpCost, hotbarAt: S.hotbarAt || 0,
         stats: { kills: S.kills, adena: S.adena, deaths: S.deaths, levelUps: S.levelUps, learned: S.learned }, log: S.log.slice(0, 100)
       } });
     } catch (e) {}
@@ -893,7 +941,7 @@
             S.lastBuff = v.lastBuff || 0; S.lastDaily = v.lastDaily || ''; S.knownSkills = v.knownSkills || [];
             S.skillInfo = v.skillInfo || {};
             Object.keys(S.skillInfo).forEach(function (k) { var i = S.skillInfo[k]; if (i && i.text) i.kind = P.skillKind(i.text, i.power); if (i && i.name) i.name = P.cleanSkillName(i.name); }); // 1.2: «Самолечение» — лечение, 1.7: вампирик — удар
-            S.lastLearnLvl = v.lastLearnLvl || 0; S.lastLearnT = v.lastLearnT || 0;
+            S.lastLearnLvl = v.lastLearnLvl || 0; S.lastLearnT = v.lastLearnT || 0; S.mpCost = v.mpCost || {}; if (v.v19) S.hotbarAt = v.hotbarAt || 0; // 1.9: панель пересобрать (Самобичевание, Вспышка Теней)
             var st = v.stats || {};
             S.kills = st.kills || 0; S.adena = st.adena || 0; S.deaths = st.deaths || 0; S.levelUps = st.levelUps || 0; S.learned = st.learned || 0;
             S.log = v.log || [];
@@ -902,7 +950,7 @@
         });
       } catch (e) { res({}); }
     }).then(function (v) {
-      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true, v13: true, v15: true }); chrome.storage.local.set(o); } catch (e) {}
+      try { var o = {}; o[KEY] = Object.assign({}, v, { cfg: cfg, v11: true, v12: true, v13: true, v15: true, v19: true }); chrome.storage.local.set(o); } catch (e) {}
       return v;
     });
   }
@@ -913,7 +961,7 @@
   function info() {
     return { version: VERSION, hero: S.hero, me: S.me, cfg: cfg, stats: { kills: S.kills, adena: S.adena, deaths: S.deaths, levelUps: S.levelUps, learned: S.learned },
       sess: S.sess, skills: S.knownSkills, skillInfo: S.skillInfo, ua: navigator.userAgent, page: location.pathname,
-      tasks: sched.view(cfg), recovery: rec.snapshot(), watchdog: wd.snapshot(), mobStats: mstats.top(40), avoid: S.avoid, day: S.day, mobDb: db.size, buffLeft: buffLeftNow(), buffCount: S.buffCount, pet: S.pet, hitBy: S.hitBy };
+      tasks: sched.view(cfg), recovery: rec.snapshot(), watchdog: wd.snapshot(), mobStats: mstats.top(40), avoid: S.avoid, day: S.day, mobDb: db.size, buffLeft: buffLeftNow(), buffCount: S.buffCount, pet: S.pet, hitBy: S.hitBy, mpCost: S.mpCost, manaStat: S.manaStat };
   }
 
   /** Кнопки «сейчас»: бот стоит — делаем сразу; бот работает — ставим задачу первой в очередь (1.1 отвечал «Сначала остановите бота»). */
@@ -930,6 +978,6 @@
     mobTop: function (n) { return mstats.top(n); }, exportCfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     importCfg: function (o) { var c = {}; Object.keys(DEFAULTS).forEach(function (k) { if (o && o[k] !== undefined && typeof o[k] === typeof DEFAULTS[k]) c[k] = o[k]; }); setCfg(c); return Object.keys(c).length; },
     buffNow: wrap(buffIfNeeded, 'Бафф', 'buff'), summonNow: wrap(function () { return summonIfNeeded(); }, 'Призыв', 'summon'), dailyNow: wrap(dailyIfNeeded, 'Алтарь', 'daily'), learnNow: wrap(learnSkills, 'Умения', 'learn'),
-    _test: { learn: function () { return learnSkills(true); }, pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, buyBook: buyBook, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates, buffProfile: buffProfile, buffDue: buffDue, noteBuffs: noteBuffs, summonIfNeeded: summonIfNeeded, noteAttackers: noteAttackers, lastAttacker: lastAttacker, restIfNeeded: restIfNeeded }
+    _test: { learn: function () { return learnSkills(true); }, pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, buyBook: buyBook, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates, buffProfile: buffProfile, buffDue: buffDue, noteBuffs: noteBuffs, summonIfNeeded: summonIfNeeded, noteAttackers: noteAttackers, lastAttacker: lastAttacker, restIfNeeded: restIfNeeded, manaReady: manaReady, noteMpCost: noteMpCost, eff: eff }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

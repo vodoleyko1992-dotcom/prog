@@ -216,3 +216,28 @@ test('1.8: бьют во время отдыха — отдых прерывае
     assert.notEqual(T.services.find(s => s.key === 'rest').due(), true);
   } finally { N.get = og; globalThis.setTimeout = sl; st.underAttack = 0; }
 });
+
+test('1.9: Самобичевание — вид mana, в бою при MP < 45% и HP ≥ 55%, отдых по MP не нужен', () => {
+  const P = globalThis.L2MParse, st = E.state;
+  assert.equal(P.skillKind('Уменьшает ваше HP, чтобы восстановить MP.', 0), 'mana');
+  assert.equal(P.skillKind('Высасывает HP из трупа и восстанавливает HP персонажа.', 0), 'other');
+  assert.equal(P.skillKind('Магическая атака без элементной основы с близкого расстояния. Power: 25.', 25), 'other');
+  st.skillInfo = { '1157': { name: 'Самобичевание', kind: 'mana', power: 0 }, '1178': { name: 'Смерч', kind: 'attack', power: 38 }, '1177': { name: 'Удар Ветра', kind: 'attack', power: 21 } };
+  st.knownSkills = ['1157', '1178', '1177']; st.cd = {}; st.manaStat = { n: 0, gain: 0, bad: 0 }; st.mpCost = {};
+  E.setCfg({ manaAt: 45, manaHp: 55, restHp: 50, restMp: 20, mpSave: 35 });
+  const hb = { attack: 'a', skills: [{ id: '1178', href: 'g1178' }, { id: '1177', href: 'g1177' }, { id: '1157', href: 'g1157' }], items: [] };
+  st.me = { hp: 600, maxHp: 664, mp: 60, maxMp: 540 };
+  assert.equal(T.chooseAction(hb, 0).skill, '1157');
+  st.me.hp = 200; assert.equal(T.chooseAction(hb, 0).skill, '1178'); // HP мало — не жжём
+  st.me = { hp: 664, maxHp: 664, mp: 60, maxMp: 540 };
+  assert.equal(T.services.find(s => s.key === 'rest').due(), false);
+  st.manaStat.bad = 3; assert.equal(T.services.find(s => s.key === 'rest').due(), true);
+  // экономный удар при малом MP: Смерч 38/40 MP хуже Удара Ветра 21/10 MP
+  T.noteMpCost('1178', 300, 260); T.noteMpCost('1177', 300, 290);
+  st.me.mp = 150; assert.equal(T.chooseAction(hb, 0).skill, '1177');
+  st.me.mp = 400; assert.equal(T.chooseAction(hb, 0).skill, '1178');
+  // зелье маны: MP < 15%, Самобичевание не работает
+  st.me.mp = 40; const hb2 = Object.assign({}, hb, { items: [{ id: '728', href: 'u728' }] });
+  assert.equal(T.chooseAction(hb2, 0).item, '728');
+  st.manaStat.bad = 0;
+});
