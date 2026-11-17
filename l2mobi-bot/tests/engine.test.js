@@ -3,6 +3,7 @@ const assert = require('node:assert');
 global.chrome = { storage: { local: { get() {}, set() {} } }, runtime: { sendMessage() {} } };
 global.location = { origin: 'https://l2mobi.pro', pathname: '/' };
 global.navigator = { userAgent: 'test' };
+global.document = { cookie: '' };
 require('../data/mobs.js'); require('../src/parse.js'); require('../src/net.js'); require('../src/core.js'); require('../src/engine.js');
 const E = globalThis.L2MEngine, T = E._test;
 
@@ -92,4 +93,43 @@ test('покупка книги: POST с count=1, «Успешно куплен�
     E.setCfg({ bookMaxPrice: 50 });
     assert.equal(await T.buyBook({ id: '1184', level: 1, name: 'Ледяной Шип', book: 1049 }), 'no');
   } finally { N.get = og; N.post = op; }
+});
+
+test('вампирик: вид drain, бьёт первым при HP ниже 80%, лечение не тратим на почти мёртвого моба', () => {
+  const P = globalThis.L2MParse, st = E.state;
+  assert.equal(P.skillKind('Высасывает HP противника и восстанавливает HP персонажа. Power: 18.', 18), 'drain');
+  st.skillInfo = { '1178': { name: 'Смерч', kind: 'attack', power: 26 }, '1147': { name: 'Прикосновение Вампира', kind: 'drain', power: 18 },
+    '1011': { name: 'Лечение', kind: 'heal', power: 107 }, '1027': { name: 'Групповое Лечение', kind: 'heal', power: 86 } };
+  st.cd = {};
+  E.setCfg({ healAt: 45, drainAt: 80, skills: '' });
+  const hb = { attack: 'a', skills: ['1178', '1147', '1011', '1027'].map(id => ({ id, href: 'g' + id })) };
+  st.me = { hp: 95, maxHp: 100, mp: 100, maxMp: 100 };
+  assert.equal(T.chooseAction(hb, 0).skill, '1178');
+  st.me.hp = 70; assert.equal(T.chooseAction(hb, 0).skill, '1147');
+  st.me.hp = 30; assert.equal(T.chooseAction(hb, 0, 80).skill, '1011');
+  assert.equal(T.chooseAction(hb, 0, 15).skill, '1147'); // моб почти мёртв — бьём (вампиром)
+});
+
+test('учёба: копит SP на боевое умение, групповые не учит, остальное — за один заход', async () => {
+  const N = globalThis.L2MNet, st = E.state, calls = [];
+  const row = (id, name, lv, sp) => `<a href="magister.php?get=${id}"><img/></a> <a href="magister.php?&des=${id}&dl=${lv}">${name} ${lv}</a>(${sp} sp)<br />`;
+  const pageOf = (sp, rows) => `<div>У Вас ${sp} Skill Points</div>Доступные магии<hr />` + rows.join('<hr />') + '<hr />';
+  st.skillInfo = { '1': { name: 'Удар', kind: 'attack', power: 30, level: 9 }, '2': { name: 'Лечение', kind: 'heal', power: 100, level: 9 },
+    '3': { name: 'Групповое Лечение', kind: 'heal', power: 80, level: 9 }, '4': { name: 'Вампир', kind: 'drain', power: 18, level: 9 } };
+  st.noBook = {}; st.hotbarAt = Date.now();
+  let sp = 500, learnedIds = [];
+  const og = N.get;
+  const listPage = () => { const rows = [];
+    if (!learnedIds.includes('4')) rows.push(row('4', 'Вампир', 1, 300));
+    rows.push(row('1', 'Удар', 2, 2000)); rows.push(row('2', 'Лечение', 2, 100)); rows.push(row('3', 'Групповое Лечение', 1, 50));
+    return pageOf(sp, rows); };
+  N.get = async (p) => { calls.push(p); const m = /get=(\d+)/.exec(p); if (m) { learnedIds.push(m[1]); sp -= 300; }
+    return { status: 200, url: 'https://l2mobi.pro/' + p, text: listPage() }; };
+  try {
+    E.setCfg({ autoLearn: true, buyBooks: false, learnGroup: false });
+    await E._test.learn();
+    assert.deepEqual(learnedIds, ['4']);                // вампирик (300) — да
+    assert.ok(!calls.some(c => /get=2|get=3/.test(c))); // лечение и групповое — нет: копим на «Удар 2» (2000)
+    assert.equal(calls.filter(c => c === 'magister.php?learnskills').length, 1); // список берётся из ответа «get»
+  } finally { N.get = og; }
 });

@@ -7,7 +7,7 @@
   'use strict';
   var P = root.L2MParse, N = root.L2MNet, C = root.L2MCore;
   var J = root.L2MJournal || { ev: function () {} };
-  var VERSION = '1.5';
+  var VERSION = '1.7';
 
   var DEFAULTS = {
     skills: '',          // id умений через запятую в порядке приоритета ('' = боевые с панели, сильнее — раньше)
@@ -34,6 +34,8 @@
     dailyKills: 0,       // суточный лимит боёв (0 — без лимита)
     stuckMin: 10,        // нет прогресса столько минут — сменить место; три раза подряд — стоп
     healAt: 45,          // в бою лечиться умением (Самолечение и т.п.), если HP ниже, %
+    learnGroup: false,   // 1.7: групповые умения и для слуги/питомца не учить (соло-фарм)
+    drainAt: 80,         // 1.7: вампирик (Прикосновение Вампира) первым, если HP ниже, %
     bookRetryH: 6,       // умение «нужна книга» не пробовать снова столько часов (или пока не будет нового уровня)
     buyBooks: true,      // 1.5: покупать книги заклинаний у Баринеля (Глудио) и сразу учить
     bookMaxPrice: 20000, // не дороже, аден за книгу
@@ -217,17 +219,21 @@
     if (!cfg.autoLearn) return;
     if (!force && S.lastLearnLvl === lvl() && Date.now() - S.lastLearnT < 30 * 60000) return;
     setStatus('учу умения у магистра', 'Умения');
-    var failed = {}, learned = [], boughtNow = {};
-    for (var step = 0; step < 25 && !stopReq; step++) {
-      var r = await page('magister.php?learnskills');
-      var m = P.parseMagister(r.text);
+    var failed = {}, learned = [], boughtNow = {}, r = null;
+    for (var step = 0; step < 40 && !stopReq; step++) {
+      // 1.7: страница после «get» уже показывает новый список — второй запрос не нужен
+      if (!r) r = await page('magister.php?learnskills');
+      var m = P.parseMagister(r.text); r = null;
       if (m.sp != null) S.sp = m.sp;
-      var can = m.list.filter(function (x) { var k = x.id + ':' + x.level; return (m.sp == null || x.sp <= m.sp) && !failed[k] && !(S.noBook[k] > Date.now() - cfg.bookRetryH * 3600000); })
-      // книжные: сначала боевые, потом лечение, потом остальное (вид — по описанию умения, кэшируется)
-      if (cfg.buyBooks) for (var q = 0; q < can.length; q++) if (can[q].book && !S.skillInfo[can[q].id]) await skillInfo(can[q].id, can[q].level);
-      var rank = function (x) { if (!x.book) return 0; var k = (S.skillInfo[x.id] || {}).kind; return k === 'attack' ? 1 : k === 'heal' ? 2 : 3; };
-      can.sort(function (a, b) { return rank(a) - rank(b) || a.sp - b.sp; });
-      if (!can.length) break;
+      var avail = m.list.filter(function (x) { var k = x.id + ':' + x.level; return !failed[k] && !(S.noBook[k] > Date.now() - cfg.bookRetryH * 3600000) && !(groupSkill(x.name) && !cfg.learnGroup); });
+      for (var q0 = 0; q0 < avail.length; q0++) if (!S.skillInfo[avail[q0].id]) await skillInfo(avail[q0].id, avail[q0].level);
+      // боевое умение есть, но SP на него пока мало — копим SP, остальное не учим (иначе SP уходят на лечение и прочее)
+      var saveFor = avail.filter(function (x) { return learnRank(x) === 0 && m.sp != null && x.sp > m.sp; })[0];
+      var can = avail.filter(function (x) { return (m.sp == null || x.sp <= m.sp) && (!saveFor || learnRank(x) === 0); })
+      // 1.7: SP сначала на боевые (и вампирик), потом на лечение себя, потом прочее; групповые/для слуги — в конце
+      // (лог John 17.11: SP ушли на Групповое Лечение). Вид — по описанию умения, кэшируется.
+      can.sort(function (a, b) { return learnRank(a) - learnRank(b) || (a.book ? 1 : 0) - (b.book ? 1 : 0) || a.sp - b.sp; });
+      if (!can.length) { if (saveFor) J.ev('learn', 'коплю SP на ' + saveFor.name + ' ' + saveFor.level + ' (' + saveFor.sp + ' sp, есть ' + m.sp + ')'); break; }
       var pick = can[0];
       if (pick.book && cfg.buyBooks && !boughtNow[pick.book]) {
         var b = await buyBook(pick);
@@ -236,6 +242,7 @@
       }
       var r2 = await page('magister.php?get=' + pick.id, 'magister.php?learnskills');
       var m2 = P.parseMagister(r2.text);
+      if (m2.list.length || /Доступные магии/.test(r2.text)) r = r2;
       var still = m2.list.some(function (x) { return x.id === pick.id && x.level === pick.level; });
       if (still) { failed[pick.id + ':' + pick.level] = 1; S.noBook[pick.id + ':' + pick.level] = Date.now(); J.ev('learn', 'не выучено: ' + pick.name + ' ' + pick.level + (pick.book ? ' (нужна книга)' : ''), pick); continue; }
       learned.push(pick.name + ' ' + pick.level); S.learned++;
@@ -246,7 +253,7 @@
     var waitBook = Object.keys(S.noBook).length;
     if (waitBook) J.ev('learn', 'ждут книгу: ' + waitBook + ' (не пробую ' + cfg.bookRetryH + ' ч)');
     S.lastLearnLvl = lvl(); S.lastLearnT = Date.now();
-    await syncHotbar();
+    if (learned.length || !S.hotbarAt || Date.now() - S.hotbarAt > 3 * 3600000) { await syncHotbar(); S.hotbarAt = Date.now(); }
     save();
   }
 
@@ -284,6 +291,13 @@
     return 'ok';
   }
 
+  function groupSkill(name) { return /групп|слуг|питом|союзн|массов/i.test(String(name || '')); }
+  function learnRank(x) {
+    var i = S.skillInfo[x.id] || {}, n = x.name || i.name;
+    if (groupSkill(n)) return 4;
+    return i.kind === 'attack' || i.kind === 'drain' ? 0 : i.kind === 'heal' ? 1 : 2;
+  }
+
   /** Новые боевые умения — на свободные ячейки панели боя. */
   async function syncHotbar() {
     if (!cfg.autoHotbar) return;
@@ -299,7 +313,7 @@
       for (var i = 0; i < list.length && free.length; i++) {
         var sk = list[i];
         var inf = await skillInfo(sk.id, sk.level);
-        if (used[sk.id] != null || (inf.kind !== 'attack' && inf.kind !== 'heal')) continue;
+        if (used[sk.id] != null || (inf.kind !== 'attack' && inf.kind !== 'heal' && inf.kind !== 'drain') || groupSkill(inf.name || sk.name)) continue;
         var slot = free.shift();
         await page('actions.php?addsc=' + slot + '&skill=' + sk.id, 'actions.php?addsc=' + slot + '&skills');
         added.push(sk.name);
@@ -437,15 +451,29 @@
     var order = ids(cfg.skills);
     if (order.length) return order;
     return hb.skills.map(function (s) { return s.id; }).filter(function (id) {
-      var i = S.skillInfo[id]; return !i || i.kind === 'attack';
+      var i = S.skillInfo[id]; return !i || i.kind === 'attack' || i.kind === 'drain';
     }).filter(function (id) { return !(S.skillInfo[id] == null && id === '27'); })
       .sort(function (a, b) { return ((S.skillInfo[b] || {}).power || 0) - ((S.skillInfo[a] || {}).power || 0); });
   }
 
-  function chooseAction(hb, now) {
-    if (S.me.maxHp && pct(S.me.hp, S.me.maxHp) < cfg.healAt) {
-      var heal = hb.skills.find(function (s) { var i = S.skillInfo[s.id]; return i && i.kind === 'heal' && !(S.cd[s.id] > now); });
+  /** Готовое умение нужного вида, самое сильное. */
+  function bestReady(hb, kind, now) {
+    return hb.skills.filter(function (s) { var i = S.skillInfo[s.id]; return i && i.kind === kind && !groupSkill(i.name) && !(S.cd[s.id] > now); })
+      .sort(function (a, b) { return ((S.skillInfo[b.id] || {}).power || 0) - ((S.skillInfo[a.id] || {}).power || 0); })[0] || null;
+  }
+  /** mobPct — сколько HP у моба (%). Лечение не нужно, если моба добьём одним-двумя ударами:
+      в логе 17.11 бот чередовал «лечение — удар» по 18 с на одного моба. */
+  function chooseAction(hb, now, mobPct) {
+    var hp = S.me.maxHp ? pct(S.me.hp, S.me.maxHp) : 100;
+    var mobAlmostDead = mobPct != null && mobPct <= 25;
+    if (hp < cfg.healAt && !mobAlmostDead) {
+      var heal = bestReady(hb, 'heal', now) || bestReady(hb, 'drain', now);
       if (heal) return { href: heal.href, label: 'лечение ' + heal.id, skill: heal.id, heal: true };
+    }
+    // Вампирик (бьёт и лечит) — первым, как только HP ниже порога (по умолчанию 80%)
+    if (hp < cfg.drainAt) {
+      var dr = bestReady(hb, 'drain', now);
+      if (dr) return { href: dr.href, label: 'вампирик ' + dr.id, skill: dr.id };
     }
     var order = rotation(hb);
     for (var i = 0; i < order.length; i++) {
@@ -535,7 +563,7 @@
       var far = step > 0 && /слишком далеко/i.test(blog[0] || '');
       if (far) J.ev('far', 'повтор сразу');
       // Действие выбираем на момент конца каста: умение, которое к тому времени откатится, лучше слабой обычной атаки.
-      var act = chooseAction(hb, now + Math.max(0, castWait));
+      var act = chooseAction(hb, now + Math.max(0, castWait), hud && hud.maxHp ? pct(hud.hp, hud.maxHp) : null);
       var wait = step === 0 || far ? Math.max(castWait, 0) : Math.max(castWait, cfg.minDelay * 1000);
       if (act && !act.skill && cast && cast.PN && step > 0 && !far) wait = Math.max(wait, cast.PN * 1000 - 300);
       J.ev('hit', act ? act.label : 'жду', { step: step, me: [S.me.hp, S.me.maxHp, S.me.mp, S.me.maxMp], mob: hud ? [hud.hp, hud.maxHp] : null, wait: Math.round(wait), log: blog[0] });
@@ -614,7 +642,7 @@
       run: async function () { setStatus('суточный лимит ' + cfg.dailyKills + ' боёв — жду новых суток', 'Лимит'); wd.progress('limit:' + Math.floor(Date.now() / 300000)); await sleep(60000); } },
     { key: 'daily', title: '⚑ Алтарь (раз в день)', prio: 90, enabled: function (c) { return c.daily || S.force.daily; }, due: function () { return S.force.daily || S.lastDaily !== today(); }, run: function () { delete S.force.daily; return dailyIfNeeded(true); } },
     { key: 'learn', title: '✦ Учёба умений', prio: 80, enabled: function (c) { return c.autoLearn || S.force.learn; },
-      due: function () { return S.force.learn || S.lastLearnLvl !== lvl() || Date.now() - S.lastLearnT > 30 * 60000; }, run: function () { delete S.force.learn; return learnSkills(true); } },
+      due: function () { return S.force.learn || S.lastLearnLvl !== lvl() || Date.now() - S.lastLearnT > 15 * 60000; }, run: function () { delete S.force.learn; return learnSkills(true); } },
     { key: 'buff', title: '✚ Бафф', prio: 70, enabled: function (c) { return ids(c.buffs).length > 0; },
       due: function () { return S.force.buff || Date.now() - S.lastBuff >= cfg.buffEvery * 60000; }, run: function () { delete S.force.buff; return buffIfNeeded(true); } },
     { key: 'rest', title: '☕ Отдых', prio: 60, enabled: function () { return true; },
@@ -642,7 +670,7 @@
     }
     empty = 0;
     // HP на карте не видно: если по последнему бою мало — сверить и отдохнуть ДО боя (смерть в логе 16.11: бой начат с 32% HP).
-    if (S.me.maxHp && pct(S.me.hp, S.me.maxHp) < cfg.restHp + 25) {
+    if (S.me.maxHp && pct(S.me.hp, S.me.maxHp) < cfg.restHp + 10) {
       await refreshMe();
       if (pct(S.me.hp, S.me.maxHp) < cfg.restHp || pct(S.me.mp, S.me.maxMp) < cfg.restMp) return;
     }
@@ -731,11 +759,13 @@
             // 1.2: после смерти не стоять, а возвращаться
             if (!v.v12) { delete c.stopOnDeath; if (c.restHp === 40) delete c.restHp; }
             S.avoid = v.avoid || {}; S.day = v.day || { key: '', kills: 0 }; S.noBook = v.v15 ? (v.noBook || {}) : {}; // 1.5: книги теперь покупаются — пробуем заново
-            if (v.v13) mstats.importState(v.mobStats); // 1.2 писал опыт 0 — начинаем учёт заново sched.importState(v.sched);
+            if (v.v13) mstats.importState(v.mobStats); // 1.2 писал опыт 0 — начинаем учёт заново
+            sched.importState(v.sched);
             cfg = Object.assign({}, DEFAULTS, c);
             S.lastBuff = v.lastBuff || 0; S.lastDaily = v.lastDaily || ''; S.knownSkills = v.knownSkills || [];
             S.skillInfo = v.skillInfo || {};
-            Object.keys(S.skillInfo).forEach(function (k) { var i = S.skillInfo[k]; if (i && i.text) i.kind = P.skillKind(i.text, i.power); }); // 1.2: «Самолечение» — лечение S.lastLearnLvl = v.lastLearnLvl || 0; S.lastLearnT = v.lastLearnT || 0;
+            Object.keys(S.skillInfo).forEach(function (k) { var i = S.skillInfo[k]; if (i && i.text) i.kind = P.skillKind(i.text, i.power); }); // 1.2: «Самолечение» — лечение, 1.7: вампирик — удар
+            S.lastLearnLvl = v.lastLearnLvl || 0; S.lastLearnT = v.lastLearnT || 0;
             var st = v.stats || {};
             S.kills = st.kills || 0; S.adena = st.adena || 0; S.deaths = st.deaths || 0; S.levelUps = st.levelUps || 0; S.learned = st.learned || 0;
             S.log = v.log || [];
@@ -772,6 +802,6 @@
     mobTop: function (n) { return mstats.top(n); }, exportCfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     importCfg: function (o) { var c = {}; Object.keys(DEFAULTS).forEach(function (k) { if (o && o[k] !== undefined && typeof o[k] === typeof DEFAULTS[k]) c[k] = o[k]; }); setCfg(c); return Object.keys(c).length; },
     buffNow: wrap(buffIfNeeded, 'Бафф', 'buff'), dailyNow: wrap(dailyIfNeeded, 'Алтарь', 'daily'), learnNow: wrap(learnSkills, 'Умения', 'learn'),
-    _test: { pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, buyBook: buyBook, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates }
+    _test: { learn: function () { return learnSkills(true); }, pickMob: pickMob, chooseAction: chooseAction, ids: ids, setHero: function (h) { S.hero = h; }, rotation: rotation, buyBook: buyBook, mstats: mstats, sched: sched, expFromLog: expFromLog, winPending: winPending, flushPending: flushPending, placeScore: placeScore, services: SERVICES, dbCandidates: dbCandidates }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
